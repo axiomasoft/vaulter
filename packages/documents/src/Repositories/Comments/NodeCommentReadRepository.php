@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Repositories\Comments;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Models\Drive\Node;
@@ -14,6 +15,7 @@ use Vaulter\Models\Drive\Node;
  * is oldest-first (a thread reads top-to-bottom); find() resolves a single comment for
  * the resolve/delete paths.
  */
+#[Internal]
 final class NodeCommentReadRepository
 {
     public function __construct(

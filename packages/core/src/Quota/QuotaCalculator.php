@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Quota;
 
 use Illuminate\Database\Query\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Support\Identity;
@@ -19,8 +20,9 @@ use Vaulter\Support\Identity;
  * Reads the tables directly (no Eloquent scopes), so it works inside migrations and
  * for system maintenance alike.
  *
- * @internal The public quota view is DriveHandle::quota().
+ * The public quota view is DriveHandle::quota().
  */
+#[Internal]
 final readonly class QuotaCalculator
 {
     public function __construct(

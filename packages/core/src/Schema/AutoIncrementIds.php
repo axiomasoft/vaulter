@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Contracts\IdStrategy;
  * actors carry the matching unsigned-bigint type; the database assigns the
  * value, so no model concern and no generated key are needed.
  */
+#[Internal]
 final class AutoIncrementIds implements IdStrategy
 {
     public function key(Blueprint $table, string $column = 'id'): void

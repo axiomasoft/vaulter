@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Events\Sharing;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Sharing\NodeShare;
@@ -18,8 +20,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * A bearer share-link was revoked. A revoked share never resolves
  * again (the resolver filters on revoked_at).
  */
+#[Api]
 final readonly class NodeShareRevoked extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public NodeShare $share,
         ActorRef $actor,

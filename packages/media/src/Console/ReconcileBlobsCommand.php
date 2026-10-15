@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Configuration\MediaConfig;
@@ -30,6 +31,7 @@ use Vaulter\VaulterManager;
  * EXIT: report-only (or prune-refused) that FINDS orphans exits FAILURE so cron/CI
  * sees the hazard; a prune that cleaned them, and a clean run, exit SUCCESS.
  */
+#[Internal]
 final class ReconcileBlobsCommand extends Command
 {
     use OpensWriteScope;

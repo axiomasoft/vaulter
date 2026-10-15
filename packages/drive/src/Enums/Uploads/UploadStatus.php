@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Uploads;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;
 
@@ -28,6 +29,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *  - Expired    — the sweeper found a stale session past expires_at and reclaimed
  *                 it (staged temp + S3 multipart cleaned). Terminal.
  */
+#[Api]
 enum UploadStatus: string
 {
     use HasLabel;

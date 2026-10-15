@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Azgard\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
+#[Api]
 final readonly class AzgardConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function panelId(): ?string

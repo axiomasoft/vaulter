@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
@@ -14,8 +16,10 @@ use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
  * Typed accessors over config('vaulter.*'). All package code reads configuration
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
+#[Api]
 final readonly class RoutesConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function prefix(): string

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Api;
+
 /**
  * One contribution to a slot, as the sealed registry lists it: ordered by `priority` ascending,
  * then `id`.
  */
+#[Api]
 final readonly class SlotContribution
 {
     /**

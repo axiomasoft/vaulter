@@ -8,6 +8,8 @@ use Closure;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ContentDelivery;
 use Vaulter\Contracts\Drive\FileOperations as Contract;
 use Vaulter\Data\Drive\FileStream;
@@ -46,8 +48,10 @@ use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
 use Vaulter\Support\TreeGuard;
 
+#[Api]
 final readonly class FileOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names, private DeleteFileRevisionAction $deleteRevision, private SetFileRevisionRetentionAction $retention, private NodeSnapshotMapper $nodes, private FileRevisionSnapshotMapper $revisions, private OperationRunner $runner) {}
 
     public function upload(UploadSource $source, ?UploadOptions $options = null): NodeSnapshot

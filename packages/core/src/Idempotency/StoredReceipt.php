@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Idempotency;
 
 use stdClass;
+use Vaulter\Attributes\Internal;
 
 /**
  * A row of the idempotency table with typed fields: what {@see IdempotencyStore::claim()} returns for a digest
  * that already has a committed (or still claimed) receipt.
- *
- * @internal
  */
+#[Internal]
 final readonly class StoredReceipt
 {
     /** The columns of the scope tuple that identify who asked for what (the key itself is stored apart). */

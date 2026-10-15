@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Sharing;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Data\Snapshots\MintedShareLink;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 
+#[Api]
 interface ShareOperations
 {
     /** @return list<ShareLinkSnapshot> */

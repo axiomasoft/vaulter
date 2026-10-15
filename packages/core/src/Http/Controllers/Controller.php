@@ -6,7 +6,9 @@ namespace Vaulter\Http\Controllers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Api;
 
+#[Api]
 abstract class Controller
 {
     use AuthorizesRequests;

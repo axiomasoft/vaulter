@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapSchema;
@@ -18,6 +19,7 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
  * Markdown: the TipTap editor limited to what Markdown can represent, so it always
  * exports to Markdown without loss. Collaborative over Yjs.
  */
+#[Api]
 final readonly class MarkdownDocumentType implements DocumentType, SupportsCollaboration
 {
     public const string KEY = 'vaulter/markdown';

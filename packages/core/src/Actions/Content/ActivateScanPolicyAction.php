@@ -6,6 +6,7 @@ namespace Vaulter\Actions\Content;
 
 use Illuminate\Support\Str;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanMode;
@@ -19,8 +20,9 @@ use Vaulter\Support\Identity;
 /**
  * Records a drive's scan activation, fixes its rollout boundary once and opens or reopens its backfill run.
  *
- * @internal Lock order: tree exclusive, drive row, policy state row, backfill run row.
+ * Lock order: tree exclusive, drive row, policy state row, backfill run row.
  */
+#[Internal]
 final readonly class ActivateScanPolicyAction
 {
     public function __construct(private VaulterDatabase $database, private ScanAuthorityRepository $authority, private ScanPolicyStateRepository $states) {}

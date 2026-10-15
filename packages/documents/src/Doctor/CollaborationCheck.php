@@ -6,12 +6,14 @@ namespace Vaulter\Documents\Doctor;
 
 use Firebase\JWT\JWT;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 
 /** Evidence names the settings and says whether they are set; the secrets themselves never leave the config. */
+#[Internal]
 final readonly class CollaborationCheck implements DoctorCheck
 {
     public function __construct(private DocumentsConfig $config) {}

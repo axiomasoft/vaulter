@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DownloadsConfig;
 use Vaulter\Content\ContentDelivery;
 use Vaulter\Contracts\Drive\DriveHandle;
@@ -44,6 +45,7 @@ use Vaulter\Support\LoadTier;
  * Public share downloads always stream, so each one is checked against the link's
  * current state.
  */
+#[Internal]
 final readonly class ContentResponder
 {
     public function __construct(

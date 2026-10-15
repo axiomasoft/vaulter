@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** A manual re-delivery was asked for a delivery that cannot be sent again right now. */
+#[Internal]
 final class WebhookDeliveryNotRedeliverableException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

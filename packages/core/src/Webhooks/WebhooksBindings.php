@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Gate;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Webhooks\HostResolver;
@@ -16,6 +17,7 @@ use Vaulter\Modules\ModuleBindings;
 use Vaulter\Policies\WebhookEndpointPolicy;
 
 /** The container wiring of the webhooks module: the outbound SSRF guard and the endpoint policy. */
+#[Internal]
 final class WebhooksBindings implements ModuleBindings
 {
     public function register(Application $app): void

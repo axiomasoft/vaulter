@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Webhooks;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
 
@@ -18,6 +20,7 @@ use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
  * five N2 controls (scheme allow-list, A+AAAA resolution + range rejection, DNS
  * pinning, redirects off, protocol/size limits at the call site).
  */
+#[Spi(SpiKind::Implement)]
 interface OutboundUrlGuard
 {
     /**

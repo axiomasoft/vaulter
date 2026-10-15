@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Content;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Cas\ScanVerdict;
 
+#[Api]
 final readonly class ScanResult
 {
     public const array REASONS = ['scanner_timeout', 'scanner_unavailable', 'transient_io', 'unsupported', 'too_large', 'password_protected', 'access_denied', 'unknown', 'content_identity_mismatch', 'attempts_exhausted', 'superseded_policy'];

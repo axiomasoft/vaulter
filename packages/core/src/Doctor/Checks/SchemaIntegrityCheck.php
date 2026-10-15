@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Illuminate\Database\Query\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Database\VaulterDatabase;
@@ -14,6 +15,7 @@ use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Support\Identity;
 
 /** Samples the structural invariants of the tree and its aggregates: at most --sample rows per invariant. */
+#[Internal]
 final readonly class SchemaIntegrityCheck implements DoctorCheck
 {
     public function __construct(private VaulterDatabase $database, private DatabaseConfig $tables) {}

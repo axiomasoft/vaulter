@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Illuminate\Console\Scheduling\Schedule;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
+#[Internal]
 final readonly class SchedulerCheck implements DoctorCheck
 {
     public function __construct(private ScheduleConfig $schedule, private Schedule $scheduler) {}

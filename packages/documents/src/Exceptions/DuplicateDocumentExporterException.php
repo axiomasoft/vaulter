@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** Raised while the application boots, so it is never rendered for a request. */
+#[Api]
 final class DuplicateDocumentExporterException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -6,6 +6,7 @@ namespace Vaulter\Policies;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 
@@ -19,6 +20,7 @@ use Vaulter\Models\Drive\Node;
  * Registered against the swappable Node model in the service provider, so a host
  * subclass of Node is governed by the same policy.
  */
+#[Internal]
 final readonly class NodePolicy
 {
     public function __construct(

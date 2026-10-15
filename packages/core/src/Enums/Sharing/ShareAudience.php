@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Sharing;
 
+use Vaulter\Attributes\Api;
+
 /**
  * Who may open a share link. The token is always required; the audience
  * adds who must hold it.
@@ -14,6 +16,7 @@ namespace Vaulter\Enums\Sharing;
  *
  * @closed The string values are stored and never change.
  */
+#[Api]
 enum ShareAudience: string
 {
     case Anyone = 'anyone';

@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Http\Requests\VaulterFormRequest;
@@ -18,6 +19,7 @@ use Vaulter\Rules\Access\RegisteredSubjectType;
  * The subject type must be one the permission driver can enumerate; Manage on the node
  * is checked by the operation.
  */
+#[Internal]
 final class CreateGrantRequest extends VaulterFormRequest
 {
     /**

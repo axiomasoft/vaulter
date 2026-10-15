@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Content;
 
+use Vaulter\Attributes\Internal;
+
 /** @internal Durable scan-work tuning, supplied by the package that runs the scan jobs. */
+#[Internal]
 interface ScanWorkSettings
 {
     public function leaseSeconds(): int;

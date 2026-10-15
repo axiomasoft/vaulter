@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Snapshots\Mapping;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\DriveSnapshot;
 use Vaulter\Data\Snapshots\QuotaSnapshot;
 use Vaulter\Enums\Drive\QuotaState;
@@ -11,6 +12,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Quota\QuotaCalculator;
 
 /** @internal */
+#[Internal]
 final readonly class DriveSnapshotMapper
 {
     public function __construct(private QuotaCalculator $quota) {}

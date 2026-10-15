@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
@@ -14,6 +15,7 @@ use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
  * An immutable checkpoint of a document. The history listing leaves the content out to
  * stay light; the single-revision read carries it.
  */
+#[Internal]
 final class DocumentRevisionResource extends JsonResource
 {
     public function __construct(DocumentRevisionSnapshot $revision, private readonly ?DocumentContent $content = null)

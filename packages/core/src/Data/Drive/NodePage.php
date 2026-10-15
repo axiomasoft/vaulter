@@ -9,6 +9,7 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 use Traversable;
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Page;
 use Vaulter\Models\Drive\Node;
 
@@ -17,6 +18,7 @@ use Vaulter\Models\Drive\Node;
  *
  * @implements IteratorAggregate<int, Node>
  */
+#[Api]
 final readonly class NodePage implements Countable, IteratorAggregate, JsonSerializable
 {
     /** @param list<Node> $items */

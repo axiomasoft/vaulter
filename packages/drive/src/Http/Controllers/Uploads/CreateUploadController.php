@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Uploads;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
@@ -20,6 +21,7 @@ use Vaulter\Enums\Access\Ability;
  * under it. The tag is checked when the session is created; the commit at the end does
  * not compare it again.
  */
+#[Internal]
 final readonly class CreateUploadController
 {
     public function __construct(

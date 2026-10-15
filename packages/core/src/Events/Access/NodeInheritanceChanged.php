@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Events\Access;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
@@ -18,8 +20,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * A node started or stopped inheriting grants from above. Restricting with
  * copy_current also writes direct grants; each of those is its own grant.created.
  */
+#[Api]
 final readonly class NodeInheritanceChanged extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public bool $inherits,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Files;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
@@ -34,6 +35,7 @@ use Vaulter\Support\TreeGuard;
  *
  * Operations authorize before this command.
  */
+#[Internal]
 final readonly class DeleteFileRevisionAction
 {
     public const string RETENTION_REASON = 'revision-retention';

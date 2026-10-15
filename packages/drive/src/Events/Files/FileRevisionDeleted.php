@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Files;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\File;
@@ -20,8 +22,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * its blob edges are gone and its bytes left the drive's quota. The
  * revision row no longer exists, so the event carries its id, number and size.
  */
+#[Api]
 final readonly class FileRevisionDeleted extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public File $file,

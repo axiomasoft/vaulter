@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
+#[Api]
 final readonly class ScanConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function mode(): ScanMode

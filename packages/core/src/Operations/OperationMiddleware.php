@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Closure;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * A slot contribution that wraps every write operation (D8). It calls `$next` exactly once with the
@@ -12,6 +14,7 @@ use Closure;
  * operation with `extension_failed`. Throwing before `$next` vetoes the operation without a mutation.
  * It never replaces the transaction, the authorization or the events of the operation.
  */
+#[Spi(SpiKind::Implement)]
 interface OperationMiddleware
 {
     /** @param Closure(Operation): mixed $next */

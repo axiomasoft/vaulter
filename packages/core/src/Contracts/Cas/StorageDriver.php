@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Cas;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * A thin abstraction over a Flysystem disk: the byte plane under the CAS.
@@ -13,6 +15,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
  * to add object-store specifics (x-amz-checksum-sha256, If-None-Match: *) while
  * keeping the local/sqlite test disk working unchanged.
  */
+#[Spi(SpiKind::Implement)]
 interface StorageDriver
 {
     /**

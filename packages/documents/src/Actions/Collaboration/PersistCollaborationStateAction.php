@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Collaboration;
 
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -58,6 +59,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * only partly refuses the whole store. An identical state is a no-op. One transaction
  * under T → N → D locks; one after-commit DocumentContentUpdated event.
  */
+#[Internal]
 final readonly class PersistCollaborationStateAction
 {
     public function __construct(

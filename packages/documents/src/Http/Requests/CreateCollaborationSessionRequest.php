@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Requests;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /** POST documents/{node}/collaboration/session: the schema version the client's editor speaks, when it says. */
+#[Internal]
 final class CreateCollaborationSessionRequest extends VaulterFormRequest
 {
     /**

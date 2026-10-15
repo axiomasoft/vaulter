@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Support;
 
 use Illuminate\Support\Facades\Facade;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 
 /**
@@ -14,6 +15,7 @@ use Vaulter\Contracts\Drive\DriveHandle;
  * @method static DriveHandle|null  handle(string $driveId)
  * @method static list<string>      ids()
  */
+#[Internal]
 final class PanelDrives extends Facade
 {
     protected static function getFacadeAccessor(): string

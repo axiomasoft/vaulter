@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Handlers;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Contracts\Handlers\FileHandler;
 
 /**
@@ -18,6 +20,7 @@ use Vaulter\Contracts\Handlers\FileHandler;
  * `ArchTest` asserts the registry's own handlers are final). This base is for a
  * HOST's or PACKAGE's own handler, which is free to extend it or not.
  */
+#[Spi(SpiKind::Implement)]
 abstract class AbstractFileHandler implements FileHandler
 {
     /**

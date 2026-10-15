@@ -11,6 +11,7 @@ use ReflectionClass;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\CompiledModules;
@@ -21,6 +22,7 @@ use Vaulter\Modules\ModuleState;
  * schema migrations not applied yet, and what it defines and contributes. Exit 1 while the module graph
  * is invalid (the reasons are printed); registered whatever the graph.
  */
+#[Internal]
 final class ModulesCommand extends Command
 {
     protected $signature = 'vaulter:modules

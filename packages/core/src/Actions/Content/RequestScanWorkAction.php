@@ -6,6 +6,7 @@ namespace Vaulter\Actions\Content;
 
 use Illuminate\Support\Str;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanResult;
@@ -24,8 +25,9 @@ use Vaulter\Tenancy\TenancyBoundary;
 /**
  * Creates scan work and its request ledger row; SQL owns generation fencing.
  *
- * @internal The caller's outer transaction holds the revision-family locks, the work row is taken last.
+ * The caller's outer transaction holds the revision-family locks, the work row is taken last.
  */
+#[Internal]
 final readonly class RequestScanWorkAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ReuseScanEvidenceAction $reuse, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}

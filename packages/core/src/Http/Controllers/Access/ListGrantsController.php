@@ -6,12 +6,14 @@ namespace Vaulter\Http\Controllers\Access;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\GrantSnapshot;
 use Vaulter\Http\Resources\Access\GrantResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** The grants set directly on a node (Manage). */
+#[Internal]
 final readonly class ListGrantsController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts) {}

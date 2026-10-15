@@ -7,8 +7,10 @@ namespace Vaulter\Filament\Resources\NodeShareResource\Pages;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 use Override;
+use Vaulter\Attributes\Internal;
 use Vaulter\Filament\Resources\NodeShareResource;
 
+#[Internal]
 final class ListNodeShares extends ListRecords
 {
     protected static string $resource = NodeShareResource::class;

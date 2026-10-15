@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Idempotency;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 
 /**
  * A neutral reference to the resource an idempotency receipt is about, or to the authorization scope it was
  * granted in (D25): a kind of the owning module (`node`, `drive`) and the string id. The kernel stores and
  * returns it; only the owner's {@see ReplayAuthorizer} resolves it.
  */
+#[Api]
 final readonly class ResourceRef
 {
     public function __construct(

@@ -6,6 +6,8 @@ namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -34,8 +36,10 @@ use Vaulter\Profiles\ProfileRegistry;
  * Typed accessors over config('vaulter.*'). All package code reads configuration
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
+#[Api]
 final readonly class VaulterConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     /** @return list<class-string<FileHandler>> */

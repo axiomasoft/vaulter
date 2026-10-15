@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Webhooks\HostResolver;
 
 /**
@@ -14,6 +15,7 @@ use Vaulter\Contracts\Webhooks\HostResolver;
  * Both families are queried so a public A record paired with a private AAAA cannot
  * slip a delivery past the guard.
  */
+#[Internal]
 final class SystemHostResolver implements HostResolver
 {
     public function resolve(string $host): array

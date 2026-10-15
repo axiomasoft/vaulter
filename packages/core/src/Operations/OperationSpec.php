@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Modules\ModuleId;
 
 /**
  * What an operation is: its stable name (the operation identity, as an OperationKind or route
  * label: `drive.folders.create`), the module that owns it and whether it writes.
  */
+#[Api]
 final readonly class OperationSpec
 {
     public const string NAME_PATTERN = '/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/';

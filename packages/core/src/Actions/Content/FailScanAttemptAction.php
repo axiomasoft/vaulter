@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Content;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanWorkTransitions;
@@ -15,8 +16,9 @@ use Vaulter\Tenancy\TenancyBoundary;
 /**
  * A live trusted attempt may record a deterministic failure without trusting altered content.
  *
- * @internal Locks only the work row.
+ * Locks only the work row.
  */
+#[Internal]
 final readonly class FailScanAttemptAction
 {
     public function __construct(private VaulterDatabase $database, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}

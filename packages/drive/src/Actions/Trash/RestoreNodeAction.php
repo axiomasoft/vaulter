@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Trash;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
@@ -27,6 +28,7 @@ use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
+#[Internal]
 final readonly class RestoreNodeAction
 {
     public function __construct(

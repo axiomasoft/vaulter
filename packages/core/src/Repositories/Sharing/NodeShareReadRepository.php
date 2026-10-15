@@ -6,6 +6,7 @@ namespace Vaulter\Repositories\Sharing;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
@@ -18,6 +19,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * revoked share never reaches the resolver. The lookup is by token_hash; the raw
  * token never touches the DB.
  */
+#[Internal]
 final class NodeShareReadRepository
 {
     public function __construct(

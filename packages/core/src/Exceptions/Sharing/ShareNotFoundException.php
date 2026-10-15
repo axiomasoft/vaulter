@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Sharing;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * spent links, a visitor outside the audience's tenant and a node outside the link's
  * scope all answer the same, so a token cannot be probed.
  */
+#[Api]
 final class ShareNotFoundException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

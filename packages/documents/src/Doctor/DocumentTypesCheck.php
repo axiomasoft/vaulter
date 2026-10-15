@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Doctor;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
@@ -11,6 +12,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 
+#[Internal]
 final readonly class DocumentTypesCheck implements DoctorCheck
 {
     public function __construct(private DocumentsConfig $config, private DocumentTypeRegistry $types) {}

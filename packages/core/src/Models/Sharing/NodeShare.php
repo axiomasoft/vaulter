@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\Role;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\GrantScope;
@@ -56,6 +57,7 @@ use Vaulter\Models\Drive\Node;
  * @property Carbon|null     $updated_at
  * @property-read Node $node
  */
+#[Internal]
 class NodeShare extends Model
 {
     use GuardsWrites;

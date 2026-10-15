@@ -7,6 +7,7 @@ namespace Vaulter\Http\Support;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DownloadsConfig;
 
 /**
@@ -22,6 +23,7 @@ use Vaulter\Configuration\DownloadsConfig;
  * that merely LOOKS safe, e.g. `text/html; charset=utf-8`) downgrades to
  * `application/octet-stream`.
  */
+#[Internal]
 final class DownloadHeaders
 {
     /**

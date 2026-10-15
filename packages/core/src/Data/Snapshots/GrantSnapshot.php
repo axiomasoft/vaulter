@@ -6,12 +6,15 @@ namespace Vaulter\Data\Snapshots;
 
 use DateTimeImmutable;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\GrantScope;
 
 /** Read-only view of a per-node grant. */
+#[Api]
 final readonly class GrantSnapshot
 {
-    /** @internal */
+    #[Internal]
     public function __construct(
         public string $id,
         public string $nodeId,

@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\MissingActorException;
@@ -30,6 +31,7 @@ use Vaulter\VaulterManager;
  * handle acting as the request's user, carrying the request's correlation id. The
  * HTTP layer therefore authorizes exactly as a PHP caller of the same operation does.
  */
+#[Internal]
 final readonly class HttpOperationContextFactory
 {
     public function __construct(

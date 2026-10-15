@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Cas\BlobStatus;
@@ -51,6 +52,7 @@ use Vaulter\Models\Drive\FileRevisionBlob;
  * @property Carbon|null          $committed_at
  * @property Carbon|null          $delete_after_at
  */
+#[Internal]
 class Blob extends Model
 {
     use GuardsWrites;

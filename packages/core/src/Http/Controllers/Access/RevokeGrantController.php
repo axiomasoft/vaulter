@@ -6,10 +6,12 @@ namespace Vaulter\Http\Controllers\Access;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Revoke one grant; a grant of another node is as unknown as a missing one. */
+#[Internal]
 final readonly class RevokeGrantController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts) {}

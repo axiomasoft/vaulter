@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Profiles;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Profiles\Profile;
 
@@ -12,6 +14,7 @@ use Vaulter\Profiles\Profile;
  * and `allowed_document_types`. The drive asks the option whether its feature is globally on and lets it
  * validate a profile, so the drive never names the module that owns the feature.
  */
+#[Spi(SpiKind::Implement)]
 interface ProfileOption
 {
     /** The option name; the slot key. */

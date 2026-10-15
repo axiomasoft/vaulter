@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Sharing;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
@@ -13,9 +14,8 @@ use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
  * start of a link session, not a request: the visits that follow inside the session
  * do not count. The count is one conditional UPDATE, so a link at its budget, a
  * revoked link or a link rotated since it was resolved is refused atomically.
- *
- * @internal
  */
+#[Internal]
 final readonly class RedeemShareLinkAction
 {
     public function __construct(private NodeShareStoreRepository $shares, private VaulterDatabase $database) {}

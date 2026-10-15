@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Documents\Data\Collaboration\RoomRef;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -12,8 +14,10 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Support\Identity;
 
+#[Api]
 final readonly class DocumentsConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function revisionLimit(): int

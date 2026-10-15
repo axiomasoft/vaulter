@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Documents;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\DocumentStateWriter;
@@ -47,6 +48,7 @@ use Vaulter\Support\TreeGuard;
  * destination, profile document types); the Action only does the row work. The actor
  * is the operation's, and the storage must be the operation's drive.
  */
+#[Internal]
 final readonly class CreateDocumentAction
 {
     public function __construct(

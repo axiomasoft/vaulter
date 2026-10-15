@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Cas;
 
+use Vaulter\Attributes\Api;
+
+#[Api]
 enum ScanVerdict: string
 {
     case Clean = 'clean';

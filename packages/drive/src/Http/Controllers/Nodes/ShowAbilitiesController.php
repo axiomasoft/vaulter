@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
@@ -17,6 +18,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * allowed or not; explaining reveals the grants behind it, so it needs Manage
  * (403 permission_denied otherwise).
  */
+#[Internal]
 final readonly class ShowAbilitiesController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts) {}

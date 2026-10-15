@@ -10,8 +10,39 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "why": "architecture#kernel: Атрибуты — EventSpec metadata stays (new #[Api]/#[Spi]/#[Internal] come in P3)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Attributes\\Api",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#api-surface (D27): the surface attributes of the kernel (P3.17)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Attributes\\Spi",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#api-surface (D27): the surface attributes of the kernel (P3.17)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Attributes\\SpiKind",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#api-surface (D27): the surface attributes of the kernel (P3.17)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Attributes\\Internal",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#api-surface (D27): the surface attributes of the kernel (P3.17)"
         },
         {
             "match": "fqcn",
@@ -19,9 +50,7 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "undecided",
-            "note": "open: consumed today by HasLabel/HasIcon of enums owned by drive/sharing/etc.; P3 decides core vs drive presentation",
-            "why": "architecture#kernel: Label/Icon stay only if the kernel consumes them, otherwise the owner of presentation"
+            "why": "architecture#api-surface (D27, D35): presentation metadata of enums stays in core and is part of the host-facing surface"
         },
         {
             "match": "fqcn",
@@ -29,9 +58,7 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "undecided",
-            "note": "open: consumed today by HasLabel/HasIcon of enums owned by drive/sharing/etc.; P3 decides core vs drive presentation",
-            "why": "architecture#kernel: Label/Icon stay only if the kernel consumes them, otherwise the owner of presentation"
+            "why": "architecture#api-surface (D27, D35): presentation metadata of enums stays in core and is part of the host-facing surface"
         },
         {
             "match": "fqcn",
@@ -39,9 +66,7 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "undecided",
-            "note": "open: follows Vaulter\\Attributes\\Icon (P3 decides)",
-            "why": "architecture#kernel: Label/Icon helper traits follow the Label/Icon attributes"
+            "why": "architecture#api-surface (D27, D35): presentation metadata of enums stays in core and is part of the host-facing surface"
         },
         {
             "match": "fqcn",
@@ -49,9 +74,7 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "undecided",
-            "note": "open: follows Vaulter\\Attributes\\Label (P3 decides)",
-            "why": "architecture#kernel: Label/Icon helper traits follow the Label/Icon attributes"
+            "why": "architecture#api-surface (D27, D35): presentation metadata of enums stays in core and is part of the host-facing surface"
         },
         {
             "match": "fqcn",
@@ -59,7 +82,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "open: follows Label/Icon (P3 decides)",
             "why": "architecture#kernel: reads Label/Icon attributes of enum cases; follows them"
         },
@@ -69,7 +91,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Идентичность — id stringify/compare primitives (IdStrategy, host keys)"
         },
         {
@@ -78,7 +99,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "note": "throws SequenceOverflowException (kept in core with it)",
             "why": "architecture#kernel: Идентичность — generic BIGINT counter contract shared by node sequence, document state version and collab epoch"
         },
@@ -88,7 +108,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Наблюдаемость — load-stand tier label read by package seams (host middleware sets it)"
         },
         {
@@ -97,7 +116,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "stamped by the drive ActivityRecorder today; the kernel owns the correlation id primitive",
             "why": "architecture#kernel: Контекст операции — request-scoped correlation/ip/user-agent capture"
         },
@@ -105,7 +123,6 @@
             "match": "fqcn",
             "value": "Vaulter\\Support\\AssembleSizeBucket",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Support helpers -> owner of the concept: multipart assembly metric label belongs to uploads (drive)"
         },
         {
@@ -114,7 +131,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "why": "architecture#kernel: Конфиг-каркас — the root typed config (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -123,7 +139,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "why": "architecture#kernel: Конфиг-каркас — registerDefaults/normalisation of sections (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -132,7 +147,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "note": "class-string validation stays (I4 config-validation); the ProfileRegistry resolved() probe is host lifecycle",
             "why": "architecture#kernel: Конфиг-каркас — ConfigValidator (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -142,7 +156,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Конфиг-каркас — connection/table names section stays (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -151,7 +164,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Конфиг-каркас — id strategy section stays (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -160,7 +172,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Конфиг-каркас — metrics/tracing section stays (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -169,7 +180,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Конфиг-каркас — route prefix/middleware of the HTTP skeleton section stays (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -178,7 +188,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Конфиг-каркас — tenancy section stays (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -187,7 +196,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "note": "open: the keys of each module move to their owner with the section split (P4)",
             "why": "architecture#kernel: Конфиг-каркас — schedule section: generic frequency settings every module reads (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -197,56 +205,48 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Конфиг-каркас — generic frequency value of ScheduleConfig (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\AccessConfig",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: access model (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\ChangesConfig",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: change feed (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\DownloadsConfig",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: content delivery (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\ListingConfig",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: node listing (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\ScanConfig",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: scan admission and work (D28) (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\SharingConfig",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: sharing (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\WebhooksConfig",
             "owner": "webhooks",
-            "surface": "Api",
             "note": "open: outbox keys (retention, consumer hold) move to core with D29",
             "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: webhooks (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -256,7 +256,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
         },
         {
@@ -265,7 +264,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
         },
         {
@@ -274,7 +272,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
         },
         {
@@ -283,7 +280,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
         },
         {
@@ -292,7 +288,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
         },
         {
@@ -301,7 +296,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
         },
         {
@@ -310,7 +304,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Транзакция — opens the core WriteScope for commands of every module"
         },
         {
@@ -319,7 +312,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: Диагностика — DoctorCheck SPI implemented by every module (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -328,7 +320,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: Идентичность — IdStrategy (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -337,7 +328,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: Наблюдаемость — MetricsRecorder (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -346,7 +336,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: Наблюдаемость — TraceRecorder (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -355,7 +344,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: Tenancy — ResolvesOwnerTenant (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -364,7 +352,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: Tenancy — TenantResolver (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -373,7 +360,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "why": "architecture#kernel: Снимки — Page stays (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -382,7 +368,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "why": "architecture#kernel: Транзакция — VaulterDatabase (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -391,7 +376,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Транзакция — statement guard of the Vaulter connection (WriteOutsideOperation)"
         },
         {
@@ -400,7 +384,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Транзакция — statement guard of the Vaulter connection (WriteOutsideOperation)"
         },
         {
@@ -409,7 +392,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Транзакция — statement guard of the Vaulter connection (WriteOutsideOperation)"
         },
         {
@@ -418,7 +400,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Транзакция — statement guard of the Vaulter connection (WriteOutsideOperation)"
         },
         {
@@ -427,42 +408,36 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#ownership-map: database/factories — the abstract factory base stays with VaulterDatabase in core; module factories extend it (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Database\\Factories\\DriveFactory",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Database\\Factories\\FileRevisionFactory",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Database\\Factories\\NodeFactory",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Database\\Factories\\PinnedOwnerTenantResolver",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: database/factories -> module of the model: tenant pin helper used by the drive factories"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Database\\Factories\\PinnedTenantResolver",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: database/factories -> module of the model: tenant pin helper used by the drive factories"
         },
         {
@@ -471,7 +446,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
         },
         {
@@ -480,7 +454,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
         },
         {
@@ -489,7 +462,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
         },
         {
@@ -498,7 +470,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
         },
         {
@@ -507,7 +478,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — aggregator of vaulter:doctor"
         },
         {
@@ -516,7 +486,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — aggregator of vaulter:doctor"
         },
         {
@@ -525,7 +494,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — aggregator of vaulter:doctor"
         },
         {
@@ -534,7 +502,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
         },
         {
@@ -543,7 +510,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
         },
         {
@@ -552,7 +518,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
         },
         {
@@ -561,7 +526,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
         },
         {
@@ -570,7 +534,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
         },
         {
@@ -579,7 +542,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
         },
         {
@@ -588,7 +550,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
         },
         {
@@ -597,7 +558,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "open: reads the table list of every module; contributions replace the central list in P3",
             "why": "architecture#kernel: Идентичность — key-type check of generic id/host-key columns"
         },
@@ -607,7 +567,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P3",
-            "surface": "Internal",
             "note": "core keeps the check mechanism; each owner contributes its tables (drive/documents/media/webhooks/outbox)",
             "why": "architecture#ownership-map: Doctor — concrete checks belong to the owner of the concept"
         },
@@ -615,21 +574,18 @@
             "match": "fqcn",
             "value": "Vaulter\\Doctor\\Checks\\SchemaIntegrityCheck",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Doctor — tree/aggregate structural invariants are drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Doctor\\Checks\\AccessDriverCheck",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Doctor — access driver check is drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Doctor\\Checks\\WebhooksDeliveriesCheck",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Doctor — webhook deliveries check is webhooks"
         },
         {
@@ -638,7 +594,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "note": "isWebhookEligible is deleted by D29 (neutral envelope)",
             "why": "architecture#kernel: События — DomainEvent base (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -648,7 +603,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "note": "webhook gate features.webhooks/isWebhookEligible is deleted by D29",
             "why": "architecture#kernel: События — EventRecorder (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -658,7 +612,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Internal",
             "note": "baseline: public in the 0.x snapshot; becomes a reference of the EventCatalog; P3 decides publication (D27)",
             "why": "architecture#kernel: События — EventCatalog reference generator (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -668,7 +621,6 @@
             "owner": "drive",
             "action": "move",
             "phase": "P4",
-            "surface": "Api",
             "note": "located in core until P4 moves it to the drive package (D38)",
             "why": "architecture#events + D38: the event types of the drive, contributed to the EventCatalog by DriveModule"
         },
@@ -678,7 +630,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: События — D38 contract of a module event enum (implemented by modules)"
         },
         {
@@ -687,7 +638,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: События — D38 spec of an event enum case from its EventSpec attribute"
         },
         {
@@ -696,7 +646,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "why": "architecture#kernel: События — D38 registry of the event types the modules contribute"
         },
         {
@@ -705,7 +654,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Internal",
             "why": "architecture#kernel: События — D38 where the catalogue reads the module enums"
         },
         {
@@ -714,7 +662,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Internal",
             "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; an Eloquent cast of the activity verb, not called by hosts",
             "why": "architecture#kernel: События — D38 stored event type value read back through the catalogue"
         },
@@ -724,7 +671,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Spi:Implement",
             "why": "architecture#events: EventSink slot of core; activity and changes are sinks of drive (D38)"
         },
         {
@@ -733,7 +679,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Spi:Call",
             "why": "architecture#events: outcome of an EventSink (new occurrence, replay, skipped)"
         },
         {
@@ -742,7 +687,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Spi:Call",
             "why": "architecture#events: the transaction-bound writer of the EventSink slot"
         },
         {
@@ -779,7 +723,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "returned by the public VaulterConfig::outbox(); hosts read the outbox settings through it, not construct it",
             "why": "architecture#kernel + D29: typed accessors of vaulter.outbox.* (P3.14)"
         },
@@ -789,7 +732,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: vaulter:relay, the core outbox relay (P3.15)"
         },
         {
@@ -798,7 +740,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: vaulter:relay:replay closes a consumer gap (P3.15)"
         },
         {
@@ -807,7 +748,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: vaulter:outbox:prune, retention without loss (P3.15)"
         },
         {
@@ -816,7 +756,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: the outbox lag is a property of the core-owned outbox and relay (renamed from WebhooksOutboxLagCheck, P3.15)"
         },
         {
@@ -825,7 +764,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: stuck outbox delivery leases (renamed from WebhooksRelayLeasesCheck, P3.15)"
         },
         {
@@ -834,7 +772,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: an unacknowledged consumer gap is a doctor error (P3.15)"
         },
         {
@@ -843,7 +780,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: the settle window against the transaction limits of the database (P3.15)"
         },
         {
@@ -852,7 +788,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel + D29: the OutboxConsumer slot of core (P3.14)"
         },
         {
@@ -861,7 +796,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Call",
             "why": "architecture#kernel + D29: what an outbox consumer receives (renamed from Vaulter\\Webhooks\\EventEnvelope, P3.14)"
         },
         {
@@ -870,7 +804,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Call",
             "why": "architecture#kernel + D29: the result an outbox consumer returns (P3.14)"
         },
         {
@@ -879,7 +812,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Call",
             "why": "architecture#kernel + D29: durable or ephemeral outbox consumer (P3.14)"
         },
         {
@@ -888,7 +820,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Call",
             "why": "architecture#kernel + D29: the fenced continuation API of an outbox consumer (P3.14)"
         },
         {
@@ -897,7 +828,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; the relay's state of a consumer row",
             "why": "architecture#kernel + D29: active, paused or detached consumer (P3.15)"
         },
@@ -907,7 +837,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; the relay's state of a delivery row",
             "why": "architecture#kernel + D29: pending, leased, done or dead delivery row (P3.14)"
         },
@@ -917,7 +846,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: a fenced write lost its lease (P3.15)"
         },
         {
@@ -926,7 +854,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "swappable via vaulter.models.outbox",
             "why": "architecture#kernel + D29: the v_outbox model (renamed from Vaulter\\Models\\Webhooks\\Outbox, P3.14)"
         },
@@ -936,7 +863,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: the synchronous half of the outbox (renamed from Vaulter\\Webhooks\\OutboxRecorder, P3.14)"
         },
         {
@@ -945,7 +871,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: the outbox tables as the relay uses them (renamed from OutboxStoreRepository, P3.15)"
         },
         {
@@ -954,7 +879,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; hosts run it through vaulter:relay",
             "why": "architecture#kernel + D29: register, reconcile, deliver, hold, retention, replay (split from Vaulter\\Webhooks\\OutboxRelay, P3.15)"
         },
@@ -964,7 +888,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + D29: the outbox relay and retention on the host scheduler (P3.15)"
         },
         {
@@ -973,7 +896,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — base exception of the kernel"
         },
         {
@@ -982,7 +904,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — ProblemException (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -991,7 +912,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — RFC 9457 details mechanics used by exceptions of every module"
         },
         {
@@ -1000,7 +920,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (config validation)"
         },
         {
@@ -1009,7 +928,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (serialization retry)"
         },
         {
@@ -1018,7 +936,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (statement guard)"
         },
         {
@@ -1027,7 +944,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (HTTP skeleton preconditions)"
         },
         {
@@ -1036,7 +952,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (sealed registries)"
         },
         {
@@ -1045,7 +960,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (id strategy)"
         },
         {
@@ -1054,7 +968,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (slot contribution returned an invalid result)"
         },
         {
@@ -1063,7 +976,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (optional package probe)"
         },
         {
@@ -1072,14 +984,12 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Ошибки — kernel exception (tenancy)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Exceptions\\Registry\\DuplicateNodeContentLifecycleException",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Exceptions by domain owner: node content lifecycle registry is drive"
         },
         {
@@ -1088,7 +998,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: HTTP-каркас — controller base of module controllers"
         },
         {
@@ -1097,7 +1006,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: HTTP-каркас — form request base of module requests"
         },
         {
@@ -1106,7 +1014,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Снимки/HTTP-каркас — generic Page response renderer"
         },
         {
@@ -1115,7 +1022,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: HTTP-каркас — generic middleware (version header, cache policy, correlation id, request metrics)"
         },
         {
@@ -1124,7 +1030,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: HTTP-каркас — generic middleware (version header, cache policy, correlation id, request metrics)"
         },
         {
@@ -1133,7 +1038,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: HTTP-каркас — generic middleware (version header, cache policy, correlation id, request metrics)"
         },
         {
@@ -1142,7 +1046,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: HTTP-каркас — generic middleware (version header, cache policy, correlation id, request metrics)"
         },
         {
@@ -1151,7 +1054,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P3",
-            "surface": "Internal",
             "note": "core keeps the labelling mechanism; route-name and path labels (drive/documents/hub) become module contributions",
             "why": "architecture#kernel: HTTP-каркас — the labelling mechanism stays, the route-name labels belong to their modules"
         },
@@ -1161,7 +1063,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P3",
-            "surface": "Internal",
             "note": "core keeps the throttling mechanism; throttled route names become module contributions",
             "why": "architecture#kernel: HTTP-каркас — the throttle mechanism stays, route names belong to their modules"
         },
@@ -1169,7 +1070,6 @@
             "match": "fqcn",
             "value": "Vaulter\\Http\\Middleware\\ResolveShareToken",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http middleware of Sharing -> drive"
         },
         {
@@ -1178,7 +1078,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Ошибки — ProblemCatalog/Renderer/CoreProblemCodes stay; module problem codes are contributions (ProblemCodeSource)"
         },
         {
@@ -1187,7 +1086,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel: Ошибки — ProblemCode registry: modules contribute through this source"
         },
         {
@@ -1196,7 +1094,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "open: used for downloads only today; moves to drive if the kernel does not consume it (P4)",
             "why": "architecture#kernel: HTTP-каркас — generic header rendering (Content-Disposition/ETag) shared by owners"
         },
@@ -1204,21 +1101,18 @@
             "match": "fqcn",
             "value": "Vaulter\\Http\\Support\\ContentResponder",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http support -> owner of the concept: content responses of file download are drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Http\\Support\\HttpOperationContextFactory",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#kernel: HTTP owner adapters do admission and call OperationRunner; the factory reaches the drive handle, AccessResolver and VaulterManager"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Http\\Support\\HttpResourceResolver",
             "owner": "drive",
-            "surface": "Internal",
             "note": "baseline: public in the 0.x snapshot; P3 decides publication (D27)",
             "why": "architecture#ownership-map: Http support -> drive: resolves drives and nodes through drive repositories (I9 authorized lookup)"
         },
@@ -1226,7 +1120,6 @@
             "match": "fqcn",
             "value": "Vaulter\\Http\\Support\\SharedNodeResolver",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http support of Sharing -> drive"
         },
         {
@@ -1235,7 +1128,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P4",
-            "surface": "Internal",
             "note": "core keeps header parsing (If-Match/If-None-Match/428); matchNode -> drive; document match mapping -> documents",
             "why": "architecture#kernel: Preconditions::matchNode — domain parts are drive, document match mapping is documents; core only parses headers"
         },
@@ -1245,7 +1137,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P4",
-            "surface": "Internal",
             "note": "core keeps the generic tag/canonical-json helper; node() -> drive; document() -> documents",
             "why": "architecture#kernel: HTTP-каркас — generic strong ETag/canonical JSON helper stays; entity tags belong to owners"
         },
@@ -1253,70 +1144,60 @@
             "match": "prefix",
             "value": "Vaulter\\Http\\Requests\\Access\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http requests of Access are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Requests\\Changes\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http requests of Changes are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Requests\\Sharing\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http requests of Sharing are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Requests\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http requests of Webhooks are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Resources\\Access\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http resources of Access are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Resources\\Activity\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http resources of Activity are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Resources\\Changes\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http resources of Changes are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Resources\\Drive\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http resources of Drive are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Resources\\Sharing\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http resources of Sharing are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Resources\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http resources of Webhooks are owned by the concept (identity surface, not PHP API)"
         },
         {
@@ -1325,7 +1206,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Tenancy — restores the tenant context in queued jobs of every module"
         },
         {
@@ -1334,7 +1214,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Идентичность/Транзакция — model trait of the Vaulter connection and keys used by module models"
         },
         {
@@ -1343,7 +1222,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Идентичность/Транзакция — model trait of the Vaulter connection and keys used by module models"
         },
         {
@@ -1352,14 +1230,12 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Идентичность/Транзакция — model trait of the Vaulter connection and keys used by module models"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Models\\Concerns\\StampsDriveTenant",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Models/Concerns of the drive tenant stamp -> drive"
         },
         {
@@ -1368,7 +1244,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Наблюдаемость — recorders and span vocabulary"
         },
         {
@@ -1377,7 +1252,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Наблюдаемость — recorders and span vocabulary"
         },
         {
@@ -1386,7 +1260,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Наблюдаемость — recorders and span vocabulary"
         },
         {
@@ -1395,7 +1268,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Наблюдаемость — recorders and span vocabulary"
         },
         {
@@ -1404,7 +1276,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "note": "neutral since P3.8: actor, tenant, scope, correlation/causation, idempotency key; drive paths use DriveContext",
             "why": "architecture#kernel: Контекст операции — OperationContext (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -1414,7 +1285,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: neutral scope reference of OperationContext (P3.8)"
         },
         {
@@ -1423,7 +1293,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: tagged tenant reference of OperationContext (P3.8)"
         },
         {
@@ -1432,7 +1301,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-operations#operation-runner: the operation pipeline (P3.9, ADR-0028)"
         },
         {
@@ -1441,7 +1309,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: the operation identity of the pipeline (P3.9, ADR-0028)"
         },
         {
@@ -1450,7 +1317,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: one run of an operation handed to middleware and the attempt (P3.9, ADR-0028)"
         },
         {
@@ -1459,7 +1325,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "knowledge/p3-modules#slots: the OperationMiddleware slot defined by core (P3.9, D8)"
         },
         {
@@ -1468,7 +1333,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "knowledge/p3-operations#idempotency: stage 4 seam of the pipeline, filled by the idempotency store (P3.9/P3.12, D25)"
         },
         {
@@ -1477,7 +1341,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "knowledge/p3-operations#operation-runner: carries a failed after-commit callback out of the retry loop so a committed attempt is never repeated"
         },
         {
@@ -1486,7 +1349,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "knowledge/p3-operations#operation-runner: the claim step until operations accept idempotency keys (P3.9)"
         },
         {
@@ -1495,7 +1357,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: lazy per-process readiness of a module before its writes (P3.9, ADR-0028)"
         },
         {
@@ -1504,7 +1365,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: telemetry of the kernel, the built-in core.telemetry operation middleware (P3.9)"
         },
         {
@@ -1513,7 +1373,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: problem module_not_ready of the operation pipeline (P3.9, ADR-0028)"
         },
         {
@@ -1536,7 +1395,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#idempotency-concurrency + D25: the idempotency mechanism of the kernel — claim, store, digest (P3.12, ADR-0029)"
         },
         {
@@ -1545,7 +1403,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "D25: the versioned receipt codec an idempotent operation's owner implements (P3.12)"
         },
         {
@@ -1554,7 +1411,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "D25: the owner's current authorization of a replay (P3.12)"
         },
         {
@@ -1563,7 +1419,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "D25: what makes OperationRunner::write() idempotent by key (P3.12)"
         },
         {
@@ -1572,7 +1427,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "D25: neutral reference of a receipt's resource and authorization scope (P3.12)"
         },
         {
@@ -1581,7 +1435,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "D25: a deterministic refusal replayed from a receipt, caught by hosts like the original (P3.12)"
         },
         {
@@ -1590,7 +1443,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "D25: the Idempotency-Key header of the HTTP skeleton (P3.12)"
         },
         {
@@ -1599,7 +1451,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "D25: retention of idempotency receipts (P3.12)"
         },
         {
@@ -1608,7 +1459,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#errors: the spec of a problem code (status, exception, retryable, receipt) a module declares (P3.11, D25)"
         },
         {
@@ -1617,7 +1467,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#errors: retryability of a problem code (P3.11)"
         },
         {
@@ -1626,14 +1475,12 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#errors + D25: whether an idempotency receipt caches a problem code (P3.11)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes",
             "owner": "drive",
-            "surface": "Internal",
             "why": "D39 + architecture#ownership-map: the problem codes of the drive concepts located in core, declared by DriveModule until P4 moves them (P3.11)"
         },
         {
@@ -1642,7 +1489,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#idempotency-concurrency + D25: the idempotency refusals of the kernel a host catches (P3.11)"
         },
         {
@@ -1651,7 +1497,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "note": "registers module slices temporarily inside core (P3 module manifests)",
             "why": "architecture#kernel: Providers ядра — host-registered provider of the kernel"
         },
@@ -1659,14 +1504,12 @@
             "match": "fqcn",
             "value": "Vaulter\\Providers\\AccessRegistrar",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Providers — registrars of the concept belong to its owner: access drivers"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Providers\\DriveSliceRegistrar",
             "owner": "drive",
-            "surface": "Internal",
             "why": "D39 + architecture#ownership-map: the drive part of the core bindings, HTTP limiters and access, declared by DriveModule until P4 moves it (P3.3 split of BindingsRegistrar/HttpRegistrar)"
         },
         {
@@ -1675,7 +1518,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P3",
-            "surface": "Internal",
             "note": "bindings of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
             "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
         },
@@ -1685,7 +1527,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P3",
-            "surface": "Internal",
             "note": "routes of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
             "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
         },
@@ -1695,7 +1536,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P3",
-            "surface": "Internal",
             "note": "schedules of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
             "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
         },
@@ -1705,7 +1545,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Internal",
             "why": "architecture#kernel: События — registrar of listeners and event sinks"
         },
         {
@@ -1714,7 +1553,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
         },
         {
@@ -1723,7 +1561,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
         },
         {
@@ -1732,7 +1569,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
         },
         {
@@ -1741,7 +1577,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
         },
         {
@@ -1750,7 +1585,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
         },
         {
@@ -1759,7 +1593,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
         },
         {
@@ -1768,7 +1601,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
         },
         {
@@ -1777,7 +1609,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Идентичность — host key columns (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -1786,7 +1617,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Идентичность — static migration helper over the IdStrategy: generic id/host-key columns (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -1795,7 +1625,6 @@
             "owner": "core",
             "action": "split",
             "phase": "P4",
-            "surface": "Internal",
             "note": "domain define*/afterCreate/createAll/dropAll/addHeadForeignKey go to the owners of the tables; core keeps only generic id/host-key/counter/connection helpers (see the member rules)",
             "why": "architecture#ownership-map + source-review#code-facts: оставление прежнего giant SchemaBuilder в core запрещено"
         },
@@ -1805,7 +1634,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Tenancy — TenantResolver machinery and withoutTenancy (Tenancy::without)"
         },
         {
@@ -1814,7 +1642,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Tenancy — TenantResolver machinery and withoutTenancy (Tenancy::without)"
         },
         {
@@ -1823,14 +1650,12 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Tenancy — TenantResolver machinery and withoutTenancy (Tenancy::without)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Tenancy\\ShareTenantContext",
             "owner": "drive",
-            "surface": "Internal",
             "note": "open: typed on the Drive model; stays drive unless a neutral scope ref replaces it (P4)",
             "why": "architecture#ownership-map: Tenancy — token-authorized, drive-limited issuer evaluation for share redemption: Sharing -> drive"
         },
@@ -1840,7 +1665,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Тестовый кит — fakes of the kernel SPIs"
         },
         {
@@ -1849,7 +1673,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: Тестовый кит — fakes of the kernel SPIs"
         },
         {
@@ -1858,7 +1681,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "surface": "Api",
             "note": "must not reference package tests or internal domain types (architecture#ownership-map); P3 splits drive-specific parts",
             "why": "architecture#kernel: Тестовый кит — the trait hosts use to test against the kernel (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -1868,7 +1690,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Тестовый кит — stream failure helper"
         },
         {
@@ -1877,35 +1698,30 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel: Тестовый кит — neutral actor/owner fixtures of the kernel kit"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Testing\\Contracts\\ContentScannerContractTests",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map: Testing — snapshots/fixtures belong to the package of the concept: ContentScanner contract tests -> media (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Testing\\FakeContentScanner",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map: Testing — fake of the ContentScanner SPI -> media (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Testing\\Contracts\\FileHandlerContractTests",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Testing — FileHandler contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Testing — PermissionDriver contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -1914,21 +1730,18 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: public test kit for third-party module manifests (P3.16, I8); it exercises the kernel's compiler, so it stays with the kernel"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Testing\\Contracts\\PermissionFixture",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Testing — fixture of the PermissionDriver contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Testing\\NullPermissionDriver",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Testing — a PermissionDriver implementation -> drive"
         },
         {
@@ -1937,7 +1750,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: События — neutral scope of the event envelope"
         },
         {
@@ -1946,21 +1758,18 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: События — neutral subject of the event envelope"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: ValueObjects by domain owner: activity target -> drive (Activity)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\ValueObjects\\Events\\JournalEffect",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: ValueObjects by domain owner: change-journal effect -> drive (Changes)"
         },
         {
@@ -2604,7 +2413,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2613,7 +2421,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2622,7 +2429,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2631,7 +2437,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2640,7 +2445,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2649,7 +2453,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2658,7 +2461,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2667,7 +2469,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2676,7 +2477,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2685,7 +2485,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2694,7 +2493,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2703,7 +2501,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2712,7 +2509,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2721,7 +2517,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2730,7 +2525,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2739,7 +2533,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2748,7 +2541,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2757,7 +2549,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2766,7 +2557,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2775,7 +2565,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2784,7 +2573,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2793,7 +2581,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         },
         {
@@ -2802,7 +2589,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — the core module manifest (P3.2, D22): kernel config, schema, commands, doctor checks"
         },
         {
@@ -2811,7 +2597,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027)"
         },
         {
@@ -2820,7 +2605,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027)"
         },
         {
@@ -2829,7 +2613,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — vaulter.module:<id> route middleware (revision 3: route cache, InvalidModuleGraph)"
         },
         {
@@ -2838,7 +2621,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — catch-all 503 module_graph_invalid while the graph is invalid (revision 3)"
         },
         {
@@ -2847,7 +2629,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — vaulter:modules (P3.2)"
         },
         {
@@ -2856,7 +2637,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — vaulter:module:uninstall dry run (P3.2, D36)"
         },
         {
@@ -2865,7 +2645,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — core.modules.cache doctor check (revision 3: route cache fingerprint)"
         }
     ]

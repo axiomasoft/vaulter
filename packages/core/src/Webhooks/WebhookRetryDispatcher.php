@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -36,6 +37,7 @@ use Vaulter\Support\Identity;
  * after the fan-out committed it): once it has sat unclaimed for
  * webhooks.retry_claim_seconds past its due time, it is claimed like a retry.
  */
+#[Internal]
 final class WebhookRetryDispatcher
 {
     private const int MAX_CLAIM_ROWS = 1000;

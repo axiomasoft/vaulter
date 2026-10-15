@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Http\Problems\ProblemCodeSource;
 
@@ -16,6 +18,7 @@ use Vaulter\Http\Problems\ProblemCodeSource;
  * The kernel applies the declarations of active modules after compilation; the schema of every
  * offered module, active or not, is installed.
  */
+#[Api]
 final class ModuleBuilder
 {
     private bool $sealed = false;
@@ -259,7 +262,8 @@ final class ModuleBuilder
         return $this;
     }
 
-    /** @internal Called by the compiler once every manifest registered. */
+    /** Called by the compiler once every manifest registered. */
+    #[Internal]
     public function seal(): void
     {
         $this->sealed = true;

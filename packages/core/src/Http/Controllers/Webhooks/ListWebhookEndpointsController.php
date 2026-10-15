@@ -7,6 +7,7 @@ namespace Vaulter\Http\Controllers\Webhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Resources\Webhooks\WebhookEndpointResource;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
@@ -17,6 +18,7 @@ use Vaulter\Repositories\Webhooks\WebhookEndpointReadRepository;
  * of this namespace authorizes through the WebhookEndpointPolicy and calls the webhook
  * actions and repositories directly.
  */
+#[Internal]
 final readonly class ListWebhookEndpointsController
 {
     public function __construct(private WebhookEndpointReadRepository $endpoints) {}

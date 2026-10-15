@@ -6,12 +6,14 @@ namespace Vaulter\ValueObjects\Cas;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 
 /**
  * The deduplication scope of a CAS blob: identical bytes share one blob only inside
  * one tenant or one drive. 'off' gives every upload a scope of its own.
  * There is no install-wide scope: dedup never crosses a tenant or a drive.
  */
+#[Api]
 final readonly class BlobScope
 {
     private function __construct(private string $kind, private string $id) {}

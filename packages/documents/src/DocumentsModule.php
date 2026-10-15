@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Contracts\Drive\DriveExtension;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
@@ -48,6 +49,7 @@ use Vaulter\Modules\VaulterModule;
  * and — until collaboration becomes its own module (P5, D32) — the collaboration routes, still mounted by
  * the existing `vaulter-documents.collaboration.enabled` switch inside the routes file.
  */
+#[Internal]
 final class DocumentsModule implements VaulterModule
 {
     public function id(): ModuleId

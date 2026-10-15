@@ -7,18 +7,18 @@ namespace Vaulter\Documents\Queries;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
+use Vaulter\Attributes\Internal;
 
 /**
  * A cursor page whose items were mapped to snapshots: the cursors stay those of the
  * source rows, which the mapped items no longer carry the sort columns for.
- *
- * @internal
  *
  * @template TKey of array-key
  * @template TValue
  *
  * @extends CursorPaginator<TKey, TValue>
  */
+#[Internal]
 final class MappedCursorPaginator extends CursorPaginator
 {
     /**

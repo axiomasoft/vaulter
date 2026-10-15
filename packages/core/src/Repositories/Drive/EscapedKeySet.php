@@ -6,13 +6,13 @@ namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Grammar;
+use Vaulter\Attributes\Internal;
 
 /**
  * An IN predicate with driver-escaped values and no bind parameters.
  * Escaping happens when the query compiles, using that query's grammar/connection.
- *
- * @internal
  */
+#[Internal]
 final readonly class EscapedKeySet implements Expression
 {
     /**

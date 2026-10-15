@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Requests\Webhooks;
 
 use Illuminate\Validation\Rule;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Webhooks\UpdateWebhookEndpointInput;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Http\Requests\VaulterFormRequest;
@@ -15,6 +16,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * touches only what it sends); a present field must still be valid. drive_id moves
  * the drive filter to another drive. signing_secret is never updatable. The controller authorizes the manage ability first.
  */
+#[Internal]
 final class UpdateWebhookEndpointRequest extends VaulterFormRequest
 {
     /**

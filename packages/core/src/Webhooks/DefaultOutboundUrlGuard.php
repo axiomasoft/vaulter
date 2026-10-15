@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
@@ -24,6 +25,7 @@ use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
  * IPv4-mapped IPv6 address. Every resolved address is range-checked on its packed
  * binary form, and IPv4-mapped IPv6 is folded back to IPv4 before the check.
  */
+#[Internal]
 final readonly class DefaultOutboundUrlGuard implements OutboundUrlGuard
 {
     public function __construct(

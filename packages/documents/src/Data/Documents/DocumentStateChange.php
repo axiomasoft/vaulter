@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Documents;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -16,8 +18,10 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
  *
  * @internal
  */
+#[Api]
 final readonly class DocumentStateChange
 {
+    #[Internal]
     public function __construct(
         public StateWriteCause $cause,
         public ?DocumentContent $content,

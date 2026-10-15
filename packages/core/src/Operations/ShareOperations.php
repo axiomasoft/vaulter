@@ -11,6 +11,8 @@ use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Actions\Sharing\RotateShareLinkAction;
 use Vaulter\Actions\Sharing\UpdateShareLinkAction;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Sharing\ShareOperations as Contract;
 use Vaulter\Data\Sharing\CreateShareLinkInput;
@@ -29,8 +31,10 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Modules\ModuleId;
 
+#[Api]
 final readonly class ShareOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private VaulterConfig $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     /** @return list<ShareLinkSnapshot> */
@@ -82,6 +86,7 @@ final readonly class ShareOperations implements Contract
     /** @internal Existing HTTP list pagination.
      * @return CursorPaginator<int, ShareLinkSnapshot>
      */
+    #[Internal]
     public function paginate(NodeSnapshot|string|int $node, int $perPage = 50): CursorPaginator
     {
         $node = $this->authorized($node, mutation: false);

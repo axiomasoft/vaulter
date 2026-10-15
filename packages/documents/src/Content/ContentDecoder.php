@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
@@ -28,6 +29,7 @@ use Vaulter\Documents\Types\UnknownDocumentType;
  *
  * @internal
  */
+#[Api]
 final readonly class ContentDecoder
 {
     public function __construct(

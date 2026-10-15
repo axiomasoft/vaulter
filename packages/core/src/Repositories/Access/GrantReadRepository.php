@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Access\NodeGrant;
@@ -20,6 +21,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * AccessResolver folds into a GrantSet. Expiry is enforced HERE, read-time:
  * an expired row never reaches the resolver.
  */
+#[Internal]
 final class GrantReadRepository
 {
     public function __construct(

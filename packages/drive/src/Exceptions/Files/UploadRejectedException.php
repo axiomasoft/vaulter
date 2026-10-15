@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Files;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
+#[Api]
 final class UploadRejectedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

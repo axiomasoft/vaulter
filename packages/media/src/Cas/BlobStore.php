@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Contracts\Cas\ContentStore;
@@ -21,8 +23,10 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  * row lookup, resurrection and promotion. SQL rollback can leave orphan bytes;
  * the reconciler uses this same lock before collecting them.
  */
+#[Api]
 final readonly class BlobStore implements BlobStoreContract
 {
+    #[Internal]
     public function __construct(
         private ContentStore $content,
         private BlobLock $lock,

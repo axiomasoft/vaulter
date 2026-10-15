@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Drive;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
+#[Api]
 final class InvalidDriveStateException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

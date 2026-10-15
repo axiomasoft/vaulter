@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * The decoded, immutable content of a document: what a codec returns and what the
  * working state and every checkpoint store.
  */
+#[Spi(SpiKind::Implement)]
 interface DocumentContent
 {
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Activity;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Events\EventTypeContract;
 
 /**
@@ -18,6 +19,7 @@ use Vaulter\Events\EventTypeContract;
  *
  * @property array<string, mixed>|null $context
  */
+#[Internal]
 final readonly class RecordActivityCommand
 {
     /**

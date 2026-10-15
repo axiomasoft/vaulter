@@ -8,6 +8,7 @@ use Illuminate\Contracts\Config\Repository;
 use InvalidArgumentException;
 use LogicException;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Changes\ChangeCursor;
 use Vaulter\Changes\ChangeJournal;
 use Vaulter\Configuration\ChangesConfig;
@@ -40,6 +41,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * upsert of a node the reader cannot see is a remove when a move or an access change
  * explains why it disappeared, and is skipped otherwise. A remove carries no snapshot.
  */
+#[Internal]
 final readonly class ChangeOperations
 {
     public function __construct(

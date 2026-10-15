@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Activity;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventSink;
@@ -15,9 +16,8 @@ use Vaulter\Events\SinkWriter;
  * The drive's activity feed as an event sink (`drive.activity`, D38): one row per occurrence of a type whose
  * spec has `activity`, while `vaulter.features.activity` is on. Located in core until P4 moves the activity
  * slice to the drive package.
- *
- * @internal
  */
+#[Internal]
 final readonly class ActivitySink implements EventSink
 {
     public function __construct(

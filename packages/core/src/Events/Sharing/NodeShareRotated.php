@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Events\Sharing;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Sharing\NodeShare;
@@ -18,8 +20,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * A share link's token was replaced. The share carries the new token's hash and
  * prefix; neither reaches the webhook, the prefix is recorded in the activity feed.
  */
+#[Api]
 final readonly class NodeShareRotated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public NodeShare $share,
         ActorRef $actor,

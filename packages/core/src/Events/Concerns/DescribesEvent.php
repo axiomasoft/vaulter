@@ -7,6 +7,8 @@ namespace Vaulter\Events\Concerns;
 use LogicException;
 use ReflectionEnumUnitCase;
 use Vaulter\Attributes\EventSpec;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Support\Concerns\HasLabel;
 
@@ -16,6 +18,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *
  * @phpstan-require-implements EventTypeContract
  */
+#[Spi(SpiKind::Implement)]
 trait DescribesEvent
 {
     use HasLabel;

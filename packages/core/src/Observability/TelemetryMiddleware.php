@@ -6,6 +6,7 @@ namespace Vaulter\Observability;
 
 use Closure;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -19,6 +20,7 @@ use Vaulter\Operations\OperationMiddleware;
  * attributes come from {@see OperationContext::telemetry()}: no personal data,
  * never an idempotency key. Outcome: `ok`, `rejected` (a problem below 500) or `error`.
  */
+#[Internal]
 final readonly class TelemetryMiddleware implements OperationMiddleware
 {
     public const string SPAN = 'vaulter.operation';

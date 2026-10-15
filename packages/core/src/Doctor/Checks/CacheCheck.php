@@ -8,10 +8,12 @@ use Illuminate\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
+#[Internal]
 final readonly class CacheCheck implements DoctorCheck
 {
     public function __construct(private Repository $config, private Factory $cache) {}

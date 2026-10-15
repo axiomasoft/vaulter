@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Policy;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
 
 /** A folder already holds the drive policy's maxFolderChildren nodes; trashed ones count until purged. */
+#[Api]
 final class FolderChildrenLimitExceededException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

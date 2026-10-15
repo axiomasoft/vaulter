@@ -13,6 +13,8 @@ use Vaulter\Access\ValueObjects\AccessExplanation;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
 use Vaulter\Actions\Access\SetNodeInheritanceAction;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\AccessOperations as Contract;
 use Vaulter\Data\Access\GrantInput;
@@ -30,8 +32,10 @@ use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleId;
 
+#[Api]
 final readonly class AccessOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private VaulterConfig $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance, private AccessSnapshotMapper $grantMapper, private NodeSnapshotMapper $nodeMapper, private OperationRunner $runner) {}
 
     /** @return list<GrantSnapshot> */
@@ -103,6 +107,7 @@ final readonly class AccessOperations implements Contract
     /** @internal Existing HTTP list pagination.
      * @return CursorPaginator<int, GrantSnapshot>
      */
+    #[Internal]
     public function paginate(NodeSnapshot|string|int $node, int $perPage = 50): CursorPaginator
     {
         $node = $this->located($node);

@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\DocumentsManager;
@@ -29,6 +30,7 @@ use Vaulter\Support\Identity;
  * writes — the hub storing a new state in between makes that write fail with the same
  * 412.
  */
+#[Internal]
 final readonly class DocumentResponses
 {
     public function __construct(private DocumentsManager $documents) {}

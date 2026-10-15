@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -17,6 +18,7 @@ use Vaulter\Exceptions\VaulterException;
  * The barrier lives on the DELIVERY path (DeliverWebhook), not just registration, so a
  * DNS record that flips to an internal address between the two is still refused.
  */
+#[Internal]
 final class BlockedOutboundUrlException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

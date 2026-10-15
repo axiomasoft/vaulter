@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Cas;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 
 /**
@@ -26,6 +27,7 @@ use Vaulter\Database\VaulterDatabase;
  * The UNIQUE (scope, sha256) constraint is the portable backbone that holds on
  * ALL three drivers even when this advisory lock is a no-op.
  */
+#[Internal]
 final class BlobLock
 {
     public function __construct(private readonly VaulterDatabase $database) {}

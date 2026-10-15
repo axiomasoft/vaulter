@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Files;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\File;
@@ -22,8 +24,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * (possibly deduplicated) blob. A subsequent upload onto the same node
  * fires FileRevisionAdded instead.
  */
+#[Api]
 final readonly class FileUploaded extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public File $file,

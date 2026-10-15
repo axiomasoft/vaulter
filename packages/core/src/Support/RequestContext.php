@@ -6,6 +6,7 @@ namespace Vaulter\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 
 /**
  * The request-scoped audit context the ActivityRecorder stamps onto an activity row
@@ -18,6 +19,7 @@ use Illuminate\Support\Str;
  * gateway-assigned trace id survives) and otherwise mints a uuid, but only when a
  * request actually exists; off-request it stays null.
  */
+#[Internal]
 final readonly class RequestContext
 {
     public function __construct(

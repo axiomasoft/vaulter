@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -62,6 +63,7 @@ use Vaulter\Models\Drive\Drive;
  * @property Carbon|null               $created_at
  * @property Carbon|null               $updated_at
  */
+#[Internal]
 class UploadSession extends Model
 {
     use GuardsWrites;

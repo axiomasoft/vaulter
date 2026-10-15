@@ -6,11 +6,13 @@ namespace Vaulter\Http\Controllers\Access;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\Access\RestrictInheritanceRequest;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
+#[Internal]
 final readonly class RestrictInheritanceController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts) {}

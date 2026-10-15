@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Access;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Label;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Support\Concerns\HasLabel;
@@ -13,6 +14,7 @@ use Vaulter\Support\Concerns\HasLabel;
  * Allow is a super-user bypass of the node ACL, Deny is an administrative block
  * that no grant can lift. Grants themselves are always positive.
  */
+#[Api]
 enum Effect: string
 {
     use HasLabel;

@@ -6,6 +6,7 @@ namespace Vaulter\Models\Content;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -41,6 +42,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property CarbonImmutable|null $last_published_at
  * @property CarbonImmutable      $available_at
  */
+#[Internal]
 class ScanObligation extends Model
 {
     use GuardsWrites;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -14,6 +15,7 @@ use Vaulter\Exceptions\VaulterException;
  * re-homing the whole subtree, so the operation is rejected explicitly rather
  * than corrupting the tree.
  */
+#[Api]
 final class CrossDriveOperationException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

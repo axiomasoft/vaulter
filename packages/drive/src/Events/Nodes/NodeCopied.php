@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
@@ -20,8 +22,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * SAME blob through a new edge (dedup keeps one physical object); for folders the
  * whole subtree is deep-copied. $copy is the newly created destination root.
  */
+#[Api]
 final readonly class NodeCopied extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $source,
         public Node $copy,

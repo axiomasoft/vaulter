@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
+use Vaulter\Attributes\Api;
+
 /**
  * Safely stringifies model keys / auth identifiers (which Eloquent types as mixed).
  */
+#[Api]
 final class Identity
 {
     public static function stringify(mixed $value): string

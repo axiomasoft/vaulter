@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Content;
 
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DownloadGuard;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
@@ -17,9 +18,8 @@ use Vaulter\Sharing\ShareContext;
 /**
  * Runs every active {@see DownloadGuard} on each delivery path, in the order of the slot. The first guard
  * that throws denies; a guard that throws anything but a problem is a denial too, never a pass.
- *
- * @internal
  */
+#[Internal]
 final readonly class DownloadGuards
 {
     public function __construct(private Kernel $kernel) {}

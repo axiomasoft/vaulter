@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Snapshots;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Drive\ScanStatus;
 
 /** The current revision of a file node. */
+#[Api]
 final readonly class FileHeadSnapshot
 {
-    /** @internal */
+    #[Internal]
     public function __construct(
         public string $fileId,
         public string $revisionId,

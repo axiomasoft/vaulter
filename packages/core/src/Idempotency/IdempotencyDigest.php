@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Idempotency;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Operations\OperationContext;
 use Vaulter\ValueObjects\Access\ActorRef;
 
@@ -14,9 +15,8 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * tuples share an encoding and a null tenant or system actor stays a distinct value. The request hash is
  * SHA-256 over the canonical JSON of the fingerprint (keys sorted recursively, unescaped slashes and unicode).
  * Both are stored as lowercase hex (64 characters).
- *
- * @internal
  */
+#[Internal]
 final class IdempotencyDigest
 {
     /**

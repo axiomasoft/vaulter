@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Access;
 
+use Vaulter\Attributes\Api;
+
 /**
  * How access()->restrictInheritance() closes a node to grants from above.
  *
@@ -13,6 +15,7 @@ namespace Vaulter\Enums\Access;
  *
  * @closed
  */
+#[Api]
 enum InheritanceRestriction: string
 {
     case Empty = 'empty';

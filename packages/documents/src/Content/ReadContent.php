@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Contracts\DocumentContent;
 
 /**
@@ -14,6 +15,7 @@ use Vaulter\Documents\Contracts\DocumentContent;
  *
  * @internal
  */
+#[Api]
 final readonly class ReadContent
 {
     public function __construct(

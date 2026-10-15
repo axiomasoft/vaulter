@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Controllers\Revisions;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\UpdateDocumentRevisionRequest;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
@@ -11,6 +12,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Keep a checkpoint out of pruning, or hand it back to the retention policy (Edit). */
+#[Internal]
 final readonly class UpdateDocumentRevisionController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}

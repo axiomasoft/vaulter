@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Sharing;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Sharing\NodeShare;
 
 /**
@@ -15,8 +17,10 @@ use Vaulter\Models\Sharing\NodeShare;
  *
  * @internal The public result is {@see \Vaulter\Data\Snapshots\MintedShareLink}.
  */
+#[Api]
 final readonly class MintedShareLink
 {
+    #[Internal]
     public function __construct(
         public NodeShare $share,
         public string $token,

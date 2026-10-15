@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Access\ValueObjects;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Api;
 
 /**
  * A grant subject — the (type, id) pair a v_node_grants row is addressed to
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Final readonly VO — value equality, no behaviour beyond identity helpers.
  */
+#[Api]
 final readonly class Subject
 {
     public function __construct(

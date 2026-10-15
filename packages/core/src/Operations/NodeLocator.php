@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Snapshots\NodeSnapshot;
@@ -13,8 +15,10 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tenancy\TenancyBoundary;
 
+#[Api]
 final readonly class NodeLocator
 {
+    #[Internal]
     public function __construct(
         private VaulterConfig $config,
         private VaulterDatabase $database,
@@ -42,11 +46,12 @@ final readonly class NodeLocator
     }
 
     /**
-     * @internal Rebind untrusted listing candidates (models, snapshots or ids) in one scoped query.
+     * Rebind untrusted listing candidates (models, snapshots or ids) in one scoped query.
      *
      * @param  iterable<Node|NodeSnapshot|int|string> $nodes
      * @return list<Node>
      */
+    #[Internal]
     public function findMany(DriveContext $context, iterable $nodes): array
     {
         $keys = [];

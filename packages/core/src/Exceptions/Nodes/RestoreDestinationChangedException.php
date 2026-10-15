@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
+#[Api]
 final class RestoreDestinationChangedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Access;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Access\RevokeGrantInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantRevoked;
@@ -13,6 +14,7 @@ use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 
 /** @internal Authorization belongs to AccessOperations; membership is also enforced here. */
+#[Internal]
 final readonly class RevokeNodeAccessAction
 {
     public function __construct(private VaulterDatabase $database, private NodeLocator $locator, private EventRecorder $recorder) {}

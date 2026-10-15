@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Http\Controllers\Collaboration;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Collaboration\CollaborationHub;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 
@@ -15,6 +16,7 @@ use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
  * refuses the socket cleanly. A room of a past generation answers 409
  * collaboration_epoch_mismatch and the client asks for a new session.
  */
+#[Internal]
 final readonly class HubAuthenticateController
 {
     public function __construct(private CollaborationHub $hub) {}

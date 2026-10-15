@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Nodes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
@@ -30,6 +31,7 @@ use Vaulter\Support\TreeGuard;
  *
  * Operations authorize before this command; the destination is checked again under lock.
  */
+#[Internal]
 final readonly class CreateFolderAction
 {
     public function __construct(

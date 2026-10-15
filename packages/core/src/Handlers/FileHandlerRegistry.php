@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Handlers;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry as FileHandlerRegistryContract;
@@ -39,6 +40,7 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
  * the routing inputs only — distinct descriptors that route identically share a key
  * deterministically, never collide across capabilities.
  */
+#[Internal]
 final class FileHandlerRegistry implements FileHandlerRegistryContract
 {
     /**

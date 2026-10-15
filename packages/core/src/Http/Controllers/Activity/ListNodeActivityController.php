@@ -6,6 +6,7 @@ namespace Vaulter\Http\Controllers\Activity;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Support\LoadTier;
 
 /** A node's activity the caller may see (View on the node), newest first. */
+#[Internal]
 final readonly class ListNodeActivityController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private MetricsRecorder $metrics, private VaulterConfig $config) {}

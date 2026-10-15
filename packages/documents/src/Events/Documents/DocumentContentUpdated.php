@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Documents;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Events\DomainEvent;
@@ -25,8 +27,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * Every save would flood the activity feed, so it is not audited; webhooks receive
  * the saves that took a checkpoint.
  */
+#[Api]
 final readonly class DocumentContentUpdated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public DocumentRevision $version,

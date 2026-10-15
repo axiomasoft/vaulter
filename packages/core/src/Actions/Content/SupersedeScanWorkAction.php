@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
@@ -15,8 +16,9 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
 /**
  * Settles work whose spec is no longer in the drive policy, so a stale worker can never record a result.
  *
- * @internal Locks only the work row.
+ * Locks only the work row.
  */
+#[Internal]
 final readonly class SupersedeScanWorkAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanPolicyResolver $policies, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}

@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Providers;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Enums\Cas\ScanMode;
@@ -16,6 +17,7 @@ use Vaulter\Providers\SchedulingRegistrar as CoreSchedulingRegistrar;
  * Puts the drive maintenance commands on the host scheduler, with the change-journal prune whose command
  * and key (`vaulter.schedule.changes_prune`) are still located in core (D39).
  */
+#[Internal]
 final class SchedulingRegistrar implements ModuleSchedule
 {
     public const array KEYS = [

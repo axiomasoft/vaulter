@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Handlers;
 
+use Vaulter\Attributes\Api;
+
 /**
  * How the client should show a node: which file handler serves it (null for a
  * document, whose presentation comes from its document type), the document type key
  * and whether that type is installed, the capabilities, and the viewer to mount.
  * Only keys and scalars, so it can be serialized as is.
  */
+#[Api]
 final readonly class NodePresentation
 {
     public function __construct(

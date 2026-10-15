@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
 use Vaulter\Support\Identity;
@@ -18,6 +19,7 @@ use Vaulter\Support\Identity;
  * ({@see PurgeDriveStepAction}). The job queues itself again while children remain, so
  * one run never holds a worker for long; re-running a finished purge does nothing.
  */
+#[Internal]
 final class PurgeDriveJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
     use Dispatchable;

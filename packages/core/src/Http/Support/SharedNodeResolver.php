@@ -6,6 +6,7 @@ namespace Vaulter\Http\Support;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\CursorPaginator;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Sharing\ShareNotFoundException;
 use Vaulter\Http\Resources\Sharing\SharedNodeResource;
@@ -26,6 +27,7 @@ use Vaulter\Tenancy\ShareTenantContext;
  * finding one compares opaque ids over that level.
  * Anything else is the same opaque share_not_found as a bad token.
  */
+#[Internal]
 final readonly class SharedNodeResolver
 {
     public function __construct(

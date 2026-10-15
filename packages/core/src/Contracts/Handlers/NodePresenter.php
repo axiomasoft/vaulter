@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Handlers;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Handlers\NodePresentation;
@@ -24,6 +26,7 @@ use Vaulter\ValueObjects\Handlers\NodePresentation;
  * contributes richer file formats by tagging handlers into the same registry, and
  * presents a whole node kind through a tagged KindPresenter — it never rebinds this seam.
  */
+#[Spi(SpiKind::Implement)]
 interface NodePresenter
 {
     public function present(Node|NodeSnapshot $node): NodePresentation;

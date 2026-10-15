@@ -26,7 +26,7 @@ use Throwable;
  * type-map, the identities and the scans share.
  *
  * @phpstan-type Method array{name: string, visibility: string, static: bool}
- * @phpstan-type Declaration array{fqcn: string, kind: string, file: string, package: ?string, extends: list<string>, implements: list<string>, traits: list<string>, attributes: list<string>, methods: list<Method>}
+ * @phpstan-type Declaration array{fqcn: string, kind: string, file: string, package: ?string, extends: list<string>, implements: list<string>, traits: list<string>, attributes: list<string>, spi_kind: ?string, methods: list<Method>}
  * @phpstan-type Reference array{file: string, symbol: string, kind: string, target: string}
  */
 final class SourceIndex
@@ -348,9 +348,13 @@ final class IndexVisitor extends NodeVisitorAbstract
             }
         }
         $attributes = [];
+        $spiKind = null;
         foreach ($node->attrGroups as $group) {
             foreach ($group->attrs as $attribute) {
                 $attributes[] = $attribute->name->toString();
+                if ($attribute->name->toString() === 'Vaulter\Attributes\Spi') {
+                    $spiKind = self::spiKind($attribute);
+                }
             }
         }
         $methods = [];
@@ -382,8 +386,25 @@ final class IndexVisitor extends NodeVisitorAbstract
             'implements' => $implements,
             'traits' => $traits,
             'attributes' => $attributes,
+            'spi_kind' => $spiKind,
             'methods' => $methods,
         ];
+    }
+
+    /** The case named by the `kind` argument of `#[Spi(SpiKind::Implement)]`; null when it is not a constant of SpiKind. */
+    private static function spiKind(Node\Attribute $attribute): ?string
+    {
+        foreach ($attribute->args as $i => $argument) {
+            if (($argument->name === null && $i === 0) || $argument->name?->toString() === 'kind') {
+                $value = $argument->value;
+
+                return $value instanceof Expr\ClassConstFetch && $value->name instanceof Node\Identifier && $value->class instanceof Name && $value->class->toString() === 'Vaulter\\Attributes\\SpiKind'
+                    ? $value->name->toString()
+                    : null;
+            }
+        }
+
+        return null;
     }
 
     /** @param  list<Node\UseItem>  $items */

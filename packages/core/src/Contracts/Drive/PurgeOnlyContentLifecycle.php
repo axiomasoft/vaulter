@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Drive;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * Marks a {@see NodeContentLifecycle} that can only purge: its copy() is a refusal,
  * not an implementation. The registry reads the marker to reject a copy of that kind
@@ -12,4 +15,5 @@ namespace Vaulter\Contracts\Drive;
  *
  * @internal
  */
+#[Spi(SpiKind::Implement)]
 interface PurgeOnlyContentLifecycle {}

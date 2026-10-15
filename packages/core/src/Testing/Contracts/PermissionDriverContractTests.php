@@ -11,6 +11,7 @@ use PHPUnit\Framework\Assert;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
@@ -22,6 +23,7 @@ use Vaulter\Profiles\ProfileRegistry;
  * inheritance restricted with no grant of its own. No override or role permission
  * should be enabled on that fixture.
  */
+#[Api]
 final class PermissionDriverContractTests
 {
     public function assertPermissionDriverContract(AccessResolver $resolver, Authorizable $actor, Node $parent, Node $child): void

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Revisions;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Events\DomainEvent;
@@ -22,8 +24,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * $epoch are the document's content validators at that moment; a named snapshot moves
  * neither.
  */
+#[Api]
 final readonly class DocumentRevisionCreated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public DocumentRevision $version,

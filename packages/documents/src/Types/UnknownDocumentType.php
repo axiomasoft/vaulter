@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
@@ -19,6 +20,7 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
  *
  * @internal
  */
+#[Api]
 final readonly class UnknownDocumentType implements DocumentType
 {
     public function __construct(private string $key) {}

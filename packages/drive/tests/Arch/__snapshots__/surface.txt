@@ -1,0 +1,457 @@
+# Surface manifest of the package `drive` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
+# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
+
+Vaulter\Drive\Configuration\DriveConfig api since 1.0 final readonly class implements Vaulter\Contracts\Content\ScanWorkSettings
+  public function allowedMimeTypes(): array
+  public function blockedExtensions(): array
+  public function chunkSize(): int
+  public function defaultQuota(): ?int
+  public function leaseSeconds(): int
+  public function maxActiveSessionsPerActor(): int
+  public function maxAttempts(): int
+  public function maxChunkSize(): int
+  public function maxFileSize(): int
+  public function metadataAllowedKeys(): array
+  public function metadataMaxValueLength(): int
+  public function model(string $key): string
+  public function resumableEnabled(): bool
+  public function scanQueue(): string
+  public function scanWork(string $key): int
+  public function scannerTimeoutSeconds(): int
+  public function sessionTtlHours(): int
+  public function trashRetentionDays(): int
+  public function validateScanWork(bool $requireBroker = false): void
+
+Vaulter\Drive\Contracts\Uploads\UploadInspector spi:implement since 1.0 interface
+  public function inspect(Vaulter\Drive\Data\Files\UploadFacts $facts, Vaulter\Profiles\UploadPolicy $policy, Vaulter\Operations\DriveContext $context): void
+  public function key(): string
+  public function priority(): int
+
+Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler spi:implement since 1.0 interface
+  public function abort(Vaulter\Drive\Models\Uploads\UploadSession $session): void
+  public function initialise(Vaulter\Drive\Models\Uploads\UploadSession $session): array
+  public function isComplete(Vaulter\Drive\Models\Uploads\UploadSession $session): bool
+  public function protocol(): Vaulter\Drive\Enums\Uploads\UploadProtocol
+
+Vaulter\Drive\Data\Files\IngestFileInput api since 1.0 final readonly class
+  public ?DateTimeInterface $clientModifiedAt
+  public ?string $declaredMimeType
+  public ?int $expectedSequence
+  public ?Vaulter\Models\Drive\Node $into
+  public ?string $mimeType
+  public ?string $name
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+  public string $originalName
+  public ?Vaulter\Drive\Uploads\PreparedUpload $prepared
+  public Vaulter\Models\Drive\Drive $storage
+  public mixed $stream
+  public ?Vaulter\Models\Drive\Node $targetNode
+  public function isNewVersion(): bool
+  public function resolvedName(): string
+
+Vaulter\Drive\Data\Files\IngestReceipt api since 1.0 final readonly class
+  public Vaulter\Models\Drive\Node $node
+  public Vaulter\Models\Drive\FileRevision $revision
+
+Vaulter\Drive\Data\Files\RestoreFileRevisionInput api since 1.0 final readonly class
+  public ?int $expectedSequence
+  public Vaulter\Models\Drive\Node $node
+  public Vaulter\Models\Drive\FileRevision $revision
+
+Vaulter\Drive\Data\Files\UploadFacts api since 1.0 final readonly class
+  public ?string $declaredMimeType
+  public ?string $detectedMimeType
+  public string $extension
+  public string $name
+  public string $sha256
+  public int $size
+  public string $stagedPath
+  public function __construct(string $name, string $extension, int $size, string $sha256, ?string $detectedMimeType, ?string $declaredMimeType, string $stagedPath)
+
+Vaulter\Drive\Data\Nodes\CopyNodeInput api since 1.0 final readonly class
+  public ?array $authorizedNodeIds
+  public ?Vaulter\Models\Drive\Node $into
+  public ?string $name
+  public Vaulter\Models\Drive\Node $node
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+
+Vaulter\Drive\Data\Nodes\CreateFolderInput api since 1.0 final readonly class
+  public string $name
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+  public ?Vaulter\Models\Drive\Node $parent
+  public Vaulter\Models\Drive\Drive $storage
+
+Vaulter\Drive\Data\Nodes\MoveNodeInput api since 1.0 final readonly class
+  public ?int $expectedSequence
+  public ?Vaulter\Models\Drive\Node $into
+  public Vaulter\Models\Drive\Node $node
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+
+Vaulter\Drive\Data\Nodes\RenameNodeInput api since 1.0 final readonly class
+  public ?int $expectedSequence
+  public string $name
+  public Vaulter\Models\Drive\Node $node
+
+Vaulter\Drive\Data\Nodes\SetNodePropertiesInput api since 1.0 final readonly class
+  public ?int $expectedSequence
+  public string $namespace
+  public Vaulter\Models\Drive\Node $node
+  public array $set
+  public array $unset
+
+Vaulter\Drive\Data\Trash\PurgeNodeInput api since 1.0 final readonly class
+  public bool $bypassTrashRequirement
+  public ?int $expectedSequence
+  public Vaulter\Models\Drive\Node $node
+
+Vaulter\Drive\Data\Trash\RestoreNodeInput api since 1.0 final readonly class
+  public Vaulter\Models\Drive\Node $destination
+  public ?int $expectedSequence
+  public Vaulter\Models\Drive\Node $node
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+
+Vaulter\Drive\Data\Trash\TrashNodeInput api since 1.0 final readonly class
+  public ?int $expectedSequence
+  public Vaulter\Models\Drive\Node $node
+
+Vaulter\Drive\Data\Uploads\InitiateUploadInput api since 1.0 final readonly class
+  public ?int $expectedSequence
+  public ?string $expectedSha256
+  public array $metadata
+  public ?string $mimeType
+  public Vaulter\Drive\Enums\Uploads\UploadProtocol $protocol
+  public ?string $targetName
+  public Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node|int|null|string $targetNode
+  public Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node|int|null|string $targetParent
+  public ?int $totalSizeBytes
+  public function isNewVersion(): bool
+
+Vaulter\Drive\DriveHandle api since 1.0 final readonly class implements Vaulter\Contracts\Drive\DriveHandle
+  public function access(): Vaulter\Contracts\Access\AccessOperations
+  public function actingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): static
+  public function activity(): Vaulter\Contracts\Activity\ActivityOperations
+  public function actor(): Vaulter\ValueObjects\Access\Actor
+  public function archive(): Vaulter\Data\Snapshots\DriveSnapshot
+  public function asSystem(string $reason): static
+  public function changes(): Vaulter\Operations\ChangeOperations
+  public function delete(): Vaulter\Data\Snapshots\DriveSnapshot
+  public function extension(string $operations): object
+  public function files(): Vaulter\Contracts\Drive\FileOperations
+  public function folders(): Vaulter\Contracts\Drive\FolderOperations
+  public function nodes(): Vaulter\Contracts\Drive\NodeOperations
+  public function profile(): Vaulter\Profiles\Profile
+  public function quota(): Vaulter\Data\Snapshots\QuotaSnapshot
+  public function root(): Vaulter\Data\Snapshots\NodeSnapshot
+  public function shares(): Vaulter\Contracts\Sharing\ShareOperations
+  public function snapshot(): Vaulter\Data\Snapshots\DriveSnapshot
+  public function trash(): Vaulter\Contracts\Drive\TrashOperations
+  public function unarchive(): Vaulter\Data\Snapshots\DriveSnapshot
+  public function uploads(): Vaulter\Drive\Operations\UploadOperations
+  public function withCorrelationId(string $correlationId): static
+  public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
+
+Vaulter\Drive\Enums\Uploads\UploadProtocol api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Direct = 'direct'
+  case S3Multipart = 's3-multipart'
+  case Tus = 'tus'
+  public static function values(): array
+
+Vaulter\Drive\Enums\Uploads\UploadStatus api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Aborted = 'aborted'
+  case Assembled = 'assembled'
+  case Committed = 'committed'
+  case Expired = 'expired'
+  case Initiated = 'initiated'
+  case Uploading = 'uploading'
+  public function allowedTransitions(): array
+  public function canTransitionTo(self $target): bool
+  public function isOpen(): bool
+  public static function values(): array
+
+Vaulter\Drive\Events\Drives\DriveArchived api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Drive $drive
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Drives\DriveCreated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Node $root
+  public Vaulter\Models\Drive\Drive $storage
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Drives\DriveDeleted api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public string $driveId
+  public string $ownerId
+  public string $ownerType
+  public string $profile
+  public int|null|string $tenantId
+  public function __construct(string $driveId, string $ownerType, string $ownerId, int|null|string $tenantId, string $profile, Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?Carbon\CarbonImmutable $occurredAt = null)
+  public function activityContext(): array
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Drives\DriveUnarchived api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Drive $drive
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Files\FileRevisionAdded api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\File $file
+  public Vaulter\Models\Drive\Node $node
+  public Vaulter\Models\Drive\FileRevision $version
+  public int $versionNo
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Files\FileRevisionDeleted api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\File $file
+  public Vaulter\Models\Drive\Node $node
+  public int|string $revisionId
+  public int $revisionNo
+  public int $sizeBytes
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Files\FileUploaded api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\File $file
+  public Vaulter\Models\Drive\Node $node
+  public Vaulter\Models\Drive\FileRevision $version
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Nodes\FolderCreated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Node $node
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Nodes\NodeCopied api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Node $copy
+  public Vaulter\Models\Drive\Node $source
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Nodes\NodeMoved api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public int|null|string $fromParentId
+  public Vaulter\Models\Drive\Node $node
+  public int|null|string $toParentId
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Nodes\NodePurged api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public const int LISTED_NODE_IDS = 1000
+  public int $freedBytes
+  public array $nodeIds
+  public string $profile
+  public int|string $storageId
+  public int|null|string $tenantId
+  public function __construct(int|string $storageId, array $nodeIds, int $freedBytes, int|null|string $tenantId, string $profile, Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?Carbon\CarbonImmutable $occurredAt = null)
+  public function activityContext(): array
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Nodes\NodeRenamed api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public string $fromName
+  public Vaulter\Models\Drive\Node $node
+  public string $toName
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Nodes\NodeRestored api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Node $node
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Nodes\NodeTrashed api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Node $node
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Nodes\NodeUpdated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Node $node
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Uploads\UploadAborted api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Drive\Models\Uploads\UploadSession $session
+  public function activityContext(): array
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Uploads\UploadExpired api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Drive\Models\Uploads\UploadSession $session
+  public function activityContext(): array
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Events\Uploads\UploadInitiated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Drive\Models\Uploads\UploadSession $session
+  public function activityContext(): array
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Drive\Exceptions\Files\UploadRejectedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly string $reason
+  public function __construct(string $reason)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function between(int|string $fromStorageId, int|string $toStorageId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Drive\Exceptions\Nodes\NodeCycleException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forMove(int|string $nodeId, int|string $intoId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Drive\Exceptions\Quota\QuotaExceededException api since 1.0 final class extends Vaulter\Exceptions\Drive\QuotaExceededException
+  public static function forStorage(int|string $storageId, int $quotaBytes, int $usedBytes, int $incomingBytes): self
+
+Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct(int $serverOffset)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemHeaders(): array
+
+Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forSession(string $uploadId, int $offset): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Drive\Exceptions\Uploads\UploadConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forClosedSession(string $uploadId): self
+  public static function forSession(string $uploadId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forSession(string $uploadId, string $declaredMime): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Drive\Operations\FileOperations api since 1.0 final readonly class implements Vaulter\Contracts\Drive\FileOperations
+  public function addRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Drive\UploadSource $source, ?Vaulter\Data\Drive\RevisionOptions $options = null): Vaulter\Data\Snapshots\FileRevisionSnapshot
+  public function deleteRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision): void
+  public function read(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|null|string $revision = null): Vaulter\Data\Drive\FileStream
+  public function restoreRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, ?int $expectedSequence = null): Vaulter\Data\Snapshots\FileRevisionSnapshot
+  public function revisions(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function setRevisionRetention(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, bool $keepForever): Vaulter\Data\Snapshots\FileRevisionSnapshot
+  public function upload(Vaulter\Data\Drive\UploadSource $source, ?Vaulter\Data\Drive\UploadOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+
+Vaulter\Drive\Operations\FolderOperations api since 1.0 final readonly class implements Vaulter\Contracts\Drive\FolderOperations
+  public function create(string $name, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?Vaulter\Data\Drive\CreateFolderOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+
+Vaulter\Drive\Operations\NodeOperations api since 1.0 final readonly class implements Vaulter\Contracts\Drive\NodeOperations
+  public function abilities(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Access\ValueObjects\NodeAbilities
+  public function abilitiesMany(array $nodes): array
+  public function children(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $folder = null, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function copy(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, ?Vaulter\Data\Drive\CopyOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function find(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
+  public function move(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination, ?Vaulter\Data\Drive\MoveOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function properties(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  public function rename(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, string $name, ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function search(string $term, ?Vaulter\Data\Drive\SearchOptions $options = null): Vaulter\Data\Page
+  public function setProperties(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function star(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
+  public function starred(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function trash(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function unstar(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
+
+Vaulter\Drive\Operations\TrashOperations api since 1.0 final readonly class implements Vaulter\Contracts\Drive\TrashOperations
+  public function empty(): int
+  public function list(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function purge(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): void
+  public function restore(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Data\Drive\RestoreOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+
+Vaulter\Drive\Operations\UploadOperations api since 1.0 final readonly class
+  public function abort(Vaulter\Drive\Models\Uploads\UploadSession|int|string $session): void
+  public function complete(Vaulter\Drive\Models\Uploads\UploadSession|int|string $session): Vaulter\Models\Drive\Node
+  public function initiate(Vaulter\Drive\Data\Uploads\InitiateUploadInput $input): Vaulter\Drive\Models\Uploads\UploadSession
+
+Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests api since 1.0 final class
+  public function assertScanLifecycleContract(callable $configureHost, Illuminate\Contracts\Auth\Authenticatable $actor): void
+
+Vaulter\Drive\VaulterDriveServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
+  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
+  public function packageRegistered(): void

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Operations;
 
+use Vaulter\Attributes\Api;
+
 /** Public operation categories; private scanner authority is a separate service. */
+#[Api]
 enum OperationKind: string
 {
     case Metadata = 'metadata';

@@ -7,6 +7,7 @@ namespace Vaulter\Repositories\Webhooks;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
@@ -20,6 +21,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  * transaction and NEVER touches a 'pending'/'failed' row: those are in-flight /
  * retryable and the relay's due-retry sweep still owns them.
  */
+#[Internal]
 final readonly class WebhookDeliveryStoreRepository
 {
     public function __construct(

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Contracts;
 
+use Vaulter\Attributes\Api;
+
+#[Api]
 interface ProblemException
 {
     public function problemCode(): string;

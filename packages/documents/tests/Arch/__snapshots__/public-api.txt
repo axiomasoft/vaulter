@@ -42,7 +42,6 @@ Vaulter\Documents\Contracts\UpgradesSchema
   upgrade(array $content, int $fromVersion): array
 
 Vaulter\Documents\Configuration\DocumentsConfig
-  __construct(\Illuminate\Contracts\Config\Repository $config)
   assertDistinctHubSecrets(): void
   channelPrefix(): string
   checkpointIntervalSeconds(): int
@@ -69,7 +68,6 @@ Vaulter\Documents\Configuration\DocumentsConfig
   types(): array
 
 Vaulter\Documents\Events\Comments\CommentAdded
-  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
@@ -89,7 +87,6 @@ Vaulter\Documents\Events\Comments\CommentAdded
   readonly string $eventId
 
 Vaulter\Documents\Events\Comments\CommentDeleted
-  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
@@ -109,7 +106,6 @@ Vaulter\Documents\Events\Comments\CommentDeleted
   readonly string $eventId
 
 Vaulter\Documents\Events\Comments\CommentResolved
-  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
@@ -129,7 +125,6 @@ Vaulter\Documents\Events\Comments\CommentResolved
   readonly string $eventId
 
 Vaulter\Documents\Events\Documents\DocumentContentUpdated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, bool $created, int $stateVersion, int $epoch, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -150,7 +145,6 @@ Vaulter\Documents\Events\Documents\DocumentContentUpdated
   readonly string $eventId
 
 Vaulter\Documents\Events\Documents\DocumentCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int $stateVersion, int $epoch, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -170,7 +164,6 @@ Vaulter\Documents\Events\Documents\DocumentCreated
   readonly string $eventId
 
 Vaulter\Documents\Events\Revisions\DocumentRestored
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, \Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom, int $epoch, int $stateVersion, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -191,7 +184,6 @@ Vaulter\Documents\Events\Revisions\DocumentRestored
   readonly string $eventId
 
 Vaulter\Documents\Events\Revisions\DocumentRevisionCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int $stateVersion, int $epoch, bool $restored, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -225,7 +217,6 @@ Vaulter\Documents\DocumentsManager
   types(): \Vaulter\Documents\Types\DocumentTypeRegistry
 
 Vaulter\Documents\Operations\DocumentOperations
-  __construct(\Vaulter\Operations\DriveContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Documents\Configuration\DocumentsConfig $config, \Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Content\ContentDecoder $decoder, \Vaulter\Documents\Actions\Documents\CreateDocumentAction $create, \Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction $update, \Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction $snapshot, \Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction $restore, \Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction $retention, \Vaulter\Documents\Actions\Export\ExportDocumentAction $export, \Vaulter\Documents\Collaboration\CollaborationSessionService $sessions, \Vaulter\Documents\Queries\DocumentQuery $query, \Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper $mapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodes, \Vaulter\Operations\OperationRunner $runner)
   collaborationSession(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   content(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   create(string $name, ?string $type = null, ?array $content = null, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
@@ -237,7 +228,6 @@ Vaulter\Documents\Operations\DocumentOperations
   update(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, array $content, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
 
 Vaulter\Documents\Operations\CommentOperations
-  __construct(\Vaulter\Operations\DriveContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Documents\Queries\DocumentQuery $query, \Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper $mapper, \Vaulter\Documents\Actions\Comments\AddCommentAction $add, \Vaulter\Documents\Actions\Comments\ResolveCommentAction $resolve, \Vaulter\Documents\Actions\Comments\DeleteCommentAction $delete, \Vaulter\Operations\OperationRunner $runner)
   add(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Comments\AddCommentInput $input): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
   delete(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment): void
   list(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
@@ -327,7 +317,6 @@ Vaulter\Documents\ValueObjects\DocumentExport
   readonly string $mimeType
 
 Vaulter\Documents\Types\DocumentTypeRegistry
-  __construct(\Illuminate\Contracts\Container\Container $container)
   all(): array
   find(string $key): ?\Vaulter\Documents\Contracts\DocumentType
   get(string $key): \Vaulter\Documents\Contracts\DocumentType
@@ -336,7 +325,6 @@ Vaulter\Documents\Types\DocumentTypeRegistry
   replace(string $key, \Vaulter\Documents\Contracts\DocumentType|string $type): void
 
 Vaulter\Documents\Export\DocumentExporterRegistry
-  __construct(\Illuminate\Contracts\Container\Container $container)
   all(): array
   for(string $typeKey, string $format): \Vaulter\Documents\Contracts\DocumentExporter
   formatsFor(string $typeKey): array

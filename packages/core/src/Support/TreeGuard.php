@@ -6,6 +6,7 @@ namespace Vaulter\Support;
 
 use Illuminate\Support\Collection;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -22,8 +23,9 @@ use Vaulter\Repositories\Drive\NodeStoreRepository;
  * picks the exception for a destination in another drive, since Drive and Documents
  * report it under different public codes.
  *
- * @internal shared by the Drive and Documents Actions; not a public extension point
+ * shared by the Drive and Documents Actions; not a public extension point
  */
+#[Internal]
 final readonly class TreeGuard
 {
     public function __construct(

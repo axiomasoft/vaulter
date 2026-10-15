@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Enums\Uploads;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;
 
@@ -23,6 +24,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *                  whose bytes are staged and committed in a single step (the
  *                  small-file fast path; reserved).
  */
+#[Api]
 enum UploadProtocol: string
 {
     use HasLabel;

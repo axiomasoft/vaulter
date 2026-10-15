@@ -6,12 +6,14 @@ namespace Vaulter\Contracts\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\ValueObjects\AccessExplanation;
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Snapshots\GrantSnapshot;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\InheritanceRestriction;
 
+#[Api]
 interface AccessOperations
 {
     /** @return list<GrantSnapshot> */

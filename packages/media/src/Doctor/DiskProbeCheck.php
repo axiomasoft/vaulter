@@ -6,6 +6,7 @@ namespace Vaulter\Media\Doctor;
 
 use Illuminate\Support\Str;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
@@ -17,6 +18,7 @@ use Vaulter\Profiles\ProfileRegistry;
  * The one check that writes: it puts a test object on each disk, reads it back and deletes it,
  * and only when the owner asked for it (--probe-storage, or the production profile).
  */
+#[Internal]
 final readonly class DiskProbeCheck implements DoctorCheck
 {
     public function __construct(private MediaConfig $config, private ProfileRegistry $profiles, private StorageDriver $storage) {}

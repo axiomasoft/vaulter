@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 
 /**
@@ -18,6 +19,7 @@ use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
  *   - readOnly      — false only with Edit on content this installation can save back.
  *   - token         — a signed JWT carrying the same claims; the hub re-checks them.
  */
+#[Api]
 final readonly class CollaborationSession
 {
     public function __construct(

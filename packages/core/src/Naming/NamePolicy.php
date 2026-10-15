@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Naming;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 
 /**
@@ -12,6 +14,7 @@ use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
  * rules ships as a new key. Names already stored are never revalidated; only
  * create, rename, copy-as, upload and a conflict-renaming restore pass it.
  */
+#[Spi(SpiKind::Implement)]
 interface NamePolicy
 {
     /** The stable key a profile selects the policy by, e.g. "portable-v1". */

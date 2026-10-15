@@ -19,6 +19,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
@@ -70,6 +71,7 @@ use Vaulter\Testing\InteractsWithVaulter;
  * configures, an asynchronous queue connection for the command, and an actor that may
  * create and read in a drive (the suite grants it the owner role on the drives it makes).
  */
+#[Api]
 final class ScanLifecycleContractTests
 {
     private FakeContentScanner $scanner;

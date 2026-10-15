@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Handlers\Builtin;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
@@ -16,6 +17,7 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
  * resolution NEVER returns null. Archives, unknown binaries and anything unhandled
  * land on this handler.
  */
+#[Internal]
 final class DownloadOnlyHandler implements FileHandler
 {
     /**

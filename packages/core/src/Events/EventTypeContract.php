@@ -6,6 +6,8 @@ namespace Vaulter\Events;
 
 use BackedEnum;
 use Vaulter\Attributes\EventSpec;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * An event type a module contributes to the {@see EventCatalog} (D38): a backed string enum of the
@@ -17,6 +19,7 @@ use Vaulter\Attributes\EventSpec;
  *
  * @property-read string $value
  */
+#[Spi(SpiKind::Implement)]
 interface EventTypeContract extends BackedEnum
 {
     public function spec(): EventSpec;

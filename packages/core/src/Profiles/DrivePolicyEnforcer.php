@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Profiles;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Nodes\InvalidPropertiesException;
 use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException;
@@ -13,13 +14,14 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
- * @internal The checks Actions run against the drive policy of a drive.
+ * The checks Actions run against the drive policy of a drive.
  *
  * Each check refuses only an operation that makes the state worse than the limit
  * allows; an excess left behind by a lowered limit stays readable and shrinkable.
  * Callers hold the locks of the rows the check reads (the parent row for the
  * children count, the tree lock for depth).
  */
+#[Internal]
 final readonly class DrivePolicyEnforcer
 {
     private const int MAX_VALUE_BYTES = 1024;

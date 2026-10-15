@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Drives;
 
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Drive\Http\Resources\DriveResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 
 /** Make an archived drive writable again (Manage on its root). */
+#[Internal]
 final readonly class UnarchiveDriveController
 {
     public function __construct(private HttpOperationContextFactory $contexts) {}

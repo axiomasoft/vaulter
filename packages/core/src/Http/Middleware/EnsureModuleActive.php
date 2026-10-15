@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleGraphException;
@@ -21,6 +22,7 @@ use Vaulter\Modules\ModuleGraphException;
  * A route cached under another module fingerprint is still served: `vaulter:doctor` reports the stale
  * cache (`core.modules.cache`).
  */
+#[Internal]
 final readonly class EnsureModuleActive
 {
     public const string ALIAS = 'vaulter.module';

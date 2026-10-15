@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Handlers;
 
+use Vaulter\Attributes\Api;
+
 /** Client-independent viewer selection for a file. */
+#[Api]
 final readonly class ViewerDescriptor
 {
     /** @param array<string, mixed> $props */

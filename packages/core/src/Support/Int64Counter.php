@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Nodes\SequenceOverflowException;
 
 /**
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\Nodes\SequenceOverflowException;
  *
  * @internal
  */
+#[Api]
 final class Int64Counter
 {
     public static function increment(int $current): int

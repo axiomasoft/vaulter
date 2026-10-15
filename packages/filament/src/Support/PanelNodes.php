@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Support;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Snapshots\NodeSnapshot;
@@ -23,6 +24,7 @@ use Vaulter\Support\Identity;
  *
  * @phpstan-type NodeRow array{id: string, drive_id: string, parent_id: ?string, kind: NodeKind, name: string, size_bytes: int, trashed_at: ?CarbonImmutable, created_at: CarbonImmutable, abilities: array<string, bool>}
  */
+#[Internal]
 final class PanelNodes
 {
     public const int LIMIT = 2000;

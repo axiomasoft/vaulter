@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Identity;
@@ -23,6 +24,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * `scoped()` (not `singleton()`) so the cache resets between requests/jobs on
  * Octane/queue workers rather than leaking across them.
  */
+#[Internal]
 final class DriveReadRepository
 {
     public function __construct(

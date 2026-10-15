@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Revisions;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
@@ -25,6 +26,7 @@ use Vaulter\Support\TreeGuard;
  * snapshot needs no precondition. One outer transaction under T → N → D locks; a
  * single after-commit event fires.
  */
+#[Internal]
 final readonly class CreateNamedRevisionAction
 {
     public function __construct(

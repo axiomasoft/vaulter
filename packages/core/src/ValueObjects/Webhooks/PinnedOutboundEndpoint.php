@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Webhooks;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * The result of validating an outbound webhook URL: the scheme,
  * host and port to dial together with the EXACT IP that passed the range check.
@@ -12,6 +14,7 @@ namespace Vaulter\ValueObjects\Webhooks;
  * connection lands on the very address the guard vetted — closing the DNS-rebind /
  * TOCTOU window between "resolve + check" and "connect".
  */
+#[Internal]
 final readonly class PinnedOutboundEndpoint
 {
     public function __construct(

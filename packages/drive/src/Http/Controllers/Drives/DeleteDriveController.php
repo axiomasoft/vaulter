@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Drives;
 
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Drive\Http\Resources\DriveResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
@@ -14,6 +15,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
  * and is purged in the background, so the answer is its last state, `deleting`, with the
  * root and quota read before the drive disappeared.
  */
+#[Internal]
 final readonly class DeleteDriveController
 {
     public function __construct(private HttpOperationContextFactory $contexts) {}

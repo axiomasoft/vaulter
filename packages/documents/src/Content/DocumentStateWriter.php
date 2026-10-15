@@ -7,6 +7,8 @@ namespace Vaulter\Documents\Content;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use LogicException;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
@@ -36,8 +38,10 @@ use Vaulter\Support\Int64Counter;
  *
  * @internal
  */
+#[Api]
 final readonly class DocumentStateWriter
 {
+    #[Internal]
     public function __construct(
         private DocumentStoreRepository $documents,
         private DocumentRevisionStoreRepository $revisions,

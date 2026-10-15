@@ -11,14 +11,18 @@ use Illuminate\Database\DatabaseManager;
 use LogicException;
 use stdClass;
 use Throwable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 
+#[Api]
 final class VaulterDatabase
 {
     /** The outermost transaction attempt now running; `aborted` once its commit failed and it was retried. */
     private ?stdClass $attempt = null;
 
+    #[Internal]
     public function __construct(
         private readonly DatabaseConfig $databaseConfig,
         private readonly DatabaseManager $db,
@@ -77,13 +81,13 @@ final class VaulterDatabase
      * Run $callback as a Vaulter write outside a transaction (a job, a command, a
      * listener staging rows after commit): model writes inside it pass the write guard.
      *
-     * @internal
      *
      * @template TReturn
      *
      * @param  Closure(): TReturn $callback
      * @return TReturn
      */
+    #[Internal]
     public function write(Closure $callback): mixed
     {
         return $this->scope()->run($callback);
@@ -103,7 +107,6 @@ final class VaulterDatabase
      * Anything else, or a non-concurrency failure, is rethrown untouched; an exhausted
      * budget becomes a retryable {@see ConcurrentUpdateException}.
      *
-     * @internal
      *
      * @template TReturn
      *
@@ -111,6 +114,7 @@ final class VaulterDatabase
      * @param  int<1, max>        $attempts
      * @return TReturn
      */
+    #[Internal]
     public function retryingOutermost(Closure $callback, int $attempts = 3): mixed
     {
         for ($attempt = 1; ; $attempt++) {
@@ -134,9 +138,10 @@ final class VaulterDatabase
     }
 
     /**
-     * @internal Walks the previous chain: a nested failure arrives wrapped in a
+     * Walks the previous chain: a nested failure arrives wrapped in a
      *           DeadlockException whose own code and message may no longer match.
      */
+    #[Internal]
     public function isConcurrencyFailure(Throwable $exception): bool
     {
         $detect = Closure::bind(
@@ -222,10 +227,10 @@ final class VaulterDatabase
      * foreign key, a lost connection) still throws. INSERT IGNORE is not used on
      * MySQL because it downgrades exactly those errors to warnings.
      *
-     * @internal
      *
      * @param array<string, mixed> $row column => database-ready value
      */
+    #[Internal]
     public function insertOnce(string $table, array $row, string $uniqueColumn): bool
     {
         if (!array_key_exists($uniqueColumn, $row)) {

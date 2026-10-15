@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Webhooks;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * The command DTO for registering a webhook endpoint.
  * Carries the receiver URL and the list of subscribed event names (validated against
@@ -15,6 +17,7 @@ namespace Vaulter\Data\Webhooks;
  * Built from a validated request and consumed ONLY by
  * {@see RegisterWebhookEndpointAction}.
  */
+#[Internal]
 final readonly class RegisterWebhookEndpointInput
 {
     /**

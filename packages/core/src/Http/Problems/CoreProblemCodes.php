@@ -9,6 +9,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
@@ -27,6 +28,7 @@ use Vaulter\Modules\ModuleGraphException;
  * module graph and idempotency. A stable public contract, so a code is added here, in
  * lang/{en,ru}/problems.php and in the reference docs together.
  */
+#[Internal]
 final class CoreProblemCodes implements ProblemCodeSource
 {
     public function translationNamespace(): string

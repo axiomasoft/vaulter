@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Webhooks\RegisteredWebhookEndpoint;
 use Vaulter\Data\Webhooks\RegisterWebhookEndpointInput;
 use Vaulter\Database\VaulterDatabase;
@@ -29,6 +30,7 @@ use Vaulter\Webhooks\WebhookSecret;
  * Authorization (the actor may manage webhooks) is enforced by the caller before the
  * Action runs — the Action persists, it does not re-authorize.
  */
+#[Internal]
 final readonly class RegisterWebhookEndpointAction
 {
     public function __construct(

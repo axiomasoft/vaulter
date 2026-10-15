@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Internal;
 
 /**
  * A host entity that only exists as a morph reference, for fixtures that need a drive
  * owner but no host model.
  */
+#[Internal]
 final class FixtureOwner extends Model
 {
     private static int $sequence = 0;

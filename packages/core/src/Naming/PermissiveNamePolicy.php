@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Naming;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Support\NodeName;
 
 /**
@@ -11,6 +12,7 @@ use Vaulter\Support\NodeName;
  * no separators or control characters, not "."/"..", at most 255 bytes). Names
  * Windows or macOS cannot store, such as "a:b" or "CON.txt", are accepted.
  */
+#[Api]
 final readonly class PermissiveNamePolicy implements NamePolicy
 {
     public const string KEY = 'permissive-v1';

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Contracts;
 
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * Primary-key strategy. Drives column types in the published (and later
@@ -15,6 +17,7 @@ use Illuminate\Database\Schema\Blueprint;
  * ecosystem; uuid7 maps onto native Postgres uuid columns and bigint is the
  * legacy auto-increment path. Implementations live in the Schema namespace.
  */
+#[Spi(SpiKind::Implement)]
 interface IdStrategy
 {
     /**

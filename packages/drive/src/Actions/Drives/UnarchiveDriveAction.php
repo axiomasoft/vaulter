@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Drives\DriveUnarchived;
 use Vaulter\Enums\Drive\DriveStatus;
@@ -14,6 +15,7 @@ use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 
 /** archived → active. */
+#[Internal]
 final readonly class UnarchiveDriveAction
 {
     public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder) {}

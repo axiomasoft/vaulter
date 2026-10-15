@@ -6,7 +6,9 @@ namespace Vaulter\Content;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 
+#[Api]
 final readonly class SignedContentUrl
 {
     public function __construct(public string $url, public DateTimeImmutable $expiresAt, public string $contentIdentity, public ?string $storageVersion)

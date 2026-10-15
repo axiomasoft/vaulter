@@ -6,6 +6,7 @@ namespace Vaulter\Actions\Content;
 
 use DateTimeImmutable;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Contracts\Content\ScanWorkSettings;
@@ -16,8 +17,9 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
 /**
  * Leases due scan work to one worker; the transaction locks only the work row and ends before scanner IO.
  *
- * @internal Hosts reach scan work through the drive scan jobs and commands.
+ * Hosts reach scan work through the drive scan jobs and commands.
  */
+#[Internal]
 final readonly class ClaimScanWorkAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanObligationRepository $work, private ScanWorkSettings $settings, private ScanWorkTransitions $transitions) {}

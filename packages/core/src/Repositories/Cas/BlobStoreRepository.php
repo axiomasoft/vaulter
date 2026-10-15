@@ -6,6 +6,7 @@ namespace Vaulter\Repositories\Cas;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Cas\BlobStatus;
@@ -19,6 +20,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  * makes NO liveness decision beyond reading the row under the lock the caller
  * already took. The scope_key lookup mirrors the scope_sha_uniq index exactly.
  */
+#[Internal]
 final readonly class BlobStoreRepository
 {
     public function __construct(

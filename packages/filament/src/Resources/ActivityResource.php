@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Override;
 use UnitEnum;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Events\EventCatalog;
@@ -42,6 +43,7 @@ use Vaulter\ValueObjects\Access\Actor;
  *
  * The model resolves through {@see app(VaulterConfig::class)->model('activity')} for swappability.
  */
+#[Internal]
 final class ActivityResource extends Resource
 {
     protected static ?string $model = Activity::class;

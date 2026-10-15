@@ -6,6 +6,8 @@ namespace Vaulter\Operations;
 
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Activity\ActivityOperations as Contract;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
@@ -18,8 +20,10 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Queries\Activity\VisibleActivityQuery;
 
+#[Api]
 final readonly class ActivityOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private VisibleActivityQuery $query, private ActivitySnapshotMapper $mapper) {}
 
     /** @return Page<ActivityEntrySnapshot> */
@@ -37,6 +41,7 @@ final readonly class ActivityOperations implements Contract
     /** @internal Existing HTTP verb filter, without widening the handle contract.
      * @return CursorPaginator<int, ActivityEntrySnapshot>
      */
+    #[Internal]
     public function filtered(NodeSnapshot|string|int|null $node = null, ?ListOptions $options = null, ?EventTypeContract $verb = null): CursorPaginator
     {
         $drive = $this->context->drive->newQuery()->whereKey($this->context->driveId())->first() ?? throw NodeNotFoundException::forId($this->context->driveId());

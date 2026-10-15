@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * The owner's current authorization of a replay (D25, architecture#operation-chains «Replay»): a receipt is
  * returned only to an actor who may still run the operation now. Called inside the operation's transaction
  * before the stored result is decoded; a denial is answered exactly as a new request would be, and the
  * receipt stays as it is.
  */
+#[Spi(SpiKind::Implement)]
 interface ReplayAuthorizer
 {
     /**

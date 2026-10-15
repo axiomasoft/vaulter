@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
 
 /**
@@ -16,8 +18,10 @@ use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
  * Several secrets (the current and the one still valid after a rotation) and several
  * space-separated signatures in the header are accepted; one match is enough.
  */
+#[Api]
 final class StandardWebhookVerifier
 {
+    #[Internal]
     public function __construct(private readonly WebhookSigner $signer = new WebhookSigner) {}
 
     /**

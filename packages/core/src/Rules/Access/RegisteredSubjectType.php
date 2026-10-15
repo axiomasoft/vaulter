@@ -9,6 +9,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Translation\PotentiallyTranslatedString;
+use Vaulter\Attributes\Internal;
 
 /**
  * A grant subject_type must resolve to a REAL host model:
@@ -18,6 +19,7 @@ use Illuminate\Translation\PotentiallyTranslatedString;
  * grant addressed to a non-existent subject_type is dead data that matches nothing
  * the PermissionDriver's subjectsFor() can ever produce.
  */
+#[Internal]
 final class RegisteredSubjectType implements ValidationRule
 {
     /**

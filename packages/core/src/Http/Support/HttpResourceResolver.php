@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Support;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
@@ -18,6 +19,7 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
  * never existed, so a caller cannot probe ids across tenants. Nested resources (grants,
  * shares, revisions) are checked against their node by the operations themselves.
  */
+#[Internal]
 final readonly class HttpResourceResolver
 {
     public function __construct(

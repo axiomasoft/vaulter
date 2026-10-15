@@ -7,6 +7,7 @@ namespace Vaulter\Events;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 
 /**
  * A stored event type value read back as the {@see EventTypeContract} case of the module that declares it.
@@ -14,6 +15,7 @@ use InvalidArgumentException;
  *
  * @implements CastsAttributes<EventTypeContract, EventTypeContract|string>
  */
+#[Internal]
 final class EventTypeCast implements CastsAttributes
 {
     /** @param array<string, mixed> $attributes */

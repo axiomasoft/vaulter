@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Search;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Drive\SearchOptions;
 use Vaulter\Drive\Http\Requests\Search\SearchNodesRequest;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
  * Nodes of a drive whose name matches `q`, limited to what the caller can see — a
  * caller granted a folder deep inside finds what is in it without seeing the root.
  */
+#[Internal]
 final readonly class SearchNodesController
 {
     public function __construct(private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

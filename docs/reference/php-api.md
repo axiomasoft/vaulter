@@ -727,3 +727,21 @@ interface NodeOperations
 fills with `documents.heads` to supply `NodeSnapshot::$document`; without an active contributor a document node
 has no head in its snapshot. `Vaulter\Contracts\Drive\DriveExtension` marks the operations a module adds to a
 drive handle, declared in the `drive` slot under the operations' FQCN and resolved by `DriveHandle::extension()`.
+
+## The supported surface
+
+What Vaulter promises to keep is marked in the code, not listed by hand (D27). Every type of `packages/*/src` carries
+exactly one attribute from `Vaulter\Attributes`:
+
+| Attribute | Meaning |
+|---|---|
+| `#[Api]` | Supported for code that uses Vaulter. Public and protected members are frozen with the type, parameter names included (named arguments are API). |
+| `#[Spi(SpiKind::Implement)]` | A contract a host or a module implements; the kernel calls it positionally. |
+| `#[Spi(SpiKind::Call)]` | A service Vaulter implements and a host or a module calls. |
+| `#[Internal]` | Not supported; may change in any release. On a member it removes just that member (a technical constructor, a hook) from an `#[Api]` type. |
+
+The manifest of each package — the `#[Api]` and `#[Spi]` types with their supported members — is generated into
+`packages/<package>/tests/Arch/__snapshots__/surface.txt` by `scripts/php84 php scripts/inventory/inventory.php surface --write`;
+`--check` (and `SurfaceManifestTest`) fails when the code and the manifest differ, so a change of the surface is always a visible
+change of a committed file. A supported signature that names an `#[Internal]` type or a domain Eloquent model is reported by the
+I13 scan (`scan-i13`, report mode until the 1.0 freeze).

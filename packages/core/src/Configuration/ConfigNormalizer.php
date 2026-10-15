@@ -6,8 +6,10 @@ namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Arr;
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
+#[Api]
 final class ConfigNormalizer
 {
     /** @var array<string, string> */

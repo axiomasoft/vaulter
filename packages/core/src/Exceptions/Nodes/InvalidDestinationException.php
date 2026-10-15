@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -17,6 +18,7 @@ use Vaulter\Models\Drive\Node;
  * The tree only stays well-formed if every parent is a live folder of the same drive
  * and the root is never an operand.
  */
+#[Api]
 final class InvalidDestinationException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -7,6 +7,7 @@ namespace Vaulter\Repositories\Drive;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
@@ -19,6 +20,7 @@ use Vaulter\Support\Identity;
  * subtree helpers take an already-materialised id list (the caller resolved it
  * via NodeReadRepository::subtree with withMaxDepth) and issue ONE bulk UPDATE.
  */
+#[Internal]
 final class NodeStoreRepository
 {
     public function __construct(

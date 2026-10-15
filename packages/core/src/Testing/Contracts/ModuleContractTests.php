@@ -7,6 +7,7 @@ namespace Vaulter\Testing\Contracts;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\App;
 use PHPUnit\Framework\Assert;
+use Vaulter\Attributes\Api;
 use Vaulter\CoreModule;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Modules\CompiledModules;
@@ -25,6 +26,7 @@ use Vaulter\Modules\VaulterModule;
  * What a manifest declares is not run here: its slot contributions are tested with the contract tests of
  * the slot that defines them.
  */
+#[Api]
 final class ModuleContractTests
 {
     /**

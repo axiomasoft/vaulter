@@ -6,16 +6,20 @@ namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Exceptions\Access\UnknownRoleException;
+use Vaulter\Attributes\Api;
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
 
+use Vaulter\Attributes\Internal;
+use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
+#[Api]
 final readonly class AccessConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function permissionDriver(): string

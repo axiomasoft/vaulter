@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * Renders the content of a document into a file format. Registered in
  * Documents::exporters() and resolved by the pair (document type, format).
@@ -14,6 +17,7 @@ namespace Vaulter\Documents\Contracts;
  *
  * @extensible Keys and formats are strings; a client must handle a format it does not know.
  */
+#[Spi(SpiKind::Implement)]
 interface DocumentExporter
 {
     /** 'vendor/name', e.g. 'vaulter/html'. */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Handlers;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
@@ -18,6 +19,7 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
  * has a fresh server sniff (e.g. just after an upload) passes it as $detectedMime to
  * override; the client-claimed Content-Type is never routed on.
  */
+#[Internal]
 final class FileDescriptorFactory
 {
     public function forNode(Node|NodeSnapshot $node, ?string $detectedMime = null): FileDescriptor

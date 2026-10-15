@@ -8,12 +8,14 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Support\LoadTier;
 
 /**
  * Records `vaulter_http_request_duration_seconds` for mapped Vaulter API routes.
  */
+#[Internal]
 final readonly class RecordVaulterRequestMetrics
 {
     public function __construct(private MetricsRecorder $metrics) {}

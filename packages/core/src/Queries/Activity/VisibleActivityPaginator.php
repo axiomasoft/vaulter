@@ -8,12 +8,14 @@ use Closure;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\Paginator;
+use Vaulter\Attributes\Internal;
 
 /**
  * @template TItem of object
  *
  * @extends CursorPaginator<int, TItem>
  */
+#[Internal]
 final class VisibleActivityPaginator extends CursorPaginator
 {
     /** @param list<TItem> $items */

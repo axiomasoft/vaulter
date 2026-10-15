@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 
 /**
  * The Standard Webhooks signing secret: "whsec_" followed by the base64 of the HMAC key.
  * Receivers (and the official libraries) decode the part after the prefix, so the
  * key bytes — not the printable string — are what signs a delivery.
  */
+#[Internal]
 final class WebhookSecret
 {
     public const string PREFIX = 'whsec_';

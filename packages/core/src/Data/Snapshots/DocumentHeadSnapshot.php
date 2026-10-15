@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Snapshots;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+
 /** The head of a document node, supplied by the documents package. */
+#[Api]
 final readonly class DocumentHeadSnapshot
 {
-    /** @internal */
+    #[Internal]
     public function __construct(
         public string $type,
         public int $schemaVersion,

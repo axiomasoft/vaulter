@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -16,6 +17,7 @@ use Vaulter\Exceptions\VaulterException;
  * duplicate the whole document when the rooms merge, and a stale one would overwrite the
  * newer text, so the seed is refused and the hub reloads the document.
  */
+#[Api]
 final class CollaborationSeedConflictException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

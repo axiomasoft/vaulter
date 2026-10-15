@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Data\Snapshots;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 
 /** Read-only view of a share link. The token is never part of it. */
+#[Api]
 final readonly class ShareLinkSnapshot
 {
-    /** @internal */
+    #[Internal]
     public function __construct(
         public string $id,
         public string $nodeId,

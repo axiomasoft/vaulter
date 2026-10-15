@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\ResponseInterface;
 use stdClass;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -59,6 +60,7 @@ use Vaulter\Webhooks\WebhookSigner;
  * lease expires so the retry sweep can recover it. Remote acceptance followed by
  * a worker crash still permits a repeated POST (at-least-once).
  */
+#[Internal]
 final class DeliverWebhook implements ShouldQueue
 {
     use InteractsWithQueue;

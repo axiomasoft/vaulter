@@ -12,6 +12,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\PermissionDriver;
@@ -44,6 +45,7 @@ use Vaulter\Enums\Access\Effect;
  * incoming team id is captured, set to the scope's workspace, and restored in a
  * finally — so concurrent panels/workspaces never bleed into each other.
  */
+#[Internal]
 final class SpatiePermissionDriver implements EnumeratesRoleSubjects, PermissionDriver
 {
     public function __construct(

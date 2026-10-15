@@ -7,6 +7,7 @@ namespace Vaulter\Schema;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
 
 /**
@@ -14,6 +15,7 @@ use Vaulter\Contracts\IdStrategy;
  * HasUuids concern already mints Str::uuid7() (ordered) values, so it is the
  * canonical "uuid7" model trait — there is no separate HasVersion7Uuids class.
  */
+#[Internal]
 final class Uuid7Ids implements IdStrategy
 {
     public function key(Blueprint $table, string $column = 'id'): void

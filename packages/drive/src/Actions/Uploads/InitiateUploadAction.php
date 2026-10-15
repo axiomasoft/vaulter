@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Uploads;
 
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadSessionManager;
@@ -17,6 +18,7 @@ use Vaulter\Operations\NodeLocator;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Support\NodeName;
 
+#[Internal]
 final readonly class InitiateUploadAction
 {
     public function __construct(private NodeLocator $locator, private OperationGuard $guard, private UploadSessionManager $manager, private DrivePolicyEnforcer $policy) {}

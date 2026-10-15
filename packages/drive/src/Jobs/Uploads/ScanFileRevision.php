@@ -11,6 +11,7 @@ use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\FailScanAttemptAction;
 use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanInput;
@@ -26,6 +27,7 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Tenancy\TenancyBypass;
 
+#[Internal]
 final class ScanFileRevision implements ShouldQueue
 {
     use InteractsWithQueue;

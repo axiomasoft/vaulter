@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Events\Outbox;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -23,9 +24,8 @@ use Vaulter\Kernel;
  * relay never registered still gets its rows, and reconciliation covers the processes that ran an older graph.
  *
  * Without consumers only the event is written; retention removes it.
- *
- * @internal
  */
+#[Internal]
 final readonly class OutboxWriter
 {
     public function __construct(

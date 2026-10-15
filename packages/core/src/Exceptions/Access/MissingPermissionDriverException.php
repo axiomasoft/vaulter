@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Access;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\VaulterException;
 
 /**
  * The host-role driver is missing, unknown, or the open null-driver was selected
  * in production (fail-loud, never silently open).
  */
+#[Api]
 final class MissingPermissionDriverException extends VaulterException
 {
     public static function nullDriverInProduction(string $key): self

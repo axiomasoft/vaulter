@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Presentation;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
@@ -14,6 +16,7 @@ use Vaulter\ValueObjects\Handlers\NodePresentation;
  * kind). A module that owns a kind's content (documents) contributes its implementation under the kind's
  * value; core never imports the module.
  */
+#[Spi(SpiKind::Implement)]
 interface KindPresenter
 {
     public function kind(): NodeKind;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Cas\ContentStore;
@@ -54,6 +55,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  *    markDeleting() that forces SQLite's write lock; the prune deliberately writes
  *    nothing, so it cannot lean on that.)
  */
+#[Internal]
 final readonly class BlobReconciler
 {
     /** Both historical two-shard keys and lossless single-shard keys. */

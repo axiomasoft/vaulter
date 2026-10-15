@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Support\Identity;
  * A document version lookup did not resolve a version belonging to the node — either it does not exist or it belongs to another node. "Not found" and "no
  * access to another node's version" are deliberately indistinguishable to the caller.
  */
+#[Api]
 final class DocumentRevisionNotFoundException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

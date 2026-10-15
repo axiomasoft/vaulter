@@ -6,11 +6,13 @@ namespace Vaulter\Operations;
 
 use InvalidArgumentException;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Int64Counter;
 
+#[Internal]
 final readonly class NodeSequence
 {
     public function __construct(private VaulterDatabase $database)

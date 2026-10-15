@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Policy;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * upload limit. Checked against the declared size before bytes are written, while
  * they stream and against the actual size at finalization.
  */
+#[Api]
 final class FileSizeLimitExceededException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

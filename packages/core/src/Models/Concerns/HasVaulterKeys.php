@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Models\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\IdsConfig;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\IdStrategyResolver;
@@ -15,6 +16,7 @@ use Vaulter\Schema\IdStrategyResolver;
  * database assigns auto-increment bigint keys. Host apps that swap in their own
  * models (e.g. a tenant-aware BaseModel) simply omit this trait.
  */
+#[Api]
 trait HasVaulterKeys
 {
     public static function bootHasVaulterKeys(): void

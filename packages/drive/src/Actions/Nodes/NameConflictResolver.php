@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Nodes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Drive;
@@ -12,6 +13,7 @@ use Vaulter\Naming\NamePolicy;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\NodeName;
 
+#[Internal]
 final readonly class NameConflictResolver
 {
     public function __construct(private NodeReadRepository $nodes) {}

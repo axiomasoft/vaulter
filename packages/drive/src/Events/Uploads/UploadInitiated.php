@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Uploads;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
@@ -16,8 +18,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * A resumable-upload session was opened. Audited only: upload
  * sessions are not a webhook type.
  */
+#[Api]
 final readonly class UploadInitiated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public UploadSession $session,
         ActorRef $actor,

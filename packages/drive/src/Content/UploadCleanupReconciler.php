@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Content;
 use Illuminate\Database\Eloquent\Builder;
 use RuntimeException;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -17,6 +18,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Models\Drive\Drive;
 
+#[Internal]
 final readonly class UploadCleanupReconciler
 {
     public function __construct(private VaulterDatabase $database, private UploadSessionStoreRepository $sessions, private StagedUpload $staged, private DriveConfig $config) {}

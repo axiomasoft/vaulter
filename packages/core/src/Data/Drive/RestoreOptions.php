@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Data\Drive;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Drive\OnNameConflict;
 
+#[Api]
 final readonly class RestoreOptions
 {
     /**

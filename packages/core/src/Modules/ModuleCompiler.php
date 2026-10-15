@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Http\Problems\ProblemSpec;
@@ -17,9 +18,8 @@ use Vaulter\Http\Problems\ProblemSpec;
  *
  * The only probes are `is_a()` checks of declared class-strings and the constant code tables of the declared
  * problem sources: config validation, never activation.
- *
- * @internal
  */
+#[Internal]
 final class ModuleCompiler
 {
     private const string CONSTRAINT = '/^\^(\d+)\.(\d+)$/';

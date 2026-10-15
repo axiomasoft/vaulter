@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Repositories\Comments;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
 
@@ -13,6 +14,7 @@ use Vaulter\Documents\Models\Comments\NodeComment;
  * stamps the (resolved_at, resolved_by) tombstone; delete() is permanent (legacy
  * parity — there is no soft-delete on this table).
  */
+#[Internal]
 final class NodeCommentStoreRepository
 {
     public function __construct(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Drive;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Drive\FileRevision;
@@ -14,6 +15,7 @@ use Vaulter\Models\Drive\FileRevision;
  * UploadFileAction wraps it. number is monotonic per file (the unique index
  * is the backbone); the caller allocates numbers from the locked file counter.
  */
+#[Internal]
 final class FileRevisionStoreRepository
 {
     public function __construct(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Nodes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\SetNodePropertiesInput;
 use Vaulter\Drive\Events\Nodes\NodeUpdated;
@@ -26,6 +27,7 @@ use Vaulter\Support\TreeGuard;
  *
  * Operations authorize before this command; locked invariants remain in the Action.
  */
+#[Internal]
 final readonly class SetNodePropertiesAction
 {
     public function __construct(

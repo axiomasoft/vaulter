@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Api;
+
 /**
  * How many active providers a capability, or contributions a slot, takes.
  */
+#[Api]
 enum Cardinality: string
 {
     /** Exactly one. */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Requests;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
@@ -12,6 +13,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * optional anchor. The author is not part of the payload: CommentOperations records the
  * acting user (their registered morph alias, never a raw FQCN).
  */
+#[Internal]
 final class AddCommentRequest extends VaulterFormRequest
 {
     /**

@@ -7,9 +7,12 @@ namespace Vaulter\Profiles;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\Container as ContainerContract;
 use LogicException;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
 
+#[Api]
 final class ProfileRegistry
 {
     /** @var array<string, Profile> */
@@ -17,6 +20,7 @@ final class ProfileRegistry
 
     private bool $frozen = false;
 
+    #[Internal]
     public function __construct(private ?ContainerContract $container = null) {}
 
     public function register(ProfileProvider|Profile|string $profile): void

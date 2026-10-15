@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\ValueObjects;
 
+use Vaulter\Attributes\Api;
+
 /**
  * The rendered file of one document export, with the source it was rendered from:
  * a chosen checkpoint (sourceRevisionId set) or the working state at
@@ -20,6 +22,7 @@ namespace Vaulter\Documents\ValueObjects;
  * type could read, not necessarily everything that is stored. A host should not cache
  * or archive such a render as the document's export.
  */
+#[Api]
 final readonly class DocumentExport
 {
     public function __construct(

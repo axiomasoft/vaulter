@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -14,6 +15,7 @@ use Vaulter\Exceptions\VaulterException;
  * an abandoned Yjs history back into the document, so the write is fenced off; the
  * hub treats the 409 as terminal and closes the room.
  */
+#[Api]
 final class CollaborationEpochMismatchException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

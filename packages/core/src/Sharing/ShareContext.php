@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Sharing;
 
 use Vaulter\Access\Roles\Role;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
@@ -26,6 +27,7 @@ use Vaulter\Support\Identity;
  *
  * Immutable.
  */
+#[Internal]
 final readonly class ShareContext
 {
     public function __construct(

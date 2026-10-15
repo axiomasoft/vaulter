@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
+#[Api]
 final readonly class DriveConfig implements ScanWorkSettings
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
-    /** @internal */
+    #[Internal]
     public function rejectMimeMismatch(): bool
     {
         return (bool) $this->config->get('vaulter-drive.uploads.reject_mime_mismatch', true);

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Data\Drive;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 
+#[Api]
 final readonly class RevisionOptions
 {
     public function __construct(

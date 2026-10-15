@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Validation\ValidationException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -35,6 +36,7 @@ use Vaulter\Support\LoadTier;
  * The handler NEVER commits — when received_bytes == total it reports complete and
  * the controller drives CommitUploadAction (assemble→BlobStore.commit).
  */
+#[Internal]
 final readonly class TusUploadHandler implements UploadProtocolHandler
 {
     public function __construct(

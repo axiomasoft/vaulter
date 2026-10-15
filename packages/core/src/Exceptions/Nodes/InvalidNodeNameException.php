@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -14,6 +15,7 @@ use Vaulter\Exceptions\VaulterException;
  * Rendered as a validation error on `name` so API clients handle it like a
  * form-request failure.
  */
+#[Api]
 final class InvalidNodeNameException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

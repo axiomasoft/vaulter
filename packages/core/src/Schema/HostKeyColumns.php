@@ -6,8 +6,10 @@ namespace Vaulter\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\IdsConfig;
 
+#[Api]
 final class HostKeyColumns
 {
     public static function add(Blueprint $table, string $column, bool $nullable, bool $index): void

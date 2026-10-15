@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Testing\Contracts;
 
 use PHPUnit\Framework\Assert;
+use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
@@ -18,6 +19,7 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
  * Routing and its cache are keyed on the sniffed mime, the extension and the requested
  * capability only, so capabilities() may depend on nothing else.
  */
+#[Api]
 final class FileHandlerContractTests
 {
     public function assertFileHandlerContract(FileHandler $handler, ?FileDescriptor $claimed = null): void

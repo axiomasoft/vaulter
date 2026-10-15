@@ -6,12 +6,14 @@ namespace Vaulter\Drive\Http\Controllers\Trash;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Move a node and its subtree to the trash (Trash); If-Match is required. */
+#[Internal]
 final readonly class TrashNodeController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

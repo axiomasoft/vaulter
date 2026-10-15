@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Content;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ImmutableContentIdentity;
 use Vaulter\Content\ScanEvidence;
@@ -18,6 +19,7 @@ use Vaulter\Models\Content\ScanRequest;
 use Vaulter\Models\Drive\FileRevision;
 
 /** @internal Immutable scan evidence persistence; availability decisions go through ContentAvailabilityGuard. */
+#[Internal]
 final readonly class ScanEvidenceRepository
 {
     public function __construct(private VaulterConfig $config, private ScanSnapshot $snapshots) {}

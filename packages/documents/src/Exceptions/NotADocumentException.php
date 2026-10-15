@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -14,6 +15,7 @@ use Vaulter\Support\Identity;
  * . A folder/file/shortcut has no document aggregate, so the operation
  * is rejected rather than silently writing an orphan revision.
  */
+#[Api]
 final class NotADocumentException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

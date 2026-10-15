@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\ValueObjects;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Permission;
 
@@ -12,6 +13,7 @@ use Vaulter\Enums\Access\Permission;
  * applies there. `superAllow`/`superDeny` carry a host override, which beats the
  * union in both directions.
  */
+#[Api]
 final readonly class GrantSet
 {
     public function __construct(

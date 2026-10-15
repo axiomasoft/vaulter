@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Cas;
 
 use RuntimeException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\StagedObject;
 
 /**
@@ -13,6 +14,7 @@ use Vaulter\Contracts\Cas\StagedObject;
  * dedup decision never trust the live stream or a client hash. discard() removes
  * the temp file and is idempotent.
  */
+#[Internal]
 final class StagedTempObject implements StagedObject
 {
     private bool $discarded = false;

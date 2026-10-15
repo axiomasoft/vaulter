@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Uploads;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -20,6 +21,7 @@ use Vaulter\Exceptions\VaulterException;
  * one fires when the lock WAS acquired but the client's declared offset disagrees
  * with the server's.
  */
+#[Api]
 final class OffsetMismatchException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

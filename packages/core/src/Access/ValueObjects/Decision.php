@@ -6,12 +6,14 @@ namespace Vaulter\Access\ValueObjects;
 
 use LogicException;
 use Vaulter\Access\Roles\Role;
+use Vaulter\Attributes\Api;
 
 /**
  * A PermissionDriver's answer for one subject: the host role system gives this role
  * here. Decisions only add abilities — they are unioned with the node grants; an
  * administrative block is PermissionDriver::override(), not a Decision.
  */
+#[Api]
 final readonly class Decision
 {
     public function __construct(

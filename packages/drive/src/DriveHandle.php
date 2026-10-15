@@ -9,6 +9,8 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Access\AccessOperations;
 use Vaulter\Contracts\Activity\ActivityOperations;
 use Vaulter\Contracts\Drive\DriveExtension;
@@ -43,11 +45,14 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
+#[Api]
 final readonly class DriveHandle implements Contract
 {
+    #[Internal]
     public function __construct(private Drive $drive, private Container $container, private ?Actor $explicitActor = null, private ?string $correlationId = null, private ?string $idempotencyKey = null, private ?string $requestFingerprint = null) {}
 
-    /** @internal The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
+    /** The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
+    #[Internal]
     public function model(): Drive
     {
         $drive = $this->container->make(TenancyBoundary::class)->assertDrive($this->drive);
@@ -148,7 +153,8 @@ final readonly class DriveHandle implements Contract
         return new self($this->drive, $this->container, $this->explicitActor, $this->correlationId, $key, $requestFingerprint);
     }
 
-    /** @internal One context and correlation per operation, no cached ACL result. */
+    /** One context and correlation per operation, no cached ACL result. */
+    #[Internal]
     private function context(): DriveContext
     {
         return DriveContext::for(

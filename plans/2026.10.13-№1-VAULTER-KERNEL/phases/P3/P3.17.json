@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.17",
   "title": "Атрибуты Api/Spi/Internal на всей поверхности, генератор манифеста, I13 в report-режиме",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Все типы `packages/*/src` размечены `#[Api]`/`#[Spi]`/`#[Internal]` (по target-map + D35 + решения в #surface), генератор `inventory.php surface` пишет пакетные snapshots членов, `PublicApiSnapshotTest`/ручные списки заменены; I13 работает в report-режиме с точной allowlist i13.json.",
   "why": "D27/I13: поверхность закрывается атрибутами, а не ручными списками; P7 замораживает. Риски: молчаливое «internal по умолчанию», утечка Eloquent/internal типов в Api-сигнатуры, нестабильный порядок манифеста.",
   "scope": {
@@ -257,6 +257,91 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:47:50Z"
+  "result": {
+    "started_at": "2026-10-15T06:44:57Z",
+    "finished_at": "2026-10-15T07:45:22Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "4280423a-de44-4a0b-9f3e-b8f554f7f074"
+    },
+    "notes": "Атрибуты Api/Spi/SpiKind/Internal; 1032 типа размечены apply-surface.php; surface из атрибутов (rules без surface); генератор surface + 6 манифестов; I13 report (207 записей). Единый ревью grok 4.7 — после коммита, по просьбе владельца.",
+    "deviations": [
+      "V5=1 только из-за внешнего AzGuard (RealAzgard*, как в P2.6/P3.5); файлы сверх task_files: i2/i13 allowlists, Allowlist.php, scan-i13, core SurfaceManifestTest, arch-тесты пакетов, docs"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V5",
+        "exit": 1,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      },
+      {
+        "id": "V14",
+        "exit": 0,
+        "at": "2026-10-15T07:45:22Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-15T07:45:22Z"
 }

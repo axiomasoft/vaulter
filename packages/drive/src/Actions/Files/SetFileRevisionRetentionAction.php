@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Files;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
@@ -23,6 +24,7 @@ use Vaulter\Support\TreeGuard;
  *
  * Operations authorize before this command.
  */
+#[Internal]
 final readonly class SetFileRevisionRetentionAction
 {
     public function __construct(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -11,6 +12,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * keys to remove. Namespace and key syntax, value sizes and the reserved `vaulter`
  * namespaces are the operation's rules (422 invalid_properties).
  */
+#[Internal]
 final class UpdateNodePropertiesRequest extends VaulterFormRequest
 {
     /**

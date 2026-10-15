@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
@@ -18,6 +19,7 @@ use Vaulter\Webhooks\WebhookRetryDispatcher;
  * DLQ for inspection. Every sweep claims through WebhookRetryDispatcher, which locks
  * + re-arms each due row atomically, so overlapping runs never fan a delivery out twice.
  */
+#[Internal]
 final class RetryWebhooksCommand extends Command
 {
     use OpensWriteScope;

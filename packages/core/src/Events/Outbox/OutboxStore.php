@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Outbox\Exceptions\LeaseLostException;
@@ -18,9 +19,8 @@ use Vaulter\Events\Outbox\Exceptions\LeaseLostException;
  * leased with; a write that matches no row means the lease was taken over and the result is discarded.
  *
  * It opens its own short transactions; the relay calls a consumer outside of them.
- *
- * @internal
  */
+#[Internal]
 final readonly class OutboxStore
 {
     public const string EVENTS = 'outbox';

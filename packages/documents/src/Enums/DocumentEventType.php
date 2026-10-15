@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Enums;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\EventSpec;
 use Vaulter\Attributes\Label;
 use Vaulter\Events\Concerns\DescribesEvent;
@@ -13,6 +14,7 @@ use Vaulter\Events\EventTypeContract;
  * The event types of the documents module (D38), contributed to the event catalogue by the documents
  * manifest. The values are the stored identities shared with the drive's activity feed and change journal.
  */
+#[Api]
 enum DocumentEventType: string implements EventTypeContract
 {
     use DescribesEvent;

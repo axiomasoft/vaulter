@@ -6,6 +6,8 @@ namespace Vaulter\Events\Outbox;
 
 use Carbon\CarbonImmutable;
 use stdClass;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 
@@ -19,6 +21,7 @@ use Vaulter\Support\Identity;
  * ordering between events; aggregate_type/aggregate_id/sequence let a consumer order per aggregate, and
  * delivery is at least once, deduplicated by event_id.
  */
+#[Spi(SpiKind::Call)]
 final readonly class OutboxEnvelope
 {
     /** Keys that must never appear anywhere in a payload. */

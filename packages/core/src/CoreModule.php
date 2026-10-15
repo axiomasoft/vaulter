@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\CommandsReferenceCommand;
 use Vaulter\Console\ConfigReferenceCommand;
 use Vaulter\Console\DoctorCommand;
@@ -56,6 +57,7 @@ use Vaulter\Providers\EventsRegistrar;
  * recorder (D38) and the outbox: its OutboxConsumer slot, relay, replay and retention commands, schedule
  * and doctor checks (D29).
  */
+#[Internal]
 final class CoreModule implements VaulterModule
 {
     /** @var array<string, class-string<DoctorCheck>> doctor key => check */

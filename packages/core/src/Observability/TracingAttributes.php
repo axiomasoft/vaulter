@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Observability;
 
+use Vaulter\Attributes\Internal;
+
+#[Internal]
 final class TracingAttributes
 {
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Requests\Access;
 
 use Illuminate\Validation\Rule;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
@@ -12,6 +13,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * Stop inherited grants at a node. `mode` decides what the node keeps: nothing
  * (`empty`, the default) or copies of the grants it inherited until now.
  */
+#[Internal]
 final class RestrictInheritanceRequest extends VaulterFormRequest
 {
     /**

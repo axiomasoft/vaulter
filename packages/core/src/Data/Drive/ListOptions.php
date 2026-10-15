@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Data\Drive;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\NodeSort;
 
+#[Api]
 final readonly class ListOptions
 {
     /** @param list<NodeKind> $kinds */

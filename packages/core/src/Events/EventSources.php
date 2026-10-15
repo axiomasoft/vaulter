@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Events;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
@@ -13,9 +14,8 @@ use Vaulter\Modules\VaulterModule;
 /**
  * Where the event catalogue takes its enums from: the sealed declarations of the active modules, or the
  * declarations of every offered manifest (the reference docs, and stored values of a module switched off).
- *
- * @internal
  */
+#[Internal]
 final readonly class EventSources
 {
     /**

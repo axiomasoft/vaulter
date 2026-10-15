@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Changes;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Changes\ChangeOperation;
 use Vaulter\Enums\Changes\ChangeReason;
 use Vaulter\Enums\Events\DriveEventType;
@@ -28,6 +29,7 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * entry a weaker one would hide: the read projection turns an invisible node's move or
  * access change into a remove, so a later rename must not erase it.
  */
+#[Internal]
 final readonly class ChangeJournal
 {
     public function __construct(

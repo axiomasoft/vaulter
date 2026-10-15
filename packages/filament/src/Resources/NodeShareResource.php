@@ -24,6 +24,7 @@ use InvalidArgumentException;
 use Override;
 use UnitEnum;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
@@ -57,6 +58,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * Both require Ability::Share on the node, gated through the ShareOperations. The model
  * resolves through {@see app(VaulterConfig::class)->model('node_share')} for swappability.
  */
+#[Internal]
 final class NodeShareResource extends Resource
 {
     protected static ?string $model = NodeShare::class;

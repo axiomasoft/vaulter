@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Database\Factories;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Tenancy\ResolvesOwnerTenant;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 
 /**
  * Resolves one fixed tenant, so a factory or a contract suite can act as a tenant other
  * than the current one.
- *
- * @internal
  */
+#[Internal]
 readonly class PinnedTenantResolver implements TenantResolver
 {
     public function __construct(protected int|string|null $tenant) {}

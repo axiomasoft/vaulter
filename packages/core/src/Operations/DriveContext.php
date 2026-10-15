@@ -6,6 +6,8 @@ namespace Vaulter\Operations;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Operations\ScopeRef;
@@ -16,6 +18,7 @@ use Vaulter\ValueObjects\Operations\TenantRef;
  * the drive, plus the bound drive model. Owned by drive; it lives in the core
  * namespace until the drive package takes it over.
  */
+#[Api]
 final readonly class DriveContext
 {
     public Actor $actor;
@@ -26,6 +29,7 @@ final readonly class DriveContext
 
     private int|string $driveKey;
 
+    #[Internal]
     public function __construct(
         public OperationContext $operation,
         public Drive $drive,
@@ -60,7 +64,8 @@ final readonly class DriveContext
         return self::for(drive: $drive, actor: Actor::system($reason), correlationId: $correlationId ?? (string) Str::ulid());
     }
 
-    /** @internal The bound identity must survive edits to the caller's model. */
+    /** The bound identity must survive edits to the caller's model. */
+    #[Internal]
     public function driveId(): int|string
     {
         return $this->driveKey;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Revisions;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
@@ -26,6 +27,7 @@ use Vaulter\Support\TreeGuard;
  * Runs under T → N → D like every document write, so it serializes with a prune that
  * could otherwise delete the checkpoint between the lookup and the pin.
  */
+#[Internal]
 final readonly class UpdateRevisionRetentionAction
 {
     public function __construct(

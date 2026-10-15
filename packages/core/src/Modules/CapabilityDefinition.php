@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * A capability contract and the module that defines it.
- *
- * @internal
  */
+#[Internal]
 final readonly class CapabilityDefinition
 {
     /** @param class-string $contract */

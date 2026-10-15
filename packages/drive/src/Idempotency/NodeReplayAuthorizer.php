@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Idempotency;
 
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
@@ -23,9 +24,8 @@ use Vaulter\Operations\NodeLocator;
  *
  * Create (`folders.create`) needs Create in the folder that holds the node now; any other write needs `$ability`
  * on the node itself, or on the scope when the node is gone.
- *
- * @internal
  */
+#[Internal]
 final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
 {
     private function __construct(

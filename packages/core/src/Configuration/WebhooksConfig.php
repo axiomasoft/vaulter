@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Webhooks\DefaultOutboundUrlGuard;
@@ -13,6 +15,7 @@ use Vaulter\Webhooks\DefaultOutboundUrlGuard;
  * Typed accessors over config('vaulter.*'). All package code reads configuration
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
+#[Api]
 final readonly class WebhooksConfig
 {
     private const array DEFAULT_BLOCKED_IP_RANGES = [
@@ -49,6 +52,7 @@ final readonly class WebhooksConfig
         'relay.claim_seconds' => 'vaulter.outbox.lease_seconds (the webhooks.fanout consumer runs under the outbox delivery lease, D29)',
     ];
 
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     /** @throws InvalidConfigurationException when a pre-1.0 delivery key is still set */

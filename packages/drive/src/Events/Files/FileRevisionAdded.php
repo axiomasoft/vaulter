@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Files;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\File;
@@ -21,8 +23,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * A new version was committed onto an existing file node: number
  * bumped, current_revision_id repointed, the prior head marked superseded.
  */
+#[Api]
 final readonly class FileRevisionAdded extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public File $file,

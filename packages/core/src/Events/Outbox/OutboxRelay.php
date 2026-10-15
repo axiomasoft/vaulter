@@ -9,6 +9,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use LogicException;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\OutboxConfig;
 use Vaulter\Configuration\VaulterConfig;
@@ -36,6 +37,7 @@ use Vaulter\Modules\SlotContribution;
  *
  * Retention and replay are separate commands ({@see prune()}, {@see replay()}).
  */
+#[Internal]
 final readonly class OutboxRelay
 {
     public function __construct(

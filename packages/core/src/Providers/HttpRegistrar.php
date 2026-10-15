@@ -11,6 +11,7 @@ use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
@@ -24,6 +25,7 @@ use Vaulter\Http\Problems\ProblemSources;
  * The kernel's HTTP diagnostics, applied whatever the module graph: the problem catalogue and renderer and the
  * priority of the response middleware.
  */
+#[Internal]
 final class HttpRegistrar
 {
     public function register(Application $app): void

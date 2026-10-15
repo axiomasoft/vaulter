@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\IdsConfig;
 use Vaulter\Database\VaulterDatabase;
@@ -11,6 +12,7 @@ use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 use Vaulter\Schema\ValueObjects\KeyColumnMismatch;
 
 /** @internal */
+#[Internal]
 final class KeyColumnInspector
 {
     public function __construct(

@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Http\Controllers\Uploads;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -34,6 +35,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * is only the protocol's receipt. Sessions are resolved like the tus ones: by upload id
  * to their drive, tenant-scoped, then authorized by the operations.
  */
+#[Internal]
 final class S3MultipartProtocolController
 {
     public function __construct(

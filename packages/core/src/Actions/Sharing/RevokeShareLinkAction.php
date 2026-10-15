@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Sharing;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Sharing\RevokeShareInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\EventRecorder;
@@ -15,6 +16,7 @@ use Vaulter\Operations\NodeLocator;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 
 /** @internal Revocation commits before subsequent share resolution can succeed. */
+#[Internal]
 final readonly class RevokeShareLinkAction
 {
     public function __construct(private NodeShareStoreRepository $shares, private VaulterDatabase $database, private NodeLocator $locator, private EventRecorder $recorder) {}

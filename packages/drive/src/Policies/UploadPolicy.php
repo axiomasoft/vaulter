@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Policies;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Profiles\Profile;
 
 /** Admission policy: each MIME allowlist contributes an independent predicate. */
+#[Internal]
 final readonly class UploadPolicy
 {
     public function __construct(private DriveConfig $config) {}

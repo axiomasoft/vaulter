@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Queries;
 
 use Illuminate\Pagination\CursorPaginator;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
@@ -23,9 +24,8 @@ use Vaulter\Models\Drive\Node;
  * Reads behind the documents operations. Every lookup is bound to the node the caller
  * already located and authorized: a revision or comment id of another node resolves
  * to "not found", never to the foreign row. Makes no access decisions itself.
- *
- * @internal
  */
+#[Internal]
 final readonly class DocumentQuery
 {
     public function __construct(private DocumentsConfig $config) {}

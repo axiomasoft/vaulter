@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content\TipTap;
 
+use Vaulter\Attributes\Api;
+
 /**
  * Strict allow-list guard for `href` URL schemes in TipTap content (
  * plans/ /findings/P0-remediation-norms.md N1). Shared by the store-time
@@ -19,6 +21,7 @@ namespace Vaulter\Documents\Content\TipTap;
  * let an attacker visually reorder the scheme in a code review / preview UI while the
  * browser resolves the real one underneath.
  */
+#[Api]
 final readonly class LinkSchemeValidator
 {
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Drive\Http\Requests\Nodes\CopyNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
@@ -15,6 +16,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * Copy a node (Copy on the source, Create in the destination). The source is not
  * changed, so no If-Match is asked for; the copy is a new node.
  */
+#[Internal]
 final readonly class CopyNodeController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

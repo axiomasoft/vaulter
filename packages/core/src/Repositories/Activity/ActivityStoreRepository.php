@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Activity;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Database\VaulterDatabase;
@@ -24,6 +25,7 @@ use Vaulter\Schema\IdStrategyResolver;
  * Not final: it is the recorder's single audit-sink seam, so a host (or a test
  * simulating a broken sink) may subclass it to route rows elsewhere.
  */
+#[Internal]
 class ActivityStoreRepository
 {
     public function __construct(

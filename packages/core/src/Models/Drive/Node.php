@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\Factories\NodeFactory;
@@ -61,6 +62,7 @@ use Vaulter\Support\NodeName;
  * @property-read Node|null        $parent
  * @property-read File|null        $file
  */
+#[Internal]
 class Node extends Model
 {
     use GuardsWrites, HasRecursiveRelationships {

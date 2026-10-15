@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use LogicException;
+use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Facades\Vaulter;
@@ -23,6 +24,7 @@ use Vaulter\Facades\Vaulter;
  *
  * @extends Factory<TModel>
  */
+#[Api]
 abstract class VaulterFactory extends Factory
 {
     /** @var array<string, mixed> */

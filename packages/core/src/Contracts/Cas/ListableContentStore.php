@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * A capability a {@see ContentStore} implements to declare it can ENUMERATE stored
  * objects and report their age — the consumer seam the
@@ -19,6 +22,7 @@ namespace Vaulter\Contracts\Cas;
  * implements it, delegating to the underlying driver only when that driver is itself
  * a {@see ListableStorageDriver} (otherwise it too reports no listing capability).
  */
+#[Spi(SpiKind::Implement)]
 interface ListableContentStore
 {
     /**

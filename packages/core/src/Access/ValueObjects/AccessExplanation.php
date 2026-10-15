@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\ValueObjects;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Access\Ability;
 
 /**
@@ -14,6 +15,7 @@ use Vaulter\Enums\Access\Ability;
  *
  * Built only by AccessResolver::explain(), never on the can() path.
  */
+#[Api]
 final readonly class AccessExplanation
 {
     public const string REASON_ALLOW = 'allow';

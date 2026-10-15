@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Middleware;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * server-side `operation` labels for {@see RecordVaulterRequestMetrics}.
  *
@@ -11,6 +13,7 @@ namespace Vaulter\Http\Middleware;
  * (php-fpm status, the load stand) and cover the versioned routes whose cost differs
  * most: bytes in or out, document reads and writes, the hub.
  */
+#[Internal]
 final class VaulterHttpOperationMap
 {
     /** @var array<string, string> route name => operation label */

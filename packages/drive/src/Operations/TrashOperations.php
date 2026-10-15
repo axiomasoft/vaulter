@@ -9,6 +9,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\TrashOperations as Contract;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\RestoreOptions;
@@ -35,8 +37,10 @@ use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
+#[Api]
 final readonly class TrashOperations implements Contract
 {
+    #[Internal]
     public function __construct(
         private DriveContext $context,
         private NodeLocator $locator,

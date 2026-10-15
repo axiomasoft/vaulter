@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\OutboxConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Database\VaulterDatabase;
@@ -18,6 +19,7 @@ use Vaulter\Doctor\DoctorFinding;
  * idle_in_transaction_session_timeout and statement_timeout, MySQL innodb_lock_wait_timeout. SQLite serialises
  * writers, so it has nothing to compare. The only I/O of the outbox settings happens here.
  */
+#[Internal]
 final readonly class OutboxSettleWindowCheck implements DoctorCheck
 {
     public function __construct(

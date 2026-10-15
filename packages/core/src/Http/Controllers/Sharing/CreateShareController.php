@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Controllers\Sharing;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Http\Requests\Sharing\StoreShareLinkRequest;
 use Vaulter\Http\Resources\Sharing\MintedShareResource;
@@ -12,6 +13,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Create a share link; the response is the only place its token appears. */
+#[Internal]
 final readonly class CreateShareController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private SharingConfig $sharing) {}

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Events\Access;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Access\NodeGrant;
@@ -19,8 +21,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * A per-node ACL grant was created or updated. Host listeners receive it
  * after the grant transaction commits.
  */
+#[Api]
 final readonly class NodeGrantCreated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public NodeGrant $grant,
         ActorRef $actor,

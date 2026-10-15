@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Collaboration;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\CollaborationDriver;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
@@ -17,6 +18,7 @@ use Vaulter\Kernel;
  * (Hocuspocus until collaboration becomes a module of its own, P5). Distinct from VaulterManager::driver(), which resolves the
  * LEGACY Document-bound collaboration driver — this is the node-tree lane.
  */
+#[Internal]
 final readonly class CollaborationDriverManager
 {
     public function __construct(

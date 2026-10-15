@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
 use Vaulter\Enums\Drive\DriveStatus;
@@ -17,6 +18,7 @@ use Vaulter\Repositories\Drive\DriveStoreRepository;
  * A drive already being deleted is left alone and its purge is queued again, which
  * is how an interrupted purge resumes.
  */
+#[Internal]
 final readonly class DeleteDriveAction
 {
     public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives) {}

@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
+#[Api]
 final readonly class DownloadsConfig
 {
     private const array DEFAULT_DOWNLOAD_INLINE_MIME_WHITELIST = [
@@ -22,6 +25,7 @@ final readonly class DownloadsConfig
         'text/plain',
     ];
 
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function deliveryMode(): string

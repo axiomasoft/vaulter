@@ -7,6 +7,7 @@ namespace Vaulter\Http\Resources\Changes;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Changes\NodeChange;
 use Vaulter\Http\Resources\Drive\NodeResource;
 
@@ -17,6 +18,7 @@ use Vaulter\Http\Resources\Drive\NodeResource;
  *
  * @mixin NodeChange
  */
+#[Internal]
 final class ChangeResource extends JsonResource
 {
     public function __construct(NodeChange $change, private readonly ?NodeAbilities $abilities)

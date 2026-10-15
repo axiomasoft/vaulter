@@ -7,6 +7,7 @@ namespace Vaulter\Models\Activity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Events\EventTypeCast;
 use Vaulter\Events\EventTypeContract;
@@ -45,6 +46,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * @property string|null              $request_id
  * @property Carbon|null              $created_at
  */
+#[Internal]
 class Activity extends Model
 {
     use GuardsWrites;

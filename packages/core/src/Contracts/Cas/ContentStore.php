@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -13,6 +15,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  * find-or-create / dedup / GC lifecycle is BlobStore — ContentStore knows only
  * bytes, hashes and keys, never the v_blobs row.
  */
+#[Spi(SpiKind::Implement)]
 interface ContentStore
 {
     /**

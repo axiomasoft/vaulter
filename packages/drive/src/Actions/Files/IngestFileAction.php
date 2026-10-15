@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Actions\Files;
 
 use LogicException;
 use Psr\Http\Message\StreamInterface;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Drive\UploadSource;
@@ -62,6 +63,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  *
  * Operations authorize before this command; locked invariants remain in the Action.
  */
+#[Internal]
 final readonly class IngestFileAction
 {
     public function __construct(

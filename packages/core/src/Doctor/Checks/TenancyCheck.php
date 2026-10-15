@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
+#[Internal]
 final readonly class TenancyCheck implements DoctorCheck
 {
     public function __construct(private TenancyConfig $tenancy) {}

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Access\PermissionDriverCatalog;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanPolicySpec;
@@ -21,6 +22,7 @@ use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 
+#[Internal]
 final readonly class ProfilePolicy
 {
     public function __construct(private VaulterConfig $config, private Repository $repository, private ProfileRegistry $profiles, private ScanConfig $scan, private Kernel $kernel) {}

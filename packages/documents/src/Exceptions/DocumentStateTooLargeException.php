@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * A collaboration store carried a binary Yjs state above
  * vaulter-documents.collaboration.max_state_bytes. Nothing is written.
  */
+#[Api]
 final class DocumentStateTooLargeException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -6,11 +6,13 @@ namespace Vaulter\Modules;
 
 use InvalidArgumentException;
 use Stringable;
+use Vaulter\Attributes\Api;
 
 /**
  * The stable name of a Vaulter module (`core`, `drive`, `webhooks`): the key of `vaulter.modules`
  * overrides, of `requires()` and of every diagnostic.
  */
+#[Api]
 final readonly class ModuleId implements Stringable
 {
     public const string PATTERN = '/^[a-z][a-z0-9-]{1,31}$/';

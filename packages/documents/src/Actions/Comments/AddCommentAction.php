@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Comments;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Events\Comments\CommentAdded;
@@ -30,6 +31,7 @@ use Vaulter\Support\TreeGuard;
  * The node is a separate argument because AddCommentInput is the public input of
  * CommentOperations::add(), which names the node on its own.
  */
+#[Internal]
 final readonly class AddCommentAction
 {
     public function __construct(

@@ -6,6 +6,7 @@ namespace Vaulter\Sharing;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Actions\Sharing\RedeemShareLinkAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Sharing\NodeShare;
 
 /**
@@ -13,6 +14,7 @@ use Vaulter\Models\Sharing\NodeShare;
  * hands out the link session that makes the visitor's next requests part of the same
  * visit. The public HTTP layer talks to this instead of to the Action.
  */
+#[Internal]
 final readonly class ShareRedeemer
 {
     public function __construct(private RedeemShareLinkAction $redeem, private ShareSession $sessions) {}

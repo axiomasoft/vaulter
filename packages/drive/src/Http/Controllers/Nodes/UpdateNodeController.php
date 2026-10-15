@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Http\Requests\Nodes\RenameNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Enums\Access\Ability;
@@ -15,6 +16,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Rename a node (Edit); If-Match is required; idempotent by Idempotency-Key. */
+#[Internal]
 final readonly class UpdateNodeController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

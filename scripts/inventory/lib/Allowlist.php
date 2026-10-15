@@ -17,10 +17,13 @@ final class Allowlist
 {
     public const KEY_FIELDS = ['view', 'file', 'symbol', 'kind', 'target'];
 
-    public const REMOVED_IN = ['P3', 'P4', 'P5', 'never'];
+    public const REMOVED_IN = ['P3', 'P4', 'P5', 'P7', 'never'];
 
     /** The only entries that may stay forever: the named destinations I4 itself demands. */
     public const PERMANENT_CATEGORIES = ['config-validation', 'host-lifecycle', 'explicit-adapter'];
+
+    /** I13: a borrowed host input named in D27 (a host model given to a drive entry) stays for ever. */
+    public const I13_PERMANENT_CATEGORIES = ['host-input'];
 
     public const MODES = ['report', 'block'];
 
@@ -28,7 +31,7 @@ final class Allowlist
     public const I4_CATEGORIES = ['activation', 'jwt-optional', 'explicit-adapter', 'config-validation', 'host-lifecycle'];
 
     /** The phase from which an invariant blocks (architecture#invariants); an entry must be gone by then. */
-    public const BLOCKS_FROM = ['I1' => 'P4', 'I2' => 'P4', 'I3' => 'P4', 'I4' => 'P3'];
+    public const BLOCKS_FROM = ['I1' => 'P4', 'I2' => 'P4', 'I3' => 'P4', 'I4' => 'P3', 'I13' => 'P7'];
 
     /** Allowed to outlive the blocking phase: jwt-optional is removed when P5 makes collaboration a require. */
     public const LATE_CATEGORIES = ['jwt-optional'];
@@ -177,8 +180,15 @@ final class Allowlist
             throw new InventoryError("{$where} (".self::key($raw).'): "removed_in" must be one of '.implode(', ', self::REMOVED_IN));
         }
         $category = $raw['category'] ?? null;
-        if ($removedIn === 'never' && ($this->invariant !== 'I4' || !in_array($category, self::PERMANENT_CATEGORIES, true))) {
-            throw new InventoryError("{$where} (".self::key($raw).'): "never" is only for I4 categories '.implode(', ', self::PERMANENT_CATEGORIES));
+        if ($removedIn === 'never') {
+            $permanent = match ($this->invariant) {
+                'I4' => self::PERMANENT_CATEGORIES,
+                'I13' => self::I13_PERMANENT_CATEGORIES,
+                default => [],
+            };
+            if (!in_array($category, $permanent, true)) {
+                throw new InventoryError("{$where} (".self::key($raw).'): "never" is only for I4 categories '.implode(', ', self::PERMANENT_CATEGORIES).' and the I13 category '.implode(', ', self::I13_PERMANENT_CATEGORIES));
+            }
         }
         if ($this->invariant === 'I4' && !in_array($category, self::I4_CATEGORIES, true)) {
             throw new InventoryError("{$where} (".self::key($raw).'): I4 needs a "category" of '.implode(', ', self::I4_CATEGORIES));

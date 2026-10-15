@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Access\ValueObjects\GrantSet;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ListingConfig;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Database\VaulterDatabase;
@@ -20,6 +21,7 @@ use Vaulter\Operations\DriveContext;
 use Vaulter\Support\Identity;
 use WeakMap;
 
+#[Internal]
 final readonly class ExactListing
 {
     /** @var WeakMap<Node, GrantSet> */

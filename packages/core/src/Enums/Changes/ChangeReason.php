@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Changes;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * Why a node is removed from a reader's view. Only `deleted` is stored;
  * the other two come from the read projection, when the node still exists but the
@@ -15,6 +17,7 @@ namespace Vaulter\Enums\Changes;
  *
  * @closed The string values are stored and never change.
  */
+#[Internal]
 enum ChangeReason: string
 {
     case Deleted = 'deleted';

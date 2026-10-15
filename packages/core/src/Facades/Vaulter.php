@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Profiles\ProfileRegistry;
@@ -20,6 +21,7 @@ use Vaulter\Profiles\ProfileRegistry;
  * @method static PermissionDriverManager permissions()
  * @method static mixed                   withoutTenancy(Closure $callback)
  */
+#[Api]
 final class Vaulter extends Facade
 {
     protected static function getFacadeAccessor(): string

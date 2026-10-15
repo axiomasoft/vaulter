@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Observability;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * Host-facing metrics seam (P8 /). Package code depends only on this
  * contract; the host or load SUT binds a real adapter. With no backend installed the
  * container resolves {@see NullMetricsRecorder}.
  */
+#[Spi(SpiKind::Implement)]
 interface MetricsRecorder
 {
     /**

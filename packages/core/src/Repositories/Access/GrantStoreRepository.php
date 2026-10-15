@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\Role;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\GrantScope;
@@ -20,6 +21,7 @@ use Vaulter\Models\Drive\Node;
  * the same scope replaces its role/expiry rather than breeding a duplicate. Opens
  * NO transactions and dispatches NO events — the Action does.
  */
+#[Internal]
 final class GrantStoreRepository
 {
     public function __construct(

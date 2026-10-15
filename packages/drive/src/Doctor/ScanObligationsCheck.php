@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Doctor;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
@@ -15,6 +16,7 @@ use Vaulter\Doctor\DoctorFinding;
  * The durable scan obligations of uploaded content. A lease nobody renews, work that never became due
  * and work that settled as failed all leave a revision unscanned, whether the webhooks module is active or not.
  */
+#[Internal]
 final readonly class ScanObligationsCheck implements DoctorCheck
 {
     /** Minutes pending or retry-waiting work may be overdue before it is reported. */

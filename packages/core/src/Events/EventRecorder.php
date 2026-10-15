@@ -8,6 +8,8 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use LogicException;
 use Throwable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Outbox\OutboxWriter;
@@ -27,11 +29,13 @@ use WeakMap;
  * opposite: they run after the commit, and their failure is reported without undoing a change that is
  * already durable.
  */
+#[Api]
 final readonly class EventRecorder
 {
     /** @var WeakMap<DomainEvent, true> the instances already recorded; the map itself stays mutable */
     private WeakMap $recorded;
 
+    #[Internal]
     public function __construct(
         private VaulterDatabase $database,
         private Container $container,

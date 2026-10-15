@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
+use Vaulter\Attributes\Api;
+
 /**
  * The result of staging an upload to a LOCAL, seekable temp file: the
  * sha256 is recomputed from these durable bytes, never from the live stream nor
@@ -14,6 +16,7 @@ namespace Vaulter\Contracts\Cas;
  * It is read-only and self-cleaning: discard() removes the temp file once the
  * bytes have been promoted (or the commit rolled back).
  */
+#[Api]
 interface StagedObject
 {
     /**

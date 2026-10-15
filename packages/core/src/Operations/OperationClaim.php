@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Closure;
+use Vaulter\Attributes\Internal;
 use Vaulter\Idempotency\CachedRefusal;
 use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotentWrite;
@@ -15,8 +16,9 @@ use Vaulter\Idempotency\IdempotentWrite;
  * and either runs the attempt (recording its receipt) or answers from a committed receipt. A refusal
  * whose receipt was recorded comes back as a {@see CachedRefusal}, thrown by the runner after commit.
  *
- * @internal filled by {@see IdempotencyClaim}
+ * filled by {@see IdempotencyClaim}
  */
+#[Internal]
 interface OperationClaim
 {
     public function admit(Operation $operation, ?IdempotentWrite $idempotency): void;

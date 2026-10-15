@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\Role;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\GrantScope;
@@ -44,6 +45,7 @@ use Vaulter\Models\Drive\Node;
  * @property Carbon|null     $updated_at
  * @property-read Node $node
  */
+#[Internal]
 class NodeGrant extends Model
 {
     use GuardsWrites;

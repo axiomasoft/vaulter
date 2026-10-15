@@ -6,11 +6,13 @@ namespace Vaulter\Doctor\Checks;
 
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
+#[Internal]
 final readonly class RoutesAuthCheck implements DoctorCheck
 {
     public function __construct(private RoutesConfig $routes, private Repository $config) {}

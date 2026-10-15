@@ -6,6 +6,7 @@ namespace Vaulter\Content;
 
 use DateTimeImmutable;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Enums\Cas\ScanVerdict;
@@ -21,8 +22,9 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
 /**
  * Fence, counter and terminal-state rules shared by the scan work Actions.
  *
- * @internal Opens no transaction and takes no lock; every caller already holds the work row.
+ * Opens no transaction and takes no lock; every caller already holds the work row.
  */
+#[Internal]
 final readonly class ScanWorkTransitions
 {
     public function __construct(private ScanObligationRepository $work, private ScanEvidenceRepository $evidence, private ScanPolicyResolver $policies, private ScanWorkSettings $settings) {}

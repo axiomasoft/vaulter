@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
@@ -35,6 +36,7 @@ use Vaulter\Modules\ModuleBindings;
  * exporters, operations, presentation, the sanitizer, and config validator, and
  * at boot the document relation of the node model and the frozen type and exporter registries.
  */
+#[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

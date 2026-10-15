@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Vaulter\Data\Snapshots;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 
 /**
  * Read-only view of an activity row after the visibility projection: fields the
  * reader may not see are null.
  */
+#[Api]
 final readonly class ActivityEntrySnapshot
 {
     /**
-     * @internal
-     *
      * @param array<string, mixed> $context
      */
+    #[Internal]
     public function __construct(
         public string $id,
         public string $verb,

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Data\Snapshots;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
 
 /**
@@ -21,9 +23,10 @@ use Vaulter\Documents\Contracts\DocumentContent;
  * in a newer schema version than the installed type's. Such content must not be saved
  * back: update() refuses it.
  */
+#[Api]
 final readonly class DocumentSnapshot
 {
-    /** @internal */
+    #[Internal]
     public function __construct(
         public string $nodeId,
         public string $documentId,

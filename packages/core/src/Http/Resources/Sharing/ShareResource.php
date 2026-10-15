@@ -6,6 +6,7 @@ namespace Vaulter\Http\Resources\Sharing;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 
@@ -15,6 +16,7 @@ use Vaulter\Data\Snapshots\ShareLinkSnapshot;
  *
  * @mixin ShareLinkSnapshot
  */
+#[Internal]
 final class ShareResource extends JsonResource
 {
     /**

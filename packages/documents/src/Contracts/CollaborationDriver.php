@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Models\Drive\Node;
@@ -16,6 +18,7 @@ use Vaulter\Models\Drive\Node;
  * decides whether the actor may write and passes that in. The driver only encodes the
  * decision, the document generation (epoch) and its schema into the session.
  */
+#[Spi(SpiKind::Implement)]
 interface CollaborationDriver
 {
     public function type(): CollaborationDriverType;

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Contracts\Drive\PurgeOnlyContentLifecycle;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 
+#[Internal]
 final class NodeContentLifecycleRegistry
 {
     /** @var array<string, NodeContentLifecycle> */

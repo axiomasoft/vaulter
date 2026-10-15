@@ -6,6 +6,7 @@ namespace Vaulter\Repositories\Changes;
 
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Changes\ChangeJournal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
@@ -14,9 +15,8 @@ use Vaulter\Enums\Changes\ChangeOperation;
 /**
  * Row work for v_drive_changes. Only {@see ChangeJournal} inserts and compacts
  * entries, only the prune and the drive purge delete them; it opens no transactions.
- *
- * @internal
  */
+#[Internal]
 final readonly class ChangeEntryRepository
 {
     public function __construct(

@@ -7,6 +7,7 @@ namespace Vaulter\Tenancy;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Tenancy\ResolvesOwnerTenant;
@@ -18,6 +19,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
 /** @internal Central boundary; resolver values and supplied models are never cached. */
+#[Internal]
 final readonly class TenancyBoundary
 {
     public function __construct(private TenancyConfig $config, private VaulterConfig $models,

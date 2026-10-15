@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * longer has: another write landed first. Content has its own validator, so a
  * rename or move of the node never invalidates it (and vice versa).
  */
+#[Api]
 final class StaleDocumentStateException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

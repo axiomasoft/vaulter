@@ -6,6 +6,7 @@ namespace Vaulter\Http\Resources\Access;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\GrantSnapshot;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 
@@ -15,6 +16,7 @@ use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
  *
  * @mixin GrantSnapshot
  */
+#[Internal]
 final class GrantResource extends JsonResource
 {
     /**

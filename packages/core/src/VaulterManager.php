@@ -9,6 +9,8 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry;
@@ -18,8 +20,10 @@ use Vaulter\Modules\MissingExtensionException;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tenancy\TenancyBypass;
 
+#[Api]
 final readonly class VaulterManager
 {
+    #[Internal]
     public function __construct(private Container $container) {}
 
     public function drive(Model $ownerOrDrive, ?string $profile = null): DriveHandle

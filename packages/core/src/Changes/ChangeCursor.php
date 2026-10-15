@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Changes;
 
 use JsonException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Changes\InvalidCursorException;
 
 /**
@@ -14,6 +15,7 @@ use Vaulter\Exceptions\Changes\InvalidCursorException;
  * key derived from the application key, so a client can neither forge a position
  * nor carry it to another drive.
  */
+#[Internal]
 final readonly class ChangeCursor
 {
     private const int VERSION = 1;

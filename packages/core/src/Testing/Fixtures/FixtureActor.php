@@ -7,6 +7,7 @@ namespace Vaulter\Testing\Fixtures;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Internal;
 
 /**
  * An actor that is identified by its morph reference alone and holds no host
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  */
+#[Internal]
 final class FixtureActor extends Model implements Authenticatable, Authorizable
 {
     private static int $sequence = 0;

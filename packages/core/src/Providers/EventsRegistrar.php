@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Providers;
 
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Attributes\Internal;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\EventSources;
 use Vaulter\Events\EventsReference;
 use Vaulter\Modules\ModuleBindings;
 
+#[Internal]
 final class EventsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Handlers;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Handlers\Capability;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
 /** The shared registry for configured, tagged and runtime file handlers. */
+#[Api]
 interface FileHandlerRegistry
 {
     /** @param FileHandler|class-string<FileHandler> $handler */

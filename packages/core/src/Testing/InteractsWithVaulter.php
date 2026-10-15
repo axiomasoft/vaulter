@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Assert;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Events\EventTypeContract;
@@ -35,6 +36,7 @@ use Vaulter\Profiles\ProfileRegistry;
  * });
  * ```
  */
+#[Api]
 trait InteractsWithVaulter
 {
     /**

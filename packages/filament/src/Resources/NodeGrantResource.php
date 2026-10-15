@@ -24,6 +24,7 @@ use Override;
 use UnitEnum;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\GrantScope;
@@ -53,6 +54,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * so the panel never bypasses the ACL. The model resolves through
  * {@see app(VaulterConfig::class)->model('grant')} for swappability.
  */
+#[Internal]
 final class NodeGrantResource extends Resource
 {
     protected static ?string $model = NodeGrant::class;

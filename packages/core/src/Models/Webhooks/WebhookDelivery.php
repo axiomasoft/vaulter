@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -40,6 +41,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  *
  * @method static Builder<static> query()
  */
+#[Internal]
 class WebhookDelivery extends Model
 {
     use GuardsWrites;

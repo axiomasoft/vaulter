@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Contracts\Foundation\Application;
 use ReflectionFunction;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
@@ -19,6 +20,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
  * Repeats the validation the packages run at boot and lists every failure instead of the first.
  * A package adds its own validation by tagging a closure binding `vaulter.config_validators`.
  */
+#[Internal]
 final readonly class ConfigValidCheck implements DoctorCheck
 {
     public const string TAG = 'vaulter.config_validators';

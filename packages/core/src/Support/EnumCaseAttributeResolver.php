@@ -6,6 +6,7 @@ namespace Vaulter\Support;
 
 use ReflectionEnumUnitCase;
 use UnitEnum;
+use Vaulter\Attributes\Internal;
 
 /**
  * Resolves a single PHP attribute declared on an enum case, with per-instance
@@ -18,6 +19,7 @@ use UnitEnum;
  * same pattern already used by {@see ProfileRegistry} and
  * {@see IdStrategyResolver} elsewhere in this package.
  */
+#[Internal]
 final class EnumCaseAttributeResolver
 {
     /**

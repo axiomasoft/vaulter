@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\Factories\DriveFactory;
@@ -40,6 +41,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
  */
+#[Internal]
 class Drive extends Model
 {
     use GuardsWrites;

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Sharing;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** A password-protected share link was opened without its (correct) password. */
+#[Api]
 final class SharePasswordRequiredException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

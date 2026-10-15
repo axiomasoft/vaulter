@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * sibling-unique). Drive operations never silently auto-rename — the conflict is
  * surfaced deterministically so the caller decides (overwrite, suffix, abort).
  */
+#[Api]
 final class NodeNameConflictException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

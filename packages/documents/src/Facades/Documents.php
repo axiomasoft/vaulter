@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
@@ -20,6 +21,7 @@ use Vaulter\Documents\Types\DocumentTypeRegistry;
  *
  * @see DocumentsManager
  */
+#[Api]
 final class Documents extends Facade
 {
     protected static function getFacadeAccessor(): string

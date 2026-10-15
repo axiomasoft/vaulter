@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Events;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Changes\ChangeOperation;
 use Vaulter\Enums\Changes\ChangeReason;
 use Vaulter\Events\DomainEvent;
@@ -17,6 +18,7 @@ use Vaulter\Support\Identity;
  *
  * @see DomainEvent::journal()
  */
+#[Internal]
 final readonly class JournalEffect
 {
     public string $nodeId;

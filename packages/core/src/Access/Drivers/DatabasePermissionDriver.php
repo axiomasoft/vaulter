@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
@@ -37,6 +38,7 @@ use Vaulter\Enums\Access\Effect;
  * isGrantAuthoritative() to return false, or the listing would wrongly hide nodes that
  * lane allows (the interface alone is inherited and cannot be un-declared).
  */
+#[Internal]
 class DatabasePermissionDriver implements GrantAuthoritativeDriver, PermissionDriver
 {
     public function isGrantAuthoritative(): bool

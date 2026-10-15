@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
  * a positive integer; an invalid one is refused rather than clamped, since a silently clamped settle window
  * could let reconciliation skip a late commit.
  */
+#[Internal]
 final readonly class OutboxConfig
 {
     public function __construct(private Repository $config) {}

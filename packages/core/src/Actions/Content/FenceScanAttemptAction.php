@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Content\ScanWorkTransitions;
@@ -14,8 +15,9 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
 /**
  * Re-checks a leased attempt against the authoritative revision chain before scanner bytes are opened.
  *
- * @internal Read only: no transaction and no lock.
+ * Read only: no transaction and no lock.
  */
+#[Internal]
 final readonly class FenceScanAttemptAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private ScanSnapshot $snapshots, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}

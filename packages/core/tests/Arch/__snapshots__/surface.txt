@@ -1,0 +1,2070 @@
+# Surface manifest of the package `core` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
+# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
+
+Vaulter\Access\Roles\Role api since 1.0 final readonly class
+  public array $abilities
+  public int $bits
+  public string $key
+  public int $version
+  public function __construct(string $key, int $version, array $abilities)
+  public function allows(Vaulter\Enums\Access\Ability $ability): bool
+  public static function covering(array $roles): ?self
+  public function covers(self $other): bool
+  public function is(self $other): bool
+
+Vaulter\Access\Roles\RoleRegistry api since 1.0 final class
+  public const string COMMENTER = 'commenter'
+  public const string ORGANIZER = 'organizer'
+  public const string OWNER = 'owner'
+  public const string PREVIEWER = 'previewer'
+  public const string READER = 'reader'
+  public const string WRITER = 'writer'
+  public function all(): array
+  public function get(string $key, int $version): Vaulter\Access\Roles\Role
+  public function has(string $key, ?int $version = null): bool
+  public function keys(): array
+  public function latest(string $key): Vaulter\Access\Roles\Role
+
+Vaulter\Access\ValueObjects\AccessExplanation api since 1.0 final readonly class
+  public const string REASON_ALLOW = 'allow'
+  public const string REASON_NO_GRANT = 'no_grant'
+  public const string REASON_OVERRIDE_ALLOW = 'override_allow'
+  public const string REASON_OVERRIDE_DENY = 'override_deny'
+  public const string REASON_SYSTEM = 'system'
+  public const string RESTRICTION_OVERRIDE_DENY = 'administrative_block'
+  public Vaulter\Enums\Access\Ability $ability
+  public bool $allowed
+  public int|null|string $boundaryNodeId
+  public string $reason
+  public array $restrictions
+  public array $sources
+  public function __construct(bool $allowed, Vaulter\Enums\Access\Ability $ability, string $reason, array $sources, array $restrictions, int|null|string $boundaryNodeId)
+
+Vaulter\Access\ValueObjects\AccessScope api since 1.0 final readonly class
+  public int|string $driveId
+  public Vaulter\ValueObjects\Access\OwnerRef $driveOwner
+  public string $profile
+  public int|null|string $tenantId
+  public function __construct(string $profile, Vaulter\ValueObjects\Access\OwnerRef $driveOwner, int|string $driveId, int|null|string $tenantId = null)
+  public static function forDrive(Vaulter\Models\Drive\Drive $drive): self
+
+Vaulter\Access\ValueObjects\AccessSource api since 1.0 final readonly class
+  public ?Illuminate\Support\Carbon $expiresAt
+  public int|null|string $grantId
+  public bool $inherited
+  public int|null|string $originNodeId
+  public string $role
+  public int $roleVersion
+  public Vaulter\Access\ValueObjects\Subject $subject
+  public function __construct(int|null|string $grantId, Vaulter\Access\ValueObjects\Subject $subject, string $role, int $roleVersion, int|null|string $originNodeId, bool $inherited, ?Illuminate\Support\Carbon $expiresAt)
+
+Vaulter\Access\ValueObjects\Decision api since 1.0 final readonly class
+  public Vaulter\Access\Roles\Role $role
+  public function __construct(Vaulter\Access\Roles\Role $role)
+  public static function union(array $roles): ?self
+
+Vaulter\Access\ValueObjects\GrantSet api since 1.0 final readonly class
+  public int $allowedBits
+  public bool $superAllow
+  public bool $superDeny
+  public function __construct(int $allowedBits, bool $superAllow = false, bool $superDeny = false)
+  public function allows(Vaulter\Enums\Access\Ability $ability): bool
+  public static function none(): self
+  public static function superAllowed(): self
+  public static function superDenied(): self
+
+Vaulter\Access\ValueObjects\Subject api since 1.0 final readonly class
+  public int|string $id
+  public string $type
+  public function __construct(string $type, int|string $id)
+  public function equals(self $other): bool
+  public static function make(string $type, int|string $id): self
+  public static function ofModel(Illuminate\Database\Eloquent\Model $model): self
+  public function signature(): string
+
+Vaulter\Attributes\Api api since 1.0 final readonly class
+  public string $since
+  public function __construct(string $since = '1.0')
+
+Vaulter\Attributes\EventSpec api since 1.0 final readonly class
+  public bool $activity
+  public array $data
+  public string $description
+  public bool $external
+  public ?string $journal
+  public string $subject
+  public function __construct(string $subject, array $data, bool $activity, bool $external, ?string $journal, string $description)
+  public function allowedKeys(): array
+  public function requiredKeys(): array
+
+Vaulter\Attributes\Icon api since 1.0 final readonly class
+  public string $value
+  public function __construct(string $value)
+
+Vaulter\Attributes\Internal api since 1.0 final readonly class
+  public ?string $reason
+  public function __construct(?string $reason = null)
+
+Vaulter\Attributes\Label api since 1.0 final readonly class
+  public string $value
+  public function __construct(string $value)
+
+Vaulter\Attributes\Spi api since 1.0 final readonly class
+  public Vaulter\Attributes\SpiKind $kind
+  public string $since
+  public function __construct(Vaulter\Attributes\SpiKind $kind, string $since = '1.0')
+
+Vaulter\Attributes\SpiKind api since 1.0 enum: string
+  case Call = 'call'
+  case Implement = 'implement'
+
+Vaulter\Concerns\HasDrives api since 1.0 trait
+  public static function bootHasDrives(): void
+  public function drive(?string $profile = null): Vaulter\Contracts\Drive\DriveHandle
+  public function drives(): Illuminate\Database\Eloquent\Relations\MorphMany
+
+Vaulter\Configuration\AccessConfig api since 1.0 final readonly class
+  public function gateAbilityMap(): array
+  public function gateCreateAbility(): string
+  public function gateSuperAbility(): string
+  public function permissionDriver(): string
+  public function permissionDrivers(): array
+  public function spatieCreatePermission(): string
+  public function spatiePermissionMap(): array
+  public function spatieRoleSubjectType(): string
+  public function spatieSuperPermission(): string
+  public function spatieTeamSubjectType(): string
+  public function spatieTeamsEnabled(): bool
+
+Vaulter\Configuration\ChangesConfig api since 1.0 final readonly class
+  public function maxPageSize(): int
+  public function retentionDays(): int
+
+Vaulter\Configuration\ConfigNormalizer api since 1.0 final class
+  public function normalize(Illuminate\Contracts\Config\Repository $config, array $packageDefaults): void
+  public function packageDefaults(): array
+  public function registerDefaults(string $root, string $path): void
+
+Vaulter\Configuration\ConfigValidator api since 1.0 final readonly class
+  public static function assertCollaborationSecrets(bool $enabled, ?string $jwtSecret, ?string $webhookSecret, Illuminate\Contracts\Foundation\Application $app): void
+  public static function assertImplements(string $key, string $class, string $base): void
+  public static function assertModel(string $key, string $class, string $base): void
+  public function validate(Vaulter\Configuration\VaulterConfig $config, Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Configuration\DatabaseConfig api since 1.0 final readonly class
+  public function connection(): ?string
+  public function table(string $name): string
+  public function tablePrefix(): string
+  public function writeGuard(): bool
+
+Vaulter\Configuration\DownloadsConfig api since 1.0 final readonly class
+  public function deliveryMode(): string
+  public function directTtlSeconds(): int
+  public function inlineMimeTypes(): array
+
+Vaulter\Configuration\IdsConfig api since 1.0 final readonly class
+  public function hostKeys(): string
+  public function strategies(): array
+  public function strategy(): string
+  public function usesUlids(): bool
+
+Vaulter\Configuration\ListingConfig api since 1.0 final readonly class
+  public function scanBudget(): int
+
+Vaulter\Configuration\ObservabilityConfig api since 1.0 final readonly class
+  public function enabled(): bool
+  public function recorder(): ?string
+  public function tracingEnabled(): bool
+  public function tracingRecorder(): ?string
+
+Vaulter\Configuration\RoutesConfig api since 1.0 final readonly class
+  public function authenticatedMiddleware(): array
+  public function hubMiddleware(): array
+  public function prefix(): string
+  public function publicMiddleware(): array
+  public function publicRateLimit(): int
+  public function uploadsRateLimit(): int
+  public function versionedPrefix(): string
+
+Vaulter\Configuration\ScanConfig api since 1.0 final readonly class
+  public function globalSpec(): Vaulter\Content\ScanPolicySpec
+  public function mode(): Vaulter\Enums\Cas\ScanMode
+  public function scanner(): ?string
+
+Vaulter\Configuration\ScheduleConfig api since 1.0 final readonly class
+  public function enabled(): bool
+  public function frequencies(string $root, array $keys): array
+
+Vaulter\Configuration\ScheduleFrequency api since 1.0 final readonly class
+  public function applyTo(Illuminate\Console\Scheduling\Event $event): Illuminate\Console\Scheduling\Event
+  public static function parse(string $key, mixed $value): ?self
+
+Vaulter\Configuration\SharingConfig api since 1.0 final readonly class
+  public function defaultTtlHours(): int
+  public function maxTtlHours(): int
+  public function prefixLength(): int
+  public function tokenGenerator(): string
+  public function urlBase(): string
+
+Vaulter\Configuration\TenancyConfig api since 1.0 final readonly class
+  public const string COLUMN = 'tenant_id'
+  public function enabled(): bool
+  public function resolver(): string
+
+Vaulter\Configuration\VaulterConfig api since 1.0 final readonly class
+  public function access(): Vaulter\Configuration\AccessConfig
+  public function changes(): Vaulter\Configuration\ChangesConfig
+  public function database(): Vaulter\Configuration\DatabaseConfig
+  public function defaultProfile(): string
+  public function downloads(): Vaulter\Configuration\DownloadsConfig
+  public function drivesDeleteWithOwner(): bool
+  public function featureEnabled(string $feature, ?string $profile = null): bool
+  public function handlers(): array
+  public function ids(): Vaulter\Configuration\IdsConfig
+  public function listing(): Vaulter\Configuration\ListingConfig
+  public function model(string $key): string
+  public function observability(): Vaulter\Configuration\ObservabilityConfig
+  public function outbox(): Vaulter\Configuration\OutboxConfig
+  public function profileProviders(): array
+  public function routes(): Vaulter\Configuration\RoutesConfig
+  public function scan(): Vaulter\Configuration\ScanConfig
+  public function sharing(): Vaulter\Configuration\SharingConfig
+  public function tenancy(): Vaulter\Configuration\TenancyConfig
+  public function webhooks(): Vaulter\Configuration\WebhooksConfig
+
+Vaulter\Configuration\WebhooksConfig api since 1.0 final readonly class
+  public const array REMOVED_KEYS = ['max_attempts' => 'vaulter.webhooks.retry_schedule (attempts = entries + 1)', 'backoff' => 'vaulter.webhooks.retry_schedule', 'disable_after_failures' => 'vaulter.webhooks.disable_after_days', 'signature_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'timestamp_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'event_header' => 'the event type, which is the "type" field of the delivery body', 'relay.claim_seconds' => 'vaulter.outbox.lease_seconds (the webhooks.fanout consumer runs under the outbox delivery lease, D29)']
+  public function allowedIpRanges(): array
+  public function allowedSchemes(): array
+  public function assertNoRemovedKeys(): void
+  public function blockedIpRanges(): array
+  public function connectTimeout(): int
+  public function disableAfterDays(): int
+  public function manageAbility(): ?string
+  public function maxResponseBytes(): int
+  public function relayFanoutChunk(): int
+  public function retentionDays(): int
+  public function retryClaimSeconds(): int
+  public function retryJitter(): float
+  public function retrySchedule(): array
+  public function secretRotationOverlap(): int
+  public function timeout(): int
+  public function urlGuard(): string
+
+Vaulter\Content\ImmutableContentIdentity api since 1.0 final readonly class
+  public int|string $blobId
+  public string $disk
+  public string $scopeKey
+  public string $sha256
+  public int $size
+  public string $storageKey
+  public ?string $storageVersion
+  public function __construct(int|string $blobId, string $scopeKey, string $disk, string $storageKey, ?string $storageVersion, string $sha256, int $size)
+  public function fingerprint(): string
+
+Vaulter\Content\ScanInput api since 1.0 final readonly class
+  public int|string $blobId
+  public DateTimeImmutable $deadline
+  public ?string $detectedMime
+  public int|string $driveId
+  public string $policyVersion
+  public int|string $revisionId
+  public string $scannerVersion
+  public string $scopeKey
+  public string $sha256
+  public int $size
+  public mixed $stream
+  public int|null|string $tenantId
+  public function __construct(mixed $stream, int|string $revisionId, int|string $blobId, int|string $driveId, int|null|string $tenantId, string $scopeKey, string $sha256, int $size, ?string $detectedMime, string $scannerVersion, string $policyVersion, DateTimeImmutable $deadline)
+
+Vaulter\Content\ScanPolicySpec api since 1.0 final readonly class
+  public Vaulter\Enums\Cas\ScanMode $mode
+  public string $policyVersion
+  public string $predicateKey
+  public ?string $rolloutKey
+  public string $scannerKey
+  public string $scannerVersion
+  public function __construct(string $predicateKey, Vaulter\Enums\Cas\ScanMode $mode, string $scannerKey, string $scannerVersion, string $policyVersion, ?string $rolloutKey = null)
+  public function configFingerprint(): string
+  public function requiresScan(int $admissionSequence, ?int $boundarySequence): bool
+  public function specKey(): string
+
+Vaulter\Content\ScanResult api since 1.0 final readonly class
+  public const array REASONS = ['scanner_timeout', 'scanner_unavailable', 'transient_io', 'unsupported', 'too_large', 'password_protected', 'access_denied', 'unknown', 'content_identity_mismatch', 'attempts_exhausted', 'superseded_policy']
+  public ?string $reason
+  public bool $retryable
+  public Vaulter\Enums\Cas\ScanVerdict $verdict
+  public function __construct(Vaulter\Enums\Cas\ScanVerdict $verdict, ?string $reason = null, bool $retryable = false)
+
+Vaulter\Content\SignedContentUrl api since 1.0 final readonly class
+  public string $contentIdentity
+  public DateTimeImmutable $expiresAt
+  public ?string $storageVersion
+  public string $url
+  public function __construct(string $url, DateTimeImmutable $expiresAt, string $contentIdentity, ?string $storageVersion)
+
+Vaulter\Contracts\Access\AccessOperations api since 1.0 interface
+  public function explain(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Enums\Access\Ability $ability, ?Illuminate\Contracts\Auth\Access\Authorizable $subject = null): Vaulter\Access\ValueObjects\AccessExplanation
+  public function grant(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Access\GrantInput $grant): Vaulter\Data\Snapshots\GrantSnapshot
+  public function grants(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  public function restoreInheritance(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
+  public function restrictInheritance(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Enums\Access\InheritanceRestriction $mode = \Vaulter\Enums\Access\InheritanceRestriction::Empty): Vaulter\Data\Snapshots\NodeSnapshot
+  public function revoke(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\GrantSnapshot|int|string $grant): void
+
+Vaulter\Contracts\Access\EnumeratesRoleSubjects spi:implement since 1.0 interface
+
+Vaulter\Contracts\Access\GrantAuthoritativeDriver spi:implement since 1.0 interface
+  public function isGrantAuthoritative(): bool
+
+Vaulter\Contracts\Access\NonEnumeratingPermissionDriver spi:implement since 1.0 interface extends Vaulter\Contracts\Access\PermissionDriver
+
+Vaulter\Contracts\Access\NonProductionPermissionDriver spi:implement since 1.0 interface extends Vaulter\Contracts\Access\PermissionDriver
+
+Vaulter\Contracts\Access\PermissionDriver spi:implement since 1.0 interface
+  public function canCreateIn(Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Access\ValueObjects\AccessScope $scope): bool
+  public function override(Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Access\ValueObjects\AccessScope $scope): ?Vaulter\Enums\Access\Effect
+  public function resolve(Vaulter\Access\ValueObjects\Subject $subject, Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Access\ValueObjects\AccessScope $scope): ?Vaulter\Access\ValueObjects\Decision
+  public function subjectsFor(Illuminate\Contracts\Auth\Access\Authorizable $actor): array
+
+Vaulter\Contracts\Activity\ActivityOperations api since 1.0 interface
+  public function forDrive(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function forNode(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+
+Vaulter\Contracts\Cas\BlobStore api since 1.0 interface
+  public function attach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
+  public function commit(mixed $stream, Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Models\Cas\Blob
+  public function commitStaged(Vaulter\Contracts\Cas\StagedObject $staged, Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Models\Cas\Blob
+  public function detach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
+  public function read(Vaulter\Models\Cas\Blob $blob): mixed
+
+Vaulter\Contracts\Cas\ContentScanner spi:implement since 1.0 interface
+  public function key(): string
+  public function scan(Vaulter\Content\ScanInput $input): Vaulter\Content\ScanResult
+  public function version(): string
+
+Vaulter\Contracts\Cas\ContentStore spi:implement since 1.0 interface
+  public function delete(string $key, ?string $disk = null): void
+  public function exists(string $key, ?string $disk = null): bool
+  public function get(string $key, ?string $disk = null): mixed
+  public function keyFor(Vaulter\ValueObjects\Cas\BlobScope $scope, string $sha256): string
+  public function promote(Vaulter\Contracts\Cas\StagedObject $staged, string $key, ?string $disk = null): void
+  public function stage(mixed $stream): Vaulter\Contracts\Cas\StagedObject
+
+Vaulter\Contracts\Cas\DirectContentUrlSigner spi:implement since 1.0 interface
+  public function sign(Vaulter\Content\ImmutableContentIdentity $content, DateTimeImmutable $expiresAt): Vaulter\Content\SignedContentUrl
+
+Vaulter\Contracts\Cas\ListableContentStore spi:implement since 1.0 interface
+  public function lastModified(string $key, ?string $disk = null): ?int
+  public function listKeys(?string $disk = null): iterable
+
+Vaulter\Contracts\Cas\ListableStorageDriver spi:implement since 1.0 interface
+  public function lastModified(string $key, ?string $disk = null): ?int
+  public function listContents(?string $disk = null): iterable
+
+Vaulter\Contracts\Cas\StagedObject api since 1.0 interface
+  public function discard(): void
+  public function path(): string
+  public function readStream(): mixed
+  public function sha256(): string
+  public function sizeBytes(): int
+
+Vaulter\Contracts\Cas\StorageDriver spi:implement since 1.0 interface
+  public function delete(string $key, ?string $disk = null): void
+  public function disk(?string $disk = null): Illuminate\Contracts\Filesystem\Filesystem
+  public function exists(string $key, ?string $disk = null): bool
+  public function get(string $key, ?string $disk = null): mixed
+  public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
+  public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string
+
+Vaulter\Contracts\Content\ScanPolicyResolver spi:implement since 1.0 interface
+  public function forDrive(Vaulter\Models\Drive\Drive $drive): array
+  public function required(Vaulter\Models\Drive\FileRevision $revision, Vaulter\Content\ScanPolicySpec $spec): bool
+  public function resolve(Vaulter\Models\Drive\Drive $drive): array
+
+Vaulter\Contracts\Doctor\DoctorCheck spi:implement since 1.0 interface
+  public function key(): string
+  public function run(Vaulter\Doctor\DoctorContext $context): array
+  public function title(): string
+
+Vaulter\Contracts\Drive\DownloadGuard spi:implement since 1.0 interface
+  public function check(Vaulter\Operations\DriveContext|Vaulter\Sharing\ShareContext $context, Vaulter\Models\Drive\Node $node, Vaulter\Models\Drive\FileRevision $revision): void
+
+Vaulter\Contracts\Drive\DriveExtension spi:implement since 1.0 interface
+
+Vaulter\Contracts\Drive\DriveHandle api since 1.0 interface
+  public function access(): Vaulter\Contracts\Access\AccessOperations
+  public function actingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): static
+  public function activity(): Vaulter\Contracts\Activity\ActivityOperations
+  public function actor(): Vaulter\ValueObjects\Access\Actor
+  public function archive(): Vaulter\Data\Snapshots\DriveSnapshot
+  public function asSystem(string $reason): static
+  public function changes(): Vaulter\Operations\ChangeOperations
+  public function delete(): Vaulter\Data\Snapshots\DriveSnapshot
+  public function extension(string $operations): object
+  public function files(): Vaulter\Contracts\Drive\FileOperations
+  public function folders(): Vaulter\Contracts\Drive\FolderOperations
+  public function nodes(): Vaulter\Contracts\Drive\NodeOperations
+  public function profile(): Vaulter\Profiles\Profile
+  public function quota(): Vaulter\Data\Snapshots\QuotaSnapshot
+  public function root(): Vaulter\Data\Snapshots\NodeSnapshot
+  public function shares(): Vaulter\Contracts\Sharing\ShareOperations
+  public function snapshot(): Vaulter\Data\Snapshots\DriveSnapshot
+  public function trash(): Vaulter\Contracts\Drive\TrashOperations
+  public function unarchive(): Vaulter\Data\Snapshots\DriveSnapshot
+  public function withCorrelationId(string $correlationId): static
+  public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
+
+Vaulter\Contracts\Drive\FileOperations api since 1.0 interface
+  public function addRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Drive\UploadSource $source, ?Vaulter\Data\Drive\RevisionOptions $options = null): Vaulter\Data\Snapshots\FileRevisionSnapshot
+  public function deleteRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision): void
+  public function read(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|null|string $revision = null): Vaulter\Data\Drive\FileStream
+  public function restoreRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, ?int $expectedSequence = null): Vaulter\Data\Snapshots\FileRevisionSnapshot
+  public function revisions(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function setRevisionRetention(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, bool $keepForever): Vaulter\Data\Snapshots\FileRevisionSnapshot
+  public function upload(Vaulter\Data\Drive\UploadSource $source, ?Vaulter\Data\Drive\UploadOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+
+Vaulter\Contracts\Drive\FolderOperations api since 1.0 interface
+  public function create(string $name, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?Vaulter\Data\Drive\CreateFolderOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+
+Vaulter\Contracts\Drive\NodeContentLifecycle spi:implement since 1.0 interface
+  public function copy(Vaulter\Operations\DriveContext $context, Vaulter\Models\Drive\Node $source, Vaulter\Models\Drive\Node $copy): Vaulter\Data\Drive\CopyResult
+  public function kind(): Vaulter\Enums\Drive\NodeKind
+  public function purge(Vaulter\Operations\DriveContext $context, Vaulter\Models\Drive\Node $node): void
+
+Vaulter\Contracts\Drive\NodeOperations api since 1.0 interface
+  public function abilities(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Access\ValueObjects\NodeAbilities
+  public function abilitiesMany(array $nodes): array
+  public function children(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $folder = null, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function copy(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, ?Vaulter\Data\Drive\CopyOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function find(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
+  public function move(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination, ?Vaulter\Data\Drive\MoveOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function properties(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  public function rename(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, string $name, ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function search(string $term, ?Vaulter\Data\Drive\SearchOptions $options = null): Vaulter\Data\Page
+  public function setProperties(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function star(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
+  public function starred(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function trash(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
+  public function unstar(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
+
+Vaulter\Contracts\Drive\NodeSnapshotContributor spi:implement since 1.0 interface
+  public function contribute(array $nodes): array
+  public function key(): string
+
+Vaulter\Contracts\Drive\PurgeOnlyContentLifecycle spi:implement since 1.0 interface
+
+Vaulter\Contracts\Drive\TrashOperations api since 1.0 interface
+  public function empty(): int
+  public function list(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function purge(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): void
+  public function restore(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Data\Drive\RestoreOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
+
+Vaulter\Contracts\Handlers\FileHandler spi:implement since 1.0 interface
+  public function capabilities(Vaulter\ValueObjects\Handlers\FileDescriptor $file): Vaulter\ValueObjects\Handlers\ContentCapabilities
+  public function extensions(): array
+  public function key(): string
+  public function mimeTypes(): array
+  public function priority(): int
+  public function viewer(Vaulter\ValueObjects\Handlers\FileDescriptor $file): Vaulter\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Contracts\Handlers\FileHandlerRegistry api since 1.0 interface
+  public function all(): array
+  public function register(Vaulter\Contracts\Handlers\FileHandler|string $handler): void
+  public function resolve(Vaulter\ValueObjects\Handlers\FileDescriptor $file, Vaulter\Enums\Handlers\Capability $capability = \Vaulter\Enums\Handlers\Capability::Download): Vaulter\Contracts\Handlers\FileHandler
+
+Vaulter\Contracts\Handlers\NodePresenter spi:implement since 1.0 interface
+  public function present(Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Contracts\IdStrategy spi:implement since 1.0 interface
+  public function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  public function cast(): string
+  public function key(Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
+  public function modelConcern(): ?string
+  public function newId(): int|null|string
+  public function reference(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+
+Vaulter\Contracts\Observability\MetricsRecorder spi:implement since 1.0 interface
+  public function counter(string $name, float|int $amount = 1, array $labels = []): void
+  public function gauge(string $name, float|int $value, array $labels = []): void
+  public function histogram(string $name, float|int $value, array $labels = []): void
+  public function timing(string $name, callable $operation, array $labels = []): mixed
+
+Vaulter\Contracts\Observability\TraceRecorder spi:implement since 1.0 interface
+  public function span(string $name, callable $operation, array $attributes = []): mixed
+
+Vaulter\Contracts\Presentation\KindPresenter spi:implement since 1.0 interface
+  public function kind(): Vaulter\Enums\Drive\NodeKind
+  public function present(Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Contracts\Profiles\ProfileOption spi:implement since 1.0 interface
+  public function enabled(): bool
+  public function name(): string
+  public function validate(Vaulter\Profiles\Profile $profile): void
+
+Vaulter\Contracts\Sharing\ShareOperations api since 1.0 interface
+  public function create(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Sharing\ShareLinkInput $input): Vaulter\Data\Snapshots\MintedShareLink
+  public function list(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  public function revoke(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
+  public function rotate(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): Vaulter\Data\Snapshots\MintedShareLink
+  public function update(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share, Vaulter\Data\Sharing\ShareLinkUpdate $changes): Vaulter\Data\Snapshots\ShareLinkSnapshot
+
+Vaulter\Contracts\Sharing\ShareTokenGenerator spi:implement since 1.0 interface
+  public function generate(): string
+
+Vaulter\Contracts\Tenancy\ResolvesOwnerTenant spi:implement since 1.0 interface
+  public function tenantOf(Illuminate\Database\Eloquent\Model $owner): int|null|string
+
+Vaulter\Contracts\Tenancy\TenantResolver spi:implement since 1.0 interface
+  public function current(): int|null|string
+
+Vaulter\Contracts\Webhooks\HostResolver spi:implement since 1.0 interface
+  public function resolve(string $host): array
+
+Vaulter\Contracts\Webhooks\OutboundUrlGuard spi:implement since 1.0 interface
+  public function isAllowed(string $url): void
+  public function pin(string $url): Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
+
+Vaulter\Data\Access\GrantInput api since 1.0 final readonly class
+  public ?Illuminate\Support\Carbon $expiresAt
+  public string $role
+  public Vaulter\Enums\Access\GrantScope $scope
+  public Vaulter\Access\ValueObjects\Subject $subject
+  public function __construct(Vaulter\Access\ValueObjects\Subject $subject, string $role, Vaulter\Enums\Access\GrantScope $scope = \Vaulter\Enums\Access\GrantScope::Subtree, ?Illuminate\Support\Carbon $expiresAt = null)
+
+Vaulter\Data\Drive\CopyOptions api since 1.0 final readonly class
+  public ?string $name
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+  public function __construct(?string $name = null, Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Rename)
+  public static function make(): self
+  public function name(?string $name): self
+  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
+
+Vaulter\Data\Drive\CopyResult api since 1.0 final readonly class
+  public int $addedBytes
+  public function __construct(int $addedBytes)
+
+Vaulter\Data\Drive\CreateFolderOptions api since 1.0 final readonly class
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+  public function __construct(Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Fail)
+  public static function make(): self
+  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
+
+Vaulter\Data\Drive\FileStream api since 1.0 final readonly class
+  public string $filename
+  public string $mimeType
+  public Vaulter\Data\Snapshots\FileRevisionSnapshot $revision
+  public string $sha256
+  public int $size
+  public mixed $stream
+  public function __construct(mixed $stream, string $filename, string $mimeType, int $size, string $sha256, Vaulter\Data\Snapshots\FileRevisionSnapshot $revision)
+
+Vaulter\Data\Drive\ListOptions api since 1.0 final readonly class
+  public ?string $cursor
+  public bool $descending
+  public array $kinds
+  public int $perPage
+  public Vaulter\Enums\Drive\NodeSort $sort
+  public function __construct(int $perPage = 50, ?string $cursor = null, Vaulter\Enums\Drive\NodeSort $sort = \Vaulter\Enums\Drive\NodeSort::Default, bool $descending = false, array $kinds = [])
+  public function cursor(?string $cursor): self
+  public function descending(bool $descending): self
+  public function kinds(array $kinds): self
+  public static function make(): self
+  public function perPage(int $perPage): self
+  public function sort(Vaulter\Enums\Drive\NodeSort $sort, bool $descending = false): self
+
+Vaulter\Data\Drive\MoveOptions api since 1.0 final readonly class
+  public ?int $expectedSequence
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+  public function __construct(?int $expectedSequence = null, Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Fail)
+  public function expectedSequence(?int $expectedSequence): self
+  public static function make(): self
+  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
+
+Vaulter\Data\Drive\NodePage api since 1.0 final readonly class implements Countable, IteratorAggregate, JsonSerializable
+  public array $items
+  public ?string $nextCursor
+  public int $scanned
+  public function __construct(array $items, ?string $nextCursor, int $scanned)
+  public function count(): int
+  public function getIterator(): Traversable
+  public function hasMore(): bool
+  public function jsonSerialize(): array
+
+Vaulter\Data\Drive\RestoreOptions api since 1.0 final readonly class
+  public Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination
+  public ?int $expectedSequence
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+  public function __construct(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Rename, ?int $expectedSequence = null)
+  public function destination(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination): self
+  public function expectedSequence(?int $expectedSequence): self
+  public static function make(): self
+  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
+
+Vaulter\Data\Drive\RevisionOptions api since 1.0 final readonly class
+  public ?string $declaredMimeType
+  public ?int $expectedSequence
+  public function __construct(?int $expectedSequence = null, ?string $declaredMimeType = null)
+  public function declaredMimeType(?string $declaredMimeType): self
+  public function expectedSequence(?int $expectedSequence): self
+  public static function make(): self
+
+Vaulter\Data\Drive\SearchOptions api since 1.0 final readonly class
+  public ?string $cursor
+  public int $perPage
+  public Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within
+  public function __construct(int $perPage = 50, ?string $cursor = null, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within = null)
+  public function cursor(?string $cursor): self
+  public static function make(): self
+  public function perPage(int $perPage): self
+  public function within(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within): self
+
+Vaulter\Data\Drive\UploadOptions api since 1.0 final readonly class
+  public ?DateTimeInterface $clientModifiedAt
+  public ?string $declaredMimeType
+  public ?string $name
+  public Vaulter\Enums\Drive\OnNameConflict $onConflict
+  public Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent
+  public function __construct(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?string $name = null, Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Fail, ?string $declaredMimeType = null, ?DateTimeInterface $clientModifiedAt = null)
+  public function clientModifiedAt(?DateTimeInterface $clientModifiedAt): self
+  public function declaredMimeType(?string $declaredMimeType): self
+  public static function make(): self
+  public function name(?string $name): self
+  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
+  public function parent(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent): self
+
+Vaulter\Data\Drive\UploadSource api since 1.0 final readonly class
+  public function declaredMimeType(): ?string
+  public function declaredSize(): ?int
+  public static function fromPath(string $path, ?string $name = null): self
+  public static function fromPsrStream(Psr\Http\Message\StreamInterface $stream, string $name): self
+  public static function fromStream($stream, string $name, ?int $size = null): self
+  public static function fromString(string $bytes, string $name): self
+  public static function fromUploadedFile(Illuminate\Http\UploadedFile $file): self
+  public function name(): string
+
+Vaulter\Data\Page api since 1.0 final readonly class implements Countable, IteratorAggregate
+  public array $items
+  public ?string $nextCursor
+  public int $scanned
+  public function count(): int
+  public function getIterator(): Traversable
+  public function hasMore(): bool
+
+Vaulter\Data\Sharing\MintedShareLink api since 1.0 final readonly class
+  public Vaulter\Models\Sharing\NodeShare $share
+  public string $token
+
+Vaulter\Data\Sharing\ShareLinkInput api since 1.0 final readonly class
+  public Vaulter\Enums\Sharing\ShareAudience $audience
+  public ?Illuminate\Support\Carbon $expiresAt
+  public ?int $maxUses
+  public ?string $password
+  public string $role
+  public Vaulter\Enums\Access\GrantScope $scope
+  public function __construct(string $role = \Vaulter\Access\Roles\RoleRegistry::READER, Vaulter\Enums\Sharing\ShareAudience $audience = \Vaulter\Enums\Sharing\ShareAudience::Anyone, Vaulter\Enums\Access\GrantScope $scope = \Vaulter\Enums\Access\GrantScope::Item, ?Illuminate\Support\Carbon $expiresAt = null, ?string $password = null, ?int $maxUses = null)
+
+Vaulter\Data\Snapshots\ActivityEntrySnapshot api since 1.0 final readonly class
+  public ?string $actorId
+  public ?string $actorType
+  public array $context
+  public DateTimeImmutable $createdAt
+  public ?string $driveId
+  public string $id
+  public ?string $ip
+  public ?string $requestId
+  public ?string $targetId
+  public ?string $targetType
+  public ?string $userAgent
+  public string $verb
+
+Vaulter\Data\Snapshots\DocumentHeadSnapshot api since 1.0 final readonly class
+  public int $epoch
+  public ?string $headRevisionId
+  public int $schemaVersion
+  public int $stateVersion
+  public string $type
+  public bool $typeAvailable
+
+Vaulter\Data\Snapshots\DriveSnapshot api since 1.0 final readonly class
+  public DateTimeImmutable $createdAt
+  public string $id
+  public string $name
+  public string $ownerId
+  public string $ownerType
+  public string $profile
+  public Vaulter\Enums\Drive\DriveStatus $status
+  public ?string $tenantId
+
+Vaulter\Data\Snapshots\FileHeadSnapshot api since 1.0 final readonly class
+  public string $fileId
+  public ?string $mimeType
+  public string $revisionId
+  public int $revisionNumber
+  public Vaulter\Enums\Drive\ScanStatus $scanStatus
+  public string $sha256
+  public int $sizeBytes
+
+Vaulter\Data\Snapshots\FileRevisionSnapshot api since 1.0 final readonly class
+  public ?DateTimeImmutable $clientModifiedAt
+  public DateTimeImmutable $createdAt
+  public ?string $createdBy
+  public ?string $declaredMimeType
+  public string $fileNodeId
+  public string $id
+  public bool $isHead
+  public bool $keepForever
+  public ?string $mimeType
+  public int $number
+  public ?string $restoredFromRevisionId
+  public Vaulter\Enums\Drive\ScanStatus $scanStatus
+  public string $sha256
+  public int $sizeBytes
+
+Vaulter\Data\Snapshots\GrantSnapshot api since 1.0 final readonly class
+  public DateTimeImmutable $createdAt
+  public ?DateTimeImmutable $expiresAt
+  public ?string $grantedBy
+  public string $id
+  public string $nodeId
+  public string $role
+  public int $roleVersion
+  public Vaulter\Enums\Access\GrantScope $scope
+  public Vaulter\Access\ValueObjects\Subject $subject
+
+Vaulter\Data\Snapshots\MintedShareLink api since 1.0 final readonly class
+  public Vaulter\Data\Snapshots\ShareLinkSnapshot $link
+  public string $token
+
+Vaulter\Data\Snapshots\NodeSnapshot api since 1.0 final readonly class
+  public ?DateTimeImmutable $contentModifiedAt
+  public ?string $contentModifiedBy
+  public DateTimeImmutable $createdAt
+  public ?string $createdBy
+  public ?Vaulter\Data\Snapshots\DocumentHeadSnapshot $document
+  public string $driveId
+  public ?string $extension
+  public ?Vaulter\Data\Snapshots\FileHeadSnapshot $file
+  public string $id
+  public bool $inheritsAccess
+  public Vaulter\Enums\Drive\NodeKind $kind
+  public ?string $mimeType
+  public string $name
+  public ?string $parentId
+  public array $properties
+  public int $sequence
+  public int $sizeBytes
+  public bool $trashRoot
+  public ?DateTimeImmutable $trashedAt
+  public ?string $trashedBy
+  public DateTimeImmutable $updatedAt
+  public ?string $updatedBy
+  public ?Vaulter\Data\Snapshots\ViewerStateSnapshot $viewer
+
+Vaulter\Data\Snapshots\QuotaSnapshot api since 1.0 final readonly class
+  public ?int $limitBytes
+  public ?int $remainingBytes
+  public Vaulter\Enums\Drive\QuotaState $state
+  public int $trashedBytes
+  public int $usedBytes
+
+Vaulter\Data\Snapshots\ShareLinkSnapshot api since 1.0 final readonly class
+  public Vaulter\Enums\Sharing\ShareAudience $audience
+  public DateTimeImmutable $createdAt
+  public ?string $createdBy
+  public ?DateTimeImmutable $expiresAt
+  public string $id
+  public ?int $maxUses
+  public string $nodeId
+  public bool $passwordProtected
+  public ?DateTimeImmutable $revokedAt
+  public string $role
+  public int $roleVersion
+  public Vaulter\Enums\Access\GrantScope $scope
+  public int $tokenGeneration
+  public string $tokenPrefix
+  public int $useCount
+
+Vaulter\Data\Snapshots\ViewerStateSnapshot api since 1.0 final readonly class
+  public bool $starred
+
+Vaulter\Database\VaulterDatabase api since 1.0 final class
+  public function advisoryLock(string $key): void
+  public function afterCommit(Closure $callback): void
+  public function connection(): Illuminate\Database\Connection
+  public function driver(): string
+  public function lockTree(int|string $storageId): void
+  public function lockTreeShared(int|string $storageId): void
+  public function transaction(Closure $callback, int $attempts = 3): mixed
+
+Vaulter\Doctor\DoctorCheckResult api since 1.0 final readonly class
+  public ?string $detail
+  public array $findings
+  public string $key
+  public string $title
+  public function __construct(string $key, string $title, array $findings, ?string $detail = null)
+
+Vaulter\Doctor\DoctorContext api since 1.0 final readonly class
+  public DateTimeImmutable $now
+  public bool $probeStorage
+  public bool $production
+  public int $sampleLimit
+  public function __construct(bool $production, bool $probeStorage, int $sampleLimit, DateTimeImmutable $now)
+  public function mayProbeStorage(): bool
+  public function strictSeverity(): Vaulter\Doctor\DoctorSeverity
+
+Vaulter\Doctor\DoctorFinding api since 1.0 final readonly class
+  public string $code
+  public array $evidence
+  public ?string $hint
+  public string $message
+  public Vaulter\Doctor\DoctorSeverity $severity
+  public function __construct(Vaulter\Doctor\DoctorSeverity $severity, string $code, string $message, ?string $hint = null, array $evidence = [])
+  public static function at(Vaulter\Doctor\DoctorSeverity $severity, string $code, string $message, ?string $hint = null, array $evidence = []): self
+  public static function error(string $code, string $message, ?string $hint = null, array $evidence = []): self
+  public static function ok(string $code, string $message, array $evidence = []): self
+  public static function warning(string $code, string $message, ?string $hint = null, array $evidence = []): self
+
+Vaulter\Doctor\DoctorSeverity api since 1.0 enum: string
+  case Error = 'error'
+  case Ok = 'ok'
+  case Warning = 'warning'
+
+Vaulter\Enums\Access\Ability api since 1.0 enum: string
+  case Comment = 'comment'
+  case Copy = 'copy'
+  case Create = 'create'
+  case Delete = 'delete'
+  case Download = 'download'
+  case Edit = 'edit'
+  case Manage = 'manage'
+  case Move = 'move'
+  case Restore = 'restore'
+  case Share = 'share'
+  case Trash = 'trash'
+  case View = 'view'
+  public function bits(): int
+  public static function fromMask(int $bits): array
+  public static function mask(iterable $abilities): int
+  public function permission(): Vaulter\Enums\Access\Permission
+  public function satisfiedBy(int $bits): bool
+
+Vaulter\Enums\Access\Effect api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Allow = 'allow'
+  case Deny = 'deny'
+
+Vaulter\Enums\Access\GrantScope api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Item = 'item'
+  case Subtree = 'subtree'
+  public function inheritsDownward(): bool
+
+Vaulter\Enums\Access\InheritanceRestriction api since 1.0 enum: string
+  case CopyCurrent = 'copy_current'
+  case Empty = 'empty'
+
+Vaulter\Enums\Access\Permission api since 1.0 enum: int
+  case Comment = 32
+  case Copy = 256
+  case Create = 4
+  case Delete = 8
+  case Download = 64
+  case Edit = 2
+  case Manage = 2048
+  case Move = 128
+  case Restore = 1024
+  case Share = 16
+  case Trash = 512
+  case View = 1
+  public static function all(): int
+  public function isSetIn(int $bits): bool
+
+Vaulter\Enums\Cas\BlobStatus api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Committed = 'committed'
+  case Deleted = 'deleted'
+  case Deleting = 'deleting'
+  case Pending = 'pending'
+  case Tombstoned = 'tombstoned'
+  public function allowedTransitions(): array
+  public function canTransitionTo(self $target): bool
+  public function isLive(): bool
+  public static function values(): array
+
+Vaulter\Enums\Cas\ScanMode api since 1.0 enum: string
+  case AllContent = 'all_content'
+  case NewContentOnly = 'new_content_only'
+  case Off = 'off'
+
+Vaulter\Enums\Cas\ScanVerdict api since 1.0 enum: string
+  case Clean = 'clean'
+  case Failed = 'failed'
+  case Infected = 'infected'
+
+Vaulter\Enums\Drive\DriveStatus api since 1.0 enum: string
+  case Active = 'active'
+  case Archived = 'archived'
+  case Deleting = 'deleting'
+
+Vaulter\Enums\Drive\NodeKind api since 1.0 enum: string uses Vaulter\Support\Concerns\HasIcon, Vaulter\Support\Concerns\HasLabel
+  case Document = 'document'
+  case File = 'file'
+  case Folder = 'folder'
+  case Shortcut = 'shortcut'
+  public function isDocument(): bool
+  public static function values(): array
+
+Vaulter\Enums\Drive\NodeSort api since 1.0 enum: string
+  case Default = 'default'
+  case Name = 'name'
+  case Size = 'size'
+  case UpdatedAt = 'updated_at'
+
+Vaulter\Enums\Drive\OnNameConflict api since 1.0 enum: string
+  case AddRevision = 'add_revision'
+  case Fail = 'fail'
+  case Rename = 'rename'
+
+Vaulter\Enums\Drive\QuotaState api since 1.0 enum: string
+  case Critical = 'critical'
+  case Exceeded = 'exceeded'
+  case Nearing = 'nearing'
+  case Normal = 'normal'
+  public static function for(?int $limitBytes, int $usedBytes): self
+
+Vaulter\Enums\Drive\ScanStatus api since 1.0 enum: string
+  case Clean = 'clean'
+  case Failed = 'failed'
+  case Infected = 'infected'
+  case NotRequired = 'not_required'
+  case Pending = 'pending'
+
+Vaulter\Enums\Events\DriveEventType api since 1.0 enum: string implements Vaulter\Events\EventTypeContract uses Vaulter\Events\Concerns\DescribesEvent
+  case DriveArchived = 'drive.archived'
+  case DriveCreated = 'drive.created'
+  case DriveDeleted = 'drive.deleted'
+  case DriveUnarchived = 'drive.unarchived'
+  case FileRevisionAdded = 'file.revision_added'
+  case FileRevisionDeleted = 'file.revision_deleted'
+  case FileUploaded = 'file.uploaded'
+  case FolderCreated = 'folder.created'
+  case GrantCreated = 'grant.created'
+  case GrantRevoked = 'grant.revoked'
+  case InheritanceChanged = 'access.inheritance_changed'
+  case NodeCopied = 'node.copied'
+  case NodeMoved = 'node.moved'
+  case NodePurged = 'node.purged'
+  case NodeRenamed = 'node.renamed'
+  case NodeRestored = 'node.restored'
+  case NodeTrashed = 'node.trashed'
+  case NodeUpdated = 'node.updated'
+  case ShareCreated = 'share.created'
+  case ShareRevoked = 'share.revoked'
+  case ShareRotated = 'share.rotated'
+  case ShareUpdated = 'share.updated'
+  case UploadAborted = 'upload.aborted'
+  case UploadExpired = 'upload.expired'
+  case UploadInitiated = 'upload.initiated'
+
+Vaulter\Enums\Handlers\Capability api since 1.0 enum: string
+  case Collaborate = 'collaborate'
+  case Download = 'vaulter/download'
+  case Edit = 'edit'
+  case Preview = 'vaulter/preview'
+  case Thumbnail = 'thumbnail'
+  public function satisfiedBy(Vaulter\ValueObjects\Handlers\ContentCapabilities $capabilities): bool
+
+Vaulter\Enums\Operations\OperationKind api since 1.0 enum: string
+  case ContentEgress = 'content_egress'
+  case Metadata = 'metadata'
+  case Mutation = 'mutation'
+  case Purge = 'purge'
+
+Vaulter\Enums\Sharing\ShareAudience api since 1.0 enum: string
+  case Anyone = 'anyone'
+  case Authenticated = 'authenticated'
+  case Tenant = 'tenant'
+  public function requiresIdentity(): bool
+
+Vaulter\Events\Access\NodeGrantCreated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Access\NodeGrant $grant
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Events\Access\NodeGrantRevoked api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Drive\Node $node
+  public int $revoked
+  public Vaulter\Access\ValueObjects\Subject $subject
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Events\Access\NodeInheritanceChanged api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public bool $inherits
+  public Vaulter\Models\Drive\Node $node
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Events\Concerns\DescribesEvent spi:implement since 1.0 trait uses Vaulter\Support\Concerns\HasLabel
+  public function spec(): Vaulter\Attributes\EventSpec
+
+Vaulter\Events\DomainEvent api since 1.0 abstract readonly class
+  public Vaulter\ValueObjects\Access\ActorRef $actor
+  public string $correlationId
+  public string $eventId
+  public Carbon\CarbonImmutable $occurredAt
+  public function __construct(Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?Carbon\CarbonImmutable $occurredAt = null)
+  public function activityContext(): array
+  public function activityTarget(): ?Vaulter\ValueObjects\Events\ActivityTarget
+  public abstract function data(): array
+  protected static function id(mixed $value): ?string
+  public function isExternal(): bool
+  public function journal(): ?Vaulter\ValueObjects\Events\JournalEffect
+  protected static function nodeScope(Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Events\EventScope
+  protected static function nodeSubject(Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Events\EventSubject
+  protected static function nodeUpsert(Vaulter\Models\Drive\Node $node, bool $subtree = false, ?int $sequence = null): Vaulter\ValueObjects\Events\JournalEffect
+  public abstract function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): ?int
+  public abstract function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public abstract function type(): Vaulter\Events\EventTypeContract
+
+Vaulter\Events\EventCatalog api since 1.0 final class
+  public function __construct(Closure $active, Closure $installed)
+  public function all(): array
+  public function external(): array
+  public function externalValues(): array
+  public function get(string $value): Vaulter\Events\EventTypeContract
+  public function has(string $value): bool
+  public function owner(string $value): Vaulter\Modules\ModuleId
+  public function resolve(string $value): ?Vaulter\Events\EventTypeContract
+  public function values(): array
+
+Vaulter\Events\EventRecorder api since 1.0 final readonly class
+  public function record(Vaulter\Events\DomainEvent $event): void
+
+Vaulter\Events\EventSink spi:implement since 1.0 interface
+  public function record(Vaulter\Events\DomainEvent $event, Vaulter\Events\SinkWriter $writer): Vaulter\Events\SinkResult
+
+Vaulter\Events\EventTypeContract spi:implement since 1.0 interface extends BackedEnum
+  public function label(): string
+  public function spec(): Vaulter\Attributes\EventSpec
+
+Vaulter\Events\Outbox\ConsumeResult spi:call since 1.0 final readonly class
+  public const string DEAD = 'dead'
+  public const string DONE = 'done'
+  public const string RETRY = 'retry'
+  public ?string $error
+  public string $outcome
+  public static function dead(string $error): self
+  public static function done(): self
+  public static function retry(string $error): self
+
+Vaulter\Events\Outbox\DeliveryClass spi:call since 1.0 enum: string
+  case Durable = 'durable'
+  case Ephemeral = 'ephemeral'
+
+Vaulter\Events\Outbox\DeliveryControl spi:call since 1.0 final class
+  public readonly string $consumerId
+  public readonly string $eventId
+  public readonly int $generation
+  public function __construct(Vaulter\Database\VaulterDatabase $database, Vaulter\Configuration\DatabaseConfig $tables, string $eventId, string $consumerId, int $generation, ?string $continuation)
+  public function continuation(): ?string
+  public function isCurrent(): bool
+  public function saveContinuation(string $cursor): bool
+
+Vaulter\Events\Outbox\OutboxConsumer spi:implement since 1.0 interface
+  public function consume(Vaulter\Events\Outbox\OutboxEnvelope $envelope, Vaulter\Events\Outbox\DeliveryControl $control): Vaulter\Events\Outbox\ConsumeResult
+  public function deliveryClass(): Vaulter\Events\Outbox\DeliveryClass
+  public function id(): string
+  public function subscribes(Vaulter\Events\EventTypeContract $type): bool
+
+Vaulter\Events\Outbox\OutboxEnvelope spi:call since 1.0 final readonly class
+  public const array FORBIDDEN_KEYS = ['name', 'from_name', 'to_name', 'path', 'mime', 'mime_type', 'content', 'token', 'token_hash', 'token_prefix', 'secret', 'password', 'ip', 'user_agent', 'request_id', 'storage_path']
+  public const string SCOPE_DRIVE = 'drive'
+  public const string SCOPE_TENANT = 'tenant'
+  public ?string $aggregateId
+  public ?string $aggregateType
+  public Carbon\CarbonImmutable $createdAt
+  public string $eventId
+  public bool $external
+  public int $outboxSeq
+  public array $payload
+  public ?string $scopeId
+  public string $scopeKind
+  public ?int $sequence
+  public ?string $tenantId
+  public string $type
+  public function __construct(string $eventId, int $outboxSeq, string $type, bool $external, ?string $tenantId, string $scopeKind, ?string $scopeId, ?string $aggregateType, ?string $aggregateId, ?int $sequence, Carbon\CarbonImmutable $createdAt, array $payload)
+  public static function body(Vaulter\Events\DomainEvent $event, ?int $changeSeq = null): array
+  public static function fromModel(Vaulter\Events\Outbox\Models\OutboxEvent $row): self
+
+Vaulter\Events\Sharing\NodeShareCreated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Sharing\NodeShare $share
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Events\Sharing\NodeShareRevoked api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Sharing\NodeShare $share
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Events\Sharing\NodeShareRotated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public Vaulter\Models\Sharing\NodeShare $share
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Events\Sharing\NodeShareUpdated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+  public array $changed
+  public Vaulter\Models\Sharing\NodeShare $share
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Enums\Events\DriveEventType
+
+Vaulter\Events\SinkResult spi:call since 1.0 enum: string
+  case Replayed = 'replayed'
+  case Skipped = 'skipped'
+  case Stored = 'stored'
+
+Vaulter\Events\SinkWriter spi:call since 1.0 final class
+  public const string JOURNAL_SEQ = 'journal_seq'
+  public function __construct(Vaulter\Database\VaulterDatabase $database)
+  public function connection(): Illuminate\Database\Connection
+  public function insertOnce(string $table, array $row, string $uniqueColumn): bool
+  public function share(string $key, int|null|string $value): void
+  public function shared(string $key): int|null|string
+
+Vaulter\Exceptions\Access\MissingActorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public function problemCode(): string
+  public static function required(): self
+
+Vaulter\Exceptions\Access\MissingPermissionDriverException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function nullDriverInProduction(string $key): self
+  public static function unknownDriver(string $key, array $known): self
+
+Vaulter\Exceptions\Access\PermissionDeniedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forAbility(string $ability): self
+  public static function forAction(string $action): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Access\UnenumerableGrantSubjectException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function for(Vaulter\Access\ValueObjects\Subject $subject, string $driverClass): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Access\UnknownRoleException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function for(string $key, ?int $version = null): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Changes\CursorExpiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public function problemCode(): string
+  public static function pruned(): self
+  public static function reset(): self
+
+Vaulter\Exceptions\Changes\InvalidCursorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function malformed(): self
+  public static function otherDrive(): self
+  public function problemCode(): string
+
+Vaulter\Exceptions\Concerns\ProvidesProblemDetails api since 1.0 trait
+  public function problemDetails(): array
+  public function problemHeaders(): array
+
+Vaulter\Exceptions\Configuration\InvalidConfigurationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function problemCode(): string
+
+Vaulter\Exceptions\Content\ContentQuarantinedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Contracts\ProblemException api since 1.0 interface
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Database\ConcurrentUpdateException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct(?Throwable $previous = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemHeaders(): array
+
+Vaulter\Exceptions\Database\WriteOutsideOperationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct(string $target, ?string $caller = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forRevision(int|string $revisionId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Drive\DriveArchivedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forDrive(int|string $driveId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Drive\InvalidDriveStateException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function for(int|string $driveId, string $operation, Vaulter\Enums\Drive\DriveStatus|string $status): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Drive\QuotaExceededException api since 1.0 class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forStorage(int|string $storageId, int $quotaBytes, int $usedBytes, int $incomingBytes): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Drive\RevisionPinnedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forRevision(int|string $revisionId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Files\ContentUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Http\PreconditionRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function missing(string $header): self
+  public function problemCode(): string
+  public function problemDetails(): array
+  public static function wildcard(): self
+
+Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forOperation(string $operation): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Idempotency\OperationInProgressException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct(int $retryAfter = 1, ?Throwable $previous = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemHeaders(): array
+
+Vaulter\Exceptions\Modules\ModuleNotReadyException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function inactive(string $module): self
+  public static function missingTables(string $module, array $missing): self
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\InvalidCursorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function invalid(): self
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Nodes\InvalidDestinationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function notAFolder(Vaulter\Models\Drive\Node $destination): self
+  public static function otherDrive(Vaulter\Models\Drive\Node $destination, int|string $storageId): self
+  public function problemCode(): string
+  public static function rootIsImmutable(Vaulter\Models\Drive\Node $root, string $operation): self
+  public static function trashed(Vaulter\Models\Drive\Node $node): self
+
+Vaulter\Exceptions\Nodes\InvalidNodeNameException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public const string CONTROL_CHAR = 'control_char'
+  public const string EMPTY = 'empty'
+  public const string LEADING_OR_TRAILING_SPACE = 'leading_or_trailing_space'
+  public const string PATH_ALIAS = 'path_alias'
+  public const string RESERVED_CHAR = 'reserved_char'
+  public const string RESERVED_NAME = 'reserved_name'
+  public const string SEPARATOR = 'separator'
+  public const string TOO_LONG = 'too_long'
+  public const string TRAILING_DOT_OR_SPACE = 'trailing_dot_or_space'
+  public readonly string $reason
+  public static function forName(string $name, string $reason): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Nodes\InvalidPropertiesException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public const string KEY = 'key'
+  public const string NAMESPACE = 'namespace'
+  public const string RESERVED_NAMESPACE = 'reserved_namespace'
+  public const string TOO_LARGE = 'too_large'
+  public const string TOO_MANY = 'too_many'
+  public const string VALUE_TOO_LONG = 'value_too_long'
+  public readonly string $reason
+  public static function because(string $reason, string $subject = ''): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Nodes\NodeNameConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forName(string $name, int|null|string $parentId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Nodes\NodeNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forId(int|string $id): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\NodeNotTrashedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forNode(Vaulter\Models\Drive\Node $node): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forNode(Vaulter\Models\Drive\Node $node, int|string $trashRootId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+  public function trashRootId(): int|string
+
+Vaulter\Exceptions\Nodes\NotAFileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\RestoreDestinationChangedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forNode(Vaulter\Models\Drive\Node $node): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\SequenceOverflowException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\StaleNodeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct(?string $nodeId = null)
+  public static function forNode(int|string $nodeId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Nodes\StorageNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forId(int|string $id): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forBound(int $bound): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\UnsupportedNodeKindException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
+  public static function forKind(Vaulter\Enums\Drive\NodeKind $kind): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Policy\FileSizeLimitExceededException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly int $limit
+  public static function forLimit(int $limit): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly int $limit
+  public static function forParent(int|string $parentId, int $limit): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Policy\TreeDepthLimitExceededException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly int $limit
+  public static function forDepth(int $depth, int $limit): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Profiles\InvalidProfileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function idStrategyWithoutOwnTables(string $panel): self
+  public static function missingClass(string $panel, string $kind, string $fqcn): self
+  public static function notInstanceOf(string $panel, string $kind, string $fqcn, string $contract): self
+
+Vaulter\Exceptions\Profiles\ProfileRestrictionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forOperation(string $operation): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Profiles\UnknownProfileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forName(string $name, array $known): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Registry\RegistryFrozenException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forRegistry(string $registry): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Schema\UnknownIdStrategyException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function forKey(string $key, array $available): self
+
+Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly int $limitDays
+  public static function forLimit(int $limitDays): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Sharing\ShareNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function opaque(): self
+  public function problemCode(): string
+
+Vaulter\Exceptions\Sharing\SharePasswordRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function challenge(): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function for(string $role, Vaulter\Enums\Sharing\ShareAudience $audience): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Support\InvalidExtensionResult api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function duplicateKey(string $slot, string $key): self
+  public static function foreignOperation(string $middleware, string $operation): self
+  public function httpStatus(): int
+  public static function invalidFragment(string $slot, string $key, string $expected): self
+  public static function nextCalls(string $middleware, string $operation, int $calls): self
+  public function problemCode(): string
+  public static function replacedResult(string $middleware, string $operation): self
+  public static function reservedKey(string $slot, string $key): self
+
+Vaulter\Exceptions\Support\MissingPackageException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function forContract(string $contract, string $package): self
+
+Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+
+Vaulter\Exceptions\VaulterException api since 1.0 class extends RuntimeException
+  protected static function docs(string $anchor): string
+
+Vaulter\Facades\Vaulter api since 1.0 final class extends Illuminate\Support\Facades\Facade
+  @method static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
+  @method static DriveHandle|null findDrive(Model $owner, ?string $profile = null)
+  @method static FileHandlerRegistry handlers()
+  @method static PermissionDriverManager permissions()
+  @method static ProfileRegistry profiles()
+  @method static mixed withoutTenancy(Closure $callback)
+  protected static function getFacadeAccessor(): string
+
+Vaulter\Handlers\AbstractFileHandler spi:implement since 1.0 abstract class implements Vaulter\Contracts\Handlers\FileHandler
+  public function extensions(): array
+
+Vaulter\Http\Controllers\Controller api since 1.0 abstract class uses Illuminate\Foundation\Auth\Access\AuthorizesRequests
+  protected function actorId(Illuminate\Http\Request $request): int|null|string
+  protected function scalarId(Illuminate\Http\Request $request, string $key): int|string
+
+Vaulter\Http\Problems\ProblemCodeSource spi:implement since 1.0 interface
+  public function codes(): array
+  public function translationNamespace(): string
+
+Vaulter\Http\Problems\ProblemSpec api since 1.0 final readonly class
+  public ?string $exception
+  public Vaulter\Http\Problems\ReceiptPolicy $receipt
+  public Vaulter\Http\Problems\Retryable $retryable
+  public int $status
+  public function __construct(int $status, ?string $exception = null, Vaulter\Http\Problems\Retryable $retryable = \Vaulter\Http\Problems\Retryable::Never, Vaulter\Http\Problems\ReceiptPolicy $receipt = \Vaulter\Http\Problems\ReceiptPolicy::Never)
+
+Vaulter\Http\Problems\ReceiptPolicy api since 1.0 enum: string
+  case Cacheable = 'cacheable'
+  case Never = 'never'
+
+Vaulter\Http\Problems\Retryable api since 1.0 enum: string
+  case AfterRefetch = 'after_refetch'
+  case Never = 'never'
+  case WithBackoff = 'with_backoff'
+
+Vaulter\Http\Requests\VaulterFormRequest api since 1.0 abstract class extends Illuminate\Foundation\Http\FormRequest
+  protected function actorId(): int|null|string
+  protected function arrayInput(string $key): array
+  public function authorize(): bool
+  protected function nullableArrayInput(string $key): ?array
+  protected function nullableScalarId(string $key): int|null|string
+  protected function scalarId(string $key): int|string
+
+Vaulter\Http\Resources\PageResponse api since 1.0 final class
+  public const int DEFAULT_PER_PAGE = 50
+  public const int MAX_PER_PAGE = 200
+  public static function cursor(Illuminate\Http\Request $request): ?string
+  public static function fromPaginator(Illuminate\Contracts\Pagination\CursorPaginator $paginator, callable $map): Illuminate\Http\JsonResponse
+  public static function listOptions(Illuminate\Http\Request $request): Vaulter\Data\Drive\ListOptions
+  public static function make(Vaulter\Data\Page $page, callable $map, int $perPage): Illuminate\Http\JsonResponse
+  public static function perPage(Illuminate\Http\Request $request): int
+
+Vaulter\Idempotency\IdempotentWrite api since 1.0 final readonly class
+  public Vaulter\Idempotency\ReplayAuthorizer $authorizer
+  public Vaulter\Idempotency\ReceiptCodec $codec
+  public array $fingerprint
+  public function __construct(Vaulter\Idempotency\ReceiptCodec $codec, Vaulter\Idempotency\ReplayAuthorizer $authorizer, array $fingerprint)
+
+Vaulter\Idempotency\ReceiptCodec spi:implement since 1.0 interface
+  public function decode(array $body, int $version): mixed
+  public function encode(mixed $result): array
+  public function kind(): string
+  public function resource(mixed $result): ?Vaulter\Idempotency\ResourceRef
+  public function version(): int
+
+Vaulter\Idempotency\ReplayAuthorizer spi:implement since 1.0 interface
+  public function authorize(?Vaulter\Idempotency\ResourceRef $resource, ?Vaulter\Idempotency\ResourceRef $scope): void
+  public function scope(mixed $result): ?Vaulter\Idempotency\ResourceRef
+
+Vaulter\Idempotency\ReplayedProblemException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException
+  public function __construct(string $problem, int $status, array $details = [], array $headers = [])
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+  public function problemHeaders(): array
+
+Vaulter\Idempotency\ResourceRef api since 1.0 final readonly class
+  public string $id
+  public string $kind
+  public function __construct(string $kind, string $id)
+  public function equals(self $other): bool
+
+Vaulter\Kernel api since 1.0 final class
+  public function assertValid(): void
+  public function capabilities(): Vaulter\Modules\Capabilities
+  public function extensions(): Vaulter\Modules\ExtensionRegistry
+  public function fingerprint(): ?string
+  public function isActive(string $id): bool
+  public function isSealed(): bool
+  public function isValid(): bool
+  public function modules(): array
+  public function reasons(): array
+
+Vaulter\Models\Concerns\GuardsWrites api since 1.0 trait
+  protected function newBaseQueryBuilder(): Illuminate\Database\Query\Builder
+  protected function vaulterWriteScope(): Vaulter\Database\WriteScope
+
+Vaulter\Models\Concerns\HasVaulterKeys api since 1.0 trait
+  public static function bootHasVaulterKeys(): void
+  public function initializeHasVaulterKeys(): void
+  protected function vaulterIdStrategyKey(): string
+
+Vaulter\Models\Concerns\ResolvesVaulterConnection api since 1.0 trait
+  public function getConnectionName(): ?string
+
+Vaulter\Modules\Activation api since 1.0 enum: string
+  case Auto = 'auto'
+  case OptIn = 'opt-in'
+
+Vaulter\Modules\Capabilities api since 1.0 final readonly class
+  public function all(string $contract): array
+  public function has(string $contract): bool
+  public function require(string $contract): object
+
+Vaulter\Modules\Cardinality api since 1.0 enum: string
+  case Many = 'many'
+  case OptionalSingle = 'optional-single'
+  case RequiredSingle = 'required-single'
+  public function admits(int $count): bool
+
+Vaulter\Modules\ExtensionRegistry api since 1.0 final readonly class
+  public function contributions(string $slot): array
+  public function handler(string $slot, string $key): object
+  public function handlerClass(string $slot, string $key): string
+  public function handlerKeys(string $slot): array
+  public function resolve(string $slot): array
+
+Vaulter\Modules\MissingExtensionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function capability(string $contract): self
+  public static function handler(string $slot, string $key): self
+  public static function notSingle(string $contract): self
+
+Vaulter\Modules\ModuleBindings spi:implement since 1.0 interface
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Modules\ModuleBuilder api since 1.0 final class
+  public function __construct(Vaulter\Modules\ModuleId $module)
+  public function bindingClasses(): array
+  public function bindings(string $bindings): self
+  public function capabilityDefinitions(): array
+  public function capabilityProviders(): array
+  public function commandClasses(): array
+  public function commands(string ...$commands): self
+  public function config(string $root, string $defaultsFile): self
+  public function configs(): array
+  public function contributions(): array
+  public function defineCapability(string $contract, Vaulter\Modules\Cardinality $cardinality): self
+  public function defineSlot(string $contract, Vaulter\Modules\SlotKind $kind, Vaulter\Modules\Cardinality $cardinality = \Vaulter\Modules\Cardinality::Many): self
+  public function eventSources(): array
+  public function events(string $enum): self
+  public function listen(string $event, string $listener): self
+  public function listeners(): array
+  public function module(): Vaulter\Modules\ModuleId
+  public function problemSources(): array
+  public function problems(string $source): self
+  public function provides(string $contract, string $implementation): self
+  public function providesFromConfig(string $contract, string $configKey, ?string $default = null): self
+  public function routeFiles(): array
+  public function routeMiddleware(string $alias, string $middleware): self
+  public function routeMiddlewareAliases(): array
+  public function routes(string $file): self
+  public function schedule(string $schedule): self
+  public function schedules(): array
+  public function schema(string $migrationsDir): self
+  public function schemaPaths(): array
+  public function slot(string $contract, string $implementation, string $id, int $priority = 0, ?string $key = null): self
+  public function slotDefinitions(): array
+  public function translationDirs(): array
+  public function translations(string $dir, string $namespace): self
+
+Vaulter\Modules\ModuleGraphException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function invalid(array $reasons): self
+  public static function notCompiled(): self
+  public function problemCode(): string
+
+Vaulter\Modules\ModuleId api since 1.0 final readonly class implements Stringable
+  public const string PATTERN = '/^[a-z][a-z0-9-]{1,31}$/'
+  public string $value
+  public function __construct(string $value)
+  public function __toString(): string
+  public function equals(self $other): bool
+  public static function isValid(string $value): bool
+
+Vaulter\Modules\ModuleSchedule spi:implement since 1.0 interface
+  public function define(Illuminate\Console\Scheduling\Schedule $schedule, Illuminate\Contracts\Config\Repository $config): void
+
+Vaulter\Modules\ModuleState api since 1.0 final readonly class
+  public const string REASON_DEFAULT = 'default'
+  public const string REASON_OVERRIDE = 'override'
+  public Vaulter\Modules\Activation $activation
+  public bool $active
+  public string $activeReason
+  public Vaulter\Modules\ModuleId $id
+  public string $manifest
+  public array $schemaPaths
+  public string $version
+  public function __construct(Vaulter\Modules\ModuleId $id, string $manifest, string $version, Vaulter\Modules\Activation $activation, bool $active, string $activeReason, array $schemaPaths = [])
+
+Vaulter\Modules\OffersModules spi:implement since 1.0 trait
+  protected function offerModule(string $manifest): void
+
+Vaulter\Modules\SlotContribution api since 1.0 final readonly class
+  public string $id
+  public string $implementation
+  public ?string $key
+  public string $module
+  public int $priority
+  public string $slot
+  public function __construct(string $slot, string $id, string $module, string $implementation, int $priority = 0, ?string $key = null)
+
+Vaulter\Modules\SlotKind api since 1.0 enum: string
+  case Contributor = 'contributor'
+  case EventSink = 'event-sink'
+  case Guard = 'guard'
+  case Handler = 'handler'
+  case OperationMiddleware = 'operation-middleware'
+  case OutboxConsumer = 'outbox-consumer'
+  case Restriction = 'restriction'
+
+Vaulter\Modules\VaulterModule spi:implement since 1.0 interface
+  public function activation(): Vaulter\Modules\Activation
+  public function id(): Vaulter\Modules\ModuleId
+  public function register(Vaulter\Modules\ModuleBuilder $module): void
+  public function requires(): array
+  public function version(): string
+
+Vaulter\Naming\NamePolicy spi:implement since 1.0 interface
+  public function apply(string $name): string
+  public function key(): string
+
+Vaulter\Naming\PermissiveNamePolicy api since 1.0 final readonly class implements Vaulter\Naming\NamePolicy
+  public const string KEY = 'permissive-v1'
+  public function apply(string $name): string
+  public function key(): string
+
+Vaulter\Naming\PortableNamePolicy api since 1.0 final readonly class implements Vaulter\Naming\NamePolicy
+  public const string KEY = 'portable-v1'
+  public function apply(string $name): string
+  public function key(): string
+
+Vaulter\Operations\AccessOperations api since 1.0 final readonly class implements Vaulter\Contracts\Access\AccessOperations
+  public function explain(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Enums\Access\Ability $ability, ?Illuminate\Contracts\Auth\Access\Authorizable $subject = null): Vaulter\Access\ValueObjects\AccessExplanation
+  public function grant(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Access\GrantInput $grant): Vaulter\Data\Snapshots\GrantSnapshot
+  public function grants(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  public function restoreInheritance(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
+  public function restrictInheritance(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Enums\Access\InheritanceRestriction $mode = \Vaulter\Enums\Access\InheritanceRestriction::Empty): Vaulter\Data\Snapshots\NodeSnapshot
+  public function revoke(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\GrantSnapshot|int|string $grant): void
+
+Vaulter\Operations\ActivityOperations api since 1.0 final readonly class implements Vaulter\Contracts\Activity\ActivityOperations
+  public function forDrive(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+  public function forNode(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
+
+Vaulter\Operations\DriveContext api since 1.0 final readonly class
+  public Vaulter\ValueObjects\Access\Actor $actor
+  public string $correlationId
+  public Vaulter\Models\Drive\Drive $drive
+  public ?string $idempotencyKey
+  public Vaulter\Operations\OperationContext $operation
+  public static function for(Vaulter\Models\Drive\Drive $drive, Vaulter\ValueObjects\Access\Actor $actor, string $correlationId, ?string $idempotencyKey = null, ?string $requestFingerprint = null): self
+  public static function system(Vaulter\Models\Drive\Drive $drive, string $reason, ?string $correlationId = null): self
+
+Vaulter\Operations\NodeLocator api since 1.0 final readonly class
+  public function find(Vaulter\Operations\DriveContext $context, Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): Vaulter\Models\Drive\Node
+
+Vaulter\Operations\Operation api since 1.0 final readonly class
+  public int $attemptNo
+  public Vaulter\Operations\OperationContext $context
+  public Vaulter\Operations\OperationSpec $spec
+  public function __construct(Vaulter\Operations\OperationSpec $spec, Vaulter\Operations\OperationContext $context, int $attemptNo = 1, bool $nested = false)
+  public function isNested(): bool
+
+Vaulter\Operations\OperationContext api since 1.0 final readonly class
+  public Vaulter\ValueObjects\Access\Actor $actor
+  public ?string $causationId
+  public string $correlationId
+  public ?string $idempotencyKey
+  public ?string $requestFingerprint
+  public Vaulter\ValueObjects\Operations\ScopeRef $scope
+  public ?string $systemReason
+  public Vaulter\ValueObjects\Operations\TenantRef $tenant
+  public function __construct(Vaulter\ValueObjects\Access\Actor $actor, Vaulter\ValueObjects\Operations\ScopeRef $scope, Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null, ?string $requestFingerprint = null)
+  public static function for(Vaulter\ValueObjects\Access\Actor $actor, Vaulter\ValueObjects\Operations\ScopeRef $scope, Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null, ?string $requestFingerprint = null): self
+  public static function system(Vaulter\ValueObjects\Operations\ScopeRef $scope, Vaulter\ValueObjects\Operations\TenantRef $tenant, string $reason, ?string $correlationId = null): self
+  public function telemetry(): array
+  public function withCausation(string $causationId): self
+  public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): self
+
+Vaulter\Operations\OperationMiddleware spi:implement since 1.0 interface
+  public function handle(Vaulter\Operations\Operation $operation, Closure $next): mixed
+
+Vaulter\Operations\OperationRunner api since 1.0 final class
+  public function inOperation(): bool
+  public function write(Vaulter\Operations\OperationSpec $spec, Vaulter\Operations\OperationContext $context, Closure $attempt, ?Vaulter\Idempotency\IdempotentWrite $idempotency = null): mixed
+
+Vaulter\Operations\OperationSpec api since 1.0 final readonly class
+  public const string NAME_PATTERN = '/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/'
+  public Vaulter\Modules\ModuleId $module
+  public bool $mutating
+  public string $name
+  public function __construct(string $name, Vaulter\Modules\ModuleId $module, bool $mutating = true)
+
+Vaulter\Operations\ShareOperations api since 1.0 final readonly class implements Vaulter\Contracts\Sharing\ShareOperations
+  public function create(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Sharing\ShareLinkInput $input): Vaulter\Data\Snapshots\MintedShareLink
+  public function list(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  public function revoke(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
+  public function rotate(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): Vaulter\Data\Snapshots\MintedShareLink
+  public function update(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share, Vaulter\Data\Sharing\ShareLinkUpdate $changes): Vaulter\Data\Snapshots\ShareLinkSnapshot
+
+Vaulter\Profiles\DrivePolicy api since 1.0 final readonly class
+  public ?int $maxFileBytes
+  public int $maxFolderChildren
+  public int $maxFolderDepth
+  public int $maxPropertiesBytes
+  public int $maxPropertyCount
+  public ?int $maxShareLinkTtlDays
+  public string $namePolicy
+  public Vaulter\Profiles\RevisionRetentionPolicy $revisionRetention
+  public function __construct(string $namePolicy = \Vaulter\Naming\PortableNamePolicy::KEY, int $maxFolderDepth = 100, int $maxFolderChildren = 10000, ?int $maxFileBytes = null, int $maxPropertiesBytes = 16384, int $maxPropertyCount = 100, ?int $maxShareLinkTtlDays = null, Vaulter\Profiles\RevisionRetentionPolicy $revisionRetention = new \Vaulter\Profiles\RevisionRetentionPolicy())
+  public function names(): Vaulter\Naming\NamePolicy
+
+Vaulter\Profiles\DrivePolicyBuilder api since 1.0 final class
+  public function __construct(Vaulter\Profiles\DrivePolicy $from = new \Vaulter\Profiles\DrivePolicy())
+  public function build(): Vaulter\Profiles\DrivePolicy
+  public function maxFileBytes(?int $bytes): static
+  public function maxFolderChildren(int $children): static
+  public function maxFolderDepth(int $depth): static
+  public function maxPropertiesBytes(int $bytes): static
+  public function maxPropertyCount(int $count): static
+  public function maxShareLinkTtlDays(?int $days): static
+  public function namePolicy(string $key): static
+  public function revisionRetention(Vaulter\Profiles\RevisionRetentionPolicy $policy): static
+
+Vaulter\Profiles\Profile api since 1.0 final class
+  public function comments(bool $enabled = true): static
+  public function commentsEnabled(): bool
+  public function defaultQuota(?int $bytes): static
+  public function disk(string $disk): static
+  public function documentTypes(string ...$typeKeys): static
+  public function drivePolicy(callable $configure): static
+  public function getDefaultQuota(): ?int
+  public function getDisk(): ?string
+  public function getDocumentTypes(): array
+  public function getDrivePolicy(): Vaulter\Profiles\DrivePolicy
+  public function getKey(): string
+  public function getOwners(): array
+  public function getPermissionDriver(): ?string
+  public function getRevisionLimit(): ?int
+  public function getTrashRetentionDays(): ?int
+  public function getUploadPolicy(): Vaulter\Profiles\UploadPolicy
+  public function grants(bool $enabled = true): static
+  public function grantsEnabled(): bool
+  public function key(string $key): static
+  public function owners(string ...$modelClasses): static
+  public function permissionDriver(string $driverKey): static
+  public function revisionLimit(?int $max): static
+  public function shareLinks(bool $enabled = true): static
+  public function shareLinksEnabled(): bool
+  public function trashRetentionDays(?int $days): static
+  public function uploads(Vaulter\Profiles\UploadPolicy $policy): static
+
+Vaulter\Profiles\ProfileProvider spi:implement since 1.0 abstract class
+  public abstract function profile(Vaulter\Profiles\Profile $profile): Vaulter\Profiles\Profile
+  public function resolve(): Vaulter\Profiles\Profile
+
+Vaulter\Profiles\ProfileRegistry api since 1.0 final class
+  public function all(): array
+  public function default(): Vaulter\Profiles\Profile
+  public function freeze(): void
+  public static function fromConfig(array $providerClasses, string $defaultClass, ?Illuminate\Contracts\Container\Container $container = null): self
+  public function get(string $key): Vaulter\Profiles\Profile
+  public function has(string $key): bool
+  public function register(Vaulter\Profiles\Profile|Vaulter\Profiles\ProfileProvider|string $profile): void
+
+Vaulter\Profiles\RevisionRetentionPolicy api since 1.0 final readonly class
+  public ?int $maxNoncurrentAgeDays
+  public ?int $maxNoncurrentRevisions
+  public int $minNoncurrentAgeDays
+  public bool $protectPinned
+  public function __construct(?int $maxNoncurrentRevisions = 100, ?int $maxNoncurrentAgeDays = null, int $minNoncurrentAgeDays = 7, bool $protectPinned = true)
+  public function prunes(): bool
+
+Vaulter\Profiles\UploadPolicy api since 1.0 final readonly class
+  public array $allowedMimeTypes
+  public array $blockedExtensions
+  public ?int $maxFileSize
+  public ?bool $requireScan
+  public ?Vaulter\Enums\Cas\ScanMode $scanMode
+  public ?string $scanPolicyVersion
+  public function __construct(?int $maxFileSize = null, array $allowedMimeTypes = [], array $blockedExtensions = [], ?bool $requireScan = null, ?Vaulter\Enums\Cas\ScanMode $scanMode = null, ?string $scanPolicyVersion = null)
+
+Vaulter\Schema\HostKeyColumns api since 1.0 final class
+  public static function add(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
+  public static function sqlType(string $driver): string
+
+Vaulter\Schema\VaulterSchema api since 1.0 final class
+  public static function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
+  public static function bits(Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void
+  public static function foreignKey(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  public static function hostKey(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  public static function key(Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
+  public static function morphs(Illuminate\Database\Schema\Blueprint $table, string $name): void
+  public static function panel(Illuminate\Database\Schema\Blueprint $table): void
+  public static function reference(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  public static function tenant(Illuminate\Database\Schema\Blueprint $table): void
+
+Vaulter\Support\Concerns\HasIcon api since 1.0 trait
+  public function icon(): ?string
+
+Vaulter\Support\Concerns\HasLabel api since 1.0 trait
+  public function label(): string
+
+Vaulter\Support\Identity api since 1.0 final class
+  public static function key(mixed $value): int|null|string
+  public static function stringify(mixed $value): string
+
+Vaulter\Support\Int64Counter api since 1.0 final class
+  public static function increment(int $current): int
+
+Vaulter\Testing\Contracts\ContentScannerContractTests api since 1.0 final class
+  public function assertContentScannerContract(Vaulter\Contracts\Cas\ContentScanner $scanner, array $samples): void
+  public function assertUnreadableBytesAreNeverClean(Vaulter\Contracts\Cas\ContentScanner $scanner): void
+
+Vaulter\Testing\Contracts\FileHandlerContractTests api since 1.0 final class
+  public function assertFileHandlerContract(Vaulter\Contracts\Handlers\FileHandler $handler, ?Vaulter\ValueObjects\Handlers\FileDescriptor $claimed = null): void
+
+Vaulter\Testing\Contracts\ModuleContractTests api since 1.0 final class
+  public function assertModuleContract(Vaulter\Modules\VaulterModule $module, array $requires = []): void
+
+Vaulter\Testing\Contracts\PermissionDriverContractTests api since 1.0 final class
+  public function assertPermissionDriverContract(Vaulter\Access\AccessResolver $resolver, Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Models\Drive\Node $parent, Vaulter\Models\Drive\Node $child): void
+  public function assertSameDecisionsAsReference(Vaulter\Contracts\Access\PermissionDriver $driver, ?Vaulter\Testing\Contracts\PermissionFixture $fixture = null): void
+
+Vaulter\Testing\Contracts\PermissionFixture api since 1.0 final readonly class
+  public Illuminate\Contracts\Auth\Access\Authorizable $actor
+  public Vaulter\Models\Drive\Node $child
+  public Vaulter\Models\Drive\Drive $drive
+  public Vaulter\Models\Drive\Node $parent
+  public static function build(?Illuminate\Database\Eloquent\Model $owner = null, ?Illuminate\Contracts\Auth\Access\Authorizable $actor = null): self
+
+Vaulter\Testing\FakeContentScanner api since 1.0 final class implements Vaulter\Contracts\Cas\ContentScanner
+  public array $scans = []
+  public function __construct(string $key = 'fake', string $version = '1')
+  public function alwaysReturns(Throwable|Vaulter\Content\ScanResult $outcome): self
+  public function key(): string
+  public function returnsFor(string $bytes, Throwable|Vaulter\Content\ScanResult $outcome): self
+  public function scan(Vaulter\Content\ScanInput $input): Vaulter\Content\ScanResult
+  public function version(): string
+
+Vaulter\Testing\FakeMetricsRecorder api since 1.0 final class implements Vaulter\Contracts\Observability\MetricsRecorder
+  public function assertCounter(string $name, ?array $labels = null): void
+  public function assertGauge(string $name, ?array $labels = null): void
+  public function assertHistogram(string $name, ?array $labels = null): void
+  public function counter(string $name, float|int $amount = 1, array $labels = []): void
+  public function emissions(): array
+  public function gauge(string $name, float|int $value, array $labels = []): void
+  public function histogram(string $name, float|int $value, array $labels = []): void
+  public function timing(string $name, callable $operation, array $labels = []): mixed
+
+Vaulter\Testing\FakeTraceRecorder api since 1.0 final class implements Vaulter\Contracts\Observability\TraceRecorder
+  public function assertSpan(string $name, ?array $attributes = null, ?string $parent = null): void
+  public function span(string $name, callable $operation, array $attributes = []): mixed
+  public function spans(): array
+
+Vaulter\Testing\InteractsWithVaulter api since 1.0 trait
+  public function assertNodeNotVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Models\Drive\Node|string $node): void
+  public function assertNodeVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Models\Drive\Node|string $node): void
+  public function assertVaulterEventNotRecorded(Vaulter\Events\EventTypeContract $type): void
+  public function assertVaulterEventRecorded(Vaulter\Events\EventTypeContract $type, ?callable $where = null): void
+  public function vaulterActingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): Closure
+  public function vaulterFakeStorage(?string $disk = null): Illuminate\Contracts\Filesystem\Filesystem
+
+Vaulter\ValueObjects\Access\Actor api since 1.0 final readonly class
+  public function __serialize(): array
+  public function authorizable(): ?Illuminate\Contracts\Auth\Access\Authorizable
+  public function isSystem(): bool
+  public function ref(): Vaulter\ValueObjects\Access\ActorRef
+  public static function system(string $reason): self
+  public static function user(Illuminate\Contracts\Auth\Access\Authorizable $user): self
+
+Vaulter\ValueObjects\Access\ActorRef api since 1.0 final readonly class
+  public const string SYSTEM_TYPE = 'vaulter:system'
+  public int|null|string $id
+  public ?string $reason
+  public ?string $type
+  public function __construct(?string $type, int|null|string $id, ?string $reason = null)
+
+Vaulter\ValueObjects\Access\OwnerRef api since 1.0 final readonly class
+  public int|string $id
+  public string $type
+  public function __construct(string $type, int|string $id)
+  public static function ofModel(Illuminate\Database\Eloquent\Model $owner): self
+
+Vaulter\ValueObjects\Cas\BlobScope api since 1.0 final readonly class
+  public function dedupScope(): string
+  public static function drive(string $id): self
+  public static function forUpload(string $dedupScope, ?string $tenantId, string $storageId): self
+  public static function fromSegment(string $segment): self
+  public function key(): string
+  public function segment(): string
+  public function storageId(): ?string
+  public static function tenant(string $id): self
+  public function tenantId(): ?string
+  public static function unshared(): self
+
+Vaulter\ValueObjects\Events\EventScope api since 1.0 final readonly class
+  public ?string $driveId
+  public string $profile
+  public ?string $tenantId
+  public function __construct(mixed $tenantId, mixed $driveId, string $profile)
+
+Vaulter\ValueObjects\Events\EventSubject api since 1.0 final readonly class
+  public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload']
+  public string $id
+  public string $type
+  public function __construct(string $type, mixed $id)
+
+Vaulter\ValueObjects\Handlers\ContentCapabilities api since 1.0 final readonly class
+  public bool $collaborative
+  public bool $downloadable
+  public bool $editable
+  public bool $previewable
+  public bool $thumbnailable
+  public function __construct(bool $editable = false, bool $previewable = false, bool $downloadable = true, bool $thumbnailable = false, bool $collaborative = false)
+  public static function downloadOnly(): self
+  public function toArray(): array
+
+Vaulter\ValueObjects\Handlers\FileDescriptor api since 1.0 final readonly class
+  public ?string $claimedMime
+  public ?string $detectedMime
+  public ?string $extension
+  public string $filename
+  public int|string $nodeId
+  public ?string $objectHash
+  public int $size
+  public function __construct(int|string $nodeId, string $filename, ?string $extension = null, ?string $claimedMime = null, ?string $detectedMime = null, ?string $objectHash = null, int $size = 0)
+  public function canonicalMime(): ?string
+  public static function make(int|string $nodeId, string $filename, ?string $extension = null, ?string $claimedMime = null, ?string $detectedMime = null, ?string $objectHash = null, int $size = 0): self
+  public function normalizedExtension(): ?string
+
+Vaulter\ValueObjects\Handlers\NodePresentation api since 1.0 final readonly class
+  public Vaulter\ValueObjects\Handlers\ContentCapabilities $capabilities
+  public ?string $documentType
+  public ?string $id
+  public bool $typeAvailable
+  public Vaulter\ValueObjects\Handlers\ViewerDescriptor $ui
+  public function __construct(?string $id, Vaulter\ValueObjects\Handlers\ContentCapabilities $capabilities, Vaulter\ValueObjects\Handlers\ViewerDescriptor $ui, ?string $documentType = null, bool $typeAvailable = true)
+  public function toArray(): array
+
+Vaulter\ValueObjects\Handlers\ViewerDescriptor api since 1.0 final readonly class
+  public string $key
+  public array $props
+  public function __construct(string $key, array $props = [])
+  public function toArray(): array
+
+Vaulter\ValueObjects\Operations\ScopeRef api since 1.0 final readonly class
+  public const string DRIVE = 'drive'
+  public string $id
+  public string $kind
+  public function __construct(string $kind, string $id)
+  public static function drive(int|string $id): self
+  public function equals(self $other): bool
+
+Vaulter\ValueObjects\Operations\TenantRef api since 1.0 final readonly class
+  public const string ID = 'id'
+  public const string NONE = 'none'
+  public ?string $id
+  public string $kind
+  public function equals(self $other): bool
+  public static function id(int|string $id): self
+  public function isNone(): bool
+  public static function none(): self
+  public static function of(mixed $key): self
+
+Vaulter\VaulterManager api since 1.0 final readonly class
+  public function drive(Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): Vaulter\Contracts\Drive\DriveHandle
+  public function findDrive(Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?Vaulter\Contracts\Drive\DriveHandle
+  public function handlers(): Vaulter\Contracts\Handlers\FileHandlerRegistry
+  public function permissions(): Vaulter\Access\PermissionDriverManager
+  public function profiles(): Vaulter\Profiles\ProfileRegistry
+  public function withoutTenancy(Closure $callback): mixed
+
+Vaulter\VaulterServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
+  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
+  public function packageBooted(): void
+  public function packageRegistered(): void
+
+Vaulter\Webhooks\Events\WebhookEndpointDisabled api since 1.0 final readonly class
+  public int|string $endpointId
+  public ?Illuminate\Support\Carbon $failingSince
+  public string $reason
+  public function __construct(int|string $endpointId, string $reason, ?Illuminate\Support\Carbon $failingSince)
+
+Vaulter\Webhooks\StandardWebhookVerifier api since 1.0 final class
+  public function verify(array $headers, string $body, array $secrets, int $toleranceSeconds = 300, ?int $now = null): void

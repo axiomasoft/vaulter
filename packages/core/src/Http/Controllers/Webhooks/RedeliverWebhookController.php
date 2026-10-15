@@ -7,6 +7,7 @@ namespace Vaulter\Http\Controllers\Webhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Actions\Webhooks\RedeliverWebhookAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotFoundException;
 use Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException;
 use Vaulter\Http\Resources\Webhooks\WebhookDeliveryResource;
@@ -16,6 +17,7 @@ use Vaulter\Repositories\Webhooks\WebhookEndpointReadRepository;
 use Vaulter\Webhooks\WebhookEndpointWrites;
 
 /** Queue a finished (delivered or dead) delivery again; 202, the send happens later. */
+#[Internal]
 final readonly class RedeliverWebhookController
 {
     public function __construct(private WebhookEndpointReadRepository $endpoints, private WebhookDeliveryStoreRepository $deliveries, private RedeliverWebhookAction $redeliver, private WebhookEndpointWrites $writes) {}

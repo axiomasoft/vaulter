@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Doctor;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
@@ -17,6 +18,7 @@ use Vaulter\Support\Identity;
  * as the recount, without the tree lock: a drive written to meanwhile can show a drift that the
  * next run does not repeat.
  */
+#[Internal]
 final readonly class DrivesUsageCheck implements DoctorCheck
 {
     public function __construct(private VaulterConfig $config, private QuotaCalculator $quota) {}

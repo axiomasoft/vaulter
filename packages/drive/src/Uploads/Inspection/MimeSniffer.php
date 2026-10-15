@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads\Inspection;
 
 use finfo;
+use Vaulter\Attributes\Internal;
 
 /**
  * Content-vs-declared-mime sniffer for the assembled resumable object. A resumable commit must not trust the CLIENT's declared
@@ -18,6 +19,7 @@ use finfo;
  * cannot confidently classify (octet-stream / empty), is accepted — the sniff
  * disproves a lie, it does not attempt to positively classify every upload.
  */
+#[Internal]
 final class MimeSniffer
 {
     /**

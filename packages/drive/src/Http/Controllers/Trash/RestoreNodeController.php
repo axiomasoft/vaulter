@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Trash;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Drive\Http\Requests\Trash\RestoreNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * Bring a trash root back (Restore; Create when it lands somewhere else). If-Match is
  * required and is compared with the trashed node as the trash listing showed it.
  */
+#[Internal]
 final readonly class RestoreNodeController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

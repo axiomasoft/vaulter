@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Webhooks;
 
 use Illuminate\Support\Facades\Bus;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
@@ -22,6 +23,7 @@ use Vaulter\Support\Identity;
  *
  * @throws WebhookDeliveryNotRedeliverableException
  */
+#[Internal]
 final readonly class RedeliverWebhookAction
 {
     public function __construct(private VaulterDatabase $database) {}

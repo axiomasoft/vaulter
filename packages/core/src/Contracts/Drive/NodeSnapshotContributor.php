@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Drive;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -11,6 +13,7 @@ use Vaulter\Models\Drive\Node;
  * module adds `document`. The mapper calls it once per page, whatever the page size, with every node of
  * the page; it answers only for the nodes it has a fragment for.
  */
+#[Spi(SpiKind::Implement)]
 interface NodeSnapshotContributor
 {
     /** The snapshot fragment key; reserved keys of the snapshot are rejected by the mapper. */

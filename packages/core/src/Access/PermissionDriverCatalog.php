@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Access;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Kernel;
@@ -13,6 +14,7 @@ use Vaulter\Kernel;
  * {@see PermissionDriver} slot (database, gate, spatie, null; azgard from its module), overlaid by the
  * host's own `vaulter.access.permission_drivers` map, where the host wins on the same key.
  */
+#[Internal]
 final readonly class PermissionDriverCatalog
 {
     public function __construct(private AccessConfig $access, private Kernel $kernel) {}

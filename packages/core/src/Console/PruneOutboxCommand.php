@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Events\Outbox\OutboxRelay;
@@ -15,6 +16,7 @@ use Vaulter\Events\Outbox\OutboxRelay;
  * ends), the done deliveries of deleted events, and dead deliveries older than dead_retention_seconds. Scheduled
  * hourly.
  */
+#[Internal]
 final class PruneOutboxCommand extends Command
 {
     use OpensWriteScope;

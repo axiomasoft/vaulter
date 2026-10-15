@@ -7,8 +7,10 @@ namespace Vaulter\Console;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 
 /** Scaffolds a consumer-owned ProfileProvider over the shared Vaulter schema. */
+#[Internal]
 final class MakeProfileCommand extends Command
 {
     protected $signature = 'vaulter:make:profile

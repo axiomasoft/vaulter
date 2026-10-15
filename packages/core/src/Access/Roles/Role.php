@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\Roles;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Access\Ability;
 
 /**
@@ -11,6 +12,7 @@ use Vaulter\Enums\Access\Ability;
  * what a role may do means a new version plus an explicit migration of the grants
  * that should move to it; a stored version keeps its meaning forever.
  */
+#[Api]
 final readonly class Role
 {
     public int $bits;

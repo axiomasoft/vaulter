@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Api;
+
 /**
  * An offered module after compilation: whether it is active and why.
  */
+#[Api]
 final readonly class ModuleState
 {
     public const string REASON_DEFAULT = 'default';

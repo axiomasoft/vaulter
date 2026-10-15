@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Providers;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Content\NodeContentLifecycleRegistry;
@@ -32,6 +33,7 @@ use Vaulter\Profiles\ProfileRegistry;
  * scanner validation, uploads, content lifecycles, the
  * drive config validator.
  */
+#[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

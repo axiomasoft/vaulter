@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Problems;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Documents\Exceptions\CollaborationSeedConflictException;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
@@ -27,6 +28,7 @@ use Vaulter\Http\Problems\Retryable;
  * here, in lang/{en,ru}/problems.php and in the reference docs together. The `collaboration_*`
  * codes belong to the collaboration concept and move with it in P5.
  */
+#[Internal]
 final class DocumentsProblemCodes implements ProblemCodeSource
 {
     public function translationNamespace(): string

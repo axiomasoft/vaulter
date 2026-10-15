@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Problems\ProblemCodeSource;
 
 /**
  * The sealed outcome of a valid compilation: every offered module with its state, and the
  * declarations of the active ones. Holds only scalars, enums, class-strings and readonly values.
- *
- * @internal
  */
+#[Internal]
 final readonly class CompiledModules
 {
     /**

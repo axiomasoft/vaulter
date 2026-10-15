@@ -8,6 +8,8 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Enums\Access\Effect;
 
 /**
@@ -25,6 +27,7 @@ use Vaulter\Enums\Access\Effect;
  * host authorization drivers implement exactly this surface, and a contract test asserts every
  * driver yields identical AccessResolver decisions on a shared fixture.
  */
+#[Spi(SpiKind::Implement)]
 interface PermissionDriver
 {
     /**

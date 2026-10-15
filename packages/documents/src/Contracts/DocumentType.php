@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
@@ -14,6 +16,7 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
  *
  * @extensible Keys are strings; a client must handle a type it does not know.
  */
+#[Spi(SpiKind::Implement)]
 interface DocumentType
 {
     /** 'vendor/name', e.g. 'vaulter/rich-text'. */

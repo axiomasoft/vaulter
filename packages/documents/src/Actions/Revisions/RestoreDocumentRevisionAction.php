@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Revisions;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Content\OpaqueContent;
@@ -35,6 +36,7 @@ use Vaulter\Support\TreeGuard;
  * outer transaction under T → N → D locks; after commit DocumentRevisionCreated fires
  * with restored=true, then DocumentRestored with the new epoch.
  */
+#[Internal]
 final readonly class RestoreDocumentRevisionAction
 {
     public function __construct(

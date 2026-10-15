@@ -6,6 +6,7 @@ namespace Vaulter\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
@@ -20,6 +21,7 @@ use Vaulter\VaulterManager;
  *
  * @mixin Model
  */
+#[Api]
 trait HasDrives
 {
     public static function bootHasDrives(): void

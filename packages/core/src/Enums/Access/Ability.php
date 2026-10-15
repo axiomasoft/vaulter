@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Access;
 
+use Vaulter\Attributes\Api;
+
 /**
  * The capabilities the AccessResolver answers `can()` for. Roles are named sets of
  * these; an actor holds an ability on a node when any role that applies there
@@ -13,6 +15,7 @@ namespace Vaulter\Enums\Access;
  *
  * @closed The string values are part of the stable contract and never change.
  */
+#[Api]
 enum Ability: string
 {
     case View = 'view';

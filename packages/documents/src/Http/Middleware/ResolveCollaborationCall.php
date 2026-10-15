@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Collaboration\CollaborationCall;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 
@@ -23,6 +24,7 @@ use Vaulter\Documents\Collaboration\CollaborationCallResolver;
  * X-Vaulter-Collab-Signature; the raw body via getContent() — the EXACT bytes the
  * resolver's HMAC check re-derives, never the parsed/re-encoded `$request->all()`.
  */
+#[Internal]
 final class ResolveCollaborationCall
 {
     /**

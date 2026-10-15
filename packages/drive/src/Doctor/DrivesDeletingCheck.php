@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Enums\Drive\DriveStatus;
 
+#[Internal]
 final readonly class DrivesDeletingCheck implements DoctorCheck
 {
     private const int HOURS = 24;

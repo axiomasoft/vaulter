@@ -6,6 +6,7 @@ namespace Vaulter\Idempotency;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar;
@@ -13,9 +14,8 @@ use Vaulter\Providers\SchedulingRegistrar;
 /**
  * Puts `vaulter:idempotency:prune` on the host scheduler under `vaulter.schedule.idempotency_prune` (daily by
  * default; null switches it off).
- *
- * @internal
  */
+#[Internal]
 final class IdempotencySchedule implements ModuleSchedule
 {
     public const string KEY = 'idempotency_prune';

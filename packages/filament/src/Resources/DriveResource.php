@@ -15,6 +15,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Override;
 use UnitEnum;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Filament\Resources\DriveResource\Pages\ListDrives;
 use Vaulter\Filament\Resources\DriveResource\Pages\ViewDrive;
@@ -31,6 +32,7 @@ use Vaulter\Models\Drive\Drive;
  * The model resolves through {@see app(VaulterConfig::class)->model('drive')} so a host that swaps the
  * Drive model still gets governed here.
  */
+#[Internal]
 final class DriveResource extends Resource
 {
     protected static ?string $model = Drive::class;

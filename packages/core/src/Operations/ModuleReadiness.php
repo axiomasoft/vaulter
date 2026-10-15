@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Doctor\Checks\SchemaTablesCheck;
@@ -18,6 +19,7 @@ use Vaulter\Support\Identity;
  * ready module is remembered for the rest of the process. A module found not ready is checked again
  * on its next write, so a migration run meanwhile is picked up.
  */
+#[Internal]
 final class ModuleReadiness
 {
     /** @var array<string, true> */

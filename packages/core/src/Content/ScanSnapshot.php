@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Content;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
@@ -16,6 +17,7 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 
 /** @internal Reloads authority and the immutable edge; passed attributes are never trusted. */
+#[Internal]
 final readonly class ScanSnapshot
 {
     public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private BlobLock $lock) {}

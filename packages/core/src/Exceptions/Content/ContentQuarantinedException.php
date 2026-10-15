@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Content;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
+#[Api]
 final class ContentQuarantinedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /** Optional: the document type can be edited by several clients at once. */
+#[Spi(SpiKind::Implement)]
 interface SupportsCollaboration
 {
     /** e.g. 'yjs'. */

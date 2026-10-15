@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Vaulter\Actions\Content\FenceScanAttemptAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Tenancy\TenancyBoundary;
 
+#[Internal]
 final readonly class PrivateScanReader
 {
     public function __construct(private FenceScanAttemptAction $fence, private ScanSnapshot $snapshots,

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Webhooks;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * Resolves a hostname to EVERY IP it maps to — both A (IPv4) and AAAA (IPv6) records
  * . The outbound guard rejects the host if ANY returned address
@@ -13,6 +16,7 @@ namespace Vaulter\Contracts\Webhooks;
  * Injected (not called statically) so a test drives it with a fake map and no real DNS
  * or socket is touched.
  */
+#[Spi(SpiKind::Implement)]
 interface HostResolver
 {
     /**

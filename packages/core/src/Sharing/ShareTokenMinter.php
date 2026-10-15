@@ -7,6 +7,7 @@ namespace Vaulter\Sharing;
 use Closure;
 use Illuminate\Database\QueryException;
 use RuntimeException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Database\VaulterDatabase;
@@ -19,6 +20,7 @@ use Vaulter\Support\ShareToken;
  * so the retry works inside the caller's transaction on PostgreSQL too. The raw token
  * leaves only through the returned value.
  */
+#[Internal]
 final readonly class ShareTokenMinter
 {
     private const int MAX_ATTEMPTS = 5;

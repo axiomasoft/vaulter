@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Comments;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\ResolveCommentInput;
 use Vaulter\Documents\Events\Comments\CommentResolved;
@@ -22,6 +23,7 @@ use Vaulter\Support\TreeGuard;
  * comment row, with the drive writable and the node live ({@see AddCommentAction}).
  * {@see CommentResolved} is delivered after the outermost commit.
  */
+#[Internal]
 final readonly class ResolveCommentAction
 {
     public function __construct(

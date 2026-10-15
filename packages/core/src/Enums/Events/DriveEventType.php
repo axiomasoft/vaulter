@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Events;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\EventSpec;
 use Vaulter\Attributes\Label;
 use Vaulter\Events\Concerns\DescribesEvent;
@@ -14,6 +15,7 @@ use Vaulter\Events\EventTypeContract;
  * Located in core until P4 moves it to the drive package. Dotted, namespaced values (folder.created,
  * file.uploaded, …) are the stored identities: the activity verb, the journal type and the outbox type.
  */
+#[Api]
 enum DriveEventType: string implements EventTypeContract
 {
     use DescribesEvent;

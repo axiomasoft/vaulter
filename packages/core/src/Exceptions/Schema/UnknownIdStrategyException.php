@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Schema;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\VaulterException;
 
 /**
  * Thrown when configuration key vaulter.ids.strategy (or an explicit key) names a
  * strategy that is not registered in configuration key vaulter.ids.strategies.
  */
+#[Api]
 final class UnknownIdStrategyException extends VaulterException
 {
     /**

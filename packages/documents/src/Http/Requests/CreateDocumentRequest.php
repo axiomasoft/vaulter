@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Requests;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Support\DriveNameRules;
 
@@ -13,6 +14,7 @@ use Vaulter\Support\DriveNameRules;
  * initial content. The type's codec validates the content and an unregistered type is
  * refused by the operation, so this request only checks the shape.
  */
+#[Internal]
 final class CreateDocumentRequest extends VaulterFormRequest
 {
     /**

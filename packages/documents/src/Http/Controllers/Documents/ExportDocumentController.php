@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Http\Controllers\Documents;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Http\Support\ContentResponder;
 use Vaulter\Http\Support\HttpOperationContextFactory;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * Render a document's working state — or the checkpoint named by `?revision=` — in the
  * given format as a download (Download). Rendering never creates a revision.
  */
+#[Internal]
 final readonly class ExportDocumentController
 {
     public function __construct(

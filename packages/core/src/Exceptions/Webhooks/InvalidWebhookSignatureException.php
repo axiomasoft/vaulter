@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * Raised on the receiving side: a host that lets it reach the exception handler answers
  * 400 without detail about which check failed.
  */
+#[Internal]
 final class InvalidWebhookSignatureException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

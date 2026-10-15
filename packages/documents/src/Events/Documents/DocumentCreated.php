@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Documents;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Events\DomainEvent;
@@ -21,8 +23,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * both the node and the v1 version so a listener need not re-read either, and the
  * content validators the write produced (state_version, collab_epoch).
  */
+#[Api]
 final readonly class DocumentCreated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public DocumentRevision $version,

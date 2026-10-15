@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * would act on is not provably complete. It stops before any write rather than copy,
  * trash or purge only part of the tree.
  */
+#[Api]
 final class TreeTraversalIncompleteException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

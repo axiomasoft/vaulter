@@ -6,9 +6,12 @@ namespace Vaulter\Profiles;
 
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 
 /** A fluent policy builder; the registry stores independent frozen snapshots. */
+#[Api]
 final class Profile
 {
     private bool $frozen = false;
@@ -269,7 +272,8 @@ final class Profile
         return $this->trashRetentionDays;
     }
 
-    /** @internal Nullable flags distinguish explicit enabling from inheritance. */
+    /** Nullable flags distinguish explicit enabling from inheritance. */
+    #[Internal]
     public function featureFlag(string $feature): ?bool
     {
         return match ($feature) {
@@ -280,7 +284,8 @@ final class Profile
         };
     }
 
-    /** @internal Called only on the registry's independent copy. */
+    /** Called only on the registry's independent copy. */
+    #[Internal]
     public function freeze(): void
     {
         $this->frozen = true;

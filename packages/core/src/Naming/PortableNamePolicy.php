@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Naming;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Support\NodeName;
 
@@ -14,6 +15,7 @@ use Vaulter\Support\NodeName;
  * COM0–COM9, LPT0–LPT9 and their superscript-digit forms, with any extension, in
  * any case), desktop.ini and .DS_Store, and names over 255 UTF-16 code units.
  */
+#[Api]
 final readonly class PortableNamePolicy implements NamePolicy
 {
     public const string KEY = 'portable-v1';

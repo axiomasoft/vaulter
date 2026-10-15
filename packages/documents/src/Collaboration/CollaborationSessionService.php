@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Collaboration;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
@@ -16,9 +17,8 @@ use Vaulter\Models\Drive\Node;
  * It makes no access decision itself: DocumentOperations::collaborationSession()
  * authorizes View through the OperationGuard and decides whether the session may
  * write, so a token never grants more than the guard allowed.
- *
- * @internal
  */
+#[Internal]
 final readonly class CollaborationSessionService
 {
     public function __construct(

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
@@ -19,8 +21,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * A node was re-parented within its storage tree — a single parent_id UPDATE
  * . Carries the old parent so listeners can reconstruct the move.
  */
+#[Api]
 final readonly class NodeMoved extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public int|string|null $fromParentId,
