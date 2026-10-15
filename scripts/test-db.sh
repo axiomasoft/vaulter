@@ -74,8 +74,25 @@ else
         # shellcheck disable=SC1091
         source "$root/var/pg-local.env"
         if "$PG_LOCAL_BIN/pg_isready" -q -h 127.0.0.1 -p "$DB_PORT"; then
-            export DB_EXTERNAL=1 PATH="$PG_LOCAL_BIN:$PATH"
+            export DB_EXTERNAL=1 DB_LOCAL_SERVER=1 PATH="$PG_LOCAL_BIN:$PATH"
         fi
+    fi
+    # Likewise the Docker server of scripts/mysql-local.sh (data on tmpfs; a native mysqld cannot use it).
+    if [[ "$engine" == mysql && -z "${DB_EXTERNAL:-}" && -f "$root/var/mysql-local.env" ]] \
+        && [[ "$("$root/scripts/mysql-local.sh" status)" == up ]]; then
+        # shellcheck disable=SC1091
+        source "$root/var/mysql-local.env"
+        export DB_EXTERNAL=1 DB_LOCAL_SERVER=1
+    fi
+    # A long-lived local server is shared by every run of this checkout and all runs use the same database names:
+    # two runs at once (two agents, two terminals) would migrate over each other. The second one waits instead.
+    if [[ "${DB_LOCAL_SERVER:-0}" == 1 ]]; then
+        exec 9>"$root/var/$engine-local.lock"
+        if ! flock -n 9; then
+            echo "test-db: another run is using the local $engine server; waiting for it" >&2
+            flock 9
+        fi
+        export DB_LOCAL_SERVER=held   # a nested call (same run) must not wait for its own lock
     fi
     if [[ "${DB_EXTERNAL:-0}" == 1 ]]; then
         db_use_external "$engine" "$workers" || exit "$?"

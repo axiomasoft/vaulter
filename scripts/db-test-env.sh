@@ -176,8 +176,9 @@ db_use_external() {
                     || PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -c "CREATE DATABASE \"$name\"" >/dev/null || return
                 ;;
             mysql)
-                MYSQL_PWD="$DB_PASSWORD" mysql --no-defaults --protocol=TCP -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" \
-                    -e "CREATE DATABASE IF NOT EXISTS \`$name\`" || return
+                # PDO rather than the mysql client: a Docker or CI server must not need client binaries on the host.
+                php -r '$p = new PDO("mysql:host=".getenv("DB_HOST").";port=".getenv("DB_PORT"), getenv("DB_USERNAME"), getenv("DB_PASSWORD"));
+                    $p->exec("CREATE DATABASE IF NOT EXISTS `".$argv[1]."`");' -- "$name" || return
                 ;;
         esac
     done
