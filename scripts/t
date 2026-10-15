@@ -121,17 +121,18 @@ def passes($p; $c; $skel; $nfiles):
                ($raw | map(resolve($n; $s))) as $q
                | [$c.engines[] as $e
                   | $s.partitions | to_entries[] | . as $pe | $pe.value as $p
-                  # --group=database[:zone] keeps only the files classified `database` (zones.json "database"), so a
-                  # partition without one is no step at all instead of a "zero tests" failure (no map = no filter)
-                  | ([$p.files[] | select(($q | length) == 0 or (. as $f | any($q[]; hit($f; .))))
-                      | select($c.dbpaths == null or (($c.groups | any(. == "database" or startswith("database:"))) | not)
-                               or (. as $f | any($c.dbpaths[]; hit($f; norm))))]) as $f
+                  | ([$p.files[] | select(($q | length) == 0 or (. as $f | any($q[]; hit($f; .))))]) as $f
                   | select(($f | length) > 0)
                   | if ($p.engines | index($e)) == null then
                       {kind: "skip", suite: $n, engine: $e, partition: $p.key,
                        reason: (if $p.database then "partition not applicable to \($e)" else "database-free partition, nothing engine-specific to check" end)}
                     else
-                      passes($p; $c; ($p.skeleton_writer // false); ($f | length)) | to_entries[] | .key as $k | .value as $ps
+                      # --group=database[:zone] keeps only the files classified `database` (zones.json "database"), so a
+                      # partition without one is no step at all instead of a "zero tests" failure (no map = no filter)
+                      ([$f[] | select($c.dbpaths == null or (($c.groups | any(. == "database" or startswith("database:"))) | not)
+                                      or (. as $x | any($c.dbpaths[]; hit($x; norm))))]) as $f
+                      | select(($f | length) > 0)
+                      | passes($p; $c; ($p.skeleton_writer // false); ($f | length)) | to_entries[] | .key as $k | .value as $ps
                       | {kind: "pest", suite: $n, engine: $e, partition: $p.key, partition_index: $pe.key,
                          pass: $ps.pass, processes: $ps.processes, cwd: $s.cwd, vendor: $s.vendor, config: $s.config,
                          files: $f, group: $ps.group, exclude: $ps.exclude, allow_empty: $ps.allow_empty,
