@@ -14877,6 +14877,20 @@
             "target_fqcn": "Vaulter\\Drive\\Testing\\Contracts\\FileHandlerContractTests"
         },
         {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Testing/Contracts/ModuleContractTests.php",
+            "fqcn": "Vaulter\\Testing\\Contracts\\ModuleContractTests",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Testing\\Contracts\\ModuleContractTests",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Testing\\Contracts\\ModuleContractTests"
+        },
+        {
             "action": "move",
             "eloquent": false,
             "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",

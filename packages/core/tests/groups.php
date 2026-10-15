@@ -26,6 +26,7 @@ return [
         'Tenancy/TenantIdentifierPredicateTest.php',
         'Sharing/ShareSecurityBoundaryTest.php',
         'Webhooks/ConcurrentDeliveryTest.php',
+        'Modules/AcmeModuleContractTest.php',
         'Outbox/OutboxRelayTest.php',
         'Outbox/OutboxWriteTest.php',
         'Outbox/WebhookFanoutConsumerTest.php',

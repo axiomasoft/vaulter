@@ -63,6 +63,7 @@ use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\VaulterSchema;
 use Vaulter\Testing\Contracts\ContentScannerContractTests;
 use Vaulter\Testing\Contracts\FileHandlerContractTests;
+use Vaulter\Testing\Contracts\ModuleContractTests;
 use Vaulter\Testing\Contracts\PermissionDriverContractTests;
 use Vaulter\Testing\Contracts\PermissionFixture;
 use Vaulter\Testing\FakeContentScanner;
@@ -379,7 +380,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         OperationKind::cases(),
     ));
     // The testing kit hosts build their own suites on: the contract suites, the scripted scanner and the helper trait.
-    foreach ([PermissionDriverContractTests::class, FileHandlerContractTests::class, ContentScannerContractTests::class, PermissionFixture::class, FakeContentScanner::class, InteractsWithVaulter::class] as $class) {
+    foreach ([PermissionDriverContractTests::class, FileHandlerContractTests::class, ModuleContractTests::class, ContentScannerContractTests::class, PermissionFixture::class, FakeContentScanner::class, InteractsWithVaulter::class] as $class) {
         $blocks[] = vaulterSnapshotInterface($class);
     }
     // The factories are frozen by what Vaulter adds to Eloquent's Factory, not by Laravel's own surface.

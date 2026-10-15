@@ -1910,6 +1910,15 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Testing\\Contracts\\ModuleContractTests",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: public test kit for third-party module manifests (P3.16, I8); it exercises the kernel's compiler, so it stays with the kernel"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Testing\\Contracts\\PermissionFixture",
             "owner": "drive",
             "surface": "Api",

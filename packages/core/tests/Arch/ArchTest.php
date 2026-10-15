@@ -359,7 +359,7 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     // Events/Outbox/Models holds the outbox model of the kernel outbox (D29: Vaulter\Events\Outbox\Models\OutboxEvent).
     expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events', 'Webhooks/Events', 'Events/Outbox/Models'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
-        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ContentScannerContractTests.php', 'FileHandlerContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
+        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ContentScannerContractTests.php', 'FileHandlerContractTests.php', 'ModuleContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
         ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'DriveEventType.php'])
         ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'ActivityTarget.php', 'EventScope.php', 'EventSubject.php', 'JournalEffect.php']);
 });

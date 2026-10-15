@@ -1027,6 +1027,9 @@ Vaulter\Testing\Contracts\PermissionDriverContractTests
 Vaulter\Testing\Contracts\FileHandlerContractTests
   assertFileHandlerContract(\Vaulter\Contracts\Handlers\FileHandler $handler, ?\Vaulter\ValueObjects\Handlers\FileDescriptor $claimed = null): void
 
+Vaulter\Testing\Contracts\ModuleContractTests
+  assertModuleContract(\Vaulter\Modules\VaulterModule $module, array $requires = []): void
+
 Vaulter\Testing\Contracts\ContentScannerContractTests
   assertContentScannerContract(\Vaulter\Contracts\Cas\ContentScanner $scanner, array $samples): void
   assertUnreadableBytesAreNeverClean(\Vaulter\Contracts\Cas\ContentScanner $scanner): void

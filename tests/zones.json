@@ -280,6 +280,7 @@
         "packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php",
         "packages/core/tests/Sharing/ShareSecurityBoundaryTest.php",
         "packages/core/tests/Webhooks/ConcurrentDeliveryTest.php",
+        "packages/core/tests/Modules/AcmeModuleContractTest.php",
         "packages/core/tests/Outbox/OutboxRelayTest.php",
         "packages/core/tests/Outbox/OutboxWriteTest.php",
         "packages/core/tests/Outbox/WebhookFanoutConsumerTest.php",
