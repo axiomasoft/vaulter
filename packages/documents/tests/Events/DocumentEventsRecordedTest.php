@@ -16,6 +16,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
+use Vaulter\Tests\Support\CanonicalJson;
 
 /**
  * Document and comment events go through the EventRecorder like every other event:
@@ -59,7 +60,7 @@ it('records the document lifecycle with the writer validators', function (): voi
     ])->and(documentEventsCount(OutboxEvent::class))->toEqualCanonicalizing([
         'document.created' => 1, 'document.revision_created' => 2, 'document.restored' => 1,
     ])->and($created->payload['data']['state_version'])->toBe(1)
-        ->and($created->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $node->id])
+        ->and(CanonicalJson::of($created->payload['subject']))->toBe(CanonicalJson::of(['type' => 'node', 'id' => (string) $node->id]))
         ->and($restored->payload['data']['state_version'])->toBe($document->state_version)
         ->and($restored->payload['data']['epoch'])->toBe($document->collab_epoch)
         ->and($restored->payload['sequence'])->toBeNull()
@@ -102,8 +103,8 @@ it('records comment events in both sinks', function (): void {
 
     expect(documentEventsCount(Activity::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
         ->and(documentEventsCount(OutboxEvent::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
-        ->and($added->payload['subject'])->toBe(['type' => 'comment', 'id' => (string) $comment->id])
-        ->and($added->payload['data'])->toBe(['comment_id' => (string) $comment->id, 'node_id' => (string) $node->id])
+        ->and(CanonicalJson::of($added->payload['subject']))->toBe(CanonicalJson::of(['type' => 'comment', 'id' => (string) $comment->id]))
+        ->and(CanonicalJson::of($added->payload['data']))->toBe(CanonicalJson::of(['comment_id' => (string) $comment->id, 'node_id' => (string) $node->id]))
         ->and($added->payload['actor']['id'])->toBe('9')
         ->and(json_encode($added->payload, JSON_THROW_ON_ERROR))->not->toContain('hello')
         ->and(Activity::query()->where('verb', DocumentEventType::CommentAdded->value)->sole()->target_id)->toEqual($node->id);

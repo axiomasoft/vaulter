@@ -106,7 +106,7 @@ it('SEC-I7-projection withholds request fingerprint and access details from a re
     AccessTestHelpers::grant($readOnly, RoleRegistry::READER);
     AccessTestHelpers::grant($managed, RoleRegistry::ORGANIZER);
     $details = static fn (): array => [
-        'ip' => '203.0.113.9', 'user_agent' => 'curl/8', 'request_id' => 'req-1', 'actor_type' => 'user', 'actor_id' => '42',
+        'ip' => '203.0.113.9', 'user_agent' => 'curl/8', 'request_id' => '6f1c2f6e-1b7a-4f0e-9d3a-5b8f0c1d2e3a', 'actor_type' => 'user', 'actor_id' => '42',
         'context' => ['subject_type' => 'user', 'subject_id' => '7', 'permissions' => 5, 'token_prefix' => 'abcd1234', 'level' => 'reader'],
     ];
     $rows = [];

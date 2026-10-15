@@ -19,6 +19,7 @@ use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Tests\Support\CanonicalJson;
 
 /**
  * Every drive event is recorded by the EventRecorder: one activity row and, for webhook
@@ -93,7 +94,7 @@ it('records drive.deleted when the purge of a deleted drive finishes', function 
     $outbox = OutboxEvent::query()->where('type', DriveEventType::DriveDeleted->value)->sole();
 
     expect($activity->event_id)->toBe($outbox->event_id)
-        ->and($outbox->payload['subject'])->toBe(['type' => 'drive', 'id' => (string) $id]);
+        ->and(CanonicalJson::of($outbox->payload['subject']))->toBe(CanonicalJson::of(['type' => 'drive', 'id' => (string) $id]));
 });
 
 it('audits upload sessions without staging webhooks', function (): void {
