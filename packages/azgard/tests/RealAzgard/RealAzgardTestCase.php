@@ -6,9 +6,10 @@ namespace Vaulter\Azgard\Tests\RealAzgard;
 
 use AzGuard\AzGuardServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Schema;
+
+use function Orchestra\Testbench\load_migration_paths;
+
 use Orchestra\Testbench\TestCase as Orchestra;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\DocumentsPanel;
@@ -61,18 +62,12 @@ abstract class RealAzgardTestCase extends Orchestra
     /**
      * AzGuard loads its own storage migration through its provider; here we add the host
      * tables the stubs live in (the User subject + a workspace entity to scope against).
+     * Registered as a migration path so RefreshDatabase creates them once with the rest of
+     * the schema: creating them in setUp outlived the first test on a server engine
+     * ("relation users already exists").
      */
     protected function defineDatabaseMigrations(): void
     {
-        Schema::create('users', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name')->nullable();
-            $table->timestamp('locked_at')->nullable();
-        });
-
-        Schema::create('workspaces', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name')->nullable();
-        });
+        load_migration_paths($this->app, __DIR__.'/database/migrations');
     }
 }
