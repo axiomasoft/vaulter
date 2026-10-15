@@ -69,8 +69,9 @@ if [[ "$engine" == sqlite ]]; then
 else
     # shellcheck source=scripts/db-test-env.sh
     source "$root/scripts/db-test-env.sh"
-    # A local server started by scripts/pg-local.sh is reused when it answers (never in CI: DB_EXTERNAL decides there).
-    if [[ "$engine" == pgsql && -z "${DB_EXTERNAL:-}" && -f "$root/var/pg-local.env" ]]; then
+    # A local server started by scripts/pg-local.sh is reused when it answers (never in CI: DB_EXTERNAL decides there;
+    # VAULTER_DB_PRIVATE=1, set by scripts/t-matrix, always starts a private server so that runs can overlap).
+    if [[ "$engine" == pgsql && -z "${DB_EXTERNAL:-}" && -z "${VAULTER_DB_PRIVATE:-}" && -f "$root/var/pg-local.env" ]]; then
         # shellcheck disable=SC1091
         source "$root/var/pg-local.env"
         if "$PG_LOCAL_BIN/pg_isready" -q -h 127.0.0.1 -p "$DB_PORT"; then
@@ -78,7 +79,7 @@ else
         fi
     fi
     # Likewise the Docker server of scripts/mysql-local.sh (data on tmpfs; a native mysqld cannot use it).
-    if [[ "$engine" == mysql && -z "${DB_EXTERNAL:-}" && -f "$root/var/mysql-local.env" ]] \
+    if [[ "$engine" == mysql && -z "${DB_EXTERNAL:-}" && -z "${VAULTER_DB_PRIVATE:-}" && -f "$root/var/mysql-local.env" ]] \
         && [[ "$("$root/scripts/mysql-local.sh" status)" == up ]]; then
         # shellcheck disable=SC1091
         source "$root/var/mysql-local.env"

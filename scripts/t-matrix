@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# The whole matrix at the speed of its slowest cell: every (engine, package) pair is its own `scripts/t` run on its own
+# private database server, several at a time. `make test-full` is this script.
+#
+#   scripts/t-matrix [--engines=sqlite,pgsql,mysql] [-p core,drive,...] [--jobs=N] [-- <scripts/t flags>]
+#
+# SQLite runs once for every suite (it needs no server); pgsql and mysql run once per package, slowest first. Logs go to
+# $T_MATRIX_LOGS (default: a fresh directory under /tmp); the summary names every failed cell and its log. Exit 0 only
+# when every cell is green.
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+engines=sqlite,pgsql,mysql
+packages=core,drive,documents,media,filament,azgard
+cpus="$(nproc 2>/dev/null || echo 4)"
+jobs=$(( cpus / 8 > 2 ? cpus / 8 : 2 ))
+extra=()
+
+while (( $# )); do
+    case "$1" in
+        --engines=*) engines="${1#*=}" ;;
+        -p) packages="${2:?-p needs a list}"; shift ;;
+        -p=* | --package=*) packages="${1#*=}" ;;
+        --jobs=*) jobs="${1#*=}" ;;
+        --) shift; extra=("$@"); break ;;
+        -h | --help) sed -n '2,10p' "$0"; exit 0 ;;
+        *) echo "t-matrix: unknown argument [$1]" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+logs="${T_MATRIX_LOGS:-$(mktemp -d /tmp/vaulter-matrix.XXXXXX)}"
+mkdir -p "$logs"
+# private servers only: a shared local server would serialise the cells again
+export VAULTER_DB_PRIVATE=1
+
+# slowest cells first: core on MySQL dominates, so it starts at once and the rest fill the other slots
+declare -a cells=()
+IFS=, read -r -a engine_list <<<"$engines"
+IFS=, read -r -a package_list <<<"$packages"
+for engine in mysql pgsql sqlite; do
+    [[ ",$engines," == *",$engine,"* ]] || continue
+    if [[ "$engine" == sqlite ]]; then
+        cells+=("sqlite|-")
+        continue
+    fi
+    for package in "${package_list[@]}"; do cells+=("$engine|$package"); done
+done
+
+declare -A pid_cell=() cell_start=()
+failed=()
+started_all=$SECONDS
+
+launch() { # cell
+    local cell="$1" engine="${1%%|*}" package="${1#*|}" log args
+    log="$logs/${engine}-${package/-/all}.log"
+    args=("$engine" --full)
+    [[ "$package" == - ]] || args+=(-p "$package")
+    cell_start[$cell]=$SECONDS
+    ( cd "$root" && exec scripts/t "${args[@]}" "${extra[@]}" ) >"$log" 2>&1 &
+    pid_cell[$!]="$cell"
+}
+
+reap() { # waits for any one job, reports it
+    local pid code=0 cell engine package
+    wait -n -p pid || code=$?
+    cell="${pid_cell[$pid]}"
+    unset 'pid_cell[$pid]'
+    engine="${cell%%|*}"; package="${cell#*|}"
+    if (( code == 0 )); then
+        printf '  ok    %-7s %-10s %4ss\n' "$engine" "${package/-/all}" $(( SECONDS - cell_start[$cell] ))
+    else
+        printf '  FAIL  %-7s %-10s %4ss  (exit %s) %s\n' "$engine" "${package/-/all}" $(( SECONDS - cell_start[$cell] )) "$code" "$logs/${engine}-${package/-/all}.log"
+        failed+=("$cell")
+    fi
+}
+
+printf 't-matrix: %s cells, %s at a time, logs in %s\n' "${#cells[@]}" "$jobs" "$logs"
+for cell in "${cells[@]}"; do
+    while (( ${#pid_cell[@]} >= jobs )); do reap; done
+    launch "$cell"
+done
+while (( ${#pid_cell[@]} > 0 )); do reap; done
+
+printf 't-matrix: %ss in all, %s failed\n' $(( SECONDS - started_all )) "${#failed[@]}"
+for cell in "${failed[@]}"; do
+    engine="${cell%%|*}"; package="${cell#*|}"
+    printf '\n--- %s %s ---\n' "$engine" "${package/-/all}"
+    sed 's/\x1b\[[0-9;]*m//g' "$logs/${engine}-${package/-/all}.log" | grep -E 'FAILED|FAIL |Failed asserting|exit=[1-9]' | head -12
+done
+(( ${#failed[@]} == 0 ))

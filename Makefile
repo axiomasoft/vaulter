@@ -50,8 +50,8 @@ test-db: db-up ## Every engine-dependent test on pgsql (the database group of ev
 test-db-mysql: db-up-mysql ## Every engine-dependent test on mysql
 	scripts/t mysql --group=database
 
-test-full: db-up db-up-mysql ## The whole matrix (sqlite+pgsql+mysql, --full): before closing a plan / a release only
-	scripts/t all --full
+test-full: ## The whole matrix (sqlite+pgsql+mysql, --full), every engine/package cell on its own private server in parallel: before closing a plan / a release only
+	scripts/t-matrix
 
 test-coverage: ## Core suite with coverage (xdebug/pcov), explicit — never part of `make test`
 	vendor/bin/pest --coverage --min=80
