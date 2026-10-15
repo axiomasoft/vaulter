@@ -73,11 +73,7 @@ beforeEach(function (): void {
 /** Database state includes side effects, not just the returned node. */
 function lifecycleBoundaryState(): array
 {
-    $db = app(VaulterDatabase::class)->connection();
-
-    return array_map(static fn (string $table): array => $db->table($table)->orderBy($table === 'v_file_revision_blobs' ? 'blob_id' : 'id')->get()->map(fn ($row): array => (array) $row)->all(), [
-        'v_nodes', 'v_files', 'v_file_revisions', 'v_file_revision_blobs', 'v_blobs', 'v_drives', 'v_activity', 'v_outbox',
-    ]);
+    return DriveTestHelpers::writeTablesSnapshot();
 }
 
 function lifecycleBoundaryEdges(FileRevision $revision): array
@@ -314,7 +310,9 @@ it('authorizes View and Create on the actual fallback destination', function (st
             subjectId: 84);
     }
     $this->system->nodes()->trash($source);
-    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($parent)->delete());
+    // The original parent leaves the active tree. Trashed, not deleted: parent_id cascades on delete, so on an engine
+    // that enforces foreign keys a delete would take the trashed source with it.
+    $this->system->nodes()->trash($parent);
     $before = lifecycleBoundaryState();
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
     $run = fn () => $actor->trash()->restore($source, new RestoreOptions(destination: $fallback));
