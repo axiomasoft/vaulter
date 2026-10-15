@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Test run tiers and the supported Node versions
+
+- Changed: Node 20 (end-of-life 2026-04-30) is no longer supported by `@vaulter/vue` (`engines.node: >=22`, like the collaboration hub). A pull request checks Node 22, the weekly full run Node 22 and 24.
+- Added: `scripts/mysql-local.sh` (`make db-up-mysql`) — a reusable local MySQL 8.4 test server on tmpfs; `make test-db`, `test-db-mysql`, `test-full` and `composer test:changed`, `test:db`; a "which run when" table in `tests/README.md`.
+- Fixed: `scripts/t <engine> --group=database` runs only the database-classified files instead of failing every partition without one; two runs on one local test server wait for each other instead of corrupting each other's schema.
+- Changed: CI starts the PostgreSQL/MySQL lanes after the SQLite fast lane is green.
+
 ### No 0.x upgrade path, one create migration per table (PLAN3.P1.10, D21)
 
 - Removed: the 43-migration chain of 0.x (renames, backfills, host-key widening, rollback guards, preflight) — `packages/core/database/migrations` holds 25 `create_v_<table>_table` migrations built from `SchemaBuilder::createTable()`; the installed schema is unchanged per engine, id strategy, host-key type, table prefix and tenancy setting (`scripts/schema-snapshot.sh --compare`).

@@ -38,7 +38,7 @@ What it asserts (the P1.1 checklist from `docs/plan/00-master-plan.md`):
 
 ## Run it (host)
 
-Prereqs: PHP 8.4+, Node 20+, Docker (for Postgres), `composer install` done.
+Prereqs: PHP 8.4+, Node 22+, Docker (for Postgres), `composer install` done.
 
 ```bash
 # from the repo root — one terminal each, or use `make e2e-up`
