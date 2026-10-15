@@ -4,8 +4,16 @@
 # of the product-realistic postgres service.
 name: vaulter-load
 
+# Container logs are capped: docker's default json-file driver keeps them without limit (3 × 10 MiB per container).
+x-bounded-logs: &bounded-logs
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
   toxiproxy:
+    logging: *bounded-logs
     image: ghcr.io/shopify/toxiproxy:2.11.0
     command: ["-host", "0.0.0.0", "-config", "/config/toxiproxy.json"]
     volumes:
@@ -26,6 +34,7 @@ services:
       retries: 30
 
   s3-fault-proxy:
+    logging: *bounded-logs
     image: vaulter-load-app:latest
     working_dir: /chaos
     entrypoint: ["python3", "/chaos/s3-fault-proxy.py"]
@@ -46,6 +55,7 @@ services:
         condition: service_healthy
 
   app:
+    logging: *bounded-logs
     environment:
       MINIO_ENDPOINT: http://s3-fault-proxy:19000
       DB_HOST: ${P7_APP_DB_HOST:-toxiproxy}
@@ -66,6 +76,7 @@ services:
         condition: service_started
 
   queue-worker:
+    logging: *bounded-logs
     environment:
       LOAD_SKIP_MIGRATIONS: "1"
       MINIO_ENDPOINT: http://s3-fault-proxy:19000
@@ -83,6 +94,7 @@ services:
         condition: service_started
 
   postgres-primary:
+    logging: *bounded-logs
     profiles: [chaos-ha]
     image: postgres:16-alpine
     environment:
@@ -111,6 +123,7 @@ services:
       retries: 30
 
   postgres-standby:
+    logging: *bounded-logs
     profiles: [chaos-ha]
     image: postgres:16-alpine
     environment:
@@ -130,6 +143,7 @@ services:
       retries: 40
 
   pgbouncer-ha:
+    logging: *bounded-logs
     profiles: [chaos-ha]
     image: edoburu/pgbouncer:latest
     environment:

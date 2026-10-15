@@ -211,6 +211,7 @@
         {"path": "scripts/test-select.php", "zones": ["repo"]},
         {"path": "scripts/test-db.sh", "zones": ["repo"]},
         {"path": "scripts/db-test-env.sh", "zones": ["repo"]},
+        {"path": "scripts/db-reap.sh", "zones": ["repo"]},
         {"path": "scripts/php84", "zones": ["repo"]},
         {"path": "tests/zones.json", "zones": ["repo"]},
         {"path": "tests/suites.json", "zones": ["repo"]},

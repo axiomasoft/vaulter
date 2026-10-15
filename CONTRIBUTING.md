@@ -133,6 +133,38 @@ scripts/test-db.sh sqlite packages/core/tests                   # in-memory, par
 - **Racing tests need their own database.** Never point two lanes at the same `*_test` database (`DatabaseMigrations`
   and `ForkRace` suites drop and rebuild it); the harness gives each run a server of its own.
 
+#### Private servers never outlive their run
+
+Each private server lives in `${VAULTER_DB_ROOT:-/tmp}/vaulter-dbtest.XXXXXX`, owned by the shell that started it:
+
+- **`db_down`** (the `EXIT` trap of `scripts/test-db.sh` and `scripts/schema-snapshot.sh`) stops every server
+  process of the directory — mysqld on `TERM`, postgres on `INT`, `KILL` after 10 s, found by pid file and, if the
+  server died before writing one, by its command line — and deletes the directory only once they are gone. A server
+  left running without its data directory loops on errors and floods its log; this order prevents it.
+- **`DB_LOG_MAX_BYTES`** (default `52428800`, 50 MiB) caps `server.log` of both engines; past it the output is read
+  and dropped, so the server never blocks. **`DB_FILE_MAX_MB`** (default `16384`, `0` = off) caps every file the
+  server writes with `ulimit -f` — the last guard: a runaway server dies with `SIGXFSZ` instead of filling the disk.
+- **A run killed with `kill -9` or a timeout** cannot run its trap. The directory's `owner` file holds the pid and
+  start time of the owning shell, and a watchdog (`scripts/db-reap.sh --watch`, detached from the run with `setsid`)
+  stops the server and deletes the directory within seconds of the owner's death. A server of another, still running
+  shell is never touched. `db_up` also reaps what dead owners left behind before starting a new server.
+- **`scripts/pg-local.sh`** starts its server with `DB_PERSISTENT=1`: it outlives the shell on purpose, has no
+  watchdog and is never reaped; `scripts/pg-local.sh down` stops it the same way as `db_down`.
+
+Finding and removing orphans by hand:
+
+```bash
+pgrep -a mysqld | grep vaulter-dbtest; pgrep -a postgres | grep vaulter-dbtest   # servers of the harness
+ls -d /tmp/vaulter-dbtest.* /dev/shm/vaulter-dbtest.* 2>/dev/null                 # their directories
+scripts/db-reap.sh --dry-run    # what has a dead owner
+scripts/db-reap.sh              # stop those servers and delete their directories (only yours, only dead owners)
+scripts/db-reap.sh --legacy     # also directories without an owner file (older harness) — only when no run is going
+scripts/db-reap.sh --stop /tmp/vaulter-dbtest.XXXXXX   # one directory of yours, even if its owner is alive
+```
+
+`scripts/db-reap.sh` only considers `vaulter-dbtest.*` directories of the current user and only signals mysqld,
+mariadbd and postgres processes whose command line names that directory.
+
 ### Changing the REST contract
 
 `openapi/vaulter-v1.yaml` is the source of truth of the REST API v1. Change a route, a resource or a header and the

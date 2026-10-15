@@ -25,8 +25,9 @@ case "${1:-}" in
         mkdir -p "$root/var"
         # shellcheck source=scripts/db-test-env.sh
         source "$root/scripts/db-test-env.sh"
-        # db_up makes its own mktemp directory under VAULTER_DB_ROOT; /dev/shm keeps the data in memory.
-        VAULTER_DB_ROOT=/dev/shm db_up pgsql 8
+        # db_up makes its own mktemp directory under VAULTER_DB_ROOT; /dev/shm keeps the data in memory. The server outlives
+        # this shell on purpose: DB_PERSISTENT=1 starts no watchdog and keeps scripts/db-reap.sh away from it.
+        VAULTER_DB_ROOT=/dev/shm DB_PERSISTENT=1 db_up pgsql 8
         {
             printf 'PG_LOCAL_BIN=%q\nPG_LOCAL_DIR=%q\n' "$DB_PG_BIN" "$DB_SERVER_DIR"
             printf 'export DB_HOST=%q DB_PORT=%q DB_USERNAME=%q DB_PASSWORD=%q DB_DATABASE=%q DB_CONNECTION=pgsql\n' \
@@ -38,8 +39,8 @@ case "${1:-}" in
         if [[ -f "$env_file" ]]; then
             # shellcheck disable=SC1090
             source "$env_file"
-            "$PG_LOCAL_BIN/pg_ctl" -D "$PG_LOCAL_DIR/data" -m immediate stop >/dev/null 2>&1 || true
-            [[ "$PG_LOCAL_DIR" == /dev/shm/vaulter-dbtest.* ]] && rm -rf -- "$PG_LOCAL_DIR"
+            # The same stop as db_down: every server process of the directory, TERM then KILL, the directory only after.
+            [[ "$PG_LOCAL_DIR" == /dev/shm/vaulter-dbtest.* ]] && "$root/scripts/db-reap.sh" --stop "$PG_LOCAL_DIR"
             rm -f -- "$env_file"
         fi
         echo 'pg-local: down'

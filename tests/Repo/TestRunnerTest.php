@@ -155,7 +155,7 @@ function t_fixture(): array
     t_write($root.'/packages/alpha/vendor/bin/pest', t_fake_pest());
     t_write($root.'/scripts/php84', "#!/usr/bin/env bash\nexec \"\$@\"\n", true);
     t_write($root.'/fake-node.sh', "#!/usr/bin/env bash\necho \"node \$* in \$(pwd)\" >> \"\$T_LOG.node\"\n", true);
-    foreach (['test-db.sh', 'db-test-env.sh'] as $script) {
+    foreach (['test-db.sh', 'db-test-env.sh', 'db-reap.sh'] as $script) {
         t_write($root.'/scripts/'.$script, (string) file_get_contents(t_real_root().'/scripts/'.$script), true);
     }
     t_write($root.'/skeleton-src/config/app.php', "<?php return [];\n");
