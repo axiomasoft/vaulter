@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
-use Vaulter\Support\Identity;
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
@@ -12,6 +11,7 @@ use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class NodeLocator
