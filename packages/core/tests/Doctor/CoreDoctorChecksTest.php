@@ -72,6 +72,11 @@ it('finds every table and migration of a migrated schema', function (): void {
 });
 
 it('reports a missing table and a pending migration as errors', function (): void {
+    // MySQL commits DDL implicitly: the drop would outlive the test transaction and break the next test.
+    if (DB::connection()->getDriverName() === 'mysql') {
+        $this->markTestSkipped('DDL is not transactional on MySQL.');
+    }
+
     Schema::drop(coreTable('drive_changes'));
     Schema::drop(coreTable('drive_change_heads'));
     DB::table('migrations')->where('migration', 'like', '%_create_v_drive_changes_table')->delete();
@@ -91,6 +96,10 @@ it('treats a published migration under a new timestamp as applied', function ():
 });
 
 it('reports a missing migrations table', function (): void {
+    if (DB::connection()->getDriverName() === 'mysql') {
+        $this->markTestSkipped('DDL is not transactional on MySQL.');
+    }
+
     Schema::drop('migrations');
 
     expect(coreCodes('core.schema.tables'))->toContain('core.schema.migrations_table_missing');
