@@ -466,7 +466,7 @@ setup_skeleton() { # dest : a private copy of the Testbench skeleton (config/ + 
     [[ -d "$src" ]] || die "Testbench skeleton not found (set T_SKELETON_SRC)"
     # storage/ of the shared skeleton collects logs and compiled views of every run (hundreds of MB): the copy starts it empty
     mkdir -p "$dest"
-    (cd "$src" && tar --exclude=./storage -cf - .) | (cd "$dest" && tar -xf -)
+    (cd "$src" && tar --exclude=./storage --mode=u+rwX -cf - .) | (cd "$dest" && tar -xf -)
     mkdir -p "$dest"/storage/{app/public,framework/{cache/data,sessions,views,testing},logs}
 }
 
