@@ -58,11 +58,7 @@ function operationMatrixGrant(DriveHandle $system, Node|NodeSnapshot $node, Auth
 
 function operationMatrixState(): array
 {
-    $db = app(VaulterDatabase::class)->connection();
-
-    return array_map(static fn (string $table): array => $db->table($table)->orderBy('id')->get()->map(fn ($row): array => (array) $row)->all(), [
-        'v_nodes', 'v_files', 'v_file_revisions', 'v_file_revision_blobs', 'v_blobs', 'v_drives', 'v_activity', 'v_outbox',
-    ]);
+    return DriveTestHelpers::writeTablesSnapshot();
 }
 
 /*

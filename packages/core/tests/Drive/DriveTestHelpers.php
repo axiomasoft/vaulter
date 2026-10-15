@@ -6,6 +6,7 @@ namespace Vaulter\Tests\Drive;
 
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Facades\Vaulter;
@@ -102,5 +103,32 @@ final class DriveTestHelpers
         rewind($stream);
 
         return $stream;
+    }
+
+    /**
+     * Every row of the write-side tables, ordered by each table's real key, to compare a state before and after an
+     * operation that must not write. The keys are spelled out: SQLite reads an unknown quoted column as a string
+     * literal, so `order by "id"` on a table without one only fails on the server engines.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public static function writeTablesSnapshot(): array
+    {
+        $keys = [
+            'v_nodes' => ['id'], 'v_files' => ['id'], 'v_file_revisions' => ['id'],
+            'v_file_revision_blobs' => ['file_revision_id', 'blob_id', 'role', 'ordinal'], 'v_blobs' => ['id'],
+            'v_drives' => ['id'], 'v_activity' => ['id'], 'v_outbox' => ['outbox_seq'],
+        ];
+        $db = app(VaulterDatabase::class)->connection();
+        $snapshot = [];
+        foreach ($keys as $table => $columns) {
+            $query = $db->table($table);
+            foreach ($columns as $column) {
+                $query->orderBy($column);
+            }
+            $snapshot[$table] = $query->get()->map(static fn (object $row): array => (array) $row)->values()->all();
+        }
+
+        return $snapshot;
     }
 }
