@@ -274,8 +274,12 @@ jobs:
 
   db:
     name: DB / ${{ matrix.engine }} / ${{ matrix.package }}
-    needs: changes
-    if: needs.changes.outputs.has_db == 'true'
+    # Fast gate first: the server lanes start once the SQLite lane is green (or not needed), so a change that is
+    # already red on SQLite does not also spend the database matrix. A skip caused by a red gate stays red in ci-gate.
+    needs: [changes, fast]
+    if: >-
+      !cancelled() && needs.changes.outputs.has_db == 'true'
+      && (needs.fast.result == 'success' || needs.fast.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -372,8 +376,12 @@ jobs:
 
   serial:
     name: Serial / pgsql / ${{ matrix.package }}
-    needs: changes
-    if: needs.changes.outputs.has_serial == 'true'
+    # Fast gate first: the server lanes start once the SQLite lane is green (or not needed), so a change that is
+    # already red on SQLite does not also spend the database matrix. A skip caused by a red gate stays red in ci-gate.
+    needs: [changes, fast]
+    if: >-
+      !cancelled() && needs.changes.outputs.has_serial == 'true'
+      && (needs.fast.result == 'success' || needs.fast.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -449,7 +457,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['20', '22']
+        # Node 20 is end-of-life (2026-04-30). A PR checks the oldest supported LTS; weekly-full.yml adds Node 24.
+        node: ['22']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
