@@ -24,9 +24,11 @@ use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 uses(EnablesWebhooksModule::class);
 
-// MySQL commits implicitly on DDL, so the tables these tests drop would stay dropped after the test: force the next test to rebuild the schema.
+// MySQL commits DDL implicitly, so the tables these tests drop stay dropped after the test (SQLite and PostgreSQL roll them back with
+// the test transaction). Start the next test from an empty database that RefreshDatabase migrates afresh.
 afterEach(function (): void {
     if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+        Schema::dropAllTables();
         RefreshDatabaseState::$migrated = false;
     }
 });

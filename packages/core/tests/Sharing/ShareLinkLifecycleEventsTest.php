@@ -40,7 +40,7 @@ it('records share.updated with the names of the changed fields only', function (
     $activity = Activity::query()->where('verb', DriveEventType::ShareUpdated->value)->sole();
 
     expect(CanonicalJson::of($outbox->payload['data']))->toBe(CanonicalJson::of(['node_id' => (string) $this->node->id, 'changed' => ['expires_at']]))
-        ->and($outbox->payload['subject'])->toBe(['type' => 'share', 'id' => (string) $this->minted->link->id])
+        ->and(CanonicalJson::of($outbox->payload['subject']))->toBe(CanonicalJson::of(['type' => 'share', 'id' => (string) $this->minted->link->id]))
         ->and($activity->event_id)->toBe($outbox->event_id)
         ->and($activity->context['changed'])->toBe(['expires_at']);
 });
