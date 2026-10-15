@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Repositories\Uploads;
 
+use Vaulter\Support\Identity;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -24,7 +26,9 @@ final class UploadSessionReadRepository
 
     public function find(int|string $id): ?UploadSession
     {
-        return $this->query()->find($id);
+        $query = $this->query();
+
+        return Identity::fitsKey($query->getModel(), $id) ? $query->find($id) : null;
     }
 
     /**
@@ -34,7 +38,8 @@ final class UploadSessionReadRepository
      */
     public function findByUploadId(string $uploadId): ?UploadSession
     {
-        return $this->query()->where('upload_id', $uploadId)->first();
+        // upload_id is a uuid column: any other string names no session (and PostgreSQL would fail the cast).
+        return Str::isUuid($uploadId) ? $this->query()->where('upload_id', $uploadId)->first() : null;
     }
 
     /**

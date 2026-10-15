@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
+use Vaulter\Support\Identity;
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
@@ -93,7 +94,7 @@ final readonly class NodeLocator
     /** @param Builder<Node> $query */
     private function plausibleKey(Builder $query, int|string $key): bool
     {
-        return $query->getModel()->getKeyType() !== 'int' || preg_match('/^[0-9]{1,19}$/', (string) $key) === 1;
+        return Identity::fitsKey($query->getModel(), $key);
     }
 
     private function key(Node|NodeSnapshot|int|string $key): int|string|null

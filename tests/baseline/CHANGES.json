@@ -4625,7 +4625,7 @@
       ]
     },
     "core": {
-      "count": 406,
+      "count": 408,
       "names": [
         "P\\Packages\\core\\tests\\Arch\\OperationsUseRunnerTest::__pest_evaluable_it_covers_every_Operations_class_of_drive__documents_and_the_core_located_ones",
         "P\\Packages\\core\\tests\\Arch\\OperationsUseRunnerTest::__pest_evaluable_it_lists_only_reads_that_exist_and_do_not_use_the_runner",
@@ -4965,6 +4965,7 @@
         "P\\Packages\\core\\tests\\Outbox\\OutboxRelayTest::__pest_evaluable_it_pauses_a_consumer_the_graph_no_longer_holds_and_resumes_it_where_it_stopped",
         "P\\Packages\\core\\tests\\Outbox\\OutboxRelayTest::__pest_evaluable_it_prunes_dead_rows_after_their_own_retention",
         "P\\Packages\\core\\tests\\Outbox\\OutboxRelayTest::__pest_evaluable_it_reconciles_the_rows_a_process_with_an_older_graph_missed__only_up_to_the_settle_window",
+        "P\\Packages\\core\\tests\\Outbox\\OutboxRelayTest::__pest_evaluable_it_records_the_events_committed_while_a_consumer_is_detached_as_a_gap_when_it_returns",
         "P\\Packages\\core\\tests\\Outbox\\OutboxRelayTest::__pest_evaluable_it_refuses_a_consumer_whose_id_differs_from_its_contribution",
         "P\\Packages\\core\\tests\\Outbox\\OutboxRelayTest::__pest_evaluable_it_registers_a_new_consumer_active_at_the_current_seq",
         "P\\Packages\\core\\tests\\Outbox\\OutboxRelayTest::__pest_evaluable_it_replays_a_range_to_a_consumer__acknowledges_the_gaps_it_covers_and_reports_what_retention_lost",
@@ -5025,6 +5026,7 @@
         "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('t12')\"",
         "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('tnull')\"",
         "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_selects_the_drive_scope_for_the_drive_dedup_setting",
+        "P\\Packages\\core\\tests\\Unit\\IdentityFitsKeyTest::__pest_evaluable_it_lets_only_a_key_the_column_can_hold_reach_a_query",
         "P\\Packages\\core\\tests\\Webhooks\\WebhookEndpointCrudTest::__pest_evaluable_it_answers_an_oversized_endpoint_id_after_the_ability_check__403_without_manage__404_with_it",
         "P\\Packages\\core\\tests\\Webhooks\\WebhookPruneSafetyTest::__pest_evaluable_it_keeps_a_finished_outbox_event_inside_the_retention_window",
         "P\\Packages\\core\\tests\\Webhooks\\WebhookPruneSafetyTest::__pest_evaluable_it_keeps_an_outbox_event_that_a_replay_reopened_between_the_select_and_the_delete",

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: `scripts/mysql-local.sh` (`make db-up-mysql`) — a reusable local MySQL 8.4 test server on tmpfs; `make test-db`, `test-db-mysql`, `test-full` and `composer test:changed`, `test:db`; a "which run when" table in `tests/README.md`.
 - Fixed: `scripts/t <engine> --group=database` runs only the database-classified files instead of failing every partition without one; two runs on one local test server wait for each other instead of corrupting each other's schema.
 - Changed: CI starts the PostgreSQL/MySQL lanes after the SQLite fast lane is green.
+- Fixed: a REST id the key column cannot hold (`no-such-node` for a bigint or uuid key, a non-uuid `upload_id`) answers 404 on PostgreSQL instead of a 500 from the failed cast (`Identity::fitsKey()` in the drive, node and upload-session lookups).
 
 ### No 0.x upgrade path, one create migration per table (PLAN3.P1.10, D21)
 

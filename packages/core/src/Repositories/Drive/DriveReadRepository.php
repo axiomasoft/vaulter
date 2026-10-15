@@ -34,8 +34,11 @@ final class DriveReadRepository
 
     public function find(int|string $id): ?Drive
     {
+        $model = $this->vaulterConfig->model('drive');
+        if (!Identity::fitsKey(new $model, $id)) {
+            return null;
+        }
         if (app(TenancyBoundary::class)->enforced()) {
-            $model = $this->vaulterConfig->model('drive');
 
             return app(TenancyBoundary::class)->constrain($model::query())->find($id);
         }
@@ -44,8 +47,6 @@ final class DriveReadRepository
         if (array_key_exists($key, $this->cache)) {
             return $this->cache[$key];
         }
-
-        $model = $this->vaulterConfig->model('drive');
 
         return $this->cache[$key] = $model::query()->find($id);
     }
