@@ -91,7 +91,9 @@ _db_spawn() {
     (
         [[ "${DB_FILE_MAX_MB:-16384}" == 0 ]] || ulimit -f "$(( ${DB_FILE_MAX_MB:-16384} * 1024 ))" 2>/dev/null || true
         "$@" </dev/null 2>&1 | { head -c "${DB_LOG_MAX_BYTES:-52428800}" >"$DB_SERVER_DIR/server.log"; cat >/dev/null; }
-    ) &
+    ) </dev/null >/dev/null 2>&1 &
+    # The server outlives the caller: holding the caller's stdout/stderr would keep a pipe reader
+    # (`scripts/pg-local.sh up | tee`) waiting for EOF until the server stops.
     disown $! 2>/dev/null || true
 }
 
