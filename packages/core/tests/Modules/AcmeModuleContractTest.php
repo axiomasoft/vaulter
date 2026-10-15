@@ -101,9 +101,21 @@ function acmeManifests(bool $withAcme): array
 /** The application's kernel resealed over the core modules, with the AcmeModule active or not, plus `$extra` contributions. */
 function acmeKernel(bool $withAcme = true, SlotContribution ...$extra): Kernel
 {
+    return acmeKernelWith($withAcme, false, $extra);
+}
+
+/**
+ * @param list<SlotContribution> $extra
+ * @param bool                   $acmeGuardOnly the module's download guard is the only one: its own verdict is then all there is to see
+ */
+function acmeKernelWith(bool $withAcme, bool $acmeGuardOnly, array $extra = []): Kernel
+{
     $compiled = (new ModuleCompiler)->compile(acmeManifests($withAcme), $withAcme ? ['acme' => true] : []);
     expect($compiled)->toBeInstanceOf(CompiledModules::class);
     $arguments = get_object_vars($compiled);
+    if ($acmeGuardOnly) {
+        $arguments['contributions'][DownloadGuard::class] = array_values(array_filter($arguments['contributions'][DownloadGuard::class], static fn (SlotContribution $c): bool => $c->module === 'acme'));
+    }
     foreach ($extra as $contribution) {
         $arguments['contributions'][$contribution->slot][] = $contribution;
     }
@@ -128,6 +140,9 @@ it('makes the module contract tests fail on a manifest that is not declarations 
 })->with([
     'a query while declaring' => [BrokenModule::QUERIES, 'ran 2 query/queries'],
     'a container resolution while declaring' => [BrokenModule::RESOLVES, 'resolved stdClass'],
+    'a container binding while declaring' => [BrokenModule::BINDS, 'bound, listened or configured'],
+    'a listener while declaring' => [BrokenModule::LISTENS, 'bound, listened or configured'],
+    'a config value while declaring' => [BrokenModule::CONFIGURES, 'bound, listened or configured'],
     'different declarations on each call' => [BrokenModule::FLAKY, 'different declarations'],
     'a requirement that is not installed' => [BrokenModule::UNKNOWN_DEPENDENCY, 'requires "nowhere", which is not installed'],
     'a version that is not MAJOR.MINOR' => [BrokenModule::BAD_VERSION, 'version must be MAJOR.MINOR'],
@@ -162,12 +177,13 @@ it('uses only the module surface, the slot contracts and what their signatures n
         }
     }
 
+    // Every name of Vaulter the fixture writes down — imports, fully qualified names, `::class` and strings — not just its `use` lines.
     $imports = [];
     foreach (glob(__DIR__.'/Fixtures/AcmeModule/*.php') ?: [] as $file) {
-        preg_match_all('/^use ([^;]+);$/m', (string) file_get_contents($file), $matches);
-        foreach ($matches[1] as $import) {
-            if (str_starts_with($import, 'Vaulter\\') && !str_starts_with($import, 'Vaulter\\Tests\\Modules\\Fixtures\\AcmeModule\\')) {
-                $imports[$import][] = basename($file);
+        preg_match_all('/\\\\?(Vaulter(?:\\\\[A-Za-z0-9_]+)+)/', (string) preg_replace('/^namespace .*;$/m', '', (string) file_get_contents($file)), $matches);
+        foreach ($matches[1] as $name) {
+            if (!str_starts_with($name, 'Vaulter\\Tests\\Modules\\Fixtures\\AcmeModule')) {
+                $imports[$name][] = basename($file);
             }
         }
     }
@@ -222,13 +238,28 @@ function acmeDeliver(Kernel $kernel): void
     (new DownloadGuards($kernel))->check(DriveContext::system($drive, 'acme contract'), new Node, new FileRevision);
 }
 
-it('lets a guard of the module veto a delivery, and treats any other failure of it as a denial too', function (string $mode): void {
-    AcmeDownloadGuard::$mode = $mode;
+it('lets a guard of the module veto a delivery, and treats any other failure of it as a denial too', function (): void {
+    // The module's guard alone: what it says is the whole verdict (behind it the drive's own guard denies a model-only node).
+    $kernel = acmeKernelWith(true, true);
 
-    // The drive's own availability guard runs after the module's and denies the model-only node: the module's verdict is what changes.
+    acmeDeliver($kernel);
+    expect(AcmeDownloadGuard::$checks)->toBe(1);
+
+    AcmeDownloadGuard::$mode = 'deny';
+    expect(fn () => acmeDeliver($kernel))->toThrow(ContentUnavailableException::class);
+
+    AcmeDownloadGuard::$mode = 'explode';
+    expect(fn () => acmeDeliver($kernel))->toThrow(ContentUnavailableException::class)
+        ->and(AcmeDownloadGuard::$checks)->toBe(3);
+});
+
+it('runs the guard of the module ahead of the availability guard of the drive', function (): void {
+    AcmeDownloadGuard::$mode = 'deny';
+
+    // Both would deny the model-only node; the module's guard is called, and the later one never is.
     expect(fn () => acmeDeliver(acmeKernel()))->toThrow(ContentUnavailableException::class)
         ->and(AcmeDownloadGuard::$checks)->toBe(1);
-})->with(['allow', 'deny', 'explode']);
+});
 
 it('fails closed on a snapshot fragment the snapshot has no place for, and never calls the contributor', function (): void {
     $node = DriveTestHelpers::model(DriveTestHelpers::drive()->folders()->create('alpha')->id);

@@ -72,8 +72,8 @@ and the logical `webhooks`.
 - File moves between packages (tables, models, migrations, FQCNs) happen in the following phase by the
   type map; until then contracts of drive-owned concepts may live in core namespaces.
 - A third-party module proves its manifest with `Vaulter\Testing\Contracts\ModuleContractTests`
-  (`assertModuleContract($module, $requires)`): the manifest declares only — no query and no container
-  resolution while it registers, the same declarations on every call — and the graph compiles with the module
+  (`assertModuleContract($module, $requires)`): the manifest declares only — no query, no new object in the
+  container, no binding, listener or config change while it registers, the same declarations on every call — and the graph compiles with the module
   switched on and off. The kernel's own suite proves the price of an inactive module the same way, with spies
   on queries, container resolutions, routes, listeners and commands, on an independent extension that
   contributes to every slot kind (`packages/core/tests/Modules/Fixtures/AcmeModule`).

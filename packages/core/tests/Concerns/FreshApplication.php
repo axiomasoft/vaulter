@@ -7,7 +7,6 @@ namespace Vaulter\Tests\Concerns;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
-use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Facade;
 use Vaulter\Tests\TestCase;
@@ -23,6 +22,9 @@ final class FreshApplication
     /** Queries run while the last fresh application booted. */
     public static int $queries = 0;
 
+    /** @var list<string> What the container built (by class) while the last fresh application booted; the spy provider records it. */
+    public static array $resolved = [];
+
     /**
      * @param array<string, mixed> $config set before the providers register
      * @param list<class-string>   $before providers listed before the Vaulter providers
@@ -31,6 +33,7 @@ final class FreshApplication
     public static function boot(array $config = [], array $before = [], array $after = []): Application
     {
         self::$queries = 0;
+        self::$resolved = [];
         $case = new class('freshApplication') extends TestCase
         {
             /** @var array<string, mixed> */
@@ -44,7 +47,7 @@ final class FreshApplication
 
             protected function getPackageProviders($app): array
             {
-                return [...self::$before, ...parent::getPackageProviders($app), ...self::$after];
+                return [FreshApplicationSpy::class, ...self::$before, ...parent::getPackageProviders($app), ...self::$after];
             }
 
             protected function defineEnvironment($app): void
@@ -53,9 +56,6 @@ final class FreshApplication
                 foreach (self::$config as $key => $value) {
                     $app['config']->set($key, $value);
                 }
-                $app['events']->listen(QueryExecuted::class, static function (): void {
-                    FreshApplication::$queries++;
-                });
             }
         };
         $case::$config = $config;

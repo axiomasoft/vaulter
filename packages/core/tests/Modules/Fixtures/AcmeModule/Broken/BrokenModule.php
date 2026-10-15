@@ -19,6 +19,12 @@ final class BrokenModule implements VaulterModule
 
     public const string FLAKY = 'flaky';
 
+    public const string BINDS = 'binds';
+
+    public const string LISTENS = 'listens';
+
+    public const string CONFIGURES = 'configures';
+
     public const string UNKNOWN_DEPENDENCY = 'unknown-dependency';
 
     public const string BAD_VERSION = 'bad-version';
@@ -58,6 +64,9 @@ final class BrokenModule implements VaulterModule
         match ($this->flaw) {
             self::QUERIES => DB::select('select 1'),
             self::RESOLVES => app()->make(\stdClass::class),
+            self::BINDS => app()->singleton('broken.service', static fn (): int => 1),
+            self::LISTENS => app('events')->listen('broken.event', static fn (): null => null),
+            self::CONFIGURES => config(['broken.key' => 1]),
             self::FLAKY => $module->commands(...(self::$registered++ % 2 === 0 ? ['A'] : ['B'])),
             default => null,
         };

@@ -57,23 +57,25 @@ function matrixRoutes(Application $app, string $module): array
 }
 
 /**
- * What an application shows of its modules to the outside: the commands, the routes, the events with a
- * listener and the config roots of Vaulter. An installed-inactive module changes none of it.
+ * What an application shows of its modules to the outside: the commands, the routes, the number of listeners per event,
+ * the container bindings and the config roots of Vaulter. An installed-inactive module changes none of it.
  *
- * @return array<string, list<string>>
+ * @return array<string, array<int|string, int|string>>
  */
 function matrixSurface(Application $app): array
 {
     $routes = array_map(static fn (Route $route): string => implode('|', $route->methods()).' '.$route->uri(), $app['router']->getRoutes()->getRoutes());
     $commands = array_keys($app->make(ConsoleKernel::class)->all());
-    $events = array_keys($app['events']->getRawListeners());
+    $listeners = array_map('count', $app['events']->getRawListeners());
+    $bindings = array_keys($app->getBindings());
     $roots = array_values(array_filter(array_keys($app['config']->all()), static fn (string $root): bool => str_starts_with($root, 'vaulter')));
     sort($routes);
     sort($commands);
-    sort($events);
+    sort($bindings);
     sort($roots);
+    ksort($listeners);
 
-    return ['routes' => $routes, 'commands' => $commands, 'events' => $events, 'config' => $roots];
+    return ['routes' => $routes, 'commands' => $commands, 'listeners' => $listeners, 'bindings' => $bindings, 'config' => $roots];
 }
 
 /** A request the host answers itself, to prove that a request outside the module wakes nothing. */
@@ -129,7 +131,8 @@ function matrixAssertZeroCost(Application $app, string $module = 'acme'): void
         ->and($app->bound(AcmeService::class))->toBeFalse()
         ->and($app['config']->has('vaulter-acme'))->toBeFalse()
         ->and(FreshApplication::$queries)->toBe(0)
-        ->and(AcmeProbe::$resolved)->toBe([]);
+        ->and(AcmeProbe::$resolved)->toBe([])
+        ->and(array_filter(FreshApplication::$resolved, static fn (string $class): bool => str_contains($class, 'Fixtures\\AcmeModule\\')))->toBe([]);
 }
 
 it('costs nothing when the module is absent: it is not installed, so a switch for it is a mistake', function (): void {
@@ -147,8 +150,11 @@ it('costs nothing when the module is absent: it is not installed, so a switch fo
 });
 
 it('costs nothing when the module is installed but inactive, yet its schema stays installed', function (): void {
-    $absent = matrixSurface(matrixApp(installed: false));
+    $absentApp = matrixApp(installed: false);
+    $absentResolved = FreshApplication::$resolved;
+    $absent = matrixSurface($absentApp);
     $app = matrixApp();
+    $installedResolved = FreshApplication::$resolved;
     $installed = matrixSurface($app);
 
     matrixAssertZeroCost($app);
@@ -157,7 +163,9 @@ it('costs nothing when the module is installed but inactive, yet its schema stay
         ->and(matrixForeignRequest($app))->toBe(200)
         ->and(FreshApplication::$queries)->toBe(0)
         ->and(AcmeProbe::$resolved)->toBe([])
-        ->and($installed)->toBe($absent);
+        ->and($installed)->toBe($absent)
+        // The container built exactly the same objects while booting with the module installed as without it.
+        ->and($installedResolved)->toBe($absentResolved);
 });
 
 it('wakes nothing of an inactive module on any entry the host uses', function (): void {
