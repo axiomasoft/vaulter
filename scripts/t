@@ -424,12 +424,18 @@ compare_suite() { # suite current-list
 # ---------------------------------------------------------------------------------------------------------------------
 # Executing a plan
 # ---------------------------------------------------------------------------------------------------------------------
-write_config() { # step-json out-file : generated phpunit configuration listing exactly the partition's files
-    local step="$1" out="$2" cwd config line skipping=0 suite
+write_config() { # step-json out-file [skeleton] : generated phpunit configuration listing exactly the partition's files
+    local step="$1" out="$2" skeleton="${3:-}" cwd config line skipping=0 suite php_seen=0 base_env=""
     cwd="$(jq -r .cwd <<<"$step")"
     suite="$(jq -r .suite <<<"$step")"
     config="$root/$cwd/$(jq -r .config <<<"$step")"
     [[ -f "$config" ]] || die "missing $config"
+    # php's variables_order has no E, so $_ENV is empty and Testbench would not see the skeleton path in the environment
+    # (nor would a ParaTest worker, which is started without the runner's -d flags): the configuration states it
+    if [[ -n "$skeleton" ]]; then
+        base_env="        <env name=\"APP_BASE_PATH\" value=\"$skeleton\" force=\"true\"/>
+        <env name=\"TESTBENCH_APP_BASE_PATH\" value=\"$skeleton\" force=\"true\"/>"
+    fi
     {
         while IFS= read -r line || [[ -n "$line" ]]; do
             if (( skipping )); then
@@ -445,6 +451,7 @@ write_config() { # step-json out-file : generated phpunit configuration listing 
             fi
             # excluded groups live in the configuration: ParaTest keeps one --exclude-group flag at most when it forks workers
             if [[ "$line" == *'</phpunit>'* ]]; then
+                [[ -z "$base_env" || $php_seen == 1 ]] || printf '    <php>\n%s\n    </php>\n' "$base_env"
                 jq -r '.exclude | if length > 0 then "    <groups>\n        <exclude>\n" + (map("            <group>\(.)</group>") | join("\n")) + "\n        </exclude>\n    </groups>" else empty end' <<<"$step"
             fi
             line="${line//bootstrap=\"vendor\/autoload.php\"/bootstrap=\"$root/$cwd/vendor/autoload.php\"}"
@@ -453,6 +460,10 @@ write_config() { # step-json out-file : generated phpunit configuration listing 
                 line="${BASH_REMATCH[1]}defaultTestSuite=\"$suite\"${BASH_REMATCH[2]}"
             fi
             printf '%s\n' "$line"
+            if [[ "$line" == *'<php>'* ]]; then
+                php_seen=1
+                [[ -z "$base_env" ]] || printf '%s\n' "$base_env"
+            fi
         done <"$config"
     } >"$out"
 }
@@ -497,9 +508,16 @@ exec_step() { # step-json
     local cfg="$run_tmp/cfg-$idx.xml" cwd processes
     cwd="$root/$(jq -r .cwd <<<"$step")"
     processes="$(jq -r .processes <<<"$step")"
-    write_config "$step" "$cfg"
+    local skeleton=""
+    # A step that runs beside others (a concurrent partition, a cell of scripts/t-matrix) gets a skeleton and a temp
+    # directory of its own: tests publish config into the skeleton and count files in the temp directory.
+    if [[ "$(jq -r .skeleton <<<"$step")" == true || -n "${T_RESULT_FILE:-}" || "${T_PRIVATE_SKELETON:-0}" == 1 ]]; then
+        skeleton="$run_tmp/skeleton-$idx"
+        setup_skeleton "$skeleton"
+    fi
+    write_config "$step" "$cfg" "$skeleton"
 
-    local -a args=(php -d memory_limit=1G "$(jq -r .vendor <<<"$step")")
+    local -a args=(php -d memory_limit=1G -d variables_order=EGPCS "$(jq -r .vendor <<<"$step")")
     # shellcheck disable=SC2206
     args+=(${PEST_FLAGS:---ci})
     args+=("--configuration=$cfg")
@@ -519,13 +537,7 @@ exec_step() { # step-json
     else
         envs+=(VAULTER_TEST_DB_PER_PROCESS=$(( processes > 1 ? 1 : 0 )))
     fi
-    # A step that runs beside others (a concurrent partition, a cell of scripts/t-matrix) gets a skeleton and a temp
-    # directory of its own: tests publish config into the skeleton and count files in the temp directory.
-    if [[ "$(jq -r .skeleton <<<"$step")" == true || -n "${T_RESULT_FILE:-}" || "${T_PRIVATE_SKELETON:-0}" == 1 ]]; then
-        local skeleton="$run_tmp/skeleton-$idx"
-        setup_skeleton "$skeleton"
-        envs+=("TESTBENCH_APP_BASE_PATH=$skeleton" "APP_BASE_PATH=$skeleton")
-    fi
+    [[ -z "$skeleton" ]] || envs+=("TESTBENCH_APP_BASE_PATH=$skeleton" "APP_BASE_PATH=$skeleton")
     if [[ -n "${T_RESULT_FILE:-}" || "${T_PRIVATE_SKELETON:-0}" == 1 ]]; then
         mkdir -p "$run_tmp/tmp-$idx"
         envs+=("TMPDIR=$run_tmp/tmp-$idx")
