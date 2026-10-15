@@ -568,7 +568,7 @@ run_pest_steps() { # plan-file engine
 default_partition_jobs() { echo 4; }
 
 # Server engines: partitions that may share a machine run at once, every one on databases of its own
-# (vaulter_p<N>_test and its workers), so they cannot migrate over each other. `serial` passes (races, committed
+# (<base>_p<N>_test and its workers), so they cannot migrate over each other. `serial` passes (races, committed
 # transactions, shared /tmp) never overlap with anything: they run alone, one by one, after the others.
 run_pest_steps_concurrently() { # plan-file engine
     local plan="$1" engine="$2" step k=0 jobs="${T_PARTITION_JOBS:-$(default_partition_jobs)}"
@@ -602,7 +602,7 @@ run_pest_steps_concurrently() { # plan-file engine
         while (( ${#running[@]} >= jobs )); do reap_partition; done
         idx=$((idx + 1))
         (
-            export DB_DATABASE="vaulter_p${idx}_test" T_STEP_IDX="p$idx" T_RESULT_FILE="$run_tmp/res-p$idx"
+            export DB_DATABASE="${DB_DATABASE%_test}_p${idx}_test" T_STEP_IDX="p$idx" T_RESULT_FILE="$run_tmp/res-p$idx"
             db_ensure "$DB_DATABASE" && db_use_external "$engine" "$(jq -r .processes <<<"$step")" && exec_step "$step"
         ) >"$run_tmp/err-p$idx" 2>&1 &
         running[$!]="p$idx"

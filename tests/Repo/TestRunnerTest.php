@@ -96,6 +96,12 @@ function t_fake_pest(): string
             'cwd' => getcwd(),
             'args' => $args,
             'files' => $m[1],
+            'excluded' => (function () use ($config): array {
+                preg_match('#<exclude>(.*?)</exclude>#s', (string) file_get_contents($config), $e);
+                preg_match_all('#<group>([^<]+)</group>#', $e[1] ?? '', $g);
+
+                return $g[1];
+            })(),
             'config' => $config,
             'env' => [
                 'DB_CONNECTION' => getenv('DB_CONNECTION'),
@@ -284,8 +290,10 @@ it('excludes nofast by default, nofull+serial then one serial pass for --full, a
     expect($merged['steps'][0]['exclude'])->toBe(['nofast', 'slow', 'flaky']);
 
     t_run(['sqlite', '-p', 'beta', '-j4', '--exclude-group=slow', '--exclude-group=flaky'], t_env($fx), $fx['root']);
-    $excludes = array_values(array_filter(t_calls($fx['log'])[0]['args'], static fn (string $a): bool => str_starts_with($a, '--exclude-group')));
-    expect($excludes)->toBe(['--exclude-group=nofast,slow,flaky']);
+    // the groups travel in the generated configuration: in --parallel mode ParaTest forwards at most one --exclude-group flag
+    $call = t_calls($fx['log'])[0];
+    $flags = array_values(array_filter($call['args'], static fn (string $a): bool => str_starts_with($a, '--exclude-group')));
+    expect($flags)->toBe([])->and($call['excluded'])->toBe(['nofast', 'slow', 'flaky']);
 });
 
 it('runs serial exactly once: --group=serial is one pass, -j1 never adds a second', function (): void {
@@ -381,7 +389,7 @@ it('skips database-free partitions on a server engine and names the skip', funct
 
 it('provisions per-worker databases explicitly for an external server and flags per-process databases', function (): void {
     $fx = t_fixture();
-    $env = t_env($fx, ['DB_EXTERNAL' => '1', 'DB_CONNECTION' => 'pgsql', 'DB_DATABASE' => 'fx_test', 'DB_PORT' => '5432']);
+    $env = t_env($fx, ['DB_EXTERNAL' => '1', 'DB_CONNECTION' => 'pgsql', 'DB_DATABASE' => 'fx_test', 'DB_PORT' => '5432', 'T_PARTITION_JOBS' => '1']);
     [$code, , $err] = t_run(['pgsql', '-p', 'alpha', '-j3', '--', 'tests/A1Test.php', 'tests/A2Test.php', 'tests/Unit/A3Test.php', 'tests/ArchTest.php'], $env, $fx['root']);
 
     $calls = t_calls($fx['log']);
@@ -394,6 +402,20 @@ it('provisions per-worker databases explicitly for an external server and flags 
         expect($created)->toContain('CREATE DATABASE "'.$name.'"');
     }
     expect($created)->not->toContain('fx_w4_test');
+});
+
+it('gives every concurrently running partition databases of its own, named after the base database', function (): void {
+    $fx = t_fixture();
+    $env = t_env($fx, ['DB_EXTERNAL' => '1', 'DB_CONNECTION' => 'pgsql', 'DB_DATABASE' => 'fx_test', 'DB_PORT' => '5432']);
+    [$code, , $err] = t_run(['pgsql', '-p', 'alpha', '-j3', '--', 'tests/A1Test.php', 'tests/A2Test.php', 'tests/Unit/A3Test.php', 'tests/ArchTest.php'], $env, $fx['root']);
+
+    $calls = t_calls($fx['log']);
+    expect($code)->toBe(0, $err)->and($calls)->toHaveCount(1)
+        ->and($calls[0]['env']['DB_DATABASE'])->toBe('fx_p1_test');
+    $created = (string) file_get_contents($fx['log'].'.psql');
+    foreach (['fx_p1_test', 'fx_p1_w1_test', 'fx_p1_w2_test', 'fx_p1_w3_test'] as $name) {
+        expect($created)->toContain('CREATE DATABASE "'.$name.'"');
+    }
 });
 
 it('clears partial-seed variables for --full and discovery, and refuses a contradicting full-seed flag', function (): void {
