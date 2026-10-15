@@ -125,4 +125,27 @@ final class UploadTestHelpers
 
         return $stream;
     }
+
+    /**
+     * Point a session at a drive row that does not exist: the corrupt state every engine's foreign key refuses. The
+     * check is lifted for this one write only — PostgreSQL drops the constraint (it cannot be switched off inside the
+     * test transaction), SQLite defers it to a commit RefreshDatabase never makes, MySQL turns FOREIGN_KEY_CHECKS off.
+     */
+    public static function danglingDrive(UploadSession $session, int $missingDriveId = 9_999_999): void
+    {
+        $connection = $session->getConnection();
+        $table = $session->getTable();
+        $write = static fn () => UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => $missingDriveId]);
+        match ($connection->getDriverName()) {
+            'pgsql' => (static function () use ($connection, $table, $write): void {
+                $connection->statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_drive_id_foreign"');
+                $write();
+            })(),
+            'sqlite' => (static function () use ($connection, $write): void {
+                $connection->statement('PRAGMA defer_foreign_keys = ON');
+                $write();
+            })(),
+            default => $connection->getSchemaBuilder()->withoutForeignKeyConstraints($write),
+        };
+    }
 }

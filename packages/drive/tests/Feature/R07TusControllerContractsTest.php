@@ -245,12 +245,7 @@ it('404s unknown upload_id on status', function (): void {
 it('404s when the session storage row is missing on HEAD', function (): void {
     $storage = r07Storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 4, createdBy: 17);
-    if (DB::connection()->getDriverName() === 'pgsql') {
-        $table = $session->getTable();
-        DB::statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_drive_id_foreign"');
-    }
-
-    UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => 9_999_999]);
+    UploadTestHelpers::danglingDrive($session);
 
     $this->call('HEAD', 'api/vaulter/v1/uploads/'.$session->upload_id, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
         ->assertNotFound();

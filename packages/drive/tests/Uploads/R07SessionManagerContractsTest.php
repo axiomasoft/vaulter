@@ -266,12 +266,7 @@ it('commit fails loud when the session storage row is missing', function (): voi
 
     $missingStorageId = 9_999_999;
 
-    if (DB::connection()->getDriverName() === 'pgsql') {
-        $table = $session->getTable();
-        DB::statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_drive_id_foreign"');
-    }
-
-    UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => $missingStorageId]);
+    UploadTestHelpers::danglingDrive($session, $missingStorageId);
     $session = $session->fresh();
 
     expect(fn () => app(CompleteUploadAction::class)->execute(context: DriveContext::system($storage, 'test fixture'), session: $session))

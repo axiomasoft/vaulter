@@ -82,7 +82,8 @@ final class SuiteDatabaseConnection
         $driver = env('DB_CONNECTION');
 
         if ($driver === null || $driver === '' || $driver === 'sqlite') {
-            return ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''];
+            // Foreign keys on, as on the server engines: without them a cascade or a dangling reference passes here only.
+            return ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '', 'foreign_key_constraints' => true];
         }
 
         if (!in_array($driver, ['pgsql', 'mysql', 'mariadb'], true)) {
