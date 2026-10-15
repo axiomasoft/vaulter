@@ -186,7 +186,7 @@
         },
         "repo": {
             "suite": "repo",
-            "src": ["scripts"],
+            "src": ["scripts", "Makefile"],
             "tests": ["tests/Repo"],
             "uses": []
         },
