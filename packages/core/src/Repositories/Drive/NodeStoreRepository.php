@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
@@ -23,6 +24,7 @@ final class NodeStoreRepository
 {
     public function __construct(
         private readonly VaulterConfig $vaulterConfig,
+        private readonly VaulterDatabase $database,
     ) {}
 
     /**
@@ -147,7 +149,7 @@ final class NodeStoreRepository
 
         $model = $this->vaulterConfig->model('node');
 
-        if (!in_array($model::query()->getConnection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+        if (!in_array($this->database->driver(), ['mysql', 'mariadb'], true)) {
             $model::query()->whereKey($ids->all())->delete();
 
             return;
@@ -158,7 +160,7 @@ final class NodeStoreRepository
         $parents = [];
         foreach ($ids->chunk(1000) as $chunk) {
             foreach ($model::query()->whereKey($chunk->all())->toBase()->get(['id', 'parent_id']) as $row) {
-                $parents[(string) $row->id] = $row->parent_id === null ? null : (string) $row->parent_id;
+                $parents[Identity::stringify($row->id)] = $row->parent_id === null ? null : Identity::stringify($row->parent_id);
             }
         }
         $levels = [];

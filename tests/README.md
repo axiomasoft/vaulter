@@ -144,6 +144,8 @@ Rules:
 | `--full`, SQLite (every suite, `serial` + `extended`) | — | 4 min 28 s |
 | `--full`, pgsql | — | 9 min 23 s |
 | `--full`, mysql (`mysql-local`) | hours | 33 min 20 s |
+| every `DatabaseMigrations` test file on mysql (core `EventRecorderTest`), private `mysqld` | 547 s | 86 s (`eatmydata`, opt out with `DB_FAST=0`) |
+| `scripts/t-matrix`: sqlite, pgsql and mysql `--full` of every package, 4 cells at a time, native servers | — | 25 min (mysql core 20 min, mysql documents 23 min are the long cells; sqlite 6 min 31 s) |
 
 ## Setting up the database servers
 
