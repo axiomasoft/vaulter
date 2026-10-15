@@ -498,9 +498,11 @@ exec_step() { # step-json
     args+=("--configuration=$cfg")
     (( processes > 1 )) && args+=(--parallel "--processes=$processes")
     [[ "$(jq -r .group <<<"$step")" == "" ]] || args+=("--group=$(jq -r .group <<<"$step")")
-    local exclude
-    exclude="$(jq -r '.exclude | join(",")' <<<"$step")"
-    [[ -z "$exclude" ]] || args+=("--exclude-group=$exclude")
+    # one flag per group: Pest does not honour a comma list in --exclude-group (a `serial` test then ran in the parallel pass)
+    local excluded
+    while IFS= read -r excluded; do
+        [[ -z "$excluded" ]] || args+=("--exclude-group=$excluded")
+    done < <(jq -r '.exclude[]' <<<"$step")
     local junit
     junit="$(jq -r '.junit // empty' <<<"$step")"
     if [[ -n "$junit" ]]; then
