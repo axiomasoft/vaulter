@@ -475,7 +475,7 @@ exec_step() { # step-json
     kind="$(jq -r .kind <<<"$step")"
     suite="$(jq -r .suite <<<"$step")"
     engine="$(jq -r .engine <<<"$step")"
-    idx="${#RESULTS[@]}"
+    idx="${T_STEP_IDX:-${#RESULTS[@]}}"
     out="$run_tmp/step-$idx.log"
     started=$SECONDS
 
@@ -523,12 +523,21 @@ exec_step() { # step-json
     fi
 
     printf '>>> %s  files=%s processes=%s\n' "$label" "$(jq '.files | length' <<<"$step")" "$processes" >&2
-    (cd "$cwd" && env "${envs[@]}" "$root/scripts/php84" "${args[@]}") 2>&1 | tee "$out" || code="${PIPESTATUS[0]}"
+    if [[ -n "${T_RESULT_FILE:-}" ]]; then
+        # a concurrent partition: its output goes to the log only, the parent prints it when the step is done
+        (cd "$cwd" && env "${envs[@]}" "$root/scripts/php84" "${args[@]}") >"$out" 2>&1 || code=$?
+    else
+        (cd "$cwd" && env "${envs[@]}" "$root/scripts/php84" "${args[@]}") 2>&1 | tee "$out" || code="${PIPESTATUS[0]}"
+    fi
     record "$label" "$code" "$out" "$(jq -r '.allow_empty' <<<"$step" | sed 's/true/1/;s/false/0/')" $((SECONDS - started))
 }
 
 record() { # label code logfile allow_empty seconds
     local label="$1" code="$2" log="$3" allow_empty="$4" seconds="$5" verdict skipped zero=0
+    if [[ -n "${T_RESULT_FILE:-}" ]]; then
+        printf '%s\t%s\t%s\t%s\t%s\n' "$label" "$code" "$log" "$allow_empty" "$seconds" >"$T_RESULT_FILE"
+        return
+    fi
     # human reporter ("2 skipped") and the compact PAO/--ci JSON ("skipped":2) alike
     skipped="$(grep -Eo '[0-9]+ skipped|"skipped":[0-9]+' "$log" | head -n 1 | grep -Eo '[0-9]+' || echo 0)"
     grep -Eq 'No tests found|No tests executed' "$log" && zero=1
@@ -547,9 +556,59 @@ record() { # label code logfile allow_empty seconds
 
 run_pest_steps() { # plan-file engine
     local plan="$1" engine="$2" step
+    if [[ "$engine" != sqlite && "${T_PARTITION_JOBS:-$(default_partition_jobs)}" -gt 1 ]]; then
+        run_pest_steps_concurrently "$plan" "$engine"
+        return
+    fi
     while IFS= read -r step; do
         exec_step "$step"
     done < <(jq -c --arg e "$engine" '.steps[] | select(.kind == "pest" and .engine == $e)' "$plan")
+}
+
+default_partition_jobs() { echo 4; }
+
+# Server engines: partitions that may share a machine run at once, every one on databases of its own
+# (vaulter_p<N>_test and its workers), so they cannot migrate over each other. `serial` passes (races, committed
+# transactions, shared /tmp) never overlap with anything: they run alone, one by one, after the others.
+run_pest_steps_concurrently() { # plan-file engine
+    local plan="$1" engine="$2" step k=0 jobs="${T_PARTITION_JOBS:-$(default_partition_jobs)}"
+    local -a concurrent=() alone=()
+    # shellcheck source=scripts/db-test-env.sh
+    source "$root/scripts/db-test-env.sh"
+    while IFS= read -r step; do
+        if [[ "$(jq -r .pass <<<"$step")" == serial ]]; then alone+=("$step"); else concurrent+=("$step"); fi
+    done < <(jq -c --arg e "$engine" '.steps[] | select(.kind == "pest" and .engine == $e)' "$plan")
+
+    local -A running=()
+    reap_partition() {
+        local pid fields label code log allow seconds
+        wait -n -p pid || true
+        k="${running[$pid]}"
+        unset 'running[$pid]'
+        if [[ ! -s "$run_tmp/res-$k" ]]; then
+            # the partition never started (its databases could not be prepared): say why instead of losing it
+            printf '>>> partition %s did not run\n' "$k" >&2
+            cat "$run_tmp/err-$k" >&2
+            record "$engine partition $k" 1 "$run_tmp/err-$k" 0 0
+            return
+        fi
+        IFS=$'\t' read -r label code log allow seconds <"$run_tmp/res-$k"
+        printf '>>> %s\n' "$label" >&2
+        cat "$log"
+        record "$label" "$code" "$log" "$allow" "$seconds"
+    }
+    local idx=0
+    for step in "${concurrent[@]}"; do
+        while (( ${#running[@]} >= jobs )); do reap_partition; done
+        idx=$((idx + 1))
+        (
+            export DB_DATABASE="vaulter_p${idx}_test" T_STEP_IDX="p$idx" T_RESULT_FILE="$run_tmp/res-p$idx"
+            db_ensure "$DB_DATABASE" && db_use_external "$engine" "$(jq -r .processes <<<"$step")" && exec_step "$step"
+        ) >"$run_tmp/err-p$idx" 2>&1 &
+        running[$!]="p$idx"
+    done
+    while (( ${#running[@]} > 0 )); do reap_partition; done
+    for step in "${alone[@]}"; do exec_step "$step"; done
 }
 
 run_node_steps() { # plan-file — once per run, whatever the engines

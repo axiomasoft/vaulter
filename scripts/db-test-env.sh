@@ -174,18 +174,25 @@ db_use_external() {
     export DB_HOST="${DB_HOST:-127.0.0.1}" DB_USERNAME="${DB_USERNAME:-vaulter}" DB_PASSWORD="${DB_PASSWORD:-secret}"
     export DB_PORT="${DB_PORT:-$([[ "$engine" == pgsql ]] && echo 5432 || echo 3306)}"
     for ((n = 1; n <= workers; n++)); do
-        name="${base%_test}_w${n}_test"
-        case "$engine" in
-            pgsql)
-                PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -tAc \
-                    "SELECT 1 FROM pg_database WHERE datname = '$name'" | grep -q 1 \
-                    || PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -c "CREATE DATABASE \"$name\"" >/dev/null || return
-                ;;
-            mysql)
-                # PDO rather than the mysql client: a Docker or CI server must not need client binaries on the host.
-                php -r '$p = new PDO("mysql:host=".getenv("DB_HOST").";port=".getenv("DB_PORT"), getenv("DB_USERNAME"), getenv("DB_PASSWORD"));
-                    $p->exec("CREATE DATABASE IF NOT EXISTS `".$argv[1]."`");' -- "$name" || return
-                ;;
-        esac
+        db_ensure "${base%_test}_w${n}_test" || return
     done
+}
+
+# Create the database $1 on the server DB_* points at, unless it exists (an external server: CI service, Docker, local).
+db_ensure() {
+    local name="$1"
+    [[ "$name" =~ ^[a-z0-9_]+_test$ ]] || { echo "db_ensure: [$name] must match [a-z0-9_]+_test" >&2; return 2; }
+    case "${DB_CONNECTION:-}" in
+        pgsql)
+            PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -tAc \
+                "SELECT 1 FROM pg_database WHERE datname = '$name'" | grep -q 1 \
+                || PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -c "CREATE DATABASE \"$name\"" >/dev/null
+            ;;
+        mysql)
+            # PDO rather than the mysql client: a Docker or CI server must not need client binaries on the host.
+            php -r '$p = new PDO("mysql:host=".getenv("DB_HOST").";port=".getenv("DB_PORT"), getenv("DB_USERNAME"), getenv("DB_PASSWORD"));
+                $p->exec("CREATE DATABASE IF NOT EXISTS `".$argv[1]."`");' -- "$name"
+            ;;
+        *) echo "db_ensure: unknown engine [${DB_CONNECTION:-}]" >&2; return 2 ;;
+    esac
 }
