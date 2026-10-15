@@ -560,7 +560,8 @@ final class ModuleCompiler
                     continue;
                 }
                 foreach ($class::cases() as $case) {
-                    $value = $case->value;
+                    // A non-string backing value (an int enum) is a malformed type, not a TypeError.
+                    $value = (string) $case->value;
                     if (preg_match(self::EVENT_TYPE, $value) !== 1) {
                         $reasons[] = sprintf('event types %s declare the malformed type "%s"', $class, $value);
 

@@ -79,8 +79,7 @@ final readonly class OutboxStore
                 }
                 $this->consumers()->where('consumer_id', $id)->where('state', ConsumerState::Paused->value)
                     ->update(['state' => ConsumerState::Active->value, 'paused_at' => null, 'delivery_class' => $class->value, 'updated_at' => $now]);
-                $this->consumers()->where('consumer_id', $id)->where('state', ConsumerState::Detached->value)
-                    ->update(['state' => ConsumerState::Active->value, 'activation_seq' => $max, 'reconciled_through_seq' => $max, 'paused_at' => null, 'delivery_class' => $class->value, 'updated_at' => $now]);
+                $this->reattach(id: $id, class: $class, max: $max, now: $now);
                 $this->consumers()->where('consumer_id', $id)->where('delivery_class', '!=', $class->value)
                     ->update(['delivery_class' => $class->value, 'updated_at' => $now]);
             }
@@ -91,6 +90,35 @@ final readonly class OutboxStore
             }
             $missing->update(['state' => ConsumerState::Paused->value, 'paused_at' => $now, 'updated_at' => $now]);
         });
+    }
+
+    /**
+     * A detached consumer returns at the current head. Durable events committed while it was detached (above the
+     * detach-time cursor) were never delivered: they join the gaps before the cursor jumps (O4).
+     */
+    private function reattach(string $id, DeliveryClass $class, int $max, CarbonImmutable $now): void
+    {
+        $row = $this->consumers()->where('consumer_id', $id)->where('state', ConsumerState::Detached->value)->lockForUpdate()->first();
+        if ($row === null) {
+            return;
+        }
+        $consumer = self::consumerRow((array) $row);
+        $values = ['state' => ConsumerState::Active->value, 'activation_seq' => $max, 'reconciled_through_seq' => max($max, $consumer['reconciled_through_seq']), 'paused_at' => null, 'delivery_class' => $class->value, 'updated_at' => $now];
+        if ($consumer['delivery_class'] === DeliveryClass::Durable->value) {
+            $missed = $this->events()->where('outbox_seq', '>', $consumer['reconciled_through_seq'])->where('outbox_seq', '<=', $max);
+            $count = (clone $missed)->count();
+            if ($count > 0) {
+                $from = self::int((clone $missed)->min('outbox_seq'));
+                $values['gaps'] = json_encode([...$consumer['gaps'], [
+                    'from_seq' => $from,
+                    'to_seq' => max($max, $from),
+                    'events' => $count,
+                    'at' => $now->toIso8601String(),
+                    'acknowledged_at' => null,
+                ]], JSON_THROW_ON_ERROR);
+            }
+        }
+        $this->consumers()->where('consumer_id', $id)->update($values);
     }
 
     /**
@@ -275,7 +303,7 @@ final readonly class OutboxStore
                 $open->update(['state' => DeliveryState::Dead->value, 'last_error' => 'consumer detached', 'done_at' => $now, 'lease_owner' => null, 'lease_expires_at' => null, 'updated_at' => $now]);
 
                 $max = $this->maxSeq();
-                $values = ['state' => ConsumerState::Detached->value, 'lease_owner' => null, 'lease_expires_at' => null, 'updated_at' => $now];
+                $values = ['state' => ConsumerState::Detached->value, 'reconciled_through_seq' => max($max, $consumer['reconciled_through_seq']), 'lease_owner' => null, 'lease_expires_at' => null, 'updated_at' => $now];
                 $missed = 0;
                 if ($consumer['delivery_class'] === DeliveryClass::Durable->value) {
                     $pending = $this->events()->where('outbox_seq', '>', $consumer['reconciled_through_seq'])->where('outbox_seq', '<=', $max);
@@ -367,7 +395,10 @@ final readonly class OutboxStore
             $first = (clone $live)->min('outbox_seq');
             $last = (clone $live)->max('outbox_seq');
             if ($first === null || $last === null || $types === []) {
-                $this->acknowledge($id, $from, $to, $now);
+                // Nothing alive in the range: the loss is acknowledged only explicitly (--ack-only), never by a replay.
+                if ($first !== null && $last !== null) {
+                    $this->acknowledge($id, $from, $to, $now);
+                }
 
                 return ['covered' => $first === null || $last === null ? null : [self::int($first), self::int($last)], 'rows' => 0];
             }
@@ -379,7 +410,10 @@ final readonly class OutboxStore
                 ->where('outbox_seq', '<=', $to)
                 ->whereIn('state', [DeliveryState::Done->value, DeliveryState::Dead->value])
                 ->update(['state' => DeliveryState::Pending->value, 'attempts' => 0, 'next_attempt_at' => $now, 'continuation' => null, 'last_error' => null, 'done_at' => null, 'updated_at' => $now]);
-            $this->acknowledge($id, $from, $to, $now);
+            // A range whose head was already pruned is only partly replayed: its gaps stay open for --ack-only.
+            if (self::int($first) <= $from) {
+                $this->acknowledge($id, $from, $to, $now);
+            }
 
             return ['covered' => [self::int($first), self::int($last)], 'rows' => $rows];
         });

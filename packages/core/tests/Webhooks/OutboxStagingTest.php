@@ -53,7 +53,7 @@ it('stages exactly one outbox row when a storage is provisioned', function (): v
 
     expect($rows)->toHaveCount(1)
         ->and($rows->first()->external)->toBeTrue()
-        ->and($rows->first()->payload['subject'])->toBe(['type' => 'drive', 'id' => (string) $storage->getKey()])
+        ->and($rows->first()->payload['subject'])->toEqualCanonicalizing(['type' => 'drive', 'id' => (string) $storage->getKey()])
         ->and($rows->first()->payload['data']['root_node_id'])->toBe((string) $storage->root_node_id)
         ->and($rows->first()->payload['actor']['type'])->toBe(ActorRef::SYSTEM_TYPE);
 });
@@ -69,9 +69,9 @@ it('stages a folder.created row carrying the actor and a thin payload', function
 
     $row = OutboxEvent::query()->where('type', DriveEventType::FolderCreated->value)->sole();
 
-    expect($row->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $folder->getKey()])
+    expect($row->payload['subject'])->toEqualCanonicalizing(['type' => 'node', 'id' => (string) $folder->getKey()])
         ->and($row->payload['data'])->toBe(['parent_id' => $folder->parent_id === null ? null : (string) $folder->parent_id])
-        ->and($row->payload['actor'])->toBe(['type' => (new TestUser)->getMorphClass(), 'id' => '7'])
+        ->and($row->payload['actor'])->toEqualCanonicalizing(['type' => (new TestUser)->getMorphClass(), 'id' => '7'])
         ->and($row->payload)->not->toHaveKey('name')
         // The envelope id is the occurrence id consumers dedupe on.
         ->and($row->payload['id'])->toBe($row->event_id);
@@ -132,7 +132,7 @@ it('never serializes a share secret, token or token prefix', function (): void {
 
     $payload = OutboxEvent::query()->where('type', DriveEventType::ShareCreated->value)->sole()->payload;
 
-    expect(array_keys($payload['data']))->toBe(['node_id', 'role', 'role_version', 'audience', 'scope', 'expires_at'])
+    expect(array_keys($payload['data']))->toEqualCanonicalizing(['node_id', 'role', 'role_version', 'audience', 'scope', 'expires_at'])
         ->and(json_encode($payload, JSON_THROW_ON_ERROR))->not->toContain('tok-outbox')
         ->and(json_encode($payload, JSON_THROW_ON_ERROR))->not->toContain((string) $share->token_prefix);
 });

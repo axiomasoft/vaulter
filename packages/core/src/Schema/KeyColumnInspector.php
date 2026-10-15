@@ -47,11 +47,9 @@ final class KeyColumnInspector
             ['upload_sessions', 'result_node_id'],
             ['upload_sessions', 'result_revision_id'],
             ['activity', 'drive_id'],
-            ['outbox', 'drive_id'],
         ];
         $strings = [
             ['drives', 'profile', 64],
-            ['outbox', 'profile', 64],
             ['activity', 'event_id', 26],
             ['outbox', 'aggregate_id', 64],
         ];

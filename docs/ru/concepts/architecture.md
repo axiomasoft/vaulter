@@ -130,7 +130,7 @@ Vaulter никогда не ссылается на конкретный кла�
 | `Engines/` | Движок реестра расширяемости по форматам (VLT-CANON P0.4, ревизия H.5/T5): `FileHandlerRegistry`, `NodePresenter`, `FileDescriptorFactory` и базовые `Handlers/{PreviewHandler,DownloadOnlyHandler}` — привязаны всегда, так что хост только с Drive резолвит preview/download без единого другого пакета. |
 | `Schema/` | Классы стратегий идентификаторов (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, колонки `SchemaBuilder`. |
 | `Sharing/` | Канал bearer-ссылок: `ShareResolver`, `ShareContext`, `ShareResult`. |
-| `Webhooks/` | Слой надёжности: `OutboxRecorder`, `OutboxRelay`, `WebhookSigner`. |
+| `Webhooks/` | Слой надёжности: `WebhookFanoutConsumer`, `WebhookSigner` (сам outbox — в `Events/Outbox/`: `OutboxWriter`, `OutboxRelay`). |
 | `Activity/` | Append-only лента активности (`ActivityRecorder`, `RecordsActivity`). |
 | `Actions/` · `Data/` · `Events/` | Только Access, Sharing и Webhooks — Actions/Events Drive и Documents теперь живут в своих пакетах (см. ниже). |
 | `ValueObjects/Handlers/` | Kind-нейтральные value-объекты шва обработчиков, от которых зависят и Drive, и Documents: `FileDescriptor`, `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`. |

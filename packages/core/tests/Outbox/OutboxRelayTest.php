@@ -236,6 +236,28 @@ it('detaches a durable consumer paused past its hold with an explicit gap, metri
         ->and(consumerRow(ScriptedConsumer::ID)['gaps'][0]['acknowledged_at'])->toBeNull();
 });
 
+it('records the events committed while a consumer is detached as a gap when it returns', function (): void {
+    relayConsumers([ScriptedConsumer::ID => ScriptedConsumer::class]);
+    relayPass();
+    relayConsumers([]);
+    relayPass();
+    bareEvent(age: 10);
+    $this->travel(3601)->seconds();
+    relayPass();
+    expect(consumerRow(ScriptedConsumer::ID)['state'])->toBe('detached');
+
+    $first = bareEvent(age: 10);
+    $last = bareEvent(age: 10);
+    relayConsumers([ScriptedConsumer::ID => ScriptedConsumer::class]);
+    relayPass();
+
+    $consumer = consumerRow(ScriptedConsumer::ID);
+    expect($consumer['state'])->toBe('active')
+        ->and($consumer['reconciled_through_seq'])->toBe($last->outbox_seq)
+        ->and($consumer['gaps'])->toHaveCount(2)
+        ->and($consumer['gaps'][1])->toMatchArray(['from_seq' => $first->outbox_seq, 'to_seq' => $last->outbox_seq, 'events' => 2, 'acknowledged_at' => null]);
+});
+
 it('detaches an ephemeral consumer without a gap and lets retention pass it', function (): void {
     relayConsumers([EphemeralConsumer::ID => EphemeralConsumer::class]);
     relayPass();
