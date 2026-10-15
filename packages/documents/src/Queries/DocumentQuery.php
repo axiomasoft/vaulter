@@ -18,6 +18,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 
 /**
  * Reads behind the documents operations. Every lookup is bound to the node the caller
@@ -41,7 +42,7 @@ final readonly class DocumentQuery
     {
         $key = $revision instanceof DocumentRevisionSnapshot ? $revision->id : $revision;
         $model = $this->config->model('document_revision');
-        $found = $key === '' ? null : $model::query()->where('document_id', $document->getKey())->whereKey($key)->first();
+        $found = $key === '' || !Identity::fitsKey(new $model, $key) ? null : $model::query()->where('document_id', $document->getKey())->whereKey($key)->first();
 
         return $found ?? throw DocumentRevisionNotFoundException::forNode($node->getKey(), $key);
     }
@@ -84,7 +85,8 @@ final readonly class DocumentQuery
     {
         $key = $comment instanceof CommentSnapshot ? $comment->id : $comment;
         $model = $this->config->model('node_comment');
-        $found = $key === '' ? null : $model::query()->where('node_id', $node->getKey())->whereKey($key)->first();
+        // an id the key column cannot hold names no row; asking PostgreSQL for it throws instead (bigint vs 'missing')
+        $found = $key === '' || !Identity::fitsKey(new $model, $key) ? null : $model::query()->where('node_id', $node->getKey())->whereKey($key)->first();
 
         return $found ?? throw CommentNotFoundException::forNode($node->getKey(), $key);
     }
