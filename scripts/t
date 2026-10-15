@@ -24,7 +24,8 @@
 #     service; the database must end in _test); they need paths, --group or --full — there is no default server sweep.
 #   * partitions that write into the Testbench skeleton run -j1 with a TESTBENCH_APP_BASE_PATH of their own.
 #   * hub/vue run `npm test` through their manifests (engines do not apply); `load` is explicit only.
-#   * groups: `database` (+ `database:<zone>`) = the result depends on the engine; `serial` = no parallel workers; `extended` =
+#   * groups: `database` (+ `database:<zone>`) = the result depends on the engine (selecting it narrows every partition to
+#     the files classified `database` in tests/zones.json; a group selection without -p leaves the Node suites out); `serial` = no parallel workers; `extended` =
 #     scale / the whole seed range; `stand` = external services and the functional load tests. nofast = serial+extended+stand,
 #     nofull = stand: the fast lane excludes nofast, --full excludes nofull (and runs serial once), nothing else is ever hidden.
 #     Selecting `--group=extended` or `--group=stand` drops the exclusion that group implies, so it never selects nothing.
@@ -101,6 +102,8 @@ def passes($p; $c; $skel; $nfiles):
    elif ($raw | length) > 0 then
      [$pest[] | select(. as $n | any($raw[]; . as $q | any(files($S[$n])[]; hit(.; $q))))]
    elif $c.mode == "stand" then [$S | to_entries[] | select(.value.stand == true) | .key]
+   # groups are a Pest notion: a group selection without -p leaves the Node suites out
+   elif ($c.groups | length) > 0 then [$S | to_entries[] | select(.value.default and .value.kind == "pest") | .key]
    else [$S | to_entries[] | select(.value.default) | .key] end) as $sel
   | if ($sel | map(select($S[.] == null)) | length) > 0 then {error: "unknown suite: \($sel | map(select($S[.] == null)) | join(","))"}
     elif ($raw | length) > 0 and ($sel | length) == 0 then {error: "cannot infer the suite for: \($raw | join(", ")); pass -p <suite>"}
@@ -118,7 +121,11 @@ def passes($p; $c; $skel; $nfiles):
                ($raw | map(resolve($n; $s))) as $q
                | [$c.engines[] as $e
                   | $s.partitions | to_entries[] | . as $pe | $pe.value as $p
-                  | ([$p.files[] | select(($q | length) == 0 or (. as $f | any($q[]; hit($f; .))))]) as $f
+                  # --group=database[:zone] keeps only the files classified `database` (zones.json "database"), so a
+                  # partition without one is no step at all instead of a "zero tests" failure (no map = no filter)
+                  | ([$p.files[] | select(($q | length) == 0 or (. as $f | any($q[]; hit($f; .))))
+                      | select($c.dbpaths == null or (($c.groups | any(. == "database" or startswith("database:"))) | not)
+                               or (. as $f | any($c.dbpaths[]; hit($f; norm))))]) as $f
                   | select(($f | length) > 0)
                   | if ($p.engines | index($e)) == null then
                       {kind: "skip", suite: $n, engine: $e, partition: $p.key,
@@ -724,7 +731,8 @@ cfg="$(jq -cn \
     --argjson groups "$(printf '%s\n' "${groups[@]:-}" | jq -R . | jq -cs 'map(select(length > 0))')" \
     --argjson xgroups "$(printf '%s\n' "${xgroups[@]:-}" | jq -R . | jq -cs 'map(select(length > 0))')" \
     --argjson workers "$workers" --arg mode "$mode" --arg junit "$junit" \
-    '{engines: $engines, suites: $suites, paths: $paths, groups: $groups, xgroups: $xgroups, workers: $workers, mode: $mode, junit: $junit}')"
+    --argjson dbpaths "$(if [[ -f "$root/tests/zones.json" ]]; then jq -c '.database // null' "$root/tests/zones.json"; else echo null; fi)" \
+    '{engines: $engines, suites: $suites, paths: $paths, groups: $groups, xgroups: $xgroups, workers: $workers, mode: $mode, junit: $junit, dbpaths: $dbpaths}')"
 
 plan="$(jq -n --argjson cfg "$cfg" --slurpfile inv "$inventory" '$inv[0] | '"$PLAN_JQ")" || die 'cannot build the plan'
 if jq -e 'has("error")' >/dev/null <<<"$plan"; then

@@ -309,6 +309,20 @@ it('forwards a group as the selector of every pass (intersection with the select
         ->and($calls[0]['files'])->toBe([$fx['root'].'/packages/alpha/tests/A1Test.php', $fx['root'].'/packages/alpha/tests/A2Test.php']);
 });
 
+it('narrows --group=database to the classified files and leaves Node suites out of a group selection', function (): void {
+    $fx = t_fixture();
+    t_write($fx['root'].'/tests/zones.json', json_encode(['database' => ['packages/alpha/tests/A1Test.php']], JSON_THROW_ON_ERROR));
+    $plan = t_plan(['pgsql', '--group=database'], root: $fx['root']);
+
+    // beta has no classified file and the skeleton partition of alpha neither: no step, so no "zero tests" failure
+    expect(array_map(static fn (array $s): string => $s['suite'].' '.$s['partition'], $plan['steps']))->toBe(['alpha RefreshDatabase+TestCase'])
+        ->and($plan['steps'][0]['files'])->toBe(['packages/alpha/tests/A1Test.php'])
+        ->and($plan['suites'])->not->toContain('noded');
+
+    // other groups are not narrowed
+    expect(t_plan(['pgsql', '-p', 'beta', '--group=serial'], root: $fx['root'])['steps'][0]['files'])->toHaveCount(2);
+});
+
 it('treats zero tests as an error except an empty serial pass the inventory allows', function (): void {
     $fx = t_fixture();
     $env = t_env($fx, ['T_FAKE_NOTESTS_SERIAL' => '1']);
