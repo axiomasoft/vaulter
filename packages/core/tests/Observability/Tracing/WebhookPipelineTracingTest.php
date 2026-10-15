@@ -5,13 +5,13 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Vaulter\Contracts\Observability\TraceRecorder;
+use Vaulter\Events\Outbox\OutboxRelay;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Testing\FakeTraceRecorder;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
-use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 uses(EnablesWebhooksModule::class);
@@ -25,12 +25,14 @@ beforeEach(function (): void {
 it('records relay and retry spans for webhook.pipeline without duplicate layers', function (): void {
     $tracer = app(TraceRecorder::class);
     expect($tracer)->toBeInstanceOf(FakeTraceRecorder::class);
+    // The webhooks.fanout consumer opens the relay span for an external event it fans out.
+    WebhookTestHelpers::outbox();
 
     $tracer->span(
         name: 'command.root',
         operation: function (): void {
             app(WebhookRetryDispatcher::class)->redispatchDue();
-            app(OutboxRelay::class)->process(limit: 0);
+            app(OutboxRelay::class)->pass();
         },
     );
 
@@ -56,6 +58,8 @@ it('records delivery job span for webhook.pipeline', function (): void {
 
     $tracer = app(TraceRecorder::class);
     expect($tracer)->toBeInstanceOf(FakeTraceRecorder::class);
+    // The webhooks.fanout consumer opens the relay span for an external event it fans out.
+    WebhookTestHelpers::outbox();
     $tracer->assertSpan(
         name: TracingSpanNames::WEBHOOK_DELIVERY,
         attributes: TracingAttributes::forTarget(targetId: 'webhook.pipeline', layer: 'job'),

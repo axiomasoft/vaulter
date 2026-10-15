@@ -7,6 +7,7 @@ namespace Vaulter\Configuration;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
@@ -22,7 +23,6 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Profiles\DefaultProfile;
@@ -59,7 +59,7 @@ final readonly class VaulterConfig
         return $handlers;
     }
 
-    /** @return ($key is 'scan_backfill_run' ? class-string<ScanBackfillRun> : ($key is 'scan_policy_state' ? class-string<ScanPolicyState> : ($key is 'scan_evidence' ? class-string<ScanEvidenceRecord> : ($key is 'scan_request' ? class-string<ScanRequest> : ($key is 'scan_obligation' ? class-string<ScanObligation> : ($key is 'drive' ? class-string<Drive> : ($key is 'node' ? class-string<Node> : ($key is 'file' ? class-string<File> : ($key is 'file_revision' ? class-string<FileRevision> : ($key is 'file_revision_blob' ? class-string<FileRevisionBlob> : ($key is 'blob' ? class-string<Blob> : ($key is 'grant' ? class-string<NodeGrant> : ($key is 'node_share' ? class-string<NodeShare> : ($key is 'activity' ? class-string<Activity> : ($key is 'outbox' ? class-string<Outbox> : ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : ($key is 'webhook_delivery' ? class-string<WebhookDelivery> : class-string<Model>))))))))))))))))) */
+    /** @return ($key is 'scan_backfill_run' ? class-string<ScanBackfillRun> : ($key is 'scan_policy_state' ? class-string<ScanPolicyState> : ($key is 'scan_evidence' ? class-string<ScanEvidenceRecord> : ($key is 'scan_request' ? class-string<ScanRequest> : ($key is 'scan_obligation' ? class-string<ScanObligation> : ($key is 'drive' ? class-string<Drive> : ($key is 'node' ? class-string<Node> : ($key is 'file' ? class-string<File> : ($key is 'file_revision' ? class-string<FileRevision> : ($key is 'file_revision_blob' ? class-string<FileRevisionBlob> : ($key is 'blob' ? class-string<Blob> : ($key is 'grant' ? class-string<NodeGrant> : ($key is 'node_share' ? class-string<NodeShare> : ($key is 'activity' ? class-string<Activity> : ($key is 'outbox' ? class-string<OutboxEvent> : ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : ($key is 'webhook_delivery' ? class-string<WebhookDelivery> : class-string<Model>))))))))))))))))) */
     public function model(string $key): string
     {
         $defaults = [
@@ -77,7 +77,7 @@ final readonly class VaulterConfig
             'grant' => NodeGrant::class,
             'node_share' => NodeShare::class,
             'activity' => Activity::class,
-            'outbox' => Outbox::class,
+            'outbox' => OutboxEvent::class,
             'webhook_endpoint' => WebhookEndpoint::class,
             'webhook_delivery' => WebhookDelivery::class,
         ];
@@ -185,6 +185,11 @@ final readonly class VaulterConfig
     public function webhooks(): WebhooksConfig
     {
         return new WebhooksConfig($this->config);
+    }
+
+    public function outbox(): OutboxConfig
+    {
+        return new OutboxConfig($this->config);
     }
 
     public function changes(): ChangesConfig

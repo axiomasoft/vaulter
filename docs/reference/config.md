@@ -312,12 +312,28 @@ fixed by the standard).
 | `webhooks.retry_jitter` | — | `0.1` | Fraction (0–0.5) added or removed at random from each retry delay |
 | `webhooks.disable_after_days` | — | `5` | Days of unbroken failure after which an endpoint is switched off (`0` = never) |
 | `webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (at most 604800) |
-| `webhooks.retention_days` | — | `30` | Age past which completed outbox rows + terminal deliveries are prunable (pending rows never are) |
-| `webhooks.relay.claim_seconds` | — | `60` | How long a relay worker leases an outbox row; a crashed worker's row is resumed after it. Also how long a pending delivery may wait for its job before the retry sweep re-queues it |
+| `webhooks.retention_days` | — | `30` | Age past which terminal deliveries are prunable (pending/failed ones never are) |
 | `webhooks.relay.fanout_chunk` | — | `100` | Endpoints written per fan-out transaction (integer 1..1000; anything else fails boot) |
 | `webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `vaulter.webhooks.manage` | The Gate ability gating the endpoint-management surface; `null` allows any authenticated user |
 
-The `features.webhooks` flag gates the outbox subscriber and endpoint routes; tables always exist. See [Recipes → Reliability & webhooks](/guides/recipes).
+The opt-in `vaulter.modules.webhooks` switches the `webhooks.fanout` outbox consumer and the endpoint routes; the tables always exist. See [Recipes → Reliability & webhooks](/guides/recipes).
+
+## Outbox — `outbox.*`
+
+The transactional outbox every event is written to, and its relay (`vaulter:relay`); see
+[The outbox](/concepts/events-outbox). Every value is a positive integer; anything else fails boot.
+
+| Key | Env | Default | Controls |
+|---|---|---|---|
+| `outbox.settle_window_seconds` | — | `300` | Reconciliation trusts only events older than this; keep it above the longest Vaulter transaction (`vaulter:doctor` compares it with the database limits) |
+| `outbox.retention_seconds` | — | `604800` | Age past which an event no open delivery and no consumer holds is pruned |
+| `outbox.max_consumer_hold_seconds` | — | `604800` | How long a paused durable consumer holds retention before it is detached with a gap (at least the settle window) |
+| `outbox.dead_retention_seconds` | — | `2592000` | How long a dead delivery is kept for inspection and replay |
+| `outbox.lease_seconds` | — | `60` | How long a relay worker owns a leased delivery (and a reconciler its consumer) before a takeover |
+| `outbox.batch` | — | `100` | Deliveries one relay pass leases per consumer |
+| `outbox.max_attempts` | — | `10` | Attempts after which a retried delivery is dead |
+| `outbox.backoff_base_seconds` | — | `2` | Base of the full-jitter retry delay |
+| `outbox.backoff_cap_seconds` | — | `3600` | Cap of the full-jitter retry delay (at least the base) |
 
 ## Change journal — `changes.*`
 
@@ -338,7 +354,8 @@ list and the value grammar are in [Commands → Scheduling](/reference/commands#
 | Key | Env | Default | Controls |
 |---|---|---|---|
 | `schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | Master switch for every Vaulter scheduled task (core, drive, media); set `false` when the host schedules the commands itself. Must be a boolean |
-| `schedule.webhooks_relay` | — | `'everyMinute'` | `vaulter:webhooks:relay`; `null` turns it off |
+| `schedule.outbox_relay` | — | `'everyMinute'` | `vaulter:relay`; `null` turns it off |
+| `schedule.outbox_prune` | — | `'hourly'` | `vaulter:outbox:prune`; `null` turns it off |
 | `schedule.webhooks_retry` | — | `'everyMinute'` | `vaulter:webhooks:retry`; `null` turns it off |
 | `schedule.webhooks_prune` | — | `'dailyAt:03:10'` | `vaulter:webhooks:prune`; `null` turns it off |
 | `schedule.changes_prune` | — | `'dailyAt:03:20'` | `vaulter:changes:prune`; `null` turns it off |
@@ -545,8 +562,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (max 604800). |
 | `vaulter.webhooks.retention_days` | — | `30` | — |
 | `vaulter.webhooks.retry_claim_seconds` | — | `60` | — |
-| `vaulter.webhooks.relay` | — | — | The outbox relay leases a row for claim_seconds while it materializes deliveries fanout_chunk endpoints at a time (1..1000); a crashed relay's row is picked up again once the lease lapses. |
-| `vaulter.webhooks.relay.claim_seconds` | — | `60` | — |
+| `vaulter.webhooks.relay` | — | — | The webhooks.fanout outbox consumer materializes deliveries fanout_chunk endpoints at a time (1..1000), each chunk in its own transaction under the outbox delivery lease. |
 | `vaulter.webhooks.relay.fanout_chunk` | — | `100` | — |
 | `vaulter.webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `'vaulter.webhooks.manage'` | — |
 | `vaulter.webhooks.delivery.url_guard` | — | `DefaultOutboundUrlGuard::class` | — |
@@ -557,11 +573,22 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.webhooks.delivery.max_response_bytes` | — | `65536` | — |
 | `vaulter.changes.retention_days` | — | `30` | Days a journal entry stays readable; vaulter:changes:prune deletes older ones and a cursor behind them expires (410 cursor_expired). |
 | `vaulter.changes.max_page_size` | — | `1000` | The largest page DriveHandle::changes()->list() returns. |
+| `vaulter.outbox` | — | — | The transactional outbox (D29): every domain event is written to v_outbox in the transaction of its operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once. settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events older than it, so a long transaction committing a smaller seq later is not skipped. |
+| `vaulter.outbox.settle_window_seconds` | — | `300` | — |
+| `vaulter.outbox.retention_seconds` | — | `604800` | — |
+| `vaulter.outbox.max_consumer_hold_seconds` | — | `604800` | How long a paused consumer (switched off, missing from the module graph) holds retention before it is detached with an explicit gap. |
+| `vaulter.outbox.dead_retention_seconds` | — | `2592000` | — |
+| `vaulter.outbox.lease_seconds` | — | `60` | — |
+| `vaulter.outbox.batch` | — | `100` | — |
+| `vaulter.outbox.max_attempts` | — | `10` | — |
+| `vaulter.outbox.backoff_base_seconds` | — | `2` | — |
+| `vaulter.outbox.backoff_cap_seconds` | — | `3600` | — |
 | `vaulter.idempotency` | — | — | Idempotency-Key receipts (D25): how long a retry with the same key gets the stored outcome. vaulter:idempotency:prune deletes expired receipts. |
 | `vaulter.idempotency.ttl_seconds` | — | `86400` | — |
 | `vaulter.schedule` | — | — | Maintenance tasks put on the host scheduler. Value: null (off) \| everyMinute \| everyFiveMinutes hourly \| daily \| weekly \| 'dailyAt:HH:MM' \| 'hourlyAt:M' \| 'weeklyOn:D,HH:MM' \| a 5-field cron expression. Set enabled to false when the host schedules the commands itself. |
 | `vaulter.schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | — |
-| `vaulter.schedule.webhooks_relay` | — | `'everyMinute'` | — |
+| `vaulter.schedule.outbox_relay` | — | `'everyMinute'` | — |
+| `vaulter.schedule.outbox_prune` | — | `'hourly'` | — |
 | `vaulter.schedule.webhooks_retry` | — | `'everyMinute'` | — |
 | `vaulter.schedule.webhooks_prune` | — | `'dailyAt:03:10'` | — |
 | `vaulter.schedule.changes_prune` | — | `'dailyAt:03:20'` | — |
@@ -585,7 +612,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.models.grant` | — | `NodeGrant::class` | — |
 | `vaulter.models.node_share` | — | `NodeShare::class` | — |
 | `vaulter.models.activity` | — | `Activity::class` | — |
-| `vaulter.models.outbox` | — | `Outbox::class` | — |
+| `vaulter.models.outbox` | — | `OutboxEvent::class` | — |
 | `vaulter.models.webhook_endpoint` | — | `WebhookEndpoint::class` | — |
 | `vaulter.models.webhook_delivery` | — | `WebhookDelivery::class` | — |
 

@@ -2,58 +2,68 @@
 
 declare(strict_types=1);
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Vaulter\Actions\Webhooks\RedeliverWebhookAction;
-use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Events\Outbox\DeliveryClass;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
+use Vaulter\Events\Outbox\OutboxRelay;
+use Vaulter\Events\Outbox\OutboxStore;
 use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Repositories\Webhooks\OutboxStoreRepository;
 use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Webhooks\WebhookFanoutConsumer;
 
 /**
- * Prune deletes only finished work: an outbox row only once 'completed' (every
- * eligible endpoint has its delivery), a delivery only once delivered or dead. A
- * pending outbox row — including one whose fan-out stopped half way — and a
- * pending/failed delivery survive any age and any retention, even 0 days.
+ * Prune deletes only finished work: an outbox event only once no delivery of it is open and the
+ * consumers that hold retention reconciled past it (vaulter:outbox:prune, D29), a webhook delivery
+ * only once delivered or dead (vaulter:webhooks:prune). An event with an open delivery — including
+ * one whose fan-out stopped half way — and a pending/failed delivery survive any age.
  */
 beforeEach(function (): void {
     Carbon::setTestNow('2026-06-30 12:00:00');
 });
 
-function agePruneRow(Outbox|WebhookDelivery $row, Carbon $at): void
+function agePruneRow(WebhookDelivery $row, Carbon $at): void
 {
     DB::table($row->getTable())->where('id', $row->getKey())->update(['created_at' => $at, 'updated_at' => $at]);
 }
 
-it('never prunes a pending outbox row, however old, even half fanned out', function (): void {
+/** Marks the webhooks.fanout delivery of $event done, as a finished fan-out leaves it. */
+function finishFanout(OutboxEvent $event): void
+{
+    DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('event_id', $event->event_id)
+        ->update(['state' => 'done', 'done_at' => Carbon::now()]);
+}
+
+/** Registers webhooks.fanout after the events were written: it holds nothing below the current seq. */
+function registerFanout(): void
+{
+    app(OutboxStore::class)->register([WebhookFanoutConsumer::ID => DeliveryClass::Durable], CarbonImmutable::now());
+}
+
+it('never prunes an outbox event with an open delivery, however old, even half fanned out', function (): void {
+    config()->set('vaulter.outbox.retention_seconds', 60);
     $ancient = Carbon::now()->subYears(3);
-    $untouched = WebhookTestHelpers::outbox(['available_at' => $ancient]);
-    $halfway = WebhookTestHelpers::outbox([
-        'available_at' => $ancient,
-        'fanout_cursor' => '7',
-        'delivery_count' => 2,
-        'claim_token' => str_repeat('a', 32),
-        'claim_generation' => 3,
-        'claim_until' => $ancient,
-        // A stray marker on a pending row must not make it look finished.
-        'fanned_out_at' => $ancient,
-    ]);
-    agePruneRow($untouched, $ancient);
-    agePruneRow($halfway, $ancient);
-    $completed = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDay()]);
+    $untouched = WebhookTestHelpers::outbox(['created_at' => $ancient]);
+    $halfway = WebhookTestHelpers::outbox(['created_at' => $ancient]);
+    DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('event_id', $halfway->event_id)
+        ->update(['state' => 'leased', 'continuation' => '7', 'lease_generation' => 3, 'lease_expires_at' => $ancient]);
+    $finished = WebhookTestHelpers::outbox(['created_at' => Carbon::now()->subDay()]);
+    finishFanout($finished);
+    registerFanout();
 
-    Artisan::call('vaulter:webhooks:prune', ['--days' => '0', '--dry-run' => true]);
-    expect(Artisan::output())->toContain('Would prune 1 completed outbox row');
+    Artisan::call('vaulter:outbox:prune');
 
-    Artisan::call('vaulter:webhooks:prune', ['--days' => '0']);
-
-    expect(Outbox::query()->whereKey($untouched->getKey())->exists())->toBeTrue()
-        ->and(Outbox::query()->whereKey($halfway->getKey())->exists())->toBeTrue()
-        ->and(Outbox::query()->whereKey($completed->getKey())->exists())->toBeFalse();
+    expect(OutboxEvent::query()->whereKey($untouched->getKey())->exists())->toBeTrue()
+        ->and(OutboxEvent::query()->whereKey($halfway->getKey())->exists())->toBeTrue()
+        ->and(OutboxEvent::query()->whereKey($finished->getKey())->exists())->toBeFalse()
+        ->and(WebhookTestHelpers::outboxDelivery($finished->event_id))->toBeNull();
 });
 
 it('never prunes a pending or failed delivery, however old', function (): void {
@@ -72,32 +82,38 @@ it('never prunes a pending or failed delivery, however old', function (): void {
     expect(WebhookDelivery::query()->pluck('event_id')->sort()->values()->all())->toBe(['f', 'p']);
 });
 
-it('keeps a completed row inside the retention window', function (): void {
-    config()->set('vaulter.webhooks.retention_days', 30);
-    $recent = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(29)]);
-    $old = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(30)]);
+it('keeps a finished outbox event inside the retention window', function (): void {
+    config()->set('vaulter.outbox.retention_seconds', 30 * 86400);
+    $recent = WebhookTestHelpers::outbox(['created_at' => Carbon::now()->subDays(29)]);
+    $old = WebhookTestHelpers::outbox(['created_at' => Carbon::now()->subDays(31)]);
+    registerFanout();
+    finishFanout($recent);
+    finishFanout($old);
 
-    Artisan::call('vaulter:webhooks:prune');
+    Artisan::call('vaulter:outbox:prune');
 
-    expect(Outbox::query()->whereKey($recent->getKey())->exists())->toBeTrue()
-        ->and(Outbox::query()->whereKey($old->getKey())->exists())->toBeFalse();
+    expect(OutboxEvent::query()->whereKey($recent->getKey())->exists())->toBeTrue()
+        ->and(OutboxEvent::query()->whereKey($old->getKey())->exists())->toBeFalse();
 });
 
-it('keeps a completed outbox row that a replay turned pending between the select and the delete', function (): void {
-    $row = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40), 'legacy_fanout' => true]);
+it('keeps an outbox event that a replay reopened between the select and the delete', function (): void {
+    config()->set('vaulter.outbox.retention_seconds', 60);
+    $row = WebhookTestHelpers::outbox(['created_at' => Carbon::now()->subDays(40)]);
+    registerFanout();
+    finishFanout($row);
     $replayed = false;
     DB::beforeExecuting(function (string $sql) use ($row, &$replayed): void {
-        if (!$replayed && str_starts_with($sql, 'delete from')) {
+        if (!$replayed && str_starts_with($sql, 'delete from') && str_contains($sql, $row->getTable())) {
             $replayed = true;
-            DB::table($row->getTable())->where('id', $row->getKey())->update(['status' => 'pending', 'fanned_out_at' => null]);
+            DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('event_id', $row->event_id)->update(['state' => 'pending']);
         }
     });
 
-    $deleted = app(OutboxStoreRepository::class)->pruneCompletedBefore(Carbon::now()->subDays(30));
+    $pruned = app(OutboxRelay::class)->prune();
 
     expect($replayed)->toBeTrue()
-        ->and($deleted)->toBe(0)
-        ->and(Outbox::query()->whereKey($row->getKey())->value('status'))->toBe('pending');
+        ->and($pruned['events'])->toBe(0)
+        ->and(OutboxEvent::query()->whereKey($row->getKey())->exists())->toBeTrue();
 });
 
 it('keeps a delivery redelivered between the batch select and delete', function (string $status, bool $finished): void {

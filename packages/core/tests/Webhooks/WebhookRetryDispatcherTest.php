@@ -9,13 +9,12 @@ use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
- * Re-dispatch has a SINGLE owner (§2.11 / F-P1.7-05): vaulter:webhooks:relay and
- * vaulter:webhooks:retry both claim a due delivery through the same
- * WebhookRetryDispatcher, which locks + re-arms next_retry_at before dispatch. Running
- * both back-to-back therefore fans a delivery out exactly once — RED on the old code
- * where each command independently dispatched the same due row.
+ * Re-dispatch has a SINGLE owner (§2.11 / F-P1.7-05): every vaulter:webhooks:retry run
+ * claims a due delivery through WebhookRetryDispatcher, which locks + re-arms
+ * next_retry_at before dispatch. Two runs back-to-back therefore fan a delivery out
+ * exactly once; the outbox relay (vaulter:relay) never re-dispatches webhook deliveries.
  */
-it('does not re-dispatch the same due delivery twice across the two commands, F-P1.7-05', function (): void {
+it('does not re-dispatch the same due delivery twice across two sweeps, F-P1.7-05', function (): void {
     Bus::fake();
 
     $endpoint = WebhookTestHelpers::endpoint();
@@ -24,7 +23,8 @@ it('does not re-dispatch the same due delivery twice across the two commands, F-
         'next_retry_at' => now()->subMinute(),
     ]);
 
-    $this->artisan('vaulter:webhooks:relay')->assertSuccessful();
+    $this->artisan('vaulter:relay', ['--once' => true])->assertSuccessful();
+    $this->artisan('vaulter:webhooks:retry')->assertSuccessful();
     $this->artisan('vaulter:webhooks:retry')->assertSuccessful();
 
     Bus::assertDispatchedTimes(DeliverWebhook::class, 1);
@@ -103,12 +103,12 @@ it('reclaims a lost delivery only after its claim window and never claims termin
     Bus::assertDispatchedTimes(DeliverWebhook::class, 2);
 });
 
-it('recovers a pending delivery whose first job was lost, only after the relay claim window', function (): void {
+it('recovers a pending delivery whose first job was lost, only after the retry claim window', function (): void {
     Bus::fake();
-    config()->set('vaulter.webhooks.relay.claim_seconds', 60);
+    config()->set('vaulter.webhooks.retry_claim_seconds', 60);
 
     $endpoint = WebhookTestHelpers::endpoint();
-    // Just written by the relay, its job presumably still queued.
+    // Just written by the fan-out, its job presumably still queued.
     $fresh = WebhookTestHelpers::delivery($endpoint, ['event_id' => 'fresh', 'next_retry_at' => now()]);
     // A worker holds it right now.
     WebhookTestHelpers::delivery($endpoint, ['event_id' => 'held', 'next_retry_at' => now()->subMinutes(5), 'claim_token' => str_repeat('b', 32), 'claim_until' => now()->addMinutes(5)]);

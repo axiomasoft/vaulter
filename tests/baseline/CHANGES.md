@@ -438,11 +438,12 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `azgard` `P\Tests\ProviderBindingTest::__pest_evaluable_it_binds_the_deny_all_null_guard_for_a_user_that_is_not_AzGuard_backed` → replacement `P\Tests\ProviderBindingTest::__pest_evaluable_it_provides_no_guard_until_the_host_names_one` — the request-bound AzgardGuard binding is removed; no guard is provided until the host names one (P3.5) (D8)
 - `azgard` `P\Tests\ProviderBindingTest::__pest_evaluable_it_preserves_an_explicitly_configured_null_driver_key` → replacement `P\Tests\ProviderBindingTest::__pest_evaluable_it_refuses_a_guard_class_that_does_not_implement_the_seam` — the permission driver map is not written by the registrar any more; the guard key is validated instead (P3.5) (D8)
 - `azgard` `P\Tests\ProviderBindingTest::__pest_evaluable_it_registers_its_permission_driver_and_keeps_a_host_driver_override` → replacement `P\Tests\ProviderBindingTest::__pest_evaluable_it_contributes_its_permission_driver_to_the_drive_slot_and_lets_the_host_map_override_the_key` — renamed: azgard contributes its driver to the PermissionDriver slot; the host map still overrides the key (P3.5) (D8)
+- `core` `P\Packages\core\tests\Http\Problems\ProblemCatalogLangTest::__pest_evaluable_it_claims_a_code_once__core_first` → replacement `P\Packages\core\tests\Http\Problems\ProblemCatalogLangTest::__pest_evaluable_it_lists_the_codes_sorted__each_under_the_module_that_declares_it` — renamed: a code is declared once by its owning module (compile-time refusal of duplicates) instead of claimed first by core (P3.11) (D25)
 
 ## Additions (current − original)
 
 - `repo`: 184 (introduced P1.3)
-- `core`: 222
+- `core`: 406
 - `media`: 11
 - `drive`: 12
 - `documents`: 9

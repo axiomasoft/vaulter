@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -14,7 +15,6 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
@@ -35,7 +35,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  *    WebhookEndpoint) silently DISCARDS a key outside the list — the attribute is
  *    simply absent afterwards;
  *  - a fully `$guarded = ['*']` model (Blob/FileRevisionBlob/NodeGrant/Activity/
- *    Outbox/WebhookDelivery) is Eloquent's "totally guarded" state, which THROWS
+ *    OutboxEvent/WebhookDelivery) is Eloquent's "totally guarded" state, which THROWS
  *    MassAssignmentException on ANY fill() with a non-empty array — an even
  *    stronger guarantee for these security-critical rows (CAS identity, ACL,
  *    audit trail, outbox/delivery bookkeeping).
@@ -72,7 +72,7 @@ it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with Mas
     'FileRevisionBlob.blob_id' => [FileRevisionBlob::class, 'blob_id', 999],
     'NodeGrant.permissions' => [NodeGrant::class, 'permissions', 65535],
     'Activity.verb' => [Activity::class, 'verb', 'fake.verb'],
-    'Outbox.status' => [Outbox::class, 'status', 'completed'],
+    'OutboxEvent.type' => [OutboxEvent::class, 'type', 'folder.created'],
     'WebhookDelivery.status' => [WebhookDelivery::class, 'status', 'delivered'],
 ]);
 

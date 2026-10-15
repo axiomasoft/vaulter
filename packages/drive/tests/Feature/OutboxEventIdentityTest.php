@@ -7,9 +7,9 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Kernel;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
@@ -28,8 +28,8 @@ it('stages three distinct occurrences for rename A to B to A to B', function ():
         $drive->nodes()->rename($node, $name);
     }
 
-    $rows = Outbox::query()->where('topic', (string) $node->id)
-        ->where('event', DriveEventType::NodeRenamed->value)->orderBy('id')->get();
+    $rows = OutboxEvent::query()->where('aggregate_id', (string) $node->id)
+        ->where('type', DriveEventType::NodeRenamed->value)->orderBy('outbox_seq')->get();
 
     $names = Activity::query()->whereIn('event_id', $rows->pluck('event_id'))->orderBy('id')->get()->pluck('context.to')->all();
 
@@ -53,13 +53,13 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
     $drive->trash()->restore($node);
     $drive->nodes()->trash($node);
 
-    $rows = Outbox::query()->where('topic', (string) $node->id)
-        ->whereIn('event', [DriveEventType::NodeTrashed->value, DriveEventType::NodeRestored->value])
-        ->orderBy('id')->get();
+    $rows = OutboxEvent::query()->where('aggregate_id', (string) $node->id)
+        ->whereIn('type', [DriveEventType::NodeTrashed->value, DriveEventType::NodeRestored->value])
+        ->orderBy('outbox_seq')->get();
 
     expect($rows)->toHaveCount(3)
         ->and($rows->pluck('event_id')->unique())->toHaveCount(3)
-        ->and($rows->pluck('event')->all())->toBe([
+        ->and($rows->pluck('type')->all())->toBe([
             DriveEventType::NodeTrashed->value,
             DriveEventType::NodeRestored->value,
             DriveEventType::NodeTrashed->value,
@@ -79,7 +79,7 @@ it('stages one row when the same event occurrence is recorded twice', function (
     app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($make()));
     app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($make()));
 
-    $row = Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->sole();
+    $row = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
 
     expect($row->event_id)->toBe($eventId)
         ->and($row->payload['id'])->toBe($eventId);

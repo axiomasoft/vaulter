@@ -13,8 +13,8 @@ use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventCatalog;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -36,15 +36,15 @@ beforeEach(function (): void {
 function driveEventsUnpaired(): array
 {
     $unpaired = [];
-    foreach (Outbox::query()->get() as $outbox) {
-        $type = app(EventCatalog::class)->get($outbox->event);
-        if ($type->spec()->activity && !Activity::query()->where('event_id', $outbox->event_id)->where('verb', $outbox->event)->exists()) {
-            $unpaired[] = $outbox->event;
+    foreach (OutboxEvent::query()->get() as $outbox) {
+        $type = app(EventCatalog::class)->get($outbox->type);
+        if ($type->spec()->activity && !Activity::query()->where('event_id', $outbox->event_id)->where('verb', $outbox->type)->exists()) {
+            $unpaired[] = $outbox->type;
         }
     }
     foreach (Activity::query()->get() as $activity) {
         $type = $activity->verb;
-        if ($activity->event_id === null || ($type->spec()->external && !Outbox::query()->where('event_id', $activity->event_id)->exists())) {
+        if ($activity->event_id === null || ($type->spec()->external && !OutboxEvent::query()->where('event_id', $activity->event_id)->exists())) {
             $unpaired[] = $type->value;
         }
     }
@@ -71,7 +71,7 @@ it('records every drive event in both sinks under one event id', function (): vo
     $drive->archive();
     $drive->unarchive();
 
-    $types = array_values(array_unique([...Activity::query()->toBase()->pluck('verb')->all(), ...Outbox::query()->toBase()->pluck('event')->all()]));
+    $types = array_values(array_unique([...Activity::query()->toBase()->pluck('verb')->all(), ...OutboxEvent::query()->toBase()->pluck('type')->all()]));
 
     expect($types)->toEqualCanonicalizing([
         'drive.created', 'folder.created', 'file.uploaded', 'file.revision_added', 'file.revision_deleted',
@@ -90,7 +90,7 @@ it('records drive.deleted when the purge of a deleted drive finishes', function 
     }
 
     $activity = Activity::query()->where('verb', DriveEventType::DriveDeleted->value)->sole();
-    $outbox = Outbox::query()->where('event', DriveEventType::DriveDeleted->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::DriveDeleted->value)->sole();
 
     expect($activity->event_id)->toBe($outbox->event_id)
         ->and($outbox->payload['subject'])->toBe(['type' => 'drive', 'id' => (string) $id]);
@@ -107,7 +107,7 @@ it('audits upload sessions without staging webhooks', function (): void {
     app(UploadSessionManager::class)->abort($session);
 
     expect(Activity::query()->whereIn('verb', ['upload.initiated', 'upload.aborted'])->count())->toBe(2)
-        ->and(Outbox::query()->where('event', 'like', 'upload.%')->exists())->toBeFalse();
+        ->and(OutboxEvent::query()->where('type', 'like', 'upload.%')->where('external', true)->exists())->toBeFalse();
 });
 
 it('records A→B→A→B renames as three distinct occurrences (V06)', function (): void {
@@ -118,7 +118,7 @@ it('records A→B→A→B renames as three distinct occurrences (V06)', function
         $drive->nodes()->rename($node, $name);
     }
 
-    $rows = Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->orderBy('id')->get();
+    $rows = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->orderBy('outbox_seq')->get();
     $names = Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->orderBy('id')->get()->pluck('context.to')->all();
 
     expect($rows)->toHaveCount(3)
@@ -135,7 +135,7 @@ it('records trash→restore→trash as three lifecycle occurrences (V06)', funct
     $drive->nodes()->trash($node);
 
     $verbs = Activity::query()->whereIn('verb', [DriveEventType::NodeTrashed->value, DriveEventType::NodeRestored->value])->orderBy('id')->toBase()->pluck('verb')->all();
-    $sequences = Outbox::query()->whereIn('event', [DriveEventType::NodeTrashed->value, DriveEventType::NodeRestored->value])->orderBy('id')->get()->pluck('payload.sequence')->all();
+    $sequences = OutboxEvent::query()->whereIn('type', [DriveEventType::NodeTrashed->value, DriveEventType::NodeRestored->value])->orderBy('outbox_seq')->get()->pluck('payload.sequence')->all();
 
     expect($verbs)->toBe(['node.trashed', 'node.restored', 'node.trashed'])
         // Each occurrence carries the node's sequence after its own change.

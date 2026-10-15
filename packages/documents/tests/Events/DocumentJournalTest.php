@@ -9,7 +9,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Enums\Changes\ChangeOperation;
-use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
 /**
@@ -56,7 +56,7 @@ it('stamps the checkpoint webhook with the seq of its journal entry', function (
     $node = $documents->create('Spec', content: DocumentTestHelpers::content('one')->toArray());
     $documents->update($node, DocumentTestHelpers::content('two')->toArray());
 
-    $updated = Outbox::query()->where('event', DocumentEventType::DocumentUpdated->value)->sole();
+    $updated = OutboxEvent::query()->where('type', DocumentEventType::DocumentUpdated->value)->sole();
 
     expect($updated->payload['changes'])->toBe(['seq' => documentJournal($node->id)[0]['seq']]);
 });

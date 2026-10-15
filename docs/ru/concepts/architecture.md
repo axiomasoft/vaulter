@@ -231,7 +231,8 @@ final class ProjectDriveProfile extends ProfileProvider
 | `v_document_revisions` | Documents: неизменяемые чекпоинты документа (история). |
 | `v_upload_sessions` / `v_upload_parts` | Сессии резюмируемых загрузок. |
 | `v_activity` | Append-only лента активности. |
-| `v_outbox` / `v_webhook_endpoints` / `v_webhook_deliveries` | Слой надёжности транзакционного outbox + вебхуков. |
+| `v_outbox` / `v_outbox_consumers` / `v_outbox_deliveries` | Транзакционный outbox всех событий и состояние доставки его consumer'ов ([Outbox](/ru/concepts/events-outbox)). |
+| `v_webhook_endpoints` / `v_webhook_deliveries` | Эндпоинты вебхуков и их доставки. |
 
 Дерево — это **список смежности** (adjacency list): перемещение/переименование — это единственный
 `UPDATE` `parent_id` / `name` (без переписывания путей). Спуск использует рекурсивные CTE,

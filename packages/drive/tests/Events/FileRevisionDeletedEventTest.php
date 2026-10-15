@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Events\EventConformance;
@@ -29,7 +29,7 @@ it('records file.revision_deleted in the activity feed and the outbox', function
 
     $actor->files()->deleteRevision($file, $first->getKey());
 
-    $outbox = Outbox::query()->where('event', DriveEventType::FileRevisionDeleted->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::FileRevisionDeleted->value)->sole();
     $activity = Activity::query()->where('verb', DriveEventType::FileRevisionDeleted->value)->sole();
 
     expect($outbox->payload['data'])->toBe(['revision_id' => (string) $first->getKey(), 'number' => 1])

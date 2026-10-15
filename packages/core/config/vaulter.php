@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -19,7 +20,6 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Profiles\DefaultProfile;
@@ -148,11 +148,9 @@ return [
         'secret_rotation_overlap' => 86400,
         'retention_days' => 30,
         'retry_claim_seconds' => 60,
-        // The outbox relay leases a row for claim_seconds while it materializes
-        // deliveries fanout_chunk endpoints at a time (1..1000); a crashed relay's
-        // row is picked up again once the lease lapses.
+        // The webhooks.fanout outbox consumer materializes deliveries fanout_chunk endpoints at a
+        // time (1..1000), each chunk in its own transaction under the outbox delivery lease.
         'relay' => [
-            'claim_seconds' => 60,
             'fanout_chunk' => 100,
         ],
         'manage_ability' => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
@@ -172,6 +170,23 @@ return [
         // The largest page DriveHandle::changes()->list() returns.
         'max_page_size' => 1000,
     ],
+    // The transactional outbox (D29): every domain event is written to v_outbox in the transaction of its
+    // operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once.
+    // settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events
+    // older than it, so a long transaction committing a smaller seq later is not skipped.
+    'outbox' => [
+        'settle_window_seconds' => 300,
+        'retention_seconds' => 604800,
+        // How long a paused consumer (switched off, missing from the module graph) holds retention before it
+        // is detached with an explicit gap.
+        'max_consumer_hold_seconds' => 604800,
+        'dead_retention_seconds' => 2592000,
+        'lease_seconds' => 60,
+        'batch' => 100,
+        'max_attempts' => 10,
+        'backoff_base_seconds' => 2,
+        'backoff_cap_seconds' => 3600,
+    ],
     // Idempotency-Key receipts (D25): how long a retry with the same key gets the stored outcome.
     // vaulter:idempotency:prune deletes expired receipts.
     'idempotency' => [
@@ -182,7 +197,8 @@ return [
     // expression. Set enabled to false when the host schedules the commands itself.
     'schedule' => [
         'enabled' => env('VAULTER_SCHEDULE_ENABLED', true),
-        'webhooks_relay' => 'everyMinute',
+        'outbox_relay' => 'everyMinute',
+        'outbox_prune' => 'hourly',
         'webhooks_retry' => 'everyMinute',
         'webhooks_prune' => 'dailyAt:03:10',
         'changes_prune' => 'dailyAt:03:20',
@@ -212,7 +228,7 @@ return [
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,
         'activity' => Activity::class,
-        'outbox' => Outbox::class,
+        'outbox' => OutboxEvent::class,
         'webhook_endpoint' => WebhookEndpoint::class,
         'webhook_delivery' => WebhookDelivery::class,
     ],

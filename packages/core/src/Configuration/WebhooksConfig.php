@@ -46,6 +46,7 @@ final readonly class WebhooksConfig
         'signature_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed',
         'timestamp_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed',
         'event_header' => 'the event type, which is the "type" field of the delivery body',
+        'relay.claim_seconds' => 'vaulter.outbox.lease_seconds (the webhooks.fanout consumer runs under the outbox delivery lease, D29)',
     ];
 
     public function __construct(private Repository $config) {}
@@ -216,20 +217,10 @@ final readonly class WebhooksConfig
         return max($seconds, 1);
     }
 
-    /** How long a relay worker owns an outbox row before another may take it over. */
-    public function relayClaimSeconds(): int
-    {
-        $value = $this->config->get('vaulter.webhooks.relay.claim_seconds', 60);
-
-        $seconds = is_numeric($value) ? (int) $value : 60;
-
-        return max($seconds, 1);
-    }
-
     /**
      * How many endpoints one fan-out transaction materializes. Out-of-range values
      * are refused rather than clamped: a silently clamped chunk would hide a typo
-     * that changes how long the outbox row stays locked.
+     * that changes how long one fan-out transaction holds its locks.
      */
     public function relayFanoutChunk(): int
     {

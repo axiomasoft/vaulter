@@ -7,8 +7,8 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -32,9 +32,9 @@ it('records access.inheritance_changed for a restriction and its restoration', f
     $this->access->restrictInheritance($this->child->id);
     $this->access->restoreInheritance($this->child->id);
 
-    $events = Outbox::query()->where('event', DriveEventType::InheritanceChanged->value)->orderBy('id')->get();
+    $events = OutboxEvent::query()->where('type', DriveEventType::InheritanceChanged->value)->orderBy('outbox_seq')->get();
 
-    expect($events->map(fn (Outbox $row): array => $row->payload['data'])->all())->toBe([['inherits' => false], ['inherits' => true]])
+    expect($events->map(fn (OutboxEvent $row): array => $row->payload['data'])->all())->toBe([['inherits' => false], ['inherits' => true]])
         ->and($events[0]->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->child->id])
         // Access changes are not node versions: a sequence here would look stale next to the node's last mutation.
         ->and($events[0]->payload['sequence'])->toBeNull()
@@ -45,15 +45,15 @@ it('records access.inheritance_changed for a restriction and its restoration', f
 it('records nothing when the node already has the requested inheritance', function (): void {
     $this->access->restoreInheritance($this->child->id);
 
-    expect(Outbox::query()->where('event', DriveEventType::InheritanceChanged->value)->exists())->toBeFalse();
+    expect(OutboxEvent::query()->where('type', DriveEventType::InheritanceChanged->value)->exists())->toBeFalse();
 });
 
 it('keeps copy_current producing grant.created next to the inheritance event', function (): void {
     $this->access->grant($this->parent->id, new GrantInput(subject: new Subject('user', 14), role: RoleRegistry::READER));
-    Outbox::query()->delete();
+    OutboxEvent::query()->delete();
     Activity::query()->delete();
 
     $this->access->restrictInheritance($this->child->id, InheritanceRestriction::CopyCurrent);
 
-    expect(Outbox::query()->orderBy('id')->pluck('event')->all())->toBe(['access.inheritance_changed', 'grant.created']);
+    expect(OutboxEvent::query()->orderBy('outbox_seq')->pluck('type')->all())->toBe(['access.inheritance_changed', 'grant.created']);
 });

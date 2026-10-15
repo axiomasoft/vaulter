@@ -798,6 +798,20 @@
             "id": "event:upload.initiated",
             "kind": "protocol",
             "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "format:webhook-envelope",
+            "kind": "protocol",
+            "reason": "P3.14: built by Vaulter\\Events\\Outbox\\OutboxEnvelope::body (was EventEnvelope::fromEvent); the bytes are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "serialized:config:vaulter.models.outbox",
+            "kind": "protocol",
+            "reason": "P3.14: the serialized default model class is Vaulter\\Events\\Outbox\\Models\\OutboxEvent"
         }
     ],
     "items": [
@@ -1572,8 +1586,8 @@
             "manual": true,
             "owner": "webhooks",
             "source": {
-                "file": "packages/core/src/Webhooks/EventEnvelope.php",
-                "symbol": "Vaulter\\Webhooks\\EventEnvelope::fromEvent"
+                "file": "packages/core/src/Events/Outbox/OutboxEnvelope.php",
+                "symbol": "Vaulter\\Events\\Outbox\\OutboxEnvelope::body"
             }
         },
         {
@@ -3330,7 +3344,7 @@
         {
             "config_key": "vaulter.models.outbox",
             "fqcns": [
-                "Vaulter\\Models\\Webhooks\\Outbox"
+                "Vaulter\\Events\\Outbox\\Models\\OutboxEvent"
             ],
             "id": "serialized:config:vaulter.models.outbox",
             "owner": "core",

@@ -10,17 +10,17 @@ use LogicException;
 use Throwable;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Events\Outbox\OutboxWriter;
 use Vaulter\Kernel;
-use Vaulter\Webhooks\EventEnvelope;
-use Vaulter\Webhooks\OutboxRecorder;
 use WeakMap;
 
 /**
  * The only way a domain event is recorded. Called as the last step of an operation's transaction, it hands
  * the occurrence to the {@see EventSink} contributions of the active modules in the order (priority, id) —
- * the drive's activity feed and change journal — then writes the outbox row on the Vaulter connection, and
- * dispatches the event to host listeners after the commit. The outbox comes last: its envelope carries the
- * journal seq a sink shared.
+ * the drive's activity feed and change journal — then writes the outbox row and the delivery rows of the
+ * subscribed outbox consumers on the Vaulter connection, whatever modules are active (D29), and dispatches
+ * the event to host listeners after the commit. The outbox comes last: its envelope carries the journal seq
+ * a sink shared.
  *
  * A failed write is not caught here: it leaves the transaction, which rolls the change back together with
  * whatever was already recorded, so a committed change always has its rows. Host listeners are the
@@ -57,15 +57,8 @@ final readonly class EventRecorder
         foreach ($this->kernel->extensions()->resolve(EventSink::class) as $sink) {
             $sinks[] = static fn (): SinkResult => $sink->record($event, $writer);
         }
-        // The outbox row follows the webhooks module until the outbox is written always (D29, P3.14).
-        if ($this->kernel->isActive('webhooks') && $event->isWebhookEligible()) {
-            $sinks[] = function () use ($event, $writer): SinkResult {
-                $seq = $writer->shared(SinkWriter::JOURNAL_SEQ);
-                $envelope = EventEnvelope::fromEvent($event, is_int($seq) ? $seq : null);
-
-                return $this->container->make(OutboxRecorder::class)->stage($event, $envelope) ? SinkResult::Stored : SinkResult::Replayed;
-            };
-        }
+        // The outbox is written always and last (D29): its envelope carries the journal seq a sink shared.
+        $sinks[] = fn (): SinkResult => $this->container->make(OutboxWriter::class)->append($event, $writer);
 
         // The first sink that keeps the event tells a new occurrence from a replay of one already stored
         // (a retried job recording the event it rebuilt). A replay touches nothing and is not dispatched

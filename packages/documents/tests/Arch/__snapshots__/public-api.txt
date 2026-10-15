@@ -76,7 +76,7 @@ Vaulter\Documents\Events\Comments\CommentAdded
   broadcastOn(): array
   broadcastWith(): array
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -96,7 +96,7 @@ Vaulter\Documents\Events\Comments\CommentDeleted
   broadcastOn(): array
   broadcastWith(): array
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -116,7 +116,7 @@ Vaulter\Documents\Events\Comments\CommentResolved
   broadcastOn(): array
   broadcastWith(): array
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -133,7 +133,7 @@ Vaulter\Documents\Events\Documents\DocumentContentUpdated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -154,7 +154,7 @@ Vaulter\Documents\Events\Documents\DocumentCreated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -174,7 +174,7 @@ Vaulter\Documents\Events\Revisions\DocumentRestored
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -195,7 +195,7 @@ Vaulter\Documents\Events\Revisions\DocumentRevisionCreated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int

@@ -18,13 +18,13 @@ use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Profiles\Profile;
@@ -262,7 +262,7 @@ it('never writes tokens or passwords into the activity feed or the outbox', func
 
     $dump = json_encode([
         Activity::query()->get()->toArray(),
-        Outbox::query()->get()->toArray(),
+        OutboxEvent::query()->get()->toArray(),
     ], JSON_THROW_ON_ERROR);
 
     foreach ([$minted->token, $rotated->token, 'hunter2-secret', 'another-secret', hash('sha256', $minted->token), hash('sha256', $rotated->token)] as $secret) {

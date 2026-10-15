@@ -16,7 +16,7 @@ function vaulterCoreTasks(Application $app): array
 {
     $tasks = [];
     foreach ($app->make(Schedule::class)->events() as $event) {
-        if (preg_match('/^vaulter:(webhooks|changes):/', (string) $event->description) === 1) {
+        if (preg_match('/^vaulter:(webhooks:|changes:|relay$|outbox:)/', (string) $event->description) === 1) {
             $tasks[$event->description] = $event;
         }
     }
@@ -38,14 +38,15 @@ function bootWebhooksSchedule(array $config = []): array
     return vaulterCoreTasks(FreshApplication::boot(['vaulter.modules.webhooks' => true, ...$config]));
 }
 
-it('schedules the webhook and journal tasks with overlap and single-server guards', function (): void {
+it('schedules the outbox, webhook and journal tasks with overlap and single-server guards', function (): void {
     $tasks = bootWebhooksSchedule();
 
-    expect(array_keys($tasks))->toEqualCanonicalizing(['vaulter:webhooks:relay', 'vaulter:webhooks:retry', 'vaulter:webhooks:prune', 'vaulter:changes:prune'])
-        ->and($tasks['vaulter:webhooks:relay']->expression)->toBe('* * * * *')
+    expect(array_keys($tasks))->toEqualCanonicalizing(['vaulter:relay', 'vaulter:outbox:prune', 'vaulter:webhooks:retry', 'vaulter:webhooks:prune', 'vaulter:changes:prune'])
+        ->and($tasks['vaulter:relay']->expression)->toBe('* * * * *')
+        ->and($tasks['vaulter:outbox:prune']->expression)->toBe('0 * * * *')
         ->and($tasks['vaulter:webhooks:prune']->expression)->toBe('10 3 * * *')
         ->and($tasks['vaulter:changes:prune']->expression)->toBe('20 3 * * *')
-        ->and($tasks['vaulter:webhooks:relay']->expiresAt)->toBe(10)
+        ->and($tasks['vaulter:relay']->expiresAt)->toBe(10)
         ->and($tasks['vaulter:webhooks:prune']->expiresAt)->toBe(120);
     foreach ($tasks as $task) {
         expect($task->withoutOverlapping)->toBeTrue()->and($task->onOneServer)->toBeTrue();
@@ -57,8 +58,8 @@ it('registers nothing when scheduling is disabled', function (): void {
         ->and(bootCoreSchedule(['vaulter.schedule.enabled' => false]))->toBe([]);
 });
 
-it('skips the webhook tasks when webhooks are off but keeps the journal prune', function (): void {
-    expect(array_keys(bootCoreSchedule()))->toBe(['vaulter:changes:prune']);
+it('skips the webhook tasks when webhooks are off but keeps the outbox relay and the journal prune', function (): void {
+    expect(array_keys(bootCoreSchedule()))->toEqualCanonicalizing(['vaulter:relay', 'vaulter:outbox:prune', 'vaulter:changes:prune']);
 });
 
 it('skips the journal prune when the change journal is off', function (): void {

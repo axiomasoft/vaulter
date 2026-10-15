@@ -63,6 +63,24 @@
         },
         {
             "match": "prefix",
+            "value": "config:vaulter.outbox.",
+            "owner": "core",
+            "why": "D29: the transactional outbox and its relay are the kernel's (architecture#events, P3.14)"
+        },
+        {
+            "match": "exact",
+            "value": "config:vaulter.schedule.outbox_relay",
+            "owner": "core",
+            "why": "vaulter:relay -> core (D29)"
+        },
+        {
+            "match": "exact",
+            "value": "config:vaulter.schedule.outbox_prune",
+            "owner": "core",
+            "why": "vaulter:outbox:prune -> core (D29)"
+        },
+        {
+            "match": "prefix",
             "value": "config:vaulter.profiles.",
             "owner": "drive",
             "why": "Profiles (11) -> drive (architecture#ownership-map)"

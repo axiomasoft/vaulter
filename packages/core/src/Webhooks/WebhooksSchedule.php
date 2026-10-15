@@ -10,13 +10,12 @@ use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar;
 
-/** Relay, retry and prune of the webhooks module on the host scheduler. */
+/** Retry and prune of the webhooks module on the host scheduler; the outbox relay is core's (D29). */
 final class WebhooksSchedule implements ModuleSchedule
 {
-    public const array KEYS = ['webhooks_relay', 'webhooks_retry', 'webhooks_prune'];
+    public const array KEYS = ['webhooks_retry', 'webhooks_prune'];
 
     private const array TASKS = [
-        'webhooks_relay' => ['vaulter:webhooks:relay', SchedulingRegistrar::RECOVERY_EXPIRY],
         'webhooks_retry' => ['vaulter:webhooks:retry', SchedulingRegistrar::RECOVERY_EXPIRY],
         'webhooks_prune' => ['vaulter:webhooks:prune', SchedulingRegistrar::DEFAULT_EXPIRY],
     ];

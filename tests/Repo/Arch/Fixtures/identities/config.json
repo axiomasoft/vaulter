@@ -84,6 +84,104 @@
             "id": "config:vaulter.schedule.idempotency_prune",
             "kind": "config",
             "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.backoff_base_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.backoff_cap_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.batch",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.dead_retention_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.lease_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.max_attempts",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.max_consumer_hold_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.retention_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.settle_window_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.outbox_relay",
+            "kind": "config",
+            "reason": "P3.15: vaulter:relay on the host scheduler, every minute"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.outbox_prune",
+            "kind": "config",
+            "reason": "P3.15: vaulter:outbox:prune on the host scheduler, hourly"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.webhooks_relay",
+            "kind": "config",
+            "reason": "P3.15: vaulter:webhooks:relay is replaced by the core vaulter:relay (schedule key outbox_relay)"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "config:vaulter.webhooks.relay.claim_seconds",
+            "kind": "config",
+            "reason": "P3.14: the webhooks.fanout consumer runs under the outbox delivery lease, vaulter.outbox.lease_seconds"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "config:vaulter.models.outbox",
+            "kind": "config",
+            "reason": "P3.14: the default model is Vaulter\\Events\\Outbox\\Models\\OutboxEvent (was Vaulter\\Models\\Webhooks\\Outbox)"
         }
     ],
     "items": [
@@ -1746,7 +1844,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Webhooks\\Outbox",
+            "default": "Vaulter\\Events\\Outbox\\Models\\OutboxEvent",
             "id": "config:vaulter.models.outbox",
             "owner": "core",
             "registered_defaults": true,
@@ -1894,6 +1992,105 @@
             },
             "env": "VAULTER_TRACING_RECORDER",
             "id": "config:vaulter.observability.tracing.recorder",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 2,
+            "id": "config:vaulter.outbox.backoff_base_seconds",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 3600,
+            "id": "config:vaulter.outbox.backoff_cap_seconds",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 100,
+            "id": "config:vaulter.outbox.batch",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 2592000,
+            "id": "config:vaulter.outbox.dead_retention_seconds",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 60,
+            "id": "config:vaulter.outbox.lease_seconds",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 10,
+            "id": "config:vaulter.outbox.max_attempts",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 604800,
+            "id": "config:vaulter.outbox.max_consumer_hold_seconds",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 604800,
+            "id": "config:vaulter.outbox.retention_seconds",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 300,
+            "id": "config:vaulter.outbox.settle_window_seconds",
             "owner": "core",
             "registered_defaults": true,
             "root": "vaulter",
@@ -2124,9 +2321,9 @@
             }
         },
         {
-            "default": "dailyAt:03:10",
-            "id": "config:vaulter.schedule.webhooks_prune",
-            "owner": "webhooks",
+            "default": "hourly",
+            "id": "config:vaulter.schedule.outbox_prune",
+            "owner": "core",
             "registered_defaults": true,
             "root": "vaulter",
             "source": {
@@ -2136,7 +2333,18 @@
         },
         {
             "default": "everyMinute",
-            "id": "config:vaulter.schedule.webhooks_relay",
+            "id": "config:vaulter.schedule.outbox_relay",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "dailyAt:03:10",
+            "id": "config:vaulter.schedule.webhooks_prune",
             "owner": "webhooks",
             "registered_defaults": true,
             "root": "vaulter",
@@ -2336,17 +2544,6 @@
             },
             "env": "VAULTER_WEBHOOKS_MANAGE_ABILITY",
             "id": "config:vaulter.webhooks.manage_ability",
-            "owner": "webhooks",
-            "registered_defaults": true,
-            "root": "vaulter",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "default": 60,
-            "id": "config:vaulter.webhooks.relay.claim_seconds",
             "owner": "webhooks",
             "registered_defaults": true,
             "root": "vaulter",

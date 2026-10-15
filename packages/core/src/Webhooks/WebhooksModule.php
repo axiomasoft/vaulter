@@ -6,12 +6,10 @@ namespace Vaulter\Webhooks;
 
 use Vaulter\Console\PruneWebhooksCommand;
 use Vaulter\Console\RedeliverWebhooksCommand;
-use Vaulter\Console\RelayWebhooksCommand;
 use Vaulter\Console\RetryWebhooksCommand;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\Checks\WebhooksDeliveriesCheck;
-use Vaulter\Doctor\Checks\WebhooksOutboxLagCheck;
-use Vaulter\Doctor\Checks\WebhooksRelayLeasesCheck;
+use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
@@ -51,15 +49,14 @@ final class WebhooksModule implements VaulterModule
             ->routes(dirname(__DIR__, 2).'/routes/webhooks.php')
             ->problems(WebhooksProblemCodes::class)
             ->commands(
-                RelayWebhooksCommand::class,
                 RetryWebhooksCommand::class,
                 PruneWebhooksCommand::class,
                 RedeliverWebhooksCommand::class,
             )
             ->schedule(WebhooksSchedule::class)
             ->bindings(WebhooksBindings::class)
-            ->slot(DoctorCheck::class, WebhooksOutboxLagCheck::class, 'core.webhooks.outbox_lag', key: 'core.webhooks.outbox_lag')
-            ->slot(DoctorCheck::class, WebhooksRelayLeasesCheck::class, 'core.webhooks.relay_leases', key: 'core.webhooks.relay_leases')
+            // Its outbox consumer turns external events into deliveries (D29).
+            ->slot(OutboxConsumer::class, WebhookFanoutConsumer::class, WebhookFanoutConsumer::ID)
             ->slot(DoctorCheck::class, WebhooksDeliveriesCheck::class, 'core.webhooks.deliveries', key: 'core.webhooks.deliveries');
     }
 }

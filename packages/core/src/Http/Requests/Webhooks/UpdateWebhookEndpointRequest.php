@@ -20,12 +20,12 @@ final class UpdateWebhookEndpointRequest extends VaulterFormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(): array
+    public function rules(EventCatalog $catalog): array
     {
         return [
             'url' => ['sometimes', 'url', 'max:2048'],
             'events' => ['sometimes', 'array', 'min:1'],
-            'events.*' => ['string', Rule::in(app(EventCatalog::class)->externalValues())],
+            'events.*' => ['string', Rule::in($catalog->externalValues())],
             'is_active' => ['sometimes', 'boolean'],
             'drive_id' => ['sometimes', 'alpha_dash:ascii', 'max:64'],
         ];

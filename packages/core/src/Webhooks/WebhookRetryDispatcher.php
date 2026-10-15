@@ -18,10 +18,9 @@ use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Identity;
 
 /**
- * The SINGLE owner of webhook-delivery re-dispatch. Both
- * vaulter:webhooks:relay and vaulter:webhooks:retry route their due-retry sweep through
- * here, so two ticks (or the two commands overlapping) can never fan the same failed
- * delivery out twice.
+ * The SINGLE owner of webhook-delivery re-dispatch: vaulter:webhooks:retry routes its
+ * due-retry sweep through here, so two ticks can never fan the same failed delivery out
+ * twice.
  *
  * A due batch is claimed under a row lock inside a transaction and its next_retry_at is
  * re-armed forward by a short claim window BEFORE dispatch — a visibility timeout: a
@@ -34,8 +33,8 @@ use Vaulter\Support\Identity;
  * lost mid-flight.
  *
  * The sweep also recovers a 'pending' delivery whose first job never ran (lost
- * after the relay committed it): once it has sat unclaimed for
- * webhooks.relay.claim_seconds past its due time, it is claimed like a retry.
+ * after the fan-out committed it): once it has sat unclaimed for
+ * webhooks.retry_claim_seconds past its due time, it is claimed like a retry.
  */
 final class WebhookRetryDispatcher
 {
@@ -90,7 +89,7 @@ final class WebhookRetryDispatcher
         $deliveryClass = $this->vaulterConfig->model('webhook_delivery');
 
         return $this->database->transaction(function () use ($deliveryClass): Collection {
-            $query = $deliveryClass::query()->dueForRetry(pendingGraceSeconds: $this->webhooksConfig->relayClaimSeconds());
+            $query = $deliveryClass::query()->dueForRetry(pendingGraceSeconds: $this->webhooksConfig->retryClaimSeconds());
 
             /** @var Collection<int, WebhookDelivery> $deliveries */
             $deliveries = $query

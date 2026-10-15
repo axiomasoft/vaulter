@@ -30,12 +30,12 @@ final class RegisterWebhookEndpointRequest extends VaulterFormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(): array
+    public function rules(EventCatalog $catalog): array
     {
         return [
             'url' => ['required', 'url', 'max:2048'],
             'events' => ['required', 'array', 'min:1'],
-            'events.*' => ['string', Rule::in(app(EventCatalog::class)->externalValues())],
+            'events.*' => ['string', Rule::in($catalog->externalValues())],
             'is_active' => ['nullable', 'boolean'],
             'drive_id' => ['nullable', 'alpha_dash:ascii', 'max:64'],
         ];

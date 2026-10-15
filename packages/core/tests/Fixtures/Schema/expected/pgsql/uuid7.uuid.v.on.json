@@ -2835,28 +2835,19 @@
         "v_outbox": {
             "columns": [
                 {
-                    "name": "id",
-                    "type": "uuid",
+                    "name": "outbox_seq",
+                    "type": "bigint",
                     "not_null": true,
-                    "default": null,
+                    "default": "nextval('v_outbox_outbox_seq_seq'::regclass)",
                     "identity": "",
                     "generated": "",
                     "collation": null
                 },
                 {
                     "name": "event_id",
-                    "type": "character varying(255)",
-                    "not_null": true,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "profile",
                     "type": "character varying(64)",
                     "not_null": true,
-                    "default": "'default'::character varying",
+                    "default": null,
                     "identity": "",
                     "generated": "",
                     "collation": "default"
@@ -2871,13 +2862,22 @@
                     "collation": null
                 },
                 {
-                    "name": "drive_id",
-                    "type": "uuid",
+                    "name": "scope_kind",
+                    "type": "character varying(32)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scope_id",
+                    "type": "character varying(191)",
                     "not_null": false,
                     "default": null,
                     "identity": "",
                     "generated": "",
-                    "collation": null
+                    "collation": "default"
                 },
                 {
                     "name": "aggregate_type",
@@ -2907,22 +2907,22 @@
                     "collation": null
                 },
                 {
-                    "name": "topic",
-                    "type": "character varying(255)",
-                    "not_null": false,
+                    "name": "type",
+                    "type": "character varying(64)",
+                    "not_null": true,
                     "default": null,
                     "identity": "",
                     "generated": "",
                     "collation": "default"
                 },
                 {
-                    "name": "event",
-                    "type": "character varying(255)",
+                    "name": "external",
+                    "type": "boolean",
                     "not_null": true,
                     "default": null,
                     "identity": "",
                     "generated": "",
-                    "collation": "default"
+                    "collation": null
                 },
                 {
                     "name": "payload",
@@ -2934,13 +2934,199 @@
                     "collation": null
                 },
                 {
-                    "name": "available_at",
+                    "name": "created_at",
                     "type": "timestamp(0) without time zone",
                     "not_null": true,
                     "default": null,
                     "identity": "",
                     "generated": "",
                     "collation": null
+                }
+            ],
+            "indexes": {
+                "v_outbox_created_idx": "CREATE INDEX v_outbox_created_idx ON public.v_outbox USING btree (created_at)",
+                "v_outbox_event_id_unique": "CREATE UNIQUE INDEX v_outbox_event_id_unique ON public.v_outbox USING btree (event_id)",
+                "v_outbox_pkey": "CREATE UNIQUE INDEX v_outbox_pkey ON public.v_outbox USING btree (outbox_seq)",
+                "v_outbox_tenant_id_index": "CREATE INDEX v_outbox_tenant_id_index ON public.v_outbox USING btree (tenant_id)"
+            },
+            "constraints": {
+                "v_outbox_event_id_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (event_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_outbox_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (outbox_seq)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "v_outbox_consumers": {
+            "columns": [
+                {
+                    "name": "consumer_id",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "delivery_class",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "state",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "activation_seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "reconciled_through_seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "paused_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "lease_owner",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "lease_generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "gaps",
+                    "type": "json",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_outbox_consumers_pkey": "CREATE UNIQUE INDEX v_outbox_consumers_pkey ON public.v_outbox_consumers USING btree (consumer_id)"
+            },
+            "constraints": {
+                "v_outbox_consumers_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (consumer_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "v_outbox_deliveries": {
+            "columns": [
+                {
+                    "name": "event_id",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "consumer_id",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "outbox_seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "state",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
                 },
                 {
                     "name": "attempts",
@@ -2952,10 +3138,55 @@
                     "collation": null
                 },
                 {
-                    "name": "status",
-                    "type": "character varying(255)",
+                    "name": "next_attempt_at",
+                    "type": "timestamp(0) without time zone",
                     "not_null": true,
-                    "default": "'pending'::character varying",
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "lease_owner",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "lease_generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "continuation",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "last_error",
+                    "type": "text",
+                    "not_null": false,
+                    "default": null,
                     "identity": "",
                     "generated": "",
                     "collation": "default"
@@ -2979,89 +3210,25 @@
                     "collation": null
                 },
                 {
-                    "name": "claim_token",
-                    "type": "character varying(32)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "claim_generation",
-                    "type": "bigint",
-                    "not_null": true,
-                    "default": "'0'::bigint",
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "claim_until",
+                    "name": "done_at",
                     "type": "timestamp(0) without time zone",
                     "not_null": false,
                     "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "fanout_cursor",
-                    "type": "character varying(64)",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": "default"
-                },
-                {
-                    "name": "fanned_out_at",
-                    "type": "timestamp(0) without time zone",
-                    "not_null": false,
-                    "default": null,
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "delivery_count",
-                    "type": "integer",
-                    "not_null": true,
-                    "default": "0",
-                    "identity": "",
-                    "generated": "",
-                    "collation": null
-                },
-                {
-                    "name": "legacy_fanout",
-                    "type": "boolean",
-                    "not_null": true,
-                    "default": "false",
                     "identity": "",
                     "generated": "",
                     "collation": null
                 }
             ],
             "indexes": {
-                "v_outbox_drain_idx": "CREATE INDEX v_outbox_drain_idx ON public.v_outbox USING btree (status, available_at)",
-                "v_outbox_drive_id_index": "CREATE INDEX v_outbox_drive_id_index ON public.v_outbox USING btree (drive_id)",
-                "v_outbox_event_id_unique": "CREATE UNIQUE INDEX v_outbox_event_id_unique ON public.v_outbox USING btree (event_id)",
-                "v_outbox_pkey": "CREATE UNIQUE INDEX v_outbox_pkey ON public.v_outbox USING btree (id)",
-                "v_outbox_profile_index": "CREATE INDEX v_outbox_profile_index ON public.v_outbox USING btree (profile)",
-                "v_outbox_prune_idx": "CREATE INDEX v_outbox_prune_idx ON public.v_outbox USING btree (status, fanned_out_at)",
-                "v_outbox_tenant_id_index": "CREATE INDEX v_outbox_tenant_id_index ON public.v_outbox USING btree (tenant_id)"
+                "v_outbox_deliveries_due_idx": "CREATE INDEX v_outbox_deliveries_due_idx ON public.v_outbox_deliveries USING btree (consumer_id, state, next_attempt_at)",
+                "v_outbox_deliveries_lease_idx": "CREATE INDEX v_outbox_deliveries_lease_idx ON public.v_outbox_deliveries USING btree (state, lease_expires_at)",
+                "v_outbox_deliveries_pkey": "CREATE UNIQUE INDEX v_outbox_deliveries_pkey ON public.v_outbox_deliveries USING btree (event_id, consumer_id)",
+                "v_outbox_deliveries_seq_idx": "CREATE INDEX v_outbox_deliveries_seq_idx ON public.v_outbox_deliveries USING btree (outbox_seq)"
             },
             "constraints": {
-                "v_outbox_event_id_unique": {
-                    "type": "u",
-                    "definition": "UNIQUE (event_id)",
-                    "deferrable": false,
-                    "deferred": false,
-                    "validated": true
-                },
-                "v_outbox_pkey": {
+                "v_outbox_deliveries_pkey": {
                     "type": "p",
-                    "definition": "PRIMARY KEY (id)",
+                    "definition": "PRIMARY KEY (event_id, consumer_id)",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true

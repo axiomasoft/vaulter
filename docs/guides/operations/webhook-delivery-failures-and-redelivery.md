@@ -6,7 +6,7 @@ title: Webhook delivery failures and redelivery
 
 First tell **no delivery** from **failed delivery**:
 
-- no `v_webhook_deliveries` row for an event: the relay did not fan it out — check `core.webhooks.outbox_lag` and that `vaulter:webhooks:relay` is scheduled;
+- no `v_webhook_deliveries` row for an event: the relay did not fan it out — check `core.outbox.lag` and `core.outbox.consumer_gaps` and that `vaulter:relay` is scheduled;
 - a `dead` row: the endpoint answered with an error or timed out until attempts ran out.
 
 <!-- snippet: shell -->

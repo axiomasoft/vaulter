@@ -634,26 +634,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Doctor\\Checks\\WebhooksOutboxLagCheck",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "surface": "Internal",
-            "note": "open: renamed away from Webhooks with the outbox (D29, P3)",
-            "why": "D29 + architecture#kernel: the outbox lag is a property of the core-owned outbox/relay"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Doctor\\Checks\\WebhooksRelayLeasesCheck",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "surface": "Internal",
-            "note": "open: renamed away from Webhooks with the relay (D29, P3)",
-            "why": "D29 + architecture#kernel: relay leases are a property of the core-owned relay"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Events\\DomainEvent",
             "owner": "core",
             "action": "keep",
@@ -764,6 +744,228 @@
             "phase": "P3",
             "surface": "Spi:Call",
             "why": "architecture#events: the transaction-bound writer of the EventSink slot"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000026_create_v_outbox_consumers_table.php",
+            "owner": "core",
+            "why": "architecture#persistence + D29: v_outbox_consumers is owned by core (P3.14)"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000027_create_v_outbox_deliveries_table.php",
+            "owner": "core",
+            "why": "architecture#persistence + D29: v_outbox_deliveries is owned by core (P3.14)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineOutboxConsumers",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + D29: SchemaBuilder is split by owner of the table: v_outbox_consumers is core-owned (P3.14)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineOutboxDeliveries",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + D29: SchemaBuilder is split by owner of the table: v_outbox_deliveries is core-owned (P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\OutboxConfig",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "returned by the public VaulterConfig::outbox(); hosts read the outbox settings through it, not construct it",
+            "why": "architecture#kernel + D29: typed accessors of vaulter.outbox.* (P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\RelayCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: vaulter:relay, the core outbox relay (P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\RelayReplayCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: vaulter:relay:replay closes a consumer gap (P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\PruneOutboxCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: vaulter:outbox:prune, retention without loss (P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\OutboxLagCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: the outbox lag is a property of the core-owned outbox and relay (renamed from WebhooksOutboxLagCheck, P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\OutboxLeasesCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: stuck outbox delivery leases (renamed from WebhooksRelayLeasesCheck, P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\OutboxConsumerGapCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: an unacknowledged consumer gap is a doctor error (P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\OutboxSettleWindowCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: the settle window against the transaction limits of the database (P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\OutboxConsumer",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel + D29: the OutboxConsumer slot of core (P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\OutboxEnvelope",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Call",
+            "why": "architecture#kernel + D29: what an outbox consumer receives (renamed from Vaulter\\Webhooks\\EventEnvelope, P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\ConsumeResult",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Call",
+            "why": "architecture#kernel + D29: the result an outbox consumer returns (P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\DeliveryClass",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Call",
+            "why": "architecture#kernel + D29: durable or ephemeral outbox consumer (P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\DeliveryControl",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Call",
+            "why": "architecture#kernel + D29: the fenced continuation API of an outbox consumer (P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\ConsumerState",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; the relay's state of a consumer row",
+            "why": "architecture#kernel + D29: active, paused or detached consumer (P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\DeliveryState",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; the relay's state of a delivery row",
+            "why": "architecture#kernel + D29: pending, leased, done or dead delivery row (P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\Exceptions\\LeaseLostException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: a fenced write lost its lease (P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\Models\\OutboxEvent",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "swappable via vaulter.models.outbox",
+            "why": "architecture#kernel + D29: the v_outbox model (renamed from Vaulter\\Models\\Webhooks\\Outbox, P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\OutboxWriter",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: the synchronous half of the outbox (renamed from Vaulter\\Webhooks\\OutboxRecorder, P3.14)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\OutboxStore",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: the outbox tables as the relay uses them (renamed from OutboxStoreRepository, P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\OutboxRelay",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; hosts run it through vaulter:relay",
+            "why": "architecture#kernel + D29: register, reconcile, deliver, hold, retention, replay (split from Vaulter\\Webhooks\\OutboxRelay, P3.15)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Outbox\\OutboxSchedule",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + D29: the outbox relay and retention on the host scheduler (P3.15)"
         },
         {
             "match": "fqcn",

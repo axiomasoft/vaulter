@@ -12,8 +12,8 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
@@ -28,9 +28,15 @@ uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::c
 /** @return array<string, int> event type => rows */
 function documentEventsCount(string $model): array
 {
-    $column = $model === Activity::class ? 'verb' : 'event';
+    $column = $model === Activity::class ? 'verb' : 'type';
 
-    return $model::query()->toBase()->where($column, 'like', 'document.%')->orWhere($column, 'like', 'comment.%')
+    // The outbox holds every occurrence (D29); the ones that leave the process are the external ones.
+    $query = $model::query()->toBase()->where(static fn ($q) => $q->where($column, 'like', 'document.%')->orWhere($column, 'like', 'comment.%'));
+    if ($model === OutboxEvent::class) {
+        $query->where('external', true);
+    }
+
+    return $query
         ->groupBy($column)->selectRaw($column.' as type, count(*) as total')->pluck('total', 'type')
         ->map(static fn (mixed $total): int => (int) $total)->sort()->all();
 }
@@ -45,12 +51,12 @@ it('records the document lifecycle with the writer validators', function (): voi
     $documents->restore($node, $named);
 
     $document = Document::query()->where('node_id', $node->id)->sole();
-    $created = Outbox::query()->where('event', DocumentEventType::DocumentCreated->value)->sole();
-    $restored = Outbox::query()->where('event', DocumentEventType::DocumentRestored->value)->sole();
+    $created = OutboxEvent::query()->where('type', DocumentEventType::DocumentCreated->value)->sole();
+    $restored = OutboxEvent::query()->where('type', DocumentEventType::DocumentRestored->value)->sole();
 
     expect(documentEventsCount(Activity::class))->toEqualCanonicalizing([
         'document.created' => 1, 'document.revision_created' => 2, 'document.restored' => 1,
-    ])->and(documentEventsCount(Outbox::class))->toEqualCanonicalizing([
+    ])->and(documentEventsCount(OutboxEvent::class))->toEqualCanonicalizing([
         'document.created' => 1, 'document.revision_created' => 2, 'document.restored' => 1,
     ])->and($created->payload['data']['state_version'])->toBe(1)
         ->and($created->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $node->id])
@@ -73,7 +79,7 @@ it('stages document.updated for a save only when it took a checkpoint', function
     });
     $documents->update($node, DocumentTestHelpers::content('three')->toArray());
 
-    $updated = Outbox::query()->where('event', DocumentEventType::DocumentUpdated->value)->sole();
+    $updated = OutboxEvent::query()->where('type', DocumentEventType::DocumentUpdated->value)->where('external', true)->sole();
 
     expect($updated->payload['data']['checkpoint'])->toBeTrue()
         ->and($updated->payload['data'])->toHaveKey('revision_id')
@@ -92,10 +98,10 @@ it('records comment events in both sinks', function (): void {
     Documents::comments($actor)->resolve($node->id, $comment->id);
     Documents::comments($actor)->delete($node->id, $comment->id);
 
-    $added = Outbox::query()->where('event', DocumentEventType::CommentAdded->value)->sole();
+    $added = OutboxEvent::query()->where('type', DocumentEventType::CommentAdded->value)->sole();
 
     expect(documentEventsCount(Activity::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
-        ->and(documentEventsCount(Outbox::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
+        ->and(documentEventsCount(OutboxEvent::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
         ->and($added->payload['subject'])->toBe(['type' => 'comment', 'id' => (string) $comment->id])
         ->and($added->payload['data'])->toBe(['comment_id' => (string) $comment->id, 'node_id' => (string) $node->id])
         ->and($added->payload['actor']['id'])->toBe('9')

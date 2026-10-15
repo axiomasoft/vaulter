@@ -36,7 +36,7 @@ Vaulter\Drive\Events\Drives\DriveArchived
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -53,7 +53,7 @@ Vaulter\Drive\Events\Drives\DriveCreated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -71,7 +71,7 @@ Vaulter\Drive\Events\Drives\DriveDeleted
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -92,7 +92,7 @@ Vaulter\Drive\Events\Drives\DriveUnarchived
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -109,7 +109,7 @@ Vaulter\Drive\Events\Files\FileRevisionAdded
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -129,7 +129,7 @@ Vaulter\Drive\Events\Files\FileRevisionDeleted
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -150,7 +150,7 @@ Vaulter\Drive\Events\Files\FileUploaded
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -169,7 +169,7 @@ Vaulter\Drive\Events\Nodes\FolderCreated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -186,7 +186,7 @@ Vaulter\Drive\Events\Nodes\NodeCopied
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -204,7 +204,7 @@ Vaulter\Drive\Events\Nodes\NodeMoved
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -223,7 +223,7 @@ Vaulter\Drive\Events\Nodes\NodePurged
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -244,7 +244,7 @@ Vaulter\Drive\Events\Nodes\NodeRenamed
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -263,7 +263,7 @@ Vaulter\Drive\Events\Nodes\NodeRestored
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -280,7 +280,7 @@ Vaulter\Drive\Events\Nodes\NodeTrashed
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -297,7 +297,7 @@ Vaulter\Drive\Events\Nodes\NodeUpdated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
@@ -314,7 +314,7 @@ Vaulter\Drive\Events\Uploads\UploadAborted
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -331,7 +331,7 @@ Vaulter\Drive\Events\Uploads\UploadExpired
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -348,7 +348,7 @@ Vaulter\Drive\Events\Uploads\UploadInitiated
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int

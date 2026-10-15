@@ -235,8 +235,8 @@ finding has a `code` and, when a command fixes it, a hint:
   [No permission driver in production](#no-permission-driver).
 - `core.schema.tables` errors: run `php artisan migrate`; `core.schema.key_types` means `ids.strategy` or
   `ids.host_keys` differs from what the schema was created with — restore the old value, do not edit columns by hand.
-- `core.webhooks.relay_leases` and `drive.scan.obligations` point at a worker or scheduler that is not
-  running: start the queue worker and `schedule:run`, then `vaulter:webhooks:relay` or
+- `core.outbox.leases`, `core.outbox.lag` and `drive.scan.obligations` point at a worker or scheduler that is not
+  running: start the queue worker and `schedule:run`, then `vaulter:relay` or
   `vaulter:scan:reconcile --all-tenants --dry-run`.
 - `drive.scan.policy` with a cutover warning means the config names a scan policy the drive has not
   activated; run `vaulter:scan:rescan --activate-policy --drive=<id> --dry-run` first.

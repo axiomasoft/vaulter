@@ -11,12 +11,12 @@ use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -177,17 +177,17 @@ it('rename to the same name emits no rename activity or outbox row', function ()
     $folder = $drive->folders()->create('Stable');
 
     Activity::query()->delete();
-    Outbox::query()->delete();
+    OutboxEvent::query()->delete();
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($folder, 'Stable');
 
     expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->count())->toBe(0)
-        ->and(Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->count())->toBe(0);
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->count())->toBe(0);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($folder, 'Renamed');
 
     expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->count())->toBe(1)
-        ->and(Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->count())->toBe(1);
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->count())->toBe(1);
 });
 
 it('refuses per_page outside 1..200 and serves both bounds', function (): void {

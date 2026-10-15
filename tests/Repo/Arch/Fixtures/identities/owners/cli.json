@@ -104,6 +104,24 @@
             "why": "D25: the idempotency receipts of the kernel (architecture#idempotency-concurrency, P3.12)"
         },
         {
+            "match": "exact",
+            "value": "command:vaulter:relay",
+            "owner": "core",
+            "why": "D29: the outbox relay of the kernel (P3.15)"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:relay:replay",
+            "owner": "core",
+            "why": "D29: replay or acknowledge a gap of an outbox consumer (P3.15)"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:outbox:prune",
+            "owner": "core",
+            "why": "D29: outbox retention without loss (P3.15)"
+        },
+        {
             "match": "prefix",
             "value": "command:vaulter:module:",
             "owner": "core",

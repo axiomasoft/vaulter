@@ -6,24 +6,29 @@ namespace Vaulter\Tests\Webhooks;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Str;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Events\Outbox\DeliveryState;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
+use Vaulter\Events\Outbox\OutboxRelay;
+use Vaulter\Events\Outbox\OutboxStore;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Kernel;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
+use Vaulter\Webhooks\WebhookFanoutConsumer;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
- * Row builders for the M3b reliability tests (§2.11): stage outbox rows, register
- * endpoints, and seed deliveries directly so the tests focus on the relay / delivery
- * algorithm, not on row plumbing.
+ * Row builders for the reliability tests: write outbox events with their webhooks.fanout
+ * delivery row (D29), register endpoints and seed webhook deliveries directly, so the
+ * tests focus on the relay / delivery algorithm, not on row plumbing.
  */
 final class WebhookTestHelpers
 {
@@ -54,26 +59,71 @@ final class WebhookTestHelpers
     }
 
     /**
+     * An outbox event (folder.created, external, tenant scope unless given) and, unless `$consumer` is null, the
+     * pending delivery row of that consumer — what the outbox writer stores for a subscribed consumer.
+     *
      * @param array<string, mixed> $attributes
      */
-    public static function outbox(array $attributes = []): Outbox
+    public static function outbox(array $attributes = [], ?string $consumer = WebhookFanoutConsumer::ID): OutboxEvent
     {
-        // forceFill (P1.4/F-P1.8-02): Outbox is fully guarded — this trusted
-        // fixture builder bypasses it exactly like OutboxRecorder::stage() does.
-        $outbox = new Outbox;
+        // forceFill: OutboxEvent is fully guarded — this trusted fixture builder bypasses it like OutboxWriter does.
+        $outbox = new OutboxEvent;
         $outbox->forceFill(array_merge([
             'event_id' => 'evt-'.Str::uuid7()->toString(),
-            'profile' => 'default',
-            'topic' => 'node-1',
-            'event' => 'folder.created',
+            'scope_kind' => 'tenant',
+            'type' => 'folder.created',
+            'external' => true,
             'payload' => ['node_id' => 'node-1', 'event_id' => 'evt-1'],
-            'available_at' => now(),
-            'status' => 'pending',
-            'attempts' => 0,
+            'created_at' => now(),
         ], $attributes));
         $outbox->save();
+        $outbox->refresh();
+
+        if ($consumer !== null) {
+            app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->insert([
+                'event_id' => $outbox->event_id,
+                'consumer_id' => $consumer,
+                'outbox_seq' => $outbox->outbox_seq,
+                'state' => DeliveryState::Pending->value,
+                'attempts' => 0,
+                'next_attempt_at' => $outbox->created_at,
+                'lease_generation' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         return $outbox;
+    }
+
+    /**
+     * The outbox delivery row of `$eventId` for `$consumer`, or null.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function outboxDelivery(string $eventId, string $consumer = WebhookFanoutConsumer::ID): ?array
+    {
+        $row = app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))
+            ->where('event_id', $eventId)->where('consumer_id', $consumer)->first();
+
+        return $row === null ? null : (array) $row;
+    }
+
+    /** Makes the next INSERT into v_outbox fail, as a lost connection or a full disk would. */
+    public static function failOutboxInsert(string $message = 'outbox insert failed'): void
+    {
+        $table = app(DatabaseConfig::class)->table(OutboxStore::EVENTS);
+        app(VaulterDatabase::class)->connection()->beforeExecuting(static function (string $query) use ($table, $message): void {
+            if (preg_match('/^insert into ["`]?'.preg_quote($table, '/').'["`]? /i', $query) === 1) {
+                throw new \RuntimeException($message);
+            }
+        });
+    }
+
+    /** One relay pass, as vaulter:relay --once runs it; the deliveries finished by consumer id. */
+    public static function relay(?int $limit = null): array
+    {
+        return app(OutboxRelay::class)->pass(limit: $limit);
     }
 
     /**
@@ -103,7 +153,7 @@ final class WebhookTestHelpers
     public static function delivery(WebhookEndpoint $endpoint, array $attributes = []): WebhookDelivery
     {
         // forceFill (P1.4/F-P1.7-04): WebhookDelivery is fully guarded —
-        // bypassed here exactly like OutboxRelay::createDelivery() does.
+        // bypassed here exactly like WebhookFanoutConsumer::createDeliveries() does.
         $delivery = new WebhookDelivery;
         $delivery->forceFill(array_merge([
             'endpoint_id' => $endpoint->getKey(),

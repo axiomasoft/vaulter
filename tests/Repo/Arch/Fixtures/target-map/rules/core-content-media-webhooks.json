@@ -295,64 +295,6 @@
             "owner": "webhooks",
             "surface": "Internal",
             "why": "architecture#ownership-map: Console/{Relay,Retry,Redeliver,Prune}WebhooksCommand -> webhooks (retry; CLI is identity surface)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Console\\RelayWebhooksCommand",
-            "owner": "webhooks",
-            "surface": "Internal",
-            "note": "the generic `vaulter:relay` of the kernel is new (architecture#packages); this command becomes the webhooks consumer entry",
-            "why": "architecture#ownership-map: Console/RelayWebhooksCommand -> webhooks (the webhook OutboxConsumer relay; CLI is identity surface)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Models\\Webhooks\\Outbox",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "surface": "Internal",
-            "note": "D29 reshapes the outbox (outbox_seq, consumers, deliveries); the Webhooks namespace segment of the FQCN is historical (open: P3 renames)",
-            "why": "architecture#kernel + D29: the outbox table v_outbox is core-owned (events, EventSink/OutboxConsumer)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Repositories\\Webhooks\\OutboxStoreRepository",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "surface": "Internal",
-            "note": "open: P3 renames out of the Webhooks namespace together with the Outbox model",
-            "why": "architecture#kernel + D29: store of the core-owned outbox"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Webhooks\\EventEnvelope",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "surface": "Api",
-            "note": "D29 generalises it; open: P3 renames out of the Vaulter\\Webhooks namespace (webhooks package owns that namespace)",
-            "why": "architecture#kernel + D29: the neutral event envelope is core (no drive_id, no fanout cursor, no isWebhookEligible)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Webhooks\\OutboxRecorder",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "surface": "Internal",
-            "note": "open: P3 renames out of the Vaulter\\Webhooks namespace",
-            "why": "architecture#kernel + D29: recording events into the outbox in the operation transaction is core (EventSink)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Webhooks\\OutboxRelay",
-            "owner": "core",
-            "action": "split",
-            "phase": "P3",
-            "surface": "Internal",
-            "note": "split: generic claim/lease/retention relay stays in core (D29); WebhookDelivery fan-out and DeliverWebhook dispatch become the webhooks consumer (P4/P6); open: P3 renames out of the Vaulter\\Webhooks namespace",
-            "why": "architecture#kernel + D29: the relay (vaulter:relay) is core; the webhook-specific fan-out becomes the webhooks OutboxConsumer"
         }
     ]
 }

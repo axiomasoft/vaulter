@@ -17,7 +17,7 @@ use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Enums\Changes\ChangeReason;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventTypeContract;
-use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\TestCase;
@@ -75,8 +75,8 @@ it('provisions a head at zero and numbers entries 1..n per drive with the event 
     $other->folders()->create('gamma');
 
     $entries = journalEntries($this->drive);
-    $outbox = Outbox::query()->where('event', DriveEventType::FolderCreated->value)->get()
-        ->sole(static fn (Outbox $row): bool => $row->payload['subject']['id'] === (string) $alpha->id);
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::FolderCreated->value)->get()
+        ->sole(static fn (OutboxEvent $row): bool => $row->payload['subject']['id'] === (string) $alpha->id);
 
     expect(array_column($entries, 'seq'))->toBe([1, 2])
         ->and((int) journalHead($this->drive)->last_seq)->toBe(2)
@@ -189,7 +189,7 @@ it('writes nothing and leaves changes.seq empty when the journal is switched off
     $this->drive->folders()->create('alpha');
 
     expect(journalEntries($this->drive))->toBe([])
-        ->and(Outbox::query()->where('event', DriveEventType::FolderCreated->value)->sole()->payload['changes'])->toBeNull();
+        ->and(OutboxEvent::query()->where('type', DriveEventType::FolderCreated->value)->sole()->payload['changes'])->toBeNull();
 });
 
 it('matches every journalled catalogue type with the operation of its entry', function (): void {

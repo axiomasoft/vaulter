@@ -10,7 +10,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
-use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
 /**
@@ -37,8 +37,8 @@ it('takes state_version and epoch of every save from the writer, not from the ch
         [false, $afterSecond->state_version, $afterSecond->collab_epoch],
         [false, $afterThird->state_version, $afterThird->collab_epoch],
     ])->and($afterThird->state_version)->toBeGreaterThan($afterSecond->state_version)
-        // Neither save took a checkpoint, so no webhook was staged for them.
-        ->and(Outbox::query()->where('event', DocumentEventType::DocumentUpdated->value)->exists())->toBeFalse();
+        // Neither save took a checkpoint: their outbox rows stay inside the process (not external), no webhook.
+        ->and(OutboxEvent::query()->where('type', DocumentEventType::DocumentUpdated->value)->where('external', true)->exists())->toBeFalse();
 });
 
 it('puts the writer validators of a checkpointed save into the envelope', function (): void {
@@ -48,7 +48,7 @@ it('puts the writer validators of a checkpointed save into the envelope', functi
     $documents->update($node, DocumentTestHelpers::content('two')->toArray());
 
     $document = Document::query()->where('node_id', $node->id)->sole();
-    $data = Outbox::query()->where('event', DocumentEventType::DocumentUpdated->value)->sole()->payload['data'];
+    $data = OutboxEvent::query()->where('type', DocumentEventType::DocumentUpdated->value)->sole()->payload['data'];
 
     expect($data['state_version'])->toBe($document->state_version)
         ->and($data['epoch'])->toBe($document->collab_epoch)

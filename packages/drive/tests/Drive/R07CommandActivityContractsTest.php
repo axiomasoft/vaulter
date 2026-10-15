@@ -17,9 +17,9 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -112,12 +112,12 @@ it('move within the same parent is a no-op without NodeMoved activity', function
     $child = $drive->folders()->create('Child', $parent);
 
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
-    app(VaulterDatabase::class)->write(fn () => Outbox::query()->delete());
+    app(VaulterDatabase::class)->write(fn () => OutboxEvent::query()->delete());
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->move($child, $parent);
 
     expect(Activity::query()->where('verb', DriveEventType::NodeMoved->value)->count())->toBe(0)
-        ->and(Outbox::query()->where('event', DriveEventType::NodeMoved->value)->count())->toBe(0);
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodeMoved->value)->count())->toBe(0);
 });
 
 it('forceDelete on a folder subtree records zero freed bytes and skips quota adjustment', function (): void {
@@ -183,17 +183,17 @@ it('upload session initiated activity carries the exact lifecycle context', func
 
 it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
     $drive = DriveTestHelpers::drive();
-    app(VaulterDatabase::class)->write(fn () => Outbox::query()->delete());
+    app(VaulterDatabase::class)->write(fn () => OutboxEvent::query()->delete());
 
     $first = $drive->folders()->create('One');
     $drive->nodes()->trash($first);
     $drive->actingAs(DriveTestHelpers::actor($drive, 9))->trash()->purge($first);
-    $firstKey = Outbox::query()->where('event', DriveEventType::NodePurged->value)->sole()->event_id;
+    $firstKey = OutboxEvent::query()->where('type', DriveEventType::NodePurged->value)->sole()->event_id;
 
     $second = $drive->folders()->create('Two');
     $drive->nodes()->trash($second);
     $drive->actingAs(DriveTestHelpers::actor($drive, 9))->trash()->purge($second);
-    $secondKey = Outbox::query()->where('event', DriveEventType::NodePurged->value)->orderByDesc('id')->firstOrFail()->event_id;
+    $secondKey = OutboxEvent::query()->where('type', DriveEventType::NodePurged->value)->orderByDesc('outbox_seq')->firstOrFail()->event_id;
 
     expect($firstKey)->not->toBe($secondKey)
         ->and(Str::isUlid($firstKey))->toBeTrue()

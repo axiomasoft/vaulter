@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.15",
   "title": "Relay D29: vaulter:relay, reconciliation с settle_window, leases, DLQ, hold/detach/gap, retention, replay; WebhookFanoutConsumer",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Core `vaulter:relay` регистрирует consumers, сверяет пропущенные строки с settle_window, доставляет с fenced lease/full-jitter/DLQ, переводит paused→detached с явным gap, чистит outbox без потери; `vaulter:relay:replay` и `vaulter:outbox:prune`; fan-out вебхуков — consumer `webhooks.fanout`; `vaulter:webhooks:relay` удалена; I10-сценарии D29 зелёные на pgsql.",
   "why": "D29: тихая потеря исключена только при reconcile+settle_window, retention ниже reconciled_through и явном gap. Риски (hard): late commit меньшего seq, takeover со stale generation, retention при paused consumer, двойной reconcile.",
   "scope": {
@@ -254,6 +254,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:47:50Z"
+  "result": {
+    "started_at": "2026-10-14T18:21:39Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "4d58b15b-bba9-4c93-b6d2-3049eaea3533"
+    }
+  },
+  "updated_at": "2026-10-14T18:21:39Z"
 }

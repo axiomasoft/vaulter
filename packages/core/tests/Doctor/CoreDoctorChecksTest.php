@@ -236,7 +236,7 @@ it('warns when nothing schedules the maintenance tasks', function (): void {
     app()->forgetInstance(Schedule::class);
     expect(coreCodes('core.scheduler'))->toBe(['core.scheduler.not_scheduled']);
 
-    app(Schedule::class)->command('vaulter:webhooks:relay');
+    app(Schedule::class)->command('vaulter:relay');
     expect(coreCodes('core.scheduler'))->toBe(['core.scheduler.scheduled']);
 });
 
@@ -247,37 +247,52 @@ it('warns about a cache that is not shared across instances', function (): void 
     expect(coreCodes('core.cache'))->toBe(['core.cache.shared']);
 });
 
-it('measures the webhook outbox lag and skips it with webhooks off', function (): void {
-    expect(coreCodes('core.webhooks.outbox_lag'))->toBe(['core.webhooks.outbox_current']);
+it('measures the outbox lag per consumer', function (): void {
+    expect(coreCodes('core.outbox.lag'))->toBe(['core.outbox.current']);
 
-    insertOutboxRow(['status' => 'pending', 'available_at' => now()->subMinutes(30)]);
-    $finding = coreFindings('core.webhooks.outbox_lag')[0];
-    expect($finding->code)->toBe('core.webhooks.outbox_lagging')
+    insertOutboxRow(['created_at' => now()->subMinutes(30)]);
+    $finding = coreFindings('core.outbox.lag')[0];
+    expect($finding->code)->toBe('core.outbox.lagging')
         ->and($finding->severity)->toBe(DoctorSeverity::Warning)
-        ->and(coreSeverities('core.webhooks.outbox_lag', production: true))->toBe(['warning']);
+        ->and($finding->evidence['consumers'])->toBe('webhooks.fanout')
+        ->and(coreSeverities('core.outbox.lag', production: true))->toBe(['warning']);
 
+    // The outbox checks are the kernel's: they stay with the webhooks module off.
     WebhookTestHelpers::switchModule($this->app, false);
-    expect(app(DoctorRegistry::class)->unmatched(['core.webhooks']))->toBe(['core.webhooks']);
+    expect(app(DoctorRegistry::class)->unmatched(['core.outbox', 'core.webhooks']))->toBe(['core.webhooks']);
 });
 
-it('does not count a row that is not due yet as lag', function (): void {
-    insertOutboxRow(['status' => 'pending', 'available_at' => now()->addHour(), 'created_at' => now()->subDay()]);
+it('does not count a delivery that is not due yet as lag', function (): void {
+    insertOutboxRow(['created_at' => now()->subDay()], ['next_attempt_at' => now()->addHour()]);
 
-    expect(coreCodes('core.webhooks.outbox_lag'))->toBe(['core.webhooks.outbox_current']);
+    expect(coreCodes('core.outbox.lag'))->toBe(['core.outbox.current']);
 });
 
 it('escalates a stuck relay lease in production', function (): void {
-    insertOutboxRow(['status' => 'pending', 'claim_until' => now()->subMinutes(2), 'claim_token' => 'live']);
-    expect(coreCodes('core.webhooks.relay_leases'))->toBe(['core.webhooks.relay_leases_ok']);
+    insertOutboxRow([], ['state' => 'leased', 'lease_owner' => 'live', 'lease_generation' => 1, 'lease_expires_at' => now()->subMinutes(2)]);
+    expect(coreCodes('core.outbox.leases'))->toBe(['core.outbox.leases_ok']);
 
-    insertOutboxRow(['status' => 'pending', 'claim_until' => now()->subMinutes(20), 'claim_token' => 'dead']);
-    insertOutboxRow(['status' => 'completed', 'claim_until' => now()->subMinutes(20)]);
+    insertOutboxRow([], ['state' => 'leased', 'lease_owner' => 'dead', 'lease_generation' => 1, 'lease_expires_at' => now()->subMinutes(20)]);
+    insertOutboxRow([], ['state' => 'done', 'lease_expires_at' => now()->subMinutes(20)]);
 
-    $finding = coreFindings('core.webhooks.relay_leases')[0];
-    expect($finding->code)->toBe('core.webhooks.relay_leases_stuck')
+    $finding = coreFindings('core.outbox.leases')[0];
+    expect($finding->code)->toBe('core.outbox.leases_stuck')
         ->and($finding->severity)->toBe(DoctorSeverity::Warning)
         ->and($finding->evidence['stuck'])->toBe(1)
-        ->and(coreSeverities('core.webhooks.relay_leases', production: true))->toBe(['error']);
+        ->and(coreSeverities('core.outbox.leases', production: true))->toBe(['error']);
+});
+
+it('compares the settle window with the transaction limits of the database', function (): void {
+    $codes = coreCodes('core.outbox.settle_window');
+
+    // SQLite serialises writers: there is no limit to compare, the window passes.
+    expect($codes)->toHaveCount(1)
+        ->and($codes[0])->toBeIn(DB::connection()->getDriverName() === 'sqlite' ? ['core.outbox.settle_window_ok'] : ['core.outbox.settle_window_ok', 'core.outbox.settle_window_short']);
+
+    config(['vaulter.outbox.settle_window_seconds' => 1]);
+    if (DB::connection()->getDriverName() === 'mysql') {
+        expect(coreCodes('core.outbox.settle_window'))->toBe(['core.outbox.settle_window_short']);
+    }
 });
 
 it('does not count an endpoint switched off by its owner nor the deliveries parked with it', function (): void {
@@ -310,15 +325,21 @@ it('counts disabled endpoints and dead deliveries', function (): void {
         ->and($finding->hint)->toContain('vaulter:webhooks:redeliver');
 });
 
-/** @param array<string, mixed> $attributes */
-function insertOutboxRow(array $attributes): void
+/**
+ * An outbox event and its webhooks.fanout delivery row.
+ *
+ * @param array<string, mixed> $event
+ * @param array<string, mixed> $delivery
+ */
+function insertOutboxRow(array $event, array $delivery = []): void
 {
     static $next = 0;
     $next++;
-    DB::table(coreTable('outbox'))->insert([
-        'event_id' => 'doctor-event-'.$next, 'profile' => 'default', 'event' => 'file.uploaded', 'payload' => '{}',
-        'available_at' => now(), 'attempts' => 0, 'status' => 'pending', 'claim_generation' => 0, 'delivery_count' => 0,
-        'legacy_fanout' => false, 'created_at' => now(), 'updated_at' => now(),
-        ...$attributes,
+    $row = ['event_id' => 'doctor-event-'.$next, 'scope_kind' => 'tenant', 'type' => 'file.uploaded', 'external' => true, 'payload' => '{}', 'created_at' => now(), ...$event];
+    DB::table(coreTable('outbox'))->insert($row);
+    DB::table(coreTable('outbox_deliveries'))->insert([
+        'event_id' => $row['event_id'], 'consumer_id' => 'webhooks.fanout', 'outbox_seq' => DB::table(coreTable('outbox'))->where('event_id', $row['event_id'])->value('outbox_seq'),
+        'state' => 'pending', 'attempts' => 0, 'next_attempt_at' => now(), 'lease_generation' => 0, 'created_at' => now(), 'updated_at' => now(),
+        ...$delivery,
     ]);
 }

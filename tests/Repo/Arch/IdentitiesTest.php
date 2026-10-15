@@ -351,7 +351,7 @@ describe('committed fixtures', function (): void {
 
         expect($schema['presets'])->toBe(48)
             ->and($schema['engines'])->toBe(['pgsql', 'mysql', 'sqlite'])
-            ->and(count($tables))->toBe(26)
+            ->and(count($tables))->toBe(28)
             ->and(array_column(array_filter($schema['items'], static fn (array $i): bool => str_starts_with($i['id'], 'migration:')), 'id'))->toBe(array_map(static fn (string $b): string => 'migration:'.$b, $migrations));
         foreach ($schema['items'] as $item) {
             if (isset($item['table'])) {
@@ -391,14 +391,14 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(29)
+        expect(count($items))->toBe(31)
             ->and($doctor['parse'])->toBe('signature')
             ->and(array_column($doctor['options'], 'name'))->toBe(['production', 'json', 'check', 'sample', 'probe-storage'])
             ->and(array_column($doctor['options'], 'accepts_value', 'name')['sample'])->toBeTrue()
             ->and(array_column($doctor['options'], 'array', 'name')['check'])->toBeTrue()
             ->and($items['command:vaulter:changes:reset']['arguments'][0])->toMatchArray(['name' => 'drive', 'required' => true])
             ->and($items['command:vaulter:blobs:gc']['owner'])->toBe('media')
-            ->and($items['command:vaulter:webhooks:relay']['owner'])->toBe('webhooks');
+            ->and($items['command:vaulter:relay']['owner'])->toBe('core');
     });
 
     it('list the routes with the feature flag that mounts them and their place in the OpenAPI contract', function (): void {

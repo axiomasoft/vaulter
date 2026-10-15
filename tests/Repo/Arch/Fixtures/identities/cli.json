@@ -21,6 +21,41 @@
             "id": "command:vaulter:idempotency:prune",
             "kind": "cli",
             "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:relay",
+            "kind": "cli",
+            "reason": "P3.15: the core outbox relay (register, reconcile, deliver, hold)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:relay:replay",
+            "kind": "cli",
+            "reason": "P3.15: replay a range to an outbox consumer or acknowledge its gap"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:outbox:prune",
+            "kind": "cli",
+            "reason": "P3.15: outbox retention without loss"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "command:vaulter:webhooks:relay",
+            "kind": "cli",
+            "reason": "P3.15: replaced by vaulter:relay; the fan-out is the webhooks.fanout outbox consumer"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "command:vaulter:webhooks:prune",
+            "kind": "cli",
+            "reason": "P3.15: prunes the terminal webhook deliveries only; the outbox has vaulter:outbox:prune"
         }
     ],
     "items": [
@@ -828,6 +863,135 @@
         },
         {
             "arguments": [],
+            "class": "Vaulter\\Console\\PruneOutboxCommand",
+            "description": "Delete outbox events and deliveries past their retention without losing undelivered ones (D29).",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:outbox:prune",
+            "options": [],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/PruneOutboxCommand.php",
+                "symbol": "Vaulter\\Console\\PruneOutboxCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\RelayCommand",
+            "description": "Relay the outbox to its consumers: register, reconcile, deliver, hold (D29).",
+            "exit_codes": [
+                "FAILURE",
+                "INVALID",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:relay",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Only this outbox consumer (registration and holds still cover all)",
+                    "name": "consumer",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Deliveries leased per consumer and pass (default vaulter.outbox.batch)",
+                    "name": "limit",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Run a single pass",
+                    "name": "once",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "50",
+                    "description": "Stop starting passes after this many seconds",
+                    "name": "max-seconds",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/RelayCommand.php",
+                "symbol": "Vaulter\\Console\\RelayCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\RelayReplayCommand",
+            "description": "Replay a range of the outbox to one consumer, or acknowledge its gap (D29).",
+            "exit_codes": [
+                "FAILURE",
+                "INVALID",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:relay:replay",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "The outbox consumer id (webhooks.fanout, …)",
+                    "name": "consumer",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "The first outbox seq",
+                    "name": "from",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "The last outbox seq",
+                    "name": "to",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Acknowledge the gaps of the range without replaying it",
+                    "name": "ack-only",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/RelayReplayCommand.php",
+                "symbol": "Vaulter\\Console\\RelayReplayCommand"
+            }
+        },
+        {
+            "arguments": [],
             "class": "Vaulter\\Drive\\Console\\PruneRevisionsCommand",
             "description": "Delete non-current file revisions past their profile retention policy.",
             "exit_codes": [
@@ -1132,7 +1296,7 @@
         {
             "arguments": [],
             "class": "Vaulter\\Console\\PruneWebhooksCommand",
-            "description": "Delete completed outbox rows and terminal webhook deliveries past the retention window.",
+            "description": "Delete terminal webhook deliveries past the retention window.",
             "exit_codes": [
                 "SUCCESS"
             ],
@@ -1217,33 +1381,6 @@
             "source": {
                 "file": "packages/core/src/Console/RedeliverWebhooksCommand.php",
                 "symbol": "Vaulter\\Console\\RedeliverWebhooksCommand"
-            }
-        },
-        {
-            "arguments": [],
-            "class": "Vaulter\\Console\\RelayWebhooksCommand",
-            "description": "Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11).",
-            "exit_codes": [
-                "SUCCESS"
-            ],
-            "hidden": false,
-            "id": "command:vaulter:webhooks:relay",
-            "options": [
-                {
-                    "accepts_value": true,
-                    "array": false,
-                    "default": null,
-                    "description": "Max outbox rows to drain this tick",
-                    "name": "limit",
-                    "shortcut": null,
-                    "value_required": false
-                }
-            ],
-            "owner": "webhooks",
-            "parse": "signature",
-            "source": {
-                "file": "packages/core/src/Console/RelayWebhooksCommand.php",
-                "symbol": "Vaulter\\Console\\RelayWebhooksCommand"
             }
         },
         {

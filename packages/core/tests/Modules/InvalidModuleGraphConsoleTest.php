@@ -59,4 +59,4 @@ it('does not define the other vaulter commands', function (string $command): voi
     expect($app->make(Kernel::class)->isValid())->toBeFalse()
         ->and($app->make(ConsoleKernel::class)->all())->not->toHaveKey($command)
         ->and(fn () => $app->make(ConsoleKernel::class)->call($command))->toThrow(CommandNotFoundException::class);
-})->with(['vaulter:install', 'vaulter:module:uninstall', 'vaulter:config:reference', 'vaulter:changes:prune', 'vaulter:webhooks:relay']);
+})->with(['vaulter:install', 'vaulter:module:uninstall', 'vaulter:config:reference', 'vaulter:changes:prune', 'vaulter:relay']);

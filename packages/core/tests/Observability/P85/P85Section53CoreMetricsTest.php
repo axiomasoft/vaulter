@@ -24,7 +24,6 @@ use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
-use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 use Vaulter\Webhooks\WebhookSigner;
 
@@ -37,8 +36,8 @@ beforeEach(function (): void {
 });
 
 it('records vaulter_outbox_backlog from pending outbox rows', function (): void {
-    WebhookTestHelpers::outbox(['status' => 'pending']);
-    WebhookTestHelpers::outbox(['status' => 'completed']);
+    WebhookTestHelpers::outbox();
+    WebhookTestHelpers::outbox();
 
     app(LoadStateMetrics::class)->observeOutboxBacklog();
 
@@ -59,7 +58,7 @@ it('records outbox relay metrics for a pending row', function (): void {
     WebhookTestHelpers::endpoint(['events' => ['grant.created'], 'url' => 'https://hooks.test/other']);
     WebhookTestHelpers::outbox();
 
-    app(OutboxRelay::class)->process();
+    WebhookTestHelpers::relay();
 
     $recorder = app(MetricsRecorder::class);
     expect(fn () => $recorder->assertHistogram(name: 'vaulter_outbox_relay_duration_seconds'))->not->toThrow(Throwable::class);
@@ -140,11 +139,8 @@ it('records vaulter_command_peak_memory_bytes for vaulter artisan commands', fun
 it('records prune webhook metrics when rows are reclaimed', function (): void {
     config()->set('vaulter.webhooks.retention_days', 0);
 
-    $threshold = now()->subDay();
-    WebhookTestHelpers::outbox([
-        'status' => 'completed',
-        'fanned_out_at' => $threshold,
-    ]);
+    WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint(), ['status' => 'delivered', 'attempts' => 1]);
+    $this->travel(1)->days();
 
     Artisan::call('vaulter:webhooks:prune');
 

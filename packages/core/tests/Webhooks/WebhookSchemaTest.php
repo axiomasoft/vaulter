@@ -7,24 +7,31 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 /**
- * The reliability-layer schema (§2.11 / D14 / M3b), ported from chatom 1:1: v_outbox,
- * v_webhook_endpoints, v_webhook_deliveries — every column exists, the idempotency and
- * FK constraints hold, and the tables are gated on the 'reliability' feature.
+ * The reliability-layer schema: the neutral outbox of core (D29) — v_outbox, v_outbox_consumers,
+ * v_outbox_deliveries — and the webhook tables v_webhook_endpoints, v_webhook_deliveries:
+ * every column exists and the idempotency and FK constraints hold.
  */
-it('creates v_outbox with every §2.11 column', function (): void {
+it('creates the neutral v_outbox without delivery state', function (): void {
     $table = app(DatabaseConfig::class)->table('outbox');
 
-    expect(Schema::hasColumns($table, [
-        'id', 'event_id', 'profile', 'tenant_id', 'drive_id', 'topic', 'event', 'payload',
-        'available_at', 'attempts', 'status', 'created_at', 'updated_at',
-        'claim_token', 'claim_generation', 'claim_until', 'fanout_cursor',
-        'fanned_out_at', 'delivery_count', 'legacy_fanout',
-    ]))->toBeTrue()
-        ->and(Schema::hasColumn($table, 'dispatched_at'))->toBeFalse();
+    expect(Schema::getColumnListing($table))->toEqualCanonicalizing([
+        'outbox_seq', 'event_id', 'tenant_id', 'scope_kind', 'scope_id', 'aggregate_type', 'aggregate_id',
+        'sequence', 'type', 'external', 'payload', 'created_at',
+    ]);
+});
+
+it('creates v_outbox_consumers and v_outbox_deliveries', function (): void {
+    expect(Schema::getColumnListing(app(DatabaseConfig::class)->table('outbox_consumers')))->toEqualCanonicalizing([
+        'consumer_id', 'delivery_class', 'state', 'activation_seq', 'reconciled_through_seq', 'paused_at',
+        'lease_owner', 'lease_generation', 'lease_expires_at', 'gaps', 'created_at', 'updated_at',
+    ])->and(Schema::getColumnListing(app(DatabaseConfig::class)->table('outbox_deliveries')))->toEqualCanonicalizing([
+        'event_id', 'consumer_id', 'outbox_seq', 'state', 'attempts', 'next_attempt_at', 'lease_owner',
+        'lease_generation', 'lease_expires_at', 'continuation', 'last_error', 'created_at', 'updated_at', 'done_at',
+    ]);
 });
 
 it('creates v_webhook_endpoints with every §2.11 column', function (): void {
@@ -64,7 +71,7 @@ it('enforces the event_id UNIQUE idempotency key on v_outbox', function (): void
 
     // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
     // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
-    expect(fn () => DB::transaction(fn (): Outbox => WebhookTestHelpers::outbox(['event_id' => 'dup'])))
+    expect(fn () => DB::transaction(fn (): OutboxEvent => WebhookTestHelpers::outbox(['event_id' => 'dup'], consumer: null)))
         ->toThrow(QueryException::class);
 });
 
@@ -73,11 +80,12 @@ it('casts the outbox json + datetime columns', function (): void {
         'payload' => ['a' => 1, 'event_id' => 'x'],
     ]);
 
-    $fresh = Outbox::query()->whereKey($row->getKey())->firstOrFail();
+    $fresh = OutboxEvent::query()->whereKey($row->getKey())->firstOrFail();
 
     expect($fresh->payload)->toBe(['a' => 1, 'event_id' => 'x'])
-        ->and($fresh->available_at)->toBeInstanceOf(Carbon::class)
-        ->and($fresh->attempts)->toBe(0);
+        ->and($fresh->created_at)->toBeInstanceOf(Carbon::class)
+        ->and($fresh->external)->toBeTrue()
+        ->and($fresh->outbox_seq)->toBeInt();
 });
 
 it('declares the endpoint_id foreign key on v_webhook_deliveries', function (): void {

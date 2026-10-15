@@ -102,12 +102,12 @@ test('layers group classes under a domain sub-namespace, not flat (ADR-0017 Law 
     $src = __DIR__.'/../../src';
 
     // layer root => bare class names allowed to remain flat at the root (canon
-    // cross-cutting citizens; documents currently declares none).
+    // cross-cutting citizens): the event types of the module, contributed to the event catalogue (D38).
     $rootsWithAllowed = [
         'Actions' => [],
         'Models' => [],
         'Repositories' => [],
-        'Enums' => [],
+        'Enums' => ['DocumentEventType'],
         'Events' => [],
         'Data' => [],
     ];

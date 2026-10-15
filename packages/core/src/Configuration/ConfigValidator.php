@@ -12,6 +12,7 @@ use Vaulter\Access\PermissionDriverCatalog;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Tenancy\TenantResolver;
+use Vaulter\Events\Outbox\OutboxSchedule;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
@@ -48,10 +49,11 @@ final readonly class ConfigValidator
         $config->webhooks()->retrySchedule();
         $config->webhooks()->retryJitter();
         $config->webhooks()->relayFanoutChunk();
+        $config->outbox()->validate();
         $schedule = new ScheduleConfig($this->config);
         $schedule->enabled();
         // changes_prune is the drive's core-located key (D39); the webhooks keys belong to WebhooksModule.
-        $schedule->frequencies('vaulter', ['changes_prune', IdempotencySchedule::KEY, ...WebhooksSchedule::KEYS]);
+        $schedule->frequencies('vaulter', ['changes_prune', IdempotencySchedule::KEY, ...OutboxSchedule::KEYS, ...WebhooksSchedule::KEYS]);
         $ttl = $this->config->get('vaulter.idempotency.ttl_seconds', IdempotencyClaim::DEFAULT_TTL_SECONDS);
         if (!is_int($ttl) || $ttl < 1) {
             throw new InvalidConfigurationException('[Vaulter] vaulter.idempotency.ttl_seconds must be a positive integer (seconds).');

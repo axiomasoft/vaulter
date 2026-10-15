@@ -6,8 +6,8 @@ namespace Vaulter\Tests\Events;
 
 use PHPUnit\Framework\Assert;
 use Vaulter\Events\EventTypeContract;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
 
 /**
  * Compares what the real Actions record with the EventSpec of each type: the keys and
@@ -29,7 +29,7 @@ final class EventConformance
     public static function assertRecorded(array $types): void
     {
         foreach ($types as $type) {
-            $rows = Outbox::query()->where('event', $type->value)->get();
+            $rows = OutboxEvent::query()->where('type', $type->value)->get();
             Assert::assertNotEmpty($rows, 'No outbox row was recorded for '.$type->value);
             foreach ($rows as $row) {
                 self::assertEnvelope($type, $row->payload);
@@ -37,13 +37,13 @@ final class EventConformance
         }
     }
 
-    /** @param list<EventTypeContract> $types the types that are audited but never staged for webhooks */
+    /** @param list<EventTypeContract> $types the types that are audited but never leave the process (not external) */
     public static function assertAuditedOnly(array $types): void
     {
         foreach ($types as $type) {
             Assert::assertFalse($type->spec()->external);
             Assert::assertTrue(Activity::query()->where('verb', $type->value)->exists(), 'No activity row was recorded for '.$type->value);
-            Assert::assertFalse(Outbox::query()->where('event', $type->value)->exists());
+            Assert::assertFalse(OutboxEvent::query()->where('type', $type->value)->where('external', true)->exists());
         }
     }
 

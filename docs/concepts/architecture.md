@@ -227,7 +227,8 @@ with one id strategy per install (`config('vaulter.ids.strategy')`, default `uli
 | `v_document_revisions` | Documents: immutable checkpoints of a document (history). |
 | `v_upload_sessions` / `v_upload_parts` | Resumable upload sessions. |
 | `v_activity` | The append-only activity feed. |
-| `v_outbox` / `v_webhook_endpoints` / `v_webhook_deliveries` | The transactional-outbox + webhook reliability layer. |
+| `v_outbox` / `v_outbox_consumers` / `v_outbox_deliveries` | The transactional outbox of every event and the delivery state of its consumers ([The outbox](/concepts/events-outbox)). |
+| `v_webhook_endpoints` / `v_webhook_deliveries` | The webhook endpoints and their deliveries. |
 
 The tree is an **adjacency list**: move/rename is a single `UPDATE` of `parent_id` / `name`
 (no path rewriting). Descent uses recursive CTEs scoped by `storage_id`; recursive descendant

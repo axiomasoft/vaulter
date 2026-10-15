@@ -40,8 +40,9 @@ of their transaction**, on the Vaulter connection. The recorder:
 1. hands it to the `EventSink` contributions of the active modules, in the order (priority, id) —
    the drive contributes `drive.activity` (the activity row, when `features.activity` is on and
    the type is audited) and `drive.changes` (the change-journal entry, when `features.changes` is on);
-2. writes the outbox row with the envelope last (when `vaulter.modules.webhooks` is on and the type
-   is `external`), so the envelope carries the journal seq;
+2. writes the outbox row with the envelope last, whatever modules are active, so the envelope carries
+   the journal seq — with a pending delivery row for each outbox consumer that subscribes to the type
+   (the webhooks module's `webhooks.fanout` takes the `external` types); see [The outbox](/concepts/events-outbox);
 3. dispatches the Laravel event to your listeners **after the transaction commits**.
 
 Both rows commit or roll back with the change itself. If a row cannot be written, the

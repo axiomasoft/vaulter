@@ -1693,6 +1693,650 @@
             "id": "event:upload.initiated",
             "kind": "protocol",
             "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.backoff_base_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.backoff_cap_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.batch",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.dead_retention_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.lease_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.max_attempts",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.max_consumer_hold_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.retention_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.settle_window_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.outbox_relay",
+            "kind": "config",
+            "reason": "P3.15: vaulter:relay on the host scheduler, every minute"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.outbox_prune",
+            "kind": "config",
+            "reason": "P3.15: vaulter:outbox:prune on the host scheduler, hourly"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.webhooks_relay",
+            "kind": "config",
+            "reason": "P3.15: vaulter:webhooks:relay is replaced by the core vaulter:relay (schedule key outbox_relay)"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "config:vaulter.webhooks.relay.claim_seconds",
+            "kind": "config",
+            "reason": "P3.14: the webhooks.fanout consumer runs under the outbox delivery lease, vaulter.outbox.lease_seconds"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "config:vaulter.models.outbox",
+            "kind": "config",
+            "reason": "P3.14: the default model is Vaulter\\Events\\Outbox\\Models\\OutboxEvent (was Vaulter\\Models\\Webhooks\\Outbox)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:relay",
+            "kind": "cli",
+            "reason": "P3.15: the core outbox relay (register, reconcile, deliver, hold)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:relay:replay",
+            "kind": "cli",
+            "reason": "P3.15: replay a range to an outbox consumer or acknowledge its gap"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:outbox:prune",
+            "kind": "cli",
+            "reason": "P3.15: outbox retention without loss"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "command:vaulter:webhooks:relay",
+            "kind": "cli",
+            "reason": "P3.15: replaced by vaulter:relay; the fan-out is the webhooks.fanout outbox consumer"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "command:vaulter:webhooks:prune",
+            "kind": "cli",
+            "reason": "P3.15: prunes the terminal webhook deliveries only; the outbox has vaulter:outbox:prune"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "format:webhook-envelope",
+            "kind": "protocol",
+            "reason": "P3.14: built by Vaulter\\Events\\Outbox\\OutboxEnvelope::body (was EventEnvelope::fromEvent); the bytes are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "serialized:config:vaulter.models.outbox",
+            "kind": "protocol",
+            "reason": "P3.14: the serialized default model class is Vaulter\\Events\\Outbox\\Models\\OutboxEvent"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.external",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.outbox_seq",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.scope_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.scope_kind",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.type",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.activation_seq",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.consumer_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.created_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.delivery_class",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.gaps",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.lease_expires_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.lease_generation",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.lease_owner",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.paused_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.reconciled_through_seq",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.state",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.updated_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.attempts",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.consumer_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.continuation",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.created_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.done_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.event_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.last_error",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.lease_expires_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.lease_generation",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.lease_owner",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.next_attempt_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.outbox_seq",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.state",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.updated_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "constraint:v_outbox_consumers.v_outbox_consumers_pkey",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "constraint:v_outbox_deliveries.v_outbox_deliveries_pkey",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_created_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_consumers.PRIMARY",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_consumers.v_outbox_consumers_pkey",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.PRIMARY",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.v_outbox_deliveries_due_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.v_outbox_deliveries_lease_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.v_outbox_deliveries_pkey",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.v_outbox_deliveries_seq_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "migration:2026_10_13_000026_create_v_outbox_consumers_table.php",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "migration:2026_10_13_000027_create_v_outbox_deliveries_table.php",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "table:v_outbox_consumers",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "table:v_outbox_deliveries",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.attempts",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.available_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.claim_generation",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.claim_token",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.claim_until",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.delivery_count",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.drive_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.event",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.fanned_out_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.fanout_cursor",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.legacy_fanout",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.profile",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.status",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.topic",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.updated_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_drain_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_drive_id_index",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_profile_index",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_prune_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "column:v_outbox.created_at",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "column:v_outbox.event_id",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "constraint:v_outbox.v_outbox_pkey",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "index:v_outbox.PRIMARY",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_pkey",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "table:v_outbox",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

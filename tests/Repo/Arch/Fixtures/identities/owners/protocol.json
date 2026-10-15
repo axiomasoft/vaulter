@@ -508,10 +508,10 @@
             "owner": "webhooks",
             "format": "JSON: id (event id), type, version (1), source (vaulter), time (UTC ms Z), tenant_id, drive_id, subject{type,id}, sequence, actor{type,id}, correlation_id, changes{seq}|null, data (object)",
             "source": {
-                "file": "packages/core/src/Webhooks/EventEnvelope.php",
-                "symbol": "Vaulter\\Webhooks\\EventEnvelope::fromEvent"
+                "file": "packages/core/src/Events/Outbox/OutboxEnvelope.php",
+                "symbol": "Vaulter\\Events\\Outbox\\OutboxEnvelope::body"
             },
-            "why": "the outbound event payload (a neutral envelope after D29)"
+            "why": "the outbound event payload: the outbox envelope body every consumer receives, forwarded byte for byte by webhooks.fanout (D29)"
         },
         {
             "id": "format:webhook-signature",

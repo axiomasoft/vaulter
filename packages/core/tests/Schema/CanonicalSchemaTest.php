@@ -19,7 +19,7 @@ it('creates the canonical schema independently of runtime features and legacy ta
         'documents' => ['node_id', 'type', 'schema_version', 'current_revision_id', 'revision_count', 'collab_epoch', 'state_version', 'checkpoint_state_version', 'content', 'content_hash', 'content_size', 'yjs_state', 'yjs_state_size', 'last_checkpoint_at'],
         'document_revisions' => ['document_id', 'number', 'schema_version', 'state_version', 'label', 'restored_from_revision_id'],
         'file_revision_blobs' => ['file_revision_id'], 'upload_sessions' => ['drive_id', 'target_node_id', 'result_node_id', 'result_revision_id'],
-        'activity' => ['drive_id', 'event_id'], 'outbox' => ['drive_id', 'aggregate_type', 'aggregate_id', 'sequence']] as $entity => $columns) {
+        'activity' => ['drive_id', 'event_id'], 'outbox' => ['scope_kind', 'scope_id', 'aggregate_type', 'aggregate_id', 'sequence']] as $entity => $columns) {
         expect($schema->hasColumns(app(DatabaseConfig::class)->table($entity), $columns))->toBeTrue();
     }
 

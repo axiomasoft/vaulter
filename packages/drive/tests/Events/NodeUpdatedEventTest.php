@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -27,7 +27,7 @@ it('records node.updated with the new node sequence and no property values', fun
 
     $this->actor->nodes()->setProperties($this->node, 'acme', ['label' => 'confidential-value']);
 
-    $outbox = Outbox::query()->where('event', DriveEventType::NodeUpdated->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::NodeUpdated->value)->sole();
     $activity = Activity::query()->where('verb', DriveEventType::NodeUpdated->value)->sole();
 
     expect($outbox->payload['data'])->toBe(['changed' => ['properties']])
@@ -41,5 +41,5 @@ it('records nothing for a patch that changes nothing', function (): void {
     $this->actor->nodes()->setProperties($this->node, 'acme', ['label' => 'same']);
     $this->actor->nodes()->setProperties($this->node, 'acme', ['label' => 'same']);
 
-    expect(Outbox::query()->where('event', DriveEventType::NodeUpdated->value)->count())->toBe(1);
+    expect(OutboxEvent::query()->where('type', DriveEventType::NodeUpdated->value)->count())->toBe(1);
 });

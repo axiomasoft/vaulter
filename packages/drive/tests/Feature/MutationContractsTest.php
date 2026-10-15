@@ -9,9 +9,9 @@ use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -29,11 +29,11 @@ beforeEach(function (): void {
  *
  * @return array{subject: array<string, mixed>, data: array<string, mixed>, actor: array<string, mixed>}
  */
-function mutationEnvelope(Outbox $row): array
+function mutationEnvelope(OutboxEvent $row): array
 {
     $payload = $row->payload;
     expect($payload['id'])->toBe($row->event_id)
-        ->and($payload['type'])->toBe($row->event)
+        ->and($payload['type'])->toBe($row->type)
         ->and($payload['correlation_id'])->toBeString()->not->toBe('');
 
     return ['subject' => $payload['subject'], 'data' => $payload['data'], 'actor' => $payload['actor']];
@@ -48,10 +48,10 @@ it('keeps the complete storage and folder event contracts', function (): void {
     $storage = $drive->model();
     $root = $storage->rootNode()->firstOrFail();
 
-    $storageOutbox = Outbox::query()->where('event', DriveEventType::DriveCreated->value)->sole();
+    $storageOutbox = OutboxEvent::query()->where('type', DriveEventType::DriveCreated->value)->sole();
 
-    expect($storageOutbox->profile)->toBe($storage->profile)
-        ->and($storageOutbox->topic)->toBe((string) $storage->getKey())
+    expect($storageOutbox->scope_kind)->toBe('drive')
+        ->and($storageOutbox->aggregate_id)->toBe((string) $storage->getKey())
         ->and(mutationEnvelope($storageOutbox))->toEqual([
             'subject' => ['type' => 'drive', 'id' => (string) $storage->getKey()],
             'data' => ['root_node_id' => (string) $root->getKey(), 'profile' => $storage->profile],
@@ -71,9 +71,9 @@ it('keeps the complete storage and folder event contracts', function (): void {
     ]);
 
     $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->folders()->create('Contract folder');
-    $created = Outbox::query()->where('event', DriveEventType::FolderCreated->value)->orderByDesc('id')->firstOrFail();
+    $created = OutboxEvent::query()->where('type', DriveEventType::FolderCreated->value)->orderByDesc('outbox_seq')->firstOrFail();
 
-    expect($created->topic)->toBe((string) $folder->id)
+    expect($created->aggregate_id)->toBe((string) $folder->id)
         ->and(mutationEnvelope($created))->toEqual([
             'subject' => ['type' => 'node', 'id' => (string) $folder->id],
             'data' => ['parent_id' => (string) $root->getKey()],
@@ -139,7 +139,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
     $node = $drive->folders()->create('Old', $from);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->move($node, $to);
-    $moved = Outbox::query()->where('event', DriveEventType::NodeMoved->value)->sole();
+    $moved = OutboxEvent::query()->where('type', DriveEventType::NodeMoved->value)->sole();
     expect(mutationEnvelope($moved)['data'])->toEqual([
         'from_parent_id' => (string) $from->id,
         'to_parent_id' => (string) $to->id,
@@ -151,7 +151,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
     ]);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($node, 'New');
-    $renamed = Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->sole();
+    $renamed = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
     // The names travel only in the activity context.
     expect(mutationEnvelope($renamed)['data'])->toBe([])
         ->and($renamed->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $node->id]);
@@ -162,8 +162,8 @@ it('preserves move, rename and copy payloads and activity context', function ():
     ]);
 
     $copy = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->copy($node, $from, options: new CopyOptions(name: 'Copied'));
-    $copied = Outbox::query()->where('event', DriveEventType::NodeCopied->value)->sole();
-    expect($copied->topic)->toBe((string) $copy->id)
+    $copied = OutboxEvent::query()->where('type', DriveEventType::NodeCopied->value)->sole();
+    expect($copied->aggregate_id)->toBe((string) $copy->id)
         ->and(mutationEnvelope($copied))->toMatchArray([
             'subject' => ['type' => 'node', 'id' => (string) $copy->id],
             'data' => ['source_id' => (string) $node->id, 'destination_id' => (string) $from->id],
@@ -180,7 +180,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first bytes'), 'report.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
     $firstVersion = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
 
-    $uploaded = Outbox::query()->where('event', DriveEventType::FileUploaded->value)->sole();
+    $uploaded = OutboxEvent::query()->where('type', DriveEventType::FileUploaded->value)->sole();
     expect(mutationEnvelope($uploaded)['data'])->toEqual([
         'parent_id' => (string) DriveTestHelpers::model($node)->parent_id,
         'revision_id' => (string) $firstVersion->getKey(),
@@ -196,7 +196,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('second version'), DriveTestHelpers::model($node)->name));
     $secondVersion = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
-    $versioned = Outbox::query()->where('event', DriveEventType::FileRevisionAdded->value)->sole();
+    $versioned = OutboxEvent::query()->where('type', DriveEventType::FileRevisionAdded->value)->sole();
 
     expect(mutationEnvelope($versioned)['data'])->toEqual([
         'revision_id' => (string) $secondVersion->getKey(),
@@ -217,9 +217,9 @@ it('preserves trash and restore payloads including actor and destination', funct
     $node = $drive->folders()->create('Child', $parent);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->trash($node);
-    $trashed = Outbox::query()->where('event', DriveEventType::NodeTrashed->value)->sole();
-    expect($trashed->profile)->toBe(DriveTestHelpers::model($node)->profile)
-        ->and($trashed->topic)->toBe((string) $node->id)
+    $trashed = OutboxEvent::query()->where('type', DriveEventType::NodeTrashed->value)->sole();
+    expect($trashed->scope_kind)->toBe('drive')
+        ->and($trashed->aggregate_id)->toBe((string) $node->id)
         ->and(mutationEnvelope($trashed))->toEqual([
             'subject' => ['type' => 'node', 'id' => (string) $node->id],
             'data' => [],
@@ -234,9 +234,9 @@ it('preserves trash and restore payloads including actor and destination', funct
         ]);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->trash()->restore($node);
-    $restored = Outbox::query()->where('event', DriveEventType::NodeRestored->value)->sole();
-    expect($restored->profile)->toBe(DriveTestHelpers::model($node)->profile)
-        ->and($restored->topic)->toBe((string) $node->id)
+    $restored = OutboxEvent::query()->where('type', DriveEventType::NodeRestored->value)->sole();
+    expect($restored->scope_kind)->toBe('drive')
+        ->and($restored->aggregate_id)->toBe((string) $node->id)
         ->and(mutationEnvelope($restored))->toEqual([
             'subject' => ['type' => 'node', 'id' => (string) $node->id],
             'data' => ['parent_id' => (string) $parent->id],
@@ -262,12 +262,12 @@ it('records every force-deleted subtree id and the exact freed bytes', function 
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->trash()->purge($folder);
 
-    $outbox = Outbox::query()->where('event', DriveEventType::NodePurged->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::NodePurged->value)->sole();
     $envelope = mutationEnvelope($outbox);
     expect($envelope['data']['node_ids'])->toEqualCanonicalizing($ids);
     unset($envelope['data']['node_ids']);
-    expect($outbox->profile)->toBe($drive->model()->profile)
-        ->and($outbox->topic)->toBe((string) $drive->model()->getKey())
+    expect($outbox->scope_kind)->toBe('drive')
+        ->and($outbox->aggregate_id)->toBe((string) $drive->model()->getKey())
         ->and($envelope)->toEqual([
             'subject' => ['type' => 'drive', 'id' => (string) $drive->model()->getKey()],
             'data' => ['node_count' => 2, 'freed_bytes' => 5],

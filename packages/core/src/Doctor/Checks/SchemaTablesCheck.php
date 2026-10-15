@@ -21,7 +21,8 @@ final readonly class SchemaTablesCheck implements DoctorCheck
         'scan_policy_states', 'scan_obligations', 'scan_backfill_runs', 'scan_requests', 'scan_evidence',
         'node_grants', 'node_shares', 'node_comments', 'node_user_states',
         'documents', 'document_revisions', 'upload_sessions', 'upload_parts',
-        'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries', 'drive_change_heads', 'drive_changes', 'idempotency_keys',
+        'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries', 'drive_change_heads', 'drive_changes',
+        'outbox_consumers', 'outbox_deliveries', 'idempotency_keys',
     ];
 
     /**
@@ -31,7 +32,7 @@ final readonly class SchemaTablesCheck implements DoctorCheck
      * @var array<string, list<string>> module id => entity keys
      */
     public const array OWNED_ENTITIES = [
-        'core' => ['outbox', 'idempotency_keys'],
+        'core' => ['outbox', 'outbox_consumers', 'outbox_deliveries', 'idempotency_keys'],
         'media' => ['blobs'],
         'drive' => [
             'drives', 'nodes', 'files', 'file_revisions', 'file_revision_blobs',

@@ -70,6 +70,8 @@ final class SchemaBuilder
         'webhook_deliveries',
         'drive_change_heads',
         'drive_changes',
+        'outbox_consumers',
+        'outbox_deliveries',
         'idempotency_keys',
     ];
 
@@ -125,7 +127,9 @@ final class SchemaBuilder
                 'upload_sessions' => $this->defineUploadSessions(table: $table, ids: $ids),
                 'upload_parts' => $this->defineUploadParts(table: $table, ids: $ids),
                 'activity' => $this->defineActivity(table: $table, ids: $ids),
-                'outbox' => $this->defineOutbox(table: $table, ids: $ids),
+                'outbox' => $this->defineOutbox(table: $table),
+                'outbox_consumers' => $this->defineOutboxConsumers(table: $table),
+                'outbox_deliveries' => $this->defineOutboxDeliveries(table: $table),
                 'webhook_endpoints' => $this->defineWebhookEndpoints(table: $table, ids: $ids),
                 'webhook_deliveries' => $this->defineWebhookDeliveries(table: $table, ids: $ids),
                 'drive_change_heads' => $this->defineDriveChangeHeads(table: $table, ids: $ids),
@@ -855,53 +859,82 @@ final class SchemaBuilder
     }
 
     /**
-     * v_outbox — the transactional-outbox staging table, ported from chatom 1:1. Gated on 'reliability'. ONE row per domain event,
-     * idempotent by event_id (UNIQUE) so the same event never stages a duplicate and
-     * the relay drains each row exactly once.
-     *
-     * The id honours the panel id strategy; panel is the discriminator (a row is
-     * fanned out for its panel's endpoints); topic is an optional routing hint
-     * (e.g. the storage/node id). status is 'pending' until the relay has written
-     * the delivery of every eligible endpoint, then 'completed' in the same
-     * transaction as the last chunk. claim_* is the relay worker's fenced lease,
-     * fanout_cursor the last endpoint key already materialized. The
-     * (status, available_at) index is the relay's drain cursor.
+     * v_outbox — the neutral transactional outbox (D29): ONE row per domain event, written in the transaction of
+     * the operation whatever modules are active, idempotent by event_id (UNIQUE). outbox_seq is the internal,
+     * monotonic order every consumer reconciles by — a bigIncrements independent of the panel id strategy, like
+     * event_id. scope_kind/scope_id name what the event is about (a drive, or the tenant) without a drive column;
+     * payload is the envelope a consumer receives. The kernel keeps no delivery state here: that lives in
+     * v_outbox_deliveries, one row per consumer. The (created_at) index serves reconciliation and retention.
      */
-    private function defineOutbox(Blueprint $table, IdStrategy $ids): void
+    private function defineOutbox(Blueprint $table): void
     {
-        $ids->key(table: $table);
-
-        // event_id is the idempotency key — a stable, caller-supplied string (NOT a
-        // Vaulter entity reference), so it is a plain unique string column independent
-        // of the panel id strategy.
-        $table->string('event_id')->unique();
-        $this->panelDiscriminator(table: $table);
+        $table->bigIncrements('outbox_seq');
+        $table->string('event_id', 64)->unique();
         $this->tenant(table: $table);
-        $ids->reference(table: $table, column: 'drive_id', nullable: true);
+        $table->string('scope_kind', 32);
+        $table->string('scope_id', 191)->nullable();
         $table->string('aggregate_type', 32)->nullable();
         $table->string('aggregate_id', 64)->nullable();
         $table->bigInteger('sequence')->nullable();
-        $table->string('topic')->nullable();
-        $table->string('event');
+        $table->string('type', 64);
+        $table->boolean('external');
         $table->json('payload');
-        $table->timestamp('available_at');
-        $table->unsignedInteger('attempts')->default(0);
-        $table->string('status')->default('pending');
-        $table->timestamps();
-        $table->string('claim_token', 32)->nullable();
-        $table->bigInteger('claim_generation')->default(0);
-        $table->timestamp('claim_until')->nullable();
-        $table->string('fanout_cursor', 64)->nullable();
-        $table->timestamp('fanned_out_at')->nullable();
-        $table->unsignedInteger('delivery_count')->default(0);
-        $table->boolean('legacy_fanout')->default(false);
+        $table->timestamp('created_at');
 
+        $table->index('created_at', $table->getTable().'_created_idx');
+    }
+
+    /**
+     * v_outbox_consumers — one row per outbox consumer the relay ever registered (D29): its delivery class, its
+     * state (active, paused while it is not in the sealed registry or switched off, detached once the hold ran
+     * out), the seq it was activated at and the seq reconciliation reached, the fenced consumer lease of the
+     * reconciler, and the explicit gaps a detach left (JSON list of {from_seq, to_seq, events, at,
+     * acknowledged_at}).
+     */
+    private function defineOutboxConsumers(Blueprint $table): void
+    {
+        $table->string('consumer_id', 64)->primary();
+        $table->string('delivery_class', 16);
+        $table->string('state', 16);
+        $table->bigInteger('activation_seq');
+        $table->bigInteger('reconciled_through_seq');
+        $table->timestamp('paused_at')->nullable();
+        $table->string('lease_owner', 64)->nullable();
+        $table->bigInteger('lease_generation')->default(0);
+        $table->timestamp('lease_expires_at')->nullable();
+        $table->json('gaps');
+        $table->timestamps();
+    }
+
+    /**
+     * v_outbox_deliveries — the delivery of one event to one consumer (D29), PK(event_id, consumer_id): pending
+     * until a relay worker leases it, then done or dead; every completion is fenced by lease_generation, so a
+     * worker whose lease was taken over writes nothing. continuation is the consumer's own resume cursor (the
+     * webhook fan-out keeps its last endpoint key there). No FK to v_outbox: retention deletes an event only
+     * after its rows are terminal, and dead rows live by their own retention.
+     */
+    private function defineOutboxDeliveries(Blueprint $table): void
+    {
         $name = $table->getTable();
 
-        $table->index(['status', 'available_at'], $name.'_drain_idx');
-        // The retention sweep (vaulter:webhooks:prune) deletes finished rows by
-        // (status='completed', fanned_out_at <= threshold) — its own scan cursor.
-        $table->index(['status', 'fanned_out_at'], $name.'_prune_idx');
+        $table->string('event_id', 64);
+        $table->string('consumer_id', 64);
+        $table->bigInteger('outbox_seq');
+        $table->string('state', 16);
+        $table->unsignedInteger('attempts')->default(0);
+        $table->timestamp('next_attempt_at');
+        $table->string('lease_owner', 64)->nullable();
+        $table->bigInteger('lease_generation')->default(0);
+        $table->timestamp('lease_expires_at')->nullable();
+        $table->string('continuation', 191)->nullable();
+        $table->text('last_error')->nullable();
+        $table->timestamps();
+        $table->timestamp('done_at')->nullable();
+
+        $table->primary(['event_id', 'consumer_id'], $name.'_pkey');
+        $table->index(['consumer_id', 'state', 'next_attempt_at'], $name.'_due_idx');
+        $table->index(['state', 'lease_expires_at'], $name.'_lease_idx');
+        $table->index('outbox_seq', $name.'_seq_idx');
     }
 
     /**

@@ -25,9 +25,11 @@ themselves — see [Scheduling](#scheduling).
 | `vaulter:blobs:reconcile` | Rebuild blob `ref_count` and report dangling rows |
 | `vaulter:trash:purge` | Permanently delete trashed nodes past retention |
 | `vaulter:revisions:prune` | Delete non-current file revisions past the profile retention policy |
-| `vaulter:webhooks:relay` | Relay pending outbox events to webhook endpoints |
+| `vaulter:relay` | Relay the outbox to its consumers: register, reconcile, deliver, hold |
+| `vaulter:relay:replay` | Replay a range of the outbox to one consumer, or acknowledge its gap |
+| `vaulter:outbox:prune` | Delete outbox events and deliveries past retention without losing undelivered ones |
 | `vaulter:webhooks:retry` | Re-dispatch webhook deliveries whose retry delay elapsed |
-| `vaulter:webhooks:prune` | Delete completed outbox rows and terminal webhook deliveries past retention |
+| `vaulter:webhooks:prune` | Delete terminal webhook deliveries past retention |
 | `vaulter:webhooks:redeliver` | Send finished webhook deliveries again with the same `webhook-id` |
 | `vaulter:events:reference` | Regenerate (or `--check`) the event catalogue table in the reference docs |
 | `vaulter:errors:reference` | Regenerate (or `--check`) the problem-code reference in the docs |
@@ -139,8 +141,10 @@ The JSON document is described by `packages/core/resources/schemas/doctor-v1.sch
 | `core.queue` | The default queue is not `sync`/`null` | warning → warning |
 | `core.scheduler` | `vaulter.schedule.enabled` or `vaulter:*` tasks on the scheduler | warning → warning |
 | `core.cache` | The default cache is shared (not `array`/`file`) and has atomic locks | warning → warning |
-| `core.webhooks.outbox_lag` | The oldest due outbox row waited less than 10 minutes | warning → warning |
-| `core.webhooks.relay_leases` | No outbox row holds a relay lease expired for more than 5 minutes | warning → error |
+| `core.outbox.lag` | The oldest due outbox delivery of each consumer waited less than 10 minutes | warning → warning |
+| `core.outbox.leases` | No outbox delivery holds a relay lease expired for more than 5 minutes | warning → error |
+| `core.outbox.consumer_gaps` | No detached consumer has an unacknowledged gap (error); paused consumers are reported (warning) | error → error |
+| `core.outbox.settle_window` | `outbox.settle_window_seconds` outlasts the database's transaction limits | warning → warning |
 | `core.webhooks.deliveries` | Endpoints auto-disabled for failing and deliveries that used up their retries, counted (`vaulter:webhooks:redeliver`) | warning → warning |
 | `media.disk.probe` | Write, read and delete a test object on every disk (only with `--probe-storage` or `--production`) | error → error |
 | `media.dedup.scope` | Tenant-wide deduplication across profiles on different disks | warning → warning |
@@ -170,7 +174,8 @@ existing ones to avoid double runs). A host still has to run `schedule:run` ever
 
 | Config key | Command | Default |
 |---|---|---|
-| `vaulter.schedule.webhooks_relay` | `vaulter:webhooks:relay` (needs `vaulter.modules.webhooks`) | `everyMinute` |
+| `vaulter.schedule.outbox_relay` | `vaulter:relay` | `everyMinute` |
+| `vaulter.schedule.outbox_prune` | `vaulter:outbox:prune` | `hourly` |
 | `vaulter.schedule.webhooks_retry` | `vaulter:webhooks:retry` (needs `vaulter.modules.webhooks`) | `everyMinute` |
 | `vaulter.schedule.webhooks_prune` | `vaulter:webhooks:prune` (needs `vaulter.modules.webhooks`) | `dailyAt:03:10` |
 | `vaulter.schedule.changes_prune` | `vaulter:changes:prune` (needs `features.changes`) | `dailyAt:03:20` |
@@ -342,32 +347,60 @@ The sweeper aborts in-flight multiparts it knows about. Add an
 
 See [Usage → Uploads](/guides/uploads).
 
-## `vaulter:webhooks:relay`
+## `vaulter:relay`
 
-Relay pending outbox events to webhook endpoints and re-dispatch due retries. Each
-pending `v_outbox` row fans out into one `v_webhook_deliveries` row per eligible
-endpoint, and the HTTP POST is queued after the rows commit. The relay leases a row
-for `webhooks.relay.claim_seconds` and writes `webhooks.relay.fanout_chunk` endpoints
-per transaction; the row becomes `completed` together with its last deliveries, so a
-relay that dies is resumed by the next run once the lease lapses. Several relays may
-run at once. At-least-once with exponential backoff + DLQ. Gated by
-`vaulter.modules.webhooks`. See [Webhooks → Delivery guarantees](/guides/webhooks#delivery-guarantees).
+The outbox relay (D29). One pass registers the outbox consumers of the module graph
+(pausing the ones it no longer holds), reconciles the delivery rows a process with an
+older graph missed — only for events older than `outbox.settle_window_seconds` — delivers
+the due rows under a fenced lease with full-jitter retries and a dead-letter state, and
+detaches the consumers paused longer than `outbox.max_consumer_hold_seconds` with an
+explicit gap. Without `--once` it repeats passes while work remains, for at most
+`--max-seconds`. Several relays may run at once. See [The outbox](/concepts/events-outbox).
 
 ```
-vaulter:webhooks:relay
-    {--limit=} Max outbox rows to drain this tick
+vaulter:relay
+    {--consumer=}       Only this outbox consumer (registration and holds still cover all)
+    {--limit=}          Deliveries leased per consumer and pass (default outbox.batch)
+    {--once}            Run a single pass
+    {--max-seconds=50}  Stop starting passes after this many seconds
 ```
 
 ```bash
-php artisan vaulter:webhooks:relay --limit=500
+php artisan vaulter:relay
+php artisan vaulter:relay --consumer=webhooks.fanout --once
 ```
 
-See [Recipes → Reliability & webhooks](/guides/recipes).
+## `vaulter:relay:replay`
+
+Close a gap of an outbox consumer: the events of `[--from, --to]` still in the outbox become
+pending again for the consumer (done and dead rows too, with a fresh attempt budget), and
+the gaps the range covers are acknowledged. Exits 1 when part of the range is no longer in
+the outbox and prints the range it covered. `--ack-only` acknowledges the loss without a
+replay.
+
+```
+vaulter:relay:replay
+    {--consumer=}  The outbox consumer id (webhooks.fanout, …)
+    {--from=}      The first outbox seq
+    {--to=}        The last outbox seq
+    {--ack-only}   Acknowledge the gaps of the range without replaying it
+```
+
+## `vaulter:outbox:prune`
+
+Outbox retention: deletes events older than `outbox.retention_seconds` that have no open
+delivery and that every durable consumer not detached has reconciled past, the done
+deliveries of deleted events, and dead deliveries older than
+`outbox.dead_retention_seconds`. Scheduled hourly.
+
+```
+vaulter:outbox:prune
+```
 
 ## `vaulter:webhooks:retry`
 
 Re-dispatch webhook deliveries whose backoff window has elapsed, and pending
-deliveries whose first job was lost (still unclaimed `webhooks.relay.claim_seconds`
+deliveries whose first job was lost (still unclaimed `webhooks.retry_claim_seconds`
 after they became due). Gated by `vaulter.modules.webhooks`.
 
 ```
@@ -412,10 +445,9 @@ php artisan vaulter:errors:reference --check
 
 ## `vaulter:webhooks:prune`
 
-Delete COMPLETED outbox rows (`completed`, `fanned_out_at` older than the retention
-window) and TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention
-window). A `pending` outbox row — even one whose fan-out stopped half way — and a
-`pending`/`failed` delivery are never touched, however old. Gated by
+Delete TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention
+window). A `pending`/`failed` delivery is never touched, however old. The outbox has its
+own retention, `vaulter:outbox:prune`. Gated by
 `vaulter.modules.webhooks` (the command exists only while the webhooks module is active). The window comes from
 `config('vaulter.webhooks.retention_days')` (default 30) unless `--days` overrides it.
 Pruned rows cannot be restored or replayed.
@@ -503,7 +535,8 @@ These lines are only needed when `vaulter.schedule.enabled` is `false`; otherwis
 ```php
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:webhooks:relay')->everyMinute();
+Schedule::command('vaulter:relay')->everyMinute()->withoutOverlapping();
+Schedule::command('vaulter:outbox:prune')->hourly();
 Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes();
 Schedule::command('vaulter:uploads:sweep')->hourly();
 Schedule::command('vaulter:blobs:gc')->daily();
@@ -544,13 +577,15 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:make:profile` | Scaffold a Vaulter profile provider (zero-migration config envelope) | `[--host [HOST]] [--no-grants] [--force] [--] <name>` |
 | `vaulter:module:uninstall` | Plan (dry run) or perform the removal of a Vaulter module's schema | `[--force] [--purge] [--] <module>` |
 | `vaulter:modules` | List the Vaulter modules, their activation and what they contribute | `[--json]` |
+| `vaulter:outbox:prune` | Delete outbox events and deliveries past their retention without losing undelivered ones (D29). | — |
+| `vaulter:relay` | Relay the outbox to its consumers: register, reconcile, deliver, hold (D29). | `[--consumer [CONSUMER]] [--limit [LIMIT]] [--once] [--max-seconds [MAX-SECONDS]]` |
+| `vaulter:relay:replay` | Replay a range of the outbox to one consumer, or acknowledge its gap (D29). | `[--consumer [CONSUMER]] [--from [FROM]] [--to [TO]] [--ack-only]` |
 | `vaulter:revisions:prune` | Delete non-current file revisions past their profile retention policy. | `[--drive [DRIVE]] [--dry-run]` |
 | `vaulter:scan:reconcile` | Recover bounded scan intents, backfill discovery and committed upload cleanup. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--limit [LIMIT]] [--max-seconds [MAX-SECONDS]] [--dry-run] [--json]` |
 | `vaulter:scan:rescan` | Activate scan policy or record bounded durable scan requests. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--revision [REVISION]] [--after [AFTER]] [--limit [LIMIT]] [--request-id [REQUEST-ID]] [--rescan] [--retry-failed] [--activate-policy] [--dry-run] [--json]` |
 | `vaulter:trash:purge` | Permanently delete trashed nodes whose retention window has elapsed. | `[--days [DAYS]]` |
 | `vaulter:uploads:sweep` | Abort and clean up stale resumable-upload sessions past their TTL (§2.8). | — |
-| `vaulter:webhooks:prune` | Delete completed outbox rows and terminal webhook deliveries past the retention window. | `[--days [DAYS]] [--dry-run]` |
+| `vaulter:webhooks:prune` | Delete terminal webhook deliveries past the retention window. | `[--days [DAYS]] [--dry-run]` |
 | `vaulter:webhooks:redeliver` | Send finished webhook deliveries again (same webhook-id). | `[--endpoint [ENDPOINT]] [--since [SINCE]] [--status [STATUS]] [--] [<delivery>]` |
-| `vaulter:webhooks:relay` | Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11). | `[--limit [LIMIT]]` |
 | `vaulter:webhooks:retry` | Re-dispatch webhook deliveries whose backoff window has elapsed (§2.11). | — |
 <!-- vaulter:commands-reference:end -->

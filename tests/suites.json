@@ -120,6 +120,8 @@
             "packages/core/tests/Changes/ChangeJournalTest.php",
             "packages/core/tests/Concurrency/EventRecorderRollbackPgTest.php",
             "packages/core/tests/Concurrency/OutboxFanoutRaceTest.php",
+            "packages/core/tests/Concurrency/OutboxLateCommitTest.php",
+            "packages/core/tests/Concurrency/OutboxLeaseTakeoverTest.php",
             "packages/core/tests/Concurrency/WebhookAutoDisableRaceTest.php",
             "packages/core/tests/Events/EventRecorderTest.php",
             "packages/core/tests/Events/WebhookAutoDisableCommitTest.php"
@@ -171,6 +173,9 @@
             "packages/core/tests/Feature/PruneWebhooksTest.php",
             "packages/core/tests/Http/WebhookEndpointsV1Test.php",
             "packages/core/tests/Observability/P85/P85Section53CoreMetricsTest.php",
+            "packages/core/tests/Outbox/OutboxRelayTest.php",
+            "packages/core/tests/Outbox/OutboxWriteTest.php",
+            "packages/core/tests/Outbox/WebhookFanoutConsumerTest.php",
             "packages/core/tests/Sharing/ShareLinkLifecycleEventsTest.php",
             "packages/core/tests/Sharing/ShareLinkLifecycleTest.php"
           ]
@@ -603,8 +608,6 @@
             "packages/core/tests/Webhooks/ConcurrentDeliveryTest.php",
             "packages/core/tests/Webhooks/DeliverWebhookTest.php",
             "packages/core/tests/Webhooks/OutboundUrlGuardTest.php",
-            "packages/core/tests/Webhooks/OutboxFanoutTest.php",
-            "packages/core/tests/Webhooks/OutboxRelayTest.php",
             "packages/core/tests/Webhooks/OutboxStagingTest.php",
             "packages/core/tests/Webhooks/OutboxTransactionTest.php",
             "packages/core/tests/Webhooks/RedeliverWebhookTest.php",

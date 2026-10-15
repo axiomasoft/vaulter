@@ -8,15 +8,14 @@ use Vaulter\Actions\Webhooks\UpdateWebhookEndpointAction;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Data\Webhooks\RegisterWebhookEndpointInput;
 use Vaulter\Data\Webhooks\UpdateWebhookEndpointInput;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\Tests\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
-use Vaulter\Webhooks\OutboxRelay;
 
 /**
  * Endpoints are scoped: one belongs to the tenant it was registered in and receives
@@ -51,7 +50,7 @@ function registerEndpoint(?string $driveId = null, string $url = 'https://hooks.
 }
 
 /** @return list<string> */
-function scopedRecipients(Outbox $message): array
+function scopedRecipients(OutboxEvent $message): array
 {
     return WebhookDelivery::query()->where('event_id', $message->event_id)->pluck('endpoint_id')
         ->map(static fn (mixed $id): string => (string) $id)->sort()->values()->all();
@@ -66,7 +65,7 @@ it('delivers a tenant event only to that tenant\'s endpoints under strict tenanc
 
     $eventA = WebhookTestHelpers::outbox(['tenant_id' => 'A']);
     $eventB = WebhookTestHelpers::outbox(['tenant_id' => 'B']);
-    app(OutboxRelay::class)->process();
+    WebhookTestHelpers::relay();
 
     expect($endpointA->tenant_id)->toBe('A')
         ->and($endpointB->tenant_id)->toBe('B')
@@ -81,7 +80,7 @@ it('matches a missing tenant only with a missing tenant', function (): void {
 
     $plain = WebhookTestHelpers::outbox();
     $scoped = WebhookTestHelpers::outbox(['tenant_id' => 'A']);
-    app(OutboxRelay::class)->process();
+    WebhookTestHelpers::relay();
 
     expect($untenanted->tenant_id)->toBeNull()
         ->and(scopedRecipients($plain))->toBe([(string) $untenanted->getKey()])
@@ -91,14 +90,14 @@ it('matches a missing tenant only with a missing tenant', function (): void {
 it('narrows an endpoint with a drive filter to that drive\'s events', function (): void {
     $driveX = AccessTestHelpers::storage();
     $driveY = AccessTestHelpers::storage();
-    Outbox::query()->delete();
+    OutboxEvent::query()->delete();
     $onlyX = registerEndpoint(driveId: (string) $driveX->getKey(), url: 'https://x.test/hook');
     $everyDrive = registerEndpoint(url: 'https://all.test/hook');
 
-    $inX = WebhookTestHelpers::outbox(['drive_id' => $driveX->getKey()]);
-    $inY = WebhookTestHelpers::outbox(['drive_id' => $driveY->getKey()]);
+    $inX = WebhookTestHelpers::outbox(['scope_kind' => 'drive', 'scope_id' => (string) $driveX->getKey()]);
+    $inY = WebhookTestHelpers::outbox(['scope_kind' => 'drive', 'scope_id' => (string) $driveY->getKey()]);
     $noDrive = WebhookTestHelpers::outbox();
-    app(OutboxRelay::class)->process();
+    WebhookTestHelpers::relay();
 
     expect((string) $onlyX->drive_id)->toBe((string) $driveX->getKey())
         ->and(scopedRecipients($inX))->toBe(collect([$onlyX, $everyDrive])->map(fn ($e): string => (string) $e->getKey())->sort()->values()->all())

@@ -7,40 +7,50 @@ title: Webhooks
 ## How an event reaches the outbox
 
 Every Vaulter change records its event through the `EventRecorder` as the last step of
-its own database transaction (see [Events](/reference/events)). With the opt-in webhooks module
-active (`vaulter.modules.webhooks` = `true`, off by default), the recorder writes one `v_outbox` row for the occurrence **in that transaction**:
+its own database transaction (see [Events](/reference/events)). The recorder writes one
+`v_outbox` row for the occurrence **in that transaction**, whatever modules are active
+(see [The outbox](/concepts/events-outbox)); with the opt-in webhooks module active
+(`vaulter.modules.webhooks` = `true`, off by default) it also writes the pending delivery
+row of the `webhooks.fanout` outbox consumer for every external event type:
 
-- the change and its outbox row commit together, so a committed change is never
+- the change and its outbox rows commit together, so a committed change is never
   missing its webhook, even if the process dies right after the commit;
 - if the outbox row cannot be written, the change is rolled back and the operation
   fails — Vaulter does not commit a change it cannot announce;
 - your Laravel listeners run only after the commit; a failing listener is reported and
   never undoes the change.
 
-The `vaulter:webhooks:relay` command then fans each pending row out into deliveries.
+The core relay, `vaulter:relay`, then hands each event to `webhooks.fanout`, which fans it
+out into webhook deliveries.
 
 ## Delivery guarantees
 
-The relay turns each `pending` outbox row into one `v_webhook_deliveries` row per
-eligible endpoint and queues a job per delivery:
+The `webhooks.fanout` consumer turns each external event into one `v_webhook_deliveries`
+row per eligible endpoint and queues a job per delivery:
 
 - **Every eligible endpoint gets exactly one delivery row per event.** The relay leases
-  the outbox row (`webhooks.relay.claim_seconds`, default 60) and writes
-  `webhooks.relay.fanout_chunk` endpoints (default 100) per transaction, remembering the
-  last one in `fanout_cursor`. The row turns `completed` in the same transaction as its
-  last deliveries. If the relay dies, the next run takes the row over once the lease
-  lapses and continues after the cursor; a relay that lost its lease writes nothing, and
-  `UNIQUE(event_id, endpoint_id)` backs this up. You may run several relays at once.
+  the event's outbox delivery (`outbox.lease_seconds`, default 60); the consumer writes
+  `webhooks.relay.fanout_chunk` endpoints (default 100) per transaction and saves the last
+  one as the delivery's continuation, fenced by the lease. The outbox delivery is done only
+  after the last chunk. If the relay dies, the next run takes the delivery over once the
+  lease lapses and continues after the continuation; a worker that lost its lease writes
+  nothing, and `UNIQUE(event_id, endpoint_id)` backs this up. You may run several relays
+  at once.
 - **Jobs are queued after the rows commit.** A job lost after that is re-queued by the
-  retry sweep (`vaulter:webhooks:retry`, also run by `vaulter:webhooks:relay`) once the
-  delivery has waited `webhooks.relay.claim_seconds` without being picked up.
+  retry sweep (`vaulter:webhooks:retry`) once the delivery has waited
+  `webhooks.retry_claim_seconds` without being picked up.
 - **HTTP is at-least-once.** A delivery is retried on failure and can arrive twice if
   your acknowledgement is lost: deduplicate on the envelope `id`. Deliveries are not
   ordered.
-- **Prune deletes only finished work.** `vaulter:webhooks:prune` removes `completed`
-  outbox rows and `delivered`/`dead` deliveries older than `webhooks.retention_days`; a
-  `pending` row or a `pending`/`failed` delivery stays however old it is. Pruned rows are
-  gone for good — nothing can replay them.
+- **A switched-off module loses nothing silently.** While `vaulter.modules.webhooks` is
+  off, `webhooks.fanout` is paused: its pending deliveries wait and it holds the outbox
+  retention for up to `outbox.max_consumer_hold_seconds`. After that it is detached with an
+  explicit gap that `vaulter:doctor` reports until `vaulter:relay:replay` replays or
+  acknowledges it.
+- **Prune deletes only finished work.** `vaulter:webhooks:prune` removes
+  `delivered`/`dead` deliveries older than `webhooks.retention_days`; a `pending`/`failed`
+  delivery stays however old it is. The outbox has its own retention,
+  `vaulter:outbox:prune`. Pruned rows are gone for good — nothing can replay them.
 
 ## Who receives an event
 

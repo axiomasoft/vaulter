@@ -76,7 +76,11 @@ abstract readonly class DomainEvent
         return null;
     }
 
-    public function isWebhookEligible(): bool
+    /**
+     * Whether this occurrence may leave the process through the outbox consumers (D29): the `external` flag of
+     * the type, which an event narrows per occurrence (a document save without a checkpoint stays inside).
+     */
+    public function isExternal(): bool
     {
         return $this->type()->spec()->external;
     }

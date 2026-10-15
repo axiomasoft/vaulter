@@ -3754,7 +3754,7 @@
         "v_outbox": {
             "columns": [
                 {
-                    "name": "id",
+                    "name": "outbox_seq",
                     "type": "INTEGER",
                     "notnull": 1,
                     "default": null,
@@ -3770,14 +3770,6 @@
                     "hidden": 0
                 },
                 {
-                    "name": "profile",
-                    "type": "varchar",
-                    "notnull": 1,
-                    "default": "'default'",
-                    "pk": 0,
-                    "hidden": 0
-                },
-                {
                     "name": "tenant_id",
                     "type": "INTEGER",
                     "notnull": 0,
@@ -3786,8 +3778,16 @@
                     "hidden": 0
                 },
                 {
-                    "name": "drive_id",
-                    "type": "INTEGER",
+                    "name": "scope_kind",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "scope_id",
+                    "type": "varchar",
                     "notnull": 0,
                     "default": null,
                     "pk": 0,
@@ -3818,16 +3818,16 @@
                     "hidden": 0
                 },
                 {
-                    "name": "topic",
+                    "name": "type",
                     "type": "varchar",
-                    "notnull": 0,
+                    "notnull": 1,
                     "default": null,
                     "pk": 0,
                     "hidden": 0
                 },
                 {
-                    "name": "event",
-                    "type": "varchar",
+                    "name": "external",
+                    "type": "tinyint(1)",
                     "notnull": 1,
                     "default": null,
                     "pk": 0,
@@ -3842,8 +3842,204 @@
                     "hidden": 0
                 },
                 {
-                    "name": "available_at",
+                    "name": "created_at",
                     "type": "datetime",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                }
+            ],
+            "indexes": {
+                "v_outbox_created_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "created_at",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"v_outbox_created_idx\" on \"v_outbox\" (\"created_at\")"
+                },
+                "v_outbox_event_id_unique": {
+                    "unique": 1,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "event_id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE UNIQUE INDEX \"v_outbox_event_id_unique\" on \"v_outbox\" (\"event_id\")"
+                },
+                "v_outbox_tenant_id_index": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "tenant_id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"v_outbox_tenant_id_index\" on \"v_outbox\" (\"tenant_id\")"
+                }
+            },
+            "foreign_keys": [],
+            "create_sql": "CREATE TABLE \"v_outbox\" (\"outbox_seq\" integer primary key autoincrement not null, \"event_id\" varchar not null, \"tenant_id\" integer, \"scope_kind\" varchar not null, \"scope_id\" varchar, \"aggregate_type\" varchar, \"aggregate_id\" varchar, \"sequence\" integer, \"type\" varchar not null, \"external\" tinyint(1) not null, \"payload\" text not null, \"created_at\" datetime not null)"
+        },
+        "v_outbox_consumers": {
+            "columns": [
+                {
+                    "name": "consumer_id",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 1,
+                    "hidden": 0
+                },
+                {
+                    "name": "delivery_class",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "state",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "activation_seq",
+                    "type": "INTEGER",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "reconciled_through_seq",
+                    "type": "INTEGER",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "paused_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "lease_owner",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "lease_generation",
+                    "type": "INTEGER",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "gaps",
+                    "type": "TEXT",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                }
+            ],
+            "indexes": {
+                "sqlite_autoindex_v_outbox_consumers_1": {
+                    "unique": 1,
+                    "origin": "pk",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "consumer_id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": null
+                }
+            },
+            "foreign_keys": [],
+            "create_sql": "CREATE TABLE \"v_outbox_consumers\" (\"consumer_id\" varchar not null, \"delivery_class\" varchar not null, \"state\" varchar not null, \"activation_seq\" integer not null, \"reconciled_through_seq\" integer not null, \"paused_at\" datetime, \"lease_owner\" varchar, \"lease_generation\" integer not null default '0', \"lease_expires_at\" datetime, \"gaps\" text not null, \"created_at\" datetime, \"updated_at\" datetime, primary key (\"consumer_id\"))"
+        },
+        "v_outbox_deliveries": {
+            "columns": [
+                {
+                    "name": "event_id",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 1,
+                    "hidden": 0
+                },
+                {
+                    "name": "consumer_id",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 2,
+                    "hidden": 0
+                },
+                {
+                    "name": "outbox_seq",
+                    "type": "INTEGER",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "state",
+                    "type": "varchar",
                     "notnull": 1,
                     "default": null,
                     "pk": 0,
@@ -3858,10 +4054,50 @@
                     "hidden": 0
                 },
                 {
-                    "name": "status",
-                    "type": "varchar",
+                    "name": "next_attempt_at",
+                    "type": "datetime",
                     "notnull": 1,
-                    "default": "'pending'",
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "lease_owner",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "lease_generation",
+                    "type": "INTEGER",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "continuation",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "last_error",
+                    "type": "TEXT",
+                    "notnull": 0,
+                    "default": null,
                     "pk": 0,
                     "hidden": 0
                 },
@@ -3882,154 +4118,90 @@
                     "hidden": 0
                 },
                 {
-                    "name": "claim_token",
-                    "type": "varchar",
-                    "notnull": 0,
-                    "default": null,
-                    "pk": 0,
-                    "hidden": 0
-                },
-                {
-                    "name": "claim_generation",
-                    "type": "INTEGER",
-                    "notnull": 1,
-                    "default": "'0'",
-                    "pk": 0,
-                    "hidden": 0
-                },
-                {
-                    "name": "claim_until",
+                    "name": "done_at",
                     "type": "datetime",
                     "notnull": 0,
                     "default": null,
-                    "pk": 0,
-                    "hidden": 0
-                },
-                {
-                    "name": "fanout_cursor",
-                    "type": "varchar",
-                    "notnull": 0,
-                    "default": null,
-                    "pk": 0,
-                    "hidden": 0
-                },
-                {
-                    "name": "fanned_out_at",
-                    "type": "datetime",
-                    "notnull": 0,
-                    "default": null,
-                    "pk": 0,
-                    "hidden": 0
-                },
-                {
-                    "name": "delivery_count",
-                    "type": "INTEGER",
-                    "notnull": 1,
-                    "default": "'0'",
-                    "pk": 0,
-                    "hidden": 0
-                },
-                {
-                    "name": "legacy_fanout",
-                    "type": "tinyint(1)",
-                    "notnull": 1,
-                    "default": "'0'",
                     "pk": 0,
                     "hidden": 0
                 }
             ],
             "indexes": {
-                "v_outbox_drain_idx": {
-                    "unique": 0,
-                    "origin": "c",
-                    "partial": 0,
-                    "columns": [
-                        {
-                            "name": "status",
-                            "desc": 0,
-                            "collation": "BINARY"
-                        },
-                        {
-                            "name": "available_at",
-                            "desc": 0,
-                            "collation": "BINARY"
-                        }
-                    ],
-                    "sql": "CREATE INDEX \"v_outbox_drain_idx\" on \"v_outbox\" (\"status\", \"available_at\")"
-                },
-                "v_outbox_drive_id_index": {
-                    "unique": 0,
-                    "origin": "c",
-                    "partial": 0,
-                    "columns": [
-                        {
-                            "name": "drive_id",
-                            "desc": 0,
-                            "collation": "BINARY"
-                        }
-                    ],
-                    "sql": "CREATE INDEX \"v_outbox_drive_id_index\" on \"v_outbox\" (\"drive_id\")"
-                },
-                "v_outbox_event_id_unique": {
+                "sqlite_autoindex_v_outbox_deliveries_1": {
                     "unique": 1,
-                    "origin": "c",
+                    "origin": "pk",
                     "partial": 0,
                     "columns": [
                         {
                             "name": "event_id",
                             "desc": 0,
                             "collation": "BINARY"
-                        }
-                    ],
-                    "sql": "CREATE UNIQUE INDEX \"v_outbox_event_id_unique\" on \"v_outbox\" (\"event_id\")"
-                },
-                "v_outbox_profile_index": {
-                    "unique": 0,
-                    "origin": "c",
-                    "partial": 0,
-                    "columns": [
+                        },
                         {
-                            "name": "profile",
+                            "name": "consumer_id",
                             "desc": 0,
                             "collation": "BINARY"
                         }
                     ],
-                    "sql": "CREATE INDEX \"v_outbox_profile_index\" on \"v_outbox\" (\"profile\")"
+                    "sql": null
                 },
-                "v_outbox_prune_idx": {
+                "v_outbox_deliveries_due_idx": {
                     "unique": 0,
                     "origin": "c",
                     "partial": 0,
                     "columns": [
                         {
-                            "name": "status",
+                            "name": "consumer_id",
                             "desc": 0,
                             "collation": "BINARY"
                         },
                         {
-                            "name": "fanned_out_at",
+                            "name": "state",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "next_attempt_at",
                             "desc": 0,
                             "collation": "BINARY"
                         }
                     ],
-                    "sql": "CREATE INDEX \"v_outbox_prune_idx\" on \"v_outbox\" (\"status\", \"fanned_out_at\")"
+                    "sql": "CREATE INDEX \"v_outbox_deliveries_due_idx\" on \"v_outbox_deliveries\" (\"consumer_id\", \"state\", \"next_attempt_at\")"
                 },
-                "v_outbox_tenant_id_index": {
+                "v_outbox_deliveries_lease_idx": {
                     "unique": 0,
                     "origin": "c",
                     "partial": 0,
                     "columns": [
                         {
-                            "name": "tenant_id",
+                            "name": "state",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        },
+                        {
+                            "name": "lease_expires_at",
                             "desc": 0,
                             "collation": "BINARY"
                         }
                     ],
-                    "sql": "CREATE INDEX \"v_outbox_tenant_id_index\" on \"v_outbox\" (\"tenant_id\")"
+                    "sql": "CREATE INDEX \"v_outbox_deliveries_lease_idx\" on \"v_outbox_deliveries\" (\"state\", \"lease_expires_at\")"
+                },
+                "v_outbox_deliveries_seq_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "outbox_seq",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"v_outbox_deliveries_seq_idx\" on \"v_outbox_deliveries\" (\"outbox_seq\")"
                 }
             },
             "foreign_keys": [],
-            "create_sql": "CREATE TABLE \"v_outbox\" (\"id\" integer primary key autoincrement not null, \"event_id\" varchar not null, \"profile\" varchar not null default 'default', \"tenant_id\" integer, \"drive_id\" integer, \"aggregate_type\" varchar, \"aggregate_id\" varchar, \"sequence\" integer, \"topic\" varchar, \"event\" varchar not null, \"payload\" text not null, \"available_at\" datetime not null, \"attempts\" integer not null default '0', \"status\" varchar not null default 'pending', \"created_at\" datetime, \"updated_at\" datetime, \"claim_token\" varchar, \"claim_generation\" integer not null default '0', \"claim_until\" datetime, \"fanout_cursor\" varchar, \"fanned_out_at\" datetime, \"delivery_count\" integer not null default '0', \"legacy_fanout\" tinyint(1) not null default '0')"
+            "create_sql": "CREATE TABLE \"v_outbox_deliveries\" (\"event_id\" varchar not null, \"consumer_id\" varchar not null, \"outbox_seq\" integer not null, \"state\" varchar not null, \"attempts\" integer not null default '0', \"next_attempt_at\" datetime not null, \"lease_owner\" varchar, \"lease_generation\" integer not null default '0', \"lease_expires_at\" datetime, \"continuation\" varchar, \"last_error\" text, \"created_at\" datetime, \"updated_at\" datetime, \"done_at\" datetime, primary key (\"event_id\", \"consumer_id\"))"
         },
         "v_scan_backfill_runs": {
             "columns": [

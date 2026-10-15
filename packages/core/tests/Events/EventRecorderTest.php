@@ -7,27 +7,23 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Str;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Enums\Events\DriveEventType;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
+use Vaulter\Events\Outbox\OutboxEnvelope;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
-use Vaulter\Webhooks\EventEnvelope;
-use Vaulter\Webhooks\OutboxRecorder;
 
 /**
- * The event pipeline (C05): a change, its activity row and its outbox row commit or
+ * The event pipeline (C05, D29): a change, its activity row and its outbox row commit or
  * roll back together, and host listeners see the event once, after the commit. No
  * wrapping test transaction, so a commit here is a real one.
  */
@@ -64,7 +60,7 @@ it('writes one activity row and one outbox row under one event id and notifies l
     eventRecorderRename($this, 'beta');
 
     $activity = Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->sole();
-    $outbox = Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
 
     expect($activity->event_id)->toBe($outbox->event_id)
         ->and($outbox->payload['id'])->toBe($outbox->event_id)
@@ -75,10 +71,10 @@ it('writes one activity row and one outbox row under one event id and notifies l
 it('stores the thin envelope as the outbox payload', function (): void {
     eventRecorderRename($this, 'beta');
 
-    $outbox = Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
     $payload = $outbox->payload;
     $forbidden = static function (array $value) use (&$forbidden): array {
-        $found = array_values(array_intersect(array_keys($value), EventEnvelope::FORBIDDEN_KEYS));
+        $found = array_values(array_intersect(array_keys($value), OutboxEnvelope::FORBIDDEN_KEYS));
         foreach ($value as $child) {
             if (is_array($child)) {
                 $found = [...$found, ...$forbidden($child)];
@@ -103,14 +99,7 @@ it('stores the thin envelope as the outbox payload', function (): void {
 });
 
 it('rolls the change back when the outbox write fails', function (): void {
-    app()->bind(OutboxRecorder::class, fn (): OutboxRecorder => new class(app(VaulterConfig::class), app(MetricsRecorder::class), app(VaulterDatabase::class), app(IdStrategyResolver::class)) extends OutboxRecorder
-    {
-        #[Override]
-        public function stage(DomainEvent $event, array $envelope): bool
-        {
-            throw new RuntimeException('outbox insert failed');
-        }
-    });
+    WebhookTestHelpers::failOutboxInsert();
 
     expect(fn () => eventRecorderRename($this, 'beta'))->toThrow(RuntimeException::class, 'outbox insert failed')
         ->and(DriveTestHelpers::model($this->folder->id)->name)->toBe('alpha')
@@ -140,7 +129,7 @@ it('ignores a replay of a stored occurrence and does not notify listeners again'
     $database->transaction(fn () => app(EventRecorder::class)->record(eventRecorderEvent($this, $eventId)));
 
     expect(Activity::query()->where('event_id', $eventId)->count())->toBe(1)
-        ->and(Outbox::query()->where('event_id', $eventId)->count())->toBe(1)
+        ->and(OutboxEvent::query()->where('event_id', $eventId)->count())->toBe(1)
         ->and(iterator_to_array($this->seen))->toBe([[$eventId, 0]]);
 });
 
@@ -166,19 +155,20 @@ it('does not notify listeners of an attempt whose commit failed and was retried'
 
     eventRecorderRename($this, 'beta');
 
-    $outbox = Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
     expect($failed)->toBeTrue()
         ->and(array_column(iterator_to_array($this->seen), 0))->toBe([$outbox->event_id]);
 });
 
-it('writes only the sinks whose feature is enabled', function (bool $activity, bool $webhooks): void {
+it('writes the activity row only while its feature is on, and the outbox whatever modules are active', function (bool $activity, bool $webhooks): void {
     config()->set('vaulter.features.activity', $activity);
     WebhookTestHelpers::switchModule($this->app, $webhooks);
 
     eventRecorderRename($this, 'beta');
 
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
     expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->count())->toBe($activity ? 1 : 0)
-        ->and(Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->count())->toBe($webhooks ? 1 : 0)
+        ->and(WebhookTestHelpers::outboxDelivery($outbox->event_id) !== null)->toBe($webhooks)
         ->and(count($this->seen))->toBe(1);
 })->with([
     'both' => [true, true],
@@ -200,7 +190,7 @@ it('reports a failing listener without undoing the committed change', function (
 
     expect($renamed->name)->toBe('beta')
         ->and(DriveTestHelpers::model($this->folder->id)->name)->toBe('beta')
-        ->and(Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->count())->toBe(1);
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->count())->toBe(1);
     Exceptions::assertReported(static fn (RuntimeException $exception): bool => $exception->getMessage() === 'listener down');
     $metrics->assertCounter(name: 'vaulter_event_listener_failures_total', labels: ['type' => 'node.renamed']);
 });

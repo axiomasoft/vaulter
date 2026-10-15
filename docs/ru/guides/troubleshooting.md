@@ -242,8 +242,8 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 - Ошибки `core.schema.tables`: выполните `php artisan migrate`; `core.schema.key_types` значит, что
   `ids.strategy` или `ids.host_keys` отличается от значения, с которым создавалась схема, — верните
   прежнее значение, колонки руками не правьте.
-- `core.webhooks.relay_leases` и `drive.scan.obligations` указывают на не запущенный воркер или
-  планировщик: запустите воркер очереди и `schedule:run`, затем `vaulter:webhooks:relay` или
+- `core.outbox.leases`, `core.outbox.lag` и `drive.scan.obligations` указывают на не запущенный воркер или
+  планировщик: запустите воркер очереди и `schedule:run`, затем `vaulter:relay` или
   `vaulter:scan:reconcile --all-tenants --dry-run`.
 - `drive.scan.policy` с предупреждением о переходе значит, что конфиг называет политику сканирования,
   которую drive не активировал; сначала `vaulter:scan:rescan --activate-policy --drive=<id> --dry-run`.

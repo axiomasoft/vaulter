@@ -277,6 +277,19 @@ Vaulter\Configuration\ObservabilityConfig
   tracingEnabled(): bool
   tracingRecorder(): ?string
 
+Vaulter\Configuration\OutboxConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  backoffBaseSeconds(): int
+  backoffCapSeconds(): int
+  batch(): int
+  deadRetentionSeconds(): int
+  leaseSeconds(): int
+  maxAttempts(): int
+  maxConsumerHoldSeconds(): int
+  retentionSeconds(): int
+  settleWindowSeconds(): int
+  validate(): void
+
 Vaulter\Configuration\RoutesConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   authenticatedMiddleware(): array
@@ -329,6 +342,7 @@ Vaulter\Configuration\VaulterConfig
   listing(): \Vaulter\Configuration\ListingConfig
   model(string $key): string
   observability(): \Vaulter\Configuration\ObservabilityConfig
+  outbox(): \Vaulter\Configuration\OutboxConfig
   profileProviders(): array
   routes(): \Vaulter\Configuration\RoutesConfig
   scan(): \Vaulter\Configuration\ScanConfig
@@ -346,7 +360,6 @@ Vaulter\Configuration\WebhooksConfig
   disableAfterDays(): int
   manageAbility(): ?string
   maxResponseBytes(): int
-  relayClaimSeconds(): int
   relayFanoutChunk(): int
   retentionDays(): int
   retryClaimSeconds(): int
@@ -1225,7 +1238,7 @@ Vaulter\Events\Access\NodeGrantCreated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -1242,7 +1255,7 @@ Vaulter\Events\Access\NodeGrantRevoked
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -1261,7 +1274,7 @@ Vaulter\Events\Access\NodeInheritanceChanged
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -1279,7 +1292,7 @@ Vaulter\Events\DomainEvent
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -1331,12 +1344,391 @@ Vaulter\Events\EventsReference
   render(): string
 
 
+Vaulter\Events\Outbox\ConsumeResult
+  dead(string $error): \self
+  done(): \self
+  retry(string $error): \self
+  readonly ?string $error
+  readonly string $outcome
+
+Vaulter\Events\Outbox\ConsumerState
+  cases(): array
+  from(int|string $value): \static
+  tryFrom(int|string $value): ?\static
+  readonly string $name
+  readonly string $value
+
+Vaulter\Events\Outbox\DeliveryClass
+  cases(): array
+  from(int|string $value): \static
+  tryFrom(int|string $value): ?\static
+  readonly string $name
+  readonly string $value
+
+Vaulter\Events\Outbox\DeliveryControl
+  __construct(\Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\DatabaseConfig $tables, string $eventId, string $consumerId, int $generation, ?string $continuation)
+  continuation(): ?string
+  isCurrent(): bool
+  saveContinuation(string $cursor): bool
+  readonly int $generation
+  readonly string $consumerId
+  readonly string $eventId
+
+Vaulter\Events\Outbox\DeliveryState
+  cases(): array
+  from(int|string $value): \static
+  tryFrom(int|string $value): ?\static
+  readonly string $name
+  readonly string $value
+
+Vaulter\Events\Outbox\Models\OutboxEvent
+  __call($method, $parameters)
+  __callStatic($method, $parameters)
+  __construct(array $attributes = [])
+  __get($key)
+  __isset($key)
+  __set($key, $value)
+  __sleep()
+  __toString(): string
+  __unset($key)
+  __wakeup()
+  addGlobalScope($scope, $implementation = null)
+  addGlobalScopes(array $scopes)
+  addObservableEvents($observables)
+  all($columns = ['*'])
+  append($attributes)
+  attributesToArray()
+  autoloadRelationsUsing(\Closure $callback, $context = null)
+  automaticallyEagerLoadRelationships($value = true)
+  belongsTo($related, $foreignKey = null, $ownerKey = null, $relation = null)
+  belongsToMany($related, $table = null, $foreignPivotKey = null, $relatedPivotKey = null, $parentKey = null, $relatedKey = null, $relation = null)
+  bootHasEvents()
+  bootHasGlobalScopes()
+  broadcastChannel()
+  broadcastChannelRoute()
+  cacheMutatedAttributes($classOrInstance)
+  callNamedScope($scope, array $parameters = [])
+  clearBootedModels()
+  created($callback)
+  creating($callback)
+  currentEncrypter()
+  delete()
+  deleteOrFail()
+  deleteQuietly()
+  deleted($callback)
+  deleting($callback)
+  destroy($ids)
+  discardChanges()
+  dispatchesEvents()
+  encryptUsing($encrypter)
+  escapeWhenCastingToString($escape = true)
+  except($attributes)
+  fill(array $attributes)
+  fillJsonAttribute($key, $value)
+  fillable(array $fillable)
+  flushEventListeners()
+  forceDelete()
+  forceDestroy($ids)
+  forceFill(array $attributes)
+  fresh($with = [])
+  freshTimestamp()
+  freshTimestampString()
+  fromDateTime($value)
+  fromEncryptedString($value)
+  fromFloat($value)
+  fromJson($value, $asObject = false)
+  getActualClassNameForMorph($class)
+  getAllGlobalScopes()
+  getAppends()
+  getAttribute($key)
+  getAttributeValue($key)
+  getAttributes()
+  getCasts()
+  getChanges()
+  getConnection()
+  getConnectionName(): ?string
+  getConnectionResolver()
+  getCreatedAtColumn()
+  getDateFormat()
+  getDates()
+  getDirty()
+  getEventDispatcher()
+  getFillable()
+  getForeignKey()
+  getGlobalScope($scope)
+  getGlobalScopes()
+  getGuarded()
+  getHidden()
+  getIncrementing()
+  getKey()
+  getKeyName()
+  getKeyType()
+  getMorphClass()
+  getMutatedAttributes()
+  getObservableEvents()
+  getOriginal($key = null, $default = null)
+  getPerPage()
+  getPrevious()
+  getQualifiedCreatedAtColumn()
+  getQualifiedKeyName()
+  getQualifiedUpdatedAtColumn()
+  getQueueableConnection()
+  getQueueableId()
+  getQueueableRelations()
+  getRawOriginal($key = null, $default = null)
+  getRelation($relation)
+  getRelationValue($key)
+  getRelations()
+  getRouteKey()
+  getRouteKeyName()
+  getTable(): string
+  getTouchedRelations()
+  getUpdatedAtColumn()
+  getVisible()
+  guard(array $guarded)
+  guessResourceName(): array
+  handleDiscardedAttributeViolationUsing(?callable $callback)
+  handleLazyLoadingViolationUsing(?callable $callback)
+  handleMissingAttributeViolationUsing(?callable $callback)
+  hasAnyGetMutator($key)
+  hasAppended($attribute)
+  hasAttribute($key)
+  hasAttributeGetMutator($key)
+  hasAttributeMutator($key)
+  hasAttributeSetMutator($key)
+  hasCast($key, $types = null)
+  hasGetMutator($key)
+  hasGlobalScope($scope)
+  hasMany($related, $foreignKey = null, $localKey = null)
+  hasManyThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+  hasNamedScope($scope)
+  hasOne($related, $foreignKey = null, $localKey = null)
+  hasOneThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+  hasRelationAutoloadCallback()
+  hasSetMutator($key)
+  initializeGuardsAttributes()
+  initializeHasRelationships()
+  initializeHasTimestamps()
+  initializeHidesAttributes()
+  initializeModelAttributes()
+  is($model)
+  isAutomaticallyEagerLoadingRelationships()
+  isClean($attributes = null)
+  isDirty($attributes = null)
+  isFillable($key)
+  isGuarded($key)
+  isIgnoringTimestamps($class = null)
+  isIgnoringTouch($class = null)
+  isNot($model)
+  isRelation($key)
+  isSoftDeletable(): bool
+  isUnguarded()
+  joiningTable($related, $instance = null)
+  joiningTableSegment()
+  jsonSerialize(): mixed
+  load($relations)
+  loadAggregate($relations, $column, $function = null)
+  loadAvg($relations, $column)
+  loadCount($relations)
+  loadExists($relations)
+  loadMax($relations, $column)
+  loadMin($relations, $column)
+  loadMissing($relations)
+  loadMorph($relation, $relations)
+  loadMorphAggregate($relation, $relations, $column, $function = null)
+  loadMorphAvg($relation, $relations, $column)
+  loadMorphCount($relation, $relations)
+  loadMorphMax($relation, $relations, $column)
+  loadMorphMin($relation, $relations, $column)
+  loadMorphSum($relation, $relations, $column)
+  loadSum($relations, $column)
+  makeHidden($attributes)
+  makeHiddenIf($condition, $attributes)
+  makeVisible($attributes)
+  makeVisibleIf($condition, $attributes)
+  mergeAppends(array $appends)
+  mergeCasts($casts)
+  mergeFillable(array $fillable)
+  mergeGuarded(array $guarded)
+  mergeHidden(array $hidden)
+  mergeVisible(array $visible)
+  morphMany($related, $name, $type = null, $id = null, $localKey = null)
+  morphOne($related, $name, $type = null, $id = null, $localKey = null)
+  morphTo($name = null, $type = null, $id = null, $ownerKey = null)
+  morphToMany($related, $name, $table = null, $foreignPivotKey = null, $relatedPivotKey = null, $parentKey = null, $relatedKey = null, $relation = null, $inverse = false)
+  morphedByMany($related, $name, $table = null, $foreignPivotKey = null, $relatedPivotKey = null, $parentKey = null, $relatedKey = null, $relation = null)
+  newCollection(array $models = [])
+  newEloquentBuilder($query)
+  newFromBuilder($attributes = [], $connection = null)
+  newInstance($attributes = [], $exists = false)
+  newModelQuery()
+  newPivot(\self $parent, array $attributes, $table, $exists, $using = null)
+  newQuery()
+  newQueryForRestoration($ids)
+  newQueryWithoutRelationships()
+  newQueryWithoutScope($scope)
+  newQueryWithoutScopes()
+  newUniqueId()
+  observe($classes)
+  offsetExists($offset): bool
+  offsetGet($offset): mixed
+  offsetSet($offset, $value): void
+  offsetUnset($offset): void
+  on($connection = null)
+  onWriteConnection()
+  only($attributes)
+  originalIsEquivalent($key)
+  preventAccessingMissingAttributes($value = true)
+  preventLazyLoading($value = true)
+  preventSilentlyDiscardingAttributes($value = true)
+  preventsAccessingMissingAttributes()
+  preventsLazyLoading()
+  preventsSilentlyDiscardingAttributes()
+  push()
+  pushQuietly()
+  qualifyColumn($column)
+  qualifyColumns($columns)
+  query()
+  refresh()
+  refreshForUpdate()
+  registerGlobalScopes($builder)
+  reguard()
+  relationLoaded($key)
+  relationResolver($class, $key)
+  relationsToArray()
+  removeObservableEvents($observables)
+  replicate(?array $except = null)
+  replicateQuietly(?array $except = null)
+  replicating($callback)
+  resolveChildRouteBinding($childType, $value, $field)
+  resolveCollectionFromAttribute()
+  resolveConnection($connection = null)
+  resolveGlobalScopeAttributes()
+  resolveObserveAttributes()
+  resolveRelationUsing($name, \Closure $callback)
+  resolveRouteBinding($value, $field = null)
+  resolveRouteBindingQuery($query, $value, $field = null)
+  resolveSoftDeletableChildRouteBinding($childType, $value, $field)
+  resolveSoftDeletableRouteBinding($value, $field = null)
+  retrieved($callback)
+  save(array $options = [])
+  saveOrFail(array $options = [])
+  saveOrIgnore(array $options = [], array|null|string $uniqueBy = null)
+  saveQuietly(array $options = [])
+  saved($callback)
+  saving($callback)
+  setAllGlobalScopes($scopes)
+  setAppends(array $appends)
+  setAttribute($key, $value)
+  setConnection($name)
+  setConnectionResolver(\Illuminate\Database\ConnectionResolverInterface $resolver)
+  setCreatedAt($value)
+  setDateFormat($format)
+  setEventDispatcher(\Illuminate\Contracts\Events\Dispatcher $dispatcher)
+  setHidden(array $hidden)
+  setIncrementing($value)
+  setKeyName($key)
+  setKeyType($type)
+  setObservableEvents(array $observables)
+  setPerPage($perPage)
+  setRawAttributes(array $attributes, $sync = false)
+  setRelation($relation, $value)
+  setRelations(array $relations)
+  setTable($table)
+  setTouchedRelations(array $touches)
+  setUniqueIds()
+  setUpdatedAt($value)
+  setVisible(array $visible)
+  shouldBeStrict(bool $shouldBeStrict = true)
+  syncChanges()
+  syncOriginal()
+  syncOriginalAttribute($attribute)
+  syncOriginalAttributes($attributes)
+  through($relationship)
+  toArray()
+  toJson($options = 0)
+  toPrettyJson(int $options = 0)
+  toResource(?string $resourceClass = null): \Illuminate\Http\Resources\Json\JsonResource
+  totallyGuarded()
+  touch($attribute = null)
+  touchOwners()
+  touchQuietly($attribute = null)
+  touches($relation)
+  unguard($state = true)
+  unguarded(callable $callback)
+  uniqueIds()
+  unsetConnectionResolver()
+  unsetEventDispatcher()
+  unsetRelation($relation)
+  unsetRelations()
+  update(array $attributes = [], array $options = [])
+  updateOrFail(array $attributes = [], array $options = [])
+  updateQuietly(array $attributes = [], array $options = [])
+  updateTimestamps()
+  updated($callback)
+  updating($callback)
+  usesTimestamps()
+  usesUniqueIds()
+  wasChanged($attributes = null)
+  with($relations)
+  withRelationshipAutoloading()
+  withoutAppends()
+  withoutBroadcasting(callable $callback)
+  withoutEvents(callable $callback)
+  withoutRelation($relations)
+  withoutRelations()
+  withoutTimestamps(callable $callback)
+  withoutTimestampsOn($models, $callback)
+  withoutTouching(callable $callback)
+  withoutTouchingOn(array $models, callable $callback)
+   $encrypter
+   $exists
+   $incrementing
+   $manyMethods
+   $preventsLazyLoading
+   $snakeAttributes
+   $timestamps
+   $usesUniqueIds
+   $wasRecentlyCreated
+
+Vaulter\Events\Outbox\OutboxConsumer
+  consume(\Vaulter\Events\Outbox\OutboxEnvelope $envelope, \Vaulter\Events\Outbox\DeliveryControl $control): \Vaulter\Events\Outbox\ConsumeResult
+  deliveryClass(): \Vaulter\Events\Outbox\DeliveryClass
+  id(): string
+  subscribes(\Vaulter\Events\EventTypeContract $type): bool
+
+
+Vaulter\Events\Outbox\OutboxEnvelope
+  __construct(string $eventId, int $outboxSeq, string $type, bool $external, ?string $tenantId, string $scopeKind, ?string $scopeId, ?string $aggregateType, ?string $aggregateId, ?int $sequence, \Carbon\CarbonImmutable $createdAt, array $payload)
+  body(\Vaulter\Events\DomainEvent $event, ?int $changeSeq = null): array
+  fromModel(\Vaulter\Events\Outbox\Models\OutboxEvent $row): \self
+  readonly ?int $sequence
+  readonly ?string $aggregateId
+  readonly ?string $aggregateType
+  readonly ?string $scopeId
+  readonly ?string $tenantId
+  readonly \Carbon\CarbonImmutable $createdAt
+  readonly array $payload
+  readonly bool $external
+  readonly int $outboxSeq
+  readonly string $eventId
+  readonly string $scopeKind
+  readonly string $type
+
+Vaulter\Events\Outbox\OutboxRelay
+  __construct(\Vaulter\Events\Outbox\OutboxStore $store, \Vaulter\Configuration\OutboxConfig $config, \Vaulter\Configuration\VaulterConfig $vaulterConfig, \Vaulter\Kernel $kernel, \Illuminate\Contracts\Container\Container $container, \Vaulter\Contracts\Observability\MetricsRecorder $metrics, \Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\DatabaseConfig $tables)
+  consumers(): array
+  pass(?string $only = null, ?int $limit = null): array
+  prune(): array
+  replay(string $id, int $from, int $to, bool $ackOnly): array
+
+
 Vaulter\Events\Sharing\NodeShareCreated
   __construct(\Vaulter\Models\Sharing\NodeShare $share, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -1353,7 +1745,7 @@ Vaulter\Events\Sharing\NodeShareRevoked
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -1370,7 +1762,7 @@ Vaulter\Events\Sharing\NodeShareRotated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
@@ -1387,7 +1779,7 @@ Vaulter\Events\Sharing\NodeShareUpdated
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
+  isExternal(): bool
   journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int

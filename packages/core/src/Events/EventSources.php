@@ -16,7 +16,7 @@ use Vaulter\Modules\VaulterModule;
  *
  * @internal
  */
-final class EventSources
+final readonly class EventSources
 {
     /**
      * The enums of the active modules; none while the graph is invalid or not compiled yet.

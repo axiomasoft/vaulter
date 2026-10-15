@@ -9,17 +9,14 @@ use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
- * Re-queues due failed webhook deliveries. A focused
- * companion to vaulter:webhooks:relay: where the relay both drains the outbox AND
- * re-arms retries, this command ONLY re-dispatches the deliveries whose backoff window
- * has elapsed (status in pending|failed, next_retry_at <= now). Schedulable on its own
- * cadence for a host that runs the relay as a long-lived worker but wants a separate
- * retry heartbeat.
+ * Re-queues due failed webhook deliveries: it re-dispatches the deliveries whose backoff
+ * window has elapsed (status in pending|failed, next_retry_at <= now). The outbox relay
+ * (vaulter:relay) only fans events out into deliveries; this command is the retry
+ * heartbeat, scheduled every minute.
  *
  * Terminal deliveries (delivered|dead) are never re-queued — a dead row stays in the
- * DLQ for inspection. Both this command and the relay claim through the SAME
- * WebhookRetryDispatcher, which locks + re-arms each due row atomically, so
- * running both never fans a delivery out twice.
+ * DLQ for inspection. Every sweep claims through WebhookRetryDispatcher, which locks
+ * + re-arms each due row atomically, so overlapping runs never fan a delivery out twice.
  */
 final class RetryWebhooksCommand extends Command
 {

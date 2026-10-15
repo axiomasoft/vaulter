@@ -609,57 +609,52 @@ php artisan vaulter:blobs:gc --grace=48 --pending
 
 ## Надёжность — outbox и вебхуки {#webhooks}
 
-Фича `reliability` стейджит каждое доменное событие Drive в `v_outbox` (после коммита), затем
-relay разносит его в подписанные строки `v_webhook_deliveries` по каждому активному подписанному
-эндпоинту:
+Каждое доменное событие пишется в `v_outbox` в транзакции своей операции; relay ядра передаёт
+его consumer'ам outbox, а consumer модуля вебхуков разворачивает его в подписанные строки
+`v_webhook_deliveries` для каждого активного подписанного эндпоинта (см. [Outbox](/ru/concepts/events-outbox)):
 
 <!-- snippet: host -->
 
 ```php
-// Нужно только при vaulter.schedule.enabled=false; иначе пакеты планируют это сами.
+// Нужно только при vaulter.schedule.enabled=false; иначе пакеты уже ставят эти задачи сами.
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:webhooks:relay')->everyMinute();    // outbox → deliveries → queue
-Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes(); // retry failed deliveries
-Schedule::command('vaulter:webhooks:prune')->daily();        // reclaim settled audit history
+Schedule::command('vaulter:relay')->everyMinute()->withoutOverlapping(); // outbox → consumer'ы → доставки → очередь
+Schedule::command('vaulter:outbox:prune')->hourly();              // хранение outbox без потерь
+Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes(); // повтор неудачных доставок
+Schedule::command('vaulter:webhooks:prune')->daily();        // обрезка истории терминальных доставок
 ```
 
-Эндпоинтами подписчиков управляют через маршруты `webhook-endpoints` (завязаны на право manage
-из `WebhookEndpointPolicy`). Каждый POST доставки подписан по Standard Webhooks (`webhook-id`,
-`webhook-timestamp`, `webhook-signature`); потребители **дедуплицируют по `webhook-id`**
-(это `id` конверта), поскольку доставка «хотя бы один раз». Настройте `config('vaulter.webhooks.*')`
-(`retry_schedule`, `retry_jitter`, `disable_after_days`).
+Эндпоинты-подписчики управляются через маршруты `webhook-endpoints` (под правом manage политики
+`WebhookEndpointPolicy`). Каждый POST доставки подписан по
+[Standard Webhooks](/ru/guides/webhooks#заголовки-и-подпись) (`webhook-id`, `webhook-timestamp`,
+`webhook-signature`); потребители **дедуплицируют по `webhook-id`** (`id` конверта), так как
+доставка — at-least-once. Настраивайте `config('vaulter.webhooks.*')` (`retry_schedule`,
+`retry_jitter`, `disable_after_days`) и `config('vaulter.outbox.*')`.
 
 ### Обрезка урегулированной истории outbox и вебхуков
 
-Разнесённые строки outbox и терминальные доставки вебхуков — это append-only аудит-след, который
-иначе растёт бесконечно. `vaulter:webhooks:prune` освобождает **урегулированные** строки за
-пределами окна хранения — и *только* урегулированные:
+`vaulter:outbox:prune` удаляет события outbox старше `outbox.retention_seconds`, когда ни одна их
+доставка не открыта и каждый durable consumer сверился дальше них; мёртвые доставки outbox живут
+`outbox.dead_retention_seconds`. `vaulter:webhooks:prune` вычищает терминальные доставки вебхуков
+старше срока хранения — и *только* их:
 
 <!-- snippet: shell -->
 
 ```bash
-# Prune settled rows older than config('vaulter.webhooks.retention_days') (default 30):
+# Удалить терминальные доставки старше config('vaulter.webhooks.retention_days') (по умолчанию 30):
 php artisan vaulter:webhooks:prune
 
-# Override the window, or preview the exact counts without deleting anything:
+# Переопределить окно или посмотреть точное число без удаления:
 php artisan vaulter:webhooks:prune --days=7
 php artisan vaulter:webhooks:prune --dry-run
 ```
 
-Она удаляет ровно два вида строк, которые больше никогда не меняются:
-
-- **разнесённые строки outbox** — статус `dispatched`, по `dispatched_at`;
-- **терминальные доставки** — статус `delivered` или `dead` (DLQ), по `updated_at` (время
-  терминализации).
-
-Строки в полёте **никогда** не трогаются: строка outbox в статусе `pending` (ею всё ещё владеет
-relay) и доставка `pending`/`failed` (ею всё ещё владеет sweep повторов по расписанию) остаются
-нетронутыми независимо от возраста. `--dry-run` сообщает счётчики, которые он *удалил бы*, ничего
-не удаляя. Команда завязана на фичу `reliability` — при выключенной фиче она ничего не делает и
-печатает уведомление (таблиц `v_outbox` / `v_webhook_*` может не быть). Значение хранения по
-умолчанию живёт в `config('vaulter.webhooks.retention_days')` (30, с нижней границей 0).
-Планируйте её рядом с командами relay/retry выше.
+Удаляются **терминальные доставки** — статус `delivered` или `dead` (DLQ), по `updated_at` (время
+перехода в терминальный статус). Доставка `pending`/`failed` (ею владеет retry-sweep) не трогается,
+сколько бы ей ни было. `--dry-run` сообщает, сколько *было бы* удалено, ничего не удаляя. Пока
+модуль вебхуков неактивен, команда ничего не делает и печатает уведомление. Срок по умолчанию —
+`config('vaulter.webhooks.retention_days')` (30, не меньше 0).
 
 ## Тестирование со штатными дублями {#testing}
 

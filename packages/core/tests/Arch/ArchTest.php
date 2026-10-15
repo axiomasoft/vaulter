@@ -173,9 +173,20 @@ arch('data transfer objects are readonly')
     ->expect('Vaulter\Data')
     ->toBeReadonly();
 
+// Enums, interfaces and traits cannot be readonly; the catalogue, the sink writer and the delivery control keep
+// per-call state, the outbox model is Eloquent and the lease exception extends RuntimeException (D29, D38).
 arch('events are readonly')
     ->expect('Vaulter\Events')
-    ->toBeReadonly();
+    ->classes()
+    ->toBeReadonly()
+    ->ignoring([
+        'Vaulter\Events\EventCatalog',
+        'Vaulter\Events\SinkWriter',
+        'Vaulter\Events\EventTypeCast',
+        'Vaulter\Events\Outbox\DeliveryControl',
+        'Vaulter\Events\Outbox\Models\OutboxEvent',
+        'Vaulter\Events\Outbox\Exceptions\LeaseLostException',
+    ]);
 
 arch('contracts are interfaces')
     ->expect('Vaulter\Contracts')
@@ -279,7 +290,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
     $rootsWithAllowed = [
         'Enums' => [],
         // The event pipeline's base class, its single recorder and the catalogue reference renderer are cross-domain (PLAN2.D22).
-        'Events' => ['DomainEvent', 'EventRecorder', 'EventsReference'],
+        // The event catalogue mechanics and the EventSink slot are cross-domain kernel types too (D38).
+        'Events' => ['DomainEvent', 'EventRecorder', 'EventsReference', 'EventCatalog', 'EventSink', 'EventSources', 'EventTypeCast', 'EventTypeContract', 'SinkResult', 'SinkWriter'],
         'Models' => [], // Concerns/ is a subdir, not a depth-0 file.
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],
@@ -344,7 +356,8 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     // holds the operational Laravel events hosts listen to (WebhookEndpointDisabled); its
     // FQCN is documented, so it stays beside the webhook delivery it reports on.
     // Exceptions/Http holds the exceptions of the HTTP protocol itself (428 precondition).
-    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events', 'Webhooks/Events'])))->toBe([])
+    // Events/Outbox/Models holds the outbox model of the kernel outbox (D29: Vaulter\Events\Outbox\Models\OutboxEvent).
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events', 'Webhooks/Events', 'Events/Outbox/Models'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
         ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ContentScannerContractTests.php', 'FileHandlerContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
         ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'DriveEventType.php'])
@@ -491,7 +504,7 @@ arch('core (and all Vaulter code) never depends on the extracted vaulter-media p
 
 /**
  * Scans packages/core/src for a `Vaulter\<root>\` reference OUTSIDE comments/docblocks
- * (the ActivityRecorder/OutboxRecorder/VaulterManager docblocks legitimately name
+ * (the ActivityRecorder/OutboxWriter/VaulterManager docblocks legitimately name
  * extracted-package classes in prose explaining the seam split). This is a file scan
  * (NOT `expect('Vaulter')->not->toUse(...)`) so it enforces core⊥<package> WITHOUT an
  * ->ignoring exclusion: each satellite is a require-dev sibling autoloaded into the

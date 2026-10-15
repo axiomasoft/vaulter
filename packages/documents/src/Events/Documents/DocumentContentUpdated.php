@@ -76,7 +76,8 @@ final readonly class DocumentContentUpdated extends DomainEvent
         return ActivityTarget::of($this->node);
     }
 
-    public function isWebhookEligible(): bool
+    #[\Override]
+    public function isExternal(): bool
     {
         return $this->created;
     }
