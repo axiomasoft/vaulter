@@ -15,6 +15,7 @@ use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
+use Vaulter\Tests\Support\CanonicalJson;
 use Vaulter\ValueObjects\Access\Actor;
 
 uses(EnablesWebhooksModule::class);
@@ -38,7 +39,7 @@ it('records share.updated with the names of the changed fields only', function (
     $outbox = OutboxEvent::query()->where('type', DriveEventType::ShareUpdated->value)->sole();
     $activity = Activity::query()->where('verb', DriveEventType::ShareUpdated->value)->sole();
 
-    expect($outbox->payload['data'])->toBe(['node_id' => (string) $this->node->id, 'changed' => ['expires_at']])
+    expect(CanonicalJson::of($outbox->payload['data']))->toBe(CanonicalJson::of(['node_id' => (string) $this->node->id, 'changed' => ['expires_at']]))
         ->and($outbox->payload['subject'])->toBe(['type' => 'share', 'id' => (string) $this->minted->link->id])
         ->and($activity->event_id)->toBe($outbox->event_id)
         ->and($activity->context['changed'])->toBe(['expires_at']);

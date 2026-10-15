@@ -13,6 +13,7 @@ use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
+use Vaulter\Tests\Support\CanonicalJson;
 
 uses(EnablesWebhooksModule::class);
 
@@ -35,7 +36,7 @@ it('records access.inheritance_changed for a restriction and its restoration', f
     $events = OutboxEvent::query()->where('type', DriveEventType::InheritanceChanged->value)->orderBy('outbox_seq')->get();
 
     expect($events->map(fn (OutboxEvent $row): array => $row->payload['data'])->all())->toBe([['inherits' => false], ['inherits' => true]])
-        ->and($events[0]->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->child->id])
+        ->and(CanonicalJson::of($events[0]->payload['subject']))->toBe(CanonicalJson::of(['type' => 'node', 'id' => (string) $this->child->id]))
         // Access changes are not node versions: a sequence here would look stale next to the node's last mutation.
         ->and($events[0]->payload['sequence'])->toBeNull()
         ->and(Activity::query()->where('verb', DriveEventType::InheritanceChanged->value)->count())->toBe(2)
