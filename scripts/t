@@ -468,10 +468,12 @@ write_config() { # step-json out-file [skeleton] : generated phpunit configurati
     } >"$out"
 }
 
-setup_skeleton() { # dest : a private copy of the Testbench skeleton (config/ + bootstrap/cache are written by these tests)
-    local dest="$1" src="${T_SKELETON_SRC:-}"
+setup_skeleton() { # dest cwd : a private copy of the Testbench skeleton (config/ + bootstrap/cache are written by these tests)
+    local dest="$1" cwd="${2:-$root}" src="${T_SKELETON_SRC:-}"
     if [[ -z "$src" ]]; then
-        src="$root/vendor/orchestra/testbench-core/laravel"
+        # the skeleton of the package under test: every package installs its own, and they differ (.env, cached providers)
+        src="$cwd/vendor/orchestra/testbench-core/laravel"
+        [[ -d "$src" ]] || src="$root/vendor/orchestra/testbench-core/laravel"
         [[ -d "$src" ]] || src="$(cd "$root" && find packages -maxdepth 6 -type d -path '*orchestra/testbench-core/laravel' 2>/dev/null | head -n 1)"
     fi
     [[ -d "$src" ]] || die "Testbench skeleton not found (set T_SKELETON_SRC)"
@@ -513,7 +515,7 @@ exec_step() { # step-json
     # directory of its own: tests publish config into the skeleton and count files in the temp directory.
     if [[ "$(jq -r .skeleton <<<"$step")" == true || -n "${T_RESULT_FILE:-}" || "${T_PRIVATE_SKELETON:-0}" == 1 ]]; then
         skeleton="$run_tmp/skeleton-$idx"
-        setup_skeleton "$skeleton"
+        setup_skeleton "$skeleton" "$cwd"
     fi
     write_config "$step" "$cfg" "$skeleton"
 
