@@ -18,7 +18,7 @@
 #   * every partition (one TestCase schema) is its own Pest process, serially; -j N ParaTest workers run INSIDE a
 #     partition (default: half the CPUs, at most 8). A partition's files are handed to Pest through a generated
 #     phpunit configuration, so a path list never turns into one pass per path.
-#   * fast (default): `--exclude-group=nofast` (+ yours, ONE exclusion). --full: parallel pass without `nofull,serial`,
+#   * fast (default): `--exclude-group=nofast` (+ yours). --full: parallel pass without `nofull,serial`,
 #     then one pass `--group=serial` (-j1 runs everything but `nofull` in one process). --group=serial: that pass only.
 #   * server engines (pgsql, mysql) are provisioned once through scripts/test-db.sh (DB_EXTERNAL=1 = a ready CI
 #     service; the database must end in _test); they need paths, --group or --full — there is no default server sweep.
@@ -443,6 +443,10 @@ write_config() { # step-json out-file : generated phpunit configuration listing 
                 skipping=1
                 continue
             fi
+            # excluded groups live in the configuration: ParaTest keeps one --exclude-group flag at most when it forks workers
+            if [[ "$line" == *'</phpunit>'* ]]; then
+                jq -r '.exclude | if length > 0 then "    <groups>\n        <exclude>\n" + (map("            <group>\(.)</group>") | join("\n")) + "\n        </exclude>\n    </groups>" else empty end' <<<"$step"
+            fi
             line="${line//bootstrap=\"vendor\/autoload.php\"/bootstrap=\"$root/$cwd/vendor/autoload.php\"}"
             # the generated configuration has exactly one testsuite: make it the default one
             if [[ "$line" =~ ^(.*)defaultTestSuite=\"[^\"]*\"(.*)$ ]]; then
@@ -498,11 +502,6 @@ exec_step() { # step-json
     args+=("--configuration=$cfg")
     (( processes > 1 )) && args+=(--parallel "--processes=$processes")
     [[ "$(jq -r .group <<<"$step")" == "" ]] || args+=("--group=$(jq -r .group <<<"$step")")
-    # one flag per group: Pest does not honour a comma list in --exclude-group (a `serial` test then ran in the parallel pass)
-    local excluded
-    while IFS= read -r excluded; do
-        [[ -z "$excluded" ]] || args+=("--exclude-group=$excluded")
-    done < <(jq -r '.exclude[]' <<<"$step")
     local junit
     junit="$(jq -r '.junit // empty' <<<"$step")"
     if [[ -n "$junit" ]]; then
