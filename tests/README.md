@@ -143,6 +143,7 @@ Rules:
 | a drive change, `--changed` (drive + 3 consumers) | — | 1 min 52 s |
 | `--full`, SQLite (every suite, `serial` + `extended`) | — | 4 min 28 s |
 | `--full`, pgsql | — | 9 min 23 s |
+| `--full`, mysql (`mysql-local`) | hours | 33 min 20 s |
 
 ## Run policy
 
