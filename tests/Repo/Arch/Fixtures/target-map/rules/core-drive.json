@@ -235,7 +235,7 @@
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Drive\\DriveHandleFactory",
             "owner": "drive",
-            "note": "baseline: public in the 0.x snapshot; after the entry point moves to drive (D10) it has no consumer outside drive; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; after the entry point moves to drive (D10) it has no consumer outside drive; P3.17 decided: Internal (D27)",
             "why": "architecture#ownership-map: Contracts/Drive -> drive; the factory VaulterManager probes (architecture#entry-point), no consumer outside drive once the entry point moves"
         },
         {

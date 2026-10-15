@@ -407,7 +407,6 @@ Vaulter\Documents\Content\TipTap\TipTapSchema
   urlAttributes(string $type): array
 
 Vaulter\Documents\Presentation\DocumentPresenter
-  __construct(\Vaulter\Documents\Content\ContentDecoder $decoder)
   kind(): \Vaulter\Enums\Drive\NodeKind
   present(\Vaulter\Data\Snapshots\NodeSnapshot|\Vaulter\Models\Drive\Node $node): \Vaulter\ValueObjects\Handlers\NodePresentation
 

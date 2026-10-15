@@ -53,21 +53,21 @@
             "match": "fqcn",
             "value": "Vaulter\\Access\\AccessResolver",
             "owner": "drive",
-            "note": "baseline: public in the 0.x snapshot; hosts reach it through AccessOperations::explain; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; hosts reach it through AccessOperations::explain; P3.17 decided: Internal (D27)",
             "why": "architecture#ownership-map: Access -> drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Access\\ExactListing",
             "owner": "drive",
-            "note": "baseline: public in the 0.x snapshot; node listing helper of the access model; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; node listing helper of the access model; P3.17 decided: Internal (D27)",
             "why": "architecture#ownership-map: Access -> drive (ExactListing is listed under Access)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Access\\OperationGuard",
             "owner": "drive",
-            "note": "baseline: public in the 0.x snapshot; replaced in P3 by an OperationMiddleware/stage of the drive module; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; replaced in P3 by an OperationMiddleware/stage of the drive module; P3.17 decided: Internal (D27)",
             "why": "architecture#ownership-map: Access -> drive; core keeps only the OperationRunner pipeline (architecture#kernel), the node-access guard is domain"
         },
         {

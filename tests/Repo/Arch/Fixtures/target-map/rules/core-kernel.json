@@ -82,7 +82,7 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "note": "open: follows Label/Icon (P3 decides)",
+            "note": "open: follows Label/Icon (P3.17 decided: Internal, D35)",
             "why": "architecture#kernel: reads Label/Icon attributes of enum cases; follows them"
         },
         {
@@ -612,7 +612,7 @@
             "owner": "core",
             "action": "keep",
             "phase": "P3",
-            "note": "baseline: public in the 0.x snapshot; becomes a reference of the EventCatalog; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; becomes a reference of the EventCatalog; P3.17 decided: Internal (D27)",
             "why": "architecture#kernel: События — EventCatalog reference generator (baseline (core PublicApiSnapshot) lists it)"
         },
         {
@@ -1113,7 +1113,7 @@
             "match": "fqcn",
             "value": "Vaulter\\Http\\Support\\HttpResourceResolver",
             "owner": "drive",
-            "note": "baseline: public in the 0.x snapshot; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; P3.17 decided: Internal (D27)",
             "why": "architecture#ownership-map: Http support -> drive: resolves drives and nodes through drive repositories (I9 authorized lookup)"
         },
         {

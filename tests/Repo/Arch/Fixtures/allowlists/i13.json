@@ -1,7 +1,40 @@
 {
     "entries": [
         {
-            "category": "internal-type",
+            "category": "domain-model",
+            "count": 1,
+            "file": "packages/core/database/factories/FileRevisionFactory.php",
+            "kind": "param",
+            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
+            "removed_in": "P7",
+            "symbol": "Vaulter\\Database\\Factories\\FileRevisionFactory::in()",
+            "target": "Vaulter\\Models\\Drive\\Drive",
+            "view": "signature"
+        },
+        {
+            "category": "domain-model",
+            "count": 1,
+            "file": "packages/core/database/factories/NodeFactory.php",
+            "kind": "param",
+            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
+            "removed_in": "P7",
+            "symbol": "Vaulter\\Database\\Factories\\NodeFactory::in()",
+            "target": "Vaulter\\Models\\Drive\\Drive",
+            "view": "signature"
+        },
+        {
+            "category": "domain-model",
+            "count": 1,
+            "file": "packages/core/database/factories/NodeFactory.php",
+            "kind": "param",
+            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
+            "removed_in": "P7",
+            "symbol": "Vaulter\\Database\\Factories\\NodeFactory::in()",
+            "target": "Vaulter\\Models\\Drive\\Node",
+            "view": "signature"
+        },
+        {
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Access/ValueObjects/AccessScope.php",
             "kind": "param",
@@ -12,18 +45,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/core/src/Configuration/VaulterConfig.php",
-            "kind": "return",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Configuration\\VaulterConfig::outbox()",
-            "target": "Vaulter\\Configuration\\OutboxConfig",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
@@ -34,7 +56,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
@@ -45,7 +67,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Cas/BlobStore.php",
             "kind": "return",
@@ -56,7 +78,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Cas/BlobStore.php",
             "kind": "return",
@@ -67,7 +89,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
@@ -78,7 +100,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
@@ -89,7 +111,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
@@ -100,40 +122,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/core/src/Contracts/Content/ScanPolicyResolver.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Content\\ScanPolicyResolver::forDrive()",
-            "target": "Vaulter\\Models\\Drive\\Drive",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/core/src/Contracts/Content/ScanPolicyResolver.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Content\\ScanPolicyResolver::required()",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/core/src/Contracts/Content/ScanPolicyResolver.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Content\\ScanPolicyResolver::resolve()",
-            "target": "Vaulter\\Models\\Drive\\Drive",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Drive/DownloadGuard.php",
             "kind": "param",
@@ -144,7 +133,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Drive/DownloadGuard.php",
             "kind": "param",
@@ -177,7 +166,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 2,
             "file": "packages/core/src/Contracts/Drive/NodeContentLifecycle.php",
             "kind": "param",
@@ -188,7 +177,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Drive/NodeContentLifecycle.php",
             "kind": "param",
@@ -210,7 +199,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Handlers/NodePresenter.php",
             "kind": "param",
@@ -221,7 +210,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Contracts/Presentation/KindPresenter.php",
             "kind": "param",
@@ -254,18 +243,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/core/src/Data/Sharing/MintedShareLink.php",
-            "kind": "property",
-            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Data\\Sharing\\MintedShareLink::$share",
-            "target": "Vaulter\\Models\\Sharing\\NodeShare",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/Access/NodeGrantCreated.php",
             "kind": "property",
@@ -298,7 +276,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/Access/NodeGrantRevoked.php",
             "kind": "property",
@@ -331,7 +309,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/Access/NodeInheritanceChanged.php",
             "kind": "property",
@@ -386,7 +364,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/DomainEvent.php",
             "kind": "param",
@@ -397,7 +375,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/DomainEvent.php",
             "kind": "param",
@@ -408,7 +386,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/DomainEvent.php",
             "kind": "param",
@@ -430,7 +408,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/Outbox/OutboxEnvelope.php",
             "kind": "param",
@@ -441,7 +419,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/Sharing/NodeShareCreated.php",
             "kind": "property",
@@ -463,7 +441,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/Sharing/NodeShareRevoked.php",
             "kind": "property",
@@ -485,7 +463,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/Sharing/NodeShareRotated.php",
             "kind": "property",
@@ -507,7 +485,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Events/Sharing/NodeShareUpdated.php",
             "kind": "property",
@@ -529,7 +507,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Exceptions/Nodes/InvalidDestinationException.php",
             "kind": "param",
@@ -540,7 +518,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Exceptions/Nodes/InvalidDestinationException.php",
             "kind": "param",
@@ -551,7 +529,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Exceptions/Nodes/InvalidDestinationException.php",
             "kind": "param",
@@ -562,7 +540,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Exceptions/Nodes/InvalidDestinationException.php",
             "kind": "param",
@@ -573,7 +551,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Exceptions/Nodes/NodeNotTrashedException.php",
             "kind": "param",
@@ -584,7 +562,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Exceptions/Nodes/NodeTrashedByAncestorException.php",
             "kind": "param",
@@ -595,7 +573,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Exceptions/Nodes/RestoreDestinationRequiredException.php",
             "kind": "param",
@@ -617,7 +595,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Operations/DriveContext.php",
             "kind": "property",
@@ -628,7 +606,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Operations/DriveContext.php",
             "kind": "param",
@@ -639,7 +617,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Operations/DriveContext.php",
             "kind": "param",
@@ -650,7 +628,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Operations/NodeLocator.php",
             "kind": "param",
@@ -661,7 +639,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Operations/NodeLocator.php",
             "kind": "return",
@@ -694,7 +672,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 2,
             "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
             "kind": "param",
@@ -705,7 +683,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
             "kind": "property",
@@ -716,7 +694,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
             "kind": "property",
@@ -727,7 +705,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
             "kind": "property",
@@ -738,7 +716,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Testing/InteractsWithVaulter.php",
             "kind": "param",
@@ -749,7 +727,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/core/src/Testing/InteractsWithVaulter.php",
             "kind": "param",
@@ -773,82 +751,49 @@
         {
             "category": "internal-type",
             "count": 1,
-            "file": "packages/documents/src/Content/ContentDecoder.php",
+            "file": "packages/core/src/Webhooks/StandardWebhookVerifier.php",
             "kind": "param",
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Content\\ContentDecoder::editable()",
-            "target": "Vaulter\\Documents\\Models\\Documents\\Document",
+            "symbol": "Vaulter\\Webhooks\\StandardWebhookVerifier::__construct()",
+            "target": "Vaulter\\Webhooks\\WebhookSigner",
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
-            "file": "packages/documents/src/Content/ContentDecoder.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Content\\ContentDecoder::editableType()",
-            "target": "Vaulter\\Documents\\Models\\Documents\\Document",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 2,
-            "file": "packages/documents/src/Content/DocumentContentLifecycle.php",
+            "file": "packages/documents/database/factories/DocumentFactory.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Content\\DocumentContentLifecycle::copy()",
+            "symbol": "Vaulter\\Documents\\Database\\Factories\\DocumentFactory::in()",
+            "target": "Vaulter\\Models\\Drive\\Drive",
+            "view": "signature"
+        },
+        {
+            "category": "domain-model",
+            "count": 1,
+            "file": "packages/documents/database/factories/DocumentFactory.php",
+            "kind": "param",
+            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
+            "removed_in": "P7",
+            "symbol": "Vaulter\\Documents\\Database\\Factories\\DocumentFactory::in()",
             "target": "Vaulter\\Models\\Drive\\Node",
             "view": "signature"
         },
         {
             "category": "internal-type",
             "count": 1,
-            "file": "packages/documents/src/Content/DocumentContentLifecycle.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Content\\DocumentContentLifecycle::purge()",
-            "target": "Vaulter\\Models\\Drive\\Node",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Content/DocumentStateWriter.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Content\\DocumentStateWriter::checkpoint()",
-            "target": "Vaulter\\Documents\\Models\\Documents\\Document",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Content/DocumentStateWriter.php",
+            "file": "packages/documents/src/Content/TipTap/TipTapCodec.php",
             "kind": "return",
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Content\\DocumentStateWriter::checkpoint()",
-            "target": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
+            "symbol": "Vaulter\\Documents\\Content\\TipTap\\TipTapCodec::decodeForRead()",
+            "target": "Vaulter\\Documents\\Content\\ReadContent",
             "view": "signature"
         },
         {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Content/DocumentStateWriter.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Content\\DocumentStateWriter::write()",
-            "target": "Vaulter\\Documents\\Models\\Documents\\Document",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Contracts/CollaborationDriver.php",
             "kind": "param",
@@ -859,7 +804,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Contracts/ExportFilenameResolver.php",
             "kind": "param",
@@ -870,7 +815,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Collaboration/PersistCollaborationStateInput.php",
             "kind": "property",
@@ -881,7 +826,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Comments/DeleteCommentInput.php",
             "kind": "property",
@@ -892,7 +837,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Comments/ResolveCommentInput.php",
             "kind": "property",
@@ -903,7 +848,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Documents/CreateDocumentInput.php",
             "kind": "property",
@@ -914,7 +859,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Documents/CreateDocumentInput.php",
             "kind": "property",
@@ -925,40 +870,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Data/Documents/DocumentStateChange.php",
-            "kind": "property",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Documents\\DocumentStateChange::$restoredFrom",
-            "target": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Data/Documents/DocumentStateResult.php",
-            "kind": "property",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Documents\\DocumentStateResult::$checkpoint",
-            "target": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Data/Documents/DocumentStateResult.php",
-            "kind": "property",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Documents\\DocumentStateResult::$document",
-            "target": "Vaulter\\Documents\\Models\\Documents\\Document",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Documents/UpdateDocumentContentInput.php",
             "kind": "property",
@@ -969,7 +881,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Export/ExportDocumentInput.php",
             "kind": "property",
@@ -980,7 +892,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Export/ExportDocumentInput.php",
             "kind": "property",
@@ -991,7 +903,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Revisions/CreateNamedRevisionInput.php",
             "kind": "property",
@@ -1002,7 +914,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Revisions/RestoreDocumentRevisionInput.php",
             "kind": "property",
@@ -1013,7 +925,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Revisions/RestoreDocumentRevisionInput.php",
             "kind": "property",
@@ -1024,7 +936,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Revisions/UpdateRevisionRetentionInput.php",
             "kind": "property",
@@ -1035,7 +947,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Data/Revisions/UpdateRevisionRetentionInput.php",
             "kind": "property",
@@ -1046,62 +958,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Data/Snapshots/Mapping/DocumentSnapshotMapper.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper::comment()",
-            "target": "Vaulter\\Documents\\Models\\Comments\\NodeComment",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Data/Snapshots/Mapping/DocumentSnapshotMapper.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper::document()",
-            "target": "Vaulter\\Documents\\Models\\Documents\\Document",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 2,
-            "file": "packages/documents/src/Data/Snapshots/Mapping/DocumentSnapshotMapper.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper::document()",
-            "target": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Data/Snapshots/Mapping/DocumentSnapshotMapper.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper::revision()",
-            "target": "Vaulter\\Documents\\Models\\Documents\\Document",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/documents/src/Data/Snapshots/Mapping/DocumentSnapshotMapper.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper::revision()",
-            "target": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Comments/CommentAdded.php",
             "kind": "property",
@@ -1123,7 +980,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Comments/CommentDeleted.php",
             "kind": "property",
@@ -1145,7 +1002,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Comments/CommentResolved.php",
             "kind": "property",
@@ -1167,7 +1024,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Documents/DocumentContentUpdated.php",
             "kind": "property",
@@ -1178,7 +1035,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Documents/DocumentContentUpdated.php",
             "kind": "property",
@@ -1211,7 +1068,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Documents/DocumentCreated.php",
             "kind": "property",
@@ -1222,7 +1079,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Documents/DocumentCreated.php",
             "kind": "property",
@@ -1255,7 +1112,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Revisions/DocumentRestored.php",
             "kind": "property",
@@ -1266,7 +1123,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Revisions/DocumentRestored.php",
             "kind": "property",
@@ -1277,7 +1134,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Revisions/DocumentRestored.php",
             "kind": "property",
@@ -1310,7 +1167,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Revisions/DocumentRevisionCreated.php",
             "kind": "property",
@@ -1321,7 +1178,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Events/Revisions/DocumentRevisionCreated.php",
             "kind": "property",
@@ -1343,7 +1200,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Export/DefaultExportFilenameResolver.php",
             "kind": "param",
@@ -1354,7 +1211,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/documents/src/Presentation/DocumentPresenter.php",
             "kind": "param",
@@ -1365,7 +1222,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Contracts/Uploads/UploadProtocolHandler.php",
             "kind": "param",
@@ -1376,7 +1233,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Contracts/Uploads/UploadProtocolHandler.php",
             "kind": "param",
@@ -1387,7 +1244,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Contracts/Uploads/UploadProtocolHandler.php",
             "kind": "param",
@@ -1398,7 +1255,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Files/IngestFileInput.php",
             "kind": "property",
@@ -1420,7 +1277,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Files/IngestFileInput.php",
             "kind": "property",
@@ -1431,7 +1288,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Files/IngestFileInput.php",
             "kind": "property",
@@ -1442,7 +1299,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Files/IngestReceipt.php",
             "kind": "property",
@@ -1453,7 +1310,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Files/IngestReceipt.php",
             "kind": "property",
@@ -1464,7 +1321,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Files/RestoreFileRevisionInput.php",
             "kind": "property",
@@ -1475,7 +1332,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Files/RestoreFileRevisionInput.php",
             "kind": "property",
@@ -1486,7 +1343,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Nodes/CopyNodeInput.php",
             "kind": "property",
@@ -1497,7 +1354,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Nodes/CopyNodeInput.php",
             "kind": "property",
@@ -1508,7 +1365,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Nodes/CreateFolderInput.php",
             "kind": "property",
@@ -1519,7 +1376,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Nodes/CreateFolderInput.php",
             "kind": "property",
@@ -1530,7 +1387,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Nodes/MoveNodeInput.php",
             "kind": "property",
@@ -1541,7 +1398,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Nodes/MoveNodeInput.php",
             "kind": "property",
@@ -1552,7 +1409,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Nodes/RenameNodeInput.php",
             "kind": "property",
@@ -1563,7 +1420,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Nodes/SetNodePropertiesInput.php",
             "kind": "property",
@@ -1574,7 +1431,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Trash/PurgeNodeInput.php",
             "kind": "property",
@@ -1585,7 +1442,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Trash/RestoreNodeInput.php",
             "kind": "property",
@@ -1596,7 +1453,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Trash/RestoreNodeInput.php",
             "kind": "property",
@@ -1607,7 +1464,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Trash/TrashNodeInput.php",
             "kind": "property",
@@ -1618,7 +1475,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Uploads/InitiateUploadInput.php",
             "kind": "property",
@@ -1629,13 +1486,24 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Data/Uploads/InitiateUploadInput.php",
             "kind": "property",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Uploads\\InitiateUploadInput::$targetParent",
+            "target": "Vaulter\\Models\\Drive\\Node",
+            "view": "signature"
+        },
+        {
+            "category": "domain-model",
+            "count": 2,
+            "file": "packages/drive/src/Data/Uploads/InitiateUploadInput.php",
+            "kind": "param",
+            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
+            "removed_in": "P7",
+            "symbol": "Vaulter\\Drive\\Data\\Uploads\\InitiateUploadInput::__construct()",
             "target": "Vaulter\\Models\\Drive\\Node",
             "view": "signature"
         },
@@ -1651,7 +1519,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Drives/DriveArchived.php",
             "kind": "property",
@@ -1673,7 +1541,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Drives/DriveCreated.php",
             "kind": "property",
@@ -1684,7 +1552,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Drives/DriveCreated.php",
             "kind": "property",
@@ -1706,7 +1574,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Drives/DriveUnarchived.php",
             "kind": "property",
@@ -1728,7 +1596,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Files/FileRevisionAdded.php",
             "kind": "property",
@@ -1739,7 +1607,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Files/FileRevisionAdded.php",
             "kind": "property",
@@ -1750,7 +1618,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Files/FileRevisionAdded.php",
             "kind": "property",
@@ -1783,7 +1651,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Files/FileRevisionDeleted.php",
             "kind": "property",
@@ -1794,7 +1662,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Files/FileRevisionDeleted.php",
             "kind": "property",
@@ -1816,7 +1684,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Files/FileUploaded.php",
             "kind": "property",
@@ -1827,7 +1695,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Files/FileUploaded.php",
             "kind": "property",
@@ -1838,7 +1706,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Files/FileUploaded.php",
             "kind": "property",
@@ -1871,7 +1739,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Nodes/FolderCreated.php",
             "kind": "property",
@@ -1904,7 +1772,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Nodes/NodeCopied.php",
             "kind": "property",
@@ -1915,7 +1783,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Nodes/NodeCopied.php",
             "kind": "property",
@@ -1948,7 +1816,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Nodes/NodeMoved.php",
             "kind": "property",
@@ -1981,7 +1849,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Nodes/NodeRenamed.php",
             "kind": "property",
@@ -2014,7 +1882,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Nodes/NodeRestored.php",
             "kind": "property",
@@ -2047,7 +1915,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Nodes/NodeTrashed.php",
             "kind": "property",
@@ -2080,7 +1948,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Nodes/NodeUpdated.php",
             "kind": "property",
@@ -2113,7 +1981,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Uploads/UploadAborted.php",
             "kind": "property",
@@ -2124,7 +1992,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Uploads/UploadExpired.php",
             "kind": "property",
@@ -2135,7 +2003,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Uploads/UploadInitiated.php",
             "kind": "property",
@@ -2157,7 +2025,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Operations/UploadOperations.php",
             "kind": "param",
@@ -2168,7 +2036,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Operations/UploadOperations.php",
             "kind": "param",
@@ -2179,7 +2047,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Operations/UploadOperations.php",
             "kind": "return",
@@ -2190,7 +2058,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Operations/UploadOperations.php",
             "kind": "return",
@@ -2201,7 +2069,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/media/src/Cas/BlobStore.php",
             "kind": "param",
@@ -2212,7 +2080,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/media/src/Cas/BlobStore.php",
             "kind": "param",
@@ -2223,7 +2091,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/media/src/Cas/BlobStore.php",
             "kind": "return",
@@ -2234,7 +2102,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/media/src/Cas/BlobStore.php",
             "kind": "return",
@@ -2245,7 +2113,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/media/src/Cas/BlobStore.php",
             "kind": "param",
@@ -2256,7 +2124,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/media/src/Cas/BlobStore.php",
             "kind": "param",
@@ -2267,7 +2135,7 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
+            "category": "domain-model",
             "count": 1,
             "file": "packages/media/src/Cas/BlobStore.php",
             "kind": "param",

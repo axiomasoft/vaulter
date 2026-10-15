@@ -184,7 +184,7 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "note": "open: folds into Vaulter\\Drive\\Vaulter or stays as an Internal factory once the entry point moves to drive (D10)",
+            "note": "P3.17 decided: Internal — the host enters through Vaulter::drive(); the factory is the implementation of the entry point (D10, D27)",
             "why": "architecture#entry-point: the factory the core VaulterManager probes for (bound(DriveHandleFactory)); it disappears with the move of the entry point to drive"
         },
         {

@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * Puts the surface attribute of D27 on every type of packages/*\/src that the target-map classifies — #[Api],
  * #[Spi(SpiKind::Implement|Call)] or #[Internal] — and #[Internal] on the technical constructor of an Api class (a
- * constructor that needs a type the host must not name, or the container). A type that already carries a surface
+ * constructor that needs, without a default, a type the host must not name, or the container). A type that already carries a surface
  * attribute is left alone, so the script is idempotent; `--check` prints what --write would do and exits 1 when
  * there is something to do. `@internal` in the docblock of an Internal type is dropped: the attribute replaces it.
  *
@@ -266,6 +266,10 @@ function technicalConstructor(Stmt\Class_ $class, array $surface): bool
         return false;
     }
     foreach ($constructor->params as $param) {
+        // An optional parameter never keeps a host from calling the constructor: it can leave it out (`new Verifier`).
+        if ($param->default !== null) {
+            continue;
+        }
         foreach (typeNames($param->type) as $name) {
             if (($surface[$name] ?? null) === 'Internal' || in_array($name, INFRASTRUCTURE, true)) {
                 return true;

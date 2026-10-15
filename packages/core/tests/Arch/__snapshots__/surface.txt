@@ -177,6 +177,18 @@ Vaulter\Configuration\ObservabilityConfig api since 1.0 final readonly class
   public function tracingEnabled(): bool
   public function tracingRecorder(): ?string
 
+Vaulter\Configuration\OutboxConfig api since 1.0 final readonly class
+  public function backoffBaseSeconds(): int
+  public function backoffCapSeconds(): int
+  public function batch(): int
+  public function deadRetentionSeconds(): int
+  public function leaseSeconds(): int
+  public function maxAttempts(): int
+  public function maxConsumerHoldSeconds(): int
+  public function retentionSeconds(): int
+  public function settleWindowSeconds(): int
+  public function validate(): void
+
 Vaulter\Configuration\RoutesConfig api since 1.0 final readonly class
   public function authenticatedMiddleware(): array
   public function hubMiddleware(): array
@@ -316,10 +328,6 @@ Vaulter\Contracts\Access\EnumeratesRoleSubjects spi:implement since 1.0 interfac
 Vaulter\Contracts\Access\GrantAuthoritativeDriver spi:implement since 1.0 interface
   public function isGrantAuthoritative(): bool
 
-Vaulter\Contracts\Access\NonEnumeratingPermissionDriver spi:implement since 1.0 interface extends Vaulter\Contracts\Access\PermissionDriver
-
-Vaulter\Contracts\Access\NonProductionPermissionDriver spi:implement since 1.0 interface extends Vaulter\Contracts\Access\PermissionDriver
-
 Vaulter\Contracts\Access\PermissionDriver spi:implement since 1.0 interface
   public function canCreateIn(Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Access\ValueObjects\AccessScope $scope): bool
   public function override(Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Access\ValueObjects\AccessScope $scope): ?Vaulter\Enums\Access\Effect
@@ -375,11 +383,6 @@ Vaulter\Contracts\Cas\StorageDriver spi:implement since 1.0 interface
   public function get(string $key, ?string $disk = null): mixed
   public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
   public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string
-
-Vaulter\Contracts\Content\ScanPolicyResolver spi:implement since 1.0 interface
-  public function forDrive(Vaulter\Models\Drive\Drive $drive): array
-  public function required(Vaulter\Models\Drive\FileRevision $revision, Vaulter\Content\ScanPolicySpec $spec): bool
-  public function resolve(Vaulter\Models\Drive\Drive $drive): array
 
 Vaulter\Contracts\Doctor\DoctorCheck spi:implement since 1.0 interface
   public function key(): string
@@ -450,8 +453,6 @@ Vaulter\Contracts\Drive\NodeOperations api since 1.0 interface
 Vaulter\Contracts\Drive\NodeSnapshotContributor spi:implement since 1.0 interface
   public function contribute(array $nodes): array
   public function key(): string
-
-Vaulter\Contracts\Drive\PurgeOnlyContentLifecycle spi:implement since 1.0 interface
 
 Vaulter\Contracts\Drive\TrashOperations api since 1.0 interface
   public function empty(): int
@@ -580,16 +581,6 @@ Vaulter\Data\Drive\MoveOptions api since 1.0 final readonly class
   public static function make(): self
   public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
 
-Vaulter\Data\Drive\NodePage api since 1.0 final readonly class implements Countable, IteratorAggregate, JsonSerializable
-  public array $items
-  public ?string $nextCursor
-  public int $scanned
-  public function __construct(array $items, ?string $nextCursor, int $scanned)
-  public function count(): int
-  public function getIterator(): Traversable
-  public function hasMore(): bool
-  public function jsonSerialize(): array
-
 Vaulter\Data\Drive\RestoreOptions api since 1.0 final readonly class
   public Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination
   public ?int $expectedSequence
@@ -649,10 +640,6 @@ Vaulter\Data\Page api since 1.0 final readonly class implements Countable, Itera
   public function count(): int
   public function getIterator(): Traversable
   public function hasMore(): bool
-
-Vaulter\Data\Sharing\MintedShareLink api since 1.0 final readonly class
-  public Vaulter\Models\Sharing\NodeShare $share
-  public string $token
 
 Vaulter\Data\Sharing\ShareLinkInput api since 1.0 final readonly class
   public Vaulter\Enums\Sharing\ShareAudience $audience
@@ -786,6 +773,44 @@ Vaulter\Data\Snapshots\ShareLinkSnapshot api since 1.0 final readonly class
 
 Vaulter\Data\Snapshots\ViewerStateSnapshot api since 1.0 final readonly class
   public bool $starred
+
+Vaulter\Database\Factories\DriveFactory api since 1.0 final class extends Vaulter\Database\Factories\VaulterFactory
+  protected $model = \Vaulter\Models\Drive\Drive::class
+  public function definition(): array
+  public function for($factory, $relationship = null)
+  protected function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
+  public function profile(string $profile): static
+
+Vaulter\Database\Factories\FileRevisionFactory api since 1.0 final class extends Vaulter\Database\Factories\VaulterFactory
+  protected $model = \Vaulter\Models\Drive\FileRevision::class
+  public function bytes(string $bytes, ?string $mimeType = 'text/plain'): static
+  public function definition(): array
+  public function for($factory, $relationship = null)
+  public function in(Vaulter\Models\Drive\Drive $drive): static
+  protected function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
+
+Vaulter\Database\Factories\NodeFactory api since 1.0 final class extends Vaulter\Database\Factories\VaulterFactory
+  protected $model = \Vaulter\Models\Drive\Node::class
+  public function definition(): array
+  public function file(string $bytes = 'fixture', ?string $mimeType = 'text/plain'): static
+  public function folder(): static
+  public function in(Vaulter\Models\Drive\Drive|Vaulter\Models\Drive\Node $container): static
+  protected function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
+
+Vaulter\Database\Factories\VaulterFactory api since 1.0 abstract class extends Illuminate\Database\Eloquent\Factories\Factory
+  protected array $vaulter = []
+  public function forTenant(int|string $tenant): static
+  public function insert(array $attributes = [], ?Illuminate\Database\Eloquent\Model $parent = null): void
+  protected function newInstance(array $arguments = [])
+  protected abstract function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
+  protected function stateArray(string $key): ?array
+  protected function stateObject(string $key, string $class): ?object
+  protected function stateString(string $key, ?string $default = null): ?string
+  protected function stateText(string $key, string $default): string
+  protected function store(Illuminate\Support\Collection $results)
+  protected function system(Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): Vaulter\Contracts\Drive\DriveHandle
+  protected function withTenant(Closure $callback): mixed
+  protected function withVaulter(array $state): static
 
 Vaulter\Database\VaulterDatabase api since 1.0 final class
   public function advisoryLock(string $key): void
@@ -1839,6 +1864,7 @@ Vaulter\Profiles\ProfileProvider spi:implement since 1.0 abstract class
   public function resolve(): Vaulter\Profiles\Profile
 
 Vaulter\Profiles\ProfileRegistry api since 1.0 final class
+  public function __construct(?Illuminate\Contracts\Container\Container $container = null)
   public function all(): array
   public function default(): Vaulter\Profiles\Profile
   public function freeze(): void
@@ -1888,9 +1914,6 @@ Vaulter\Support\Concerns\HasLabel api since 1.0 trait
 Vaulter\Support\Identity api since 1.0 final class
   public static function key(mixed $value): int|null|string
   public static function stringify(mixed $value): string
-
-Vaulter\Support\Int64Counter api since 1.0 final class
-  public static function increment(int $current): int
 
 Vaulter\Testing\Contracts\ContentScannerContractTests api since 1.0 final class
   public function assertContentScannerContract(Vaulter\Contracts\Cas\ContentScanner $scanner, array $samples): void
@@ -2067,4 +2090,5 @@ Vaulter\Webhooks\Events\WebhookEndpointDisabled api since 1.0 final readonly cla
   public function __construct(int|string $endpointId, string $reason, ?Illuminate\Support\Carbon $failingSince)
 
 Vaulter\Webhooks\StandardWebhookVerifier api since 1.0 final class
+  public function __construct(Vaulter\Webhooks\WebhookSigner $signer = new \Vaulter\Webhooks\WebhookSigner())
   public function verify(array $headers, string $body, array $secrets, int $toleranceSeconds = 300, ?int $now = null): void

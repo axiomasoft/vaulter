@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Access;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Vaulter\Attributes\Internal;
 
 /**
  * Marks a base subjectsFor implementation that never expands role or team subjects.
  *
- * @internal PermissionDriverManager classification seam.
+ * PermissionDriverManager classification seam.
  */
-#[Spi(SpiKind::Implement)]
+#[Internal]
 interface NonEnumeratingPermissionDriver extends PermissionDriver {}

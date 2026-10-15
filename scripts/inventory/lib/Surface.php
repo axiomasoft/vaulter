@@ -56,14 +56,17 @@ final class Surface
     {
         $sources = [];
         foreach (SourceIndex::PACKAGES as $package) {
-            $dir = $repo->path("packages/{$package}/src");
-            if (!is_dir($dir)) {
-                continue;
-            }
-            foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $file) {
-                if ($file instanceof SplFileInfo && $file->isFile() && $file->getExtension() === 'php') {
-                    $relative = substr($file->getPathname(), strlen($repo->root()) + 1);
-                    $sources[$relative] = $repo->read($relative);
+            // The code of a package: its src and the factories its hosts use in tests (database/factories).
+            foreach (['src', 'database/factories'] as $root) {
+                $dir = $repo->path("packages/{$package}/{$root}");
+                if (!is_dir($dir)) {
+                    continue;
+                }
+                foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $file) {
+                    if ($file instanceof SplFileInfo && $file->isFile() && $file->getExtension() === 'php') {
+                        $relative = substr($file->getPathname(), strlen($repo->root()) + 1);
+                        $sources[$relative] = $repo->read($relative);
+                    }
                 }
             }
         }
@@ -72,7 +75,7 @@ final class Surface
     }
 
     /**
-     * @param  array<string, string> $sources repo-relative path (packages/<p>/src/...) => PHP code
+     * @param  array<string, string> $sources repo-relative path (packages/<p>/src/... or database/factories/...) => PHP code
      * @return list<SurfaceType>
      */
     public static function fromSources(array $sources): array
@@ -165,8 +168,8 @@ final class Surface
                 foreach ($member['types'] as $target) {
                     $category = match (true) {
                         !isset($by[$target]) => null,
-                        $by[$target]['surface'] === 'Internal' => 'internal-type',
                         $index->isEloquent($target) => 'domain-model',
+                        $by[$target]['surface'] === 'Internal' => 'internal-type',
                         default => null,
                     };
                     if ($category === null) {

@@ -1092,7 +1092,7 @@
             "file": "packages/core/src/Access/AccessResolver.php",
             "fqcn": "Vaulter\\Access\\AccessResolver",
             "kind": "final-class",
-            "note": "baseline: public in the 0.x snapshot; hosts reach it through AccessOperations::explain; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; hosts reach it through AccessOperations::explain; P3.17 decided: Internal (D27)",
             "owner": "drive",
             "package": "core",
             "phase": "P4",
@@ -1148,7 +1148,7 @@
             "file": "packages/core/src/Access/ExactListing.php",
             "fqcn": "Vaulter\\Access\\ExactListing",
             "kind": "final-class",
-            "note": "baseline: public in the 0.x snapshot; node listing helper of the access model; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; node listing helper of the access model; P3.17 decided: Internal (D27)",
             "owner": "drive",
             "package": "core",
             "phase": "P4",
@@ -1162,7 +1162,7 @@
             "file": "packages/core/src/Access/OperationGuard.php",
             "fqcn": "Vaulter\\Access\\OperationGuard",
             "kind": "final-class",
-            "note": "baseline: public in the 0.x snapshot; replaced in P3 by an OperationMiddleware/stage of the drive module; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; replaced in P3 by an OperationMiddleware/stage of the drive module; P3.17 decided: Internal (D27)",
             "owner": "drive",
             "package": "core",
             "phase": "P4",
@@ -2161,7 +2161,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Configuration\\OutboxConfig",
-            "surface": "Internal",
+            "surface": "Api",
             "target_fqcn": "Vaulter\\Configuration\\OutboxConfig"
         },
         {
@@ -2819,7 +2819,7 @@
             "package": "core",
             "phase": "P4",
             "rule": "core-access-sharing:prefix:Vaulter\\Contracts\\Access\\",
-            "surface": "Spi:Implement",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Contracts\\Access\\NonEnumeratingPermissionDriver"
         },
         {
@@ -2833,7 +2833,7 @@
             "package": "core",
             "phase": "P4",
             "rule": "core-access-sharing:prefix:Vaulter\\Contracts\\Access\\",
-            "surface": "Spi:Implement",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver"
         },
         {
@@ -2987,7 +2987,7 @@
             "package": "core",
             "phase": "P4",
             "rule": "core-content-media-webhooks:fqcn:Vaulter\\Contracts\\Content\\ScanPolicyResolver",
-            "surface": "Spi:Implement",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Contracts\\Content\\ScanPolicyResolver"
         },
         {
@@ -3066,7 +3066,7 @@
             "file": "packages/core/src/Contracts/Drive/DriveHandleFactory.php",
             "fqcn": "Vaulter\\Contracts\\Drive\\DriveHandleFactory",
             "kind": "interface",
-            "note": "baseline: public in the 0.x snapshot; after the entry point moves to drive (D10) it has no consumer outside drive; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; after the entry point moves to drive (D10) it has no consumer outside drive; P3.17 decided: Internal (D27)",
             "owner": "drive",
             "package": "core",
             "phase": "P4",
@@ -3155,7 +3155,7 @@
             "package": "core",
             "phase": "P4",
             "rule": "core-drive:prefix:Vaulter\\Contracts\\Drive\\",
-            "surface": "Spi:Implement",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Contracts\\PurgeOnlyContentLifecycle"
         },
         {
@@ -3561,7 +3561,7 @@
             "package": "core",
             "phase": "P4",
             "rule": "core-drive:prefix:Vaulter\\Data\\Drive\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\NodePage"
         },
         {
@@ -3673,7 +3673,7 @@
             "package": "core",
             "phase": "P4",
             "rule": "core-access-sharing:fqcn:Vaulter\\Data\\Sharing\\MintedShareLink",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Data\\Sharing\\MintedShareLink"
         },
         {
@@ -4849,7 +4849,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Content\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Content\\ContentDecoder"
         },
         {
@@ -4877,7 +4877,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Content\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Content\\DocumentContentLifecycle"
         },
         {
@@ -4891,7 +4891,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Content\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Content\\DocumentStateWriter"
         },
         {
@@ -4933,7 +4933,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Content\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Content\\ReadContent"
         },
         {
@@ -5241,7 +5241,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Documents\\DocumentStateChange"
         },
         {
@@ -5255,7 +5255,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Documents\\DocumentStateResult"
         },
         {
@@ -5381,7 +5381,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper"
         },
         {
@@ -5493,7 +5493,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Enums\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Enums\\Documents\\StateWriteCause"
         },
         {
@@ -6697,7 +6697,7 @@
             "package": "documents",
             "phase": "stay",
             "rule": "other-packages:prefix:Vaulter\\Documents\\Types\\",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Documents\\Types\\UnknownDocumentType"
         },
         {
@@ -7630,7 +7630,7 @@
             "file": "packages/drive/src/DriveHandleFactory.php",
             "fqcn": "Vaulter\\Drive\\DriveHandleFactory",
             "kind": "final-class",
-            "note": "open: folds into Vaulter\\Drive\\Vaulter or stays as an Internal factory once the entry point moves to drive (D10)",
+            "note": "P3.17 decided: Internal — the host enters through Vaulter::drive(); the factory is the implementation of the entry point (D10, D27)",
             "owner": "drive",
             "package": "drive",
             "phase": "stay",
@@ -9730,7 +9730,7 @@
             "file": "packages/core/src/Events/EventsReference.php",
             "fqcn": "Vaulter\\Events\\EventsReference",
             "kind": "final-class",
-            "note": "baseline: public in the 0.x snapshot; becomes a reference of the EventCatalog; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; becomes a reference of the EventCatalog; P3.17 decided: Internal (D27)",
             "owner": "core",
             "package": "core",
             "phase": "P3",
@@ -12250,7 +12250,7 @@
             "file": "packages/core/src/Http/Support/HttpResourceResolver.php",
             "fqcn": "Vaulter\\Http\\Support\\HttpResourceResolver",
             "kind": "final-class",
-            "note": "baseline: public in the 0.x snapshot; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; P3.17 decided: Internal (D27)",
             "owner": "drive",
             "package": "core",
             "phase": "P4",
@@ -14728,7 +14728,7 @@
             "file": "packages/core/src/Support/EnumCaseAttributeResolver.php",
             "fqcn": "Vaulter\\Support\\EnumCaseAttributeResolver",
             "kind": "final-class",
-            "note": "open: follows Label/Icon (P3 decides)",
+            "note": "open: follows Label/Icon (P3.17 decided: Internal, D35)",
             "owner": "core",
             "package": "core",
             "phase": "stay",
@@ -14761,7 +14761,7 @@
             "package": "core",
             "phase": "stay",
             "rule": "core-kernel:fqcn:Vaulter\\Support\\Int64Counter",
-            "surface": "Api",
+            "surface": "Internal",
             "target_fqcn": "Vaulter\\Support\\Int64Counter"
         },
         {

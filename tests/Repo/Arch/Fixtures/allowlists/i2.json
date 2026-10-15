@@ -5834,28 +5834,6 @@
             "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/core/src/Webhooks/StandardWebhookVerifier.php",
-            "kind": "use",
-            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Internal",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/core/src/Webhooks/StandardWebhookVerifier.php",
-            "kind": "name",
-            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Webhooks\\StandardWebhookVerifier::__construct",
-            "target": "Vaulter\\Attributes\\Internal",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/core/src/Webhooks/StandardWebhookVerifier.php",
             "kind": "name",
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
@@ -8984,7 +8962,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -8995,7 +8973,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Content\\ContentDecoder",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -9017,17 +8995,6 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Content\\ContentHasher",
-            "target": "Vaulter\\Attributes\\Api",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Content/DocumentContentLifecycle.php",
-            "kind": "use",
-            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
             "target": "Vaulter\\Attributes\\Api",
             "view": "target"
         },
@@ -9061,18 +9028,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Content\\DocumentContentLifecycle",
-            "target": "Vaulter\\Attributes\\Api",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Content/DocumentStateWriter.php",
-            "kind": "use",
-            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -9171,7 +9127,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Content\\DocumentStateWriter",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -9226,7 +9182,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -9237,7 +9193,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Content\\ReadContent",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -10040,17 +9996,6 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Api",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Data/Documents/DocumentStateChange.php",
-            "kind": "use",
-            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
             "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
@@ -10073,18 +10018,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Data\\Documents\\DocumentStateChange",
-            "target": "Vaulter\\Attributes\\Api",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Data/Documents/DocumentStateResult.php",
-            "kind": "use",
-            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -10117,7 +10051,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Data\\Documents\\DocumentStateResult",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -10480,7 +10414,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -10535,7 +10469,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Data\\Snapshots\\Mapping\\DocumentSnapshotMapper",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -11162,7 +11096,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -11173,7 +11107,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Enums\\Documents\\StateWriteCause",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -15844,6 +15778,28 @@
             "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Presentation/DocumentPresenter.php",
+            "kind": "use",
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Attributes\\Internal",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Presentation/DocumentPresenter.php",
+            "kind": "name",
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Presentation\\DocumentPresenter::__construct",
+            "target": "Vaulter\\Attributes\\Internal",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Presentation/DocumentPresenter.php",
             "kind": "name",
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
@@ -16684,7 +16640,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {
@@ -16695,7 +16651,7 @@
             "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Types\\UnknownDocumentType",
-            "target": "Vaulter\\Attributes\\Api",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {

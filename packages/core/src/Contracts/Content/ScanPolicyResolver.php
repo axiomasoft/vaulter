@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Content;
 
-use Vaulter\Attributes\Spi;
-use Vaulter\Attributes\SpiKind;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 
-/** @internal Persisted scan activation is supplied by the drive runtime. */
-#[Spi(SpiKind::Implement)]
+/** Persisted scan activation is supplied by the drive runtime. */
+#[Internal]
 interface ScanPolicyResolver
 {
     /** @return array{ScanPolicySpec, ScanPolicySpec} */

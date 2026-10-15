@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
-use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
 
 /**
@@ -12,10 +12,8 @@ use Vaulter\Documents\Contracts\DocumentContent;
  * something the current type does not understand (a node of a disabled editor
  * extension, a payload the codec rejects): such content is shown, never saved back,
  * because the next save would silently delete what was dropped.
- *
- * @internal
  */
-#[Api]
+#[Internal]
 final readonly class ReadContent
 {
     public function __construct(

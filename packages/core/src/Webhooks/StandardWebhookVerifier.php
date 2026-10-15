@@ -6,7 +6,6 @@ namespace Vaulter\Webhooks;
 
 use InvalidArgumentException;
 use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
 
 /**
@@ -21,7 +20,6 @@ use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
 #[Api]
 final class StandardWebhookVerifier
 {
-    #[Internal]
     public function __construct(private readonly WebhookSigner $signer = new WebhookSigner) {}
 
     /**

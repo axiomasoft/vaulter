@@ -6,7 +6,6 @@ namespace Vaulter\Drive\Data\Uploads;
 
 use InvalidArgumentException;
 use Vaulter\Attributes\Api;
-use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Models\Drive\Node;
@@ -15,7 +14,6 @@ use Vaulter\Models\Drive\Node;
 final readonly class InitiateUploadInput
 {
     /** @param array<string, mixed> $metadata */
-    #[Internal]
     public function __construct(
         public UploadProtocol $protocol,
         public Node|NodeSnapshot|int|string|null $targetParent = null,

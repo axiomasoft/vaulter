@@ -158,7 +158,7 @@ it('keeps every type of the repository under exactly one surface attribute', fun
     $repo = Repo::discover();
     $types = Surface::read($repo);
     $index = SourceIndex::forRepo($repo);
-    $declared = array_map(static fn (array $d): string => $d['fqcn'], array_filter($index->declarations(), static fn (array $d): bool => str_contains($d['file'], '/src/')));
+    $declared = array_map(static fn (array $d): string => $d['fqcn'], array_filter($index->declarations(), static fn (array $d): bool => str_contains($d['file'], '/src/') || str_contains($d['file'], '/database/factories/')));
 
     expect(array_column(array_filter($types, static fn (array $t): bool => $t['surface'] === 'undecided'), 'fqcn'))->toBe([])
         ->and(count($types))->toBe(count($declared))

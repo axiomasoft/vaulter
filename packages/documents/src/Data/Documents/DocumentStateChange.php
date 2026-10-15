@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Documents;
 
-use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
@@ -15,10 +14,8 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
  * projection (a collaboration store may carry only Yjs state); $yjsState is written
  * as given, so null clears it. $schemaVersion is the schema the JSON is in after the
  * write — the caller's, never assumed: a write that keeps the JSON keeps its version.
- *
- * @internal
  */
-#[Api]
+#[Internal]
 final readonly class DocumentStateChange
 {
     #[Internal]

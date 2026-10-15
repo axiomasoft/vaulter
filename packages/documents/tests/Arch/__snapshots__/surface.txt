@@ -27,29 +27,9 @@ Vaulter\Documents\Configuration\DocumentsConfig api since 1.0 final readonly cla
   public function tiptapUrlAttributes(): array
   public function types(): array
 
-Vaulter\Documents\Content\ContentDecoder api since 1.0 final readonly class
-  public function __construct(Vaulter\Documents\Types\DocumentTypeRegistry $types, Vaulter\Documents\Configuration\DocumentsConfig $config)
-  public function available(string $key): bool
-  public function decode(Vaulter\Documents\Contracts\DocumentType $type, ?array $raw): Vaulter\Documents\Contracts\DocumentContent
-  public function editable(Vaulter\Documents\Models\Documents\Document $document): bool
-  public function editableType(Vaulter\Documents\Models\Documents\Document $document): Vaulter\Documents\Contracts\DocumentType
-  public function read(string $typeKey, ?array $stored, int $schemaVersion): Vaulter\Documents\Content\ReadContent
-  public function schemaWritable(Vaulter\Documents\Contracts\DocumentType $type, int $schemaVersion): bool
-  public function type(string $key): Vaulter\Documents\Contracts\DocumentType
-  public function writable(string $key): Vaulter\Documents\Contracts\DocumentType
-
 Vaulter\Documents\Content\ContentHasher api since 1.0 final class
   public static function hash(array $content): string
   public static function size(array $content): int
-
-Vaulter\Documents\Content\DocumentContentLifecycle api since 1.0 final readonly class implements Vaulter\Contracts\Drive\NodeContentLifecycle
-  public function copy(Vaulter\Operations\DriveContext $context, Vaulter\Models\Drive\Node $source, Vaulter\Models\Drive\Node $copy): Vaulter\Data\Drive\CopyResult
-  public function kind(): Vaulter\Enums\Drive\NodeKind
-  public function purge(Vaulter\Operations\DriveContext $context, Vaulter\Models\Drive\Node $node): void
-
-Vaulter\Documents\Content\DocumentStateWriter api since 1.0 final readonly class
-  public function checkpoint(Vaulter\Documents\Models\Documents\Document $locked, ?string $label, bool $keepForever, int|null|string $actorId): Vaulter\Documents\Models\Revisions\DocumentRevision
-  public function write(Vaulter\Documents\Models\Documents\Document $locked, Vaulter\Documents\Data\Documents\DocumentStateChange $change): Vaulter\Documents\Data\Documents\DocumentStateResult
 
 Vaulter\Documents\Content\OpaqueContent api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentContent
   public array $data
@@ -62,11 +42,6 @@ Vaulter\Documents\Content\OpaqueJsonCodec api since 1.0 final readonly class imp
   public function __construct(?int $maxSizeBytes = null)
   public function decode(array $raw, int $schemaVersion): Vaulter\Documents\Contracts\DocumentContent
   public function maxSizeBytes(): ?int
-
-Vaulter\Documents\Content\ReadContent api since 1.0 final readonly class
-  public Vaulter\Documents\Contracts\DocumentContent $content
-  public bool $lossless
-  public function __construct(Vaulter\Documents\Contracts\DocumentContent $content, bool $lossless)
 
 Vaulter\Documents\Content\TipTap\LinkSchemeValidator api since 1.0 final readonly class
   public static function isAllowed(string $href): bool
@@ -207,25 +182,6 @@ Vaulter\Documents\Data\Documents\CreateDocumentInput api since 1.0 final readonl
   public Vaulter\Models\Drive\Drive $storage
   public string $type
 
-Vaulter\Documents\Data\Documents\DocumentStateChange api since 1.0 final readonly class
-  public int|null|string $actorId
-  public Vaulter\Documents\Enums\Documents\StateWriteCause $cause
-  public ?Vaulter\Documents\Contracts\DocumentContent $content
-  public ?int $expectedEpoch
-  public ?int $expectedStateVersion
-  public bool $forceCheckpoint
-  public bool $keepForever
-  public ?string $label
-  public ?Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom
-  public int $schemaVersion
-  public ?string $yjsState
-
-Vaulter\Documents\Data\Documents\DocumentStateResult api since 1.0 final readonly class
-  public bool $changed
-  public ?Vaulter\Documents\Models\Revisions\DocumentRevision $checkpoint
-  public Vaulter\Documents\Models\Documents\Document $document
-  public bool $epochChanged
-
 Vaulter\Documents\Data\Documents\UpdateDocumentContentInput api since 1.0 final readonly class
   public Vaulter\Documents\Contracts\DocumentContent $content
   public ?int $expectedStateVersion
@@ -301,11 +257,14 @@ Vaulter\Documents\Data\Snapshots\DocumentSnapshot api since 1.0 final readonly c
   public ?string $updatedBy
   public ?int $yjsStateSize
 
-Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper api since 1.0 final readonly class
-  public function __construct(Vaulter\Documents\Content\ContentDecoder $decoder)
-  public function comment(Vaulter\Documents\Models\Comments\NodeComment $comment): Vaulter\Documents\Data\Snapshots\CommentSnapshot
-  public function document(Vaulter\Documents\Models\Documents\Document $document, ?Vaulter\Documents\Models\Revisions\DocumentRevision $head, ?Vaulter\Documents\Models\Revisions\DocumentRevision $revision = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
-  public function revision(Vaulter\Documents\Models\Revisions\DocumentRevision $revision, Vaulter\Documents\Models\Documents\Document $document): Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
+Vaulter\Documents\Database\Factories\DocumentFactory api since 1.0 final class extends Vaulter\Database\Factories\VaulterFactory
+  protected $model = \Vaulter\Documents\Models\Documents\Document::class
+  public function definition(): array
+  public function in(Vaulter\Models\Drive\Drive|Vaulter\Models\Drive\Node $container): static
+  public function named(string $name): static
+  public function ofType(string $type): static
+  protected function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
+  public function richText(string $text = 'fixture'): static
 
 Vaulter\Documents\DocumentsManager api since 1.0 final readonly class
   public function __construct(Vaulter\Documents\Types\DocumentTypeRegistry $types, Vaulter\Documents\Export\DocumentExporterRegistry $exporters)
@@ -325,15 +284,6 @@ Vaulter\Documents\Enums\DocumentEventType api since 1.0 enum: string implements 
   case DocumentRestored = 'document.restored'
   case DocumentRevisionCreated = 'document.revision_created'
   case DocumentUpdated = 'document.updated'
-
-Vaulter\Documents\Enums\Documents\StateWriteCause api since 1.0 enum: string
-  case Collaboration = 'collaboration'
-  case Copy = 'copy'
-  case Create = 'create'
-  case Restore = 'restore'
-  case Seed = 'seed'
-  case Update = 'update'
-  public function skipsIdenticalWrite(): bool
 
 Vaulter\Documents\Events\Comments\CommentAdded api since 1.0 final readonly class extends Vaulter\Events\DomainEvent implements Illuminate\Contracts\Broadcasting\ShouldBroadcast
   public Vaulter\Documents\Models\Comments\NodeComment $comment
@@ -595,7 +545,6 @@ Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly cla
   public function update(Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, array $content, ?int $expectedStateVersion = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
 
 Vaulter\Documents\Presentation\DocumentPresenter api since 1.0 final readonly class implements Vaulter\Contracts\Presentation\KindPresenter
-  public function __construct(Vaulter\Documents\Content\ContentDecoder $decoder)
   public function kind(): Vaulter\Enums\Drive\NodeKind
   public function present(Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Handlers\NodePresentation
 
@@ -639,16 +588,6 @@ Vaulter\Documents\Types\RichTextDocumentType api since 1.0 final readonly class 
 
 Vaulter\Documents\Types\SpreadsheetDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType
   public const string KEY = 'vaulter/spreadsheet'
-  public function capabilities(): Vaulter\ValueObjects\Handlers\ContentCapabilities
-  public function codec(): Vaulter\Documents\Contracts\DocumentCodec
-  public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
-  public function key(): string
-  public function label(): string
-  public function schemaVersion(): int
-  public function viewer(): Vaulter\ValueObjects\Handlers\ViewerDescriptor
-
-Vaulter\Documents\Types\UnknownDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType
-  public function __construct(string $key)
   public function capabilities(): Vaulter\ValueObjects\Handlers\ContentCapabilities
   public function codec(): Vaulter\Documents\Contracts\DocumentCodec
   public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent

@@ -124,6 +124,7 @@ Vaulter\Drive\Data\Uploads\InitiateUploadInput api since 1.0 final readonly clas
   public Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node|int|null|string $targetNode
   public Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node|int|null|string $targetParent
   public ?int $totalSizeBytes
+  public function __construct(Vaulter\Drive\Enums\Uploads\UploadProtocol $protocol, Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node|int|null|string $targetParent = null, ?string $targetName = null, Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node|int|null|string $targetNode = null, ?string $expectedSha256 = null, ?int $totalSizeBytes = null, ?string $mimeType = null, array $metadata = [], ?int $expectedSequence = null)
   public function isNewVersion(): bool
 
 Vaulter\Drive\DriveHandle api since 1.0 final readonly class implements Vaulter\Contracts\Drive\DriveHandle
