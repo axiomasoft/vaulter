@@ -106,7 +106,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
 //     that lists a PHANTOM key (old mtime, no bytes): detection classifies it as an
 //     orphan, then the prune's delete no-ops over the absent object.
 it('prune на pgsql идемпотентен: исчезнувший до удаления объект не бросает (phantom listing)', function (): void {
-    $phantomKey = app(ContentStore::class)->keyFor(scope: BlobScope::fromSegment('t1'), sha256: hash('sha256', 'phantom'));
+    $phantomKey = app(ContentStore::class)->keyFor(scope: BlobScope::fromSegment('t-1'), sha256: hash('sha256', 'phantom'));
 
     app()->instance(ContentStore::class, new PhantomListingContentStore(
         phantomKey: $phantomKey,
