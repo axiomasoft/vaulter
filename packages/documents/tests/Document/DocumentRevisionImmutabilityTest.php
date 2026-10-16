@@ -11,7 +11,7 @@ use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
  * D34: a checkpoint is immutable — after INSERT only keep_forever changes, so a

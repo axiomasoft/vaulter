@@ -12,6 +12,7 @@ use Vaulter\Drive\Content\ScanPolicyResolver as DriveScanPolicyResolver;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Jobs\PruneFileRevisionsJob;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\FileRevision;
@@ -21,7 +22,6 @@ use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\RevisionRetentionPolicy;
 use Vaulter\Quota\QuotaCalculator;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * RevisionRetentionPolicy (PLAN2.D48, P4-I19): the pruning never deletes the head or a

@@ -8,15 +8,15 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Sharing\ShareResolution;
 use Vaulter\Sharing\ShareResolver;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The resolver hardening matrix (§2.7 / M2c): a valid token resolves within its

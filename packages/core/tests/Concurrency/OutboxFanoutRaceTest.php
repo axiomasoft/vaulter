@@ -11,9 +11,9 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxRelay;
 use Vaulter\Events\Outbox\OutboxStore;
 use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookFanoutConsumer;
 

@@ -28,6 +28,8 @@ use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Access\MissingActorException;
@@ -37,8 +39,6 @@ use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * PLAN2.P4.8: DocumentOperations returns snapshots, keeps the content validator

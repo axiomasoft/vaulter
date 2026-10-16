@@ -7,6 +7,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\InheritanceRestriction;
@@ -15,8 +16,7 @@ use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**

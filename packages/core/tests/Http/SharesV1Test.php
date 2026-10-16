@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Tests\Http\V1;
 
 /**
  * Share links over v1: the token and URL appear only in the create and rotate

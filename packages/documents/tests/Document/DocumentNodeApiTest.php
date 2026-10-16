@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The Documents REST surface (§5 / §7 / M4a): create a document, read/autosave its

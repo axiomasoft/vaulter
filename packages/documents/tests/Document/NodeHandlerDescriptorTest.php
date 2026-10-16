@@ -9,10 +9,10 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * The presentation embedded in the node payload (§4.5 / §5 / M4a): the client routes a

@@ -6,13 +6,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Testing\Activity\ActivityTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Activity\ActivityTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests;
 
 use Illuminate\Foundation\Application;
-use Vaulter\Tests\Fixtures\Panels\TeamProfile;
+use Vaulter\Drive\Testing\Fixtures\Panels\TeamProfile;
 
 /**
  * Registers a second storage panel BEFORE the application boots.

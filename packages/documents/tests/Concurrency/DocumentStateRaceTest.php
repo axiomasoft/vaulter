@@ -9,7 +9,7 @@ use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Tests\Concurrency\RaceFixtures;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
  * Two writers that read state version N and both ask to write on top of it: exactly one

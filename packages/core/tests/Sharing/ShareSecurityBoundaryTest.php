@@ -10,6 +10,9 @@ use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -20,10 +23,7 @@ use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Sharing\ShareResolver;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {

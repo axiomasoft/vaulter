@@ -111,7 +111,7 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
 
         // Testing/Contracts holds the contract suites a host runs against its own configuration;
         // like core's, they live with the testing kit rather than in the Contracts layer.
-        if ($relative === 'Testing/Contracts') {
+        if (in_array($relative, ['Testing/Contracts', 'Testing/Http'], true)) {
             continue;
         }
 

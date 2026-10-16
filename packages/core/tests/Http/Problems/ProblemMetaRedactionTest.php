@@ -9,7 +9,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Http\Problems\ProblemRenderer;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 it('drops forbidden meta keys at any depth and logs a warning without the values', function (): void {
     $logger = new class extends AbstractLogger

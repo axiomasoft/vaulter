@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Fixtures\TenantAwareNode;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
 
 /**
  * Boots the package in ULID + tenant mode so the migrations and key handling are

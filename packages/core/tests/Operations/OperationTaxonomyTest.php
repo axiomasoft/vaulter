@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);

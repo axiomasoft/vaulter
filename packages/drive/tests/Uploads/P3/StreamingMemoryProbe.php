@@ -8,10 +8,10 @@ use GuzzleHttp\Psr7\Stream;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\TextUI\Configuration\Builder;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /** Deterministic nonseekable source; never materializes the whole payload. */
 final class P37ProbeStream

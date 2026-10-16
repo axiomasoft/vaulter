@@ -5,15 +5,15 @@ declare(strict_types=1);
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Support\CanonicalJson;
 
 uses(EnablesWebhooksModule::class);
 

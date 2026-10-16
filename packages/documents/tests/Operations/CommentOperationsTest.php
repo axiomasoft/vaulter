@@ -15,13 +15,13 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * PLAN2.P4.8: CommentOperations. Read needs View, write needs Comment; resolve needs

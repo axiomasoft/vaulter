@@ -10,7 +10,7 @@ use Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException;
 use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 /**
  * PLAN2.D37 error contract: stable codes and statuses, an actionable message, and the

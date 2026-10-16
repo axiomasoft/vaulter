@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\ShareToken;
-use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Schema\ForceCreates;
 
 /**

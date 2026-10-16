@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Test groups of the core suite (PLAN3 P1.5), paths relative to this directory; Vaulter\Tests\Support\TestGroups turns them into
+ * Test groups of the core suite (PLAN3 P1.5), paths relative to this directory; Vaulter\Testing\Support\TestGroups turns them into
  * Pest groups, tests/Repo/TestGroupsTest.php keeps them true. A test belongs to `database` only when its RESULT depends on the
  * engine; why each entry is here: plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md.
  */

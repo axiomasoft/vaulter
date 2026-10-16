@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The public share-download response headers (P1.1 / F-P1.3-04, F-P1.11-03):

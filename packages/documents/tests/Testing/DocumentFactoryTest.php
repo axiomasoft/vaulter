@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\RichTextDocumentType;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * The factory goes through DocumentOperations, so a fixture document has its node, its

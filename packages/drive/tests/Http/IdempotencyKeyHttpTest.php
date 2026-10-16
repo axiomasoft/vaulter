@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Http\V1;
 
 /**
  * Idempotency-Key over v1 (D25, ADR-0029): folders.store and nodes.update read the header — one Structured Field

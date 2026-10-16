@@ -6,10 +6,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * A node or drive the caller may not see answers exactly like one that does not

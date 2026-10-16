@@ -8,10 +8,10 @@ use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
 /**
  * Document events carry the validators of the writer's result (state_version, epoch),

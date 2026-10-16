@@ -17,6 +17,7 @@ use Vaulter\Drive\Content\PrivateScanReader;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Enums\Cas\ScanVerdict;
@@ -25,8 +26,7 @@ use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

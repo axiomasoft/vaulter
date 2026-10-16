@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Event;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 it('создаёт папку в корне хранилища (под root-узлом)', function (): void {
     $drive = DriveTestHelpers::drive();

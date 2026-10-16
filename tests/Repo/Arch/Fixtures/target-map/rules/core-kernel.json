@@ -1694,6 +1694,14 @@
         },
         {
             "match": "prefix",
+            "value": "Vaulter\\Testing\\",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#kernel: Тестовый кит — the shared test helpers of the kernel kit (D14): database lifecycle, test groups, race harness, event conformance, OpenApi contract check, fresh application"
+        },
+        {
+            "match": "prefix",
             "value": "Vaulter\\Testing\\Fixtures\\",
             "owner": "core",
             "action": "keep",

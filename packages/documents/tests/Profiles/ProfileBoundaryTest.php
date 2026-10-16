@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Tests\Comment\CommentsTestCase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 uses(CommentsTestCase::class, RefreshDatabase::class);
 

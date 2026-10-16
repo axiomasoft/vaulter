@@ -8,8 +8,8 @@ use Vaulter\Content\ImmutableContentIdentity;
 use Vaulter\Content\SignedContentUrl;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 
 /** A revision that is not scanned clean answers 423 content_unavailable before any byte or URL. */
 uses(RefreshDatabase::class);

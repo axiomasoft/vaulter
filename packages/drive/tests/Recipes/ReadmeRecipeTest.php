@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 // The fragment below is copied into README.md byte for byte; the README's own `use` lines are the
 // imports of this file.

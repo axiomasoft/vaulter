@@ -6,11 +6,11 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 /**
  * The content of a document is its own resource: GET carries a tag made of the

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Tests\Http;
 
 use Illuminate\Testing\TestResponse;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Testing\Http\V1;
 
 /** Fixtures of the documents REST v1 suite on top of the core V1 helpers; every call runs as the test's acting user. */
 final class DocumentsV1

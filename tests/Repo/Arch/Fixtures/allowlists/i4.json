@@ -133,6 +133,28 @@
             "view": "current"
         },
         {
+            "category": "config-validation",
+            "count": 1,
+            "file": "packages/core/src/Testing/Concurrency/ForkRace.php",
+            "kind": "probe",
+            "reason": "the fork-based race harness of the test kit asks whether the process can fork and signal: a capability check of the test host, not an activation",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Testing\\Concurrency\\ForkRace::supported",
+            "target": "'pcntl_fork'",
+            "view": "current"
+        },
+        {
+            "category": "config-validation",
+            "count": 1,
+            "file": "packages/core/src/Testing/Concurrency/ForkRace.php",
+            "kind": "probe",
+            "reason": "the fork-based race harness of the test kit asks whether the process can fork and signal: a capability check of the test host, not an activation",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Testing\\Concurrency\\ForkRace::supported",
+            "target": "'posix_kill'",
+            "view": "current"
+        },
+        {
             "category": "jwt-optional",
             "count": 1,
             "file": "packages/documents/src/Collaboration/CollaborationCallResolver.php",

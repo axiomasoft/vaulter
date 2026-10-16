@@ -14,6 +14,8 @@ use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -23,8 +25,6 @@ use Vaulter\Handlers\FileDescriptorFactory;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');

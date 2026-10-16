@@ -13,7 +13,7 @@ use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Providers\BindingsRegistrar;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

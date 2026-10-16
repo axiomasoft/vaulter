@@ -8,9 +8,9 @@ use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
-use Vaulter\Tests\Concerns\RefreshesDatabaseForSchemaVariant;
-use Vaulter\Tests\Support\OpenApi\ValidatesOpenApiResponses;
-use Vaulter\Tests\Support\SuiteDatabaseConnection;
+use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
+use Vaulter\Testing\Support\OpenApi\ValidatesOpenApiResponses;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase

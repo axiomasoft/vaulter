@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Tests\Support\TestGroups;
+use Vaulter\Testing\Support\TestGroups;
 
 /*
  * The test groups of PLAN3 P1.5 (database, serial, extended, stand, engine:*): every suite declares them in <tests>/groups.php,

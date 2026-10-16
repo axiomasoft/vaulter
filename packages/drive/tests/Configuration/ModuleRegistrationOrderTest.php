@@ -7,7 +7,7 @@ use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\Configuration\DedupScope;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\VaulterMediaServiceProvider;
-use Vaulter\Tests\Concerns\FreshApplication;
+use Vaulter\Testing\Concerns\FreshApplication;
 
 // The module kernel compiles after every provider registered: a package provider listed before the core
 // one only offers its manifest, and the module config is merged and normalized once the graph is sealed.

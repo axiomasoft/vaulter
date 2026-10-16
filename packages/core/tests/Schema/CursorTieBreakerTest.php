@@ -5,14 +5,14 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Tests\Schema\ForceCreates;
 
 /**

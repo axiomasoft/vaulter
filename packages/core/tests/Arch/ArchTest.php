@@ -357,7 +357,7 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     // FQCN is documented, so it stays beside the webhook delivery it reports on.
     // Exceptions/Http holds the exceptions of the HTTP protocol itself (428 precondition).
     // Events/Outbox/Models holds the outbox model of the kernel outbox (D29: Vaulter\Events\Outbox\Models\OutboxEvent).
-    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events', 'Webhooks/Events', 'Events/Outbox/Models'])))->toBe([])
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'Testing/Events', 'ValueObjects/Events', 'Webhooks/Events', 'Events/Outbox/Models'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
         ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ContentScannerContractTests.php', 'FileHandlerContractTests.php', 'ModuleContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
         ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'DriveEventType.php'])
@@ -688,7 +688,7 @@ arch('the FileHandler contract seam is kind-neutral and never depends on vaulter
 arch('DB facade only in Database and Schema (AD25)')
     ->expect('Illuminate\Support\Facades\DB')
     ->toOnlyBeUsedIn(['Vaulter\Database', 'Vaulter\Schema'])
-    ->ignoring(['Vaulter\Tests', 'Vaulter\Load']);
+    ->ignoring(['Vaulter\Tests', 'Vaulter\Testing', 'Vaulter\Load']);
 
 arch('domain exceptions implement the HTTP problem contract')
     ->expect('Vaulter\Exceptions')

@@ -6,6 +6,7 @@ use Illuminate\Pagination\Cursor;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Events\DriveEventType;
@@ -13,7 +14,6 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\ActivityOperations;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {

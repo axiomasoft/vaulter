@@ -5,14 +5,14 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Tenancy\ResolvesOwnerTenant;
 use Vaulter\Contracts\Tenancy\TenantResolver;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
  * The factories create through the same Operations a host calls, so the invariants a

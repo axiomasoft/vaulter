@@ -21,6 +21,8 @@ use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantScope;
@@ -30,8 +32,6 @@ use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 // D30 (variant A): COPY needs View and Copy on EVERY active descendant, not only on the root.
 

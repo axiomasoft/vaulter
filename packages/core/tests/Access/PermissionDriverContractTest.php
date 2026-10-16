@@ -9,10 +9,10 @@ use Vaulter\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Testing\Contracts\PermissionDriverContractTests;
-use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
 
 /**

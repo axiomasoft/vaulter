@@ -12,10 +12,10 @@ use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\SpatieUser;
 use Vaulter\ValueObjects\Access\OwnerRef;
 

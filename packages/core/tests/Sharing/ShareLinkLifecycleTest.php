@@ -16,6 +16,8 @@ use Vaulter\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
@@ -33,11 +35,9 @@ use Vaulter\Sharing\ShareResolution;
 use Vaulter\Sharing\ShareResolver;
 use Vaulter\Sharing\ShareSession;
 use Vaulter\Sharing\ShareTokenMinter;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
 
 uses(EnablesWebhooksModule::class);
 

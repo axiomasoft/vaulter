@@ -10,9 +10,9 @@ use Vaulter\Content\SignedContentUrl;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 
 /**
  * In the opt-in direct_signed mode a download is an uncached 302 to a short-lived URL of

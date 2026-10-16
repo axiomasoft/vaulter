@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
  * The document aggregate schema (D34): v_documents holds the working state 1:1 with

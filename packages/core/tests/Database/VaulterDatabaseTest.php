@@ -12,7 +12,7 @@ use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
 
 uses(P83DocumentsTestCase::class);

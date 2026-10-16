@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The NODE-attached comment HTTP surface (ADR-0014 шаг 1), the additive twin of the

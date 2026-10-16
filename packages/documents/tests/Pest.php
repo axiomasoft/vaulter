@@ -11,8 +11,8 @@ use Vaulter\Documents\Tests\Export\ExportTestCase;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Documents\Tests\TestCase;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
-use Vaulter\Tests\Support\TestGroups;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Support\TestGroups;
 
 // The v_node_comments/v_documents/v_document_revisions schema is always migrated (core owns
 // it unconditionally); only the ROUTES are feature-gated. Schema + Unit run on the

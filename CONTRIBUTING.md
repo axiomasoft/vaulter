@@ -58,7 +58,7 @@ Full, coverage, mutation and load runs are not part of a pull request.
 SQLite serialises writes, so a race test on it passes even against defective code.
 Any test that must prove behaviour under real concurrency (two writers on one row,
 a lock held across a read-modify-write, a sweep racing an upload) runs on PostgreSQL
-through `Vaulter\Tests\Concurrency\ForkRace`: each task runs in its own forked
+through `Vaulter\Testing\Concurrency\ForkRace`: each task runs in its own forked
 process on its own connection, and a file barrier releases them together.
 
 ```php
@@ -77,7 +77,7 @@ Each `RaceOutcome` carries `ok`, the task's JSON-serialisable `value`, and the t
 read must be committed: bind the test directory with `DatabaseMigrations`, not
 `RefreshDatabase`. A task returns or throws, never calls `exit()`. The harness refuses a
 database whose name does not end in `_test`.
-Packages reach it through the `Vaulter\Tests\` autoload-dev mapping to `../core/tests/`.
+Packages reach it through the core testing kit (`Vaulter\Testing\`, shipped in `packages/core/src/Testing`).
 
 Run them locally as the `serial` CI lane does: `scripts/t pgsql -p core --group=serial -j1 --no-skips`.
 

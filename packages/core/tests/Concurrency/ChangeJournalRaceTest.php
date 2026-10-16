@@ -10,11 +10,11 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Changes\NodeChange;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Changes\CursorExpiredException;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Concurrency\RaceOutcome;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
  * The change journal under real concurrency (P5-I14, P5-I15): seqs are allocated under

@@ -12,7 +12,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Tests\Webhooks\FakeHostResolver;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookSigner;

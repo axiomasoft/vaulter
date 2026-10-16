@@ -8,11 +8,11 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\IdsConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Support\Scale;
 
 trait ExercisesWideNodeListing

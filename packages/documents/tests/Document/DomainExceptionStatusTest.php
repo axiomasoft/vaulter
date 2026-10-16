@@ -29,7 +29,7 @@ use Vaulter\Exceptions\VaulterException;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Testing\NullPermissionDriver;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 it('renders each domain exception with its stable code and HTTP status', function (
     VaulterException $exception,

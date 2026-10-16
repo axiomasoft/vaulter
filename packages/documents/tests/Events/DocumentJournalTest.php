@@ -6,11 +6,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
+use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Enums\Changes\ChangeOperation;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
 /**
  * Document events in the drive change journal (PLAN2.D59, D35): every content save is

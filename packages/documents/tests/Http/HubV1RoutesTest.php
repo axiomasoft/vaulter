@@ -8,9 +8,9 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 use Vaulter\Http\Middleware\VaulterThrottledRouteMap;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 /**
  * The hub's server-to-server calls on their own stack: a room JWT and a body signature

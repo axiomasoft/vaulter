@@ -14,6 +14,7 @@ use Vaulter\Drive\Actions\Uploads\InitiateUploadAction;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
@@ -27,7 +28,6 @@ use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\DrivePolicyBuilder;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /** P4-I25 and P4-I17: the drive policy and name policy hold on every write path. */
 function policyDrive(?callable $configure = null): DriveHandle

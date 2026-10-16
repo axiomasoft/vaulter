@@ -26,10 +26,10 @@ use Orchestra\Testbench\Foundation\Application as Testbench;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Support\Schema\SchemaPresets;
 use Vaulter\Tests\Support\Schema\SchemaSnapshot;
-use Vaulter\Tests\Support\SuiteDatabaseConnection;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
 use Vaulter\VaulterServiceProvider;
 
 $root = dirname(__DIR__);

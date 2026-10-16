@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Repositories\Drive\FileRevisionReadRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 uses(TestCase::class, RefreshDatabase::class);
 

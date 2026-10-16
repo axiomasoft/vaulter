@@ -2337,6 +2337,83 @@
             "id": "table:v_outbox",
             "kind": "schema",
             "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_CONNECTION",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_DATABASE",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_HOST",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_PASSWORD",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_PORT",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_USERNAME",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:TEST_TOKEN",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:VAULTER_OPENAPI_VALIDATE",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:VAULTER_TEST_DB_PER_PROCESS",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "morph:Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers::grant#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "morph:Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

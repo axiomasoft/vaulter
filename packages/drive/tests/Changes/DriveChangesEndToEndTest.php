@@ -13,11 +13,11 @@ use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Enums\Changes\ChangeOperation;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * A syncing client end to end (PLAN2.D50, D59): it lists the drive once, takes the

@@ -12,10 +12,10 @@ use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /** @return array{DriveHandle, NodeSnapshot, TestUser} */
 function exportFixture(?string $role, string $type = 'vaulter/rich-text', ?array $content = null): array

@@ -8,14 +8,14 @@ use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Events\Drives\DriveCreated;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Support\CanonicalJson;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Testing\Support\CanonicalJson;
 
 uses(EnablesWebhooksModule::class);
 

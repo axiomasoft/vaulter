@@ -2859,6 +2859,39 @@
             "symbol": "Vaulter\\Console\\InstallCommand::permissionDrivers",
             "target": "Vaulter\\Access\\PermissionDriverCatalog",
             "view": "target"
+        },
+        {
+            "category": "domain-in-core",
+            "count": 1,
+            "file": "packages/core/src/Testing/Concerns/RefreshesDatabaseForSchemaVariant.php",
+            "kind": "config",
+            "reason": "D14: the shared test helper of the core kit touches a drive model/config section until the drive types move (P4.6+); then the helper moves to the drive kit or reads it through a contract",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Testing\\Concerns\\RefreshesDatabaseForSchemaVariant::loadMigrationsFrom",
+            "target": "vaulter.features",
+            "view": "target"
+        },
+        {
+            "category": "domain-in-core",
+            "count": 1,
+            "file": "packages/core/src/Testing/Events/EventConformance.php",
+            "kind": "use",
+            "reason": "D14: the shared test helper of the core kit touches a drive model/config section until the drive types move (P4.6+); then the helper moves to the drive kit or reads it through a contract",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Models\\Activity\\Activity",
+            "view": "target"
+        },
+        {
+            "category": "domain-in-core",
+            "count": 1,
+            "file": "packages/core/src/Testing/Events/EventConformance.php",
+            "kind": "name",
+            "reason": "D14: the shared test helper of the core kit touches a drive model/config section until the drive types move (P4.6+); then the helper moves to the drive kit or reads it through a contract",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Testing\\Events\\EventConformance::assertAuditedOnly",
+            "target": "Vaulter\\Models\\Activity\\Activity",
+            "view": "target"
         }
     ],
     "invariant": "I1",

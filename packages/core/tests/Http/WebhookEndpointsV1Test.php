@@ -6,9 +6,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Http\V1;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 /**

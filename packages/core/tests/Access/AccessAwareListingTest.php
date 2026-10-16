@@ -6,12 +6,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Tests\Fixtures\Access\RoleSubjectGrantDriver;
-use Vaulter\Tests\Fixtures\TestUser;
 
 /**
  * Repository candidate prefilters and exact HTTP visibility are separate seams.

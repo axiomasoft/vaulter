@@ -23,7 +23,7 @@ use Vaulter\Exceptions\Support\InvalidExtensionResult;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Modules\ModuleGraphException;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 it('renders the documented domain code and HTTP status', function (VaulterException $exception, string $code, int $status): void {
     // A domain exception answers problem+json with its catalogue status, never a 500.

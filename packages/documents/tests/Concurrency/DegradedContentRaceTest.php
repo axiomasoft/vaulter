@@ -12,7 +12,7 @@ use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Concurrency\RaceFixtures;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
  * A write without an expectation passes the caller's writability check, and a restore of

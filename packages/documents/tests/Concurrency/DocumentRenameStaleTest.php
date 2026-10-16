@@ -6,7 +6,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Tests\Concurrency\RaceFixtures;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 /*
  * V36 for a document: two clients rename the same document with the same expected

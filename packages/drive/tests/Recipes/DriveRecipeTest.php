@@ -8,10 +8,10 @@ use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 // The fragments below are copied into the guides byte for byte; the guides' own `use` lines are
 // the imports of this file.

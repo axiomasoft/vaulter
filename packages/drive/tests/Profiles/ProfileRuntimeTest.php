@@ -9,6 +9,7 @@ use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Policies\UploadPolicy as EffectiveUploadPolicy;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Facades\Vaulter;
@@ -20,8 +21,7 @@ use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\RevisionRetentionPolicy;
 use Vaulter\Profiles\UploadPolicy;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

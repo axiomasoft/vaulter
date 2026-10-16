@@ -6,10 +6,10 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Actions\Drives\RecountDriveQuotaAction;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Quota\QuotaCalculator;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
  * PLAN2.F08: a recount racing an upload or a revision delete never overwrites the

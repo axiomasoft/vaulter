@@ -812,6 +812,20 @@
             "id": "serialized:config:vaulter.models.outbox",
             "kind": "protocol",
             "reason": "P3.14: the serialized default model class is Vaulter\\Events\\Outbox\\Models\\OutboxEvent"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "morph:Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers::grant#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "morph:Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
         }
     ],
     "items": [
@@ -1673,11 +1687,31 @@
         {
             "call": "getMorphClass",
             "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers::grant#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Testing/Access/AccessTestHelpers.php",
+                "symbol": "Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers::grant"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
             "id": "morph:Vaulter\\Drive\\Testing\\Contracts\\ScanLifecycleContractTests::uploaded#getMorphClass",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/src/Testing/Contracts/ScanLifecycleContractTests.php",
                 "symbol": "Vaulter\\Drive\\Testing\\Contracts\\ScanLifecycleContractTests::uploaded"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 2,
+            "id": "morph:Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Testing/Drive/DriveTestHelpers.php",
+                "symbol": "Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor"
             }
         },
         {

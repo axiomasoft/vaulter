@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**

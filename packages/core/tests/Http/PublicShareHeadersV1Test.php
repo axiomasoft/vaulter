@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
 
 /**
  * A share token is a bearer secret in the URL: no public share response may be stored

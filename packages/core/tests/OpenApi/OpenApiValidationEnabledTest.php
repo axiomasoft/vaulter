@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\AssertionFailedError;
-use Vaulter\Tests\Support\OpenApi\ValidateOpenApiResponses;
+use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
 
 /**
  * Every v1 feature test is a contract test only while the validating middleware is on; this

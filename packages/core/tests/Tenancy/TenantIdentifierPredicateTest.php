@@ -7,7 +7,7 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tenancy\TenancyBoundary;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class);

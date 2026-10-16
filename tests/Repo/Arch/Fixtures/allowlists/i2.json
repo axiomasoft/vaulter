@@ -5514,6 +5514,28 @@
         {
             "category": "reverse-edge",
             "count": 1,
+            "file": "packages/core/src/Testing/Events/EventConformance.php",
+            "kind": "use",
+            "reason": "D14: the shared test helper of the core kit names a drive model until the drive types move (P4.6+); then the helper moves to the drive kit",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Models\\Activity\\Activity",
+            "view": "target"
+        },
+        {
+            "category": "reverse-edge",
+            "count": 1,
+            "file": "packages/core/src/Testing/Events/EventConformance.php",
+            "kind": "name",
+            "reason": "D14: the shared test helper of the core kit names a drive model until the drive types move (P4.6+); then the helper moves to the drive kit",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Testing\\Events\\EventConformance::assertAuditedOnly",
+            "target": "Vaulter\\Models\\Activity\\Activity",
+            "view": "target"
+        },
+        {
+            "category": "reverse-edge",
+            "count": 1,
             "file": "packages/core/src/Testing/InteractsWithVaulter.php",
             "kind": "use",
             "reason": "тестовый трейт ядра создаёт доменные объекты: тестовые хелперы доменов переезжают к владельцам (цель: drive)",
@@ -16443,6 +16465,72 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Testing\\Contracts\\ExporterContractTests",
             "target": "Vaulter\\Attributes\\Api",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Testing/Fixtures/FakeHostUserResolver.php",
+            "kind": "use",
+            "reason": "the documents test fixture imports the core kit and the surface attribute of core directly while core is only a transitive requirement: P4 declares an explicit require core in the package composer (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Attributes\\Internal",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Testing/Fixtures/FakeHostUserResolver.php",
+            "kind": "use",
+            "reason": "the documents test fixture imports the core kit and the surface attribute of core directly while core is only a transitive requirement: P4 declares an explicit require core in the package composer (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Support\\Identity",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Testing/Fixtures/FakeHostUserResolver.php",
+            "kind": "use",
+            "reason": "the documents test fixture imports the core kit and the surface attribute of core directly while core is only a transitive requirement: P4 declares an explicit require core in the package composer (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Testing\\Fixtures\\TestUser",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Testing/Fixtures/FakeHostUserResolver.php",
+            "kind": "name",
+            "reason": "the documents test fixture imports the core kit and the surface attribute of core directly while core is only a transitive requirement: P4 declares an explicit require core in the package composer (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Testing\\Fixtures\\FakeHostUserResolver::find",
+            "target": "Vaulter\\Support\\Identity",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Testing/Fixtures/FakeHostUserResolver.php",
+            "kind": "name",
+            "reason": "the documents test fixture imports the core kit and the surface attribute of core directly while core is only a transitive requirement: P4 declares an explicit require core in the package composer (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Testing\\Fixtures\\FakeHostUserResolver::find",
+            "target": "Vaulter\\Testing\\Fixtures\\TestUser",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Testing/Fixtures/FakeHostUserResolver.php",
+            "kind": "name",
+            "reason": "the documents test fixture imports the core kit and the surface attribute of core directly while core is only a transitive requirement: P4 declares an explicit require core in the package composer (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Testing\\Fixtures\\FakeHostUserResolver",
+            "target": "Vaulter\\Attributes\\Internal",
             "view": "target"
         },
         {

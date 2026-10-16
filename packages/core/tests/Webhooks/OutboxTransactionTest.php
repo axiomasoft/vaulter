@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\ValueObjects\Access\ActorRef;
 

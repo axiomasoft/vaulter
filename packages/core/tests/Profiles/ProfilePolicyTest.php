@@ -14,9 +14,9 @@ use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileProvider;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
-use Vaulter\Tests\Concerns\FreshApplication;
-use Vaulter\Tests\Fixtures\Panels\FakeProject;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Concerns\FreshApplication;
+use Vaulter\Testing\Fixtures\Panels\FakeProject;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Tests\Profiles\Fixtures\CommentsOptionProvider;
 
 it('treats comments as globally off when no module contributes the option and leaves the other flags untouched', function (): void {

@@ -14,8 +14,8 @@ use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Modules\VaulterModule;
-use Vaulter\Tests\Concerns\FreshApplication;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Concerns\FreshApplication;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);

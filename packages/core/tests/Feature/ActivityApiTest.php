@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The activity feed HTTP surface (§2.9 / M2c-activity, REST v1). The feed is queried

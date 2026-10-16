@@ -8,13 +8,13 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Data\Snapshots\GrantSnapshot;
 use Vaulter\Data\Snapshots\ShareLinkSnapshot;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Http\Resources\Access\GrantResource;
 use Vaulter\Http\Resources\Activity\ActivityResource;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Resources\Sharing\ShareResource;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 it('serializes snapshot timestamps as UTC strings and keeps absent timestamps null', function (): void {
     $time = new DateTimeImmutable('2026-10-08T12:34:56.123456+03:00');

@@ -8,13 +8,13 @@ use Vaulter\Actions\Webhooks\UpdateWebhookEndpointAction;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Data\Webhooks\RegisterWebhookEndpointInput;
 use Vaulter\Data\Webhooks\UpdateWebhookEndpointInput;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 /**

@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * PLAN2.P4.13 (D44): a Vaulter model cannot be written outside an operation. The base

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
+use Vaulter\Drive\Testing\Fixtures\Panels\TeamProfile;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
 use Vaulter\Profiles\DefaultProfile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tests\Fixtures\Panels\OverrideDefaultProfile;
 use Vaulter\Tests\Fixtures\Panels\ProjectProfile;
-use Vaulter\Tests\Fixtures\Panels\TeamProfile;
 
 it('строит реестр из конфига и регистрирует дефолт первым', function (): void {
     $registry = ProfileRegistry::fromConfig(

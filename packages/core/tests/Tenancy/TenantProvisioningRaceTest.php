@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, DatabaseMigrations::class);

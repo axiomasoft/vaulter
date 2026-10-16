@@ -12,7 +12,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Concerns\FreshApplication;
+use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Tests\Content\Fixtures\DownloadGuardProvider;
 use Vaulter\Tests\Content\Fixtures\FirstDownloadGuard;
 use Vaulter\Tests\Content\Fixtures\RecordingDownloadGuard;

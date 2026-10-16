@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route;
 use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Exceptions\VaulterException;
-use Vaulter\Tests\Http\V1;
 
 /**
  * There is one HTTP surface: versioned, named and answered as problem+json. Nothing is

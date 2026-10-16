@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Tests\Support\OpenApi\OpenApiContract;
-use Vaulter\Tests\Support\OpenApi\OpenApiResponseValidator;
-use Vaulter\Tests\Support\OpenApi\UnsupportedOpenApiConstruct;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
+use Vaulter\Testing\Support\OpenApi\UnsupportedOpenApiConstruct;
 
 /**
  * The validator is itself under test: each fixture is a response that breaks the contract in

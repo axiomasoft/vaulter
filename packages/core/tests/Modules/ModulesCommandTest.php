@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Artisan;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\CoreModule;
 use Vaulter\Kernel;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\TestCase;
 use Vaulter\Webhooks\WebhooksModule;
 

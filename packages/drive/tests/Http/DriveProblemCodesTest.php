@@ -12,7 +12,7 @@ use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Http\Problems\ProblemCatalog;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 it('answers every drive domain exception as problem+json with its stable code', function (Throwable $exception, string $code, int $status): void {
     ProblemProbeRoutes::register(['case' => $exception]);

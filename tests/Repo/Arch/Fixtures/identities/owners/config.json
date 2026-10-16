@@ -258,6 +258,30 @@
             "value": "publish:vaulter-filament-",
             "owner": "filament",
             "why": "tags of the filament provider"
+        },
+        {
+            "match": "prefix",
+            "value": "env:DB_",
+            "owner": "core",
+            "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
+        },
+        {
+            "match": "exact",
+            "value": "env:TEST_TOKEN",
+            "owner": "core",
+            "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
+        },
+        {
+            "match": "exact",
+            "value": "env:VAULTER_OPENAPI_VALIDATE",
+            "owner": "core",
+            "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
+        },
+        {
+            "match": "exact",
+            "value": "env:VAULTER_TEST_DB_PER_PROCESS",
+            "owner": "core",
+            "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
         }
     ]
 }

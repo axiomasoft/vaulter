@@ -34,6 +34,8 @@ use Vaulter\Drive\Data\Trash\RestoreNodeInput;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
 use Vaulter\Drive\Events\Drives\DriveArchived;
 use Vaulter\Drive\Events\Drives\DriveUnarchived;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
@@ -44,9 +46,7 @@ use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {

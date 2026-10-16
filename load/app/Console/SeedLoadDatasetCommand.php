@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -20,9 +22,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Support\Config;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * VLT-LOAD P2.3 — seed the stand to its tier's volume envelope (reference-env.md §2),

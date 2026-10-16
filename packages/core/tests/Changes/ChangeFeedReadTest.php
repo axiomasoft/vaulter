@@ -12,6 +12,8 @@ use Vaulter\Data\Changes\ChangePage;
 use Vaulter\Data\Changes\NodeChange;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Changes\ChangeOperation;
 use Vaulter\Enums\Changes\ChangeReason;
 use Vaulter\Enums\Drive\DriveStatus;
@@ -20,8 +22,6 @@ use Vaulter\Exceptions\Changes\InvalidCursorException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Repositories\Changes\ChangeHeadRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\TestCase;
 
 /**

@@ -7,7 +7,7 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Console\PruneChangesCommand;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Tests\TestCase;
 
 /**

@@ -16,7 +16,7 @@ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Http\Problems\ProblemRenderer;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 const PROBLEM_TYPE_BASE = 'https://github.com/axiomasoft/vaulter/blob/main/docs/reference/errors.md#';
 

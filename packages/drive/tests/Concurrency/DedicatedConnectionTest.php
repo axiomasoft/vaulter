@@ -11,7 +11,7 @@ use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);

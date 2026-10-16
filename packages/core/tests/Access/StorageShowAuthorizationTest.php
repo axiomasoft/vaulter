@@ -7,11 +7,11 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * Drive show authorization — `GET v1/drives/{drive}` reads the meta only after View on

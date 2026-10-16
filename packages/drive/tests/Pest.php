@@ -6,8 +6,8 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Drive\Tests\PanelTestCase;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
-use Vaulter\Tests\Support\TestGroups;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Support\TestGroups;
 
 uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi', 'WriteGuard', 'Doctor', 'Testing');
 

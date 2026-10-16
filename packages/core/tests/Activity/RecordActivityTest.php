@@ -12,6 +12,10 @@ use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Activity\ActivityTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -23,11 +27,7 @@ use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Activity\ActivityTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**

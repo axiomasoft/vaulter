@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Load\Http\Middleware\RecordRequestPeakMemory;
 use Vaulter\Load\Listeners\RecordThrottledResponse;
 use Vaulter\Load\Observability\DownloadStreamMetrics;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');

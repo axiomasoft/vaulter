@@ -7,11 +7,11 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
+use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Events\EventConformance;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Testing\Events\EventConformance;
 
 /**
  * The document and comment events, produced by the real Actions, carry exactly the

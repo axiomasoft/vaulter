@@ -14,14 +14,14 @@ use Vaulter\Content\SignedContentUrl;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Support\ContentResponder;
 use Vaulter\Http\Support\DownloadHeaders;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
 
 /**
  * The one HTTP egress point: fresh authorization and scan check per request, the exact

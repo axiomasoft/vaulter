@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Tests\Support\NodeProbeRoutes;
 
 /**

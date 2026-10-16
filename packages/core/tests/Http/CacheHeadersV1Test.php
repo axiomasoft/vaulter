@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Tests\Support\NodeProbeRoutes;
 
 /**

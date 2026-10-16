@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Testing\TestResponse;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
-use Vaulter\Tests\Http\V1;
-use Vaulter\Tests\Support\OpenApi\OpenApiContract;
-use Vaulter\Tests\Support\OpenApi\OpenApiResponseValidator;
+use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
 
 /**
  * openapi/examples/*.json: one real response per resource, written from feature requests

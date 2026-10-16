@@ -18,6 +18,7 @@ use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Events\Drives\DriveDeleted;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
@@ -27,7 +28,6 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());

@@ -18,9 +18,9 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 /**
  * The hub protocol end to end at the HTTP boundary: load → seed → store behind the

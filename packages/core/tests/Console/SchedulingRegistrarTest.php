@@ -9,7 +9,7 @@ use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Providers\SchedulingRegistrar as DriveSchedulingRegistrar;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Tests\Concerns\FreshApplication;
+use Vaulter\Testing\Concerns\FreshApplication;
 
 /** @return array<string, Event> keyed by the task name */
 function vaulterCoreTasks(Application $app): array

@@ -11,6 +11,7 @@ use Vaulter\Actions\Access\RevokeNodeAccessAction;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Data\Access\RevokeGrantInput;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -18,7 +19,6 @@ use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');

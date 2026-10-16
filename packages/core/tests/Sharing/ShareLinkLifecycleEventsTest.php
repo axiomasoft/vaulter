@@ -6,6 +6,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
@@ -13,9 +14,8 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Operations\ActivityOperations;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Support\CanonicalJson;
 use Vaulter\ValueObjects\Access\Actor;
 
 uses(EnablesWebhooksModule::class);

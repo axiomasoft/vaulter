@@ -7,6 +7,9 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
@@ -17,10 +20,7 @@ use Vaulter\Events\Outbox\OutboxWriter;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Events\SinkResult;
 use Vaulter\Events\SinkWriter;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**

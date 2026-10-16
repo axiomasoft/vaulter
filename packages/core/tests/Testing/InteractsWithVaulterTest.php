@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\AssertionFailedError;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Contracts\PermissionFixture;
 use Vaulter\Testing\Fixtures\FixtureActor;
 use Vaulter\Testing\InteractsWithVaulter;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 uses(InteractsWithVaulter::class);
 

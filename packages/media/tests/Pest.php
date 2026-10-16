@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Media\Tests\TestCase;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
-use Vaulter\Tests\Support\TestGroups;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Support\TestGroups;
 
 uses(TestCase::class, RefreshDatabase::class)->in('Feature', 'Observability', 'Doctor');
 

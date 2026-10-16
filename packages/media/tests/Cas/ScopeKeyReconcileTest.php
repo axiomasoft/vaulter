@@ -12,7 +12,7 @@ use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\FailingPromoteContentStore;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {

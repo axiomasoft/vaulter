@@ -26,6 +26,20 @@ parameters:
             identifier: return.unusedType
             path: packages/core/src/Testing/NullPermissionDriver.php
 
+        # The traits of the testing kit are used by test files (Pest `uses()`) and by the test cases of other packages,
+        # never by code under packages/core/src: PHPStan cannot see a user and would call them unused (D14).
+        -
+            identifier: trait.unused
+            paths:
+                - packages/core/src/Testing/Concerns/*.php
+                - packages/core/src/Testing/Support/OpenApi/ValidatesOpenApiResponses.php
+
+        # The kit reads the process environment of the test run on purpose (database engine, OpenAPI switch): it never
+        # runs with a cached configuration.
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: packages/core/src/Testing/*
+
         # The commit path stages the upload stream INTO the CAS inside the transaction
         # (uploadFile->execute), which may consume + fclose it; the finally re-guards
         # with is_resource() to avoid a double-close. PHPStan proves the stream is a

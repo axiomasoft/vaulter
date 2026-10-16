@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 it('move = ОДИН UPDATE по parent_id, поддерево не трогается', function (): void {
     $drive = DriveTestHelpers::drive();

@@ -23,7 +23,7 @@ use Vaulter\Drive\Actions\Trash\TrashNodeAction;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
  * PLAN2.F05/F06 on real backends: a document writer racing a trash or an archive of

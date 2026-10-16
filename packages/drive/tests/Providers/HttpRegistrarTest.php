@@ -17,13 +17,22 @@ use Vaulter\Drive\Events\Uploads\UploadInitiated;
 use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
+use Vaulter\Events\EventRecorder;
+use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity, bool $webhooks): void {
     config()->set('vaulter.features.activity', $activity);
-    WebhookTestHelpers::switchModule($this->app, $webhooks);
+    // Reseal the kernel with the webhooks module switched like a process that read another `vaulter.modules`.
+    $overrides = [...(array) config('vaulter.modules', []), 'webhooks' => $webhooks];
+    config()->set('vaulter.modules', $overrides);
+    $kernel = new Kernel($this->app);
+    $kernel->seal((new ModuleCompiler)->compileOffered(ModuleCatalog::of($this->app)->offered(), $overrides));
+    $this->app->instance(Kernel::class, $kernel);
+    $this->app->forgetInstance(EventRecorder::class);
 
     expect(Event::hasListeners(FolderCreated::class))->toBeFalse()
         ->and(Event::hasListeners(UploadInitiated::class))->toBeFalse();

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 /*
  * Standalone baseline: tenancy is disabled by default, so low-level model queries

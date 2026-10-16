@@ -9,6 +9,8 @@ use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Events\DriveEventType;
@@ -16,10 +18,8 @@ use Vaulter\Events\EventCatalog;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Support\CanonicalJson;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Testing\Support\CanonicalJson;
 
 /**
  * Every drive event is recorded by the EventRecorder: one activity row and, for webhook

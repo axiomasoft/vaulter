@@ -89,6 +89,16 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
 - Removing or merging a living test needs the owner's decision and a replacement: `scripts/t baseline --compare`
   fails on a missing original name that has no entry in the ledger.
 
+## Testing kit (PLAN3 P4.2, D14)
+
+A split package is tested without `packages/core/tests`: the helpers every suite shares ship as the **Testing kit** of the package that owns the concept, in `src/Testing`, and are marked `#[Internal]`.
+
+- Core kit `Vaulter\Testing\…` (`packages/core/src/Testing`): `Concerns\{RefreshesDatabaseForSchemaVariant, WithoutDatabaseSchema, EnablesModules, FreshApplication}`, `Support\{SuiteDatabaseConnection, TestGroups, CanonicalJson, ProblemProbeRoutes, OpenApi\*}`, `Concurrency\{ForkRace, RaceOutcome}`, `Tenancy\MutableTenantResolver`, `Events\EventConformance`, `Fixtures\{TestUser, Panels\FakeProject}`.
+- Drive kit `Vaulter\Drive\Testing\…`: `Drive\DriveTestHelpers`, `Access\AccessTestHelpers`, `Sharing\ShareTestHelpers`, `Activity\ActivityTestHelpers`, `Http\V1`, `Fixtures\Access\*`, `Fixtures\Panels\TeamProfile`. Documents kit: `Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver`.
+- A kit never imports `Vaulter\Tests\*` and never reads a file of `packages/core/tests`; the core kit names no other package's module (`webhooks` included). A test case of a package declares what it needs: `EnablesModules` switches `vaulter.modules.<id>` on (property `$enabledModules`, or override `modulesToEnable()` in a trait of the package that owns the module — `EnablesWebhooksModule` in the tests of core, drive and documents until the webhooks package ships its own kit).
+- `FreshApplication::boot()` takes providers and environment from the running test case (or its `$case` argument), so it works in any package.
+- The kit is analysed by the PHPStan of its package; its dependencies on dev packages (Testbench, Pest, opis/json-schema, symfony/yaml) are `suggest` entries of `vaulter-core`.
+
 ## Inventory (PLAN3 P2)
 
 Architecture inventory of the monorepo: one `SourceIndex` reads every `packages/<p>/{src,database,config,routes}` file of the packages that `tests/Repo/Arch/Fixtures/packages.json` marks `exists: true`, generators turn it into committed fixtures, and thin Pest tests of the `repo` suite assert that nothing drifted.

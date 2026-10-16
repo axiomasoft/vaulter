@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
-use Vaulter\Tests\Fixtures\Panels\FakeProject;
+use Vaulter\Testing\Fixtures\Panels\FakeProject;
 
 it('captures independent policy snapshots and rejects later mutation', function (): void {
     $source = (new Profile)->key('project')->owners(FakeProject::class)->disk('local')->defaultQuota(100)

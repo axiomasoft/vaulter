@@ -23,6 +23,9 @@ use PDO;
 use Throwable;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Documents\Contracts\HostUserResolver;
+use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
@@ -57,10 +60,7 @@ use Vaulter\Load\Observability\RedisMetricsRegistry;
 use Vaulter\Load\Webhooks\LoadSinkOutboundUrlGuard;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\FakeHostUserResolver;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * Load-stand host provider (P2.2). Boots ONLY under the VLT-LOAD nginx+php-fpm SUT

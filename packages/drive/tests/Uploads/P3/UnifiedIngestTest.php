@@ -14,6 +14,7 @@ use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
@@ -21,8 +22,7 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(fn () => Storage::fake('local'));
 

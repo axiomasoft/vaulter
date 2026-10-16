@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\OperationContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\TestCase;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Operations\ScopeRef;

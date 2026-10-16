@@ -10,6 +10,7 @@ use Vaulter\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Data\Sharing\RevokeShareInput;
 use Vaulter\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Events\Sharing\NodeShareCreated;
@@ -17,7 +18,6 @@ use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Support\ShareToken;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 /**
  * The mint/revoke Actions (§2.7 / M2c): the raw token is returned ONCE and only its

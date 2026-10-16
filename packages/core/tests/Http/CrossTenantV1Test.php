@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Tests\Http\V1;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
  * With strict tenancy, a drive or node of another tenant is unknown on every core v1

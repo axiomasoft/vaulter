@@ -11,15 +11,15 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Queries\SharedWithActorQuery;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\VaulterManager;
 

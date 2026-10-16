@@ -6,14 +6,14 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Activity\RecordActivityCommand;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Profiles\Profile;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\HostKeyUser;
 
 // Build a fresh panel after upgrade migrations, so the regression cannot be

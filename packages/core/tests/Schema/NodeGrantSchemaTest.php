@@ -6,9 +6,9 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 /**
  * The v_node_grants schema (master plan §2.6): the table, its columns, and the

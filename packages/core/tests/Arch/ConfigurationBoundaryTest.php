@@ -7,7 +7,7 @@ use Vaulter\Tests\Support\ConfigurationArchitectureGuard;
 arch('core reads configuration through typed package accessors (P2.5)')
     ->expect('Vaulter')
     ->not->toUse(['config'])
-    ->ignoring(['Vaulter\Configuration', 'Vaulter\Drive\Configuration', 'Vaulter\Documents\Configuration', 'Vaulter\Media\Configuration', 'Vaulter\Filament\Configuration', 'Vaulter\Azgard\Configuration', 'Vaulter\Tests', 'Vaulter\Load', 'Vaulter\Drive\Tests', 'Vaulter\Documents\Tests', 'Vaulter\Media\Tests', 'Vaulter\Filament\Tests', 'Vaulter\Azgard\Tests']);
+    ->ignoring(['Vaulter\Configuration', 'Vaulter\Drive\Configuration', 'Vaulter\Documents\Configuration', 'Vaulter\Media\Configuration', 'Vaulter\Filament\Configuration', 'Vaulter\Azgard\Configuration', 'Vaulter\Tests', 'Vaulter\Testing', 'Vaulter\Drive\Testing', 'Vaulter\Documents\Testing', 'Vaulter\Load', 'Vaulter\Drive\Tests', 'Vaulter\Documents\Tests', 'Vaulter\Media\Tests', 'Vaulter\Filament\Tests', 'Vaulter\Azgard\Tests']);
 
 test('core source has no direct Vaulter configuration reads (P2.5)', function (): void {
     $package = dirname(__DIR__, 2);
@@ -27,7 +27,7 @@ test('core source has no direct Vaulter configuration reads (P2.5)', function ()
             );
 
             foreach ($files as $file) {
-                if (str_contains($file->getPathname(), '/Configuration/')) {
+                if (str_contains($file->getPathname(), '/Configuration/') || str_contains($file->getPathname(), '/src/Testing/')) {
                     continue;
                 }
 

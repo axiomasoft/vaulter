@@ -8,10 +8,10 @@ use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Access\MissingPermissionDriverException;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 it('authorises purely from grants with no host roles (standalone database lane)', function (): void {
     config()->set('vaulter.access.permission_driver', 'database');

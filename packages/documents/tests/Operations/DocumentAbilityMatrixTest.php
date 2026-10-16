@@ -13,11 +13,11 @@ use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
  * PLAN2.P4.8: every method of the Documents API against every built-in role, plus a

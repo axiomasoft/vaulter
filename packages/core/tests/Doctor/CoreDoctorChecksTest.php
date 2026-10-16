@@ -15,11 +15,11 @@ use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 uses(EnablesWebhooksModule::class);

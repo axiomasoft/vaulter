@@ -8,13 +8,13 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Testing\Events\EventConformance;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Events\EventConformance;
 use Vaulter\Tests\TestCase;
 
 /**

@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException;
 use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');
