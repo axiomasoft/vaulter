@@ -45,6 +45,7 @@ outline: deep
 | Code | HTTP | Module | Retryable | Receipt | Exception |
 |---|---|---|---|---|---|
 | [`actor_required`](#actor_required) | 401 | core | `never` | `never` | `Vaulter\Exceptions\Access\MissingActorException` |
+| [`blob_unavailable`](#blob_unavailable) | 409 | media | `never` | `never` | `Vaulter\Media\Exceptions\Cas\BlobUnavailableException` |
 | [`cannot_delete_head_revision`](#cannot_delete_head_revision) | 409 | drive | `never` | `cacheable` | `Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException` |
 | [`collaboration_epoch_mismatch`](#collaboration_epoch_mismatch) | 409 | documents | `after_refetch` | `cacheable` | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
 | [`collaboration_seed_conflict`](#collaboration_seed_conflict) | 409 | documents | `after_refetch` | `cacheable` | `Vaulter\Documents\Exceptions\CollaborationSeedConflictException` |
@@ -127,6 +128,12 @@ outline: deep
 **401** · core · retryable `never` · receipt `never`
 
 **Требуется аутентификация** — Запрос должен выполняться от аутентифицированного субъекта.
+
+### `blob_unavailable`
+
+**409** · media · retryable `never` · receipt `never`
+
+**Содержимое недоступно** — Сохранённое содержимое файла больше недоступно.
 
 ### `cannot_delete_head_revision`
 

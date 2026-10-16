@@ -36,8 +36,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Vaulter\\Media\\Tests\\": "tests/",
-            "Vaulter\\Drive\\": "../drive/src/"
+            "Vaulter\\Media\\Tests\\": "tests/"
         }
     },
     "extra": {

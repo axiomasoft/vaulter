@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -503,7 +504,7 @@ final class SeedLoadDatasetCommand extends Command
                         )])[0];
 
                         $versionModel = Config::fileVersionModel();
-                        $blobStore->attach(version: $versionModel::query()->find($versionId), blob: $blob);
+                        app(RevisionBlobLinks::class)->attach(revision: $versionModel::query()->find($versionId), blob: $blob);
 
                         continue;
                     }

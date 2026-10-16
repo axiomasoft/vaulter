@@ -8,3 +8,9 @@ P4.6 | packages/media/tests/TestCase.php:23 | комментарий «Core prov
 P4.6 | packages/drive/src/DriveModule.php:86 | docblock «two doctor checks» неверен (теперь 10 проверок, включая media.disk.probe/media.dedup.scope по D33)
 P4.6 | packages/media/src/Models/Cas/Blob.php:3 | docblock ссылается на v_file_revision_blobs/FileRevision — уйдёт с pins (P4.7)
 RC1-fix | docs/reference/compatibility.md:236 (+ru) | уточнить абзац про enforceMorphMap: алиасы теперь в morphMap(merge)
+P4.7 | packages/media/src/Console/ReconcileBlobsCommand.php:51 | описание команды «from edge counts» → «from the pin counts» (идентичность cli description + docs/reference/commands.md, P4.20)
+P4.7 | packages/media/tests/Cas/{BlobReconcilerTest.php:21,BlobGarbageCollectorTest.php:41,BlobGcPipelineTest.php:86,BlobDedupScopeBehaviourTest.php:85} | имена тестов говорят «ребро»/«drive_id» — теперь pins/storage_id (переименование = запись baseline CHANGES)
+P4.7 | packages/media/tests/Cas/BlobGcPipelineTest.php:13-39 | комментарии «commit → attach → detach», «число рёбер» — теперь pin/unpin
+P4.7 | docs/ (storage-and-blobs, gc, reference/schema, en+ru) | v_blob_references, BlobPins, storage_id, blob_unavailable, RevisionBlobLinks, doctor media.blobs.pins (P4.20 по ledger D23)
+P4.7 | load/app/Console/SeedLoadDatasetCommand.php:~475-545 | сидер устарел до P4.7 (file_version_id/version_no, commit без scope); холодные рёбра вставляются без pins — GC их соберёт
+P4.7 | packages/drive/src/Actions/Files/IngestFileAction.php:51 | docblock «→ version↔blob edge» — теперь edge + pin (RevisionBlobLinks)
