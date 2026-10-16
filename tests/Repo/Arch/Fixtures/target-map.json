@@ -269,188 +269,35 @@
             "role": "config"
         },
         {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000001_create_v_drives_table.php",
+            "action": "keep",
+            "file": "packages/core/database/migrations/0001_01_01_000001_create_v_outbox_table.php",
             "note": null,
-            "owner": "drive",
+            "owner": "core",
             "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000002_create_v_nodes_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000003_create_v_blobs_table.php",
-            "note": null,
-            "owner": "media",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000004_create_v_files_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000005_create_v_file_revisions_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000006_create_v_file_revision_blobs_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000007_create_v_scan_policy_states_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000008_create_v_scan_obligations_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000009_create_v_scan_backfill_runs_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000010_create_v_scan_requests_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000011_create_v_scan_evidence_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000012_create_v_node_grants_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000013_create_v_node_shares_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000014_create_v_node_comments_table.php",
-            "note": null,
-            "owner": "documents",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000015_create_v_node_user_states_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000016_create_v_documents_table.php",
-            "note": null,
-            "owner": "documents",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000017_create_v_document_revisions_table.php",
-            "note": null,
-            "owner": "documents",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000018_create_v_upload_sessions_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000019_create_v_upload_parts_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000020_create_v_activity_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
+            "phase": "stay",
             "role": "migration"
         },
         {
             "action": "keep",
-            "file": "packages/core/database/migrations/2026_10_13_000021_create_v_outbox_table.php",
+            "file": "packages/core/database/migrations/0001_01_01_000002_create_v_outbox_consumers_table.php",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/core/database/migrations/0001_01_01_000003_create_v_outbox_deliveries_table.php",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/core/database/migrations/0001_01_01_000004_create_v_idempotency_keys_table.php",
             "note": null,
             "owner": "core",
             "package": "core",
@@ -459,7 +306,7 @@
         },
         {
             "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000022_create_v_webhook_endpoints_table.php",
+            "file": "packages/core/database/migrations/0001_01_01_000401_create_v_webhook_endpoints_table.php",
             "note": null,
             "owner": "webhooks",
             "package": "core",
@@ -468,56 +315,11 @@
         },
         {
             "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000023_create_v_webhook_deliveries_table.php",
+            "file": "packages/core/database/migrations/0001_01_01_000402_create_v_webhook_deliveries_table.php",
             "note": null,
             "owner": "webhooks",
             "package": "core",
             "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000024_create_v_drive_change_heads_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "move",
-            "file": "packages/core/database/migrations/2026_10_13_000025_create_v_drive_changes_table.php",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "role": "migration"
-        },
-        {
-            "action": "keep",
-            "file": "packages/core/database/migrations/2026_10_13_000026_create_v_outbox_consumers_table.php",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "role": "migration"
-        },
-        {
-            "action": "keep",
-            "file": "packages/core/database/migrations/2026_10_13_000027_create_v_outbox_deliveries_table.php",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "role": "migration"
-        },
-        {
-            "action": "keep",
-            "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
             "role": "migration"
         },
         {
@@ -549,6 +351,33 @@
         },
         {
             "action": "keep",
+            "file": "packages/documents/database/migrations/0001_01_01_000301_create_v_node_comments_table.php",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
             "file": "packages/documents/routes/documents.php",
             "note": "open: collaboration routes move to collaboration in P5",
             "owner": "documents",
@@ -564,6 +393,168 @@
             "package": "drive",
             "phase": "stay",
             "role": "config"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000203_create_v_files_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000204_create_v_file_revisions_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000205_create_v_file_revision_blobs_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000206_create_v_scan_policy_states_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000207_create_v_scan_obligations_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000208_create_v_scan_backfill_runs_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000209_create_v_scan_requests_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000210_create_v_scan_evidence_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000211_create_v_node_grants_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000213_create_v_node_user_states_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000214_create_v_upload_sessions_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000215_create_v_upload_parts_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000216_create_v_activity_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000217_create_v_drive_change_heads_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/drive/database/migrations/0001_01_01_000218_create_v_drive_changes_table.php",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "role": "migration"
         },
         {
             "action": "keep",
@@ -591,6 +582,15 @@
             "package": "media",
             "phase": "stay",
             "role": "config"
+        },
+        {
+            "action": "keep",
+            "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "role": "migration"
         }
     ],
     "members": [

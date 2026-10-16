@@ -14,6 +14,7 @@ use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Modules\VaulterModule;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\TestCase;
@@ -61,23 +62,6 @@ const I5_UNMOUNTED_ROUTES = [
     'route:vaulter.v1.collaboration.hub.authenticate',
     'route:vaulter.v1.collaboration.hub.load',
     'route:vaulter.v1.collaboration.hub.store',
-];
-
-/**
- * Tables the migrations of the core module create for other owners until P4 splits the create-migrations into the
- * schema descriptors of the owners (D36).
- *
- * @var array<string, list<string>>
- */
-const I5_TABLES_BY_OWNER_UNTIL_P4 = [
-    'documents' => ['v_document_revisions', 'v_documents', 'v_node_comments'],
-    'drive' => [
-        'v_activity', 'v_drive_change_heads', 'v_drive_changes', 'v_drives', 'v_file_revision_blobs', 'v_file_revisions', 'v_files',
-        'v_node_grants', 'v_node_shares', 'v_node_user_states', 'v_nodes', 'v_scan_backfill_runs', 'v_scan_evidence',
-        'v_scan_obligations', 'v_scan_policy_states', 'v_scan_requests', 'v_upload_parts', 'v_upload_sessions',
-    ],
-    'media' => ['v_blobs'],
-    'webhooks' => ['v_webhook_deliveries', 'v_webhook_endpoints'],
 ];
 
 /**
@@ -282,22 +266,69 @@ it('declares every inventoried event type in the module that owns it', function 
         ->and($declared)->toBe($owners);
 });
 
-it('installs every table from the core migrations until P4 splits them by owner', function (): void {
+it('keeps every table in the migrations and the schema class of the module that owns it', function (): void {
+    $schemas = i5App()->make(ModuleSchemas::class);
     $schemaModules = array_keys(array_filter(i5Builders(), static fn (ModuleBuilder $b): bool => $b->schemaPaths() !== []));
-    $byOwner = [];
+    $tables = [];
     foreach (i5Identities('schema') as $id => $item) {
-        if (str_starts_with($id, 'table:') && $item['owner'] !== 'core') {
-            expect($item['source']['file'])->toStartWith('packages/core/database/migrations/');
-            $byOwner[$item['owner']][] = substr($id, strlen('table:'));
+        if (!str_starts_with($id, 'table:')) {
+            continue;
+        }
+        $table = substr($id, strlen('table:'));
+        $owner = $item['owner'];
+        // The webhooks migrations ship with core until the webhooks package exists (P4.13).
+        $package = $owner === 'webhooks' ? 'core' : $owner;
+
+        expect(in_array(substr($table, 2), $schemas->entitiesOf($owner), true))->toBeTrue($id)
+            ->and(str_starts_with($item['source']['file'], 'packages/'.$package.'/database/migrations/'))->toBeTrue($id);
+        $tables[$owner][] = $table;
+    }
+    ksort($tables);
+    $withSchema = array_keys($schemas->all());
+    sort($withSchema);
+
+    expect($schemaModules)->toBe(['core', 'documents', 'drive', 'media'])
+        ->and(array_keys($tables))->toBe($withSchema);
+    foreach ($schemas->all() as $module => $schema) {
+        expect(count($tables[$module]))->toBe(count($schema->entities()), $module);
+    }
+});
+
+it('numbers the create-migrations in the block of the owner and in the order of the foreign keys (D40)', function (): void {
+    $root = dirname(__DIR__, 4);
+    $blocks = ['core' => [1, 99], 'media' => [101, 199], 'drive' => [201, 299], 'documents' => [301, 399], 'webhooks' => [401, 499]];
+    $numbers = [];
+    foreach (glob($root.'/packages/*/database/migrations/*.php') ?: [] as $file) {
+        expect(preg_match('/^0001_01_01_(\d{6})_create_(v_[a-z_]+)_table\.php$/', basename($file), $m))->toBe(1, $file);
+        $numbers[$m[2]] = (int) $m[1];
+    }
+
+    $owners = [];
+    foreach (i5Identities('schema') as $id => $item) {
+        if (str_starts_with($id, 'table:')) {
+            $owners[substr($id, strlen('table:'))] = $item['owner'];
         }
     }
-    ksort($byOwner);
-    $byOwner = array_map(static function (array $tables): array {
-        sort($tables);
+    ksort($owners);
+    ksort($numbers);
 
-        return $tables;
-    }, $byOwner);
+    // One migration per table, none left over, each in the number block of the package that owns the table.
+    expect(array_keys($numbers))->toBe(array_keys($owners))
+        ->and(count(array_unique($numbers)))->toBe(count($numbers));
+    foreach ($numbers as $table => $number) {
+        [$from, $to] = $blocks[$owners[$table]];
+        expect($number >= $from && $number <= $to)->toBeTrue($table.' is '.$number.' but '.$owners[$table].' owns '.$from.'-'.$to);
+    }
 
-    expect($schemaModules)->toBe(['core'])
-        ->and($byOwner)->toBe(I5_TABLES_BY_OWNER_UNTIL_P4);
+    // The table a foreign key points at is created before the table that holds it (the head FKs are added later).
+    $fks = json_decode((string) file_get_contents($root.'/tests/Repo/Arch/Fixtures/fk-map.json'), true, flags: JSON_THROW_ON_ERROR)['fks'];
+    $checked = 0;
+    foreach ($fks as $fk) {
+        if ($fk['head'] || $fk['from_table'] === $fk['to_table']) {
+            continue;
+        }
+        expect($numbers[$fk['to_table']])->toBeLessThan($numbers[$fk['from_table']], $fk['name']);
+        $checked++;
+    }
+    expect($checked)->toBeGreaterThan(20);
 });

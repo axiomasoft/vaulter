@@ -4441,6 +4441,15 @@
       ],
       "reason": "the hand-listed contract snapshot of core is replaced by the manifest generated from the #[Api]/#[Spi]/#[Internal] attributes (packages/*/tests/Arch/__snapshots__/surface.txt)",
       "decision": "D27"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\InstallationDocsGuardTest::__pest_evaluable_it_warns_that_publishing_migrations_switches_the_canonical_mode__F_P2_2_02_",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Unit\\InstallationDocsGuardTest::__pest_evaluable_it_tells_the_reader_the_migrations_run_from_vendor_and_are_not_published__D40_"
+      ],
+      "reason": "the migrations are no longer published (each package runs its own from vendor/), so the guard that the install guide warns about publishing them now guards that it says they are not published",
+      "decision": "D40"
     }
   ],
   "additions": {
@@ -4448,7 +4457,7 @@
       "introduced": "P1.3",
       "count": 217,
       "names": [
-        "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__I4_blocks__I1–I3_report_",
+        "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__I3_and_I4_block__I1_and_I2_report_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_matches_the_committed_allowlist_of_every_scan_to_the_current_tree__exactly\"('scan-i1')\"",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_matches_the_committed_allowlist_of_every_scan_to_the_current_tree__exactly\"('scan-i2')\"",
@@ -4535,7 +4544,7 @@
         "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_reports_a_violation_that_is_not_allowed_as_new",
         "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_reports_an_allowed_entry_that_is_no_longer_found_as_stale",
         "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_resolves_relative_names__imports_and___class_to_the_same_fully_qualified_name",
-        "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_takes_the_table_names_of_the_real_repository_from_the_core_migrations",
+        "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_takes_the_table_names_of_the_real_repository_from_the_migrations_of_every_package",
         "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_treats_a_different_count_as_stale_and_sums_repeated_occurrences",
         "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_treats_a_scope_element_without_a_trailing_backslash_as_that_exact_type__not_as_a_prefix",
         "P\\Tests\\Repo\\Arch\\MoveTypesTest::__pest_evaluable_it_does_not_change_the_tree_in_a_dry_run__and_reports_what_it_would_do",
@@ -4668,7 +4677,7 @@
       ]
     },
     "core": {
-      "count": 455,
+      "count": 457,
       "names": [
         "P\\Packages\\core\\tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_gives_the_host_subclass_configured_in_vaulter_models_the_same_alias",
         "P\\Packages\\core\\tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_is_not_renamed_by_a_host_morph_map_and_is_not_refused_by_enforceMorphMap",
@@ -4999,8 +5008,9 @@
         "P\\Packages\\core\\tests\\Modules\\OwnershipRegistryTest::__pest_evaluable_it_defines_every_slot_and_capability_in_the_module_that_owns_its_contract",
         "P\\Packages\\core\\tests\\Modules\\OwnershipRegistryTest::__pest_evaluable_it_gives_every_command_the_owner_of_the_inventory",
         "P\\Packages\\core\\tests\\Modules\\OwnershipRegistryTest::__pest_evaluable_it_gives_every_problem_code_the_owner_of_the_inventory",
-        "P\\Packages\\core\\tests\\Modules\\OwnershipRegistryTest::__pest_evaluable_it_installs_every_table_from_the_core_migrations_until_P4_splits_them_by_owner",
+        "P\\Packages\\core\\tests\\Modules\\OwnershipRegistryTest::__pest_evaluable_it_keeps_every_table_in_the_migrations_and_the_schema_class_of_the_module_that_owns_it",
         "P\\Packages\\core\\tests\\Modules\\OwnershipRegistryTest::__pest_evaluable_it_mounts_every_route_behind_the_middleware_of_the_owner_of_the_inventory",
+        "P\\Packages\\core\\tests\\Modules\\OwnershipRegistryTest::__pest_evaluable_it_numbers_the_create_migrations_in_the_block_of_the_owner_and_in_the_order_of_the_foreign_keys__D40_",
         "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_accepts_a_route_cache_built_under_the_running_activation",
         "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_answers_404_for_a_cached_route_of_a_module_switched_off_after_the_cache_was_built",
         "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_reports_an_active_module_missing_from_a_route_cache_built_before_it_was_switched_on",
@@ -5117,6 +5127,7 @@
         "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('tnull')\"",
         "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_selects_the_drive_scope_for_the_drive_dedup_setting",
         "P\\Packages\\core\\tests\\Unit\\IdentityFitsKeyTest::__pest_evaluable_it_lets_only_a_key_the_column_can_hold_reach_a_query",
+        "P\\Packages\\core\\tests\\Unit\\InstallationDocsGuardTest::__pest_evaluable_it_tells_the_reader_the_migrations_run_from_vendor_and_are_not_published__D40_",
         "P\\Packages\\core\\tests\\Webhooks\\WebhookEndpointCrudTest::__pest_evaluable_it_answers_an_oversized_endpoint_id_after_the_ability_check__403_without_manage__404_with_it",
         "P\\Packages\\core\\tests\\Webhooks\\WebhookPruneSafetyTest::__pest_evaluable_it_keeps_a_finished_outbox_event_inside_the_retention_window",
         "P\\Packages\\core\\tests\\Webhooks\\WebhookPruneSafetyTest::__pest_evaluable_it_keeps_an_outbox_event_that_a_replay_reopened_between_the_select_and_the_delete",
@@ -5128,9 +5139,10 @@
       ]
     },
     "media": {
-      "count": 11,
+      "count": 12,
       "names": [
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_MediaModule_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Schema_never_uses_the_Testing_namespaces",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('bigint', 'drive')\"",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('ulid', 'drive')\"",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('uuid7', 'drive')\"",
@@ -5179,10 +5191,11 @@
       ]
     },
     "documents": {
-      "count": 9,
+      "count": 10,
       "names": [
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_DocumentsModule_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Profiles_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Schema_never_uses_the_Testing_namespaces",
         "P\\Tests\\Configuration\\DocumentsConfigTest::__pest_evaluable_it_answers_core_s_comments_question_through_its_profile_option_from_its_own_config",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_contributes_the_document_presenter_and_lifecycle_to_the_drive_slots__and_no_file_handler__PLAN2_P4_3_",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_fills_the_type_and_exporter_registries_from_the_module_contributions__once",
@@ -5205,6 +5218,10 @@
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_the_configured_guard_class_as_the_capability",
         "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_refuses_a_guard_class_that_does_not_implement_the_seam"
       ]
+    },
+    "filament": {
+      "count": 0,
+      "names": []
     }
   }
 }

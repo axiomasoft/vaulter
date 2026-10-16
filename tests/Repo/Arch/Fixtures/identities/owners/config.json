@@ -219,12 +219,6 @@
         },
         {
             "match": "exact",
-            "value": "publish:vaulter-migrations",
-            "owner": "core",
-            "why": "one core migrations tag until P4 splits the migrations per owning package"
-        },
-        {
-            "match": "exact",
             "value": "publish:vaulter-translations",
             "owner": "core",
             "why": "one core translations tag until P4 splits the problem-code translations"

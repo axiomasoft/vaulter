@@ -31,13 +31,6 @@
         },
         {
             "change": "redefined",
-            "decision": "D22",
-            "id": "publish:vaulter-migrations",
-            "kind": "config",
-            "reason": "P3.2: published by the module kernel from CoreModule::schema instead of spatie discoversMigrations"
-        },
-        {
-            "change": "redefined",
             "decision": "D39",
             "id": "publish:vaulter-drive-config",
             "kind": "config",
@@ -245,6 +238,13 @@
             "id": "env:VAULTER_TEST_DB_PER_PROCESS",
             "kind": "config",
             "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "removed",
+            "decision": "D40",
+            "id": "publish:vaulter-migrations",
+            "kind": "config",
+            "reason": "P4.5: the migrations are not published; each package runs the migrations of its tables from vendor/"
         }
     ],
     "items": [
@@ -3460,15 +3460,6 @@
                 "symbol": "Vaulter\\Media\\MediaModule::register"
             },
             "via": "module:config"
-        },
-        {
-            "id": "publish:vaulter-migrations",
-            "owner": "core",
-            "source": {
-                "file": "packages/core/src/CoreModule.php",
-                "symbol": "Vaulter\\CoreModule::register"
-            },
-            "via": "module:schema"
         },
         {
             "id": "publish:vaulter-translations",

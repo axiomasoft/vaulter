@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.5",
   "title": "Раскладка create-миграций по пакетам-владельцам блоками 0001_01_01_00NNNN, без publish-копий; I3 блокирующий",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "28 create-миграций переименовываются по таблице p4-design#schema и переезжают в database/migrations своих пакетов (core 4, media 1, drive 18, documents 3; webhooks 2 — финальные имена, физически в core до P4.13); манифесты объявляют schema() своего каталога; publish-копии миграций убраны; OwnershipRegistryTest I5 сверяет таблицы со schema-дескрипторами владельцев; I3 → mode block.",
   "why": "architecture#persistence п.2/п.4, D21, D40. Нужен до pins (P4.7, новая media-таблица после v_blobs), uninstall (P4.17) и I15 (P4.18). Риск: порядок имён ≠ граф FK (миграция падает) и rollback head FK — ловит sqlite snapshot --rollback (pgsql/mysql — PLAN4, D41).",
   "scope": {
@@ -303,12 +303,59 @@
   },
   "result": {
     "started_at": "2026-10-16T14:35:24Z",
+    "finished_at": "2026-10-16T17:20:47Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
       "effort": "high",
-      "session": "22cc46e5-b736-4541-92b1-73b04dfd686e"
-    }
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "Работа прошлой сессии проверена и доведена; добавлен тест D40; Fast-набор зелёный",
+    "deviations": [
+      "docs/ и docs/ru правлены ради теста-стража InstallationDocsGuardTest; текст отказа --force/--purge в ModuleUninstallCommand заменён (P4.17 перепишет)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-16T16:58:04Z"
+  "updated_at": "2026-10-16T17:20:47Z"
 }

@@ -4,8 +4,8 @@
 declare(strict_types=1);
 
 /**
- * Schema snapshot CLI (PLAN3.P1.10). Boots a bare Testbench application with the core, media and drive
- * providers, migrates the packaged migrations onto an empty database and writes (or compares) the raw
+ * Schema snapshot CLI (PLAN3.P1.10). Boots a bare Testbench application with the core, media, drive and
+ * documents providers, migrates the packaged migrations of every module onto an empty database and writes (or compares) the raw
  * catalog snapshot of one id/host-key/prefix/tenancy preset on one engine. Schema migrations only — no
  * behavioural test runs here.
  *
@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 use Illuminate\Contracts\Console\Kernel;
 use Orchestra\Testbench\Foundation\Application as Testbench;
+use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Schema\ModuleSchemas;
@@ -74,6 +75,7 @@ try {
             VaulterServiceProvider::class,
             VaulterMediaServiceProvider::class,
             VaulterDriveServiceProvider::class,
+            VaulterDocumentsServiceProvider::class,
         ],
         'env' => [
             'APP_KEY=base64:tJ4mVwShl8LETWdRtTCwcoKS7MS2ipekchk9seHrIVc=',
@@ -102,7 +104,8 @@ try {
         exit(2);
     }
 
-    $migrations = $root.'/packages/core/database/migrations';
+    // The migrations of every offered module, from the schema paths its manifest declares.
+    $migrations = array_values(array_unique($app->make(Vaulter\Kernel::class)->compiled()->schemaPaths));
     $kernel = $app->make(Kernel::class);
     $migrate = static function (string $command) use ($kernel, $migrations): void {
         $status = $kernel->call($command, ['--path' => $migrations, '--realpath' => true, '--force' => true, '--database' => 'testing']);

@@ -690,18 +690,6 @@
             "why": "architecture#events: the transaction-bound writer of the EventSink slot"
         },
         {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000026_create_v_outbox_consumers_table.php",
-            "owner": "core",
-            "why": "architecture#persistence + D29: v_outbox_consumers is owned by core (P3.14)"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000027_create_v_outbox_deliveries_table.php",
-            "owner": "core",
-            "why": "architecture#persistence + D29: v_outbox_deliveries is owned by core (P3.14)"
-        },
-        {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\OutboxConfig",
             "owner": "core",
@@ -1360,12 +1348,6 @@
             "why": "architecture#kernel: problem module_not_ready of the operation pipeline (P3.9, ADR-0028)"
         },
         {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
-            "owner": "core",
-            "why": "architecture#persistence + D25: v_idempotency_keys is owned by core (P3.12)"
-        },
-        {
             "match": "prefix",
             "value": "Vaulter\\Idempotency\\",
             "owner": "core",
@@ -1749,158 +1731,6 @@
         },
         {
             "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000001_create_v_drives_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_drives is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000002_create_v_nodes_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_nodes is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000003_create_v_blobs_table.php",
-            "owner": "media",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_blobs is owned by media"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000004_create_v_files_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_files is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000005_create_v_file_revisions_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_file_revisions is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000006_create_v_file_revision_blobs_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_file_revision_blobs is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000007_create_v_scan_policy_states_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_policy_states is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000008_create_v_scan_obligations_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_obligations is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000009_create_v_scan_backfill_runs_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_backfill_runs is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000010_create_v_scan_requests_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_requests is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000011_create_v_scan_evidence_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_evidence is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000012_create_v_node_grants_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_node_grants is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000013_create_v_node_shares_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_node_shares is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000014_create_v_node_comments_table.php",
-            "owner": "documents",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_node_comments is owned by documents"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000015_create_v_node_user_states_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_node_user_states is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000016_create_v_documents_table.php",
-            "owner": "documents",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_documents is owned by documents"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000017_create_v_document_revisions_table.php",
-            "owner": "documents",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_document_revisions is owned by documents"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000018_create_v_upload_sessions_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_upload_sessions is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000019_create_v_upload_parts_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_upload_parts is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000020_create_v_activity_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_activity is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000021_create_v_outbox_table.php",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_outbox is owned by core"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000022_create_v_webhook_endpoints_table.php",
-            "owner": "webhooks",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_webhook_endpoints is owned by webhooks"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000023_create_v_webhook_deliveries_table.php",
-            "owner": "webhooks",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_webhook_deliveries is owned by webhooks"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000024_create_v_drive_change_heads_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_drive_change_heads is owned by drive"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/2026_10_13_000025_create_v_drive_changes_table.php",
-            "owner": "drive",
-            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_drive_changes is owned by drive"
-        },
-        {
-            "match": "file",
             "value": "packages/core/config/vaulter.php",
             "owner": "core",
             "action": "split",
@@ -2213,6 +2043,50 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel + D34 (P4.4): the trait that stores a Vaulter model under a constant morph alias; core API, applied to the models of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/0001_01_01_000001_create_v_outbox_table.php",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_outbox is owned by core"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/0001_01_01_000002_create_v_outbox_consumers_table.php",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_outbox_consumers is owned by core"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/0001_01_01_000003_create_v_outbox_deliveries_table.php",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_outbox_deliveries is owned by core"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/0001_01_01_000004_create_v_idempotency_keys_table.php",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_idempotency_keys is owned by core"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/0001_01_01_000401_create_v_webhook_endpoints_table.php",
+            "owner": "webhooks",
+            "why": "architecture#persistence + D40 (P4.5): v_webhook_endpoints is created by the webhooks migration; it moves to the webhooks package with the module (P4.13)"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/0001_01_01_000402_create_v_webhook_deliveries_table.php",
+            "owner": "webhooks",
+            "why": "architecture#persistence + D40 (P4.5): v_webhook_deliveries is created by the webhooks migration; it moves to the webhooks package with the module (P4.13)"
         }
     ]
 }

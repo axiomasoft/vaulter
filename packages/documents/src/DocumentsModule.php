@@ -83,6 +83,7 @@ final class DocumentsModule implements OwnsSchema, VaulterModule
     {
         $module
             ->config('vaulter-documents', dirname(__DIR__).'/config/vaulter-documents.php')
+            ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/documents.php')
             ->problems(DocumentsProblemCodes::class)
             ->events(DocumentEventType::class)

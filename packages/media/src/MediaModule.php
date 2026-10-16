@@ -59,6 +59,7 @@ final class MediaModule implements OwnsSchema, VaulterModule
     {
         $module
             ->config('vaulter-media', dirname(__DIR__).'/config/vaulter-media.php')
+            ->schema(dirname(__DIR__).'/database/migrations')
             ->bindings(BindingsRegistrar::class)
             ->commands(GcBlobsCommand::class, ReconcileBlobsCommand::class)
             ->schedule(SchedulingRegistrar::class)

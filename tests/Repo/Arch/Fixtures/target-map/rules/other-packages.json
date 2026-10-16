@@ -583,6 +583,182 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#packages: filament section stays in vaulter-filament"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000301_create_v_node_comments_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_node_comments is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_documents is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_document_revisions is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_drives is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_nodes is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000203_create_v_files_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_files is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000204_create_v_file_revisions_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_file_revisions is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000205_create_v_file_revision_blobs_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_file_revision_blobs is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000206_create_v_scan_policy_states_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_policy_states is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000207_create_v_scan_obligations_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_obligations is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000208_create_v_scan_backfill_runs_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_backfill_runs is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000209_create_v_scan_requests_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_requests is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000210_create_v_scan_evidence_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_evidence is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000211_create_v_node_grants_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_node_grants is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_node_shares is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000213_create_v_node_user_states_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_node_user_states is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000214_create_v_upload_sessions_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_upload_sessions is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000215_create_v_upload_parts_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_upload_parts is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000216_create_v_activity_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_activity is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000217_create_v_drive_change_heads_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_drive_change_heads is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000218_create_v_drive_changes_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_drive_changes is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+            "owner": "media",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_blobs is created by the migration of media"
         }
     ]
 }

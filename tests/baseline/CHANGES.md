@@ -499,12 +499,14 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `core` `P\Packages\core\tests\Webhooks\WebhookRetryDispatcherTest::__pest_evaluable_it_recovers_a_pending_delivery_whose_first_job_was_lost__only_after_the_relay_claim_window` → replacement `P\Packages\core\tests\Webhooks\WebhookRetryDispatcherTest::__pest_evaluable_it_recovers_a_pending_delivery_whose_first_job_was_lost__only_after_the_retry_claim_window` — the pending grace is webhooks.retry_claim_seconds (D29) (D29)
 - `core` `P\Packages\core\tests\Webhooks\WebhookSchemaTest::__pest_evaluable_it_creates_v__outbox_with_every_§2_11_column` → replacement `P\Packages\core\tests\Webhooks\WebhookSchemaTest::__pest_evaluable_it_creates_the_neutral_v__outbox_without_delivery_state`, `P\Packages\core\tests\Webhooks\WebhookSchemaTest::__pest_evaluable_it_creates_v__outbox__consumers_and_v__outbox__deliveries` — the neutral outbox schema (D29) (D29)
 - `core` `P\Packages\core\tests\Arch\PublicApiSnapshotTest::__pest_evaluable_vaulter_core_public_API_surface_matches_the_frozen_golden__VLT_REL_P2_2_` → replacement `P\Packages\core\tests\Arch\SurfaceManifestTest::__pest_evaluable_it_keeps_the_committed_surface_manifest_of_core_equal_to_the_attributes_of_its_code`, `P\Packages\core\tests\Arch\SurfaceManifestTest::__pest_evaluable_it_marks_every_type_of_core_with_exactly_one_surface_attribute` — the hand-listed contract snapshot of core is replaced by the manifest generated from the #[Api]/#[Spi]/#[Internal] attributes (packages/*/tests/Arch/__snapshots__/surface.txt) (D27)
+- `core` `P\Packages\core\tests\Unit\InstallationDocsGuardTest::__pest_evaluable_it_warns_that_publishing_migrations_switches_the_canonical_mode__F_P2_2_02_` → replacement `P\Packages\core\tests\Unit\InstallationDocsGuardTest::__pest_evaluable_it_tells_the_reader_the_migrations_run_from_vendor_and_are_not_published__D40_` — the migrations are no longer published (each package runs its own from vendor/), so the guard that the install guide warns about publishing them now guards that it says they are not published (D40)
 
 ## Additions (current − original)
 
 - `repo`: 217 (introduced P1.3)
-- `core`: 455
-- `media`: 11
+- `core`: 457
+- `media`: 12
 - `drive`: 30
-- `documents`: 9
+- `documents`: 10
 - `azgard`: 9
+- `filament`: 0

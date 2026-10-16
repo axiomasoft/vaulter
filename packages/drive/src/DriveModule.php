@@ -131,6 +131,7 @@ final class DriveModule implements OwnsSchema, VaulterModule
     {
         $module
             ->config('vaulter-drive', dirname(__DIR__).'/config/vaulter-drive.php')
+            ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/drive.php')
             ->routes(self::coreRoutes())
             ->problems(DriveProblemCodes::class)
