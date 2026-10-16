@@ -1912,6 +1912,7 @@ Vaulter\Support\Concerns\HasLabel api since 1.0 trait
   public function label(): string
 
 Vaulter\Support\Identity api since 1.0 final class
+  public static function fitsKey(Illuminate\Database\Eloquent\Model $model, int|string $key): bool
   public static function key(mixed $value): int|null|string
   public static function stringify(mixed $value): string
 

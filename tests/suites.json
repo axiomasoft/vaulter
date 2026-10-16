@@ -678,6 +678,7 @@
             "packages/core/tests/Modules/OwnershipRegistryTest.php",
             "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
             "packages/core/tests/Observability/Tracing/TraceRecorderBindingTest.php",
+            "packages/core/tests/Unit/IdentityFitsKeyTest.php",
             "packages/core/tests/Unit/NodeNameTest.php"
           ]
         },

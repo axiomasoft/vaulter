@@ -9,6 +9,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Support\CanonicalJson;
 
 /**
  * Changing a node's properties is a node.updated event (PLAN2.D41); the values are
@@ -32,7 +33,7 @@ it('records node.updated with the new node sequence and no property values', fun
 
     expect($outbox->payload['data'])->toBe(['changed' => ['properties']])
         ->and($outbox->payload['sequence'])->toBe($before + 1)
-        ->and($outbox->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->node->id])
+        ->and(CanonicalJson::of($outbox->payload['subject']))->toBe(CanonicalJson::of(['type' => 'node', 'id' => (string) $this->node->id]))
         ->and($activity->event_id)->toBe($outbox->event_id)
         ->and(json_encode([$outbox->payload, $activity->context]))->not->toContain('confidential-value');
 });

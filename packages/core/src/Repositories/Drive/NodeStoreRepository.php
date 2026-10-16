@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
@@ -25,6 +26,7 @@ final class NodeStoreRepository
 {
     public function __construct(
         private readonly VaulterConfig $vaulterConfig,
+        private readonly VaulterDatabase $database,
     ) {}
 
     /**
@@ -148,7 +150,37 @@ final class NodeStoreRepository
         }
 
         $model = $this->vaulterConfig->model('node');
-        $model::query()->whereKey($ids->all())->delete();
+
+        if (!in_array($this->database->driver(), ['mysql', 'mariadb'], true)) {
+            $model::query()->whereKey($ids->all())->delete();
+
+            return;
+        }
+
+        // MySQL refuses a foreign-key cascade deeper than 15 levels (error 3008) and a node tree can be 130 deep: delete the
+        // subtree leaves first, level by level, so that no single DELETE cascades through more than the dependents of one level.
+        $parents = [];
+        foreach ($ids->chunk(1000) as $chunk) {
+            foreach ($model::query()->whereKey($chunk->all())->toBase()->get(['id', 'parent_id']) as $row) {
+                $parents[Identity::stringify($row->id)] = $row->parent_id === null ? null : Identity::stringify($row->parent_id);
+            }
+        }
+        $levels = [];
+        foreach (array_keys($parents) as $id) {
+            $depth = 0;
+            $at = (string) $id;
+            while (($up = $parents[$at] ?? null) !== null && array_key_exists($up, $parents)) {
+                $depth++;
+                $at = $up;
+            }
+            $levels[$depth][] = $id;
+        }
+        krsort($levels);
+        foreach ($levels as $level) {
+            foreach (array_chunk($level, 1000) as $chunk) {
+                $model::query()->whereKey($chunk)->delete();
+            }
+        }
     }
 
     /**

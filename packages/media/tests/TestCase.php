@@ -7,11 +7,14 @@ namespace Vaulter\Media\Tests;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Media\VaulterMediaServiceProvider;
+use Vaulter\Tests\Concerns\RefreshesDatabaseForSchemaVariant;
 use Vaulter\Tests\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    use RefreshesDatabaseForSchemaVariant;
+
     /**
      * @param  Application              $app
      * @return array<int, class-string>

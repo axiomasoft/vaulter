@@ -91,7 +91,9 @@ _db_spawn() {
     (
         [[ "${DB_FILE_MAX_MB:-16384}" == 0 ]] || ulimit -f "$(( ${DB_FILE_MAX_MB:-16384} * 1024 ))" 2>/dev/null || true
         "$@" </dev/null 2>&1 | { head -c "${DB_LOG_MAX_BYTES:-52428800}" >"$DB_SERVER_DIR/server.log"; cat >/dev/null; }
-    ) &
+    ) </dev/null >/dev/null 2>&1 &
+    # The server outlives the caller: holding the caller's stdout/stderr would keep a pipe reader
+    # (`scripts/pg-local.sh up | tee`) waiting for EOF until the server stops.
     disown $! 2>/dev/null || true
 }
 
@@ -116,13 +118,17 @@ _db_up_pgsql() {
 _db_up_mysql() {
     local fast=(--skip-log-bin --innodb-flush-log-at-trx-commit=0 --innodb-doublewrite=0 --innodb-flush-method=O_DIRECT_NO_FSYNC --innodb-file-per-table=OFF --innodb-buffer-pool-size=1G)
     [[ "${DB_FAST:-1}" == 1 ]] || fast=()
+    # libeatmydata turns fsync into a no-op: this server is throw-away and its data lives in $DB_SERVER_DIR only. DDL-heavy
+    # partitions (migrate:fresh per test) are bound by fsync on a disk-backed /tmp, where tmpfs is off limits for mysqld.
+    local lead=()
+    [[ "${DB_FAST:-1}" != 1 ]] || ! command -v eatmydata >/dev/null || lead=(eatmydata)
     command -v mysqld >/dev/null || { echo 'db_up: mysqld not found' >&2; return 1; }
     mkdir "$DB_SERVER_DIR/data" || return
     mysqld --no-defaults --initialize-insecure --datadir="$DB_SERVER_DIR/data" --user="$(id -un)" >"$DB_SERVER_DIR/init.log" 2>&1 || {
         echo 'db_up: mysqld --initialize failed (see '"$DB_SERVER_DIR"'/init.log; AppArmor may refuse this directory — set VAULTER_DB_ROOT=/tmp)' >&2
         return 1
     }
-    _db_spawn mysqld --no-defaults --datadir="$DB_SERVER_DIR/data" --user="$(id -un)" --port="$DB_PORT" --bind-address=127.0.0.1 \
+    _db_spawn "${lead[@]}" mysqld --no-defaults --datadir="$DB_SERVER_DIR/data" --user="$(id -un)" --port="$DB_PORT" --bind-address=127.0.0.1 \
         --socket="$DB_SERVER_DIR/my.sock" --mysqlx=OFF --max-connections=400 --log-bin-trust-function-creators=1 \
         --pid-file="$DB_SERVER_DIR/my.pid" "${fast[@]}"
     local i
@@ -168,17 +174,25 @@ db_use_external() {
     export DB_HOST="${DB_HOST:-127.0.0.1}" DB_USERNAME="${DB_USERNAME:-vaulter}" DB_PASSWORD="${DB_PASSWORD:-secret}"
     export DB_PORT="${DB_PORT:-$([[ "$engine" == pgsql ]] && echo 5432 || echo 3306)}"
     for ((n = 1; n <= workers; n++)); do
-        name="${base%_test}_w${n}_test"
-        case "$engine" in
-            pgsql)
-                PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -tAc \
-                    "SELECT 1 FROM pg_database WHERE datname = '$name'" | grep -q 1 \
-                    || PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -c "CREATE DATABASE \"$name\"" >/dev/null || return
-                ;;
-            mysql)
-                MYSQL_PWD="$DB_PASSWORD" mysql --no-defaults --protocol=TCP -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" \
-                    -e "CREATE DATABASE IF NOT EXISTS \`$name\`" || return
-                ;;
-        esac
+        db_ensure "${base%_test}_w${n}_test" || return
     done
+}
+
+# Create the database $1 on the server DB_* points at, unless it exists (an external server: CI service, Docker, local).
+db_ensure() {
+    local name="$1"
+    [[ "$name" =~ ^[a-z0-9_]+_test$ ]] || { echo "db_ensure: [$name] must match [a-z0-9_]+_test" >&2; return 2; }
+    case "${DB_CONNECTION:-}" in
+        pgsql)
+            PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -tAc \
+                "SELECT 1 FROM pg_database WHERE datname = '$name'" | grep -q 1 \
+                || PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -c "CREATE DATABASE \"$name\"" >/dev/null
+            ;;
+        mysql)
+            # PDO rather than the mysql client: a Docker or CI server must not need client binaries on the host.
+            php -r '$p = new PDO("mysql:host=".getenv("DB_HOST").";port=".getenv("DB_PORT"), getenv("DB_USERNAME"), getenv("DB_PASSWORD"));
+                $p->exec("CREATE DATABASE IF NOT EXISTS `".$argv[1]."`");' -- "$name"
+            ;;
+        *) echo "db_ensure: unknown engine [${DB_CONNECTION:-}]" >&2; return 2 ;;
+    esac
 }

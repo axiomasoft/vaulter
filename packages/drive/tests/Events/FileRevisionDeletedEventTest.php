@@ -12,6 +12,7 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Events\EventConformance;
+use Vaulter\Tests\Support\CanonicalJson;
 
 /**
  * Deleting a non-current revision is audited and staged for webhooks like every other
@@ -32,7 +33,7 @@ it('records file.revision_deleted in the activity feed and the outbox', function
     $outbox = OutboxEvent::query()->where('type', DriveEventType::FileRevisionDeleted->value)->sole();
     $activity = Activity::query()->where('verb', DriveEventType::FileRevisionDeleted->value)->sole();
 
-    expect($outbox->payload['data'])->toBe(['revision_id' => (string) $first->getKey(), 'number' => 1])
+    expect(CanonicalJson::of($outbox->payload['data']))->toBe(CanonicalJson::of(['revision_id' => (string) $first->getKey(), 'number' => 1]))
         ->and($activity->event_id)->toBe($outbox->event_id)
         ->and($activity->context['size_bytes'])->toBe(2)
         ->and($outbox->payload['sequence'])->toBeInt();

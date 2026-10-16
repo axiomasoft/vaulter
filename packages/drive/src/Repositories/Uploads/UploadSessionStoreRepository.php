@@ -190,7 +190,9 @@ final class UploadSessionStoreRepository
                 'updated_at' => now(),
             ]);
 
-        if ($affected === 0) {
+        // MySQL reports CHANGED rows, not matched ones: a re-sent identical chunk within the same second rewrites the very
+        // same values and affects 0 rows although the session is open. Only a session that is no longer open is a conflict.
+        if ($affected === 0 && !$model::query()->whereKey($session->getKey())->whereIn('status', [UploadStatus::Initiated->value, UploadStatus::Uploading->value])->exists()) {
             throw UploadConflictException::forClosedSession($session->upload_id);
         }
 

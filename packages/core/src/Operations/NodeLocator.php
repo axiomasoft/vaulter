@@ -13,6 +13,7 @@ use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 
 #[Api]
@@ -98,7 +99,7 @@ final readonly class NodeLocator
     /** @param Builder<Node> $query */
     private function plausibleKey(Builder $query, int|string $key): bool
     {
-        return $query->getModel()->getKeyType() !== 'int' || preg_match('/^[0-9]{1,19}$/', (string) $key) === 1;
+        return Identity::fitsKey($query->getModel(), $key);
     }
 
     private function key(Node|NodeSnapshot|int|string $key): int|string|null

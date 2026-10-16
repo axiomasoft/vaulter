@@ -38,30 +38,20 @@ Override these with `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and
 return exit 2 and print the administrator command needed to provision the test
 account; other failures return exit 1. Resolve preflight failures before tests.
 
-Run the PostgreSQL base suite with the same coordinates as CI:
-
-```bash
-DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 \
-DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret \
-scripts/php84 vendor/bin/pest --ci \
-packages/core/tests/Access packages/core/tests/Activity \
-packages/core/tests/Feature packages/core/tests/Panels \
-packages/core/tests/Schema packages/core/tests/Sharing packages/core/tests/Webhooks
-```
+Server engines are started by the harness; see [Which run when](tests/README.md#which-run-when).
 
 ### Tests
 
-Every suite runs through `scripts/t`; zones, groups, lines and the run policy are in [`tests/README.md`](tests/README.md).
+Every suite runs through `scripts/t`. **What to run while iterating, before a commit, before a push and before a
+release is one table: [Which run when](tests/README.md#which-run-when)** (zones, groups and CI lines are in the same file).
 
 ```bash
-scripts/t --changed --dry-run        # what your change affects, nothing runs
-scripts/t --changed                  # the affected zones and their consumers (SQLite)
-scripts/t sqlite -p media            # one package
-scripts/t pgsql -p core --group=database   # engine-dependent tests on a server
+scripts/t sqlite -p <pkg> <path>     # while iterating: the files you change
+scripts/t --changed                  # before a commit: affected zones + consumers (SQLite); make test-changed adds pgsql
+make test-db                         # schema/query change: every database test on pgsql
 ```
 
-Run the named tests of your change, not the whole suite; full, coverage, mutation and load runs are not part of a
-pull request.
+Full, coverage, mutation and load runs are not part of a pull request.
 
 ### Concurrency tests
 
@@ -89,13 +79,7 @@ read must be committed: bind the test directory with `DatabaseMigrations`, not
 database whose name does not end in `_test`.
 Packages reach it through the `Vaulter\Tests\` autoload-dev mapping to `../core/tests/`.
 
-Run the harness suite locally exactly as the `test-pgsql` CI job does:
-
-```bash
-DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 \
-DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret \
-scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency
-```
+Run them locally as the `serial` CI lane does: `scripts/t pgsql -p core --group=serial -j1 --no-skips`.
 
 All quality tooling is wired through the `Makefile`:
 
@@ -106,8 +90,8 @@ All quality tooling is wired through the `Makefile`:
 | `make stan` | PHPStan (level max) + Larastan |
 | `make rector` | Rector dry-run |
 | `make rector-fix` | Apply Rector |
-| `make test` | Pest with `--coverage --min=80` |
-| `make ci` | Everything CI runs (quality + tests) |
+| `make test` | Every default suite on SQLite (`scripts/t sqlite`), no coverage |
+| `make ci` | Quality checks + every default suite on SQLite (servers: see the table above) |
 
 Run `make ci` before opening a PR.
 

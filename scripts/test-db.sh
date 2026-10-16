@@ -69,13 +69,31 @@ if [[ "$engine" == sqlite ]]; then
 else
     # shellcheck source=scripts/db-test-env.sh
     source "$root/scripts/db-test-env.sh"
-    # A local server started by scripts/pg-local.sh is reused when it answers (never in CI: DB_EXTERNAL decides there).
-    if [[ "$engine" == pgsql && -z "${DB_EXTERNAL:-}" && -f "$root/var/pg-local.env" ]]; then
+    # A local server started by scripts/pg-local.sh is reused when it answers (never in CI: DB_EXTERNAL decides there;
+    # VAULTER_DB_PRIVATE=1, set by scripts/t-matrix, always starts a private server so that runs can overlap).
+    if [[ "$engine" == pgsql && -z "${DB_EXTERNAL:-}" && -z "${VAULTER_DB_PRIVATE:-}" && -f "$root/var/pg-local.env" ]]; then
         # shellcheck disable=SC1091
         source "$root/var/pg-local.env"
         if "$PG_LOCAL_BIN/pg_isready" -q -h 127.0.0.1 -p "$DB_PORT"; then
-            export DB_EXTERNAL=1 PATH="$PG_LOCAL_BIN:$PATH"
+            export DB_EXTERNAL=1 DB_LOCAL_SERVER=1 PATH="$PG_LOCAL_BIN:$PATH"
         fi
+    fi
+    # Likewise the Docker server of scripts/mysql-local.sh (data on tmpfs; a native mysqld cannot use it).
+    if [[ "$engine" == mysql && -z "${DB_EXTERNAL:-}" && -z "${VAULTER_DB_PRIVATE:-}" && -f "$root/var/mysql-local.env" ]] \
+        && [[ "$("$root/scripts/mysql-local.sh" status)" == up ]]; then
+        # shellcheck disable=SC1091
+        source "$root/var/mysql-local.env"
+        export DB_EXTERNAL=1 DB_LOCAL_SERVER=1
+    fi
+    # A long-lived local server is shared by every run of this checkout and all runs use the same database names:
+    # two runs at once (two agents, two terminals) would migrate over each other. The second one waits instead.
+    if [[ "${DB_LOCAL_SERVER:-0}" == 1 ]]; then
+        exec 9>"$root/var/$engine-local.lock"
+        if ! flock -n 9; then
+            echo "test-db: another run is using the local $engine server; waiting for it" >&2
+            flock 9
+        fi
+        export DB_LOCAL_SERVER=held   # a nested call (same run) must not wait for its own lock
     fi
     if [[ "${DB_EXTERNAL:-0}" == 1 ]]; then
         db_use_external "$engine" "$workers" || exit "$?"

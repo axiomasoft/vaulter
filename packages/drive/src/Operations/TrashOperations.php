@@ -110,7 +110,10 @@ final readonly class TrashOperations implements Contract
     public function empty(): int
     {
         // Materialize before commits remove rows; every root owns one atomic operation.
-        $roots = $this->nodes->trashedBefore(Carbon::now())->where('drive_id', $this->context->driveId())->get();
+        // Newest root first: a folder trashed after its already-trashed child comes before that child, so purging it takes the
+        // child along and the child is skipped as gone, whatever the clock resolution (microseconds on PostgreSQL, seconds on MySQL).
+        $roots = $this->nodes->trashedBefore(Carbon::now())->where('drive_id', $this->context->driveId())
+            ->reorder()->orderByDesc('trashed_at')->orderBy('id')->get();
         $count = 0;
         $firstFailure = null;
         foreach ($roots as $root) {

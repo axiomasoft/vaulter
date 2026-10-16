@@ -63,6 +63,8 @@
     "scripts": {
         "test": "scripts/t sqlite -p core",
         "test:all": "scripts/t sqlite",
+        "test:changed": "scripts/t --changed --db=pgsql",
+        "test:db": "scripts/t pgsql --group=database",
         "test:full": "scripts/t sqlite --full",
         "test:baseline": "scripts/t baseline --compare",
         "test:coverage": "vendor/bin/pest --coverage --min=80",

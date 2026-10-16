@@ -18,6 +18,7 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Support\CanonicalJson;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
@@ -87,9 +88,9 @@ it('stores the thin envelope as the outbox payload', function (): void {
     // The key set is the contract; MySQL's JSON column returns its keys sorted, so the order is not asserted.
     expect(array_keys($payload))->toEqualCanonicalizing(['id', 'type', 'version', 'source', 'time', 'tenant_id', 'drive_id', 'subject', 'sequence', 'actor', 'correlation_id', 'changes', 'data'])
         ->and($payload['type'])->toBe('node.renamed')
-        ->and($payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->folder->id])
+        ->and(CanonicalJson::of($payload['subject']))->toBe(CanonicalJson::of(['type' => 'node', 'id' => (string) $this->folder->id]))
         ->and($payload['sequence'])->toBe(DriveTestHelpers::model($this->folder->id)->sequence)
-        ->and($payload['actor'])->toBe(['type' => $this->user->getMorphClass(), 'id' => '7'])
+        ->and(CanonicalJson::of($payload['actor']))->toBe(CanonicalJson::of(['type' => $this->user->getMorphClass(), 'id' => '7']))
         // The folder's creation took seq 1 of the drive's change journal, the rename seq 2.
         ->and($payload['changes'])->toBe(['seq' => 2])
         ->and($payload['time'])->toMatch('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/')

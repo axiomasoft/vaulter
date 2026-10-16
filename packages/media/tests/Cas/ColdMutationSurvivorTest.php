@@ -66,7 +66,8 @@ function r18Reconciler(FakeMetricsRecorder $metrics): BlobReconciler
 
 function r18PgAdvisoryLockIsHeld(string $scope, string $sha256): bool
 {
-    config()->set('database.connections.r18_lock_probe', config('database.connections.pgsql'));
+    // advisory locks are per database: probe the connection the suite really runs on (the worker database), not the stock 'pgsql' entry
+    config()->set('database.connections.r18_lock_probe', config('database.connections.'.config('database.default')));
     DB::purge('r18_lock_probe');
     $connection = DB::connection('r18_lock_probe');
     $lockKey = 'cas:'.$scope.':'.$sha256;

@@ -81,7 +81,8 @@ it('takes the storage row before the parent row, as every node insert does', fun
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {
-        $queries[] = $query->sql;
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        $queries[] = str_replace('`', '"', $query->sql);
     });
 
     createDocumentUnder($drive, 'Ordered', $folder);

@@ -15,6 +15,7 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Tests\Support\CanonicalJson;
 
 uses(EnablesWebhooksModule::class);
 
@@ -154,7 +155,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
     $renamed = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
     // The names travel only in the activity context.
     expect(mutationEnvelope($renamed)['data'])->toBe([])
-        ->and($renamed->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $node->id]);
+        ->and(CanonicalJson::of($renamed->payload['subject']))->toBe(CanonicalJson::of(['type' => 'node', 'id' => (string) $node->id]));
     expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->sole()->context)->toEqual([
         'correlation_id' => 'mutation-contract',
         'from' => 'Old',

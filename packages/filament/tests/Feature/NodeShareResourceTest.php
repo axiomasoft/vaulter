@@ -57,7 +57,7 @@ it('preserves the validated share form contract and one-time token notification'
     $folder = DriveBuilder::folder($storage, 'Exact share');
     DriveBuilder::grant($folder, $owner);
 
-    session()->forget('filament.notifications');
+    pullSentNotifications();
     $expires = Carbon::now()->addDay()->startOfSecond();
 
     NodeShareResource::createFromData([
@@ -81,7 +81,7 @@ it('preserves the validated share form contract and one-time token notification'
         ->and($share->max_uses)->toBe(7)
         ->and((string) $share->granted_by)->toBe('51');
 
-    $notification = session('filament.notifications.0');
+    $notification = pullSentNotifications()[0] ?? null;
     $prefix = 'Copy it now — it is shown only once: '.app(SharingConfig::class)->urlBase().'/';
 
     expect($notification)->toBeArray()
@@ -130,11 +130,11 @@ it('applies safe share defaults to omitted and blank optional values', function 
 });
 
 it('rejects a missing share node with the declared warning', function (): void {
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeShareResource::createFromData([]);
 
-    $notification = session('filament.notifications.0');
+    $notification = pullSentNotifications()[0] ?? null;
 
     expect(NodeShare::query()->count())->toBe(0)
         ->and($notification)->toBeArray()
@@ -228,7 +228,7 @@ it('does not create a share when the admin may not share the node', function ():
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'Locked');
 
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
@@ -240,7 +240,7 @@ it('does not create a share when the admin may not share the node', function ():
         'expires_at' => '',
     ]);
 
-    $notification = session('filament.notifications.0');
+    $notification = pullSentNotifications()[0] ?? null;
 
     expect(app(NodeShareReadRepository::class)->forNode($folder)->count())->toBe(0)
         ->and($notification)->toBeArray()
@@ -308,13 +308,13 @@ it('shows the refusal instead of failing when the role does not fit the audience
     $drive = DriveBuilder::storage();
     $node = DriveBuilder::folder($drive);
     DriveBuilder::grant($node, $owner);
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeShareResource::createFromData(['node_id' => $node->id, 'role' => RoleRegistry::WRITER, 'audience' => ShareAudience::Anyone->value]);
-    $writer = session('filament.notifications.0');
-    session()->forget('filament.notifications');
+    $writer = pullSentNotifications()[0] ?? null;
+    pullSentNotifications();
     NodeShareResource::createFromData(['node_id' => $node->id, 'audience' => ShareAudience::Tenant->value]);
-    $tenant = session('filament.notifications.0');
+    $tenant = pullSentNotifications()[0] ?? null;
 
     expect(NodeShare::query()->count())->toBe(0)
         ->and($writer['status'])->toBe('warning')

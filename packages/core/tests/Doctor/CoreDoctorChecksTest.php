@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
@@ -22,6 +23,15 @@ use Vaulter\Tests\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 uses(EnablesWebhooksModule::class);
+
+// MySQL commits DDL implicitly, so the tables these tests drop stay dropped after the test (SQLite and PostgreSQL roll them back with
+// the test transaction). Start the next test from an empty database that RefreshDatabase migrates afresh.
+afterEach(function (): void {
+    if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+        Schema::dropAllTables();
+        RefreshDatabaseState::$migrated = false;
+    }
+});
 
 /** @return list<DoctorFinding> */
 function coreFindings(string $key, bool $production = false): array

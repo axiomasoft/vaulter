@@ -258,7 +258,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['20', '22']
+        node: ['22', '24']  # the maintained LTS lines; Node 20 is end-of-life (2026-04-30)
     steps:
       - name: Checkout
         uses: actions/checkout@v4

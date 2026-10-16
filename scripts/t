@@ -18,13 +18,14 @@
 #   * every partition (one TestCase schema) is its own Pest process, serially; -j N ParaTest workers run INSIDE a
 #     partition (default: half the CPUs, at most 8). A partition's files are handed to Pest through a generated
 #     phpunit configuration, so a path list never turns into one pass per path.
-#   * fast (default): `--exclude-group=nofast` (+ yours, ONE exclusion). --full: parallel pass without `nofull,serial`,
+#   * fast (default): `--exclude-group=nofast` (+ yours). --full: parallel pass without `nofull,serial`,
 #     then one pass `--group=serial` (-j1 runs everything but `nofull` in one process). --group=serial: that pass only.
 #   * server engines (pgsql, mysql) are provisioned once through scripts/test-db.sh (DB_EXTERNAL=1 = a ready CI
 #     service; the database must end in _test); they need paths, --group or --full — there is no default server sweep.
 #   * partitions that write into the Testbench skeleton run -j1 with a TESTBENCH_APP_BASE_PATH of their own.
 #   * hub/vue run `npm test` through their manifests (engines do not apply); `load` is explicit only.
-#   * groups: `database` (+ `database:<zone>`) = the result depends on the engine; `serial` = no parallel workers; `extended` =
+#   * groups: `database` (+ `database:<zone>`) = the result depends on the engine (selecting it narrows every partition to
+#     the files classified `database` in tests/zones.json; a group selection without -p leaves the Node suites out); `serial` = no parallel workers; `extended` =
 #     scale / the whole seed range; `stand` = external services and the functional load tests. nofast = serial+extended+stand,
 #     nofull = stand: the fast lane excludes nofast, --full excludes nofull (and runs serial once), nothing else is ever hidden.
 #     Selecting `--group=extended` or `--group=stand` drops the exclusion that group implies, so it never selects nothing.
@@ -101,6 +102,8 @@ def passes($p; $c; $skel; $nfiles):
    elif ($raw | length) > 0 then
      [$pest[] | select(. as $n | any($raw[]; . as $q | any(files($S[$n])[]; hit(.; $q))))]
    elif $c.mode == "stand" then [$S | to_entries[] | select(.value.stand == true) | .key]
+   # groups are a Pest notion: a group selection without -p leaves the Node suites out
+   elif ($c.groups | length) > 0 then [$S | to_entries[] | select(.value.default and .value.kind == "pest") | .key]
    else [$S | to_entries[] | select(.value.default) | .key] end) as $sel
   | if ($sel | map(select($S[.] == null)) | length) > 0 then {error: "unknown suite: \($sel | map(select($S[.] == null)) | join(","))"}
     elif ($raw | length) > 0 and ($sel | length) == 0 then {error: "cannot infer the suite for: \($raw | join(", ")); pass -p <suite>"}
@@ -124,7 +127,12 @@ def passes($p; $c; $skel; $nfiles):
                       {kind: "skip", suite: $n, engine: $e, partition: $p.key,
                        reason: (if $p.database then "partition not applicable to \($e)" else "database-free partition, nothing engine-specific to check" end)}
                     else
-                      passes($p; $c; ($p.skeleton_writer // false); ($f | length)) | to_entries[] | .key as $k | .value as $ps
+                      # --group=database[:zone] keeps only the files classified `database` (zones.json "database"), so a
+                      # partition without one is no step at all instead of a "zero tests" failure (no map = no filter)
+                      ([$f[] | select($c.dbpaths == null or (($c.groups | any(. == "database" or startswith("database:"))) | not)
+                                      or (. as $x | any($c.dbpaths[]; hit($x; norm))))]) as $f
+                      | select(($f | length) > 0)
+                      | passes($p; $c; ($p.skeleton_writer // false); ($f | length)) | to_entries[] | .key as $k | .value as $ps
                       | {kind: "pest", suite: $n, engine: $e, partition: $p.key, partition_index: $pe.key,
                          pass: $ps.pass, processes: $ps.processes, cwd: $s.cwd, vendor: $s.vendor, config: $s.config,
                          files: $f, group: $ps.group, exclude: $ps.exclude, allow_empty: $ps.allow_empty,
@@ -416,12 +424,18 @@ compare_suite() { # suite current-list
 # ---------------------------------------------------------------------------------------------------------------------
 # Executing a plan
 # ---------------------------------------------------------------------------------------------------------------------
-write_config() { # step-json out-file : generated phpunit configuration listing exactly the partition's files
-    local step="$1" out="$2" cwd config line skipping=0 suite
+write_config() { # step-json out-file [skeleton] : generated phpunit configuration listing exactly the partition's files
+    local step="$1" out="$2" skeleton="${3:-}" cwd config line skipping=0 suite php_seen=0 base_env=""
     cwd="$(jq -r .cwd <<<"$step")"
     suite="$(jq -r .suite <<<"$step")"
     config="$root/$cwd/$(jq -r .config <<<"$step")"
     [[ -f "$config" ]] || die "missing $config"
+    # php's variables_order has no E, so $_ENV is empty and Testbench would not see the skeleton path in the environment
+    # (nor would a ParaTest worker, which is started without the runner's -d flags): the configuration states it
+    if [[ -n "$skeleton" ]]; then
+        base_env="        <env name=\"APP_BASE_PATH\" value=\"$skeleton\" force=\"true\"/>
+        <env name=\"TESTBENCH_APP_BASE_PATH\" value=\"$skeleton\" force=\"true\"/>"
+    fi
     {
         while IFS= read -r line || [[ -n "$line" ]]; do
             if (( skipping )); then
@@ -435,24 +449,38 @@ write_config() { # step-json out-file : generated phpunit configuration listing 
                 skipping=1
                 continue
             fi
+            # excluded groups live in the configuration: ParaTest keeps one --exclude-group flag at most when it forks workers
+            if [[ "$line" == *'</phpunit>'* ]]; then
+                [[ -z "$base_env" || $php_seen == 1 ]] || printf '    <php>\n%s\n    </php>\n' "$base_env"
+                jq -r '.exclude | if length > 0 then "    <groups>\n        <exclude>\n" + (map("            <group>\(.)</group>") | join("\n")) + "\n        </exclude>\n    </groups>" else empty end' <<<"$step"
+            fi
             line="${line//bootstrap=\"vendor\/autoload.php\"/bootstrap=\"$root/$cwd/vendor/autoload.php\"}"
             # the generated configuration has exactly one testsuite: make it the default one
             if [[ "$line" =~ ^(.*)defaultTestSuite=\"[^\"]*\"(.*)$ ]]; then
                 line="${BASH_REMATCH[1]}defaultTestSuite=\"$suite\"${BASH_REMATCH[2]}"
             fi
             printf '%s\n' "$line"
+            if [[ "$line" == *'<php>'* ]]; then
+                php_seen=1
+                [[ -z "$base_env" ]] || printf '%s\n' "$base_env"
+            fi
         done <"$config"
     } >"$out"
 }
 
-setup_skeleton() { # dest : a private copy of the Testbench skeleton (config/ + bootstrap/cache are written by these tests)
-    local dest="$1" src="${T_SKELETON_SRC:-}"
+setup_skeleton() { # dest cwd : a private copy of the Testbench skeleton (config/ + bootstrap/cache are written by these tests)
+    local dest="$1" cwd="${2:-$root}" src="${T_SKELETON_SRC:-}"
     if [[ -z "$src" ]]; then
-        src="$root/vendor/orchestra/testbench-core/laravel"
+        # the skeleton of the package under test: every package installs its own, and they differ (.env, cached providers)
+        src="$cwd/vendor/orchestra/testbench-core/laravel"
+        [[ -d "$src" ]] || src="$root/vendor/orchestra/testbench-core/laravel"
         [[ -d "$src" ]] || src="$(cd "$root" && find packages -maxdepth 6 -type d -path '*orchestra/testbench-core/laravel' 2>/dev/null | head -n 1)"
     fi
     [[ -d "$src" ]] || die "Testbench skeleton not found (set T_SKELETON_SRC)"
-    cp -a "$src" "$dest"
+    # storage/ of the shared skeleton collects logs and compiled views of every run (hundreds of MB): the copy starts it empty
+    mkdir -p "$dest"
+    (cd "$src" && tar --exclude=./storage --mode=u+rwX -cf - .) | (cd "$dest" && tar -xf -)
+    mkdir -p "$dest"/storage/{app/public,framework/{cache/data,sessions,views,testing},logs}
 }
 
 declare -a RESULTS=()
@@ -463,7 +491,7 @@ exec_step() { # step-json
     kind="$(jq -r .kind <<<"$step")"
     suite="$(jq -r .suite <<<"$step")"
     engine="$(jq -r .engine <<<"$step")"
-    idx="${#RESULTS[@]}"
+    idx="${T_STEP_IDX:-${#RESULTS[@]}}"
     out="$run_tmp/step-$idx.log"
     started=$SECONDS
 
@@ -482,17 +510,21 @@ exec_step() { # step-json
     local cfg="$run_tmp/cfg-$idx.xml" cwd processes
     cwd="$root/$(jq -r .cwd <<<"$step")"
     processes="$(jq -r .processes <<<"$step")"
-    write_config "$step" "$cfg"
+    local skeleton=""
+    # A step that runs beside others (a concurrent partition, a cell of scripts/t-matrix) gets a skeleton and a temp
+    # directory of its own: tests publish config into the skeleton and count files in the temp directory.
+    if [[ "$(jq -r .skeleton <<<"$step")" == true || -n "${T_RESULT_FILE:-}" || "${T_PRIVATE_SKELETON:-0}" == 1 ]]; then
+        skeleton="$run_tmp/skeleton-$idx"
+        setup_skeleton "$skeleton" "$cwd"
+    fi
+    write_config "$step" "$cfg" "$skeleton"
 
-    local -a args=(php -d memory_limit=1G "$(jq -r .vendor <<<"$step")")
+    local -a args=(php -d memory_limit=1G -d variables_order=EGPCS "$(jq -r .vendor <<<"$step")")
     # shellcheck disable=SC2206
     args+=(${PEST_FLAGS:---ci})
     args+=("--configuration=$cfg")
     (( processes > 1 )) && args+=(--parallel "--processes=$processes")
     [[ "$(jq -r .group <<<"$step")" == "" ]] || args+=("--group=$(jq -r .group <<<"$step")")
-    local exclude
-    exclude="$(jq -r '.exclude | join(",")' <<<"$step")"
-    [[ -z "$exclude" ]] || args+=("--exclude-group=$exclude")
     local junit
     junit="$(jq -r '.junit // empty' <<<"$step")"
     if [[ -n "$junit" ]]; then
@@ -507,19 +539,28 @@ exec_step() { # step-json
     else
         envs+=(VAULTER_TEST_DB_PER_PROCESS=$(( processes > 1 ? 1 : 0 )))
     fi
-    if [[ "$(jq -r .skeleton <<<"$step")" == true ]]; then
-        local skeleton="$run_tmp/skeleton-$idx"
-        setup_skeleton "$skeleton"
-        envs+=("TESTBENCH_APP_BASE_PATH=$skeleton" "APP_BASE_PATH=$skeleton")
+    [[ -z "$skeleton" ]] || envs+=("TESTBENCH_APP_BASE_PATH=$skeleton" "APP_BASE_PATH=$skeleton")
+    if [[ -n "${T_RESULT_FILE:-}" || "${T_PRIVATE_SKELETON:-0}" == 1 ]]; then
+        mkdir -p "$run_tmp/tmp-$idx"
+        envs+=("TMPDIR=$run_tmp/tmp-$idx")
     fi
 
     printf '>>> %s  files=%s processes=%s\n' "$label" "$(jq '.files | length' <<<"$step")" "$processes" >&2
-    (cd "$cwd" && env "${envs[@]}" "$root/scripts/php84" "${args[@]}") 2>&1 | tee "$out" || code="${PIPESTATUS[0]}"
+    if [[ -n "${T_RESULT_FILE:-}" ]]; then
+        # a concurrent partition: its output goes to the log only, the parent prints it when the step is done
+        (cd "$cwd" && env "${envs[@]}" "$root/scripts/php84" "${args[@]}") >"$out" 2>&1 || code=$?
+    else
+        (cd "$cwd" && env "${envs[@]}" "$root/scripts/php84" "${args[@]}") 2>&1 | tee "$out" || code="${PIPESTATUS[0]}"
+    fi
     record "$label" "$code" "$out" "$(jq -r '.allow_empty' <<<"$step" | sed 's/true/1/;s/false/0/')" $((SECONDS - started))
 }
 
 record() { # label code logfile allow_empty seconds
     local label="$1" code="$2" log="$3" allow_empty="$4" seconds="$5" verdict skipped zero=0
+    if [[ -n "${T_RESULT_FILE:-}" ]]; then
+        printf '%s\t%s\t%s\t%s\t%s\n' "$label" "$code" "$log" "$allow_empty" "$seconds" >"$T_RESULT_FILE"
+        return
+    fi
     # human reporter ("2 skipped") and the compact PAO/--ci JSON ("skipped":2) alike
     skipped="$(grep -Eo '[0-9]+ skipped|"skipped":[0-9]+' "$log" | head -n 1 | grep -Eo '[0-9]+' || echo 0)"
     grep -Eq 'No tests found|No tests executed' "$log" && zero=1
@@ -538,9 +579,59 @@ record() { # label code logfile allow_empty seconds
 
 run_pest_steps() { # plan-file engine
     local plan="$1" engine="$2" step
+    if [[ "$engine" != sqlite && "${T_PARTITION_JOBS:-$(default_partition_jobs)}" -gt 1 ]]; then
+        run_pest_steps_concurrently "$plan" "$engine"
+        return
+    fi
     while IFS= read -r step; do
         exec_step "$step"
     done < <(jq -c --arg e "$engine" '.steps[] | select(.kind == "pest" and .engine == $e)' "$plan")
+}
+
+default_partition_jobs() { echo 4; }
+
+# Server engines: partitions that may share a machine run at once, every one on databases of its own
+# (<base>_p<N>_test and its workers), so they cannot migrate over each other. `serial` passes (races, committed
+# transactions, shared /tmp) never overlap with anything: they run alone, one by one, after the others.
+run_pest_steps_concurrently() { # plan-file engine
+    local plan="$1" engine="$2" step k=0 jobs="${T_PARTITION_JOBS:-$(default_partition_jobs)}"
+    local -a concurrent=() alone=()
+    # shellcheck source=scripts/db-test-env.sh
+    source "$root/scripts/db-test-env.sh"
+    while IFS= read -r step; do
+        if [[ "$(jq -r .pass <<<"$step")" == serial ]]; then alone+=("$step"); else concurrent+=("$step"); fi
+    done < <(jq -c --arg e "$engine" '.steps[] | select(.kind == "pest" and .engine == $e)' "$plan")
+
+    local -A running=()
+    reap_partition() {
+        local pid fields label code log allow seconds
+        wait -n -p pid || true
+        k="${running[$pid]}"
+        unset 'running[$pid]'
+        if [[ ! -s "$run_tmp/res-$k" ]]; then
+            # the partition never started (its databases could not be prepared): say why instead of losing it
+            printf '>>> partition %s did not run\n' "$k" >&2
+            cat "$run_tmp/err-$k" >&2
+            record "$engine partition $k" 1 "$run_tmp/err-$k" 0 0
+            return
+        fi
+        IFS=$'\t' read -r label code log allow seconds <"$run_tmp/res-$k"
+        printf '>>> %s\n' "$label" >&2
+        cat "$log"
+        record "$label" "$code" "$log" "$allow" "$seconds"
+    }
+    local idx=0
+    for step in "${concurrent[@]}"; do
+        while (( ${#running[@]} >= jobs )); do reap_partition; done
+        idx=$((idx + 1))
+        (
+            export DB_DATABASE="${DB_DATABASE%_test}_p${idx}_test" T_STEP_IDX="p$idx" T_RESULT_FILE="$run_tmp/res-p$idx"
+            db_ensure "$DB_DATABASE" && db_use_external "$engine" "$(jq -r .processes <<<"$step")" && exec_step "$step"
+        ) >"$run_tmp/err-p$idx" 2>&1 &
+        running[$!]="p$idx"
+    done
+    while (( ${#running[@]} > 0 )); do reap_partition; done
+    for step in "${alone[@]}"; do exec_step "$step"; done
 }
 
 run_node_steps() { # plan-file — once per run, whatever the engines
@@ -724,7 +815,8 @@ cfg="$(jq -cn \
     --argjson groups "$(printf '%s\n' "${groups[@]:-}" | jq -R . | jq -cs 'map(select(length > 0))')" \
     --argjson xgroups "$(printf '%s\n' "${xgroups[@]:-}" | jq -R . | jq -cs 'map(select(length > 0))')" \
     --argjson workers "$workers" --arg mode "$mode" --arg junit "$junit" \
-    '{engines: $engines, suites: $suites, paths: $paths, groups: $groups, xgroups: $xgroups, workers: $workers, mode: $mode, junit: $junit}')"
+    --argjson dbpaths "$(if [[ -f "$root/tests/zones.json" ]]; then jq -c '.database // null' "$root/tests/zones.json"; else echo null; fi)" \
+    '{engines: $engines, suites: $suites, paths: $paths, groups: $groups, xgroups: $xgroups, workers: $workers, mode: $mode, junit: $junit, dbpaths: $dbpaths}')"
 
 plan="$(jq -n --argjson cfg "$cfg" --slurpfile inv "$inventory" '$inv[0] | '"$PLAN_JQ")" || die 'cannot build the plan'
 if jq -e 'has("error")' >/dev/null <<<"$plan"; then

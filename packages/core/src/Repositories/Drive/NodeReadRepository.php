@@ -67,7 +67,9 @@ final class NodeReadRepository
 
     public function find(int|string $id): ?Node
     {
-        return $this->query()->find($id);
+        $query = $this->query();
+
+        return Identity::fitsKey($query->getModel(), $id) ? $query->find($id) : null;
     }
 
     /**

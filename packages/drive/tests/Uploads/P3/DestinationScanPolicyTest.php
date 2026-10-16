@@ -133,7 +133,8 @@ it('SEC-R03 folder COPY creates every child obligation and later failure rolls b
     $beforeNodes = Node::query()->count();
     $writes = 0;
     app(VaulterDatabase::class)->connection()->listen(function ($query) use (&$writes): void {
-        if (str_starts_with($query->sql, 'insert into "v_scan_obligations"') && ++$writes === 2) {
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        if (str_starts_with(str_replace('`', '"', $query->sql), 'insert into "v_scan_obligations"') && ++$writes === 2) {
             throw new RuntimeException('fixture obligation failure');
         }
     });

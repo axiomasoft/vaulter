@@ -32,11 +32,7 @@ beforeEach(function (): void {
 
 function sequenceContractState(): array
 {
-    $db = app(VaulterDatabase::class)->connection();
-
-    return array_map(static fn (string $table): array => $db->table($table)->orderBy($table === 'v_file_revision_blobs' ? 'blob_id' : 'id')->get()->map(fn ($row): array => (array) $row)->all(), [
-        'v_nodes', 'v_files', 'v_file_revisions', 'v_blobs', 'v_file_revision_blobs', 'v_drives', 'v_activity', 'v_outbox',
-    ]);
+    return DriveTestHelpers::writeTablesSnapshot();
 }
 
 it('SEC-R19-noop checks a current or stale expectation before every effective no-op', function (string $operation): void {

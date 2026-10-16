@@ -70,10 +70,12 @@ final readonly class SchemaTablesCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        $existing = array_column($this->database->connection()->getSchemaBuilder()->getTables(), 'name');
+        // hasTable() asks about the connection's own database: getTables() without a schema lists every database of a MySQL
+        // server, so a table of a neighbouring database would hide a missing one.
+        $builder = $this->database->connection()->getSchemaBuilder();
         $missing = [];
         foreach (self::ENTITIES as $entity) {
-            if (!in_array($this->tables->table($entity), $existing, true)) {
+            if (!$builder->hasTable($this->tables->table($entity))) {
                 $missing[] = $this->tables->table($entity);
             }
         }

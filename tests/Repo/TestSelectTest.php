@@ -58,9 +58,9 @@ function s_git(string $root, string ...$args): string
  * @param  array<int, string>                                $args
  * @return array{0: int, 1: array<string, mixed>, 2: string}
  */
-function s_select(array $args, ?string $root = null): array
+function s_select(array $args, ?string $root = null, array $env = []): array
 {
-    [$code, $out, $err] = s_exec([PHP_BINARY, s_root().'/scripts/test-select.php', '--json', ...($root === null ? [] : ["--root=$root"]), ...$args]);
+    [$code, $out, $err] = s_exec([PHP_BINARY, s_root().'/scripts/test-select.php', '--json', ...($root === null ? [] : ["--root=$root"]), ...$args], env: $env);
     $plan = json_decode($out, true);
     expect($plan)->toBeArray("selector printed no JSON (exit $code): $out $err");
 
@@ -271,7 +271,8 @@ it('refuses a base that does not resolve and a root that is not a work tree, nam
     mkdir($bare.'/tests', 0o777, true);
     register_shutdown_function(static fn () => s_rmdir($bare));
     file_put_contents($bare.'/tests/zones.json', json_encode(s_map()));
-    [$code, $plan] = s_select([], $bare);
+    // the temp directory may itself sit inside a work tree (a runner's private TMPDIR): git must not look above $bare
+    [$code, $plan] = s_select([], $bare, ['GIT_CEILING_DIRECTORIES' => dirname($bare)]);
     expect($code)->toBe(2)->and($plan['errors'][0])->toContain('not a git work tree');
 });
 
