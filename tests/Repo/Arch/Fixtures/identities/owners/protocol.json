@@ -261,6 +261,12 @@
         },
         {
             "match": "prefix",
+            "value": "morph:Vaulter\\VaulterServiceProvider::",
+            "owner": "core",
+            "why": "the kernel provider registers the stable morph aliases of the Vaulter models in the morph map"
+        },
+        {
+            "match": "prefix",
             "value": "morph:Vaulter\\Testing\\Contracts\\PermissionFixture",
             "owner": "drive",
             "why": "permission-driver contract tests exercise the drive access model"

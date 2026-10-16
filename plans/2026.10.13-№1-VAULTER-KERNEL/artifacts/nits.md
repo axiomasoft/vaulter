@@ -7,3 +7,4 @@ P4.6 | docs/reference/config.md, docs/ru/reference/config.md | таблица в
 P4.6 | packages/media/tests/TestCase.php:23 | комментарий «Core provides the Contracts\Cas seam, the Blob model + v_blobs schema» устарел (контракты, модель и схема — media)
 P4.6 | packages/drive/src/DriveModule.php:86 | docblock «two doctor checks» неверен (теперь 10 проверок, включая media.disk.probe/media.dedup.scope по D33)
 P4.6 | packages/media/src/Models/Cas/Blob.php:3 | docblock ссылается на v_file_revision_blobs/FileRevision — уйдёт с pins (P4.7)
+RC1-fix | docs/reference/compatibility.md:236 (+ru) | уточнить абзац про enforceMorphMap: алиасы теперь в morphMap(merge)

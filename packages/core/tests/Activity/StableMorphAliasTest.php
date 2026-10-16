@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Testing\Activity\ActivityTestHelpers;
@@ -13,6 +15,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\Panels\FakeProject;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\VaulterServiceProvider;
 
 /**
  * D34: the types of the Vaulter models stored in a polymorphic column are constant aliases, whatever the class name
@@ -70,4 +73,39 @@ it('is not renamed by a host morph map and is not refused by enforceMorphMap', f
 
     Relation::morphMap([Node::class => 'host-node'], true);
     expect((new Node)->getMorphClass())->toBe('vaulter.node');
+});
+
+it('registers the aliases in the morph map so a host morphTo() resolves them', function (): void {
+    $drive = DriveTestHelpers::drive()->model();
+    $root = Node::query()->findOrFail($drive->root_node_id);
+
+    expect(Relation::getMorphedModel('vaulter.node'))->toBe(Node::class)
+        ->and(Relation::getMorphedModel('vaulter.drive'))->toBe(Drive::class)
+        ->and(Relation::requiresMorphMap())->toBeFalse();
+
+    $holder = new class extends Model
+    {
+        protected $guarded = [];
+
+        public function subject(): MorphTo
+        {
+            return $this->morphTo('subject');
+        }
+    };
+    $holder->subject_type = 'vaulter.node';
+    $holder->subject_id = $root->getKey();
+
+    expect($holder->subject()->getResults()?->getKey())->toBe($root->getKey())
+        ->and($holder->subject()->getResults())->toBeInstanceOf(Node::class);
+});
+
+it('merges the aliases without erasing a host morph map entry', function (): void {
+    Relation::morphMap(['project' => FakeProject::class]);
+
+    // Register again over a map the host already filled: booted() runs the callback at once on a booted app.
+    $provider = new VaulterServiceProvider(app());
+    (new ReflectionMethod($provider, 'bootModuleKernel'))->invoke($provider);
+
+    expect(Relation::getMorphedModel('project'))->toBe(FakeProject::class)
+        ->and(Relation::getMorphedModel('vaulter.node'))->toBe(Node::class);
 });
