@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Cas\BlobReconciler;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\FailingPromoteContentStore;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Testing\Concurrency\ForkRace;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);

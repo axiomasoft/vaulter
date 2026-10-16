@@ -9,8 +9,15 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
+use Vaulter\Drive\Doctor\DedupScopeCheck;
+use Vaulter\Drive\Doctor\DiskProbeCheck;
+use Vaulter\Drive\Doctor\DiskSet;
+use Vaulter\Drive\DriveModule;
+use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\MediaModule;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 
@@ -153,4 +160,26 @@ it('makes no write to the database', function (): void {
     app(DoctorRunner::class)->run(new DoctorContext(production: false, probeStorage: false, sampleLimit: 10, now: CarbonImmutable::now('UTC')), ['media']);
 
     expect(array_filter($statements, static fn (string $sql): bool => preg_match('/^\s*(insert|update|delete|create|alter|drop)\b/i', $sql) === 1))->toBe([]);
+});
+
+it('contributes the disk and dedup-scope checks as the drive and keeps them with the drive module (D33)', function (): void {
+    $keys = array_map(static fn ($check): string => $check->key(), app(DoctorRegistry::class)->all());
+    $drive = (new ReflectionClassConstant(DriveModule::class, 'DOCTOR_CHECKS'))->getValue();
+    $media = new ReflectionMethod(MediaModule::class, 'register');
+
+    expect($keys)->toContain('media.disk.probe', 'media.dedup.scope')
+        ->and($drive)->toHaveKeys(['media.disk.probe', 'media.dedup.scope'])
+        ->and($drive['media.disk.probe'])->toBe(DiskProbeCheck::class)
+        ->and($drive['media.dedup.scope'])->toBe(DedupScopeCheck::class)
+        ->and(file_get_contents((string) $media->getFileName()))->not->toContain('DoctorCheck');
+});
+
+it('lists the media default disk and each distinct profile disk once', function (): void {
+    $registry = new ProfileRegistry;
+    $registry->register((new Profile)->key('default'));
+    $registry->register((new Profile)->key('second')->disk('beta'));
+    $registry->register((new Profile)->key('third')->disk('beta'));
+    config()->set('vaulter-media.disk', 'alpha');
+
+    expect(DiskSet::of(app(MediaConfig::class), $registry))->toBe(['alpha', 'beta']);
 });

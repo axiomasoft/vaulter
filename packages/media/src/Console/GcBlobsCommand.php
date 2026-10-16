@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Two-phase, race-safe blob garbage collection. ACL-blind, system context:
@@ -37,7 +37,7 @@ final class GcBlobsCommand extends Command
 
     public function handle(BlobGarbageCollector $collector): int
     {
-        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($collector));
+        return Tenancy::without(fn (): int => $this->runMaintenance($collector));
     }
 
     private function runMaintenance(BlobGarbageCollector $collector): int

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Cas\ContentScanner;
-use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Kernel;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Modules\Cardinality;
 
 // The media module owns two config-selected capabilities (knowledge/p3-modules#slots): the storage engine the

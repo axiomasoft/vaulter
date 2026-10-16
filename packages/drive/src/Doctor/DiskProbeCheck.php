@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Media\Doctor;
+namespace Vaulter\Drive\Doctor;
 
 use Illuminate\Support\Str;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Profiles\ProfileRegistry;
 
 /**

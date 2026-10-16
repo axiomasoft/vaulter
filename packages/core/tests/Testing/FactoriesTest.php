@@ -8,7 +8,7 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;

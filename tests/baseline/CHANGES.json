@@ -2696,82 +2696,91 @@
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_accepts_canonical_and_legacy_drive_scope_inputs_with_the_same_canonical_identity\"('drive')\"",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_accepts_canonical_and_legacy_drive_scope_inputs_with_the_same_canonical_identity\"('storage')\"",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_reports_canonical_drive_scope_while_retaining_historical_storage_paths",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_retains_legacy_paths_while_sharing_their_numeric_scope_keys\"('global', 'global')\"",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_retains_legacy_paths_while_sharing_their_numeric_scope_keys\"('s001', 'drive:001')\"",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_retains_legacy_paths_while_sharing_their_numeric_scope_keys\"('snull', 'legacy:snull')\"",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_retains_legacy_paths_while_sharing_their_numeric_scope_keys\"('t12', 'tenant:12')\"",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_retains_legacy_paths_while_sharing_their_numeric_scope_keys\"('tnull', 'legacy:tnull')\"",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_still_reads_objects_of_the_retired_global_scope",
       "replacement": [
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\""
       ],
       "reason": "legacy scope segments (global, s/t prefixes, snull/tnull) and the storage alias are no longer parsed; they are rejected",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "media"
     },
     {
       "suite": "core",
@@ -3686,10 +3695,11 @@
       "suite": "media",
       "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_finds_blobs_with_a_legacy_scope",
       "replacement": [
-        "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_makes_no_write_to_the_database"
+        "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_makes_no_write_to_the_database"
       ],
       "reason": "LegacyScopesCheck removed with the legacy scopes",
-      "decision": "D21"
+      "decision": "D21",
+      "new_suite": "drive"
     },
     {
       "suite": "drive",
@@ -4450,6 +4460,317 @@
       ],
       "reason": "the migrations are no longer published (each package runs its own from vendor/), so the guard that the install guide warns about publishing them now guards that it says they are not published",
       "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\BlobDedupScopeTest::__pest_evaluable_it_допускает_одинаковый_sha256_в_разных_scope",
+      "new": "P\\Tests\\Cas\\BlobDedupScopeTest::__pest_evaluable_it_допускает_одинаковый_sha256_в_разных_scope",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\BlobDedupScopeTest::__pest_evaluable_it_отвергает_одинаковый_sha256_в_одном_scope",
+      "new": "P\\Tests\\Cas\\BlobDedupScopeTest::__pest_evaluable_it_отвергает_одинаковый_sha256_в_одном_scope",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\BlobDedupScopeTest::__pest_evaluable_it_хранит_state_колонки_блоба_для_CAS_логики_M1b",
+      "new": "P\\Tests\\Cas\\BlobDedupScopeTest::__pest_evaluable_it_хранит_state_колонки_блоба_для_CAS_логики_M1b",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Testing\\ContractSuitesTest::__pest_evaluable_it_accepts_a_scanner_that_maps_every_outcome_as_the_lifecycle_records_it",
+      "new": "P\\Tests\\Unit\\ContentScannerContractSuiteTest::__pest_evaluable_it_accepts_a_scanner_that_maps_every_outcome_as_the_lifecycle_records_it",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Testing\\ContractSuitesTest::__pest_evaluable_it_rejects_a_scanner_that_mistakes_an_unreadable_stream_for_a_clean_file",
+      "new": "P\\Tests\\Unit\\ContentScannerContractSuiteTest::__pest_evaluable_it_rejects_a_scanner_that_mistakes_an_unreadable_stream_for_a_clean_file",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Testing\\ContractSuitesTest::__pest_evaluable_it_rejects_a_scanner_that_turns_unreadable_bytes_into_a_verdict__and_accepts_one_that_throws_or_fails",
+      "new": "P\\Tests\\Unit\\ContentScannerContractSuiteTest::__pest_evaluable_it_rejects_a_scanner_that_turns_unreadable_bytes_into_a_verdict__and_accepts_one_that_throws_or_fails.",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Testing\\ContractSuitesTest::__pest_evaluable_it_rejects_a_scanner_whose_outcome_does_not_match_the_sample",
+      "new": "P\\Tests\\Unit\\ContentScannerContractSuiteTest::__pest_evaluable_it_rejects_a_scanner_whose_outcome_does_not_match_the_sample",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_gives_every_upload_its_own_scope_when_deduplication_is_off",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_gives_every_upload_its_own_scope_when_deduplication_is_off",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('../g')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('../g')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('d-')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('d-')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('d-~')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('d-~')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('d-~YQ')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('d-~YQ')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('t-~bad=')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('t-~bad=')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('unknown')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('unknown')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('001')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('001')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('019a0000-1234-7000-8000-123456789abc')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('019a0000-1234-7000-8000-123456789abc')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('01ARZ3NDEKTSV4RRFFQ69G5FAV')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('01ARZ3NDEKTSV4RRFFQ69G5FAV')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('host/project')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('host/project')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('équipe')\"",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_round_trips_lossless_CAS_scope_identifiers\"('équipe')\"",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_selects_the_host_scope_without_coercing_identifiers_and_never_builds_global",
+      "new": "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_selects_the_host_scope_without_coercing_identifiers_and_never_builds_global",
+      "new_suite": "media",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_does_not_call_a_disk_healthy_when_the_test_object_cannot_be_deleted",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_does_not_call_a_disk_healthy_when_the_test_object_cannot_be_deleted",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_does_not_touch_a_disk_without___probe_storage",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_does_not_touch_a_disk_without___probe_storage",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_makes_no_write_to_the_database",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_makes_no_write_to_the_database",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_probes_every_profile_disk_once",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_probes_every_profile_disk_once",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_probes_in_production_without_the_flag",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_probes_in_production_without_the_flag",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_reports_a_disk_that_fails_without_quoting_the_driver_message_and_leaves_nothing_behind",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_reports_a_disk_that_fails_without_quoting_the_driver_message_and_leaves_nothing_behind",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_reports_a_disk_that_is_not_configured",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_reports_a_disk_that_is_not_configured",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_warns_when_tenant_wide_deduplication_spans_disks",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_warns_when_tenant_wide_deduplication_spans_disks",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Doctor\\MediaDoctorChecksTest::__pest_evaluable_it_writes__reads_and_deletes_a_test_object_on_the_disk_when_probing",
+      "new": "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_writes__reads_and_deletes_a_test_object_on_the_disk_when_probing",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.6)",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Cas_never_uses_the_Testing_namespaces",
+      "new": "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Cas_never_uses_the_Testing_namespaces",
+      "new_suite": "media",
+      "reason": "P4.6: the Vaulter\\Cas namespace moved to media (Vaulter\\Media\\Cas), where the same boundary is checked",
+      "decision": "D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Profiles\\ScanPolicyAlgebraTest::__pest_evaluable_it_rejects_contradictory_required_profile_modes\"(Vaulter\\Enums\\Cas\\ScanMode Enum (NewContentOnly, 'new_content_only'))\"",
+      "new": "P\\Packages\\core\\tests\\Profiles\\ScanPolicyAlgebraTest::__pest_evaluable_it_rejects_contradictory_required_profile_modes\"(Vaulter\\Media\\Enums\\Cas\\ScanMode Enum (NewContentOnly, 'new_content_only'))\"",
+      "reason": "P4.6: the dataset label carries the FQCN of the enum, which moved to media",
+      "decision": "D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Profiles\\ScanPolicyAlgebraTest::__pest_evaluable_it_rejects_contradictory_required_profile_modes\"(Vaulter\\Enums\\Cas\\ScanMode Enum (Off, 'off'))\"",
+      "new": "P\\Packages\\core\\tests\\Profiles\\ScanPolicyAlgebraTest::__pest_evaluable_it_rejects_contradictory_required_profile_modes\"(Vaulter\\Media\\Enums\\Cas\\ScanMode Enum (Off, 'off'))\"",
+      "reason": "P4.6: the dataset label carries the FQCN of the enum, which moved to media",
+      "decision": "D6"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_caps_sweep_and_pending_batches_while_skipped_rows_stay_eligible\"(Vaulter\\Enums\\Cas\\BlobStatus Enum (Pending, 'pending'))\"",
+      "new": "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_caps_sweep_and_pending_batches_while_skipped_rows_stay_eligible\"(Vaulter\\Media\\Enums\\Cas\\BlobStatus Enum (Pending, 'pending'))\"",
+      "reason": "P4.6: the dataset label carries the FQCN of the enum, which moved to media",
+      "decision": "D6"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_rechecks_status_liveness_and_grace_for_a_materialized_deletion_batch\"(Vaulter\\Enums\\Cas\\BlobStatus Enum (Pending, 'pending'))\"",
+      "new": "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_rechecks_status_liveness_and_grace_for_a_materialized_deletion_batch\"(Vaulter\\Media\\Enums\\Cas\\BlobStatus Enum (Pending, 'pending'))\"",
+      "reason": "P4.6: the dataset label carries the FQCN of the enum, which moved to media",
+      "decision": "D6"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_caps_sweep_and_pending_batches_while_skipped_rows_stay_eligible\"(Vaulter\\Enums\\Cas\\BlobStatus Enum (Tombstoned, 'tombstoned'))\"",
+      "new": "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_caps_sweep_and_pending_batches_while_skipped_rows_stay_eligible\"(Vaulter\\Media\\Enums\\Cas\\BlobStatus Enum (Tombstoned, 'tombstoned'))\"",
+      "reason": "P4.6: the dataset label carries the FQCN of the enum, which moved to media",
+      "decision": "D6"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_rechecks_status_liveness_and_grace_for_a_materialized_deletion_batch\"(Vaulter\\Enums\\Cas\\BlobStatus Enum (Tombstoned, 'tombstoned'))\"",
+      "new": "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_rechecks_status_liveness_and_grace_for_a_materialized_deletion_batch\"(Vaulter\\Media\\Enums\\Cas\\BlobStatus Enum (Tombstoned, 'tombstoned'))\"",
+      "reason": "P4.6: the dataset label carries the FQCN of the enum, which moved to media",
+      "decision": "D6"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Arch\\ArchTest::__pest_evaluable_the_package_exposes_no_public_contract_surface__VLT_REL_P2_2_",
+      "new": "P\\Tests\\Arch\\ArchTest::__pest_evaluable_the_contracts_of_the_package_are_the_CAS_seams_under_Contracts_Cas_and_nothing_else__D6_",
+      "reason": "P4.6: media now owns the CAS contracts, the guard states that they are the only ones and interfaces",
+      "decision": "D6"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Doctor_never_uses_the_Testing_namespaces",
+      "new": "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Cas_never_uses_the_Testing_namespaces",
+      "reason": "P4.6: the Doctor namespace moved to drive (D33); the boundary is checked for each remaining media namespace",
+      "decision": "D33"
+    },
+    {
+      "suite": "media",
+      "old": "P\\Tests\\Recipes\\MediaRecipeTest::__pest_evaluable_it_keeps_tenants_apart_under_the_documented_dedup_scope__troubleshooting_guide_.",
+      "new": "P\\Tests\\Recipes\\MediaRecipeTest::__pest_evaluable_it_keeps_tenants_apart_under_the_documented_dedup_scope__troubleshooting_guide_",
+      "reason": "the discovered name no longer ends with a dot",
+      "decision": "D14"
     }
   ],
   "additions": {
@@ -4677,7 +4998,7 @@
       ]
     },
     "core": {
-      "count": 457,
+      "count": 455,
       "names": [
         "P\\Packages\\core\\tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_gives_the_host_subclass_configured_in_vaulter_models_the_same_alias",
         "P\\Packages\\core\\tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_is_not_renamed_by_a_host_morph_map_and_is_not_refused_by_enforceMorphMap",
@@ -5098,6 +5419,8 @@
         "P\\Packages\\core\\tests\\Outbox\\WebhookFanoutConsumerTest::__pest_evaluable_it_skips_endpoints_not_subscribed_to_the_type_and_inactive_ones",
         "P\\Packages\\core\\tests\\Profiles\\ProfilePolicyTest::__pest_evaluable_it_conjoins_the_comments_flag_with_the_option_of_the_module_that_owns_comments",
         "P\\Packages\\core\\tests\\Profiles\\ProfilePolicyTest::__pest_evaluable_it_treats_comments_as_globally_off_when_no_module_contributes_the_option_and_leaves_the_other_flags_untouched",
+        "P\\Packages\\core\\tests\\Profiles\\ScanPolicyAlgebraTest::__pest_evaluable_it_rejects_contradictory_required_profile_modes\"(Vaulter\\Media\\Enums\\Cas\\ScanMode Enum (NewContentOnly, 'new_content_only'))\"",
+        "P\\Packages\\core\\tests\\Profiles\\ScanPolicyAlgebraTest::__pest_evaluable_it_rejects_contradictory_required_profile_modes\"(Vaulter\\Media\\Enums\\Cas\\ScanMode Enum (Off, 'off'))\"",
         "P\\Packages\\core\\tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_registers_the_kernel_config__database_and_observability_seams",
         "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_preserves_host_rate_limiters_when_booted_again",
         "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_registers_the_manager_and_file_presentation_seams",
@@ -5119,13 +5442,9 @@
         "P\\Packages\\core\\tests\\Support\\DomainExceptionStatusTest::__pest_evaluable_it_renders_the_documented_domain_code_and_HTTP_status\"dataset \"broken extension\"\"",
         "P\\Packages\\core\\tests\\Support\\DomainExceptionStatusTest::__pest_evaluable_it_renders_the_documented_domain_code_and_HTTP_status\"dataset \"invalid module graph\"\"",
         "P\\Packages\\core\\tests\\Support\\DomainExceptionStatusTest::__pest_evaluable_it_renders_the_documented_domain_code_and_HTTP_status\"dataset \"module not ready\"\"",
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('g')\"",
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('global')\"",
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('s001')\"",
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('snull')\"",
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('t12')\"",
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('tnull')\"",
-        "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_selects_the_drive_scope_for_the_drive_dedup_setting",
+        "P\\Packages\\core\\tests\\Tenancy\\TenancyWithoutTest::__pest_evaluable_it_is_what_VaulterManager__withoutTenancy_delegates_to",
+        "P\\Packages\\core\\tests\\Tenancy\\TenancyWithoutTest::__pest_evaluable_it_nests_and_restores_the_previous_state_when_the_callback_throws",
+        "P\\Packages\\core\\tests\\Tenancy\\TenancyWithoutTest::__pest_evaluable_it_runs_the_callback_inside_the_tenancy_bypass_and_returns_its_value",
         "P\\Packages\\core\\tests\\Unit\\IdentityFitsKeyTest::__pest_evaluable_it_lets_only_a_key_the_column_can_hold_reach_a_query",
         "P\\Packages\\core\\tests\\Unit\\InstallationDocsGuardTest::__pest_evaluable_it_tells_the_reader_the_migrations_run_from_vendor_and_are_not_published__D40_",
         "P\\Packages\\core\\tests\\Webhooks\\WebhookEndpointCrudTest::__pest_evaluable_it_answers_an_oversized_endpoint_id_after_the_ability_check__403_without_manage__404_with_it",
@@ -5139,30 +5458,57 @@
       ]
     },
     "media": {
-      "count": 12,
+      "count": 37,
       "names": [
+        "P\\Tests\\Arch\\ArchTest::__pest_evaluable_the_contracts_of_the_package_are_the_CAS_seams_under_Contracts_Cas_and_nothing_else__D6_",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Content_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Contracts_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Enums_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_MediaModule_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Models_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Repositories_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Schema_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Support_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_ValueObjects_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_caps_sweep_and_pending_batches_while_skipped_rows_stay_eligible\"(Vaulter\\Media\\Enums\\Cas\\BlobStatus Enum (Pending, 'pending'))\"",
+        "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_caps_sweep_and_pending_batches_while_skipped_rows_stay_eligible\"(Vaulter\\Media\\Enums\\Cas\\BlobStatus Enum (Tombstoned, 'tombstoned'))\"",
+        "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_rechecks_status_liveness_and_grace_for_a_materialized_deletion_batch\"(Vaulter\\Media\\Enums\\Cas\\BlobStatus Enum (Pending, 'pending'))\"",
+        "P\\Tests\\Cas\\BlobGcBatchTest::__pest_evaluable_it_rechecks_status_liveness_and_grace_for_a_materialized_deletion_batch\"(Vaulter\\Media\\Enums\\Cas\\BlobStatus Enum (Tombstoned, 'tombstoned'))\"",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('bigint', 'drive')\"",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('ulid', 'drive')\"",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('uuid7', 'drive')\"",
         "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_reads_canonical_scope_changes_on_the_live_repository_after_boot",
         "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_reads_the_dedup_scope_from_the_canonical_media_environment_setting",
+        "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_reads_the_swappable_blob_model_from_vaulter_media_models_blob_and_refuses_a_class_that_is_not_a_blob__D6_",
         "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_refuses_the_global_scope_and_unknown_scopes\"dataset \"global\"\"",
         "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_refuses_the_global_scope_and_unknown_scopes\"dataset \"not a string\"\"",
         "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_refuses_the_global_scope_and_unknown_scopes\"dataset \"unknown\"\"",
         "P\\Tests\\Configuration\\StorageDriverCapabilityTest::__pest_evaluable_it_defines_the_storage_driver_as_a_required_single_capability_resolved_from_config__Flysystem_by_default",
-        "P\\Tests\\Configuration\\StorageDriverCapabilityTest::__pest_evaluable_it_keeps_the_content_scanner_optional__none_is_configured__none_is_available"
+        "P\\Tests\\Configuration\\StorageDriverCapabilityTest::__pest_evaluable_it_keeps_the_content_scanner_optional__none_is_configured__none_is_available",
+        "P\\Tests\\Recipes\\MediaRecipeTest::__pest_evaluable_it_keeps_tenants_apart_under_the_documented_dedup_scope__troubleshooting_guide_",
+        "P\\Tests\\Support\\UtcDateTimeCastTest::__pest_evaluable_it_is_the_cast_of_the_quarantine_timestamp_of_the_blob_model",
+        "P\\Tests\\Support\\UtcDateTimeCastTest::__pest_evaluable_it_reads_a_stored_timestamp_as_a_UTC_immutable_date",
+        "P\\Tests\\Support\\UtcDateTimeCastTest::__pest_evaluable_it_refuses_a_value_that_is_neither_a_string_nor_a_date",
+        "P\\Tests\\Support\\UtcDateTimeCastTest::__pest_evaluable_it_writes_any_date_in_UTC_and_keeps_null",
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('g')\"",
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('global')\"",
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('s001')\"",
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('snull')\"",
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('t12')\"",
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('tnull')\"",
+        "P\\Tests\\Unit\\BlobScopeTest::__pest_evaluable_it_selects_the_drive_scope_for_the_drive_dedup_setting"
       ]
     },
     "drive": {
-      "count": 30,
+      "count": 32,
       "names": [
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_DriveModule_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Idempotency_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Schema_never_uses_the_Testing_namespaces",
         "P\\Tests\\Concurrency\\RootTransactionSnapshotTest::__pest_evaluable_it_sees_a_sibling_name_committed_by_a_peer_between_the_first_read_and_the_tree_lock",
         "P\\Tests\\Configuration\\ModuleRegistrationOrderTest::__pest_evaluable_it_retains_module_defaults_and_applies_host_settings_when_modules_register_before_core",
+        "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_contributes_the_disk_and_dedup_scope_checks_as_the_drive_and_keeps_them_with_the_drive_module__D33_",
+        "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_lists_the_media_default_disk_and_each_distinct_profile_disk_once",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_declares_the_drive_codes_located_in_core_under_the_drive_module__D39_",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_says_whether_a_drive_refusal_may_be_retried",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_answers_another_body_under_a_used_key_with_idempotency__key__reused",

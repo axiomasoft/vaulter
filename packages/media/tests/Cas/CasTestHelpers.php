@@ -6,18 +6,18 @@ namespace Vaulter\Media\Tests\Cas;
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Configuration\IdsConfig;
-use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Cas\Sha256ContentStore;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Shared builders for the CAS slice tests (M1b): a real Storage→Node→File→Version

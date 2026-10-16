@@ -19,7 +19,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\Fixtures\TestUser;

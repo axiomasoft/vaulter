@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D8', 'D14', 'D21', 'D22', 'D25', 'D29', 'D34', 'D36', 'D38', 'D39', 'D40'];
+const ID_ACCEPTED_DECISIONS = ['D6', 'D8', 'D14', 'D21', 'D22', 'D25', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -381,7 +381,8 @@ describe('committed fixtures', function (): void {
             ->and($items['config:vaulter-media.dedup.scope']['owner'])->toBe('media')
             ->and($items['env:VAULTER_TABLE_PREFIX']['config_keys'])->toBe(['vaulter.database.table_prefix'])
             ->and($items['env:VAULTER_ORPHAN_GRACE_HOURS']['config_keys'])->toBe(['vaulter-media.gc.orphan_grace_hours'])
-            ->and($items['config:vaulter.models.blob']['owner'])->toBe('media')
+            ->and($items['config:vaulter-media.models.blob']['owner'])->toBe('media')
+            ->and($items)->not->toHaveKey('config:vaulter.models.blob')
             ->and($items['publish:vaulter-config'])->toMatchArray(['owner' => 'core', 'via' => 'module:config'])
             ->and($items['config:vaulter.modules'])->toMatchArray(['default' => [], 'owner' => 'core'])
             ->and($items)->not->toHaveKey('config:vaulter.features.webhooks')

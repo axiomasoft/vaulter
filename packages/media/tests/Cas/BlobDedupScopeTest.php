@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Enums\Cas\BlobStatus;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 
 /**
  * Blob dedup-uniqueness is scoped (D18 / H.3): the same sha256 is unique only

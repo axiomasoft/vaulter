@@ -359,7 +359,7 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     // Events/Outbox/Models holds the outbox model of the kernel outbox (D29: Vaulter\Events\Outbox\Models\OutboxEvent).
     expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'Testing/Events', 'ValueObjects/Events', 'Webhooks/Events', 'Events/Outbox/Models'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
-        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ContentScannerContractTests.php', 'FileHandlerContractTests.php', 'ModuleContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
+        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'FileHandlerContractTests.php', 'ModuleContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
         ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'DriveEventType.php'])
         ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'ActivityTarget.php', 'EventScope.php', 'EventSubject.php', 'JournalEffect.php']);
 });
@@ -417,7 +417,7 @@ test('split classes resolve under their canonical domain namespace', function ()
     // leaves a class flat or under a wrong domain makes class_exists() false here.
     $expected = [
         'Vaulter\Models\Drive\Node',
-        'Vaulter\Models\Cas\Blob',
+        'Vaulter\Media\Models\Cas\Blob',
         'Vaulter\Models\Access\NodeGrant',
         'Vaulter\Models\Sharing\NodeShare',
         'Vaulter\Drive\Models\Uploads\UploadSession',
@@ -430,7 +430,7 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Profiles\UnknownProfileException',
         'Vaulter\Repositories\Drive\NodeReadRepository',
-        'Vaulter\Contracts\Cas\BlobStore',
+        'Vaulter\Media\Contracts\Cas\BlobStore',
         'Vaulter\Contracts\Access\PermissionDriver',
         'Vaulter\Documents\Content\TipTap\TipTapContent',
         'Vaulter\Access\ValueObjects\NodeAbilities',

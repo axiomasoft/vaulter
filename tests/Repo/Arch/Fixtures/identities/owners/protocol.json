@@ -309,9 +309,9 @@
         },
         {
             "match": "prefix",
-            "value": "serialized:cast:Vaulter\\Models\\Cas\\",
+            "value": "serialized:cast:Vaulter\\Media\\Models\\Cas\\",
             "owner": "media",
-            "why": "Models/Cas -> media"
+            "why": "Models/Cas -> media (P4.6: the model lives in vaulter-media)"
         },
         {
             "match": "prefix",
@@ -333,9 +333,9 @@
         },
         {
             "match": "exact",
-            "value": "serialized:config:vaulter.models.blob",
+            "value": "serialized:config:vaulter-media.models.blob",
             "owner": "media",
-            "why": "Models/Cas/Blob -> media"
+            "why": "Models/Cas/Blob -> media; the key moved to vaulter-media (D6)"
         },
         {
             "match": "exact",

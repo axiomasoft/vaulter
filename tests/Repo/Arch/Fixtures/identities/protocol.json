@@ -882,6 +882,30 @@
             "id": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.models.blob",
+            "id": "serialized:config:vaulter-media.models.blob",
+            "kind": "protocol",
+            "reason": "P4.6: the blob model moved to vaulter-media with the CAS slice, so its swap key lives in the media config root; the serialized default is Vaulter\\Media\\Models\\Cas\\Blob"
+        },
+        {
+            "change": "renamed",
+            "decision": "D33",
+            "from": "serialized:cast:Vaulter\\Models\\Cas\\Blob.quarantined_at",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.quarantined_at",
+            "kind": "protocol",
+            "reason": "P4.6: the model moved to media (Vaulter\\Media\\Models\\Cas\\Blob) and casts the timestamp with the media UTC cast Vaulter\\Media\\Support\\UtcDateTimeCast, not the drive scan cast"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:cast:Vaulter\\Models\\Cas\\Blob.status",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.status",
+            "kind": "protocol",
+            "reason": "P4.6: the model and the BlobStatus enum moved to media (Vaulter\\Media\\Enums\\Cas\\BlobStatus)"
         }
     ],
     "items": [
@@ -2899,6 +2923,28 @@
             }
         },
         {
+            "attribute": "quarantined_at",
+            "cast": "Vaulter\\Media\\Support\\UtcDateTimeCast",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.quarantined_at",
+            "model": "Vaulter\\Media\\Models\\Cas\\Blob",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/src/Models/Cas/Blob.php",
+                "symbol": "Vaulter\\Media\\Models\\Cas\\Blob::casts"
+            }
+        },
+        {
+            "attribute": "status",
+            "cast": "Vaulter\\Media\\Enums\\Cas\\BlobStatus",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.status",
+            "model": "Vaulter\\Media\\Models\\Cas\\Blob",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/src/Models/Cas/Blob.php",
+                "symbol": "Vaulter\\Media\\Models\\Cas\\Blob::casts"
+            }
+        },
+        {
             "attribute": "scope",
             "cast": "Vaulter\\Enums\\Access\\GrantScope",
             "id": "serialized:cast:Vaulter\\Models\\Access\\NodeGrant.scope",
@@ -2918,28 +2964,6 @@
             "source": {
                 "file": "packages/core/src/Models/Activity/Activity.php",
                 "symbol": "Vaulter\\Models\\Activity\\Activity::casts"
-            }
-        },
-        {
-            "attribute": "quarantined_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Cas\\Blob.quarantined_at",
-            "model": "Vaulter\\Models\\Cas\\Blob",
-            "owner": "media",
-            "source": {
-                "file": "packages/core/src/Models/Cas/Blob.php",
-                "symbol": "Vaulter\\Models\\Cas\\Blob::casts"
-            }
-        },
-        {
-            "attribute": "status",
-            "cast": "Vaulter\\Enums\\Cas\\BlobStatus",
-            "id": "serialized:cast:Vaulter\\Models\\Cas\\Blob.status",
-            "model": "Vaulter\\Models\\Cas\\Blob",
-            "owner": "media",
-            "source": {
-                "file": "packages/core/src/Models/Cas/Blob.php",
-                "symbol": "Vaulter\\Models\\Cas\\Blob::casts"
             }
         },
         {
@@ -3228,6 +3252,18 @@
             }
         },
         {
+            "config_key": "vaulter-media.models.blob",
+            "fqcns": [
+                "Vaulter\\Media\\Models\\Cas\\Blob"
+            ],
+            "id": "serialized:config:vaulter-media.models.blob",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "config_key": "vaulter-media.storage_driver",
             "fqcns": [
                 "Vaulter\\Media\\Cas\\FlysystemStorageDriver"
@@ -3330,18 +3366,6 @@
             ],
             "id": "serialized:config:vaulter.models.activity",
             "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.blob",
-            "fqcns": [
-                "Vaulter\\Models\\Cas\\Blob"
-            ],
-            "id": "serialized:config:vaulter.models.blob",
-            "owner": "media",
             "source": {
                 "file": "packages/core/config/vaulter.php",
                 "symbol": "<file>"

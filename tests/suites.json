@@ -53,7 +53,6 @@
             "packages/core/tests/PublicApi/SequenceOptionContractTest.php",
             "packages/core/tests/PublicApi/UploadSourceTest.php",
             "packages/core/tests/Unit/AccessEnumsTest.php",
-            "packages/core/tests/Unit/BlobScopeTest.php",
             "packages/core/tests/Unit/DatabaseCompatibilityDocsGuardTest.php",
             "packages/core/tests/Unit/DatabaseSchemaReuseTest.php",
             "packages/core/tests/Unit/EnumTest.php",
@@ -472,7 +471,6 @@
             "packages/core/tests/Recipes/PermissionDriverRecipeTest.php",
             "packages/core/tests/Schema/ActivitySchemaTest.php",
             "packages/core/tests/Schema/BlobDedupIndexTest.php",
-            "packages/core/tests/Schema/BlobDedupScopeTest.php",
             "packages/core/tests/Schema/CanonicalSchemaTest.php",
             "packages/core/tests/Schema/CursorTieBreakerTest.php",
             "packages/core/tests/Schema/FileHeadIntegrityTest.php",
@@ -645,6 +643,7 @@
             "packages/core/tests/Operations/ProblemMappingTest.php",
             "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
             "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+            "packages/core/tests/Tenancy/TenancyWithoutTest.php",
             "packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php"
           ]
         },
@@ -730,7 +729,9 @@
             "packages/media/tests/Arch/ArchTest.php",
             "packages/media/tests/Arch/ConfigurationBoundaryTest.php",
             "packages/media/tests/Arch/PublicApiSnapshotTest.php",
-            "packages/media/tests/Arch/TestingBoundaryTest.php"
+            "packages/media/tests/Arch/TestingBoundaryTest.php",
+            "packages/media/tests/Unit/BlobScopeTest.php",
+            "packages/media/tests/Unit/ContentScannerContractSuiteTest.php"
           ]
         },
         {
@@ -772,6 +773,7 @@
             "packages/media/tests/Cas/BlobCommitTest.php",
             "packages/media/tests/Cas/BlobCrossScopeGcTest.php",
             "packages/media/tests/Cas/BlobDedupScopeBehaviourTest.php",
+            "packages/media/tests/Cas/BlobDedupScopeTest.php",
             "packages/media/tests/Cas/BlobFindOrCreateTest.php",
             "packages/media/tests/Cas/BlobGarbageCollectorTest.php",
             "packages/media/tests/Cas/BlobGcBatchTest.php",
@@ -786,7 +788,6 @@
             "packages/media/tests/Cas/OrphanGraceConfigTest.php",
             "packages/media/tests/Cas/ReconcileBlobsOrphanCommandTest.php",
             "packages/media/tests/Cas/SweepPendingSerializableTest.php",
-            "packages/media/tests/Doctor/MediaDoctorChecksTest.php",
             "packages/media/tests/Feature/BootTest.php",
             "packages/media/tests/Observability/P85Section53MediaMetricsTest.php",
             "packages/media/tests/Recipes/MediaRecipeTest.php"
@@ -807,7 +808,8 @@
           "files": [
             "packages/media/tests/Configuration/MediaConfigTest.php",
             "packages/media/tests/Configuration/StorageDriverCapabilityTest.php",
-            "packages/media/tests/Console/SchedulingRegistrarTest.php"
+            "packages/media/tests/Console/SchedulingRegistrarTest.php",
+            "packages/media/tests/Support/UtcDateTimeCastTest.php"
           ]
         }
       ]
@@ -917,6 +919,7 @@
             "serial"
           ],
           "files": [
+            "packages/drive/tests/Doctor/DiskDoctorChecksTest.php",
             "packages/drive/tests/Doctor/DriveDoctorChecksTest.php",
             "packages/drive/tests/Doctor/ScanDoctorChecksTest.php",
             "packages/drive/tests/Drive/CopyMutationContractsTest.php",

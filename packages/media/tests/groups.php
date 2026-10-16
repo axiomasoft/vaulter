@@ -13,6 +13,7 @@ return [
         'Cas/BlobCommitTest.php',
         'Cas/BlobCrossScopeGcTest.php',
         'Cas/BlobDedupScopeBehaviourTest.php',
+        'Cas/BlobDedupScopeTest.php',
         'Cas/BlobFindOrCreateTest.php',
         'Cas/BlobGarbageCollectorTest.php',
         'Cas/BlobGcBatchTest.php',

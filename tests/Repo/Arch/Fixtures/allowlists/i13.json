@@ -47,78 +47,78 @@
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Cas/BlobStore.php",
+            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Cas\\BlobStore::attach()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::attach()",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Cas/BlobStore.php",
+            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Cas\\BlobStore::attach()",
+            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::attach()",
             "target": "Vaulter\\Models\\Drive\\FileRevision",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Cas/BlobStore.php",
+            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
             "kind": "return",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Cas\\BlobStore::commit()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::commit()",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Cas/BlobStore.php",
+            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
             "kind": "return",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Cas\\BlobStore::commitStaged()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::commitStaged()",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Cas/BlobStore.php",
+            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Cas\\BlobStore::detach()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::detach()",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Cas/BlobStore.php",
+            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Cas\\BlobStore::detach()",
+            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::detach()",
             "target": "Vaulter\\Models\\Drive\\FileRevision",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Cas/BlobStore.php",
+            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Cas\\BlobStore::read()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::read()",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
@@ -2076,7 +2076,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Media\\Cas\\BlobStore::attach()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
@@ -2098,7 +2098,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Media\\Cas\\BlobStore::commit()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
@@ -2109,7 +2109,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Media\\Cas\\BlobStore::commitStaged()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
@@ -2120,7 +2120,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Media\\Cas\\BlobStore::detach()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         },
         {
@@ -2142,7 +2142,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Media\\Cas\\BlobStore::read()",
-            "target": "Vaulter\\Models\\Cas\\Blob",
+            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "signature"
         }
     ],

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Tests\Fixtures\Testing;
+namespace Vaulter\Media\Tests\Fixtures\Testing;
 
-use Vaulter\Content\ScanInput;
-use Vaulter\Content\ScanResult;
-use Vaulter\Contracts\Cas\ContentScanner;
-use Vaulter\Enums\Cas\ScanVerdict;
+use Vaulter\Media\Content\ScanInput;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 /** Breaks the scanner contract: a read error is taken for an empty file, which is clean. */
 final class ReadErrorSwallowingScanner implements ContentScanner

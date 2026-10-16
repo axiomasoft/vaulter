@@ -9,15 +9,14 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Cas\BlobLock;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 
 /**
@@ -316,7 +315,7 @@ final readonly class BlobGarbageCollector
      */
     private function markBatch(Collection $batch, int $graceHours): int
     {
-        $model = $this->vaulterConfig->model('blob');
+        $model = $this->mediaConfig->blobModel();
 
         // Custom models/observers may change another candidate while saving.
         // Preserve the per-row fresh liveness check for those extension points.
@@ -347,7 +346,7 @@ final readonly class BlobGarbageCollector
                 $this->lock->acquireMany($keys);
             }
 
-            $model = $this->vaulterConfig->model('blob');
+            $model = $this->mediaConfig->blobModel();
             $query = $model::query()->whereKey($batch->modelKeys())->orderBy((new $model)->getKeyName());
 
             if ($this->lock->usesRowLock()) {
@@ -400,7 +399,7 @@ final readonly class BlobGarbageCollector
      */
     private function candidateBatches(\Closure $scope): iterable
     {
-        $model = $this->vaulterConfig->model('blob');
+        $model = $this->mediaConfig->blobModel();
         $query = $scope($model::query());
         $key = $query->getModel()->getKeyName();
         $upper = (clone $query)->reorder($key, 'desc')->value($key);

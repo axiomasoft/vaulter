@@ -8,7 +8,6 @@ use Vaulter\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Content\ScanBackfillRun;
 use Vaulter\Models\Content\ScanEvidenceRecord;
 use Vaulter\Models\Content\ScanObligation;
@@ -223,7 +222,6 @@ return [
         'scan_policy_state' => ScanPolicyState::class,
         'scan_backfill_run' => ScanBackfillRun::class,
         'file_revision' => FileRevision::class,
-        'blob' => Blob::class,
         'file_revision_blob' => FileRevisionBlob::class,
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,

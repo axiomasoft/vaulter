@@ -9,9 +9,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Content\ImmutableContentIdentity;
-use Vaulter\Content\SignedContentUrl;
-use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -22,6 +19,9 @@ use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Support\ContentResponder;
 use Vaulter\Http\Support\DownloadHeaders;
+use Vaulter\Media\Content\ImmutableContentIdentity;
+use Vaulter\Media\Content\SignedContentUrl;
+use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
 
 /**
  * The one HTTP egress point: fresh authorization and scan check per request, the exact

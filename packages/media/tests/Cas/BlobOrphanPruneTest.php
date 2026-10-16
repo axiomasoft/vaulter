@@ -6,13 +6,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Console\Command\Command;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobReconciler;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\PhantomListingContentStore;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * The DESTRUCTIVE orphan prune (master plan P4 #11 / H.3): physically deleting true

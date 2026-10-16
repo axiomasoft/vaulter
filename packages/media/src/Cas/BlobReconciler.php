@@ -5,19 +5,17 @@ declare(strict_types=1);
 namespace Vaulter\Media\Cas;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Cas\BlobLock;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\ListableContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\ListableContentStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Support\Identity;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Blob reconciliation: ref_count is a CACHE, not the truth, so it drifts and
@@ -69,7 +67,6 @@ final readonly class BlobReconciler
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private MediaConfig $mediaConfig,
-        private VaulterConfig $vaulterConfig,
     ) {}
 
     /**
@@ -337,6 +334,6 @@ final readonly class BlobReconciler
      */
     private function blobModel(): string
     {
-        return $this->vaulterConfig->model('blob');
+        return $this->mediaConfig->blobModel();
     }
 }

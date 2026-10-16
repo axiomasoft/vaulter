@@ -6,17 +6,16 @@ namespace Vaulter\Media\Cas;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Cas\BlobLock;
-use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Stage and hash outside the transaction, then lock (scope_key, sha256) before

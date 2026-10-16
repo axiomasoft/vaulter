@@ -245,6 +245,14 @@
             "id": "publish:vaulter-migrations",
             "kind": "config",
             "reason": "P4.5: the migrations are not published; each package runs the migrations of its tables from vendor/"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "config:vaulter.models.blob",
+            "id": "config:vaulter-media.models.blob",
+            "kind": "config",
+            "reason": "P4.6: the blob model moved to vaulter-media with the CAS slice, so its swap key lives in the media config root"
         }
     ],
     "items": [
@@ -1215,6 +1223,17 @@
             }
         },
         {
+            "default": "Vaulter\\Media\\Models\\Cas\\Blob",
+            "id": "config:vaulter-media.models.blob",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "default": "dailyAt:04:00",
             "id": "config:vaulter-media.schedule.blobs_gc",
             "owner": "media",
@@ -1811,17 +1830,6 @@
             "default": "Vaulter\\Models\\Activity\\Activity",
             "id": "config:vaulter.models.activity",
             "owner": "drive",
-            "registered_defaults": true,
-            "root": "vaulter",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "default": "Vaulter\\Models\\Cas\\Blob",
-            "id": "config:vaulter.models.blob",
-            "owner": "media",
             "registered_defaults": true,
             "root": "vaulter",
             "source": {

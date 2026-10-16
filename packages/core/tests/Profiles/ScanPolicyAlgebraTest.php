@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Content\ScanPolicySpec;
-use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\UploadPolicy;

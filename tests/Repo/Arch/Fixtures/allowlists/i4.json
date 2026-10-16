@@ -295,7 +295,7 @@
             "reason": "проверка явно выбранного DirectContentUrlSigner: переводится в typed required capability без удаления fail-closed проверки (code-facts)",
             "removed_in": "never",
             "symbol": "Vaulter\\Providers\\DriveSliceRegistrar::boot",
-            "target": "\\Vaulter\\Contracts\\Cas\\DirectContentUrlSigner::class",
+            "target": "\\Vaulter\\Media\\Contracts\\Cas\\DirectContentUrlSigner::class",
             "view": "current"
         }
     ],

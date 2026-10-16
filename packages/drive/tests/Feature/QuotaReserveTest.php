@@ -11,7 +11,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;

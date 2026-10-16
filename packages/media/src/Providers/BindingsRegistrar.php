@@ -9,11 +9,11 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Modules\ModuleBindings;
 
 /**

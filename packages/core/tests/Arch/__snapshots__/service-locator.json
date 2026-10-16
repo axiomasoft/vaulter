@@ -18,7 +18,6 @@
     "core/src/Jobs/Webhooks/DeliverWebhook.php": 2,
     "core/src/Models/Access/NodeGrant.php": 2,
     "core/src/Models/Activity/Activity.php": 1,
-    "core/src/Models/Cas/Blob.php": 4,
     "core/src/Models/Concerns/GuardsWrites.php": 1,
     "core/src/Models/Concerns/HasVaulterKeys.php": 4,
     "core/src/Models/Concerns/ResolvesVaulterConnection.php": 1,
@@ -92,6 +91,5 @@
     "filament/src/Resources/NodeResource.php": 1,
     "filament/src/Resources/NodeShareResource.php": 10,
     "filament/src/VaulterPlugin.php": 2,
-    "media/src/Console/GcBlobsCommand.php": 1,
-    "media/src/Console/ReconcileBlobsCommand.php": 1
+    "media/src/Models/Cas/Blob.php": 4
 }

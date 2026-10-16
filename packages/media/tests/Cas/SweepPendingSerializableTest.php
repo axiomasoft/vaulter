@@ -5,19 +5,19 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Cas\BlobLock;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
+use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
-use Vaulter\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * sweepPending must run its critical section through the SERIALIZABLE + retry-on-40001

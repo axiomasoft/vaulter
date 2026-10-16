@@ -1579,6 +1579,14 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Tenancy\\Tenancy",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#entry-point + D10: withoutTenancy is the core Tenancy::without (P4.6); VaulterManager::withoutTenancy delegates"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Tenancy\\TenancyBoundary",
             "owner": "core",
             "action": "keep",
@@ -1656,18 +1664,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel: Тестовый кит — neutral actor/owner fixtures of the kernel kit"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Testing\\Contracts\\ContentScannerContractTests",
-            "owner": "media",
-            "why": "architecture#ownership-map: Testing — snapshots/fixtures belong to the package of the concept: ContentScanner contract tests -> media (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Testing\\FakeContentScanner",
-            "owner": "media",
-            "why": "architecture#ownership-map: Testing — fake of the ContentScanner SPI -> media (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",

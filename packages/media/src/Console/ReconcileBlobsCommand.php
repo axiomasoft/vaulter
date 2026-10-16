@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Rebuild the ref_count cache from the v_file_revision_blobs edge counts — the real
@@ -52,7 +52,7 @@ final class ReconcileBlobsCommand extends Command
 
     public function handle(BlobReconciler $reconciler): int
     {
-        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($reconciler));
+        return Tenancy::without(fn (): int => $this->runMaintenance($reconciler));
     }
 
     private function runMaintenance(BlobReconciler $reconciler): int

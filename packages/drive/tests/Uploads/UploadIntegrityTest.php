@@ -14,7 +14,7 @@ use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Operations\DriveContext;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.

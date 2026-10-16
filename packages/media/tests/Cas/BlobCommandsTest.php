@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Enums\Cas\BlobStatus;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * The CAS console commands wire the collector / reconciler to artisan (H.3): the

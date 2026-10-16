@@ -7,12 +7,12 @@ namespace Vaulter\Drive\Doctor;
 use Illuminate\Contracts\Container\Container;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Kernel;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 

@@ -12,7 +12,7 @@ use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Drive\Content\ScanPolicyResolver;
-use Vaulter\Enums\Cas\ScanMode;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Support\Identity;
 
 /**

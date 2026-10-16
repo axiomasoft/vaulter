@@ -18,7 +18,7 @@ use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Modules\MissingExtensionException;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tenancy\TenancyBypass;
+use Vaulter\Tenancy\Tenancy;
 
 #[Api]
 final readonly class VaulterManager
@@ -73,7 +73,7 @@ final readonly class VaulterManager
      */
     public function withoutTenancy(Closure $callback): mixed
     {
-        return $this->container->make(TenancyBypass::class)->run($callback);
+        return Tenancy::without($callback);
     }
 
     private function driveFactory(): DriveHandleFactory

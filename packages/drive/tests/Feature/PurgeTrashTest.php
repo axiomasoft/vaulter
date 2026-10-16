@@ -9,7 +9,7 @@ use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\Node;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());

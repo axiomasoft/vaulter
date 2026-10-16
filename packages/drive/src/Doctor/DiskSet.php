@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Media\Doctor;
+namespace Vaulter\Drive\Doctor;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Media\Configuration\MediaConfig;

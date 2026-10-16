@@ -11,7 +11,7 @@ use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Drive\Content\ScanPolicyResolver;
-use Vaulter\Enums\Cas\ScanMode;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Support\Identity;
 
 /** Scan work is scoped by drive and tenant; work outside its drive's scope is never completed correctly. */

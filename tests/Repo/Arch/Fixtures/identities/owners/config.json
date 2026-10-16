@@ -159,12 +159,6 @@
         },
         {
             "match": "exact",
-            "value": "config:vaulter.models.blob",
-            "owner": "media",
-            "why": "Models/Cas/Blob -> media"
-        },
-        {
-            "match": "exact",
             "value": "config:vaulter.models.outbox",
             "owner": "core",
             "why": "Models/Webhooks/Outbox stays in core (D29)"

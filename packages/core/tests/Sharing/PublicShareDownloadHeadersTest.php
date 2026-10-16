@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

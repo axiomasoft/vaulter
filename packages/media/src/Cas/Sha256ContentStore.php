@@ -6,12 +6,12 @@ namespace Vaulter\Media\Cas;
 
 use RuntimeException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\ListableContentStore;
-use Vaulter\Contracts\Cas\ListableStorageDriver;
-use Vaulter\Contracts\Cas\StagedObject;
-use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\ListableContentStore;
+use Vaulter\Media\Contracts\Cas\ListableStorageDriver;
+use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * The default ContentStore: hash the LOCAL staged temp file, never the live

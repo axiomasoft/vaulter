@@ -200,7 +200,7 @@ Vaulter\Configuration\RoutesConfig api since 1.0 final readonly class
 
 Vaulter\Configuration\ScanConfig api since 1.0 final readonly class
   public function globalSpec(): Vaulter\Content\ScanPolicySpec
-  public function mode(): Vaulter\Enums\Cas\ScanMode
+  public function mode(): Vaulter\Media\Enums\Cas\ScanMode
   public function scanner(): ?string
 
 Vaulter\Configuration\ScheduleConfig api since 1.0 final readonly class
@@ -263,57 +263,17 @@ Vaulter\Configuration\WebhooksConfig api since 1.0 final readonly class
   public function timeout(): int
   public function urlGuard(): string
 
-Vaulter\Content\ImmutableContentIdentity api since 1.0 final readonly class
-  public int|string $blobId
-  public string $disk
-  public string $scopeKey
-  public string $sha256
-  public int $size
-  public string $storageKey
-  public ?string $storageVersion
-  public function __construct(int|string $blobId, string $scopeKey, string $disk, string $storageKey, ?string $storageVersion, string $sha256, int $size)
-  public function fingerprint(): string
-
-Vaulter\Content\ScanInput api since 1.0 final readonly class
-  public int|string $blobId
-  public DateTimeImmutable $deadline
-  public ?string $detectedMime
-  public int|string $driveId
-  public string $policyVersion
-  public int|string $revisionId
-  public string $scannerVersion
-  public string $scopeKey
-  public string $sha256
-  public int $size
-  public mixed $stream
-  public int|null|string $tenantId
-  public function __construct(mixed $stream, int|string $revisionId, int|string $blobId, int|string $driveId, int|null|string $tenantId, string $scopeKey, string $sha256, int $size, ?string $detectedMime, string $scannerVersion, string $policyVersion, DateTimeImmutable $deadline)
-
 Vaulter\Content\ScanPolicySpec api since 1.0 final readonly class
-  public Vaulter\Enums\Cas\ScanMode $mode
+  public Vaulter\Media\Enums\Cas\ScanMode $mode
   public string $policyVersion
   public string $predicateKey
   public ?string $rolloutKey
   public string $scannerKey
   public string $scannerVersion
-  public function __construct(string $predicateKey, Vaulter\Enums\Cas\ScanMode $mode, string $scannerKey, string $scannerVersion, string $policyVersion, ?string $rolloutKey = null)
+  public function __construct(string $predicateKey, Vaulter\Media\Enums\Cas\ScanMode $mode, string $scannerKey, string $scannerVersion, string $policyVersion, ?string $rolloutKey = null)
   public function configFingerprint(): string
   public function requiresScan(int $admissionSequence, ?int $boundarySequence): bool
   public function specKey(): string
-
-Vaulter\Content\ScanResult api since 1.0 final readonly class
-  public const array REASONS = ['scanner_timeout', 'scanner_unavailable', 'transient_io', 'unsupported', 'too_large', 'password_protected', 'access_denied', 'unknown', 'content_identity_mismatch', 'attempts_exhausted', 'superseded_policy']
-  public ?string $reason
-  public bool $retryable
-  public Vaulter\Enums\Cas\ScanVerdict $verdict
-  public function __construct(Vaulter\Enums\Cas\ScanVerdict $verdict, ?string $reason = null, bool $retryable = false)
-
-Vaulter\Content\SignedContentUrl api since 1.0 final readonly class
-  public string $contentIdentity
-  public DateTimeImmutable $expiresAt
-  public ?string $storageVersion
-  public string $url
-  public function __construct(string $url, DateTimeImmutable $expiresAt, string $contentIdentity, ?string $storageVersion)
 
 Vaulter\Contracts\Access\AccessOperations api since 1.0 interface
   public function explain(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Enums\Access\Ability $ability, ?Illuminate\Contracts\Auth\Access\Authorizable $subject = null): Vaulter\Access\ValueObjects\AccessExplanation
@@ -337,52 +297,6 @@ Vaulter\Contracts\Access\PermissionDriver spi:implement since 1.0 interface
 Vaulter\Contracts\Activity\ActivityOperations api since 1.0 interface
   public function forDrive(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
   public function forNode(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-
-Vaulter\Contracts\Cas\BlobStore api since 1.0 interface
-  public function attach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
-  public function commit(mixed $stream, Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Models\Cas\Blob
-  public function commitStaged(Vaulter\Contracts\Cas\StagedObject $staged, Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Models\Cas\Blob
-  public function detach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
-  public function read(Vaulter\Models\Cas\Blob $blob): mixed
-
-Vaulter\Contracts\Cas\ContentScanner spi:implement since 1.0 interface
-  public function key(): string
-  public function scan(Vaulter\Content\ScanInput $input): Vaulter\Content\ScanResult
-  public function version(): string
-
-Vaulter\Contracts\Cas\ContentStore spi:implement since 1.0 interface
-  public function delete(string $key, ?string $disk = null): void
-  public function exists(string $key, ?string $disk = null): bool
-  public function get(string $key, ?string $disk = null): mixed
-  public function keyFor(Vaulter\ValueObjects\Cas\BlobScope $scope, string $sha256): string
-  public function promote(Vaulter\Contracts\Cas\StagedObject $staged, string $key, ?string $disk = null): void
-  public function stage(mixed $stream): Vaulter\Contracts\Cas\StagedObject
-
-Vaulter\Contracts\Cas\DirectContentUrlSigner spi:implement since 1.0 interface
-  public function sign(Vaulter\Content\ImmutableContentIdentity $content, DateTimeImmutable $expiresAt): Vaulter\Content\SignedContentUrl
-
-Vaulter\Contracts\Cas\ListableContentStore spi:implement since 1.0 interface
-  public function lastModified(string $key, ?string $disk = null): ?int
-  public function listKeys(?string $disk = null): iterable
-
-Vaulter\Contracts\Cas\ListableStorageDriver spi:implement since 1.0 interface
-  public function lastModified(string $key, ?string $disk = null): ?int
-  public function listContents(?string $disk = null): iterable
-
-Vaulter\Contracts\Cas\StagedObject api since 1.0 interface
-  public function discard(): void
-  public function path(): string
-  public function readStream(): mixed
-  public function sha256(): string
-  public function sizeBytes(): int
-
-Vaulter\Contracts\Cas\StorageDriver spi:implement since 1.0 interface
-  public function delete(string $key, ?string $disk = null): void
-  public function disk(?string $disk = null): Illuminate\Contracts\Filesystem\Filesystem
-  public function exists(string $key, ?string $disk = null): bool
-  public function get(string $key, ?string $disk = null): mixed
-  public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
-  public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string
 
 Vaulter\Contracts\Doctor\DoctorCheck spi:implement since 1.0 interface
   public function key(): string
@@ -901,27 +815,6 @@ Vaulter\Enums\Access\Permission api since 1.0 enum: int
   case View = 1
   public static function all(): int
   public function isSetIn(int $bits): bool
-
-Vaulter\Enums\Cas\BlobStatus api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
-  case Committed = 'committed'
-  case Deleted = 'deleted'
-  case Deleting = 'deleting'
-  case Pending = 'pending'
-  case Tombstoned = 'tombstoned'
-  public function allowedTransitions(): array
-  public function canTransitionTo(self $target): bool
-  public function isLive(): bool
-  public static function values(): array
-
-Vaulter\Enums\Cas\ScanMode api since 1.0 enum: string
-  case AllContent = 'all_content'
-  case NewContentOnly = 'new_content_only'
-  case Off = 'off'
-
-Vaulter\Enums\Cas\ScanVerdict api since 1.0 enum: string
-  case Clean = 'clean'
-  case Failed = 'failed'
-  case Infected = 'infected'
 
 Vaulter\Enums\Drive\DriveStatus api since 1.0 enum: string
   case Active = 'active'
@@ -1886,9 +1779,9 @@ Vaulter\Profiles\UploadPolicy api since 1.0 final readonly class
   public array $blockedExtensions
   public ?int $maxFileSize
   public ?bool $requireScan
-  public ?Vaulter\Enums\Cas\ScanMode $scanMode
+  public ?Vaulter\Media\Enums\Cas\ScanMode $scanMode
   public ?string $scanPolicyVersion
-  public function __construct(?int $maxFileSize = null, array $allowedMimeTypes = [], array $blockedExtensions = [], ?bool $requireScan = null, ?Vaulter\Enums\Cas\ScanMode $scanMode = null, ?string $scanPolicyVersion = null)
+  public function __construct(?int $maxFileSize = null, array $allowedMimeTypes = [], array $blockedExtensions = [], ?bool $requireScan = null, ?Vaulter\Media\Enums\Cas\ScanMode $scanMode = null, ?string $scanPolicyVersion = null)
 
 Vaulter\Schema\HostKeyColumns api since 1.0 final class
   public static function add(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
@@ -1935,9 +1828,8 @@ Vaulter\Support\Identity api since 1.0 final class
   public static function key(mixed $value): int|null|string
   public static function stringify(mixed $value): string
 
-Vaulter\Testing\Contracts\ContentScannerContractTests api since 1.0 final class
-  public function assertContentScannerContract(Vaulter\Contracts\Cas\ContentScanner $scanner, array $samples): void
-  public function assertUnreadableBytesAreNeverClean(Vaulter\Contracts\Cas\ContentScanner $scanner): void
+Vaulter\Tenancy\Tenancy api since 1.0 final class
+  public static function without(Closure $callback): mixed
 
 Vaulter\Testing\Contracts\FileHandlerContractTests api since 1.0 final class
   public function assertFileHandlerContract(Vaulter\Contracts\Handlers\FileHandler $handler, ?Vaulter\ValueObjects\Handlers\FileDescriptor $claimed = null): void
@@ -1955,15 +1847,6 @@ Vaulter\Testing\Contracts\PermissionFixture api since 1.0 final readonly class
   public Vaulter\Models\Drive\Drive $drive
   public Vaulter\Models\Drive\Node $parent
   public static function build(?Illuminate\Database\Eloquent\Model $owner = null, ?Illuminate\Contracts\Auth\Access\Authorizable $actor = null): self
-
-Vaulter\Testing\FakeContentScanner api since 1.0 final class implements Vaulter\Contracts\Cas\ContentScanner
-  public array $scans = []
-  public function __construct(string $key = 'fake', string $version = '1')
-  public function alwaysReturns(Throwable|Vaulter\Content\ScanResult $outcome): self
-  public function key(): string
-  public function returnsFor(string $bytes, Throwable|Vaulter\Content\ScanResult $outcome): self
-  public function scan(Vaulter\Content\ScanInput $input): Vaulter\Content\ScanResult
-  public function version(): string
 
 Vaulter\Testing\FakeMetricsRecorder api since 1.0 final class implements Vaulter\Contracts\Observability\MetricsRecorder
   public function assertCounter(string $name, ?array $labels = null): void
@@ -2008,18 +1891,6 @@ Vaulter\ValueObjects\Access\OwnerRef api since 1.0 final readonly class
   public string $type
   public function __construct(string $type, int|string $id)
   public static function ofModel(Illuminate\Database\Eloquent\Model $owner): self
-
-Vaulter\ValueObjects\Cas\BlobScope api since 1.0 final readonly class
-  public function dedupScope(): string
-  public static function drive(string $id): self
-  public static function forUpload(string $dedupScope, ?string $tenantId, string $storageId): self
-  public static function fromSegment(string $segment): self
-  public function key(): string
-  public function segment(): string
-  public function storageId(): ?string
-  public static function tenant(string $id): self
-  public function tenantId(): ?string
-  public static function unshared(): self
 
 Vaulter\ValueObjects\Events\EventScope api since 1.0 final readonly class
   public ?string $driveId

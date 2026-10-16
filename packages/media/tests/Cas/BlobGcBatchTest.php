@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
-use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Testing\FakeMetricsRecorder;
 
@@ -219,7 +219,7 @@ it('advances sparse string and native UUID keys with configured models', functio
             return 'r21_string_edges';
         }
     };
-    config()->set('vaulter.models.blob', $model::class);
+    config()->set('vaulter-media.models.blob', $model::class);
     config()->set('vaulter.models.file_revision_blob', $edgeModel::class);
     $keyFor = static fn (int $index): string => $keyType === 'uuid'
         ? sprintf('00000000-0000-7000-8000-%012d', $index * 3)

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.6",
   "title": "Media: перенос CAS-срезов из core, Tenancy::without, D33 (doctor профилей → drive)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`move-types --owner=media` переносит 21 тип (Cas-контракты, Blob, BlobStoreRepository, BlobLock, Cas enums/VO, ScanInput/ScanResult/ImmutableContentIdentity/SignedContentUrl, FakeContentScanner, media testing contracts) в packages/media; core получает `Vaulter\\Tenancy\\Tenancy::without()`; media-команды GcBlobs/ReconcileBlobs используют его; DiskSet/DiskProbeCheck/DedupScopeCheck переезжают в drive как вклад в doctor (D33); Blob кастует через media-UTC-cast; `vaulter.models.blob` → `vaulter-media.models.blob`; CAS-тесты core → media.",
   "why": "D6/D23/D33: media — самостоятельный пакет без ссылок на drive и доменные core-типы. Подготовка к pins (P4.7). Риск: media-тесты, неявно опирающиеся на drive-провайдер (DriveTestHelpers) — такие тесты принадлежат drive.",
   "scope": {
@@ -253,6 +253,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-16T17:21:20Z",
+    "finished_at": "2026-10-16T17:59:44Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "21 тип в media, doctor-проверки в drive (D33), Tenancy::without, UtcDateTimeCast, MediaConfig::blobModel",
+    "deviations": [
+      "Файлы тестов перенесены git mv вместо каталожного move-types; core временно зависит от media (allowlist removed_in P4)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T17:59:44Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T17:59:44Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T17:59:44Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-16T17:59:44Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-16T17:59:44Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-16T17:59:44Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-16T17:59:44Z"
 }

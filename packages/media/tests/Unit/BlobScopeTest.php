@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 it('round trips lossless CAS scope identifiers', function (string $id): void {
     foreach ([BlobScope::drive($id), BlobScope::tenant($id)] as $scope) {

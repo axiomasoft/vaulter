@@ -5,14 +5,14 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Content\ImmutableContentIdentity;
-use Vaulter\Content\SignedContentUrl;
-use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Media\Content\ImmutableContentIdentity;
+use Vaulter\Media\Content\SignedContentUrl;
+use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
 
 /**
  * In the opt-in direct_signed mode a download is an uncached 302 to a short-lived URL of

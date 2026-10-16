@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Tests\Fixtures\Cas;
 
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * A {@see ContentStore} that DELIBERATELY does NOT implement
