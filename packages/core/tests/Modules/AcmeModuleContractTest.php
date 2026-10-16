@@ -51,6 +51,7 @@ use Vaulter\Operations\Operation;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Testing\Contracts\ModuleContractTests;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeConstraints;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeDownloadGuard;
@@ -277,7 +278,7 @@ function acmeRunner(Kernel $kernel): OperationRunner
 {
     $database = app(VaulterDatabase::class);
 
-    return new OperationRunner($kernel, new ModuleReadiness($kernel, $database, app(DatabaseConfig::class)), $database, new NoOperationClaim);
+    return new OperationRunner($kernel, new ModuleReadiness($kernel, $database, app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), $database, new NoOperationClaim);
 }
 
 function acmeWrite(OperationRunner $runner, Closure $attempt): mixed

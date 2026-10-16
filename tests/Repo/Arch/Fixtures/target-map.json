@@ -609,470 +609,6 @@
             "note": "-> drive link service; media keeps pins only (D23)",
             "owner": "drive",
             "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addActivityContextGinIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addActivityCreatedAtIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addDocumentContentGinIndex",
-            "note": null,
-            "owner": "documents",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addGrantUniqueIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "split",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addHeadForeignKey",
-            "note": "split by owner of the cycle: files<->file_revisions drive, documents<->document_revisions documents; create+deferred head FK in the last create migration of the cycle",
-            "owner": "core",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addNodeSequence",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addOwnerUniqueIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addShareExpiryIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addSiblingUniqueIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addSingleRootIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addTrashedAtIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "addUploadSweeperIndex",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "split",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "afterCreate",
-            "note": "per-entity steps go to the owners of their tables; core keeps only generic helpers",
-            "owner": "core",
-            "phase": "P4"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "assertEnforcedMysqlChecks",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "binaryColumn",
-            "note": "generic binary column (yjs_state)",
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "counterColumn",
-            "note": "generic BIGINT counter column (node sequence, state versions, epochs)",
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "split",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "createAll",
-            "note": "orchestration goes to the owners; core keeps only generic helpers",
-            "owner": "core",
-            "phase": "P4"
-        },
-        {
-            "action": "split",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "createTable",
-            "note": "orchestration goes to the owners; core keeps only generic helpers",
-            "owner": "core",
-            "phase": "P4"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "dbConnection",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineActivity",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineBlobs",
-            "note": null,
-            "owner": "media",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineDocumentRevisions",
-            "note": null,
-            "owner": "documents",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineDocuments",
-            "note": null,
-            "owner": "documents",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineDriveChangeHeads",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineDriveChanges",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineDrives",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineFileRevisionBlobs",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineFileRevisions",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineFiles",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineIdempotencyKeys",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineNodeComments",
-            "note": null,
-            "owner": "documents",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineNodeGrants",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineNodeShares",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineNodeUserStates",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineNodes",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineOutbox",
-            "note": "D29 reshapes the outbox tables (v_outbox, v_outbox_consumers, v_outbox_deliveries)",
-            "owner": "core",
-            "phase": "P3"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineOutboxConsumers",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineOutboxDeliveries",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineScanTable",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineUploadCleanup",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineUploadParts",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineUploadSessions",
-            "note": null,
-            "owner": "drive",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineWebhookDeliveries",
-            "note": null,
-            "owner": "webhooks",
-            "phase": "P4"
-        },
-        {
-            "action": "move",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "defineWebhookEndpoints",
-            "note": null,
-            "owner": "webhooks",
-            "phase": "P4"
-        },
-        {
-            "action": "split",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "dropAll",
-            "note": "orchestration goes to the owners; core keeps only generic helpers",
-            "owner": "core",
-            "phase": "P4"
-        },
-        {
-            "action": "split",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "dropHeadForeignKey",
-            "note": "split by owner of the cycle: the head FK is dropped before the tables of drive/documents",
-            "owner": "core",
-            "phase": "P4"
-        },
-        {
-            "action": "split",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "dropTable",
-            "note": "orchestration goes to the owners; core keeps only generic helpers",
-            "owner": "core",
-            "phase": "P4"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "hasForeignKey",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "ids",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "ipColumn",
-            "note": "generic column helper (named after the activity ip column)",
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "nameKeyColumn",
-            "note": "generic collation helper (name_key byte compare); consumed by drive nodes",
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "panelDiscriminator",
-            "note": "generic helper emitted by several owners tables",
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "scanEnum",
-            "note": "generic enum column helper named after the scan tables (D28); rename in P4",
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "scanInteger",
-            "note": "generic signed-counter helper named after the scan tables (D28); rename in P4",
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "scanReference",
-            "note": "generic reference-column helper named after the scan tables (D28); rename in P4",
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "schemaConnection",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "table",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
-        },
-        {
-            "action": "keep",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "member": "tenant",
-            "note": null,
-            "owner": "core",
-            "phase": "stay"
         }
     ],
     "owners": [
@@ -6577,6 +6113,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Schema/DocumentsSchema.php",
+            "fqcn": "Vaulter\\Documents\\Schema\\DocumentsSchema",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Schema\\DocumentsSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Support/DocumentHeads.php",
             "fqcn": "Vaulter\\Documents\\Support\\DocumentHeads",
             "kind": "final-class",
@@ -9107,6 +8657,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Repositories\\Uploads\\UploadSessionStoreRepository"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Schema/DriveSchema.php",
+            "fqcn": "Vaulter\\Drive\\Schema\\DriveSchema",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Schema\\DriveSchema"
         },
         {
             "action": "keep",
@@ -12863,6 +12427,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/media/src/Schema/MediaSchema.php",
+            "fqcn": "Vaulter\\Media\\Schema\\MediaSchema",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Schema\\MediaSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/media/src/VaulterMediaServiceProvider.php",
             "fqcn": "Vaulter\\Media\\VaulterMediaServiceProvider",
             "kind": "final-class",
@@ -13447,6 +13025,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Modules\\OffersModules",
             "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Modules\\OffersModules"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Modules/OwnsSchema.php",
+            "fqcn": "Vaulter\\Modules\\OwnsSchema",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\OwnsSchema",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\OwnsSchema"
         },
         {
             "action": "keep",
@@ -14557,6 +14149,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Schema/KernelSchema.php",
+            "fqcn": "Vaulter\\Schema\\KernelSchema",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Schema\\KernelSchema",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Schema\\KernelSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Schema/KeyColumnInspector.php",
             "fqcn": "Vaulter\\Schema\\KeyColumnInspector",
             "kind": "final-class",
@@ -14569,18 +14175,46 @@
             "target_fqcn": "Vaulter\\Schema\\KeyColumnInspector"
         },
         {
-            "action": "split",
+            "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Schema/SchemaBuilder.php",
-            "fqcn": "Vaulter\\Schema\\SchemaBuilder",
-            "kind": "final-class",
-            "note": "domain define*/afterCreate/createAll/dropAll/addHeadForeignKey go to the owners of the tables; core keeps only generic id/host-key/counter/connection helpers (see the member rules)",
+            "file": "packages/core/src/Schema/ModuleSchema.php",
+            "fqcn": "Vaulter\\Schema\\ModuleSchema",
+            "kind": "interface",
+            "note": null,
             "owner": "core",
             "package": "core",
-            "phase": "P4",
-            "rule": "core-kernel:fqcn:Vaulter\\Schema\\SchemaBuilder",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Schema\\ModuleSchema",
             "surface": "Internal",
-            "target_fqcn": "Vaulter\\Schema\\SchemaBuilder"
+            "target_fqcn": "Vaulter\\Schema\\ModuleSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Schema/ModuleSchemas.php",
+            "fqcn": "Vaulter\\Schema\\ModuleSchemas",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Schema\\ModuleSchemas",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Schema\\ModuleSchemas"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Schema/SchemaHelpers.php",
+            "fqcn": "Vaulter\\Schema\\SchemaHelpers",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Schema\\SchemaHelpers",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Schema\\SchemaHelpers"
         },
         {
             "action": "keep",
@@ -15771,6 +15405,20 @@
             "rule": "core-content-media-webhooks:prefix:Vaulter\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\ResponseSizeLimit"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
+            "file": "packages/core/src/Webhooks/Schema/WebhooksSchema.php",
+            "fqcn": "Vaulter\\Webhooks\\Schema\\WebhooksSchema",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-content-media-webhooks:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\Schema\\WebhooksSchema"
         },
         {
             "action": "move",

@@ -15,10 +15,12 @@ use Vaulter\Media\Doctor\DedupScopeCheck;
 use Vaulter\Media\Doctor\DiskProbeCheck;
 use Vaulter\Media\Providers\BindingsRegistrar;
 use Vaulter\Media\Providers\SchedulingRegistrar;
+use Vaulter\Media\Schema\MediaSchema;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\VaulterModule;
 
 /**
@@ -26,8 +28,13 @@ use Vaulter\Modules\VaulterModule;
  * its doctor checks and the content-scanner and storage-driver capabilities. Auto: the drive needs it and it opens no outbound traffic.
  */
 #[Internal]
-final class MediaModule implements VaulterModule
+final class MediaModule implements OwnsSchema, VaulterModule
 {
+    public static function ownedSchema(): string
+    {
+        return MediaSchema::class;
+    }
+
     public function id(): ModuleId
     {
         return new ModuleId('media');

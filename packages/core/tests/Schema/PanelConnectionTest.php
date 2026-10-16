@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Drive\Schema\DriveSchema;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Schema\SchemaBuilder;
 
 /**
  * F-P2.3-02 — `config('vaulter.database.connection')` parameterises WHERE Vaulter writes
@@ -12,7 +12,7 @@ use Vaulter\Schema\SchemaBuilder;
  * database/connection (sharding, data placement, isolating a heavy CAS/activity
  * workload) without forking the package.
  *
- * Red-before: on the pre-fix code this test fails — `SchemaBuilder` always
+ * Red-before: on the pre-fix code this test fails — the schema builder always
  * writes through the default `Schema`/`DB` facades and every model's
  * `getConnectionName()` stays null regardless of `vaulter.database.connection`
  * (repro: `plans/AUDIT-VLT/artifacts/repro/P2.3/C6NoConnectionParamTest.php`).
@@ -25,16 +25,16 @@ it('creates a panel\'s tables on the connection named by vaulter.database.connec
     ]);
     config()->set('vaulter.database.connection', 'vaulter_other');
 
-    $builder = new SchemaBuilder;
+    $builder = new DriveSchema;
     config()->set('vaulter.database.table_prefix', 'conntest_');
 
-    $builder->createTable(entity: 'drives');
+    $builder->create(entity: 'drives');
 
     try {
         expect(Schema::connection('vaulter_other')->hasTable('conntest_drives'))->toBeTrue()
             ->and(Schema::hasTable('conntest_drives'))->toBeFalse();
     } finally {
-        $builder->dropTable(entity: 'drives');
+        $builder->drop(entity: 'drives');
         config()->set('vaulter.database.connection', null);
         config()->set('vaulter.database.table_prefix', 'v_');
     }
@@ -55,16 +55,16 @@ it('routes a default Vaulter model\'s connection through vaulter.database.connec
 it('control: vaulter.database.connection=null (the default) leaves every write on the host\'s default connection [F-P2.3-02]', function (): void {
     expect(config('vaulter.database.connection'))->toBeNull();
 
-    $builder = new SchemaBuilder;
+    $builder = new DriveSchema;
     config()->set('vaulter.database.table_prefix', 'conntestctrl_');
 
-    $builder->createTable(entity: 'drives');
+    $builder->create(entity: 'drives');
 
     try {
         expect(Schema::hasTable('conntestctrl_drives'))->toBeTrue()
             ->and((new Node)->getConnectionName())->toBeNull();
     } finally {
-        $builder->dropTable(entity: 'drives');
+        $builder->drop(entity: 'drives');
         config()->set('vaulter.database.connection', null);
         config()->set('vaulter.database.table_prefix', 'v_');
     }

@@ -3,17 +3,26 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Drive\Schema\DriveSchema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        app(SchemaBuilder::class)->createTable(entity: 'drive_change_heads');
+        // Until the migrations move into their packages (P4.5), a host without vaulter-drive has no schema class to call.
+        if (!class_exists(DriveSchema::class)) {
+            return;
+        }
+
+        app(DriveSchema::class)->create(entity: 'drive_change_heads');
     }
 
     public function down(): void
     {
-        app(SchemaBuilder::class)->dropTable(entity: 'drive_change_heads');
+        if (!class_exists(DriveSchema::class)) {
+            return;
+        }
+
+        app(DriveSchema::class)->drop(entity: 'drive_change_heads');
     }
 };

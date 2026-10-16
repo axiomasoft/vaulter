@@ -44,7 +44,7 @@ UNIQUE-индекс дедупликации блобов ключуется н�
 выключена, индекс просто охватывает `NULL`-колонку.
 
 ```php
-// Vaulter\Schema\SchemaBuilder::tenant() — выполняется для каждой таблицы Drive
+// Vaulter\Schema\SchemaHelpers::tenant() — выполняется для каждой таблицы Drive
 private function tenant(Blueprint $table, IdStrategy $ids): void
 {
     $ids->reference(table: $table, column: 'tenant_id', nullable: true);

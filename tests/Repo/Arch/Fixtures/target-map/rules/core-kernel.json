@@ -702,22 +702,6 @@
             "why": "architecture#persistence + D29: v_outbox_deliveries is owned by core (P3.14)"
         },
         {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineOutboxConsumers",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + D29: SchemaBuilder is split by owner of the table: v_outbox_consumers is core-owned (P3.14)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineOutboxDeliveries",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + D29: SchemaBuilder is split by owner of the table: v_outbox_deliveries is core-owned (P3.14)"
-        },
-        {
             "match": "fqcn",
             "value": "Vaulter\\Configuration\\OutboxConfig",
             "owner": "core",
@@ -1382,14 +1366,6 @@
             "why": "architecture#persistence + D25: v_idempotency_keys is owned by core (P3.12)"
         },
         {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineIdempotencyKeys",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + D25: SchemaBuilder is split by owner of the table: v_idempotency_keys is core-owned (P3.12)"
-        },
-        {
             "match": "prefix",
             "value": "Vaulter\\Idempotency\\",
             "owner": "core",
@@ -1618,15 +1594,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel: Идентичность — static migration helper over the IdStrategy: generic id/host-key columns (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Schema\\SchemaBuilder",
-            "owner": "core",
-            "action": "split",
-            "phase": "P4",
-            "note": "domain define*/afterCreate/createAll/dropAll/addHeadForeignKey go to the owners of the tables; core keeps only generic id/host-key/counter/connection helpers (see the member rules)",
-            "why": "architecture#ownership-map + source-review#code-facts: оставление прежнего giant SchemaBuilder в core запрещено"
         },
         {
             "match": "fqcn",
@@ -1960,462 +1927,6 @@
             "why": "architecture#packages + D39: webhook endpoint routes (P3.2 split of routes/api.php)"
         },
         {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::schemaConnection",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::dbConnection",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::table",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::ids",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::tenant",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::hasForeignKey",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::assertEnforcedMysqlChecks",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::counterColumn",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "generic BIGINT counter column (node sequence, state versions, epochs)",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::binaryColumn",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "generic binary column (yjs_state)",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::ipColumn",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "generic column helper (named after the activity ip column)",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::nameKeyColumn",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "generic collation helper (name_key byte compare); consumed by drive nodes",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::panelDiscriminator",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "generic helper emitted by several owners tables",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::scanInteger",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "generic signed-counter helper named after the scan tables (D28); rename in P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::scanEnum",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "generic enum column helper named after the scan tables (D28); rename in P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::scanReference",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "generic reference-column helper named after the scan tables (D28); rename in P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::createAll",
-            "owner": "core",
-            "action": "split",
-            "phase": "P4",
-            "note": "orchestration goes to the owners; core keeps only generic helpers",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the orchestration over the ENTITIES list moves to the owners"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::dropAll",
-            "owner": "core",
-            "action": "split",
-            "phase": "P4",
-            "note": "orchestration goes to the owners; core keeps only generic helpers",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the orchestration over the ENTITIES list moves to the owners"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::createTable",
-            "owner": "core",
-            "action": "split",
-            "phase": "P4",
-            "note": "orchestration goes to the owners; core keeps only generic helpers",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the orchestration over the ENTITIES list moves to the owners"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::dropTable",
-            "owner": "core",
-            "action": "split",
-            "phase": "P4",
-            "note": "orchestration goes to the owners; core keeps only generic helpers",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the orchestration over the ENTITIES list moves to the owners"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::afterCreate",
-            "owner": "core",
-            "action": "split",
-            "phase": "P4",
-            "note": "per-entity steps go to the owners of their tables; core keeps only generic helpers",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: afterCreate dispatches per-entity steps (indexes, CHECKs, head FKs) of every owner"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addHeadForeignKey",
-            "owner": "core",
-            "action": "split",
-            "phase": "P4",
-            "note": "split by owner of the cycle: files<->file_revisions drive, documents<->document_revisions documents; create+deferred head FK in the last create migration of the cycle",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: mutual head FKs files<->file_revisions (drive) and documents<->document_revisions (documents) at SchemaBuilder::addHeadForeignKey (source-review#code-facts)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::dropHeadForeignKey",
-            "owner": "core",
-            "action": "split",
-            "phase": "P4",
-            "note": "split by owner of the cycle: the head FK is dropped before the tables of drive/documents",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the reverse rollback of the head FKs (source-review#code-facts)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineDrives",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodes",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineBlobs",
-            "owner": "media",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of media"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineFiles",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineFileRevisions",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineFileRevisionBlobs",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodeGrants",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodeShares",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodeComments",
-            "owner": "documents",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of documents"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodeUserStates",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineDocuments",
-            "owner": "documents",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of documents"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineDocumentRevisions",
-            "owner": "documents",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of documents"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineUploadSessions",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineUploadParts",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineActivity",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineWebhookEndpoints",
-            "owner": "webhooks",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of webhooks"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineWebhookDeliveries",
-            "owner": "webhooks",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of webhooks"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineDriveChangeHeads",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineDriveChanges",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineScanTable",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive (D28 scan_*)"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineUploadCleanup",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addNodeSequence",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addActivityCreatedAtIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addActivityContextGinIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addDocumentContentGinIndex",
-            "owner": "documents",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of documents"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addShareExpiryIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addTrashedAtIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addUploadSweeperIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addGrantUniqueIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addOwnerUniqueIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addSiblingUniqueIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::addSingleRootIndex",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
-        },
-        {
-            "match": "member",
-            "value": "Vaulter\\Schema\\SchemaBuilder::defineOutbox",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "note": "D29 reshapes the outbox tables (v_outbox, v_outbox_consumers, v_outbox_deliveries)",
-            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: v_outbox is core-owned (D29)"
-        },
-        {
             "match": "fqcn",
             "value": "Vaulter\\Kernel",
             "owner": "core",
@@ -2654,6 +2165,46 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — core.modules.cache doctor check (revision 3: route cache fingerprint)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\SchemaHelpers",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + D40 (P4.3): the generic column, key and connection helpers a module's schema class builds its tables from; the kernel's part of the former SchemaBuilder"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\KernelSchema",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + D40 (P4.3): the DDL of the tables the kernel owns — outbox, outbox consumers and deliveries, idempotency keys"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\ModuleSchema",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + D40 (P4.3): what a module's schema class offers — its entity keys, create and drop"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\ModuleSchemas",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + D40 (P4.3): walks the schema classes of the offered modules; replaces the central entity lists and SchemaBuilder::createAll/dropAll"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\OwnsSchema",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + D40 (P4.3): a module manifest names the schema class that holds the DDL of its tables"
         }
     ]
 }

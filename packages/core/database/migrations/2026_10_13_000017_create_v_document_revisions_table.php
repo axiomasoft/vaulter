@@ -3,17 +3,26 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Documents\Schema\DocumentsSchema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        app(SchemaBuilder::class)->createTable(entity: 'document_revisions');
+        // Until the migrations move into their packages (P4.5), a host without vaulter-documents has no schema class to call.
+        if (!class_exists(DocumentsSchema::class)) {
+            return;
+        }
+
+        app(DocumentsSchema::class)->create(entity: 'document_revisions');
     }
 
     public function down(): void
     {
-        app(SchemaBuilder::class)->dropTable(entity: 'document_revisions');
+        if (!class_exists(DocumentsSchema::class)) {
+            return;
+        }
+
+        app(DocumentsSchema::class)->drop(entity: 'document_revisions');
     }
 };

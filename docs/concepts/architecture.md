@@ -124,9 +124,9 @@ Drive and Documents each ship as their own package:
 | `Drivers/Permission/` | The shipped `PermissionDriver` lanes: `database`, `gate`, `spatie`; `azgard` lives in `vaulter-azgard`. |
 | `Cas/` | `BlobLock` — the last CAS class left in core; the store engine itself moved to `vaulter-media`. |
 | `Profiles/` | `Profile`, `ProfileProvider`, `ProfileRegistry`. |
-| `Schema/` | `SchemaBuilder`, `VaulterSchema`. |
+| `Schema/` | `VaulterSchema`, `SchemaHelpers` (the generic column, key and connection helpers), `KernelSchema` (the DDL of the kernel's own tables), `ModuleSchema` and `ModuleSchemas` (the schema classes of the offered modules). Every other module keeps the DDL of its tables in its own `Schema/<Module>Schema` class. |
 | `Engines/` | The format-extensibility registry ENGINE (VLT-CANON P0.4, superseding H.5/T5): `FileHandlerRegistry`, `NodePresenter`, `FileDescriptorFactory`, and the baseline `Handlers/{PreviewHandler,DownloadOnlyHandler}` — always bound, so a drive-only host resolves preview/download with no other package installed. |
-| `Schema/` | The id-strategy classes (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, `SchemaBuilder` columns. |
+| `Schema/` | The id-strategy classes (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, the host-key columns. |
 | `Sharing/` | The bearer-link channel: `ShareResolver`, `ShareContext`, `ShareResult`. |
 | `Webhooks/` | The reliability layer: `WebhookFanoutConsumer`, `WebhookSigner` (the outbox itself lives in `Events/Outbox/`: `OutboxWriter`, `OutboxRelay`). |
 | `Activity/` | The append-only activity feed (`ActivityRecorder`, `RecordsActivity`). |

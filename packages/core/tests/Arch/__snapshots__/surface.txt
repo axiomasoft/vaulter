@@ -1894,6 +1894,22 @@ Vaulter\Schema\HostKeyColumns api since 1.0 final class
   public static function add(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
   public static function sqlType(string $driver): string
 
+Vaulter\Schema\SchemaHelpers spi:call since 1.0 final class
+  public function addHeadForeignKey(string $aggregate, string $revisions, string $owner): void
+  public function assertEnforcedMysqlChecks(): void
+  public function binaryColumn(Illuminate\Database\Schema\Blueprint $table, string $column): void
+  public function counterColumn(Illuminate\Database\Schema\Blueprint $table, string $column): void
+  public function dbConnection(): Illuminate\Database\Connection
+  public function dropHeadForeignKey(string $aggregate): void
+  public function hasForeignKey(string $table, string $name): bool
+  public function ids(): Vaulter\Contracts\IdStrategy
+  public function ipColumn(Illuminate\Database\Schema\Blueprint $table): void
+  public function nameKeyColumn(Illuminate\Database\Schema\Blueprint $table): void
+  public function panelDiscriminator(Illuminate\Database\Schema\Blueprint $table): void
+  public function schemaConnection(): Illuminate\Database\Schema\Builder
+  public function table(string $entity): string
+  public function tenant(Illuminate\Database\Schema\Blueprint $table): void
+
 Vaulter\Schema\VaulterSchema api since 1.0 final class
   public static function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
   public static function bits(Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void

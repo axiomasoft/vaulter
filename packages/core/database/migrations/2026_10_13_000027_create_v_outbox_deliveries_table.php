@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Schema\KernelSchema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        app(SchemaBuilder::class)->createTable(entity: 'outbox_deliveries');
+        app(KernelSchema::class)->create(entity: 'outbox_deliveries');
     }
 
     public function down(): void
     {
-        app(SchemaBuilder::class)->dropTable(entity: 'outbox_deliveries');
+        app(KernelSchema::class)->drop(entity: 'outbox_deliveries');
     }
 };

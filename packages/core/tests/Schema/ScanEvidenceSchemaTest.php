@@ -8,7 +8,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class);
@@ -18,7 +18,7 @@ it('creates the scan evidence and work schema with enforced checks and foreign k
     $oldStrategy = config('vaulter.ids.strategy');
     config()->set('vaulter.database.table_prefix', 'scan_probe_');
     config()->set('vaulter.ids.strategy', $strategy);
-    $builder = app(SchemaBuilder::class);
+    $builder = app(ModuleSchemas::class);
     $db = app(VaulterDatabase::class)->connection();
     $schema = $db->getSchemaBuilder();
     if ($db->getDriverName() === 'sqlite') {

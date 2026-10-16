@@ -144,8 +144,8 @@ Staged-объект (`Vaulter\Media\Cas\StagedTempObject`, реализующи�
 
 Эта единственная настройка приводит в движение **обе** стороны дизайна разом:
 
-1. **Форму дедуп-UNIQUE-индекса.** `SchemaBuilder::dedupUniqueColumns()` выдаёт индекс
-   по `(sha256)`, `(tenant_id, sha256)` или `(storage_id, sha256)`. Колонки `tenant_id` /
+1. **Форму дедуп-UNIQUE-индекса.** `MediaSchema` выдаёт индекс
+   по `(scope_key, sha256)`. Колонки `tenant_id` /
    `storage_id` *всегда* существуют в `v_blobs`; только UNIQUE-индекс покрывает
    релевантное области подмножество.
 2. **Ключ с учётом области**, описанный выше.

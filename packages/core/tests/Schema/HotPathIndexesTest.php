@@ -7,7 +7,7 @@ use Vaulter\Configuration\VaulterConfig;
 
 /**
  * F-P4.1-01 / F-P4.1-02 (VLT-REMED P4.3, batch B16) — schema green guard, no
- * behaviour delta (D19): the hot-path index shape SchemaBuilder emits (and
+ * behaviour delta (D19): the hot-path index shape the drive schema emits (and
  * the 2026_07_11_000001 upgrade migration repairs on a pre-fix database) must
  * carry the (trashed_at) scan index PurgeTrashCommand's predicate needs, and
  * must NOT carry the three indexes whose column set duplicates/prefixes another

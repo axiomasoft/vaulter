@@ -26,6 +26,7 @@ use Vaulter\Operations\Operation;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Tests\Operations\Fixtures\OuterMiddleware;
 use Vaulter\Tests\Operations\Fixtures\ProbeMiddleware;
 use Vaulter\Tests\TestCase;
@@ -62,7 +63,7 @@ function runnerContractRunner(array $middleware, CompiledModules|InvalidModuleGr
     }
     $kernel->seal($state);
 
-    return new OperationRunner($kernel, new ModuleReadiness($kernel, app(VaulterDatabase::class), app(DatabaseConfig::class)), app(VaulterDatabase::class), new NoOperationClaim);
+    return new OperationRunner($kernel, new ModuleReadiness($kernel, app(VaulterDatabase::class), app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), app(VaulterDatabase::class), new NoOperationClaim);
 }
 
 function runnerContractSpec(string $name = 'drive.folders.create', string $module = 'drive'): OperationSpec

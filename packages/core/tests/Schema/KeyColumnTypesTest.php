@@ -7,9 +7,10 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\IdsConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Schema\DocumentsSchema;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Schema\KeyColumnInspector;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Schema\ModuleSchemas;
 
 it('uses the configured types for every key column on a fresh schema', function (string $strategy, string $hostKeys): void {
     if (app(VaulterDatabase::class)->driver() === 'sqlite') {
@@ -28,10 +29,13 @@ it('uses the configured types for every key column on a fresh schema', function 
         $this->app->forgetInstance($binding);
     }
 
-    $builder = new SchemaBuilder;
+    $builder = app(ModuleSchemas::class);
 
     try {
         $builder->createAll();
+        // The documents module is not offered by this harness; its tables are built by its own schema class.
+        $documents = app(DocumentsSchema::class);
+        array_map($documents->create(...), $documents->entities());
 
         $inspector = new KeyColumnInspector(
             app(VaulterDatabase::class),
@@ -81,6 +85,8 @@ it('uses the configured types for every key column on a fresh schema', function 
             expect($connection->table($nodes)->count())->toBe(0);
         }
     } finally {
+        $documents = app(DocumentsSchema::class);
+        array_map($documents->drop(...), array_reverse($documents->entities()));
         $builder->dropAll();
     }
 })->with([

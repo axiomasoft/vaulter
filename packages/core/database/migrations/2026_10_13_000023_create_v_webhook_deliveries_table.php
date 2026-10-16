@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Webhooks\Schema\WebhooksSchema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        app(SchemaBuilder::class)->createTable(entity: 'webhook_deliveries');
+        app(WebhooksSchema::class)->create(entity: 'webhook_deliveries');
     }
 
     public function down(): void
     {
-        app(SchemaBuilder::class)->dropTable(entity: 'webhook_deliveries');
+        app(WebhooksSchema::class)->drop(entity: 'webhook_deliveries');
     }
 };

@@ -7,10 +7,10 @@ namespace Vaulter\Operations;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Doctor\Checks\SchemaTablesCheck;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Support\Identity;
 
 /**
@@ -32,6 +32,7 @@ final class ModuleReadiness
         private readonly Kernel $kernel,
         private readonly VaulterDatabase $database,
         private readonly DatabaseConfig $config,
+        private readonly ModuleSchemas $schemas,
     ) {}
 
     /** @throws ModuleNotReadyException */
@@ -46,7 +47,7 @@ final class ModuleReadiness
 
         $tables = $this->tables ??= $this->existingTables();
         $missing = [];
-        foreach (array_unique([...SchemaTablesCheck::ownedBy('core'), ...SchemaTablesCheck::ownedBy($module->value)]) as $entity) {
+        foreach (array_unique([...$this->schemas->entitiesOf('core'), ...$this->schemas->entitiesOf($module->value)]) as $entity) {
             $table = $this->config->table($entity);
             if (!isset($tables[$table])) {
                 $missing[] = $table;
@@ -71,10 +72,8 @@ final class ModuleReadiness
         $connection = $this->database->connection();
         $prefix = $connection->getTablePrefix();
         $names = [];
-        foreach (SchemaTablesCheck::OWNED_ENTITIES as $entities) {
-            foreach ($entities as $entity) {
-                $names[$prefix.$this->config->table($entity)] = $this->config->table($entity);
-            }
+        foreach ($this->schemas->allEntities() as $entity) {
+            $names[$prefix.$this->config->table($entity)] = $this->config->table($entity);
         }
         $placeholders = implode(', ', array_fill(0, count($names), '?'));
         $sql = match ($connection->getDriverName()) {

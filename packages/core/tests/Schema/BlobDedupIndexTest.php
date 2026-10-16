@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Media\Schema\MediaSchema;
 
 /** Every configured scope uses the same NULL-free scope_key index. */
 function dedupIndexColumns(): array
@@ -19,11 +19,11 @@ function dedupIndexColumns(): array
 
 function rebuildBlobsTable(): void
 {
-    $builder = new SchemaBuilder;
+    $builder = new MediaSchema;
     config()->set('vaulter.database.table_prefix', 'dedup_test_');
 
-    $builder->dropTable(entity: 'blobs');
-    $builder->createTable(entity: 'blobs');
+    $builder->drop(entity: 'blobs');
+    $builder->create(entity: 'blobs');
 }
 
 function storageKeyIndexColumns(): array
@@ -67,6 +67,6 @@ it('storage_key_uniq stays single-column (the F-P1.5-03 NULL-tenant dedup backbo
 
 afterEach(function (): void {
     config()->set('vaulter.database.table_prefix', 'dedup_test_');
-    (new SchemaBuilder)->dropTable('blobs');
+    (new MediaSchema)->drop('blobs');
     config()->set('vaulter.database.table_prefix', 'v_');
 });

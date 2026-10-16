@@ -78,8 +78,8 @@ final class VaulterPlugin implements Plugin
      * . Only `activity` qualifies today: `drive`/
      * `node` have no corresponding feature (drives/nodes are the unconditional
      * schema roots), and `grant`/`share` map to `grants`/`share_links` — both
-     * consulted by `SchemaBuilder::entityEnabled()` for DYNAMICALLY-built
-     * per-panel schemas, but the package's OWN static migrations always create
+     * consulted when a per-panel schema was built DYNAMICALLY, but the package's OWN
+     * static migrations always create
      * `v_node_grants`/`v_node_shares` unconditionally (only the ROUTES/UI are
      * feature-gated for them) — gating those two resources here would hide them by
      * default (`share_links` defaults `false`) with no missing-table risk to guard

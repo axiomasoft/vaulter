@@ -44,7 +44,7 @@ column must exist for the index to be defined. When tenancy is off, the index si
 spans a `NULL` column.
 
 ```php
-// Vaulter\Schema\SchemaBuilder::tenant() — runs for every Drive table
+// Vaulter\Schema\SchemaHelpers::tenant() — runs for every Drive table
 private function tenant(Blueprint $table, IdStrategy $ids): void
 {
     $ids->reference(table: $table, column: 'tenant_id', nullable: true);

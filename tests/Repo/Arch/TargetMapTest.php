@@ -309,10 +309,7 @@ it('classifies the special cases of the architecture by name', function (): void
         ->and($types['Vaulter\Models\Drive\Node'])->toMatchArray(['owner' => 'drive', 'target_fqcn' => 'Vaulter\Drive\Models\Node', 'eloquent' => true])
         ->and($types['Vaulter\Contracts\Cas\BlobStore']['owner'])->toBe('media')
         ->and($types['Vaulter\Documents\Collaboration\CollaborationHub'])->toMatchArray(['owner' => 'collaboration', 'phase' => 'P5'])
-        ->and($members['Vaulter\Media\Cas\BlobStore::attach']['owner'])->toBe('drive')
-        ->and($members['Vaulter\Schema\SchemaBuilder::addHeadForeignKey']['action'])->toBe('split')
-        ->and($members['Vaulter\Schema\SchemaBuilder::createAll']['action'])->toBe('split')
-        ->and($members['Vaulter\Schema\SchemaBuilder::dropAll']['action'])->toBe('split');
+        ->and($members['Vaulter\Media\Cas\BlobStore::attach']['owner'])->toBe('drive');
 });
 
 it('keeps every public-API baseline type out of Internal unless a note says why', function (): void {

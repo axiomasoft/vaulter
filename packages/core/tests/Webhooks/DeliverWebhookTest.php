@@ -17,8 +17,8 @@ use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Profiles\Profile;
-use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Webhooks\Schema\WebhooksSchema;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 use Vaulter\Webhooks\WebhookSecret;
 use Vaulter\Webhooks\WebhookSigner;
@@ -309,10 +309,10 @@ it('delivers on the custom model connection without holding a transaction during
     config()->set('database.connections.delivery_other', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
     config()->set('vaulter.database.connection', 'delivery_other');
 
-    $builder = new SchemaBuilder;
+    $builder = new WebhooksSchema;
     $panel = (new Profile)->key('default');
-    $builder->createTable(entity: 'webhook_endpoints');
-    $builder->createTable(entity: 'webhook_deliveries');
+    $builder->create(entity: 'webhook_endpoints');
+    $builder->create(entity: 'webhook_deliveries');
 
     $delivery = WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint());
     Http::fake(function () {

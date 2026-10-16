@@ -511,9 +511,9 @@ it('is deterministic: two reads of the same sources give identical JSON', functi
     expect(SourceIndex::forRepo($repo))->toBe(SourceIndex::forRepo($repo));
 });
 
-it('indexes the real repository: SchemaBuilder keeps its private define methods and no reference carries a position', function (): void {
+it('indexes the real repository: DriveSchema keeps its private define methods and no reference carries a position', function (): void {
     $index = SourceIndex::forRepo(Repo::discover());
-    $builder = $index->declaration('Vaulter\Schema\SchemaBuilder');
+    $builder = $index->declaration('Vaulter\Drive\Schema\DriveSchema');
     $private = array_column(array_filter($builder['methods'] ?? [], static fn (array $m): bool => $m['visibility'] === 'private' && str_starts_with($m['name'], 'define')), 'name');
 
     expect($builder)->not->toBeNull()->and($private)->toContain('defineNodes')

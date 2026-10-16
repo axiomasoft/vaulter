@@ -7,7 +7,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Drive\Schema\DriveSchema;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class);
@@ -17,7 +17,7 @@ it('creates the node sequence as a signed 64-bit column with enforced foreign ke
     $oldStrategy = config('vaulter.ids.strategy');
     config()->set('vaulter.database.table_prefix', 'sequence_probe_');
     config()->set('vaulter.ids.strategy', $strategy);
-    $builder = app(SchemaBuilder::class);
+    $builder = app(DriveSchema::class);
     $db = app(VaulterDatabase::class)->connection();
     $schema = $db->getSchemaBuilder();
     if ($db->getDriverName() === 'sqlite') {
@@ -32,8 +32,8 @@ it('creates the node sequence as a signed 64-bit column with enforced foreign ke
     [$drive, $parent, $child, $absent] = array_map($key, [1, 2, 3, 4]);
 
     try {
-        $builder->createTable('drives');
-        $builder->createTable('nodes');
+        $builder->create('drives');
+        $builder->create('nodes');
         expect($schema->hasColumn('sequence_probe_nodes', 'sequence'))->toBeTrue();
         $db->table('sequence_probe_drives')->insert([
             'id' => $drive, 'owner_type' => 'team', 'owner_id' => '1', 'name' => 'drive',
@@ -63,8 +63,8 @@ it('creates the node sequence as a signed 64-bit column with enforced foreign ke
         expect(fn () => $db->transaction(fn () => $db->table('sequence_probe_nodes')->where('id', $child)->update(['drive_id' => $absent])))
             ->toThrow(QueryException::class);
     } finally {
-        $builder->dropTable('nodes');
-        $builder->dropTable('drives');
+        $builder->drop('nodes');
+        $builder->drop('drives');
         config()->set('vaulter.database.table_prefix', $oldPrefix);
         config()->set('vaulter.ids.strategy', $oldStrategy);
     }
@@ -79,7 +79,7 @@ it('D33 refuses to add the node sequence on a mysql-driver server that cannot en
     DB::shouldReceive('connection')->andReturn($connection);
 
     try {
-        expect(fn () => app(SchemaBuilder::class)->addNodeSequence())->toThrow(RuntimeException::class, 'enforced MySQL CHECKs');
+        expect(fn () => app(DriveSchema::class)->addNodeSequence())->toThrow(RuntimeException::class, 'enforced MySQL CHECKs');
     } finally {
         DB::swap($database);
     }

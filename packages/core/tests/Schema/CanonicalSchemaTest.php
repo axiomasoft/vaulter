@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Documents\Schema\DocumentsSchema;
+use Vaulter\Schema\ModuleSchemas;
 
 it('creates the canonical schema independently of runtime features and legacy table overrides', function (): void {
     $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
@@ -37,11 +38,15 @@ it('creates the canonical schema independently of runtime features and legacy ta
     expect($indexes['v_node_grants_grant_uniq']['columns'])->toBe(['node_id', 'subject_type', 'subject_id', 'scope']);
     config()->set('vaulter.features', array_fill_keys(['grants', 'share_links', 'activity', 'webhooks', 'public_listing', 'spreadsheets'], false));
     config()->set('vaulter.database.table_prefix', 'features_off_');
-    (new SchemaBuilder)->createAll();
+    // The documents module is not offered by this harness; its tables are built by its own schema class.
+    $documents = app(DocumentsSchema::class);
+    app(ModuleSchemas::class)->createAll();
+    array_map($documents->create(...), $documents->entities());
     expect($schema->hasTable('features_off_file_revisions'))->toBeTrue()
         ->and($schema->hasTable('features_off_documents'))->toBeTrue()
         ->and($schema->hasTable('features_off_document_revisions'))->toBeTrue()
         ->and($schema->hasTable('features_off_node_comments'))->toBeTrue()
         ->and($schema->hasColumn('features_off_nodes', 'extra_data'))->toBeFalse();
-    (new SchemaBuilder)->dropAll();
+    array_map($documents->drop(...), array_reverse($documents->entities()));
+    app(ModuleSchemas::class)->dropAll();
 });

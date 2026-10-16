@@ -11,9 +11,8 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Profiles\Profile;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Tests\Fixtures\HostKeyUser;
 
 // Build a fresh panel after upgrade migrations, so the regression cannot be
@@ -21,10 +20,10 @@ use Vaulter\Tests\Fixtures\HostKeyUser;
 beforeEach(function (): void {
     config()->set('vaulter.ids.host_keys', 'string');
     config()->set('vaulter.database.table_prefix', 'hk_v23_');
-    (new SchemaBuilder)->createAll((new Profile)->key('default'));
+    app(ModuleSchemas::class)->createAll();
 });
 afterEach(function (): void {
-    (new SchemaBuilder)->dropAll((new Profile)->key('default'));
+    app(ModuleSchemas::class)->dropAll();
 });
 
 it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulter IDs', function (): void {

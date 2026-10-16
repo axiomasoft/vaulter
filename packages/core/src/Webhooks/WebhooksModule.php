@@ -14,7 +14,9 @@ use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\VaulterModule;
+use Vaulter\Webhooks\Schema\WebhooksSchema;
 
 /**
  * The webhooks module (D22, D39): a logical manifest offered by the core provider until P4 moves the
@@ -23,8 +25,13 @@ use Vaulter\Modules\VaulterModule;
  * requires the drive module.
  */
 #[Internal]
-final class WebhooksModule implements VaulterModule
+final class WebhooksModule implements OwnsSchema, VaulterModule
 {
+    public static function ownedSchema(): string
+    {
+        return WebhooksSchema::class;
+    }
+
     public function id(): ModuleId
     {
         return new ModuleId('webhooks');

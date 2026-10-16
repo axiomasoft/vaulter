@@ -17,7 +17,7 @@ declare(strict_types=1);
  * exits 1; nothing is rewritten. The server engines come from DB_CONNECTION/DB_HOST/DB_PORT/DB_DATABASE/...
  * (scripts/schema-snapshot.sh provisions a disposable one); DB_DATABASE must end in _test.
  * --rollback additionally rolls the chain back and requires an empty schema.
- * --mode=builder builds the schema straight from SchemaBuilder::createAll() instead of the migration chain. It exists
+ * --mode=builder builds the schema straight from the schema classes of the offered modules (ModuleSchemas::createAll()) instead of the migration chain. It exists
  * for one purpose: the immutable "before" of a preset whose 0.x chain cannot even migrate an empty database.
  */
 
@@ -25,7 +25,7 @@ use Illuminate\Contracts\Console\Kernel;
 use Orchestra\Testbench\Foundation\Application as Testbench;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Support\Schema\SchemaPresets;
@@ -115,7 +115,7 @@ try {
     $mode = (string) ($options['mode'] ?? 'chain');
     if ($mode === 'builder') {
         $app['db']->connection('testing')->getSchemaBuilder()->dropAllTables();
-        $app->make(SchemaBuilder::class)->createAll();
+        $app->make(ModuleSchemas::class)->createAll();
     } elseif ($mode === 'chain') {
         $migrate('migrate:fresh');
     } else {
@@ -127,7 +127,7 @@ try {
 
     if (isset($options['rollback'])) {
         if ($mode === 'builder') {
-            $app->make(SchemaBuilder::class)->dropAll();
+            $app->make(ModuleSchemas::class)->dropAll();
         } else {
             $migrate('migrate:rollback');
         }

@@ -53,6 +53,7 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Providers\SchedulingRegistrar;
+use Vaulter\Drive\Schema\DriveSchema;
 use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
 use Vaulter\Drive\Uploads\Inspection\MimeConsistencyInspector;
 use Vaulter\Drive\Uploads\Inspection\ScanDispatchInspector;
@@ -70,6 +71,7 @@ use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
 use Vaulter\Providers\AccessRegistrar;
@@ -83,7 +85,7 @@ use Vaulter\VaulterServiceProvider;
  * drive's event types with the activity and change-journal event sinks, and the drive part of the core bindings. `vaulter.modules.drive = false` removes all of it.
  */
 #[Internal]
-final class DriveModule implements VaulterModule
+final class DriveModule implements OwnsSchema, VaulterModule
 {
     /** @var array<string, class-string<DoctorCheck>> doctor key => check */
     private const array DOCTOR_CHECKS = [
@@ -99,6 +101,11 @@ final class DriveModule implements VaulterModule
         'core.routes.auth' => RoutesAuthCheck::class,
         'core.access.driver' => AccessDriverCheck::class,
     ];
+
+    public static function ownedSchema(): string
+    {
+        return DriveSchema::class;
+    }
 
     public function id(): ModuleId
     {

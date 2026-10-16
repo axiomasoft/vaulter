@@ -42,12 +42,14 @@ use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
 use Vaulter\Observability\TelemetryMiddleware;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Providers\BindingsRegistrar;
 use Vaulter\Providers\EventsRegistrar;
+use Vaulter\Schema\KernelSchema;
 
 /**
  * The kernel's own module (ADR-0027): the `vaulter` config root, the schema of every create-migration
@@ -58,7 +60,7 @@ use Vaulter\Providers\EventsRegistrar;
  * and doctor checks (D29).
  */
 #[Internal]
-final class CoreModule implements VaulterModule
+final class CoreModule implements OwnsSchema, VaulterModule
 {
     /** @var array<string, class-string<DoctorCheck>> doctor key => check */
     private const array DOCTOR_CHECKS = [
@@ -77,6 +79,11 @@ final class CoreModule implements VaulterModule
         'core.outbox.consumer_gaps' => OutboxConsumerGapCheck::class,
         'core.outbox.settle_window' => OutboxSettleWindowCheck::class,
     ];
+
+    public static function ownedSchema(): string
+    {
+        return KernelSchema::class;
+    }
 
     public function id(): ModuleId
     {

@@ -206,7 +206,7 @@ name.
 By default every Vaulter table and model reads/writes through the host application's default
 Laravel database connection. Set `config('vaulter.database.connection')` (or `VAULTER_DB_CONNECTION`) to a
 named connection from `config('database.connections')` to route the entire `v_*` schema — every
-migration `SchemaBuilder` creates and every shipped model's `getConnectionName()` — onto that
+migration creates and every shipped model's `getConnectionName()` — onto that
 connection instead, e.g. to shard Vaulter onto its own database or isolate a heavy CAS/activity
 workload. Leaving the key `null` (the default) keeps the current behaviour exactly as it is today.
 

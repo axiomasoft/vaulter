@@ -33,6 +33,7 @@ use Vaulter\Documents\Profiles\AllowedDocumentTypesProfileOption;
 use Vaulter\Documents\Profiles\CommentsProfileOption;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Providers\CollaborationRegistrar;
+use Vaulter\Documents\Schema\DocumentsSchema;
 use Vaulter\Documents\Support\DocumentHeads;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -41,6 +42,7 @@ use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
 
@@ -50,8 +52,13 @@ use Vaulter\Modules\VaulterModule;
  * the existing `vaulter-documents.collaboration.enabled` switch inside the routes file.
  */
 #[Internal]
-final class DocumentsModule implements VaulterModule
+final class DocumentsModule implements OwnsSchema, VaulterModule
 {
+    public static function ownedSchema(): string
+    {
+        return DocumentsSchema::class;
+    }
+
     public function id(): ModuleId
     {
         return new ModuleId('documents');

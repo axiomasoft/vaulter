@@ -126,9 +126,9 @@ Vaulter никогда не ссылается на конкретный кла�
 | `Drivers/Permission/` | Поставляемые полосы `PermissionDriver`: `database`, `gate`, `spatie`; `azgard` находится в `vaulter-azgard`. |
 | `Cas/` | `BlobLock` — единственный CAS-класс, оставшийся в core; сам движок хранилища переехал в `vaulter-media`. |
 | `Profiles/` | `Profile`, `ProfileProvider`, `ProfileRegistry`. |
-| `Schema/` | `SchemaBuilder`, `VaulterSchema`. |
+| `Schema/` | `VaulterSchema`, `SchemaHelpers` (общие помощники колонок, ключей и соединения), `KernelSchema` (DDL собственных таблиц ядра), `ModuleSchema` и `ModuleSchemas` (schema-классы предложенных модулей). DDL таблиц остальных модулей лежит в их собственном классе `Schema/<Module>Schema`. |
 | `Engines/` | Движок реестра расширяемости по форматам (VLT-CANON P0.4, ревизия H.5/T5): `FileHandlerRegistry`, `NodePresenter`, `FileDescriptorFactory` и базовые `Handlers/{PreviewHandler,DownloadOnlyHandler}` — привязаны всегда, так что хост только с Drive резолвит preview/download без единого другого пакета. |
-| `Schema/` | Классы стратегий идентификаторов (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, колонки `SchemaBuilder`. |
+| `Schema/` | Классы стратегий идентификаторов (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, колонки хост-ключей. |
 | `Sharing/` | Канал bearer-ссылок: `ShareResolver`, `ShareContext`, `ShareResult`. |
 | `Webhooks/` | Слой надёжности: `WebhookFanoutConsumer`, `WebhookSigner` (сам outbox — в `Events/Outbox/`: `OutboxWriter`, `OutboxRelay`). |
 | `Activity/` | Append-only лента активности (`ActivityRecorder`, `RecordsActivity`). |
