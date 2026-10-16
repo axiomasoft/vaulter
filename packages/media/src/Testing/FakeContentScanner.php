@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Testing;
+namespace Vaulter\Media\Testing;
 
 use Throwable;
 use Vaulter\Attributes\Api;
-use Vaulter\Content\ScanInput;
-use Vaulter\Content\ScanResult;
-use Vaulter\Contracts\Cas\ContentScanner;
-use Vaulter\Enums\Cas\ScanVerdict;
+use Vaulter\Media\Content\ScanInput;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 /**
  * A scanner whose verdicts a test scripts, keyed by the bytes it is asked to scan, and

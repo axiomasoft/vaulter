@@ -254,7 +254,7 @@ override) — returning `false` (or not implementing the interface) is always sa
 
 ### Cas (content-addressed storage)
 
-#### `Vaulter\Contracts\Cas\BlobStore`
+#### `Vaulter\Media\Contracts\Cas\BlobStore`
 
 The high-level, race-free CAS blob lifecycle. `commit()` is the single entry point —
 stage → hash → find-or-create the blob by its per-scope dedup key inside one locked
@@ -278,7 +278,7 @@ interface BlobStore
 }
 ```
 
-#### `Vaulter\Contracts\Cas\ContentStore`
+#### `Vaulter\Media\Contracts\Cas\ContentStore`
 
 The low-level byte side of the CAS: stage an incoming stream to a local seekable temp
 file (hashing those durable bytes server-side), then promote the staged bytes to
@@ -305,7 +305,7 @@ interface ContentStore
 }
 ```
 
-#### `Vaulter\Contracts\Cas\ListableContentStore`
+#### `Vaulter\Media\Contracts\Cas\ListableContentStore`
 
 An opt-in capability a `ContentStore` implements to declare it can enumerate stored
 objects and report their age — the seam the orphan disk-walk (CAS reconciler) uses
@@ -324,7 +324,7 @@ interface ListableContentStore
 
 **Implement when** your `ContentStore` should participate in orphan reconciliation.
 
-#### `Vaulter\Contracts\Cas\StagedObject`
+#### `Vaulter\Media\Contracts\Cas\StagedObject`
 
 The result of staging an upload to a local, seekable temp file. The sha256 is
 recomputed from these durable bytes — never the live stream, a client hash, or an S3
@@ -346,7 +346,7 @@ interface StagedObject
 }
 ```
 
-#### `Vaulter\Contracts\Cas\StorageDriver`
+#### `Vaulter\Media\Contracts\Cas\StorageDriver`
 
 A thin abstraction over a Flysystem disk — the byte plane under the CAS. Swap to add
 object-store specifics (`x-amz-checksum-sha256`, `If-None-Match: *`) while keeping
@@ -379,7 +379,7 @@ we were overtaken and must re-SELECT + reuse — surfaced as `put()` returning `
 not an exception. On a local disk the condition degrades to a best-effort `exists()`
 guard.
 
-#### `Vaulter\Contracts\Cas\ListableStorageDriver`
+#### `Vaulter\Media\Contracts\Cas\ListableStorageDriver`
 
 An opt-in capability a `StorageDriver` implements to declare it can enumerate the
 disk and report object age — the seam the orphan disk-walk (CAS reconciler) uses to

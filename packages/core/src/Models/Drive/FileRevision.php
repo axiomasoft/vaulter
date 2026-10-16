@@ -15,7 +15,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\Factories\FileRevisionFactory;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;

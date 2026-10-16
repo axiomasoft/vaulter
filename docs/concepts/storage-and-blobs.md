@@ -17,8 +17,8 @@ database*, and a garbage collector that is safe to run while uploads are in flig
 
 ::: info Where this lives
 The CAS implementation is in `Vaulter\Media\Cas\*` (package `axioma-studio/vaulter-media`;
-the host-facing `BlobLock` stays at `Vaulter\Cas\BlobLock` in core), the row model is
-`Vaulter\Models\Cas\Blob`, the lifecycle enum is `Vaulter\Enums\Cas\BlobStatus`, and
+the host-facing `BlobLock` stays at `Vaulter\Media\Cas\BlobLock` in core), the row model is
+`Vaulter\Media\Models\Cas\Blob`, the lifecycle enum is `Vaulter\Media\Enums\Cas\BlobStatus`, and
 configuration sits under the `cas`, `dedup`, `gc` and `storage` keys of
 `config/vaulter.php`.
 :::
@@ -45,9 +45,9 @@ Three contracts split the work, and all three are swappable through `config('vau
 
 | Contract | Default | Responsibility |
 |---|---|---|
-| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | High-level lifecycle: `commit` / `commitStaged` / `attach` / `detach` / `read`. Prepared and stream CAS entry points. |
-| `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Byte side: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Knows bytes, hashes and keys — never a `v_blobs` row. |
-| `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Thin Flysystem abstraction: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
+| `Vaulter\Media\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | High-level lifecycle: `commit` / `commitStaged` / `attach` / `detach` / `read`. Prepared and stream CAS entry points. |
+| `Vaulter\Media\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Byte side: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Knows bytes, hashes and keys — never a `v_blobs` row. |
+| `Vaulter\Media\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Thin Flysystem abstraction: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
 ```php
 // config/vaulter-media.php
@@ -64,7 +64,7 @@ your own class to change how bytes are staged, hashed, promoted, or stored — s
 
 ## Bytes on disk, metadata in the database
 
-A blob is just metadata. The `v_blobs` row (model `Vaulter\Models\Cas\Blob`) carries:
+A blob is just metadata. The `v_blobs` row (model `Vaulter\Media\Models\Cas\Blob`) carries:
 
 | Column | Meaning |
 |---|---|
@@ -121,7 +121,7 @@ transaction, so hashing a multi-GB upload never holds the row/advisory lock.
 :::
 
 The staged object (`Vaulter\Media\Cas\StagedTempObject`, implementing
-`Vaulter\Contracts\Cas\StagedObject`) exposes `path()`, `sha256()`, `sizeBytes()`,
+`Vaulter\Media\Contracts\Cas\StagedObject`) exposes `path()`, `sha256()`, `sizeBytes()`,
 `readStream()` and an idempotent `discard()` that removes the temp file once the
 bytes are promoted (or the commit rolls back).
 
@@ -248,7 +248,7 @@ or an explicit revision). `vaulter.downloads.delivery_mode` picks how:
 | Mode | What the client gets | Revocation |
 |---|---|---|
 | `strict` (default) | the bytes, streamed by the application, `Cache-Control: private, no-store` | every new request is checked; a stream already started is not cut |
-| `direct_signed` (opt-in) | a `302` to a URL your `Vaulter\Contracts\Cas\DirectContentUrlSigner` signs for that exact object version, valid `vaulter.downloads.direct_ttl_seconds` (1–300) | a URL already issued stays valid until it expires — revoking access does not cancel it |
+| `direct_signed` (opt-in) | a `302` to a URL your `Vaulter\Media\Contracts\Cas\DirectContentUrlSigner` signs for that exact object version, valid `vaulter.downloads.direct_ttl_seconds` (1–300) | a URL already issued stays valid until it expires — revoking access does not cancel it |
 
 `direct_signed` needs a signer bound in the container; the signer receives the immutable content
 identity (blob, storage key, storage version, sha256, size) and must sign exactly that. Choose it
@@ -262,7 +262,7 @@ Only committed or superseded revisions can be downloaded. A caller without Downl
 
 ## Blob lifecycle
 
-`Vaulter\Enums\Cas\BlobStatus` is the state machine:
+`Vaulter\Media\Enums\Cas\BlobStatus` is the state machine:
 
 ```
 Pending → Committed → Tombstoned → Deleting → Deleted
@@ -317,7 +317,7 @@ that wins the lock resurrects a tombstoned blob *before* the sweep can see it; a
 sweep that wins the lock re-checks edge existence *before* deleting.
 :::
 
-Per database driver (`Vaulter\Cas\BlobLock`):
+Per database driver (`Vaulter\Media\Cas\BlobLock`):
 
 - **PostgreSQL** — `pg_advisory_xact_lock(hashtext(scope||sha256))`, a real mutex
   held for the whole transaction. The sweep additionally runs `SERIALIZABLE` with

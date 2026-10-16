@@ -9,7 +9,7 @@ use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Cas\ScanMode;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Models\Content\ScanPolicyState;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\DriveContext;

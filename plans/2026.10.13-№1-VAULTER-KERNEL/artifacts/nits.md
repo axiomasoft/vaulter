@@ -1,3 +1,9 @@
 P4.5 | packages/core/src/Testing/Support/SuiteDatabaseConnection.php:50 | докблок engine() оказался над migrationPaths(); вернуть его к engine()
 P4.5 | tests/baseline/vue.list | `scripts/t baseline --compare` предупреждает: vue.list устарел относительно discovery (pre-existing, вне P4.5)
 P4.5 | packages/core/src/Console/ModuleUninstallCommand.php:77 | текст отказа --force/--purge "not available yet (P4)" заменит P4.17
+P4.5 | packages/core/src/Webhooks/Schema/WebhooksSchema.php:84 | FK webhook_endpoints.drive_id→drives в core без drive падает на pgsql/mysql; уйдёт с переездом в P4.13 (RC1)
+P4.5 | UPGRADE.md/CHANGELOG | строка: dev-БД с main до RC1 пересоздать (migrate:fresh) — имена миграций сменились (RC1)
+P4.6 | docs/reference/config.md, docs/ru/reference/config.md | таблица владельцев `models.blob` … `core` и страницы storage-and-blobs/tenancy: ключ теперь `vaulter-media.models.blob`, `Tenancy::without` (P4.20)
+P4.6 | packages/media/tests/TestCase.php:23 | комментарий «Core provides the Contracts\Cas seam, the Blob model + v_blobs schema» устарел (контракты, модель и схема — media)
+P4.6 | packages/drive/src/DriveModule.php:86 | docblock «two doctor checks» неверен (теперь 10 проверок, включая media.disk.probe/media.dedup.scope по D33)
+P4.6 | packages/media/src/Models/Cas/Blob.php:3 | docblock ссылается на v_file_revision_blobs/FileRevision — уйдёт с pins (P4.7)

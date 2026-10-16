@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Content;
+namespace Vaulter\Media\Content;
 
 use DateTimeImmutable;
 use Vaulter\Attributes\Api;

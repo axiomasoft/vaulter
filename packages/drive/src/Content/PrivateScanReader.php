@@ -8,7 +8,7 @@ use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanSnapshot;
-use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]

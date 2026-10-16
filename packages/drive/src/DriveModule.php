@@ -41,6 +41,8 @@ use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\ShortcutPurgeLifecycle;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Doctor\DedupScopeCheck;
+use Vaulter\Drive\Doctor\DiskProbeCheck;
 use Vaulter\Drive\Doctor\DrivesDeletingCheck;
 use Vaulter\Drive\Doctor\DrivesUsageCheck;
 use Vaulter\Drive\Doctor\IntlCheck;
@@ -97,6 +99,9 @@ final class DriveModule implements OwnsSchema, VaulterModule
         'drive.scan.scope' => ScanScopeCheck::class,
         'drive.drives.deleting' => DrivesDeletingCheck::class,
         'drive.drives.usage' => DrivesUsageCheck::class,
+        // The checks of the disks of the profiles (D33): the profiles are the drive's, the keys keep the media.* identity.
+        'media.disk.probe' => DiskProbeCheck::class,
+        'media.dedup.scope' => DedupScopeCheck::class,
         // Located in core until P4 (D39).
         'core.routes.auth' => RoutesAuthCheck::class,
         'core.access.driver' => AccessDriverCheck::class,

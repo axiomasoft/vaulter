@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Testing\Contracts;
+namespace Vaulter\Media\Testing\Contracts;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\Assert;
 use Throwable;
 use Vaulter\Attributes\Api;
-use Vaulter\Content\ScanInput;
-use Vaulter\Content\ScanResult;
-use Vaulter\Contracts\Cas\ContentScanner;
-use Vaulter\Enums\Cas\ScanVerdict;
+use Vaulter\Media\Content\ScanInput;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Testing\Support\FailingStream;
 
 /**

@@ -164,7 +164,7 @@ namespace+use» внутри уже спланированной фазы «git 
 
 **Инвариант, отвечающий на «как это уживается с single-prefix» из брифа:** single-prefix относится
 **только к корню автозагрузки НОВОГО пакета**, а не к запрету слову «Drive»/«Documents» появляться
-где-либо ещё. Ровно так уже устроено у media: `Vaulter\Cas\BlobLock` остался в core **одновременно**
+где-либо ещё. Ровно так уже устроено у media: `Vaulter\Media\Cas\BlobLock` остался в core **одновременно**
 с тем, что media получил свой `Vaulter\Media\Cas\*` — совпадение слова «Cas» в обоих местах не
 конфликт, потому что физически это разные top-level ветки (`Vaulter\Cas\...` в
 `packages/core/src/Cas/`, `Vaulter\Media\Cas\...` в `packages/media/src/Cas/`). Для drive это
@@ -316,7 +316,7 @@ kernel-Access/Sharing/Activity/Webhooks/Panels/Schema — docdrive их толь
   делают **guard-throw** при отсутствии пакета вместо тихого дефолта. Тот же паттерн уже заложен в
   T9 топологии для `uploadSessionModel`/`nodeCommentModel` и т.п. — аддендум ничего нового сюда не
   добавляет, только подтверждает, что паттерн проверен на практике.
-- BlobLock-исключение: единственный класс (`Vaulter\Cas\BlobLock`), который логически про CAS, но
+- BlobLock-исключение: единственный класс (`Vaulter\Media\Cas\BlobLock`), который логически про CAS, но
   остался в core, потому что его увод создал бы обратный цикл (`Repositories\Cas\BlobStoreRepository`
   (core) → media). Прямая аналогия для drive/docdrive: НЕТ ни одного такого класса — карта в §(3)
   чистая, обратных циклов не создаёт (все ссылки консюмеров указывают на классы, которые и так

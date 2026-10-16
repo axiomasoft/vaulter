@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Profiles;
 
 use Vaulter\Attributes\Api;
-use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
+use Vaulter\Media\Enums\Cas\ScanMode;
 
 #[Api]
 final readonly class UploadPolicy

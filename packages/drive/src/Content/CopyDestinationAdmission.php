@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfilePolicy;

@@ -7,7 +7,7 @@ namespace Vaulter\Repositories\Drive;
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 

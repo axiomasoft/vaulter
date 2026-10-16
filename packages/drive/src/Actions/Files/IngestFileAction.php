@@ -7,7 +7,6 @@ namespace Vaulter\Drive\Actions\Files;
 use LogicException;
 use Psr\Http\Message\StreamInterface;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
@@ -27,7 +26,9 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
@@ -42,7 +43,6 @@ use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\TreeGuard;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Commit an upload into the Drive (commit flow): stage → quota → BlobStore.commitStaged

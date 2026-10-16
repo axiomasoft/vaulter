@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Load\Console\SeedLoadDatasetCommand;
+use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage as DriveStorage;

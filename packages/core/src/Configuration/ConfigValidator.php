@@ -91,7 +91,6 @@ final readonly class ConfigValidator
             'scan_obligation', 'scan_request', 'scan_evidence', 'scan_policy_state', 'scan_backfill_run',
             'file_revision',
             'file_revision_blob',
-            'blob',
             'grant',
             'node_share',
             'activity',

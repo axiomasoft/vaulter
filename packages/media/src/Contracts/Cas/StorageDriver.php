@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Cas;
+namespace Vaulter\Media\Contracts\Cas;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Vaulter\Attributes\Spi;

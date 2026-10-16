@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Repositories\Cas;
+namespace Vaulter\Media\Repositories\Cas;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Cas\BlobLock;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Enums\Cas\BlobStatus;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\Cas\BlobLock;
+use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * Write-side row work for v_blobs. It owns the locked find-or-create by the
@@ -24,7 +24,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 final readonly class BlobStoreRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly MediaConfig $mediaConfig,
         private BlobLock $lock,
     ) {}
 
@@ -210,7 +210,7 @@ final readonly class BlobStoreRepository
         // forceFill: Blob is intentionally fully guarded (CAS
         // integrity: sha256/storage_key are content-addressed) — this is the
         // sole trusted commit seam, never raw request input.
-        $blob = new ($this->vaulterConfig->model('blob'));
+        $blob = new ($this->mediaConfig->blobModel());
         $blob->forceFill([
             'tenant_id' => $scope->dedupScope() === 'drive' ? null : $tenantId,
             'drive_id' => $scope->dedupScope() === 'drive' ? $storageId : null,
@@ -254,7 +254,7 @@ final readonly class BlobStoreRepository
      */
     private function query(): Builder
     {
-        $model = $this->vaulterConfig->model('blob');
+        $model = $this->mediaConfig->blobModel();
 
         return $model::query();
     }

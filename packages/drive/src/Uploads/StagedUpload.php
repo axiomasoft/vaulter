@@ -10,7 +10,6 @@ use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Files\UploadFacts;
@@ -19,6 +18,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
 use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Media\Cas\StagedTempObject;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Models\Drive\Drive;
 
 /**

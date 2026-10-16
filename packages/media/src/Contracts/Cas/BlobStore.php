@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Cas;
+namespace Vaulter\Media\Contracts\Cas;
 
 use Vaulter\Attributes\Api;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * The high-level content-addressed blob lifecycle: the race-free CAS.

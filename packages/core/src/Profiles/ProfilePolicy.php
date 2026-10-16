@@ -14,11 +14,11 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Contracts\Profiles\ProfileOption;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Kernel;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 

@@ -6,7 +6,7 @@ namespace Vaulter\Load\Console;
 
 use Illuminate\Console\Command;
 use RuntimeException;
-use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\ContentStore;
 
 /**
  * P4.2 — isolated CAS stage probe (CLI process, not FPM).

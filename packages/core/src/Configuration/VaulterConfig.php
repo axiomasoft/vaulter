@@ -11,9 +11,10 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Content\ScanBackfillRun;
 use Vaulter\Models\Content\ScanEvidenceRecord;
 use Vaulter\Models\Content\ScanObligation;
@@ -76,7 +77,6 @@ final readonly class VaulterConfig
             'node' => Node::class,
             'file' => File::class,
             'file_revision' => FileRevision::class,
-            'blob' => Blob::class,
             'file_revision_blob' => FileRevisionBlob::class,
             'grant' => NodeGrant::class,
             'node_share' => NodeShare::class,
@@ -85,6 +85,11 @@ final readonly class VaulterConfig
             'webhook_endpoint' => WebhookEndpoint::class,
             'webhook_delivery' => WebhookDelivery::class,
         ];
+
+        if ($key === 'blob') {
+            // The blob model is the media package's (D6): its key lives in vaulter-media.models.blob.
+            return (new MediaConfig($this->config))->blobModel();
+        }
 
         $class = $this->config->get('vaulter.models.'.$key, $defaults[$key] ?? null);
         if (!is_string($class) || !isset($defaults[$key])) {

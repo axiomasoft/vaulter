@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Files;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\CopyDestinationAdmission;
 use Vaulter\Drive\Content\ScanAdmission;
@@ -14,6 +13,7 @@ use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Operations\DriveContext;

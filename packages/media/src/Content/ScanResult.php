@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Content;
+namespace Vaulter\Media\Content;
 
 use Vaulter\Attributes\Api;
-use Vaulter\Enums\Cas\ScanVerdict;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 #[Api]
 final readonly class ScanResult

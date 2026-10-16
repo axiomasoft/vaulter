@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Models\Cas;
+namespace Vaulter\Media\Models\Cas;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,11 +12,11 @@ use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Enums\Cas\BlobStatus;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Support\UtcDateTimeCast;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Content\ScanUtcDateTime;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 
@@ -27,7 +27,7 @@ use Vaulter\Models\Drive\FileRevisionBlob;
  * truth is the existence of a v_file_revision_blobs edge. The byte handling
  * and GC commit-flow are — this is the schema + model only.
  *
- * Swappable via configuration key vaulter.models.blob.
+ * Swappable via configuration key vaulter-media.models.blob.
  *
  * @property CarbonImmutable|null $quarantined_at
  * @property string|null          $storage_version
@@ -137,7 +137,7 @@ class Blob extends Model
     protected function casts(): array
     {
         return [
-            'quarantined_at' => ScanUtcDateTime::class,
+            'quarantined_at' => UtcDateTimeCast::class,
             'size_bytes' => 'integer',
             'ref_count' => 'integer',
             'status' => BlobStatus::class,

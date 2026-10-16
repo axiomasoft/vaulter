@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Cas;
+namespace Vaulter\Media\Contracts\Cas;
 
 use DateTimeImmutable;
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
-use Vaulter\Content\ImmutableContentIdentity;
-use Vaulter\Content\SignedContentUrl;
+use Vaulter\Media\Content\ImmutableContentIdentity;
+use Vaulter\Media\Content\SignedContentUrl;
 
 /** Trusted adapters sign an exact version or guarantee write-once immutable keys. */
 #[Spi(SpiKind::Implement)]

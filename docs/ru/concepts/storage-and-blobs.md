@@ -17,8 +17,8 @@ Vaulter никогда не копирует байты файлов в собс
 
 ::: info Где это живёт
 Реализация CAS — в `Vaulter\Media\Cas\*` (пакет `axioma-studio/vaulter-media`;
-обращённый к хосту `BlobLock` остаётся в core как `Vaulter\Cas\BlobLock`), модель строки —
-`Vaulter\Models\Cas\Blob`, enum жизненного цикла — `Vaulter\Enums\Cas\BlobStatus`, а
+обращённый к хосту `BlobLock` остаётся в core как `Vaulter\Media\Cas\BlobLock`), модель строки —
+`Vaulter\Media\Models\Cas\Blob`, enum жизненного цикла — `Vaulter\Media\Enums\Cas\BlobStatus`, а
 конфигурация лежит под ключами `cas`, `dedup`, `gc` и `storage` файла `config/vaulter.php`.
 :::
 
@@ -44,9 +44,9 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 
 | Контракт | По умолчанию | Ответственность |
 |---|---|---|
-| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | Высокоуровневый жизненный цикл: `commit` / `attach` / `detach` / `read`. Единственная точка входа в CAS. |
-| `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Байтовая сторона: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Знает байты, хэши и ключи — но никогда строку `v_blobs`. |
-| `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Тонкая абстракция над Flysystem: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
+| `Vaulter\Media\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | Высокоуровневый жизненный цикл: `commit` / `attach` / `detach` / `read`. Единственная точка входа в CAS. |
+| `Vaulter\Media\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Байтовая сторона: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Знает байты, хэши и ключи — но никогда строку `v_blobs`. |
+| `Vaulter\Media\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Тонкая абстракция над Flysystem: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
 ```php
 // config/vaulter-media.php
@@ -63,7 +63,7 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 
 ## Байты на диске, метаданные в базе
 
-Блоб — это лишь метаданные. Строка `v_blobs` (модель `Vaulter\Models\Cas\Blob`) несёт:
+Блоб — это лишь метаданные. Строка `v_blobs` (модель `Vaulter\Media\Models\Cas\Blob`) несёт:
 
 | Колонка | Смысл |
 |---|---|
@@ -116,7 +116,7 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 :::
 
 Staged-объект (`Vaulter\Media\Cas\StagedTempObject`, реализующий
-`Vaulter\Contracts\Cas\StagedObject`) отдаёт `path()`, `sha256()`, `sizeBytes()`,
+`Vaulter\Media\Contracts\Cas\StagedObject`) отдаёт `path()`, `sha256()`, `sizeBytes()`,
 `readStream()` и идемпотентный `discard()`, который удаляет temp-файл, как только байты
 запромоучены (или коммит откатился).
 
@@ -224,7 +224,7 @@ $stream = $blobStore->read($blob);         // resource|null над канони�
 | Режим | Что получает клиент | Отзыв |
 |---|---|---|
 | `strict` (по умолчанию) | байты потоком через приложение, `Cache-Control: private, no-store` | проверяется каждый новый запрос; уже начатый поток не обрывается |
-| `direct_signed` (по выбору) | `302` на URL, подписанный вашим `Vaulter\Contracts\Cas\DirectContentUrlSigner` для этой версии объекта, действующий `vaulter.downloads.direct_ttl_seconds` (1–300) | уже выданный URL действует до истечения — отзыв доступа его не отменяет |
+| `direct_signed` (по выбору) | `302` на URL, подписанный вашим `Vaulter\Media\Contracts\Cas\DirectContentUrlSigner` для этой версии объекта, действующий `vaulter.downloads.direct_ttl_seconds` (1–300) | уже выданный URL действует до истечения — отзыв доступа его не отменяет |
 
 Для `direct_signed` нужен signer в контейнере; он получает неизменяемую идентичность содержимого
 (блоб, ключ хранилища, версия объекта, sha256, размер) и должен подписать ровно её. Выбирайте этот
@@ -239,7 +239,7 @@ $stream = $blobStore->read($blob);         // resource|null над канони�
 
 ## Жизненный цикл блоба
 
-`Vaulter\Enums\Cas\BlobStatus` — это конечный автомат:
+`Vaulter\Media\Enums\Cas\BlobStatus` — это конечный автомат:
 
 ```
 Pending → Committed → Tombstoned → Deleting → Deleted
@@ -293,7 +293,7 @@ tombstone-блоб *до того*, как sweep его увидит; sweep, в�
 существование ребра *до* удаления.
 :::
 
-По драйверам БД (`Vaulter\Cas\BlobLock`):
+По драйверам БД (`Vaulter\Media\Cas\BlobLock`):
 
 - **PostgreSQL** — `pg_advisory_xact_lock(hashtext(scope||sha256))`, настоящий мьютекс,
   удерживаемый всю транзакцию. Sweep дополнительно работает в `SERIALIZABLE` с

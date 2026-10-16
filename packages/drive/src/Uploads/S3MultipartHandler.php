@@ -7,7 +7,6 @@ namespace Vaulter\Drive\Uploads;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -17,6 +16,7 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Support\AssembleSizeBucket;
 use Vaulter\Support\LoadTier;
 

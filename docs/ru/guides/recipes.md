@@ -440,7 +440,7 @@ CAS-бакет должен быть **без версионирования**. 
 ### Подмените CAS-сервис под особенности объектного хранилища
 
 Если нужно поведение, которого штатный драйвер не покрывает, реализуйте
-`Vaulter\Contracts\Cas\StorageDriver` (или `ContentStore` / `BlobStore`) и привяжите:
+`Vaulter\Media\Contracts\Cas\StorageDriver` (или `ContentStore` / `BlobStore`) и привяжите:
 
 <!-- snippet: config -->
 

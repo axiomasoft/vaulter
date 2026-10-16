@@ -6,8 +6,8 @@ namespace Vaulter\Content;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
-use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Profiles\ProfilePolicy;

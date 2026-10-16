@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\ValueObjects\Cas;
+namespace Vaulter\Media\ValueObjects\Cas;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;

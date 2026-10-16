@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Cas;
+namespace Vaulter\Media\Contracts\Cas;
 
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * The low-level byte side of the CAS: stage an incoming stream to a local

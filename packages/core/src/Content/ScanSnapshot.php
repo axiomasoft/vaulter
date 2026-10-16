@@ -6,11 +6,12 @@ namespace Vaulter\Content;
 
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Cas\BlobLock;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Cas\BlobStatus;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Cas\BlobLock;
+use Vaulter\Media\Content\ImmutableContentIdentity;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;

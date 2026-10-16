@@ -435,7 +435,7 @@ uploads ([ADR-0006](/adr/0006-content-addressed-blobs-gc)).
 ### Swap a CAS service for object-store specifics
 
 If you need behaviour the default driver doesn't cover, implement
-`Vaulter\Contracts\Cas\StorageDriver` (or `ContentStore` / `BlobStore`) and bind it:
+`Vaulter\Media\Contracts\Cas\StorageDriver` (or `ContentStore` / `BlobStore`) and bind it:
 
 <!-- snippet: config -->
 

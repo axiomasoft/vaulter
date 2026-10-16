@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Cas;
+namespace Vaulter\Media\Contracts\Cas;
 
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
-use Vaulter\Content\ScanInput;
-use Vaulter\Content\ScanResult;
+use Vaulter\Media\Content\ScanInput;
+use Vaulter\Media\Content\ScanResult;
 
 #[Spi(SpiKind::Implement)]
 interface ContentScanner

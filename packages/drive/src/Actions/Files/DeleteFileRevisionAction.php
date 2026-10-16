@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Files;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
 use Vaulter\Exceptions\Drive\RevisionPinnedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;

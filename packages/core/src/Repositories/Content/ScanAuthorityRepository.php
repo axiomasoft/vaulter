@@ -6,7 +6,7 @@ namespace Vaulter\Repositories\Content;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 

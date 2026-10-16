@@ -28,7 +28,7 @@ php artisan vendor:publish --tag=vaulter-config
 | `models.node` | `Vaulter\Models\Drive\Node` | core |
 | `models.file` | `Vaulter\Models\Drive\File` | core |
 | `models.file_revision` | `Vaulter\Models\Drive\FileRevision` | core |
-| `models.blob` | `Vaulter\Models\Cas\Blob` | core |
+| `models.blob` | `Vaulter\Media\Models\Cas\Blob` | core |
 | `models.file_revision_blob` | `Vaulter\Models\Drive\FileRevisionBlob` | core |
 | `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
 | `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
@@ -572,7 +572,6 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter.models.scan_policy_state` | — | `ScanPolicyState::class` | — |
 | `vaulter.models.scan_backfill_run` | — | `ScanBackfillRun::class` | — |
 | `vaulter.models.file_revision` | — | `FileRevision::class` | — |
-| `vaulter.models.blob` | — | `Blob::class` | — |
 | `vaulter.models.file_revision_blob` | — | `FileRevisionBlob::class` | — |
 | `vaulter.models.grant` | — | `NodeGrant::class` | — |
 | `vaulter.models.node_share` | — | `NodeShare::class` | — |
@@ -673,4 +672,6 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter-media.content_store` | — | `Sha256ContentStore::class` | — |
 | `vaulter-media.storage_driver` | — | `FlysystemStorageDriver::class` | — |
 | `vaulter-media.blob_store` | — | `BlobStore::class` | — |
+| `vaulter-media.models` | — | — | Swappable Eloquent model of the blob table (must extend the package model). |
+| `vaulter-media.models.blob` | — | `Blob::class` | — |
 <!-- vaulter:config-reference:end -->

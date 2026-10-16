@@ -247,7 +247,7 @@ scope панели AzGuard. Фейк также требует установл�
 
 ### Cas (контент-адресуемое хранилище)
 
-#### `Vaulter\Contracts\Cas\BlobStore`
+#### `Vaulter\Media\Contracts\Cas\BlobStore`
 
 Высокоуровневый, свободный от гонок жизненный цикл CAS-блоба. `commit()` — единственная
 точка входа: stage → хэш → найти-или-создать блоб по его ключу дедупликации в области,
@@ -272,7 +272,7 @@ interface BlobStore
 }
 ```
 
-#### `Vaulter\Contracts\Cas\ContentStore`
+#### `Vaulter\Media\Contracts\Cas\ContentStore`
 
 Низкоуровневая байтовая сторона CAS: сложить входящий поток во временный локальный файл с
 произвольным доступом (хэшируя эти надёжные байты на стороне сервера), затем продвинуть
@@ -299,7 +299,7 @@ interface ContentStore
 }
 ```
 
-#### `Vaulter\Contracts\Cas\StagedObject`
+#### `Vaulter\Media\Contracts\Cas\StagedObject`
 
 Результат складывания загрузки в локальный временный файл с произвольным доступом. sha256
 пересчитывается из этих надёжных байтов — никогда из живого потока, клиентского хэша или
@@ -322,7 +322,7 @@ interface StagedObject
 }
 ```
 
-#### `Vaulter\Contracts\Cas\StorageDriver`
+#### `Vaulter\Media\Contracts\Cas\StorageDriver`
 
 Тонкая абстракция над Flysystem-диском — байтовая плоскость под CAS. Подмените её, чтобы
 добавить специфику объектного хранилища (`x-amz-checksum-sha256`, `If-None-Match: *`),

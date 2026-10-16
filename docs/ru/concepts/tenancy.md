@@ -53,7 +53,7 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 
 Свойство модели объявлено на каждой Drive-модели
 (`Vaulter\Models\Drive\Drive`, `Node`, `File`, `FileRevision`,
-`Vaulter\Models\Cas\Blob`, `Vaulter\Models\Access\NodeGrant`,
+`Vaulter\Media\Models\Cas\Blob`, `Vaulter\Models\Access\NodeGrant`,
 `Vaulter\Models\Sharing\NodeShare`, …) как `int|string|null $tenant_id`.
 
 ::: tip

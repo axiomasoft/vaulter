@@ -307,7 +307,9 @@ it('classifies the special cases of the architecture by name', function (): void
         ->and($types['Vaulter\ValueObjects\Access\Actor'])->toMatchArray(['owner' => 'core', 'action' => 'keep'])
         ->and($types['Vaulter\Events\Outbox\Models\OutboxEvent'])->toMatchArray(['owner' => 'core', 'action' => 'keep'])
         ->and($types['Vaulter\Models\Drive\Node'])->toMatchArray(['owner' => 'drive', 'target_fqcn' => 'Vaulter\Drive\Models\Node', 'eloquent' => true])
-        ->and($types['Vaulter\Contracts\Cas\BlobStore']['owner'])->toBe('media')
+        ->and($types['Vaulter\Media\Contracts\Cas\BlobStore']['owner'])->toBe('media')
+        ->and($types['Vaulter\Tenancy\Tenancy'])->toMatchArray(['owner' => 'core', 'action' => 'keep', 'surface' => 'Api'])
+        ->and($types['Vaulter\Drive\Doctor\DiskSet']['owner'])->toBe('drive')
         ->and($types['Vaulter\Documents\Collaboration\CollaborationHub'])->toMatchArray(['owner' => 'collaboration', 'phase' => 'P5'])
         ->and($members['Vaulter\Media\Cas\BlobStore::attach']['owner'])->toBe('drive');
 });

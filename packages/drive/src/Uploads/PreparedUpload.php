@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Drive\Data\Files\UploadFacts;
+use Vaulter\Media\Contracts\Cas\StagedObject;
 
 /** @internal The caller owns this preparation until its last SQL attempt returns. */
 #[Internal]

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Enums\Cas;
+namespace Vaulter\Media\Enums\Cas;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Label;

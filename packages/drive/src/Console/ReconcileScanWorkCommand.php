@@ -8,13 +8,13 @@ use Illuminate\Console\Command;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
-use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Content\UploadCleanupReconciler;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\VaulterManager;
 
 #[Internal]

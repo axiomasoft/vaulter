@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Cas;
+namespace Vaulter\Media\Cas;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;

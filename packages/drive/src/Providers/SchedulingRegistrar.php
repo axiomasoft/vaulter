@@ -9,7 +9,7 @@ use Illuminate\Contracts\Config\Repository;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\ScheduleConfig;
-use Vaulter\Enums\Cas\ScanMode;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar as CoreSchedulingRegistrar;
 

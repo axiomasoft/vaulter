@@ -6,7 +6,7 @@ namespace Vaulter\Content;
 
 use DateTimeImmutable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Cas\ScanVerdict;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 #[Internal]
 final readonly class ScanEvidence
