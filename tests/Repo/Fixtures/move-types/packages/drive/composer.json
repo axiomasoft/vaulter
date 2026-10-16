@@ -1,0 +1,8 @@
+{
+    "name": "acme/drive",
+    "autoload": {
+        "psr-4": {
+            "Acme\\Drive\\": "src/"
+        }
+    }
+}

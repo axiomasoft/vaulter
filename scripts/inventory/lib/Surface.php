@@ -55,7 +55,7 @@ final class Surface
     public static function read(Repo $repo): array
     {
         $sources = [];
-        foreach (SourceIndex::PACKAGES as $package) {
+        foreach ($repo->sourcePackages() as $package) {
             // The code of a package: its src and the factories its hosts use in tests (database/factories).
             foreach (['src', 'database/factories'] as $root) {
                 $dir = $repo->path("packages/{$package}/{$root}");
@@ -107,12 +107,15 @@ final class Surface
      * One manifest per package: the Api and Spi types of the package.
      *
      * @param  list<SurfaceType>     $types
+     * @param  list<string>|null     $packages the packages to write (Repo::sourcePackages()); default: those the types belong to
      * @return array<string, string>
      */
-    public static function manifests(array $types): array
+    public static function manifests(array $types, ?array $packages = null): array
     {
+        $packages ??= array_values(array_unique(array_filter(array_column($types, 'package'))));
+        sort($packages, SORT_STRING);
         $manifests = [];
-        foreach (SourceIndex::PACKAGES as $package) {
+        foreach ($packages as $package) {
             $lines = [
                 "# Surface manifest of the package `{$package}` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].",
                 '# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.',

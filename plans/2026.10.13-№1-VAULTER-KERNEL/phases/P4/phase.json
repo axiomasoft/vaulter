@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P4",
   "title": "Разделение владения: media, drive, webhooks и облегчение core",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Разнести владение по пакетам: media получает CAS-схему и контракты, drive — доменную модель (узлы, файлы, ревизии, доступ, шаринг, активность, изменения, квоты, профили) и точку входа Vaulter, новый пакет vaulter-webhooks — вебхуки; чистые create-миграции (P1.10) раскладываются по пакетам-владельцам, каждый пакет получает свой TestCase; core становится ядром.",
-  "context": "Фаза D. Размер: XL — делить на пункты по пакетам-получателям и по слоям (модели+репозитории, операции+HTTP, конфиг+команды+doctor, миграции, тесты). Оракул — type-map P2: каждый перенос сверяется с ним, отклонение — D#. После фазы I1, I2, I3, I5, I6, I9 блокирующие, allowlist пусты (кроме задокументированных адаптеров I4). Порядок: media → drive → webhooks → documents-подстройка → core-очистка → раскладка create-миграций → split/CI. ADR-0030 (владение схемой). Установок нет (D21): переносы FQCN/ключей без шимов, но документация и тесты обновляются в том же коммите.\nD23: media own pins+GC и drive link composition; D28: все текущие scan_* drive. Filament authorized listing/lookup/snapshots API строится перед запретом ORM reads I9. Core generic schema helpers отделяются от всего domain DDL; нельзя оставить giant SchemaBuilder. Core EventKind/OperationKind/HTTP matchNode/manager domain removed, neutral values остаются. P4 начинает blocking clean-consumer harness (I14), P7 квалифицирует каждого archive.",
+  "context": "Фаза D. Размер: XL — делить на пункты по пакетам-получателям и по слоям (модели+репозитории, операции+HTTP, конфиг+команды+doctor, миграции, тесты). Оракул — type-map P2: каждый перенос сверяется с ним, отклонение — D#. После фазы I1, I2, I3, I5, I6, I9 блокирующие, allowlist пусты (кроме задокументированных адаптеров I4). Порядок: media → drive → webhooks → documents-подстройка → core-очистка → раскладка create-миграций → split/CI. ADR-0030 (владение схемой). Установок нет (D21): переносы FQCN/ключей без шимов, но документация и тесты обновляются в том же коммите.\nD23: media own pins+GC и drive link composition; D28: все текущие scan_* drive. Filament authorized listing/lookup/snapshots API строится перед запретом ORM reads I9. Core generic schema helpers отделяются от всего domain DDL; нельзя оставить giant SchemaBuilder. Core EventKind/OperationKind/HTTP matchNode/manager domain removed, neutral values остаются. P4 начинает blocking clean-consumer harness (I14), P7 квалифицирует каждого archive.\nДетализация (2026-10-16): порядок пунктов уточнён D40 — DDL и create-миграции раскладываются по владельцам до переноса кода (P4.3/P4.5), затем media → pins → drive (4 пункта по rule-файлам target-map + точка входа) → webhooks → явные require/D32 → Filament → очистка core → uninstall → матрицы → split/CI/I14 → ADR/docs → квалификация. Нормы и алгоритмы — knowledge/p4-design; перенос типов только инструментом P4.1.",
   "contract": {
     "consumes": [
       "knowledge/architecture#packages",
@@ -24,7 +24,13 @@
       "D20",
       "D23",
       "D27",
-      "knowledge/architecture#operation-chains"
+      "knowledge/architecture#operation-chains",
+      "knowledge/p4-design",
+      "D40",
+      "D34",
+      "D33",
+      "D36",
+      "D32"
     ],
     "produces": [
       "packages/media, packages/drive с полными срезами; packages/webhooks (новый пакет, composer, split-цель, CI)",
@@ -75,8 +81,8 @@
   ],
   "validation": [
     {
-      "id": "V1",
-      "procedure": "I1, I2, I3, I5, I6, I9 блокирующие с пустыми allowlist; чистая установка каждой комбинации пакетов мигрирует и откатывается на sqlite/pgsql/mysql (I15); суммарная схема совпадает со снимком P1.10, с текущими identities по D23/D29/D25/D28; original сохраняется; квалификационный пункт P4 зелёный",
+      "id": "V100",
+      "procedure": "I1, I2, I3, I5, I6, I9 блокирующие с пустыми allowlist; чистая установка каждой комбинации пакетов мигрирует и откатывается на sqlite/pgsql/mysql (I15); суммарная схема совпадает со снимком P1.10, с текущими identities по D23/D29/D25/D28; original сохраняется; квалификационный пункт P4 зелёный Детализация: P4.16 (I1/I2/I5/I9 block), P4.5 (I3 block), P4.18 (I6, I15 на трёх engine), P4.21 (сводная квалификация).",
       "expect": "все зелёные",
       "kind": "acceptance"
     }
@@ -88,8 +94,143 @@
     "ADR-0030",
     "Документация P4"
   ],
-  "items": [],
-  "batches": [],
+  "items": [
+    "P4.1",
+    "P4.2",
+    "P4.3",
+    "P4.4",
+    "P4.5",
+    "P4.6",
+    "P4.7",
+    "P4.8",
+    "P4.9",
+    "P4.10",
+    "P4.11",
+    "P4.12",
+    "P4.13",
+    "P4.14",
+    "P4.15",
+    "P4.16",
+    "P4.17",
+    "P4.18",
+    "P4.19",
+    "P4.20",
+    "P4.21"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P4.1",
+        "P4.2"
+      ],
+      "mode": "recommended",
+      "note": "Инструмент переноса и кит D14 — основа всех переносов"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P4.3",
+        "P4.4",
+        "P4.5"
+      ],
+      "mode": "recommended",
+      "note": "Схема владельцев (D40): DDL → morph-алиасы → раскладка миграций; строго последовательно"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P4.6"
+      ],
+      "mode": "recommended",
+      "note": "Media: перенос CAS-срезов, D33"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P4.7"
+      ],
+      "mode": "recommended",
+      "note": "Pins D23 — frontier, отдельная сессия"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P4.8",
+        "P4.9"
+      ],
+      "mode": "recommended",
+      "note": "Drive A/B: Access+Sharing, Content/scan"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P4.10"
+      ],
+      "mode": "recommended",
+      "note": "Drive C: доменная модель (крупнейший перенос)"
+    },
+    {
+      "id": "B7",
+      "items": [
+        "P4.11",
+        "P4.12"
+      ],
+      "mode": "recommended",
+      "note": "Drive D: kernel-срез, конфиг, маршруты; точка входа"
+    },
+    {
+      "id": "B8",
+      "items": [
+        "P4.13"
+      ],
+      "mode": "recommended",
+      "note": "Пакет vaulter-webhooks"
+    },
+    {
+      "id": "B9",
+      "items": [
+        "P4.14",
+        "P4.15"
+      ],
+      "mode": "recommended",
+      "note": "Явные require/D32; Filament на Operations"
+    },
+    {
+      "id": "B10",
+      "items": [
+        "P4.16"
+      ],
+      "mode": "recommended",
+      "note": "Очистка core, I1/I2/I5/I9 block"
+    },
+    {
+      "id": "B11",
+      "items": [
+        "P4.17",
+        "P4.18"
+      ],
+      "mode": "recommended",
+      "note": "Uninstall; матрицы I6/I15"
+    },
+    {
+      "id": "B12",
+      "items": [
+        "P4.19",
+        "P4.20"
+      ],
+      "mode": "recommended",
+      "note": "Split/CI/I14; ADR-0030 и docs"
+    },
+    {
+      "id": "B13",
+      "items": [
+        "P4.21"
+      ],
+      "mode": "recommended",
+      "note": "Квалификация P4"
+    }
+  ],
   "sections": [
     {
       "id": "design-inputs",

@@ -56,7 +56,7 @@ final class Protocol
         }
 
         $files = [];
-        foreach (SourceIndex::PACKAGES as $package) {
+        foreach ($repo->sourcePackages() as $package) {
             array_push($files, ...AstFiles::tree($repo, "packages/{$package}/src"));
         }
         sort($files, SORT_STRING);

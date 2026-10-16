@@ -31,9 +31,7 @@ use Throwable;
  */
 final class SourceIndex
 {
-    /** Packages whose code is indexed; the files are packages/<p>/{src,database,config,routes}/**\/*.php. */
-    public const PACKAGES = ['core', 'media', 'drive', 'documents', 'azgard', 'filament'];
-
+    /** The code of a package is packages/<p>/{src,database,config,routes}/**\/*.php; which packages: Repo::sourcePackages(). */
     public const ROOTS = ['src', 'database', 'config', 'routes'];
 
     public const ELOQUENT_BASES = [
@@ -203,7 +201,7 @@ final class SourceIndex
     private static function readSources(Repo $repo): array
     {
         $files = [];
-        foreach (self::PACKAGES as $package) {
+        foreach ($repo->sourcePackages() as $package) {
             foreach (self::ROOTS as $root) {
                 $dir = $repo->path("packages/{$package}/{$root}");
                 if (!is_dir($dir)) {

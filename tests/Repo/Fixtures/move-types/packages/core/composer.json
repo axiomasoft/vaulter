@@ -1,0 +1,16 @@
+{
+    "name": "acme/core",
+    "autoload": {
+        "psr-4": {
+            "Acme\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Acme\\Roles\\Role",
+                "Acme\\PermX"
+            ]
+        }
+    }
+}

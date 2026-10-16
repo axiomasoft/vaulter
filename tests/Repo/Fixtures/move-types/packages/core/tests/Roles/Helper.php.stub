@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Tests\Roles;
+
+use Acme\Roles\Role;
+
+final class Helper
+{
+    public static function role(): Role
+    {
+        return (new \Acme\Roles\Neighbor)->make();
+    }
+}

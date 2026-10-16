@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "suites": {
+    "core": {
+      "kind": "pest",
+      "cwd": ".",
+      "vendor": "vendor/bin/pest",
+      "config": "phpunit.xml",
+      "tests_dir": "packages/core/tests",
+      "path_base": "repo",
+      "default": true,
+      "discovery": [
+        "--list-tests"
+      ],
+      "partitions": [
+        {
+          "key": "(unbound)",
+          "fingerprint": "none",
+          "lifecycle": "none",
+          "database": false,
+          "files": [
+            "packages/core/tests/Other/OtherCheck.php",
+            "packages/core/tests/Roles/RoleCheck.php"
+          ]
+        }
+      ]
+    },
+    "drive": {
+      "kind": "pest",
+      "cwd": "packages/drive",
+      "vendor": "vendor/bin/pest",
+      "config": "phpunit.xml",
+      "tests_dir": "packages/drive/tests",
+      "path_base": "package",
+      "default": true,
+      "discovery": [
+        "--list-tests"
+      ],
+      "partitions": [
+        {
+          "key": "(unbound)",
+          "fingerprint": "none",
+          "lifecycle": "none",
+          "database": false,
+          "files": []
+        }
+      ]
+    }
+  }
+}

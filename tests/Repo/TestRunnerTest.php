@@ -487,6 +487,51 @@ it('rejects a stale ledger entry and one that names a test the original never ha
     expect($code)->toBe(1)->and($out)->toContain('not in the original');
 });
 
+it('accepts a test that moved to another suite: the ledger entry names new_suite and the replacement is looked up there', function (): void {
+    $fx = t_baseline_fixture(['alpha' => ['P\\A::one', 'P\\A::two'], 'beta' => ['P\\B::one']], ['alpha' => ['P\\A::one'], 'beta' => ['P\\B::one', 'P\\B::two']]);
+
+    // without new_suite the replacement is searched in the own suite only
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::two', 'new' => 'P\\B::two', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
+    expect($code)->toBe(1)->and($out)->toContain('replacement not in the current list for: P\\A::two');
+
+    // the other suite is discovered on demand, even when it is not among the compared ones
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::two', 'new' => 'P\\B::two', 'new_suite' => 'beta', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
+    expect($code)->toBe(0)->and($out)->toContain('ok   alpha');
+
+    // the replacement is absent from new_suite although it exists in the own suite
+    t_write($fx['root'].'/fake-tests.txt', "P\\B::one\n");
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha,beta'], t_env($fx), $fx['root']);
+    expect($code)->toBe(1)->and($out)->toContain('replacement not in the current list of [beta] for: P\\A::two');
+});
+
+it('rejects a cross-suite entry whose test is still in its old suite, and an unknown new_suite', function (): void {
+    $fx = t_baseline_fixture(['alpha' => ['P\\A::one']], ['alpha' => ['P\\A::one'], 'beta' => ['P\\A::one']]);
+
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::one', 'new' => 'P\\A::one', 'new_suite' => 'beta', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
+    expect($code)->toBe(1)->and($out)->toContain('stale ledger entry');
+
+    t_write($fx['root'].'/packages/alpha/fake-tests.txt', "P\\A::two\n");
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::one', 'new' => 'P\\A::one', 'new_suite' => 'nowhere', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
+    expect($code)->toBe(1)->and($out)->toContain('unknown new_suite [nowhere]')->and($out)->toContain('replacement not in the current list of [nowhere]');
+});
+
+it('does not count a test that moved in from another suite as an addition, and shows new_suite in the view', function (): void {
+    $fx = t_baseline_fixture(['alpha' => ['P\\A::one', 'P\\A::two'], 'beta' => ['P\\B::one']], ['alpha' => ['P\\A::one'], 'beta' => ['P\\B::one', 'P\\B::two', 'P\\B::fresh']]);
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::two', 'new' => 'P\\B::two', 'new_suite' => 'beta', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code] = t_run(['baseline', '--write', '-p', 'alpha,beta'], t_env($fx), $fx['root']);
+    $ledger = json_decode((string) file_get_contents($fx['root'].'/tests/baseline/CHANGES.json'), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($code)->toBe(0)
+        ->and($ledger['additions']['beta']['names'])->toBe(['P\\B::fresh'])
+        ->and($ledger['additions']['beta']['count'])->toBe(1)
+        ->and($ledger['entries'][0]['new_suite'])->toBe('beta')
+        ->and(file_get_contents($fx['root'].'/tests/baseline/CHANGES.md'))->toContain('[`beta`] `P\\B::two`');
+});
+
 it('writes current lists and ledger additions without ever rewriting an original', function (): void {
     $fx = t_baseline_fixture(['alpha' => ['P\\A::one']], ['alpha' => ['P\\A::one', 'P\\A::two'], 'beta' => ['P\\B::new']]);
     [$code] = t_run(['baseline', '--write', '-p', 'alpha,beta'], t_env($fx), $fx['root']);

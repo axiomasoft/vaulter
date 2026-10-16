@@ -186,7 +186,7 @@ final class TargetMap
     public static function sourceFiles(Repo $repo): array
     {
         $files = [];
-        foreach (SourceIndex::PACKAGES as $package) {
+        foreach ($repo->sourcePackages() as $package) {
             foreach (self::SOURCE_ROOTS as $root) {
                 $dir = $repo->path("packages/{$package}/{$root}");
                 if (!is_dir($dir)) {

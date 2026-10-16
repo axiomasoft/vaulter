@@ -85,7 +85,7 @@ function sm_sources(): array
 }
 
 it('manifest: lists the Api and Spi types of a package with the members the host can use, and nothing else', function (): void {
-    $manifests = Surface::manifests(Surface::fromSources(sm_sources()));
+    $manifests = Surface::manifests(Surface::fromSources(sm_sources()), ['core', 'drive', 'media']);
 
     expect($manifests['core'])->toBe(<<<'TXT'
         # Surface manifest of the package `core` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].

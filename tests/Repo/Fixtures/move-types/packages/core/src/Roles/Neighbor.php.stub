@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Roles;
+
+final class Neighbor
+{
+    public function key(): string
+    {
+        return Role::class.'|Acme\PermX|Acme\Permanent|'.\Acme\Perm::class;
+    }
+
+    public function copy(): self
+    {
+        return new self;
+    }
+
+    public function make(): Role
+    {
+        return new Role($this, new Policy, new \Acme\Support\Clock);
+    }
+}

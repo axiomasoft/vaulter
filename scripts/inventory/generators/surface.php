@@ -24,7 +24,7 @@ return new class implements Generator
     public function write(Repo $repo, array $options = []): array
     {
         $written = [];
-        foreach (Surface::manifests(Surface::read($repo)) as $package => $contents) {
+        foreach (Surface::manifests(Surface::read($repo), $repo->sourcePackages()) as $package => $contents) {
             $repo->write(Surface::snapshotPath($package), $contents);
             $written[] = Surface::snapshotPath($package);
         }
@@ -47,7 +47,7 @@ return new class implements Generator
     {
         $lines = [];
         $code = 0;
-        foreach (Surface::manifests(Surface::read($repo)) as $package => $contents) {
+        foreach (Surface::manifests(Surface::read($repo), $repo->sourcePackages()) as $package => $contents) {
             $path = Surface::snapshotPath($package);
             $diff = Diff::unified($repo->exists($path) ? $repo->read($path) : '', $contents, $path);
             if ($report) {

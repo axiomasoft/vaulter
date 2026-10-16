@@ -113,6 +113,25 @@ final class Repo
     }
 
     /**
+     * The packages whose code is indexed (packages/<p>/{src,database,config,routes}): every fixture entry with
+     * `exists: true`, sorted; a package that is only a target (`exists: false`) has no code to read yet.
+     *
+     * @return list<string>
+     */
+    public function sourcePackages(): array
+    {
+        $names = [];
+        foreach ($this->packages() as $name => $package) {
+            if (($package['exists'] ?? false) === true) {
+                $names[] = (string) $name;
+            }
+        }
+        sort($names, SORT_STRING);
+
+        return $names;
+    }
+
+    /**
      * PSR-4 prefix => package for every package of the fixture, the not yet existing ones included (their target).
      *
      * @return array<string, string>

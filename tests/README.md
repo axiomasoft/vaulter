@@ -91,7 +91,7 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
 
 ## Inventory (PLAN3 P2)
 
-Architecture inventory of the monorepo: one `SourceIndex` reads every `packages/{core,media,drive,documents,azgard,filament}/{src,database,config,routes}` file, generators turn it into committed fixtures, and thin Pest tests of the `repo` suite assert that nothing drifted.
+Architecture inventory of the monorepo: one `SourceIndex` reads every `packages/<p>/{src,database,config,routes}` file of the packages that `tests/Repo/Arch/Fixtures/packages.json` marks `exists: true`, generators turn it into committed fixtures, and thin Pest tests of the `repo` suite assert that nothing drifted.
 
 ```bash
 scripts/php84 php scripts/inventory/inventory.php [<name>…] --check    # recompute in memory, compare byte-for-byte; 0 equal, 1 differs, 2 rule/usage error
@@ -102,6 +102,21 @@ scripts/php84 php scripts/inventory/inventory.php [<name>…] --report   # --che
 - No names runs every generator (`scripts/inventory/generators/*.php`, one file per generator, `name()` = basename); an unknown name exits 2.
 - Fixtures live in `tests/Repo/Arch/Fixtures/`. `packages.json` is hand-written for `dir`, `exists` and `target_require`; `composer`, `psr4` and `current_require` are verified against each `packages/<p>/composer.json` and rewritten by `packages --write`. Never edit generated files by hand: change the rule or the code, then `--write`.
 - Library tests: `scripts/t sqlite -p repo tests/Repo/Arch/InventoryHarnessTest.php`. A new `tests/Repo/Arch/*Test.php` goes into `suites.repo.partitions[0].files` of `tests/suites.json` in the same commit.
+
+### Moving types between packages (PLAN3 P4)
+
+`scripts/inventory/move-types.php` is the only way to move a type of `target-map.json` (`phase=P4`, `action=move`) to the package that owns it; `replace` and `split` types are never selected. It needs a tracked tree (`git mv`), or `--no-git`.
+
+```bash
+scripts/php84 php scripts/inventory/move-types.php --owner=<drive|media|webhooks|documents> [--rule-file=<name>] [--fqcn-prefix=<prefix>]… [--exclude-fqcn=<FQCN>]… [--tests=<old-dir>:<new-dir>]… [--decision=D40] (--dry-run [--json] | --apply)
+```
+
+- `--dry-run --json` prints `{moved, edits, strings, tests, ledger, warnings}` and writes nothing; `--apply` writes only after the whole plan (selection, conflicts, every new file content) is computed. A second `--apply` reports zeros.
+- It rewrites the namespace of a moved file, `use` imports (group imports are split), fully qualified, imported and namespace-relative names, the type part of docblock tags, string literals and comments, and the docs, JSON, neon, yml and `phpunit.xml` files that name a moved class. A name that resolved through the namespace and no longer does gets an import. Run `scripts/php84 php vendor/bin/pint <paths>` on the touched files afterwards (import order).
+- Exit: 0 done, 1 a failure while reading or applying (a file that does not parse), 2 usage, conflict (a target file exists), empty selection or a `replace`/`split` type.
+- `--tests=<old-dir>:<new-dir>` moves a whole test directory: `Vaulter\Tests\…` classes become `Vaulter\<Package>\Tests\…`, `tests/suites.json` lists each file in the partition of the same TestCase key of the new package's suite (no such partition: exit 2), `tests/zones.json` forgets the old directory, and `tests/baseline/CHANGES.json` gets one entry per moved Pest case (`suite`, `old`, `new`, `new_suite`, `reason`, `decision`). Afterwards run `scripts/t baseline --write -p <old>,<new>` for the current lists and additions.
+- A ledger entry with `new_suite` moves a test to another suite: `scripts/t baseline --compare` looks for `new`/`replacement[]` in the current discovery of `new_suite` (discovered on demand), and `--write` does not count such a name as an addition of `new_suite`. An unknown `new_suite`, a missing replacement and a stale entry fail the comparison.
+- Tests: `scripts/t sqlite -p repo tests/Repo/Arch/MoveTypesTest.php` (fixture tree `tests/Repo/Fixtures/move-types`, PHP kept as `*.php.stub`) and the cross-suite cases of `tests/Repo/TestRunnerTest.php`.
 
 ## Which run when
 

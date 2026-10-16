@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Folders;
+
+use Acme\Roles\Role;
+use Acme\{Roles\Policy, Support\Clock};
+use function Acme\helper;
+
+final class Folder
+{
+    public function roles(Role $role, Policy $policy, Clock $clock): array
+    {
+        return [$role, $policy, $clock, helper()];
+    }
+}

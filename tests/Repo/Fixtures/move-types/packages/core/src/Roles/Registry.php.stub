@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Roles;
+
+/**
+ * @template TModel of object
+ */
+final class Registry
+{
+    /** @var array<string, Role|Policy> */
+    public array $items = [];
+
+    /**
+     * @param  array{role: Role, key: string}|TModel $input
+     * @return list<Neighbor>
+     */
+    public function pick(array|object $input): array
+    {
+        return [];
+    }
+}
