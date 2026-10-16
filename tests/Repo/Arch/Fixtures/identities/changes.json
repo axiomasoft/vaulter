@@ -2414,6 +2414,62 @@
             "id": "morph:Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor#getMorphClass",
             "kind": "protocol",
             "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

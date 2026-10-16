@@ -398,6 +398,7 @@
             "packages/core/tests/Access/TenantDelegationContractTest.php",
             "packages/core/tests/Activity/ActivityVisibilityTest.php",
             "packages/core/tests/Activity/RecordActivityTest.php",
+            "packages/core/tests/Activity/StableMorphAliasTest.php",
             "packages/core/tests/Configuration/ConfigDefaultsLoadingTest.php",
             "packages/core/tests/Configuration/ConfigNormalizerTest.php",
             "packages/core/tests/Configuration/ConfigValidatorTest.php",

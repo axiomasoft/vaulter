@@ -91,8 +91,8 @@ it('sweep-expire пишет activity-строку upload.expired без акто
  * upload models are never persisted as a morph-type string. The upload lifecycle records
  * activity without an activity target, so no `v_activity` row ever holds
  * `UploadSession`'s FQCN — the move cannot orphan a row. The Vaulter models persisted as
- * `target_type` are `Node` and `Drive`, and neither moved, so historical rows stay
- * resolvable. A future regression that made an
+ * `target_type` are `Node` and `Drive`, stored under constant aliases (D34), so a move of
+ * either class cannot orphan a historical row. A future regression that made an
  * upload a morph target (or moved `Node`) trips this.
  */
 it('переезд Uploads morph-безопасен: upload-session activity не пишет target_type/target_id, единственный morph-таргет Node не переезжал (P4.10)', function (): void {
@@ -108,5 +108,5 @@ it('переезд Uploads morph-безопасен: upload-session activity н�
     expect(UploadSession::class)->toBe(UploadSession::class)
         ->and($row->target_type)->toBeNull()
         ->and($row->target_id)->toBeNull()
-        ->and((new Node)->getMorphClass())->toBe(Node::class);
+        ->and((new Node)->getMorphClass())->toBe(Node::MORPH_ALIAS);
 });

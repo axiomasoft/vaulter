@@ -2205,6 +2205,14 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#ownership-map + D40 (P4.3): a module manifest names the schema class that holds the DDL of its tables"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\Concerns\\HasStableMorphAlias",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#kernel + D34 (P4.4): the trait that stores a Vaulter model under a constant morph alias; core API, applied to the models of drive"
         }
     ]
 }

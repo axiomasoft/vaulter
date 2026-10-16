@@ -18,6 +18,7 @@ use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Support\Concerns\HasStableMorphAlias;
 
 /**
  * An ownable, polymorphic disk container: one storage row is a
@@ -49,8 +50,12 @@ class Drive extends Model
     /** @use HasFactory<DriveFactory> */
     use HasFactory;
 
+    use HasStableMorphAlias;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
+
+    /** The type under which a drive is stored in a polymorphic column (D34). */
+    public const string MORPH_ALIAS = 'vaulter.drive';
 
     /**
      * Closed allow-list. owner_type/owner_id/panel/disk/storage_type/

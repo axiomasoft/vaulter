@@ -87,7 +87,9 @@ it('SEC-D30-copy-subtree refuses a hidden document descendant before any documen
     $hidden = AccessTestHelpers::folder($this->system->model(), $folder, 'hidden document', inheritGrants: false);
     app(VaulterDatabase::class)->write(fn () => $hidden->forceFill(['kind' => NodeKind::Document])->save());
     $db = app(VaulterDatabase::class)->connection();
-    $rows = static fn (): array => [Node::query()->count(), $db->table('v_documents')->count(), $db->table('v_document_revisions')->count()];
+    // The document tables belong to the documents package: a host without it has none, and then there is nothing to leak.
+    $count = static fn (string $table): int => $db->getSchemaBuilder()->hasTable($table) ? $db->table($table)->count() : 0;
+    $rows = static fn (): array => [Node::query()->count(), $count('v_documents'), $count('v_document_revisions')];
     $before = $rows();
 
     expect(fn () => $this->actor->nodes()->copy($folder, $destination))

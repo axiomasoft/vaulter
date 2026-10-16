@@ -22,6 +22,7 @@ use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
+use Vaulter\Support\Concerns\HasStableMorphAlias;
 use Vaulter\Support\NodeName;
 
 /**
@@ -72,9 +73,13 @@ class Node extends Model
     /** @use HasFactory<NodeFactory> */
     use HasFactory;
 
+    use HasStableMorphAlias;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;
+
+    /** The type under which a node is stored in a polymorphic column (D34). */
+    public const string MORPH_ALIAS = 'vaulter.node';
 
     /**
      * Closed allow-list: only the handful of columns a caller

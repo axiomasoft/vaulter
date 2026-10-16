@@ -14455,6 +14455,20 @@
             "target_fqcn": "Vaulter\\Support\\Concerns\\HasLabel"
         },
         {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Support/Concerns/HasStableMorphAlias.php",
+            "fqcn": "Vaulter\\Support\\Concerns\\HasStableMorphAlias",
+            "kind": "trait",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Support\\Concerns\\HasStableMorphAlias",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Support\\Concerns\\HasStableMorphAlias"
+        },
+        {
             "action": "move",
             "eloquent": false,
             "file": "packages/core/src/Support/DriveLifecycle.php",

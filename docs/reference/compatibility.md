@@ -230,6 +230,15 @@ $database->transaction(function () use ($database, $storageId): void {
 
 
 
+### Stored model types
+
+A Vaulter model whose type is stored in a polymorphic column — today the target of an activity row — is
+stored under a constant alias, not under its class name: `vaulter.node` for a node and `vaulter.drive`
+for a drive. The alias does not change when a class moves between packages, a morph map of your
+application does not rename it, and `Relation::enforceMorphMap()` needs no entry for it (a subclass you
+configure in `vaulter.models.*` inherits it). Your own models (a drive owner, a grant subject, a comment
+author) stay under your morph policy.
+
 ### Schema change policy
 
 Vaulter is pre-`v0.1.0` today, so every table is create-only or empty for every consumer — a
