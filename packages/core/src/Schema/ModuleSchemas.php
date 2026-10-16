@@ -29,6 +29,48 @@ final readonly class ModuleSchemas
      */
     public function all(): array
     {
+        $schemas = [];
+        foreach ($this->ordered() as $module => $manifest) {
+            if (!is_subclass_of($manifest, OwnsSchema::class)) {
+                continue;
+            }
+
+            $schema = $this->container->make($manifest::ownedSchema());
+            if ($schema instanceof ModuleSchema) {
+                $schemas[$module] = $schema;
+            }
+        }
+
+        return $schemas;
+    }
+
+    /**
+     * The migration directories of every offered module, as its manifest declares them, a module after the ones it
+     * requires.
+     *
+     * @return list<string>
+     */
+    public function migrationPaths(): array
+    {
+        if (!$this->kernel->isValid()) {
+            return [];
+        }
+
+        $byModule = [];
+        foreach ($this->kernel->compiled()->modules as $state) {
+            $byModule[$state->id->value] = $state->schemaPaths;
+        }
+        $paths = [];
+        foreach (array_keys($this->ordered()) as $module) {
+            array_push($paths, ...$byModule[$module]);
+        }
+
+        return array_values(array_unique($paths));
+    }
+
+    /** @return array<string, class-string<VaulterModule>> module id => manifest, a module after the ones it requires */
+    private function ordered(): array
+    {
         if (!$this->kernel->isValid()) {
             return [];
         }
@@ -39,36 +81,24 @@ final readonly class ModuleSchemas
         }
 
         $ordered = [];
-        $visit = function (string $module) use (&$visit, &$ordered, $manifests): void {
-            if (array_key_exists($module, $ordered) || !isset($manifests[$module])) {
+        $visited = [];
+        $visit = function (string $module) use (&$visit, &$ordered, &$visited, $manifests): void {
+            if (isset($visited[$module]) || !isset($manifests[$module])) {
                 return;
             }
-            $ordered[$module] = null;
+            $visited[$module] = true;
 
             $manifest = $this->container->make($manifests[$module]);
             foreach ($manifest instanceof VaulterModule ? array_keys($manifest->requires()) : [] as $required) {
                 $visit($required);
             }
-            unset($ordered[$module]);
-            $ordered[$module] = true;
+            $ordered[$module] = $manifests[$module];
         };
         foreach (array_keys($manifests) as $module) {
             $visit($module);
         }
 
-        $schemas = [];
-        foreach (array_keys($ordered) as $module) {
-            if (!is_subclass_of($manifests[$module], OwnsSchema::class)) {
-                continue;
-            }
-
-            $schema = $this->container->make($manifests[$module]::ownedSchema());
-            if ($schema instanceof ModuleSchema) {
-                $schemas[$module] = $schema;
-            }
-        }
-
-        return $schemas;
+        return $ordered;
     }
 
     /** @return list<string> the entity keys of the tables `$module` owns; empty for a module without tables */

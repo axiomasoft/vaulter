@@ -7,14 +7,13 @@ namespace Vaulter\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\IdStrategy;
 
 /** The tables the kernel owns: the transactional outbox, its consumers and deliveries, and the idempotency keys. */
 #[Internal]
 final class KernelSchema implements ModuleSchema
 {
-    public function __construct(private readonly SchemaHelpers $helpers = new SchemaHelpers) {}
+    public function __construct(private readonly SchemaHelpers $helpers) {}
 
     /** @return list<string> the entity keys of the tables this schema owns, in dependency order */
     public function entities(): array
@@ -31,7 +30,7 @@ final class KernelSchema implements ModuleSchema
     {
         $ids = $this->helpers->ids();
 
-        $this->helpers->schemaConnection()->create(app(DatabaseConfig::class)->table($entity), function (Blueprint $table) use ($ids, $entity): void {
+        $this->helpers->schemaConnection()->create($this->helpers->table($entity), function (Blueprint $table) use ($ids, $entity): void {
             match ($entity) {
                 'outbox' => $this->defineOutbox(table: $table),
                 'outbox_consumers' => $this->defineOutboxConsumers(table: $table),
@@ -44,7 +43,7 @@ final class KernelSchema implements ModuleSchema
 
     public function drop(string $entity): void
     {
-        $this->helpers->schemaConnection()->dropIfExists(app(DatabaseConfig::class)->table($entity));
+        $this->helpers->schemaConnection()->dropIfExists($this->helpers->table($entity));
     }
 
     /**

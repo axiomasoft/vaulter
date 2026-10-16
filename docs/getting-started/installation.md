@@ -84,14 +84,13 @@ Prefer to do it step by step? The install command is equivalent to:
 
 ```bash [publish + migrate]
 php artisan vendor:publish --tag=vaulter-config
-php artisan vendor:publish --tag=vaulter-migrations
 php artisan migrate
 ```
 
 <!-- snippet: shell -->
 
 ```bash [config only]
-# Vaulter's migrations are auto-discovered and run even without publishing,
+# Vaulter's migrations run from vendor/ and are never published,
 # so the minimum is just the config file:
 php artisan vendor:publish --tag=vaulter-config
 php artisan migrate
@@ -99,25 +98,12 @@ php artisan migrate
 
 :::
 
-::: info Migrations are auto-discovered
-The service provider calls `discoversMigrations()->runsMigrations()`, so the package
-migrations run from `vendor/` without being published. Publish them with
-`--tag=vaulter-migrations` only when you want to **edit** them (e.g. to tweak the schema
-before a custom panel). The published config lands at `config/vaulter.php`.
-:::
-
-::: warning Publishing migrations switches the canonical mode — don't run both
-`vendor:publish --tag=vaulter-migrations` generates **new timestamp-prefixed filenames**
-for every migration (e.g. `2026_06_13_000007_create_v_storages_table.php` becomes
-`2026_07_10_101542_create_v_storages_table.php`). Laravel tracks executed migrations by
-**filename**, so once you publish, the vendor-discovered copies (still active through
-`discoversMigrations()->runsMigrations()`) are no longer the same migrations Laravel has
-already run — the next `php artisan migrate` will try to run the published copies a
-**second time** and fail with `SQLSTATE[42S01]: table already exists`.
-
-Publishing migrations is a one-way switch: once you publish `vaulter-migrations` to edit
-the schema, migrate **only** from the published copies from then on. Do not leave the
-vendor auto-run active alongside a published copy of the same migration.
+::: info Migrations are not published
+Every package runs the migrations of the tables it owns straight from `vendor/`: `vaulter-core` the
+outbox and idempotency keys, `vaulter-media` the blobs, `vaulter-drive` the drive tables,
+`vaulter-documents` the document tables. There is no publish tag for them, so there are no published
+copies to drift from the package, and a table you did not install a package for is never created. The
+published config lands at `config/vaulter.php`.
 :::
 
 ## 2. Frontend — the Vue package

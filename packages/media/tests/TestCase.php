@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Media\Tests;
 
 use Illuminate\Foundation\Application;
+
+use function Orchestra\Testbench\load_migration_paths;
+
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
@@ -53,9 +56,11 @@ abstract class TestCase extends OrchestraTestCase
         // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
         SuiteDatabaseConnection::skipOnForeignEngine($this);
 
-        // The v_blobs (+ Drive) schema is owned by core; load its migrations through
-        // the path-repo symlink that Composer places in this package's vendor dir.
-        $this->loadMigrationsFrom(__DIR__.'/../vendor/axioma-studio/vaulter-core/database/migrations');
+        // The migrations of every offered module. The blob tests still build their fixtures on the drive tables (P4.6 takes them out); the drive package is no
+        // dependency of media, so its migrations are named here and its schema class is autoloaded in composer's dev section.
+        $paths = [...SuiteDatabaseConnection::migrationPaths($this->app), dirname(__DIR__, 2).'/drive/database/migrations'];
+        load_migration_paths($this->app, $paths);
+        $this->loadMigrationsFrom($paths);
     }
 
     /**

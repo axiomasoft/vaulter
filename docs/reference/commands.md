@@ -85,9 +85,9 @@ php artisan vaulter:module:uninstall <module> [--force] [--purge]
 
 A dry run by default: plans the removal of the module's schema — its migrations and tables,
 the installed modules that require it, the foreign keys other owners hold on its tables — and
-prints why it would be refused. Exit `1` when anything refuses. Until the create-migrations
-are split by owner (P4), `--force` (roll the owner's migrations back) and `--purge` (delete its
-rows and its own media pins) refuse with "owner migrations are not split yet (P4)". Disabling
+prints why it would be refused. Exit `1` when anything refuses. Until the uninstall of the owner
+migrations lands (P4), `--force` (roll the owner's migrations back) and `--purge` (delete its
+rows and its own media pins) refuse with "the uninstall of the owner migrations is not available yet (P4)". Disabling
 a module never uninstalls it.
 
 ## `vaulter:doctor`

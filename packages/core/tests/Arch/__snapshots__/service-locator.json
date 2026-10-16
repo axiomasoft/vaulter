@@ -44,7 +44,6 @@
     "core/src/Repositories/Sharing/NodeShareReadRepository.php": 2,
     "core/src/Schema/HostKeyColumns.php": 2,
     "core/src/Schema/IdStrategyResolver.php": 1,
-    "core/src/Schema/SchemaBuilder.php": 31,
     "core/src/Schema/VaulterSchema.php": 2,
     "core/src/Sharing/ShareContentGuard.php": 1,
     "core/src/Sharing/ShareResolver.php": 2,

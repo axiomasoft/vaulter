@@ -95,7 +95,7 @@ abstract class TestCase extends OrchestraTestCase
         // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
         SuiteDatabaseConnection::skipOnForeignEngine($this);
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(SuiteDatabaseConnection::migrationPaths($this->app));
     }
 
     /**

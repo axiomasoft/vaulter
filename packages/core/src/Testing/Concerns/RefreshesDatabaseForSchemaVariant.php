@@ -27,7 +27,10 @@ trait RefreshesDatabaseForSchemaVariant
             || $this->usesSqliteInMemoryDatabaseConnection()
             || (is_array($paths) && !array_is_list($paths))) {
             self::$databaseSchema = null;
-            parent::loadMigrationsFrom($paths);
+            // Testbench only registers a list of paths before the first refresh; otherwise it runs `migrate`, whose
+            // options name the paths.
+            $registersOnly = static::usesRefreshDatabaseTestingConcern() && RefreshDatabaseState::$migrated === false && RefreshDatabaseState::$lazilyRefreshed === false;
+            parent::loadMigrationsFrom(is_array($paths) && array_is_list($paths) && !$registersOnly ? ['--path' => $paths, '--realpath' => true] : $paths);
 
             return;
         }

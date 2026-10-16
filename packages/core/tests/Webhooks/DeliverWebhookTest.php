@@ -309,7 +309,7 @@ it('delivers on the custom model connection without holding a transaction during
     config()->set('database.connections.delivery_other', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
     config()->set('vaulter.database.connection', 'delivery_other');
 
-    $builder = new WebhooksSchema;
+    $builder = app(WebhooksSchema::class);
     $panel = (new Profile)->key('default');
     $builder->create(entity: 'webhook_endpoints');
     $builder->create(entity: 'webhook_deliveries');

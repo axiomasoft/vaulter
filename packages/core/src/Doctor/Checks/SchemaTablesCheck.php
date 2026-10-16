@@ -73,7 +73,10 @@ final readonly class SchemaTablesCheck implements DoctorCheck
 
         // A published migration gets a new timestamp prefix; its name after the prefix is what identifies it.
         $applied = array_map(self::bareName(...), $migrations->getRan());
-        $files = glob(dirname(__DIR__, 3).'/database/migrations/*.php') ?: [];
+        $files = [];
+        foreach ($this->schemas->migrationPaths() as $directory) {
+            array_push($files, ...(glob(rtrim($directory, '/').'/*.php') ?: []));
+        }
         $pending = [];
         foreach ($files as $file) {
             $name = basename($file, '.php');

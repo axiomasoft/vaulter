@@ -7,7 +7,6 @@ namespace Vaulter\Media\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
@@ -16,7 +15,7 @@ use Vaulter\Schema\SchemaHelpers;
 #[Internal]
 final class MediaSchema implements ModuleSchema
 {
-    public function __construct(private readonly SchemaHelpers $helpers = new SchemaHelpers) {}
+    public function __construct(private readonly SchemaHelpers $helpers) {}
 
     /** @return list<string> the entity keys of the tables this schema owns, in dependency order */
     public function entities(): array
@@ -30,7 +29,7 @@ final class MediaSchema implements ModuleSchema
     {
         $ids = $this->helpers->ids();
 
-        $this->helpers->schemaConnection()->create(app(DatabaseConfig::class)->table($entity), function (Blueprint $table) use ($ids, $entity): void {
+        $this->helpers->schemaConnection()->create($this->helpers->table($entity), function (Blueprint $table) use ($ids, $entity): void {
             match ($entity) {
                 'blobs' => $this->defineBlobs(table: $table, ids: $ids),
                 default => throw new InvalidArgumentException(sprintf('Unknown media entity [%s].', $entity)),
@@ -40,7 +39,7 @@ final class MediaSchema implements ModuleSchema
 
     public function drop(string $entity): void
     {
-        $this->helpers->schemaConnection()->dropIfExists(app(DatabaseConfig::class)->table($entity));
+        $this->helpers->schemaConnection()->dropIfExists($this->helpers->table($entity));
     }
 
     /**

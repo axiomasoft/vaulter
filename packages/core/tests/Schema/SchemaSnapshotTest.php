@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Schema\DocumentsSchema;
 use Vaulter\Tests\Support\Schema\SchemaPresets;
 use Vaulter\Tests\Support\Schema\SchemaSnapshot;
 
@@ -23,6 +25,14 @@ function schemaSnapshotFixture(string $kind, string $driver, string $preset): ar
 it('installs exactly the expected schema of the current preset', function (): void {
     $connection = app(VaulterDatabase::class)->connection();
     $preset = SchemaPresets::current(config());
+    // The documents module is not offered by this harness, so its migrations did not run; the snapshot is the schema of
+    // an installation that has it, built by the schema class its migrations call.
+    $documents = app(DocumentsSchema::class);
+    foreach ($documents->entities() as $entity) {
+        if (!$connection->getSchemaBuilder()->hasTable(app(DatabaseConfig::class)->table($entity))) {
+            $documents->create($entity);
+        }
+    }
 
     $differences = SchemaSnapshot::differences(
         schemaSnapshotFixture('expected', $connection->getDriverName(), $preset),

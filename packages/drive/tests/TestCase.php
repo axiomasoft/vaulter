@@ -79,7 +79,7 @@ abstract class TestCase extends OrchestraTestCase
         // The whole v_* schema (incl. v_upload_sessions/v_upload_parts) is owned by
         // core; load its migrations through the path-repo symlink Composer places in
         // this package's vendor dir.
-        $this->loadMigrationsFrom(__DIR__.'/../vendor/axioma-studio/vaulter-core/database/migrations');
+        $this->loadMigrationsFrom(SuiteDatabaseConnection::migrationPaths($this->app));
     }
 
     /**

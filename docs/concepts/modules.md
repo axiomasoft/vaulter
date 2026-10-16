@@ -64,7 +64,7 @@ rebuild the caches (`php artisan optimize:clear && php artisan optimize`) and re
 Disabling a module keeps its tables and data. `php artisan vaulter:module:uninstall <module>`
 plans the removal of a module's schema as a dry run — its migrations and tables, the modules that
 require it, foreign keys other owners hold on its tables — and says why it would be refused. Until
-the create-migrations are split by owner, `--force` and `--purge` refuse.
+the uninstall of the owner migrations lands, `--force` and `--purge` refuse.
 
 ## See also
 

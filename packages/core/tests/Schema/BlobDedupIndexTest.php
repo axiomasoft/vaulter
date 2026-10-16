@@ -19,7 +19,7 @@ function dedupIndexColumns(): array
 
 function rebuildBlobsTable(): void
 {
-    $builder = new MediaSchema;
+    $builder = app(MediaSchema::class);
     config()->set('vaulter.database.table_prefix', 'dedup_test_');
 
     $builder->drop(entity: 'blobs');
@@ -67,6 +67,6 @@ it('storage_key_uniq stays single-column (the F-P1.5-03 NULL-tenant dedup backbo
 
 afterEach(function (): void {
     config()->set('vaulter.database.table_prefix', 'dedup_test_');
-    (new MediaSchema)->drop('blobs');
+    (app(MediaSchema::class))->drop('blobs');
     config()->set('vaulter.database.table_prefix', 'v_');
 });

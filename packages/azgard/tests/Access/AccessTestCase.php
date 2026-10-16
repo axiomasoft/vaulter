@@ -6,6 +6,7 @@ namespace Vaulter\Azgard\Tests\Access;
 
 use Illuminate\Foundation\Application;
 use Vaulter\Azgard\Tests\TestCase;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
 
 abstract class AccessTestCase extends TestCase
 {
@@ -25,6 +26,8 @@ abstract class AccessTestCase extends TestCase
 
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadMigrationsFrom(dirname(__DIR__, 3).'/core/database/migrations');
+        foreach (SuiteDatabaseConnection::migrationPaths($this->app) as $path) {
+            $this->loadMigrationsFrom($path);
+        }
     }
 }

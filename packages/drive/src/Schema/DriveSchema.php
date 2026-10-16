@@ -8,7 +8,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\ModuleSchema;
@@ -18,7 +17,7 @@ use Vaulter\Schema\SchemaHelpers;
 #[Internal]
 final class DriveSchema implements ModuleSchema
 {
-    public function __construct(private readonly SchemaHelpers $helpers = new SchemaHelpers) {}
+    public function __construct(private readonly SchemaHelpers $helpers) {}
 
     /** @return list<string> the entity keys of the tables this schema owns, in dependency order */
     public function entities(): array
@@ -49,7 +48,7 @@ final class DriveSchema implements ModuleSchema
     {
         $ids = $this->helpers->ids();
 
-        $this->helpers->schemaConnection()->create(app(DatabaseConfig::class)->table($entity), function (Blueprint $table) use ($ids, $entity): void {
+        $this->helpers->schemaConnection()->create($this->helpers->table($entity), function (Blueprint $table) use ($ids, $entity): void {
             match ($entity) {
                 'drives' => $this->defineDrives(table: $table, ids: $ids),
                 'nodes' => $this->defineNodes(table: $table, ids: $ids),
@@ -84,7 +83,7 @@ final class DriveSchema implements ModuleSchema
             $this->helpers->dropHeadForeignKey(aggregate: 'files');
         }
 
-        $this->helpers->schemaConnection()->dropIfExists(app(DatabaseConfig::class)->table($entity));
+        $this->helpers->schemaConnection()->dropIfExists($this->helpers->table($entity));
     }
 
     /**
@@ -173,12 +172,12 @@ final class DriveSchema implements ModuleSchema
 
         $table->foreign('drive_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('drives'))
+            ->on($this->helpers->table('drives'))
             ->cascadeOnDelete();
 
         $table->foreign('parent_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('nodes'))
+            ->on($this->helpers->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -203,7 +202,7 @@ final class DriveSchema implements ModuleSchema
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('nodes'))
+            ->on($this->helpers->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -247,7 +246,7 @@ final class DriveSchema implements ModuleSchema
 
         $table->foreign('file_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('files'))
+            ->on($this->helpers->table('files'))
             ->cascadeOnDelete();
 
         // Restore is copy-forward: the new revision remembers its source until
@@ -278,12 +277,12 @@ final class DriveSchema implements ModuleSchema
 
         $table->foreign('file_revision_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('file_revisions'))
+            ->on($this->helpers->table('file_revisions'))
             ->cascadeOnDelete();
 
         $table->foreign('blob_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('blobs'))
+            ->on($this->helpers->table('blobs'))
             ->cascadeOnDelete();
     }
 
@@ -318,7 +317,7 @@ final class DriveSchema implements ModuleSchema
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('nodes'))
+            ->on($this->helpers->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -376,7 +375,7 @@ final class DriveSchema implements ModuleSchema
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('nodes'))
+            ->on($this->helpers->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -480,7 +479,7 @@ final class DriveSchema implements ModuleSchema
 
         $table->foreign('drive_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('drives'))
+            ->on($this->helpers->table('drives'))
             ->cascadeOnDelete();
     }
 
@@ -508,7 +507,7 @@ final class DriveSchema implements ModuleSchema
 
         $table->foreign('upload_session_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('upload_sessions'))
+            ->on($this->helpers->table('upload_sessions'))
             ->cascadeOnDelete();
     }
 
@@ -734,7 +733,7 @@ final class DriveSchema implements ModuleSchema
     public function addNodeSequence(): void
     {
         $this->helpers->assertEnforcedMysqlChecks();
-        $name = app(DatabaseConfig::class)->table('nodes');
+        $name = $this->helpers->table('nodes');
         if ($this->helpers->schemaConnection()->hasColumn($name, 'sequence')) {
             return;
         }
@@ -982,13 +981,13 @@ final class DriveSchema implements ModuleSchema
     private function scanReference(Blueprint $table, IdStrategy $ids, string $column, string $entity, bool $nullable = false, string $delete = 'cascade'): void
     {
         $ids->reference($table, $column, $nullable);
-        $table->foreign($column)->references('id')->on(app(DatabaseConfig::class)->table($entity))->onDelete($delete);
+        $table->foreign($column)->references('id')->on($this->helpers->table($entity))->onDelete($delete);
     }
 
     private function afterCreate(string $entity): void
     {
         if (in_array($entity, ['scan_obligations', 'scan_evidence'], true) && $this->helpers->dbConnection()->getDriverName() === 'mysql') {
-            $name = app(DatabaseConfig::class)->table($entity);
+            $name = $this->helpers->table($entity);
             $grammar = $this->helpers->dbConnection()->getQueryGrammar();
             $checks = ['outcome_fields' => "COALESCE((outcome IS NULL AND reason IS NULL AND retryable = false) OR (outcome IN ('clean','infected') AND reason IS NULL AND retryable = false AND blob_id IS NOT NULL) OR (outcome = 'failed' AND reason IS NOT NULL), false) = true"];
             if ($entity === 'scan_obligations') {
@@ -1004,22 +1003,22 @@ final class DriveSchema implements ModuleSchema
         }
 
         if ($entity === 'drives') {
-            $this->addOwnerUniqueIndex(table: app(DatabaseConfig::class)->table('drives'));
+            $this->addOwnerUniqueIndex(table: $this->helpers->table('drives'));
         }
 
         if ($entity === 'nodes') {
             $this->addNodeSequence();
-            $this->addSiblingUniqueIndex(table: app(DatabaseConfig::class)->table('nodes'));
-            $this->addSingleRootIndex(table: app(DatabaseConfig::class)->table('nodes'));
-            $this->addTrashedAtIndex(table: app(DatabaseConfig::class)->table('nodes'));
+            $this->addSiblingUniqueIndex(table: $this->helpers->table('nodes'));
+            $this->addSingleRootIndex(table: $this->helpers->table('nodes'));
+            $this->addTrashedAtIndex(table: $this->helpers->table('nodes'));
         }
 
         if ($entity === 'node_grants') {
-            $this->addGrantUniqueIndex(table: app(DatabaseConfig::class)->table('node_grants'));
+            $this->addGrantUniqueIndex(table: $this->helpers->table('node_grants'));
         }
 
         if ($entity === 'node_shares') {
-            $this->addShareExpiryIndex(table: app(DatabaseConfig::class)->table('node_shares'));
+            $this->addShareExpiryIndex(table: $this->helpers->table('node_shares'));
         }
 
         if ($entity === 'file_revisions') {
@@ -1027,12 +1026,12 @@ final class DriveSchema implements ModuleSchema
         }
 
         if ($entity === 'upload_sessions') {
-            $this->addUploadSweeperIndex(table: app(DatabaseConfig::class)->table('upload_sessions'));
+            $this->addUploadSweeperIndex(table: $this->helpers->table('upload_sessions'));
         }
 
         if ($entity === 'activity') {
-            $this->addActivityCreatedAtIndex(table: app(DatabaseConfig::class)->table('activity'));
-            $this->addActivityContextGinIndex(table: app(DatabaseConfig::class)->table('activity'));
+            $this->addActivityCreatedAtIndex(table: $this->helpers->table('activity'));
+            $this->addActivityContextGinIndex(table: $this->helpers->table('activity'));
         }
     }
 }

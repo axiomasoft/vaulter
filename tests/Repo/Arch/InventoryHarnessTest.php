@@ -248,9 +248,9 @@ it('reads table names from table calls, Schema, $table, named arguments and tabl
     ]);
 });
 
-it('takes the table names of the real repository from the core migrations', function (): void {
+it('takes the table names of the real repository from the migrations of every package', function (): void {
     $index = SourceIndex::forRepo(Repo::discover());
-    $migrations = array_filter($index->references('table'), static fn (array $r): bool => str_contains($r['file'], 'packages/core/database/migrations/') && $r['target'] === 'nodes');
+    $migrations = array_filter($index->references('table'), static fn (array $r): bool => str_contains($r['file'], '/database/migrations/') && $r['target'] === 'nodes');
 
     expect($migrations)->not->toBeEmpty();
 });

@@ -23,6 +23,7 @@ use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Filament\Tests\Fixtures\TestPanelProvider;
 use Vaulter\Filament\VaulterFilamentServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
@@ -91,6 +92,8 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__.'/../vendor/axioma-studio/vaulter-core/database/migrations');
+        foreach (SuiteDatabaseConnection::migrationPaths($this->app) as $path) {
+            $this->loadMigrationsFrom($path);
+        }
     }
 }

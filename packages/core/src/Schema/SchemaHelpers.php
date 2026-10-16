@@ -9,6 +9,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Attributes\Internal;
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 use Vaulter\Configuration\DatabaseConfig;
@@ -22,14 +23,20 @@ use Vaulter\Contracts\IdStrategy;
 #[Spi(SpiKind::Call)]
 final class SchemaHelpers
 {
+    #[Internal]
+    public function __construct(
+        private readonly DatabaseConfig $config,
+        private readonly IdStrategyResolver $resolver,
+    ) {}
+
     /**
      * The Schema builder for the connection Vaulter's tables live on
-     * (`app(\Vaulter\Configuration\DatabaseConfig::class)->connection()`) — null defers to the host's default
+     * (`DatabaseConfig::connection()`) — null defers to the host's default
      * connection exactly as every call site did before this key existed.
      */
     public function schemaConnection(): Builder
     {
-        return Schema::connection(app(DatabaseConfig::class)->connection());
+        return Schema::connection($this->config->connection());
     }
 
     /**
@@ -39,17 +46,17 @@ final class SchemaHelpers
      */
     public function dbConnection(): Connection
     {
-        return DB::connection(app(DatabaseConfig::class)->connection());
+        return DB::connection($this->config->connection());
     }
 
     public function ids(): IdStrategy
     {
-        return app(IdStrategyResolver::class)->resolve();
+        return $this->resolver->resolve();
     }
 
     public function table(string $entity): string
     {
-        return app(DatabaseConfig::class)->table($entity);
+        return $this->config->table($entity);
     }
 
     /**

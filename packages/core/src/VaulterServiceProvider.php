@@ -105,9 +105,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
             function (array $paths, string $tag): void {
                 $this->publishes($paths, $tag);
             },
-            function (array $paths, string $tag): void {
-                $this->publishesMigrations($paths, $tag);
-            },
         );
     }
 

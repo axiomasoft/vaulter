@@ -84,6 +84,9 @@ final readonly class SchemaIntegrityCheck implements DoctorCheck
     /** I5: a node of $kind has a row in the aggregate table. */
     private function orphans(string $nodes, string $aggregate, string $foreign, string $kind, int $limit): int
     {
+        if (!$this->installed($aggregate)) {
+            return 0;
+        }
         $db = $this->database->connection();
 
         return count($db->table($this->tables->table($nodes).' as n')->where('n.kind', $kind)
@@ -94,6 +97,9 @@ final readonly class SchemaIntegrityCheck implements DoctorCheck
     /** I5, the other direction: an aggregate row belongs to a node of its kind. */
     private function misplaced(string $aggregate, string $kind, int $limit): int
     {
+        if (!$this->installed($aggregate)) {
+            return 0;
+        }
         $db = $this->database->connection();
 
         return count($db->table($this->tables->table($aggregate).' as a')
@@ -104,10 +110,19 @@ final readonly class SchemaIntegrityCheck implements DoctorCheck
     /** I6: the head revision of an aggregate is one of its own revisions. */
     private function foreignHead(string $aggregate, string $revisions, string $foreign, int $limit): int
     {
+        if (!$this->installed($aggregate) || !$this->installed($revisions)) {
+            return 0;
+        }
         $db = $this->database->connection();
 
         return count($db->table($this->tables->table($aggregate).' as a')->whereNotNull('a.current_revision_id')
             ->whereNotExists(fn (Builder $query): Builder => $query->selectRaw('1')->from($this->tables->table($revisions).' as r')->whereColumn('r.id', 'a.current_revision_id')->whereColumn('r.'.$foreign, 'a.id'))
             ->orderBy('a.id')->limit($limit)->pluck('a.id')->all());
+    }
+
+    /** Whether the table of an aggregate exists: a host without the package that owns it has nothing to check. */
+    private function installed(string $entity): bool
+    {
+        return $this->database->connection()->getSchemaBuilder()->hasTable($this->tables->table($entity));
     }
 }

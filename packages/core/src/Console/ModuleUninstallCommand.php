@@ -62,7 +62,7 @@ final class ModuleUninstallCommand extends Command
         }
 
         $this->components->twoColumnDetail('Module', $id.($module->active ? ' (active)' : ' (inactive)'));
-        $this->components->twoColumnDetail('Migrations', $migrations === [] ? 'none of its own — the create-migrations ship with core until P4' : (string) count($migrations));
+        $this->components->twoColumnDetail('Migrations', $migrations === [] ? 'none of its own' : (string) count($migrations));
         foreach ($migrations as $migration) {
             $this->line('  '.OutputFormatter::escape($migration));
         }
@@ -74,7 +74,7 @@ final class ModuleUninstallCommand extends Command
         }
 
         if ($this->option('force') === true || $this->option('purge') === true) {
-            $this->components->error('owner migrations are not split yet (P4): --force and --purge are not available.');
+            $this->components->error('the uninstall of the owner migrations is not available yet (P4): --force and --purge are not available.');
 
             return self::FAILURE;
         }

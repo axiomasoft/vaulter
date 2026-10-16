@@ -7,7 +7,6 @@ namespace Vaulter\Documents\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\ModuleSchema;
@@ -17,7 +16,7 @@ use Vaulter\Schema\SchemaHelpers;
 #[Internal]
 final class DocumentsSchema implements ModuleSchema
 {
-    public function __construct(private readonly SchemaHelpers $helpers = new SchemaHelpers) {}
+    public function __construct(private readonly SchemaHelpers $helpers) {}
 
     /** @return list<string> the entity keys of the tables this schema owns, in dependency order */
     public function entities(): array
@@ -33,7 +32,7 @@ final class DocumentsSchema implements ModuleSchema
     {
         $ids = $this->helpers->ids();
 
-        $this->helpers->schemaConnection()->create(app(DatabaseConfig::class)->table($entity), function (Blueprint $table) use ($ids, $entity): void {
+        $this->helpers->schemaConnection()->create($this->helpers->table($entity), function (Blueprint $table) use ($ids, $entity): void {
             match ($entity) {
                 'node_comments' => $this->defineNodeComments(table: $table, ids: $ids),
                 'documents' => $this->defineDocuments(table: $table, ids: $ids),
@@ -53,7 +52,7 @@ final class DocumentsSchema implements ModuleSchema
             $this->helpers->dropHeadForeignKey(aggregate: 'documents');
         }
 
-        $this->helpers->schemaConnection()->dropIfExists(app(DatabaseConfig::class)->table($entity));
+        $this->helpers->schemaConnection()->dropIfExists($this->helpers->table($entity));
     }
 
     /**
@@ -105,13 +104,13 @@ final class DocumentsSchema implements ModuleSchema
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('nodes'))
+            ->on($this->helpers->table('nodes'))
             ->cascadeOnDelete();
 
         // Self-FK: deleting a parent comment cascades to its replies.
         $table->foreign('parent_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('node_comments'))
+            ->on($this->helpers->table('node_comments'))
             ->cascadeOnDelete();
     }
 

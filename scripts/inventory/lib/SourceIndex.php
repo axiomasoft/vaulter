@@ -187,7 +187,7 @@ final class SourceIndex
     private static function migrationTables(Repo $repo): array
     {
         $tables = [];
-        foreach (glob($repo->path('packages/core/database/migrations/*.php')) ?: [] as $migration) {
+        foreach (glob($repo->path('packages/*/database/migrations/*.php')) ?: [] as $migration) {
             if (preg_match('/create_v_(.+)_table\.php$/', basename($migration), $m) === 1) {
                 $tables[] = $m[1];
             }

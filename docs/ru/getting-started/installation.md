@@ -75,14 +75,13 @@ php artisan vaulter:install
 
 ```bash [публикация + миграции]
 php artisan vendor:publish --tag=vaulter-config
-php artisan vendor:publish --tag=vaulter-migrations
 php artisan migrate
 ```
 
 <!-- snippet: shell -->
 
 ```bash [только конфиг]
-# Миграции Vaulter обнаруживаются и запускаются даже без публикации,
+# Миграции Vaulter запускаются из vendor/ и никогда не публикуются,
 # поэтому минимум — это только файл конфигурации:
 php artisan vendor:publish --tag=vaulter-config
 php artisan migrate
@@ -90,11 +89,12 @@ php artisan migrate
 
 :::
 
-::: info Миграции обнаруживаются автоматически
-Сервис-провайдер вызывает `discoversMigrations()->runsMigrations()`, поэтому миграции пакета
-запускаются прямо из `vendor/` без публикации. Публикуйте их тегом `--tag=vaulter-migrations`
-только когда нужно их **редактировать** (например, подправить схему под собственную панель).
-Опубликованный конфиг ложится в `config/vaulter.php`.
+::: info Миграции не публикуются
+Каждый пакет запускает миграции своих таблиц прямо из `vendor/`: `vaulter-core` — outbox и ключи
+идемпотентности, `vaulter-media` — блобы, `vaulter-drive` — таблицы диска, `vaulter-documents` — таблицы
+документов. Тега публикации для них нет, поэтому опубликованных копий, которые расходятся с пакетом, не
+бывает, а таблица пакета, который вы не ставили, не создаётся. Опубликованный конфиг ложится в
+`config/vaulter.php`.
 :::
 
 ## 2. Фронтенд — Vue-пакет

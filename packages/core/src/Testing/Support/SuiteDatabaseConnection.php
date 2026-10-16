@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit\Metadata\Api\Groups;
 use RuntimeException;
 use Vaulter\Attributes\Internal;
+use Vaulter\Schema\ModuleSchemas;
 
 /**
  * The one place every package's TestCase decides which database a suite runs on.
@@ -47,6 +48,17 @@ final class SuiteDatabaseConnection
     }
 
     /** The engine the suite runs on, decided by the environment alone (no application needed): sqlite|pgsql|mysql|mariadb. */
+    /**
+     * The migration directories of every offered module, as its manifest declares them: a package's TestCase migrates
+     * these, never a path of core alone (a module's tables are created by the migrations of its own package).
+     *
+     * @return list<string>
+     */
+    public static function migrationPaths(Application $app): array
+    {
+        return $app->make(ModuleSchemas::class)->migrationPaths();
+    }
+
     public static function engine(): string
     {
         $driver = env('DB_CONNECTION');

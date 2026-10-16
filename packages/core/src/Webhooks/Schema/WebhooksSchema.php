@@ -7,7 +7,6 @@ namespace Vaulter\Webhooks\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
@@ -16,7 +15,7 @@ use Vaulter\Schema\SchemaHelpers;
 #[Internal]
 final class WebhooksSchema implements ModuleSchema
 {
-    public function __construct(private readonly SchemaHelpers $helpers = new SchemaHelpers) {}
+    public function __construct(private readonly SchemaHelpers $helpers) {}
 
     /** @return list<string> the entity keys of the tables this schema owns, in dependency order */
     public function entities(): array
@@ -31,7 +30,7 @@ final class WebhooksSchema implements ModuleSchema
     {
         $ids = $this->helpers->ids();
 
-        $this->helpers->schemaConnection()->create(app(DatabaseConfig::class)->table($entity), function (Blueprint $table) use ($ids, $entity): void {
+        $this->helpers->schemaConnection()->create($this->helpers->table($entity), function (Blueprint $table) use ($ids, $entity): void {
             match ($entity) {
                 'webhook_endpoints' => $this->defineWebhookEndpoints(table: $table, ids: $ids),
                 'webhook_deliveries' => $this->defineWebhookDeliveries(table: $table, ids: $ids),
@@ -42,7 +41,7 @@ final class WebhooksSchema implements ModuleSchema
 
     public function drop(string $entity): void
     {
-        $this->helpers->schemaConnection()->dropIfExists(app(DatabaseConfig::class)->table($entity));
+        $this->helpers->schemaConnection()->dropIfExists($this->helpers->table($entity));
     }
 
     /**
@@ -122,7 +121,7 @@ final class WebhooksSchema implements ModuleSchema
 
         $table->foreign('endpoint_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('webhook_endpoints'))
+            ->on($this->helpers->table('webhook_endpoints'))
             ->cascadeOnDelete();
     }
 }

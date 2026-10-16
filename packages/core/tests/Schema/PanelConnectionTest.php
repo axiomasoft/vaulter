@@ -25,7 +25,7 @@ it('creates a panel\'s tables on the connection named by vaulter.database.connec
     ]);
     config()->set('vaulter.database.connection', 'vaulter_other');
 
-    $builder = new DriveSchema;
+    $builder = app(DriveSchema::class);
     config()->set('vaulter.database.table_prefix', 'conntest_');
 
     $builder->create(entity: 'drives');
@@ -55,7 +55,7 @@ it('routes a default Vaulter model\'s connection through vaulter.database.connec
 it('control: vaulter.database.connection=null (the default) leaves every write on the host\'s default connection [F-P2.3-02]', function (): void {
     expect(config('vaulter.database.connection'))->toBeNull();
 
-    $builder = new DriveSchema;
+    $builder = app(DriveSchema::class);
     config()->set('vaulter.database.table_prefix', 'conntestctrl_');
 
     $builder->create(entity: 'drives');

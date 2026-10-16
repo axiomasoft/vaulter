@@ -185,22 +185,20 @@ collide with Vaulter's.
 
 **Why & fix.**
 
-- **Order.** Vaulter's migrations are timestamp-ordered (`..._000001_…` → `..._000021_…`) so the
-  parent tables (`v_storages`, `v_nodes`, `v_blobs`) are created before the tables that reference
-  them. The package discovers and runs its own migrations; if you **publish** them with
-  `vendor:publish --tag=vaulter-migrations`, keep the published filenames' ordering intact — don't
-  renumber them.
+- **Order.** Vaulter's migrations are named `0001_01_01_00NNNN_create_v_<table>_table` in one global
+  sequence (core `0001…`, media `0101`, drive `0201…`, documents `0301…`, webhooks `0401…`) so the
+  parent tables (`v_drives`, `v_nodes`, `v_blobs`) are created before the tables that reference
+  them. Each package runs its own migrations from `vendor/`; they are not published.
 
   ```bash
   php artisan vaulter:install        # publishes config, offers to run the migrations
   # or, manually:
   php artisan vendor:publish --tag=vaulter-config
-  php artisan vendor:publish --tag=vaulter-migrations
   php artisan migrate
   ```
 
 - **Prefix.** Every Vaulter table reads `config('vaulter.database.table_prefix')` (default `v_`). The
-  published migrations and the models both read it, so change it in **one** place. If you flip the
+  migrations and the models both read it, so change it in **one** place. If you flip the
   prefix **after** migrating, the models look for `<newprefix>…` tables that don't exist — set the
   prefix **before** the first migrate, or rename the tables to match.
 

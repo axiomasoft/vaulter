@@ -9,6 +9,14 @@ use Vaulter\Schema\ModuleSchemas;
 
 it('creates the canonical schema independently of runtime features and legacy table overrides', function (): void {
     $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
+    // The documents module is not offered by this harness, so its migrations did not run: the canonical schema of an
+    // installation that has it is built by the schema class those migrations call.
+    $documents = app(DocumentsSchema::class);
+    foreach ($documents->entities() as $entity) {
+        if (!$schema->hasTable(app(DatabaseConfig::class)->table($entity))) {
+            $documents->create($entity);
+        }
+    }
     config()->set('vaulter.table_names.drives', 'ignored_drives');
     expect(app(DatabaseConfig::class)->table('drives'))->toBe('v_drives');
     foreach (['drives', 'file_revisions', 'file_revision_blobs', 'documents', 'document_revisions', 'node_comments'] as $entity) {
@@ -38,8 +46,6 @@ it('creates the canonical schema independently of runtime features and legacy ta
     expect($indexes['v_node_grants_grant_uniq']['columns'])->toBe(['node_id', 'subject_type', 'subject_id', 'scope']);
     config()->set('vaulter.features', array_fill_keys(['grants', 'share_links', 'activity', 'webhooks', 'public_listing', 'spreadsheets'], false));
     config()->set('vaulter.database.table_prefix', 'features_off_');
-    // The documents module is not offered by this harness; its tables are built by its own schema class.
-    $documents = app(DocumentsSchema::class);
     app(ModuleSchemas::class)->createAll();
     array_map($documents->create(...), $documents->entities());
     expect($schema->hasTable('features_off_file_revisions'))->toBeTrue()

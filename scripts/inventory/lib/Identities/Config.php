@@ -338,8 +338,8 @@ final class Config
     /**
      * Publish tags: `publishes([...], 'tag')` calls, spatie/laravel-package-tools chains
      * (`->name('x')->hasConfigFile()…` publishes `x-config`, `x-migrations`, `x-translations`, `x-views`), and the
-     * declarations of module manifests the kernel publishes: `config('root', …)` as `root-config`, `schema(…)` as
-     * `vaulter-migrations` for the core module and `vaulter-<id>-migrations` for another.
+     * declarations of module manifests the kernel publishes: `config('root', …)` as `root-config`. The migrations of a
+     * module are never published (D40): `schema(…)` is no tag.
      *
      * @return array<string, array{file: string, symbol: string, via: string}>
      */
@@ -349,17 +349,10 @@ final class Config
         foreach (self::srcFiles($repo) as $file) {
             $stmts = AstFiles::parse($repo, $file);
             $moduleIds = self::moduleIds($stmts);
-            AstFiles::walk($stmts, static function (Node $node, string $symbol) use (&$tags, $file, $moduleIds): void {
+            AstFiles::walk($stmts, static function (Node $node, string $symbol) use (&$tags, $file): void {
                 $root = self::manifestCall($node, $symbol, 'config');
                 if ($root !== null) {
                     $tags[$root.'-config'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:config'];
-
-                    return;
-                }
-                $class = explode('::', $symbol)[0];
-                if (self::manifestCall($node, $symbol, 'schema', literal: false) !== null && isset($moduleIds[$class])) {
-                    $id = $moduleIds[$class];
-                    $tags[$id === 'core' ? 'vaulter-migrations' : 'vaulter-'.$id.'-migrations'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:schema'];
 
                     return;
                 }
