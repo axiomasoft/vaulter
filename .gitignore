@@ -117,3 +117,5 @@ load/gates/__pycache__/
 
 # Local quality/baseline run output (plans VLT-LOAD, KERNEL P1)
 /var/
+.grok/state/
+plans/*/artifacts/**/*.jsonl
