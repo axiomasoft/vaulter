@@ -1,0 +1,167 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.20",
+  "title": "ADR-0030 (владение схемой и пакетами) и документация P4",
+  "status": "todo",
+  "summary": "ADR-0030: владение таблицами/миграциями/конфигом по пакетам, блоки номеров, pins D23, D40-порядок, отсутствие publish-копий и шимов; docs: архитектура пакетов, установка (метапакет + webhooks отдельно), конфиг-корни vaulter-<pkg>, точка входа drive, тестовый кит, uninstall; README пакетов (webhooks новый); CHANGELOG Unreleased; RU-зеркало; reference-страницы генерацией.",
+  "why": "Правило плана: ADR пишется в фазе, реализующей решение; документация — часть поверхности 1.0 (D27).",
+  "scope": {
+    "include": [
+      "docs/adr/0030-*.md + docs/adr/index.md",
+      "docs/** и docs/ru/** страницы, затронутые P4 (сверка, не дублирование правок пунктов)",
+      "packages/*/README.md",
+      "CHANGELOG.md Unreleased",
+      "Проход по tests/Repo/Arch/Fixtures/identities/changes.json: все переименованные в P4.5–P4.19 идентичности отражены в docs EN+RU и README пакетов"
+    ],
+    "exclude": [
+      "UPGRADE 0.x (D21)"
+    ]
+  },
+  "depends_on": [
+    "P4.19"
+  ],
+  "decisions": [
+    "D21",
+    "D23",
+    "D40",
+    "D10",
+    "D6",
+    "D14",
+    "D34",
+    "D41",
+    "D43",
+    "D44"
+  ],
+  "skills": [
+    "php-packages:laravel-package-docs"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "владение схемой",
+      "required": true,
+      "section": "persistence"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "пакеты",
+      "required": true,
+      "section": "packages"
+    },
+    {
+      "path": "docs/adr/index.md",
+      "why": "формат ADR",
+      "required": true
+    },
+    {
+      "path": "docs/adr/0027-kernel-boundaries-and-modules.md",
+      "why": "образец ADR",
+      "required": false
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "docs/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/*/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "README.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Reference-страницы (events/errors/commands/config) — только генерацией командами reference.",
+    "Нет упоминаний старых FQCN/ключей как поддерживаемых.",
+    "Мелочи — одна строка в artifacts/nits.md (D43); отклонения и попутные баги чинить на месте; развилки — Perplexity и D# (D44).",
+    "Единый проход по docs EN+RU: каждая идентичность из tests/Repo/Arch/Fixtures/identities/changes.json (FQCN, ключ конфига, команда, маршрут, миграция, morph-алиас), перенесённая в P4.5–P4.19, отражена в docs/, docs/ru/, README пакетов; затем check-doc-links/snippets и greps пункта.",
+    "Прогоны — только doc-проверки пункта и Fast-набор (D41)."
+  ],
+  "guidance": "Проверка устаревших ссылок: `grep -rnE 'Vaulter\\\\\\\\(VaulterManager|Facades\\\\\\\\Vaulter|Models\\\\\\\\Drive|Access\\\\\\\\)|vaulter\\.(access|sharing|webhooks)\\.' docs README.md packages/*/README.md` пуст.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test -s docs/adr/0030-*.md || ls docs/adr | grep -q '^0030-'",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "! grep -rnE 'Vaulter\\\\\\\\VaulterManager|Vaulter\\\\\\\\Facades\\\\\\\\Vaulter' docs README.md packages/*/README.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/php84 php scripts/check-doc-links.php docs README.md && scripts/php84 php scripts/check-doc-links.php --mirror docs",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/php84 php scripts/check-doc-snippets.php docs",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "ADR-0030",
+    "docs P4"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T16:58:04Z"
+}

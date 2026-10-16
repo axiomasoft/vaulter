@@ -1,0 +1,212 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.18",
+  "title": "Матрицы I6 (активация с фикстурами приложений) и I15 (чистая установка и откат; параметризована под sqlite/pgsql/mysql, исполняется на sqlite) — блокирующие",
+  "status": "todo",
+  "summary": "ActivationMatrixTest расширяется на downward-closed наборы приложений (core; +media; +drive; +documents; +webhooks; +azgard; +filament) и состояния (inactive override, route:cache до смены активации, InvalidModuleGraph); новый CleanInstallMatrixTest: migrate с нуля → таблицы = schema-дескрипторы набора → rollback до пустой схемы и 0 pins owner_type набора → повторный migrate, по пресетам ids/prefix; тест параметризован под три engine, в PLAN3 исполняется на sqlite (D41).",
+  "why": "Фаза V1: I6 и I15 блокирующие после P4. Риск: зависание pins после rollback drive (P7 инварианта pins) и head FK cycles при откате — именно это проверяет I15.",
+  "scope": {
+    "include": [
+      "Фикстуры приложений packages/core/tests/Modules/Fixtures/Apps/*",
+      "ActivationMatrixTest, CleanInstallMatrixTest",
+      "core require-dev webhooks/documents/azgard/filament — только если нужен для фикстуры (azgard — FakeAzgardGuard, без внешнего azguard)",
+      "groups.php: database для CleanInstallMatrixTest",
+      "suites.json partition"
+    ],
+    "exclude": [
+      "I14 (P4.19)",
+      "upgrade-линия (после 1.0)",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.17"
+  ],
+  "decisions": [
+    "D22",
+    "D21",
+    "D23",
+    "D6",
+    "D41",
+    "D43",
+    "D44"
+  ],
+  "skills": [
+    "laravel-testing:laravel-testing"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "наборы, пресеты, команды",
+      "required": true,
+      "section": "matrices"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/test-strategy",
+      "why": "suite cwd/partitions, пути repo/package-relative",
+      "required": false,
+      "section": "runner-contract"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "I6/I15 доп. проверки ревизии 3",
+      "required": true,
+      "section": "invariants"
+    },
+    {
+      "path": "packages/core/tests/Modules/ActivationMatrixTest.php",
+      "why": "существующая матрица P3.16",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/snapshot-configs.json",
+      "why": "пресеты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/tests/Modules/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/groups.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/composer.json",
+      "change": "modify",
+      "note": "require-dev, если нужно"
+    },
+    {
+      "path": "composer.json",
+      "change": "modify",
+      "note": "если нужно"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Расширять существующий ActivationMatrixTest, не дублировать.",
+    "Каждый набор downward-closed по D6; набор без своих таблиц (azgard, filament) проверяет только отсутствие лишних таблиц.",
+    "I15 параметризован под sqlite/pgsql/mysql (группа database); в PLAN3 исполняется только sqlite, серверные engine не запускаются и не маскируются skipped-green — они в knowledge/deferred-runs (D41).",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "Набор провайдеров задаётся через TestCase-фабрику фикстуры (`getPackageProviders` по набору); `migrate:fresh` в рамках DatabaseMigrations-partition. Pins-проверка: после rollback `SELECT owner_type, count(*) FROM v_blob_references` для набора с media — таблицы нет (media откатилась) либо 0 строк drive.* (набор без drive).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p core packages/core/tests/Modules/ActivationMatrixTest.php packages/core/tests/Modules/CleanInstallMatrixTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "I6 и I15 блокирующие тесты"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T16:58:04Z"
+}

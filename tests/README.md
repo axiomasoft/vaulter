@@ -131,6 +131,7 @@ scripts/php84 php scripts/inventory/move-types.php --owner=<drive|media|webhooks
 ## Which run when
 
 This table is the single source for humans and agents (`AGENTS.md`, `CLAUDE.md` and `CONTRIBUTING.md` link here).
+**While PLAN3 is active** (`plans/ACTIVE.md`) a narrower rule applies on top of it: only the Fast set of decision D41 (`plans/2026.10.13-№1-VAULTER-KERNEL/knowledge/orchestration`, section `run-set`) may be run — SQLite, static analysis and structural checks, at most 10 minutes per plan item; the server, full, coverage, mutation and load rows below are deferred to the next plan.
 Pick the **smallest** row that covers the change; a bigger row is never a substitute for reading what failed.
 
 | When | Command | Covers | Does not cover | Time¹ |

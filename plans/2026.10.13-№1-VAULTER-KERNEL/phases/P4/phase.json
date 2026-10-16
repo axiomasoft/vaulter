@@ -4,7 +4,7 @@
   "title": "Разделение владения: media, drive, webhooks и облегчение core",
   "design": "detailed",
   "goal": "Разнести владение по пакетам: media получает CAS-схему и контракты, drive — доменную модель (узлы, файлы, ревизии, доступ, шаринг, активность, изменения, квоты, профили) и точку входа Vaulter, новый пакет vaulter-webhooks — вебхуки; чистые create-миграции (P1.10) раскладываются по пакетам-владельцам, каждый пакет получает свой TestCase; core становится ядром.",
-  "context": "Фаза D. Размер: XL — делить на пункты по пакетам-получателям и по слоям (модели+репозитории, операции+HTTP, конфиг+команды+doctor, миграции, тесты). Оракул — type-map P2: каждый перенос сверяется с ним, отклонение — D#. После фазы I1, I2, I3, I5, I6, I9 блокирующие, allowlist пусты (кроме задокументированных адаптеров I4). Порядок: media → drive → webhooks → documents-подстройка → core-очистка → раскладка create-миграций → split/CI. ADR-0030 (владение схемой). Установок нет (D21): переносы FQCN/ключей без шимов, но документация и тесты обновляются в том же коммите.\nD23: media own pins+GC и drive link composition; D28: все текущие scan_* drive. Filament authorized listing/lookup/snapshots API строится перед запретом ORM reads I9. Core generic schema helpers отделяются от всего domain DDL; нельзя оставить giant SchemaBuilder. Core EventKind/OperationKind/HTTP matchNode/manager domain removed, neutral values остаются. P4 начинает blocking clean-consumer harness (I14), P7 квалифицирует каждого archive.\nДетализация (2026-10-16): порядок пунктов уточнён D40 — DDL и create-миграции раскладываются по владельцам до переноса кода (P4.3/P4.5), затем media → pins → drive (4 пункта по rule-файлам target-map + точка входа) → webhooks → явные require/D32 → Filament → очистка core → uninstall → матрицы → split/CI/I14 → ADR/docs → квалификация. Нормы и алгоритмы — knowledge/p4-design; перенос типов только инструментом P4.1.",
+  "context": "Фаза D. Размер: XL — делить на пункты по пакетам-получателям и по слоям (модели+репозитории, операции+HTTP, конфиг+команды+doctor, миграции, тесты). Оракул — type-map P2: каждый перенос сверяется с ним, отклонение — D#. После фазы I1, I2, I3, I5, I6, I9 блокирующие, allowlist пусты (кроме задокументированных адаптеров I4). Порядок: media → drive → webhooks → documents-подстройка → core-очистка → раскладка create-миграций → split/CI. ADR-0030 (владение схемой). Установок нет (D21): переносы FQCN/ключей без шимов, но документация и тесты обновляются в том же коммите.\nD23: media own pins+GC и drive link composition; D28: все текущие scan_* drive. Filament authorized listing/lookup/snapshots API строится перед запретом ORM reads I9. Core generic schema helpers отделяются от всего domain DDL; нельзя оставить giant SchemaBuilder. Core EventKind/OperationKind/HTTP matchNode/manager domain removed, neutral values остаются. P4 начинает blocking clean-consumer harness (I14), P7 квалифицирует каждого archive.\nДетализация (2026-10-16): порядок пунктов уточнён D40 — DDL и create-миграции раскладываются по владельцам до переноса кода (P4.3/P4.5), затем media → pins → drive (4 пункта по rule-файлам target-map + точка входа) → webhooks → явные require/D32 → Filament → очистка core → uninstall → матрицы → split/CI/I14 → ADR/docs → квалификация. Нормы и алгоритмы — knowledge/p4-design; перенос типов только инструментом P4.1.\nРежим исполнения (2026-10-16): D41–D44 — Fast-набор вместо серверных прогонов, ревью по карте, приоритет кода и тестов, автономность; карта — knowledge/orchestration; отложенные прогоны — knowledge/deferred-runs (PLAN4).",
   "contract": {
     "consumes": [
       "knowledge/architecture#packages",
@@ -25,7 +25,6 @@
       "D23",
       "D27",
       "knowledge/architecture#operation-chains",
-      "knowledge/p4-design",
       "D40",
       "D34",
       "D33",
@@ -74,7 +73,6 @@
     "Фабрики моделей и Testing-хелперы переезжают с моделями",
     "Laravel discovery: aliases фасада объявляет drive, не core",
     "SQLite не именует FK — снимки схемы сравниваются нормализованно по драйверу",
-    "Любой server validation group/path/full/serial проходит TestCase/schema partitions каждого пакета (test-strategy#runner-contract); worker DB не решает schema changes внутри worker.",
     "Reference-only pin к tombstoned без проверки байтов или к deleting/deleted запрещён; BlobStore::attach без lock не переносится как есть (D23 протокол)",
     "Uninstall/rollback владельца освобождает собственные pins; чужие pins не трогаются generic-командой",
     "Каждая route group пакета регистрируется с vaulter.module middleware"
@@ -82,7 +80,7 @@
   "validation": [
     {
       "id": "V100",
-      "procedure": "I1, I2, I3, I5, I6, I9 блокирующие с пустыми allowlist; чистая установка каждой комбинации пакетов мигрирует и откатывается на sqlite/pgsql/mysql (I15); суммарная схема совпадает со снимком P1.10, с текущими identities по D23/D29/D25/D28; original сохраняется; квалификационный пункт P4 зелёный Детализация: P4.16 (I1/I2/I5/I9 block), P4.5 (I3 block), P4.18 (I6, I15 на трёх engine), P4.21 (сводная квалификация).",
+      "procedure": "I1, I2, I3, I5, I9 блокирующие с пустыми allowlist; матрицы I6 и I15 реализованы (I15 параметризована под sqlite/pgsql/mysql, исполняется на sqlite — pgsql/mysql в PLAN4, D41); суммарная схема совпадает со снимком P1.10 на sqlite (snapshot compare), original сохранён; квалификационный пункт P4 (Fast) зелёный. Детализация: P4.16 (I1/I2/I5/I9 block), P4.5 (I3 block), P4.18 (I6, I15 sqlite), P4.21 (сводная Fast-квалификация).",
       "expect": "все зелёные",
       "kind": "acceptance"
     }
@@ -135,7 +133,7 @@
         "P4.5"
       ],
       "mode": "recommended",
-      "note": "Схема владельцев (D40): DDL → morph-алиасы → раскладка миграций; строго последовательно"
+      "note": "Схема владельцев (D40): DDL → morph-алиасы → раскладка миграций; строго последовательно. Ревью RC1 на P4.5 (high)."
     },
     {
       "id": "B3",
@@ -143,7 +141,7 @@
         "P4.6"
       ],
       "mode": "recommended",
-      "note": "Media: перенос CAS-срезов, D33"
+      "note": "Media: перенос CAS-срезов, D33. Ревью — в составе RC2."
     },
     {
       "id": "B4",
@@ -151,7 +149,7 @@
         "P4.7"
       ],
       "mode": "recommended",
-      "note": "Pins D23 — frontier, отдельная сессия"
+      "note": "Pins D23 — frontier, отдельная сессия. Ревью RC2 на P4.7 (xhigh), покрывает P4.6–P4.7."
     },
     {
       "id": "B5",
@@ -160,7 +158,7 @@
         "P4.9"
       ],
       "mode": "recommended",
-      "note": "Drive A/B: Access+Sharing, Content/scan"
+      "note": "Drive A/B: Access+Sharing, Content/scan. Ревью — в составе RC3."
     },
     {
       "id": "B6",
@@ -168,7 +166,7 @@
         "P4.10"
       ],
       "mode": "recommended",
-      "note": "Drive C: доменная модель (крупнейший перенос)"
+      "note": "Drive C: доменная модель (крупнейший перенос). Ревью — в составе RC3."
     },
     {
       "id": "B7",
@@ -177,7 +175,7 @@
         "P4.12"
       ],
       "mode": "recommended",
-      "note": "Drive D: kernel-срез, конфиг, маршруты; точка входа"
+      "note": "Drive D: kernel-срез, конфиг, маршруты; точка входа. Ревью RC3 на P4.12 (high), покрывает P4.8–P4.12."
     },
     {
       "id": "B8",
@@ -185,7 +183,7 @@
         "P4.13"
       ],
       "mode": "recommended",
-      "note": "Пакет vaulter-webhooks"
+      "note": "Пакет vaulter-webhooks. Ревью — в составе RC4."
     },
     {
       "id": "B9",
@@ -194,7 +192,7 @@
         "P4.15"
       ],
       "mode": "recommended",
-      "note": "Явные require/D32; Filament на Operations"
+      "note": "Явные require/D32; Filament на Operations. Ревью — в составе RC4."
     },
     {
       "id": "B10",
@@ -202,7 +200,7 @@
         "P4.16"
       ],
       "mode": "recommended",
-      "note": "Очистка core, I1/I2/I5/I9 block"
+      "note": "Очистка core, I1/I2/I5/I9 block. Ревью — в составе RC4."
     },
     {
       "id": "B11",
@@ -211,7 +209,7 @@
         "P4.18"
       ],
       "mode": "recommended",
-      "note": "Uninstall; матрицы I6/I15"
+      "note": "Uninstall; матрицы I6/I15. Ревью RC4 на P4.17 (high), покрывает P4.13–P4.17."
     },
     {
       "id": "B12",
@@ -220,7 +218,7 @@
         "P4.20"
       ],
       "mode": "recommended",
-      "note": "Split/CI/I14; ADR-0030 и docs"
+      "note": "Split/CI/I14; ADR-0030 и docs-проход. Ревью RC5 на P4.19 (high), покрывает P4.18–P4.19."
     },
     {
       "id": "B13",
@@ -228,14 +226,14 @@
         "P4.21"
       ],
       "mode": "recommended",
-      "note": "Квалификация P4"
+      "note": "Fast-квалификация P4."
     }
   ],
   "sections": [
     {
       "id": "design-inputs",
       "title": "Обязательные входы детализации",
-      "text": "Сессия детализации P4 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P4`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section packages\n$P get $ID knowledge/architecture --section ownership-map\n$P get $ID knowledge/architecture --section entry-point\n$P get $ID knowledge/architecture --section persistence\n$P get $ID knowledge/architecture --section module-system\n$P get $ID knowledge/architecture --section operation-chains\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/p2-findings\n$P get $ID D6\n$P get $ID D21\n$P get $ID D10\n$P get $ID D29\n$P get $ID D14\n$P get $ID D28\n$P get $ID D20\n$P show $ID P3            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P4» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~80 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте.\n\nРевизия 2 — дополнительно читать: knowledge/source-review#code-facts; knowledge/test-strategy#runner-contract; knowledge/architecture#cost; D29, D28, D23, D27. Эти нормы не переопределяются при детализации.\nВсегда сохранять identity/current snapshot amendments до P7 без upgrade 0.x; обязательный qualification последним. Validation paths должны существовать на момент item, suite cwd/partition из runner-contract. SQL/stand skipped не Green. Owner mutations только отдельный явно optional gated item P7, exception к запрету general пунктов; product benchmark acceptance отсутствует.\nРевизия 3 — читать: knowledge/review-matrix --section counter-review-3; D29; architecture --section events (D29); architecture --section operation-chains (протокол pins). Нормы ревизии 3 обязательны при детализации."
+      "text": "Сессия детализации P4 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P4`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section packages\n$P get $ID knowledge/architecture --section ownership-map\n$P get $ID knowledge/architecture --section entry-point\n$P get $ID knowledge/architecture --section persistence\n$P get $ID knowledge/architecture --section module-system\n$P get $ID knowledge/architecture --section operation-chains\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/p2-findings\n$P get $ID D6\n$P get $ID D21\n$P get $ID D10\n$P get $ID D29\n$P get $ID D14\n$P get $ID D28\n$P get $ID D20\n$P show $ID P3            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из Fast-набора (D41, knowledge/orchestration#run-set): `scripts/t sqlite -p <pkg> [paths]`, статика, структурные проверки; без серверных движков, без мутаций (D3), без load, без coverage. Тесты серверных/serial/stand линий пишутся, не запускаются.\n2. Последний пункт фазы — «Квалификация P4 (Fast)» по knowledge/test-strategy#qualification-template: быстрая линия + статика + baseline, ≤10 мин.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~80 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте.\n7. Расставить ревью-чекпоинты по D42 (≈1 на 3–5 пунктов; xhigh только concurrency/durability/destructive; reviewer codex/gpt-6.1-sol) и дополнить knowledge/orchestration#item-map и #review-map.\n8. Вопросы владельцу не задавать: лестница D44 (план → код → Perplexity → решение с D#). Мелочи — artifacts/nits.md, документация — отдельный пункт-проход (D43).\n\nРевизия 2 — дополнительно читать: knowledge/source-review#code-facts; knowledge/test-strategy#runner-contract; knowledge/architecture#cost; D29, D28, D23, D27. Эти нормы не переопределяются при детализации.\nВсегда сохранять identity/current snapshot amendments до P7 без upgrade 0.x; обязательный qualification последним. Validation paths должны существовать на момент item, suite cwd/partition из runner-contract. Серверные и stand-линии в PLAN3 не исполняются (D41) — это «отложено» (knowledge/deferred-runs), не «зелёное». Мутации и benchmark в PLAN3 отсутствуют.\nРевизия 3 — читать: knowledge/review-matrix --section counter-review-3; D29; architecture --section events (D29); architecture --section operation-chains (протокол pins). Нормы ревизии 3 обязательны при детализации."
     }
   ]
 }

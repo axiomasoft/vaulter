@@ -1,0 +1,199 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.14",
+  "title": "Явные Composer require всех пакетов и остаток D32 documents→collaboration в i2",
+  "status": "todo",
+  "summary": "Каждый пакет объявляет в `require` все пакеты, чьи типы импортирует (documents, webhooks, azgard, filament → core явно; documents → media при прямых импортах); `packages.json` current/target_require сверены; i2 needs-explicit-require = 0; 27 записей documents→collaboration получают removed_in P5 и поздний допуск target_owner=collaboration в `Allowlist.php` (D32).",
+  "why": "architecture#packages: не полагаться на транзитивный require; I14 ломается без явных зависимостей. D32 требует исправить i2-фикстуру до блокировки I2 (P4.16).",
+  "scope": {
+    "include": [
+      "composer.json require пакетов + composer update в каждом",
+      "packages.json",
+      "Allowlist.php LATE для i2 target_owner collaboration",
+      "правило i2 removed_in P5 для 27 записей",
+      "core/composer.json suggest: устаревший firebase/php-jwt ^6.0 исправить на ^7.0 (дефект p2-findings)"
+    ],
+    "exclude": [
+      "Выделение collaboration (P5)",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.13"
+  ],
+  "decisions": [
+    "D32",
+    "D6",
+    "D41",
+    "D43",
+    "D44"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "D32",
+      "why": "поздний допуск i2",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p2-findings",
+      "why": "скан-база и остатки",
+      "required": true,
+      "section": "scan-baseline"
+    },
+    {
+      "path": "scripts/inventory/lib/Allowlist.php",
+      "why": "LATE_CATEGORIES",
+      "required": true
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/packages.json",
+      "why": "current/target_require",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/*/composer.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/*/composer.lock",
+      "change": "modify",
+      "note": "если отслеживается"
+    },
+    {
+      "path": "scripts/inventory/lib/Allowlist.php",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/InventoryHarnessTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Ни одного require против графа D6 (обратное направление — дефект).",
+    "Поздний допуск i2 — только записи с target_owner collaboration и removed_in P5.",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "Посчитать фактические импорты: `scripts/php84 php scripts/inventory/inventory.php scan-i2 --report` до/после; цель — 0 needs-explicit-require, reverse-edge только D32-остаток и ещё не очищенные core-записи (их снимает P4.16).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php scan-i2 --check && jq -e '[.entries[] | select(.category==\"needs-explicit-require\")] | length == 0' tests/Repo/Arch/Fixtures/allowlists/i2.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "for p in core media drive documents webhooks azgard filament; do (cd packages/$p && composer validate --no-check-publish --no-check-lock) || exit 1; done",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p documents,filament,webhooks,repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p azgard",
+      "expect": "exit 0 либо падают только 10 RealAzgard* (дрейф ../azguard, pre-existing)",
+      "kind": "impact"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Явные require",
+    "i2 D32-остаток с removed_in P5"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T16:58:04Z"
+}

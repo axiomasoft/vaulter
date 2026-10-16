@@ -1,0 +1,225 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.9",
+  "title": "Drive B: контент и сканирование (Content, scan-модели, DownloadGuard) из core в vaulter-drive",
+  "status": "todo",
+  "summary": "`move-types --owner=drive --rule-file=core-content-media-webhooks` (33: Actions\\Content, ContentAvailabilityGuard, ContentDelivery, DownloadGuards, NodeContentLifecycleRegistry, Scan*, Contracts\\Content, Models\\Content, Repositories\\Content, Exceptions\\Content), тесты `packages/core/tests/Content` → drive.",
+  "why": "D28: все scan_* и карантин — drive; media держит только чистый ContentScanner SPI (перенесён в P4.6). Риск: ScanBackfillReconciler/ScanWork live-логика — переносится как есть (persistence: не вырезать).",
+  "scope": {
+    "include": [
+      "Перенос селектором",
+      "тесты Content"
+    ],
+    "exclude": [
+      "Изменение scan-семантики",
+      "Pins scan-ссылок",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.8"
+  ],
+  "decisions": [
+    "D28",
+    "D10",
+    "D41",
+    "D43",
+    "D44"
+  ],
+  "skills": [
+    "php:namespace-refactor-safety"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "CLI и поведение инструмента переноса",
+      "required": true,
+      "section": "move-tool"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "селектор, тесты, ручные шаги пункта",
+      "required": true,
+      "section": "drive-moves"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "D28",
+      "why": "владение scan",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/**",
+      "change": "modify",
+      "note": "перенос инструментом"
+    },
+    {
+      "path": "packages/drive/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "packages/filament/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "packages/azgard/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "load/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "e2e/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Только инструмент + перенос тестов.",
+    "Ledger: FQCN-строки serialized/config — redefined D28.",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "`move-types.php --owner=drive --rule-file=core-content-media-webhooks --tests=packages/core/tests/Content:packages/drive/tests/Content --dry-run` → `--apply`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test ! -e packages/core/src/Content && test ! -e packages/core/src/Actions/Content && test ! -e packages/core/src/Models/Content && test ! -e packages/core/tests/Content",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p drive,core,documents,media,filament,repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p azgard",
+      "expect": "exit 0 либо падают только 10 RealAzgard* (дрейф ../azguard, pre-existing)",
+      "kind": "impact"
+    },
+    {
+      "id": "V4",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/documents && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/filament && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/azgard && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Content/scan в drive"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T16:58:04Z"
+}

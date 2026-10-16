@@ -3,7 +3,7 @@
   "id": "D34",
   "title": "Стабильные morph-алиасы моделей Vaulter до freeze",
   "date": "2026-10-14",
-  "status": "open",
+  "status": "accepted",
   "question": "Фиксирует ли Vaulter стабильные morph-алиасы своих моделей до freeze P7, или в полиморфных колонках остаётся getMorphClass() (FQCN, если хост не задал morph map)?",
   "options": [
     {
@@ -20,8 +20,16 @@
     }
   ],
   "context": "knowledge/p2-findings#open-questions OQ3. Код 35718fd2: в src нет morphMap/enforceMorphMap; ActivityTarget::of и VisibleActivityQuery пишут/фильтруют target_type = getMorphClass() моделей Vaulter (config vaulter.models.* позволяет хосту подменить класс), RegisteredSubjectType принимает алиас или FQCN. P4 переносит Vaulter\\Models\\Drive\\Node → Vaulter\\Drive\\Models\\Node (target-map), поэтому FQCN как хранимый тип нестабилен. До 1.0 данных нет (D21) — вопрос о форме замороженной идентичности, не о миграции.",
+  "decision": "A — Стабильные алиасы собственных моделей Vaulter: каждая модель Vaulter, чей тип пишется в полиморфную колонку (сегодня Node и Drive как target активности), возвращает из getMorphClass() константный алиас вида vaulter.<entity> (vaulter.node, vaulter.drive; для документов — vaulter.document при появлении такой записи) через трейт ядра Vaulter\\Support\\Concerns\\HasStableMorphAlias; глобальный Relation::morphMap не регистрируется (алиасы Vaulter-моделей никем не резолвятся через morphTo), enforceMorphMap хоста не требует маппить модели Vaulter. Хост-модели (owner, subject, author) остаются под политикой хоста. Алиасы — идентичности identities/protocol (I16); переносы FQCN в P4 их не меняют. Реализует P4 до переноса моделей drive.",
+  "rationale": "Делегировано (M5). Код (main 2a657840): getMorphClass() Vaulter-моделей только пишется и сравнивается (ActivityTarget::of, VisibleActivityQuery, Activity-контроллеры), morphTo есть лишь к хост-моделям (Drive::owner, NodeComment::author) — значит резолв алиаса не нужен и глобальная регистрация morphMap лишняя. B делает FQCN модели вечной идентичностью хранения и ломается уже в P4 (Vaulter\\Models\\Drive\\Node → Vaulter\\Drive\\Models\\Node); кроме того, хост с enforceMorphMap обязан был бы маппить модели Vaulter. C меняет схему и семантику активности (новая enum-колонка вместо morph type) — изменение семантики вне scope P4. A меняет только значение target_type (данных нет, D21) и фиксируется ledger-записью.",
+  "consequences": [
+    "P4.4 вводит трейт Vaulter\\Support\\Concerns\\HasStableMorphAlias (core, Api) и применяет его к Node и Drive; target_type активности = vaulter.node / vaulter.drive",
+    "identities/protocol: morph-идентичности моделей Vaulter меняют значение с FQCN на алиас (ledger redefined D34); переносы FQCN моделей в P4 больше не меняют хранимых значений",
+    "Хост-модели (owner, subject, author) продолжают писать getMorphClass() хоста; P7 замораживает алиасы"
+  ],
   "applies_to": [
-    "P4",
+    "P4.4",
+    "P4.10",
     "P7"
   ],
   "evidence": [
@@ -45,5 +53,6 @@
     "provider": "claude",
     "model": "claude-opus-5-5",
     "effort": "medium"
-  }
+  },
+  "answered_by": "agent"
 }

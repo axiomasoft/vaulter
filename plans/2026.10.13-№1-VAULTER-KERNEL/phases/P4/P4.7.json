@@ -1,0 +1,297 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.7",
+  "title": "D23: media-pins v_blob_references, GC читает только pins, связи ревизий → drive RevisionBlobLinks",
+  "status": "todo",
+  "summary": "Media получает таблицу `v_blob_references` (0001_01_01_000102), контракт `BlobPins` с протоколом lock/status, GC и reconcile читают только pins; `BlobStore::attach/detach` удаляются, drive `RevisionBlobLinks` атомарно пишет ребро ревизии и pin; purge-пути снимают pins; down миграции file_revision_blobs освобождает pins drive; `v_blobs.drive_id` → `storage_id`; doctor pins по owner_type; тесты I18 и PG-гонка pin↔sweep.",
+  "why": "D23 и протокол pins (architecture#operation-chains, ревизия 3): GC сегодня читает drive-таблицу (обратная зависимость), attach без lock/статуса допускает pin к tombstoned без байтов. Hard risks: потеря байтов живой ревизии (pin после unlink в откаченном sweep), вечный pin при каскадном delete без unpin, deadlock при порядке lock дерева drive и lock blob.",
+  "scope": {
+    "include": [
+      "MediaSchema blob_references + миграция media 0102",
+      "BlobPins/BlobPinStore, BlobUnavailableException + problem code blob_unavailable (receipt never)",
+      "BlobGarbageCollector/BlobReconciler: pins-only",
+      "drive RevisionBlobLinks + перевод IngestFileAction/RestoreFileRevisionAction/DeleteFileRevisionAction/FileContentLifecycle",
+      "purge диска/узла/ревизии: detachAll до delete",
+      "drive миграция 0205 down → releaseOwner",
+      "storage_id, BlobScope::storage()",
+      "media doctor BlobPinsCheck",
+      "arch: только BlobPinStore пишет v_blob_references; media/src без FileRevision"
+    ],
+    "exclude": [
+      "Pins для scan_*/upload_* (семантика не расширяется)",
+      "uninstall --purge (P4.17)",
+      "Scrub (P6)",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.6"
+  ],
+  "decisions": [
+    "D23",
+    "D28",
+    "D21",
+    "D41",
+    "D43",
+    "D44",
+    "D42"
+  ],
+  "skills": [
+    "php:production-readiness-checklist",
+    "php:database"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормативная модель инвариантов P1–P8, API, пары операция↔lock",
+      "required": true,
+      "section": "pins"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "протокол pins D23 (ревизия 3)",
+      "required": true,
+      "section": "operation-chains"
+    },
+    {
+      "ref": "D23",
+      "why": "решение",
+      "required": true
+    },
+    {
+      "ref": "D28",
+      "why": "scan-таблицы не пинят",
+      "required": true
+    },
+    {
+      "path": "packages/media/src/Cas/BlobGarbageCollector.php",
+      "why": "mark/sweep, lockedTransaction, edge query (строки ~115–380)",
+      "required": true
+    },
+    {
+      "path": "packages/media/src/Cas/BlobStore.php",
+      "why": "commitStaged/attach/detach",
+      "required": true
+    },
+    {
+      "path": "packages/media/src/Cas/BlobReconciler.php",
+      "why": "ref_count reconcile",
+      "required": true
+    },
+    {
+      "path": "packages/media/src/Cas/BlobLock.php",
+      "why": "advisory/row lock",
+      "required": false
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    },
+    {
+      "ref": "D42",
+      "why": "ревью-чекпоинт и карта ревью",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "карта ревью-чекпоинтов, запуск ревью",
+      "required": true,
+      "section": "review-map"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/media/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Content/RevisionBlobLinks.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/**",
+      "change": "modify",
+      "note": "core-located drive Actions/purge-пути до P4.10"
+    },
+    {
+      "path": "packages/drive/database/migrations/0001_01_01_000205_create_v_file_revision_blobs_table.php",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом P4 (P4.5 / P4.12)"
+    },
+    {
+      "path": "packages/media/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/expected/**",
+      "change": "modify"
+    },
+    {
+      "path": "openapi/**",
+      "change": "modify",
+      "note": "problem blob_unavailable, если наружу"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Все инварианты P1–P8 p4-design#pins реализованы и покрыты тестами; lock order: lock дерева drive → lock(scope,sha) → FOR UPDATE blob (как ingest сегодня).",
+    "Ни одного чтения drive-таблиц/моделей из packages/media/src.",
+    "Pin вне транзакции — LogicException.",
+    "Хранимые форматы CAS-ключа/dedup_scope не меняются; ledger: таблица/колонки/индексы added D23, drive_id→storage_id renamed D23, problem blob_unavailable added D23.",
+    "expected-снапшоты перезаписываются (новая таблица/колонка) и сравниваются на трёх engine; original неизменен.",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "PinSweepRaceTest (pgsql, serial, ForkRace из кита): процесс A — sweep blob X (tombstoned, grace истёк) с паузой после unlink до commit; процесс B — ingest того же sha в тот же scope → pin. Ожидание: либо B ждёт lock и после отката/коммита sweep получает blob_unavailable и перекоммичивает байты (promote), либо sweep видит pin и не удаляет; в любом исходе `ContentStore::exists` для blob, на который есть pin, = true. Повторить для mark vs detach. Существующие I18-тесты (grep `GarbageCollector` в tests) должны остаться зелёными. Тест пишется и классифицируется (serial + database), в PLAN3 не запускается (D41); гонку проверяет ревью RC2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "! grep -rnE 'FileRevision|file_revision_blob' packages/media/src",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/schema-snapshot.sh --driver=sqlite --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "git diff --quiet 2a657840 -- packages/core/tests/Fixtures/Schema/original",
+      "expect": "exit 0: original P1.10 неизменен",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p media,drive,documents,core,repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/media && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "v_blob_references + BlobPins",
+    "GC pins-only",
+    "RevisionBlobLinks",
+    "storage_id",
+    "PinSweepRaceTest"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "gpt-6.1-sol",
+      "note": "RC2: покрывает P4.6–P4.7. Фокус: протокол pins D23 — гонка pin vs sweep, tombstone/deleting, FK-направление, GC читает только pins.",
+      "provider": "codex",
+      "effort": "xhigh"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T16:58:04Z"
+}

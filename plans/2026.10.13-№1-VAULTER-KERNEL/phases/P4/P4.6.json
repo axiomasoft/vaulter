@@ -1,0 +1,258 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.6",
+  "title": "Media: перенос CAS-срезов из core, Tenancy::without, D33 (doctor профилей → drive)",
+  "status": "todo",
+  "summary": "`move-types --owner=media` переносит 21 тип (Cas-контракты, Blob, BlobStoreRepository, BlobLock, Cas enums/VO, ScanInput/ScanResult/ImmutableContentIdentity/SignedContentUrl, FakeContentScanner, media testing contracts) в packages/media; core получает `Vaulter\\Tenancy\\Tenancy::without()`; media-команды GcBlobs/ReconcileBlobs используют его; DiskSet/DiskProbeCheck/DedupScopeCheck переезжают в drive как вклад в doctor (D33); Blob кастует через media-UTC-cast; `vaulter.models.blob` → `vaulter-media.models.blob`; CAS-тесты core → media.",
+  "why": "D6/D23/D33: media — самостоятельный пакет без ссылок на drive и доменные core-типы. Подготовка к pins (P4.7). Риск: media-тесты, неявно опирающиеся на drive-провайдер (DriveTestHelpers) — такие тесты принадлежат drive.",
+  "scope": {
+    "include": [
+      "move-types --owner=media --apply",
+      "target-map правило: DiskSet/DiskProbeCheck/DedupScopeCheck owner drive, P4, target Vaulter\\Drive\\Doctor\\… (D33) → move-types --owner=drive --fqcn-prefix='Vaulter\\Media\\Doctor\\'",
+      "Tenancy::without (core, Api) + VaulterManager::withoutTenancy делегирует",
+      "ScanUtcDateTime в Blob → Vaulter\\Media\\Support\\UtcDateTimeCast",
+      "конфиг ключ models.blob",
+      "тесты CAS из packages/core/tests (Schema/BlobDedup*, CAS unit) → packages/media/tests; doctor-тесты D33 → drive"
+    ],
+    "exclude": [
+      "BlobStore::attach/detach и GC-запросы к file_revision_blobs (P4.7)",
+      "v_blobs.drive_id (P4.7)",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.5"
+  ],
+  "decisions": [
+    "D33",
+    "D23",
+    "D6",
+    "D10",
+    "D41",
+    "D43",
+    "D44"
+  ],
+  "skills": [
+    "php:namespace-refactor-safety"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "CLI и поведение инструмента переноса",
+      "required": true,
+      "section": "move-tool"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "D33",
+      "why": "перенос doctor-проверок и cast",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "media vs drive владение, Content split",
+      "required": true,
+      "section": "ownership-map"
+    },
+    {
+      "path": "packages/media/src/Doctor/DiskSet.php",
+      "why": "D33 перенос",
+      "required": true
+    },
+    {
+      "path": "packages/media/src/Console/GcBlobsCommand.php",
+      "why": "withoutTenancy",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/VaulterManager.php",
+      "why": "withoutTenancy реализация (TenancyBypass)",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Models/Cas/Blob.php",
+      "why": "cast quarantined_at",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/{Cas,Contracts/Cas,Enums/Cas,Models/Cas,Repositories/Cas,ValueObjects/Cas,Content,Testing}/**",
+      "change": "modify",
+      "note": "перенос инструментом"
+    },
+    {
+      "path": "packages/media/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Doctor/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Tenancy/Tenancy.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/VaulterManager.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/media/config/vaulter-media.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/media/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/media/composer.json",
+      "change": "modify",
+      "note": "только если нужен"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Все переносы — инструментом P4.1; ручные правки только Tenancy::without, cast, config-ключ, правило target-map D33.",
+    "После пункта media/src не ссылается на типы с owner drive/documents/webhooks (I2 reverse-edge media→drive только записи D23 до P4.7).",
+    "Ledger: config-ключ renamed D6; serialized FQCN-defaults redefined D6; doctor-проверки D33.",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "Порядок: (1) правило D33 в tests/Repo/Arch/*.json + `inventory.php target-map --write`; (2) `move-types --owner=media --dry-run` → проверить отчёт → `--apply --tests=…` для CAS-тестов; (3) `move-types --owner=drive --fqcn-prefix='Vaulter\\Media\\Doctor\\' --apply`; (4) ручные правки; (5) pint, inventory --write, baseline --write -p core,media,drive.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test ! -e packages/core/src/Cas && test ! -e packages/core/src/Contracts/Cas && test ! -e packages/core/src/Models/Cas && ! grep -rn 'VaulterManager\\|Profiles\\\\ProfileRegistry\\|ScanUtcDateTime' packages/media/src",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "jq -e '[.types[] | select(.owner==\"media\" and .package!=\"media\")] | length == 0' tests/Repo/Arch/Fixtures/target-map.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p core,media,drive,documents,repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/media && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "CAS-срезы в media",
+    "Tenancy::without",
+    "D33 исполнено"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T16:58:04Z"
+}
