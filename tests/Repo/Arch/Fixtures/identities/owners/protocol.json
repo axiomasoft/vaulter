@@ -140,6 +140,12 @@
             "why": "kernel concern: idempotency of the operation pipeline and its dependencies (architecture#errors, D25)"
         },
         {
+            "match": "exact",
+            "value": "problem:blob_unavailable",
+            "owner": "media",
+            "why": "D23: a pin refused because the bytes of the blob are gone — the media pin protocol"
+        },
+        {
             "match": "prefix",
             "value": "problem:collaboration_",
             "owner": "collaboration",

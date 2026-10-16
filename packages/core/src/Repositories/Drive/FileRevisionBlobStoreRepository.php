@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Database\Eloquent\Builder;
+use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
+use Vaulter\Support\Identity;
 
 /**
- * Write-side row work for the v_file_revision_blobs edge table — the GC liveness
- * truth. A blob is live iff an edge here references it, so attaching /
- * detaching an edge is what actually changes liveness; ref_count is only a
- * reconciled cache. Opens no transactions (the caller wraps it). Idempotent
- * upsert so a re-attach of the same (version, blob, role, ordinal) is a no-op.
+ * Row work for the v_file_revision_blobs edge table: which blobs a revision is made
+ * of. The edge does not keep a blob alive — its media pin does (D23) — so the only
+ * caller is the drive's RevisionBlobLinks, which writes the edge and the pin in one
+ * transaction. Opens no transactions (the caller wraps it). Idempotent upsert so a
+ * re-attach of the same (version, blob, role, ordinal) is a no-op.
  */
 #[Internal]
 final readonly class FileRevisionBlobStoreRepository
@@ -50,35 +52,58 @@ final readonly class FileRevisionBlobStoreRepository
     }
 
     /**
-     * Remove a version↔blob edge. The blob's bytes are NOT deleted here — it just
-     * becomes a GC candidate once reconciliation recomputes ref_count = 0.
+     * Remove a version↔blob edge. The blob's bytes are NOT deleted here, and the
+     * pin is the caller's to remove.
      */
-    public function detach(FileRevision $version, Blob $blob, string $role = 'data', int $ordinal = 0): void
+    public function detach(FileRevision $version, Blob|int|string $blob, string $role = 'data', int $ordinal = 0): void
     {
         $this->query()
             ->where('file_revision_id', $version->getKey())
-            ->where('blob_id', $blob->getKey())
+            ->where('blob_id', $blob instanceof Blob ? $blob->getKey() : $blob)
             ->where('role', $role)
             ->where('ordinal', $ordinal)
             ->delete();
     }
 
     /**
-     * Whether ANY edge still references this blob — the liveness re-check the GC
-     * runs under the lock before it tombstones.
+     * The edges of the given revisions, ordered by their primary key.
+     *
+     * @param  list<int|string>                                                                           $revisionIds
+     * @return list<array{file_revision_id: int|string, blob_id: int|string, role: string, ordinal: int}>
      */
-    public function hasLiveEdge(Blob $blob): bool
+    public function forRevisions(array $revisionIds): array
     {
-        return $this->query()->where('blob_id', $blob->getKey())->exists();
+        if ($revisionIds === []) {
+            return [];
+        }
+
+        $edges = [];
+        foreach ($this->query()->toBase()->whereIn('file_revision_id', $revisionIds)
+            ->orderBy('file_revision_id')->orderBy('blob_id')->orderBy('role')->orderBy('ordinal')
+            ->get(['file_revision_id', 'blob_id', 'role', 'ordinal']) as $row) {
+            $revisionId = Identity::key($row->file_revision_id);
+            $blobId = Identity::key($row->blob_id);
+            if ($revisionId === null || $blobId === null || !is_string($row->role) || !is_numeric($row->ordinal)) {
+                throw new LogicException('[Vaulter] A revision edge row has no usable key.');
+            }
+            $edges[] = ['file_revision_id' => $revisionId, 'blob_id' => $blobId, 'role' => $row->role, 'ordinal' => (int) $row->ordinal];
+        }
+
+        return $edges;
     }
 
     /**
-     * Count the edges referencing this blob — the reconciled source of truth for
-     * the ref_count cache.
+     * Delete every edge of the given revisions; the number deleted.
+     *
+     * @param list<int|string> $revisionIds
      */
-    public function countEdges(Blob $blob): int
+    public function deleteForRevisions(array $revisionIds): int
     {
-        return $this->query()->where('blob_id', $blob->getKey())->count();
+        if ($revisionIds === []) {
+            return 0;
+        }
+
+        return $this->query()->toBase()->whereIn('file_revision_id', $revisionIds)->delete();
     }
 
     /**

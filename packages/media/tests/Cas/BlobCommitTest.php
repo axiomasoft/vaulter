@@ -56,10 +56,10 @@ it('дедуп: одинаковые байты дважды → ОДНА стр
         ->and(Blob::query()->count())->toBe(1);
 
     // Two distinct versions reference the one blob — two edges, one physical object.
-    $v1 = CasTestHelpers::makeVersion(versionNo: 1, name: 'a.bin');
-    $v2 = CasTestHelpers::makeVersion(versionNo: 1, name: 'b.bin');
-    $store->attach($v1, $first);
-    $store->attach($v2, $second);
+    $v1 = CasTestHelpers::reference('a.bin');
+    $v2 = CasTestHelpers::reference('b.bin');
+    CasTestHelpers::pin($first, $v1);
+    CasTestHelpers::pin($second, $v2);
 
     expect(Storage::disk('local')->allFiles())->toHaveCount(1);
 

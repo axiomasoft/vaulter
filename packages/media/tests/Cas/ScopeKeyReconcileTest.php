@@ -43,18 +43,18 @@ it('collects a post-promote SQL rollback only after grace under the lossless loc
 });
 
 it('serializes GC against a writer of the same scope and keeps reachable bytes', function (): void {
-    $scope = BlobScope::drive('01ARZ3NDEKTSV4RRFFQ69G5FAV');
+    $scope = BlobScope::storage('01ARZ3NDEKTSV4RRFFQ69G5FAV');
     $bytes = 'race bytes';
     $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), $scope);
     $blob->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subDay()])->save();
-    $version = CasTestHelpers::makeVersion();
+    $version = CasTestHelpers::reference();
     $outcomes = ForkRace::run([
         fn (): array => app(BlobGarbageCollector::class)->sweep(),
         function () use ($scope, $bytes, $version): string {
             return app(VaulterDatabase::class)->transaction(function () use ($scope, $bytes, $version): string {
                 $store = app(BlobStore::class);
                 $fresh = $store->commit(CasTestHelpers::streamFor($bytes), $scope);
-                $store->attach($version, $fresh);
+                CasTestHelpers::pin($fresh, $version);
 
                 return (string) $fresh->getKey();
             });

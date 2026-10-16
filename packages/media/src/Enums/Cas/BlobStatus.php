@@ -75,7 +75,7 @@ enum BlobStatus: string
     /**
      * A blob in a live state pins its bytes (no physical delete is permitted).
      * Committed obviously; Pending too, since an in-flight commit may still
-     * attach an edge.
+     * gain a pin.
      */
     public function isLive(): bool
     {

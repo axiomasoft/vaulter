@@ -5,77 +5,71 @@ declare(strict_types=1);
 namespace Vaulter\Media\Tests\Cas;
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\IdsConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Cas\Sha256ContentStore;
+use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Schema\IdStrategyResolver;
 
 /**
- * Shared builders for the CAS slice tests (M1b): a real Storage→Node→File→Version
- * chain so attach()/detach() can hang real edges off a committed blob, plus a
- * helper to turn a string into a stream the ContentStore can stage.
+ * Shared builders for the CAS slice tests (M1b): pins of an opaque test owner (D23 —
+ * media knows no drive), blob rows and orphan objects, plus a helper to turn a string
+ * into a stream the ContentStore can stage.
  */
 final class CasTestHelpers
 {
-    /**
-     * Build a committed FileRevision (with its File + Node + Storage) to attach a
-     * blob edge to.
-     */
-    public static function makeVersion(int $versionNo = 1, string $name = 'a.bin'): FileRevision
+    /** The owner type of the pins these tests write: media knows no owner (D23). */
+    public const string OWNER = 'test.owner';
+
+    /** A fresh pin reference key, unique within the test process. */
+    public static function reference(string $name = 'ref'): string
     {
-        // One storage per host owner (the M1c owner-unique index): mint a fresh
-        // owner_id per call so repeated makeVersion()s in one test don't collide.
-        static $owner = 0;
-        $owner++;
+        static $sequence = 0;
+        $sequence++;
 
-        // forceFill (P1.4/F-P1.8-02, F-P1.5-04): Storage/Node/File/FileRevision all
-        // now carry a closed $fillable/$guarded list — this trusted fixture
-        // builder bypasses it exactly like the production store repositories do.
-        $storage = new Drive;
-        $storage->forceFill([
-            'owner_type' => 'team',
-            'owner_id' => $owner,
-            'name' => 'Disk',
-        ]);
-        self::write(static fn () => $storage->save());
+        return $name.'#'.$sequence;
+    }
 
-        $node = new Node;
-        $node->forceFill([
-            'drive_id' => $storage->getKey(),
-            'kind' => NodeKind::File,
-            'name' => $name,
-        ]);
-        self::write(static fn () => $node->save());
+    /** Pin $blob through the pin protocol (BlobPins), in a transaction of its own as an owner would. */
+    public static function pin(Blob $blob, string $reference = 'ref', string $ownerType = self::OWNER): void
+    {
+        app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->pin($blob, $ownerType, $reference));
+    }
 
-        $file = new File;
-        $file->forceFill([
-            'node_id' => $node->getKey(),
-            'mime_type' => 'application/octet-stream',
-            'size_bytes' => 0,
-        ]);
-        self::write(static fn () => $file->save());
+    /** Remove a pin through the protocol. */
+    public static function unpin(Blob $blob, string $reference = 'ref', string $ownerType = self::OWNER): void
+    {
+        app(VaulterDatabase::class)->transaction(static fn () => app(BlobPins::class)->unpin($blob, $ownerType, $reference));
+    }
 
-        $version = new FileRevision;
-        $version->forceFill([
-            'file_id' => $file->getKey(),
-            'number' => $versionNo,
-            'sha256' => str_repeat('0', 64),
-            'size_bytes' => 0,
-            'original_name' => $name,
-            'status' => 'committed',
-        ]);
-        self::write(static fn () => $version->save());
+    /**
+     * Write a pin row directly, bypassing the protocol — only to put the garbage collector in front of a state the
+     * protocol never produces (a pinned tombstoned or pending blob) and prove its re-check under the lock.
+     */
+    public static function seedPin(Blob|int|string $blob, string $reference = 'seeded', string $ownerType = self::OWNER): void
+    {
+        $row = [
+            'blob_id' => $blob instanceof Blob ? $blob->getKey() : $blob,
+            'owner_type' => $ownerType,
+            'reference_key' => $reference,
+            'created_at' => now(),
+        ];
+        $id = app(IdStrategyResolver::class)->resolve(app(IdsConfig::class)->strategy())->newId();
 
-        return $version;
+        app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('blob_references'))
+            ->insert($id === null ? $row : ['id' => $id, ...$row]);
+    }
+
+    /** The number of pins of $blob. */
+    public static function pins(Blob $blob): int
+    {
+        return app(VaulterDatabase::class)->connection()->table(app(DatabaseConfig::class)->table('blob_references'))
+            ->where('blob_id', $blob->getKey())->count();
     }
 
     /**
@@ -154,7 +148,7 @@ final class CasTestHelpers
         $blob = new Blob;
         $blob->forceFill([
             'tenant_id' => null,
-            'drive_id' => null,
+            'storage_id' => null,
             'hash_algo' => 'sha256',
             'sha256' => $sha256,
             'size_bytes' => strlen($bytes),
@@ -202,7 +196,7 @@ final class CasTestHelpers
             $blob = new Blob;
             $blob->forceFill([
                 'tenant_id' => null,
-                'drive_id' => null,
+                'storage_id' => null,
                 'hash_algo' => 'sha256',
                 'sha256' => $sha256,
                 'size_bytes' => strlen($bytes),

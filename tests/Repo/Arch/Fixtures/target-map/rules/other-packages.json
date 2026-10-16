@@ -759,6 +759,14 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#persistence + D40 (P4.5): v_blobs is created by the migration of media"
+        },
+        {
+            "match": "file",
+            "value": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+            "owner": "media",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D23 (P4.7): v_blob_references, the pins media owns, is created by the migration of media"
         }
     ]
 }

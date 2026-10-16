@@ -11,7 +11,7 @@ use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
 
-/** The tables the media module owns: the content-addressed blobs. */
+/** The tables the media module owns: the content-addressed blobs and the pins that keep them alive (D23). */
 #[Internal]
 final class MediaSchema implements ModuleSchema
 {
@@ -22,6 +22,7 @@ final class MediaSchema implements ModuleSchema
     {
         return [
             'blobs',
+            'blob_references',
         ];
     }
 
@@ -32,6 +33,7 @@ final class MediaSchema implements ModuleSchema
         $this->helpers->schemaConnection()->create($this->helpers->table($entity), function (Blueprint $table) use ($ids, $entity): void {
             match ($entity) {
                 'blobs' => $this->defineBlobs(table: $table, ids: $ids),
+                'blob_references' => $this->defineBlobReferences(table: $table, ids: $ids),
                 default => throw new InvalidArgumentException(sprintf('Unknown media entity [%s].', $entity)),
             };
         });
@@ -51,7 +53,9 @@ final class MediaSchema implements ModuleSchema
     {
         $ids->key(table: $table);
         $this->helpers->tenant(table: $table);
-        $ids->reference(table: $table, column: 'drive_id', nullable: true);
+        // The opaque storage the blob deduplicates within under dedup_scope 'drive' (D23): no foreign key, media
+        // knows no drive table.
+        $ids->reference(table: $table, column: 'storage_id', nullable: true);
 
         $table->string('hash_algo', 16)->default('sha256');
         $table->char('sha256', 64);
@@ -91,5 +95,29 @@ final class MediaSchema implements ModuleSchema
 
         // GC scan support: committed orphans past their grace deadline.
         $table->index(['status', 'ref_count', 'delete_after_at'], $name.'_gc_idx');
+    }
+
+    /**
+     * v_blob_references — the pins (D23): the liveness truth of a blob. Every row is one opaque owner reference
+     * (owner_type, e.g. `drive.revision_blob`, and a reference_key derived from the owner's row), written only
+     * through BlobPins. The foreign key points from the pin to the blob and restricts its deletion; media never
+     * references a table of an owner.
+     */
+    private function defineBlobReferences(Blueprint $table, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $ids->reference(table: $table, column: 'blob_id');
+        $table->string('owner_type', 64);
+        $table->string('reference_key', 191);
+        $table->timestamp('created_at')->useCurrent();
+
+        $name = $table->getTable();
+        $table->unique(['blob_id', 'owner_type', 'reference_key'], $name.'_pin_uniq');
+        $table->index(['owner_type', 'reference_key'], $name.'_owner_idx');
+
+        $table->foreign('blob_id', $name.'_blob_fk')
+            ->references('id')
+            ->on($this->helpers->table('blobs'))
+            ->restrictOnDelete();
     }
 }

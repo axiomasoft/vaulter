@@ -6,14 +6,13 @@ namespace Vaulter\Drive\Actions\Files;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
 use Vaulter\Exceptions\Drive\RevisionPinnedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
@@ -29,8 +28,8 @@ use Vaulter\Support\TreeGuard;
  * R(revision) → Q(drive quota) → C(CAS edges). Under the file and revision locks the
  * head and pinned revisions are refused (P4-I19), so a concurrent new revision or pin
  * cannot slip between the choice and the delete. The revision's bytes leave the
- * quota in one conditional UPDATE (P4-I18); its blobs lose their edges and become GC
- * candidates on the existing path. The node's sequence does not move: the file's
+ * quota in one conditional UPDATE (P4-I18); its blobs lose their edges and pins and
+ * become GC candidates on the existing path. The node's sequence does not move: the file's
  * content is unchanged.
  *
  * Operations authorize before this command.
@@ -46,7 +45,7 @@ final readonly class DeleteFileRevisionAction
         private FileStoreRepository $files,
         private FileRevisionStoreRepository $revisions,
         private DriveStoreRepository $drives,
-        private BlobStore $blobs,
+        private RevisionBlobLinks $links,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
     ) {}
@@ -84,11 +83,8 @@ final readonly class DeleteFileRevisionAction
                 $this->drives->adjustUsedBytes(storage: $context->drive, delta: -$locked->size_bytes);
             }
 
-            foreach ($locked->blobs as $blob) {
-                /** @var FileRevisionBlob $edge */
-                $edge = $blob->getRelationValue('pivot');
-                $this->blobs->detach(version: $locked, blob: $blob, role: $edge->role, ordinal: $edge->ordinal);
-            }
+            // The edges and their pins go before the row: the cascade would leave the pins behind (D23).
+            $this->links->detachAll([$locked->id]);
 
             $this->revisions->delete($locked);
 

@@ -19,6 +19,7 @@ use Vaulter\Drive\Events\Drives\DriveDeleted;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
@@ -65,7 +66,7 @@ it('purges every node, revision edge and the drive row, keeping activity as hist
     Event::fake([DriveDeleted::class]);
     [$drive, $id] = drivePurgeFixture();
     $blob = Blob::query()->firstOrFail();
-    expect($blob->versions()->count())->toBe(1);
+    expect(RevisionBlobPins::edges($blob))->toBe(1)->and(RevisionBlobPins::pins($blob))->toBe(1);
     $history = Activity::query()->where('drive_id', $id)->count();
     Queue::fake();
 
@@ -76,7 +77,7 @@ it('purges every node, revision edge and the drive row, keeping activity as hist
 
     expect(Drive::query()->whereKey($id)->exists())->toBeFalse()
         ->and(Node::query()->where('drive_id', $id)->count())->toBe(0)
-        ->and($blob->refresh()->versions()->count())->toBe(0)
+        ->and(RevisionBlobPins::edges($blob->refresh()))->toBe(0)->and(RevisionBlobPins::pins($blob->refresh()))->toBe(0)
         ->and(Activity::query()->where('drive_id', $id)->count())->toBeGreaterThanOrEqual($history);
     Event::assertDispatched(DriveDeleted::class, fn (DriveDeleted $event): bool => $event->driveId === (string) $id);
 });
@@ -167,7 +168,7 @@ it('purges a quarantined revision through the same path: edges, rows and quota, 
     }
 
     expect(Drive::query()->whereKey($id)->exists())->toBeFalse()
-        ->and($blob->refresh()->versions()->count())->toBe(0);
+        ->and(RevisionBlobPins::edges($blob->refresh()))->toBe(0)->and(RevisionBlobPins::pins($blob->refresh()))->toBe(0);
     // SQLite does not enforce the FK cascades that remove the revision rows with their node.
     if (DB::connection()->getDriverName() === 'pgsql') {
         expect(FileRevision::query()->whereKey($revision->getKey())->exists())->toBeFalse();

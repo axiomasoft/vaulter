@@ -7,13 +7,13 @@ namespace Vaulter\Drive\Actions\Files;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\CopyDestinationAdmission;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Operations\DriveContext;
@@ -30,7 +30,7 @@ use Vaulter\Support\TreeGuard;
 #[Internal]
 final readonly class RestoreFileRevisionAction
 {
-    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder) {}
+    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private RevisionBlobLinks $links, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder) {}
 
     public function execute(DriveContext $context, RestoreFileRevisionInput $data): FileRevision
     {
@@ -66,7 +66,7 @@ final readonly class RestoreFileRevisionAction
             foreach ($source->blobs as $blob) {
 
                 /** @var FileRevisionBlob $pivot */ $pivot = $blob->getRelationValue('pivot');
-                $this->blobs->attach($revision, $blob, ['role' => $pivot->role, 'ordinal' => $pivot->ordinal, 'offset_bytes' => $pivot->offset_bytes, 'length_bytes' => $pivot->length_bytes]);
+                $this->links->attach($revision, $blob, ['role' => $pivot->role, 'ordinal' => $pivot->ordinal, 'offset_bytes' => $pivot->offset_bytes, 'length_bytes' => $pivot->length_bytes]);
             }
             app(ScanAdmission::class)->admit($context, $revision, $source);
             if ($previous !== null) {

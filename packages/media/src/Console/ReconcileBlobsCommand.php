@@ -12,7 +12,7 @@ use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Tenancy\Tenancy;
 
 /**
- * Rebuild the ref_count cache from the v_file_revision_blobs edge counts — the real
+ * Rebuild the ref_count cache from the pin counts (v_blob_references, D23) — the real
  * liveness truth — and report integrity hazards: dangling rows (a committed
  * blob whose canonical object is missing on disk). With --orphans it ALSO walks the
  * disk for the inverse hazard — orphan objects (bytes on disk with no blob row),

@@ -47,7 +47,7 @@ function scanBoundaryFixture(?Blob $sharedBlob = null, ?Drive $drive = null): ar
     }
     $file = (new File)->forceFill(['node_id' => $node->id, 'tenant_id' => $drive->tenant_id]);
     $file->save();
-    $blob = $sharedBlob ?? (new Blob)->forceFill(['scope_key' => 'drive:'.$drive->id, 'drive_id' => $drive->id,
+    $blob = $sharedBlob ?? (new Blob)->forceFill(['scope_key' => 'drive:'.$drive->id, 'storage_id' => $drive->id,
         'sha256' => hash('sha256', 'immutable fixture bytes'), 'size_bytes' => strlen('immutable fixture bytes'),
         'disk' => 'default', 'storage_key' => 'scope/'.Str::uuid(), 'status' => 'committed', 'committed_at' => now('UTC')]);
     if (!$blob->exists) {
@@ -163,7 +163,7 @@ it('SEC-R06 reuses only exact same-drive clean evidence and revocation immediate
         ->and(ScanEvidenceRecord::query()->where('revision_id', $copy->id)->first()->reused_from_id)->toBe($sourceEvidence->id);
     // Tenant-global physical storage can be shared, but evidence never grants
     // another drive authority, even for byte-for-byte identical immutable identity.
-    $blob->forceFill(['drive_id' => null])->save();
+    $blob->forceFill(['storage_id' => null])->save();
     [$foreignDrive, $foreignRevision, , $foreignContext] = scanBoundaryFixture($blob);
     $foreignWork = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($foreignRevision, $spec, (string) Str::uuid(), $foreignContext));
     expect($foreignWork->state)->toBe('pending');

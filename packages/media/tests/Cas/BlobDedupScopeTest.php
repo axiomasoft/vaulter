@@ -9,7 +9,7 @@ use Vaulter\Media\Models\Cas\Blob;
 
 /**
  * Blob dedup-uniqueness is scoped (D18 / H.3): the same sha256 is unique only
- * within (tenant_id, drive_id), so identical bytes in two scopes are two rows
+ * within (tenant_id, storage_id), so identical bytes in two scopes are two rows
  * and storage_key is scope-qualified so they never share one physical object.
  */
 function makeBlob(array $overrides = []): Blob
@@ -31,7 +31,7 @@ function makeBlob(array $overrides = []): Blob
 }
 
 it('отвергает одинаковый sha256 в одном scope', function (): void {
-    makeBlob(['tenant_id' => 1, 'drive_id' => 1, 'storage_key' => 't1/aa/aa/x']);
+    makeBlob(['tenant_id' => 1, 'storage_id' => 1, 'storage_key' => 't1/aa/aa/x']);
 
     // Run the violating insert inside a SAVEPOINT (nested DB::transaction): on PostgreSQL
     // a UNIQUE violation aborts the WHOLE enclosing transaction — here the RefreshDatabase
@@ -39,13 +39,13 @@ it('отвергает одинаковый sha256 в одном scope', functio
     // ("current transaction is aborted"). The savepoint rolls back just the failed insert,
     // exactly as the production BlobStore commit does. SQLite tolerates either form.
     expect(fn () => DB::transaction(
-        fn (): Blob => makeBlob(['tenant_id' => 1, 'drive_id' => 1, 'storage_key' => 't1/aa/aa/y']),
+        fn (): Blob => makeBlob(['tenant_id' => 1, 'storage_id' => 1, 'storage_key' => 't1/aa/aa/y']),
     ))->toThrow(QueryException::class);
 });
 
 it('допускает одинаковый sha256 в разных scope', function (): void {
-    $a = makeBlob(['tenant_id' => 1, 'drive_id' => null, 'storage_key' => 't1/aa/aa/a']);
-    $b = makeBlob(['tenant_id' => 2, 'drive_id' => null, 'storage_key' => 't2/aa/aa/b']);
+    $a = makeBlob(['tenant_id' => 1, 'storage_id' => null, 'storage_key' => 't1/aa/aa/a']);
+    $b = makeBlob(['tenant_id' => 2, 'storage_id' => null, 'storage_key' => 't2/aa/aa/b']);
 
     expect($a->exists)->toBeTrue()
         ->and($b->exists)->toBeTrue()

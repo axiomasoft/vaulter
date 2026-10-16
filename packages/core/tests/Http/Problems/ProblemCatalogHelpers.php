@@ -8,6 +8,7 @@ use Vaulter\Http\Problems\CoreProblemCodes;
 use Vaulter\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Http\Problems\ProblemCodeSource;
+use Vaulter\Media\Http\Problems\MediaProblemCodes;
 use Vaulter\Webhooks\WebhooksProblemCodes;
 
 // Shared by ProblemCatalogLangTest, ProblemSpecRulesTest and ErrorsReferenceTest. It lives in a file of its own, loaded
@@ -23,6 +24,7 @@ function monorepoProblemSources(): array
 {
     return [
         'core' => [CoreProblemCodes::class],
+        'media' => [MediaProblemCodes::class],
         'drive' => [DriveSliceProblemCodes::class, DriveProblemCodes::class],
         'webhooks' => [WebhooksProblemCodes::class],
         'documents' => [DocumentsProblemCodes::class],
@@ -38,6 +40,7 @@ function fullProblemCatalog(): ProblemCatalog
     $root = dirname(__DIR__, 5).'/packages';
     $translator = app('translator');
     $translator->addNamespace('vaulter', $root.'/core/resources/lang');
+    $translator->addNamespace('vaulter-media', $root.'/media/resources/lang');
     $translator->addNamespace('vaulter-drive', $root.'/drive/resources/lang');
     $translator->addNamespace('vaulter-documents', $root.'/documents/resources/lang');
 

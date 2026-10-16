@@ -253,6 +253,13 @@
             "id": "config:vaulter-media.models.blob",
             "kind": "config",
             "reason": "P4.6: the blob model moved to vaulter-media with the CAS slice, so its swap key lives in the media config root"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "publish:vaulter-media-translations",
+            "kind": "config",
+            "reason": "P4.7: vaulter-media ships the translations of its problem code blob_unavailable (resources/lang, spatie hasTranslations)"
         }
     ],
     "items": [
@@ -3468,6 +3475,15 @@
                 "symbol": "Vaulter\\Media\\MediaModule::register"
             },
             "via": "module:config"
+        },
+        {
+            "id": "publish:vaulter-media-translations",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/src/VaulterMediaServiceProvider.php",
+                "symbol": "Vaulter\\Media\\VaulterMediaServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasTranslations"
         },
         {
             "id": "publish:vaulter-translations",

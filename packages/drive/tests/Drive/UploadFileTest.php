@@ -12,6 +12,7 @@ use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Events\Files\FileUploaded;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
@@ -49,7 +50,7 @@ it('дедуп: два одинаковых файла → один блоб, д
 
     $blob = Blob::query()->first();
 
-    expect($blob->versions()->count())->toBe(2)
+    expect(RevisionBlobPins::edges($blob))->toBe(2)->and(RevisionBlobPins::pins($blob))->toBe(2)
         ->and($a->id)->not->toEqual($b->id);
 });
 

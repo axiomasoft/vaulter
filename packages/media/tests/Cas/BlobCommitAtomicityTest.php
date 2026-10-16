@@ -14,7 +14,6 @@ use Vaulter\Media\Contracts\Cas\StagedObject;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
-use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 
 /**
  * Commit atomicity (H.3): if the transaction rolls back, no blob row is left
@@ -74,7 +73,6 @@ it('rollback не оставляет висящей строки blob', function
         content: $exploding,
         lock: app(BlobLock::class),
         blobs: app(BlobStoreRepository::class),
-        edges: app(FileRevisionBlobStoreRepository::class),
         database: app(VaulterDatabase::class),
         mediaConfig: app(MediaConfig::class),
     );

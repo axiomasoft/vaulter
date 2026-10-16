@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\Node;
@@ -58,14 +59,14 @@ it('frees the blob edges of a purged file subtree (GC-eligible)', function (): v
 
     // The blob is referenced (one live edge) while the file lives.
     $blob = Blob::query()->firstOrFail();
-    expect($blob->versions()->count())->toBe(1);
+    expect(RevisionBlobPins::edges($blob))->toBe(1)->and(RevisionBlobPins::pins($blob))->toBe(1);
 
     DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $fileNode->id])->save();
 
     $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
     // The edge is detached — the blob is now unreferenced (GC-eligible).
-    expect($blob->refresh()->versions()->count())->toBe(0);
+    expect(RevisionBlobPins::edges($blob->refresh()))->toBe(0)->and(RevisionBlobPins::pins($blob->refresh()))->toBe(0);
 });
 
 it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02', function (): void {

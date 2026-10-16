@@ -7,6 +7,7 @@ use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
@@ -34,7 +35,7 @@ it('копия файла переиспользует ОДИН блоб чер�
         ->and(File::query()->count())->toBe(2);
 
     $blob = Blob::query()->first();
-    expect($blob->versions()->count())->toBe(2);
+    expect(RevisionBlobPins::edges($blob))->toBe(2)->and(RevisionBlobPins::pins($blob))->toBe(2);
 });
 
 it('глубокая копия папки клонирует всё поддерево', function (): void {

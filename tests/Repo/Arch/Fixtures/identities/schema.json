@@ -928,6 +928,127 @@
             "id": "migration:0001_01_01_000303_create_v_document_revisions_table.php",
             "kind": "schema",
             "reason": "P4.5: v_document_revisions is created by the migration of the package that owns it (documents), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "table:v_blob_references",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "migration:0001_01_01_000102_create_v_blob_references_table.php",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.id",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.blob_id",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.owner_type",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.reference_key",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.created_at",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "constraint:v_blob_references.v_blob_references_pkey",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "constraint:v_blob_references.v_blob_references_pin_uniq",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "fk:v_blob_references.v_blob_references_blob_fk",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.PRIMARY",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_pkey",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_pin_uniq",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_owner_idx",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_blob_id_index",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "renamed",
+            "decision": "D23",
+            "from": "column:v_blobs.drive_id",
+            "id": "column:v_blobs.storage_id",
+            "kind": "schema",
+            "reason": "P4.7: the blob's storage scope is an opaque identifier of the owner's storage, not a drive reference (D23): v_blobs.drive_id becomes storage_id (nullable, no FK); dedup_scope values, the d- key segment and the key format are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D23",
+            "from": "index:v_blobs.v_blobs_drive_id_index",
+            "id": "index:v_blobs.v_blobs_storage_id_index",
+            "kind": "schema",
+            "reason": "P4.7: the blob's storage scope is an opaque identifier of the owner's storage, not a drive reference (D23): v_blobs.drive_id becomes storage_id (nullable, no FK); dedup_scope values, the d- key segment and the key format are unchanged"
         }
     ],
     "engines": [
@@ -1568,6 +1689,241 @@
         {
             "engines": {
                 "mysql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "bigint unsigned"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_blob_references.blob_id",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references",
+            "variants": {
+                "mysql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(26)"
+                        },
+                        "ids=uuid7": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(36)"
+                        }
+                    }
+                },
+                "pgsql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "collation": "default",
+                            "type": "character(26)"
+                        },
+                        "ids=uuid7": {
+                            "type": "uuid"
+                        }
+                    }
+                },
+                "sqlite": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "type": "varchar"
+                        },
+                        "ids=uuid7": {
+                            "type": "varchar"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "CURRENT_TIMESTAMP",
+                    "extra": "DEFAULT_GENERATED",
+                    "nullable": false,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": "CURRENT_TIMESTAMP",
+                    "nullable": false,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": "CURRENT_TIMESTAMP",
+                    "nullable": false,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_blob_references.created_at",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "extra": "auto_increment",
+                    "nullable": false,
+                    "type": "bigint unsigned"
+                },
+                "pgsql": {
+                    "default": "nextval('v_blob_references_id_seq'::regclass)",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "primary_key": 1,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_blob_references.id",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references",
+            "variants": {
+                "mysql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "extra": null,
+                            "type": "char(26)"
+                        },
+                        "ids=uuid7": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "extra": null,
+                            "type": "char(36)"
+                        }
+                    }
+                },
+                "pgsql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "collation": "default",
+                            "default": null,
+                            "type": "character(26)"
+                        },
+                        "ids=uuid7": {
+                            "default": null,
+                            "type": "uuid"
+                        }
+                    }
+                },
+                "sqlite": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "type": "varchar"
+                        },
+                        "ids=uuid7": {
+                            "type": "varchar"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(64)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(64)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_blob_references.owner_type",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(191)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(191)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_blob_references.reference_key",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "mysql": {
                     "default": "0",
                     "nullable": false,
                     "type": "tinyint(1)"
@@ -1729,78 +2085,6 @@
                 "symbol": "v_blobs"
             },
             "table": "v_blobs"
-        },
-        {
-            "engines": {
-                "mysql": {
-                    "default": null,
-                    "nullable": true,
-                    "type": "bigint unsigned"
-                },
-                "pgsql": {
-                    "default": null,
-                    "nullable": true,
-                    "type": "bigint"
-                },
-                "sqlite": {
-                    "default": null,
-                    "nullable": true,
-                    "type": "INTEGER"
-                }
-            },
-            "id": "column:v_blobs.drive_id",
-            "owner": "media",
-            "source": {
-                "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
-                "symbol": "v_blobs"
-            },
-            "table": "v_blobs",
-            "variants": {
-                "mysql": {
-                    "axes": [
-                        "ids"
-                    ],
-                    "by": {
-                        "ids=ulid": {
-                            "charset": "utf8mb4",
-                            "collation": "utf8mb4_unicode_ci",
-                            "type": "char(26)"
-                        },
-                        "ids=uuid7": {
-                            "charset": "utf8mb4",
-                            "collation": "utf8mb4_unicode_ci",
-                            "type": "char(36)"
-                        }
-                    }
-                },
-                "pgsql": {
-                    "axes": [
-                        "ids"
-                    ],
-                    "by": {
-                        "ids=ulid": {
-                            "collation": "default",
-                            "type": "character(26)"
-                        },
-                        "ids=uuid7": {
-                            "type": "uuid"
-                        }
-                    }
-                },
-                "sqlite": {
-                    "axes": [
-                        "ids"
-                    ],
-                    "by": {
-                        "ids=ulid": {
-                            "type": "varchar"
-                        },
-                        "ids=uuid7": {
-                            "type": "varchar"
-                        }
-                    }
-                }
-            }
         },
         {
             "engines": {
@@ -2230,6 +2514,78 @@
                 "symbol": "v_blobs"
             },
             "table": "v_blobs"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint unsigned"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_blobs.storage_id",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+                "symbol": "v_blobs"
+            },
+            "table": "v_blobs",
+            "variants": {
+                "mysql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(26)"
+                        },
+                        "ids=uuid7": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(36)"
+                        }
+                    }
+                },
+                "pgsql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "collation": "default",
+                            "type": "character(26)"
+                        },
+                        "ids=uuid7": {
+                            "type": "uuid"
+                        }
+                    }
+                },
+                "sqlite": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "type": "varchar"
+                        },
+                        "ids=uuid7": {
+                            "type": "varchar"
+                        }
+                    }
+                }
+            }
         },
         {
             "engines": {
@@ -18206,6 +18562,36 @@
         {
             "engines": {
                 "pgsql": {
+                    "definition": "UNIQUE (blob_id, owner_type, reference_key)",
+                    "kind": "unique"
+                }
+            },
+            "id": "constraint:v_blob_references.v_blob_references_pin_uniq",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "PRIMARY KEY (id)",
+                    "kind": "primary key"
+                }
+            },
+            "id": "constraint:v_blob_references.v_blob_references_pkey",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "pgsql": {
                     "definition": "PRIMARY KEY (id)",
                     "kind": "primary key"
                 }
@@ -19841,6 +20227,41 @@
                 "symbol": "v_webhook_endpoints"
             },
             "table": "v_webhook_endpoints"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "blob_id"
+                    ],
+                    "kind": "foreign key",
+                    "on_delete": "RESTRICT",
+                    "on_update": "NO ACTION",
+                    "ref_columns": [
+                        "id"
+                    ],
+                    "ref_table": "v_blobs"
+                },
+                "pgsql": {
+                    "columns": [
+                        "blob_id"
+                    ],
+                    "kind": "foreign key",
+                    "on_delete": "RESTRICT",
+                    "on_update": "NO ACTION",
+                    "ref_columns": [
+                        "id"
+                    ],
+                    "ref_table": "v_blobs"
+                }
+            },
+            "id": "fk:v_blob_references.v_blob_references_blob_fk",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
         },
         {
             "engines": {
@@ -21482,37 +21903,137 @@
                     "unique": true
                 }
             },
-            "id": "index:v_blobs.PRIMARY",
+            "id": "index:v_blob_references.PRIMARY",
             "owner": "media",
             "source": {
-                "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
-                "symbol": "v_blobs"
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
             },
-            "table": "v_blobs"
+            "table": "v_blob_references"
         },
         {
             "engines": {
                 "mysql": {
                     "columns": [
-                        "drive_id"
+                        "blob_id"
                     ],
                     "method": "BTREE",
                     "unique": false
                 },
                 "pgsql": {
-                    "definition": "(drive_id)",
+                    "definition": "(blob_id)",
                     "method": "btree",
                     "unique": false
                 },
                 "sqlite": {
                     "columns": [
-                        "drive_id"
+                        "blob_id"
                     ],
                     "origin": "c",
                     "unique": false
                 }
             },
-            "id": "index:v_blobs.v_blobs_drive_id_index",
+            "id": "index:v_blob_references.v_blob_references_blob_id_index",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "owner_type",
+                        "reference_key"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(owner_type, reference_key)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "owner_type",
+                        "reference_key"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_blob_references.v_blob_references_owner_idx",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "blob_id",
+                        "owner_type",
+                        "reference_key"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                },
+                "pgsql": {
+                    "definition": "(blob_id, owner_type, reference_key)",
+                    "method": "btree",
+                    "unique": true
+                },
+                "sqlite": {
+                    "columns": [
+                        "blob_id",
+                        "owner_type",
+                        "reference_key"
+                    ],
+                    "origin": "c",
+                    "unique": true
+                }
+            },
+            "id": "index:v_blob_references.v_blob_references_pin_uniq",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "(id)",
+                    "method": "btree",
+                    "unique": true
+                }
+            },
+            "id": "index:v_blob_references.v_blob_references_pkey",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            },
+            "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "id"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                }
+            },
+            "id": "index:v_blobs.PRIMARY",
             "owner": "media",
             "source": {
                 "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
@@ -21655,6 +22176,36 @@
                 }
             },
             "id": "index:v_blobs.v_blobs_size_bytes_index",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+                "symbol": "v_blobs"
+            },
+            "table": "v_blobs"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "storage_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(storage_id)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "storage_id"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_blobs.v_blobs_storage_id_index",
             "owner": "media",
             "source": {
                 "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
@@ -27039,6 +27590,17 @@
             ]
         },
         {
+            "id": "migration:0001_01_01_000102_create_v_blob_references_table.php",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_blob_references"
+            ]
+        },
+        {
             "id": "migration:0001_01_01_000201_create_v_drives_table.php",
             "owner": "drive",
             "source": {
@@ -27320,8 +27882,183 @@
         {
             "columns": [
                 "id",
+                "blob_id",
+                "owner_type",
+                "reference_key",
+                "created_at"
+            ],
+            "id": "table:v_blob_references",
+            "logical": "blob_references",
+            "migration": "0001_01_01_000102_create_v_blob_references_table.php",
+            "original_diff": {
+                "mysql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "pgsql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "sqlite": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                }
+            },
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+                "symbol": "v_blob_references"
+            }
+        },
+        {
+            "columns": [
+                "id",
                 "tenant_id",
-                "drive_id",
+                "storage_id",
                 "hash_algo",
                 "sha256",
                 "size_bytes",
@@ -27345,6 +28082,1172 @@
             "id": "table:v_blobs",
             "logical": "blobs",
             "migration": "0001_01_01_000101_create_v_blobs_table.php",
+            "original_diff": {
+                "mysql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        }
+                    }
+                },
+                "pgsql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        }
+                    }
+                },
+                "sqlite": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "storage_id"
+                            ],
+                            "removed": [
+                                "drive_id"
+                            ]
+                        }
+                    }
+                }
+            },
             "owner": "media",
             "source": {
                 "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",

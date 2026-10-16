@@ -160,6 +160,84 @@
                 }
             }
         },
+        "custom_blob_references": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_blob_references_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "blob_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "owner_type",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "reference_key",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": "CURRENT_TIMESTAMP",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_blob_references_blob_id_index": "CREATE INDEX custom_blob_references_blob_id_index ON public.custom_blob_references USING btree (blob_id)",
+                "custom_blob_references_owner_idx": "CREATE INDEX custom_blob_references_owner_idx ON public.custom_blob_references USING btree (owner_type, reference_key)",
+                "custom_blob_references_pin_uniq": "CREATE UNIQUE INDEX custom_blob_references_pin_uniq ON public.custom_blob_references USING btree (blob_id, owner_type, reference_key)",
+                "custom_blob_references_pkey": "CREATE UNIQUE INDEX custom_blob_references_pkey ON public.custom_blob_references USING btree (id)"
+            },
+            "constraints": {
+                "custom_blob_references_blob_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (blob_id) REFERENCES custom_blobs(id) ON DELETE RESTRICT",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blob_references_pin_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (blob_id, owner_type, reference_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blob_references_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
         "custom_blobs": {
             "columns": [
                 {
@@ -181,7 +259,7 @@
                     "collation": "default"
                 },
                 {
-                    "name": "drive_id",
+                    "name": "storage_id",
                     "type": "bigint",
                     "not_null": false,
                     "default": null,
@@ -362,12 +440,12 @@
                 }
             ],
             "indexes": {
-                "custom_blobs_drive_id_index": "CREATE INDEX custom_blobs_drive_id_index ON public.custom_blobs USING btree (drive_id)",
                 "custom_blobs_encryption_key_id_index": "CREATE INDEX custom_blobs_encryption_key_id_index ON public.custom_blobs USING btree (encryption_key_id)",
                 "custom_blobs_gc_idx": "CREATE INDEX custom_blobs_gc_idx ON public.custom_blobs USING btree (status, ref_count, delete_after_at)",
                 "custom_blobs_pkey": "CREATE UNIQUE INDEX custom_blobs_pkey ON public.custom_blobs USING btree (id)",
                 "custom_blobs_scope_sha_uniq": "CREATE UNIQUE INDEX custom_blobs_scope_sha_uniq ON public.custom_blobs USING btree (scope_key, sha256)",
                 "custom_blobs_size_bytes_index": "CREATE INDEX custom_blobs_size_bytes_index ON public.custom_blobs USING btree (size_bytes)",
+                "custom_blobs_storage_id_index": "CREATE INDEX custom_blobs_storage_id_index ON public.custom_blobs USING btree (storage_id)",
                 "custom_blobs_storage_key_uniq": "CREATE UNIQUE INDEX custom_blobs_storage_key_uniq ON public.custom_blobs USING btree (storage_key)",
                 "custom_blobs_tenant_id_index": "CREATE INDEX custom_blobs_tenant_id_index ON public.custom_blobs USING btree (tenant_id)"
             },

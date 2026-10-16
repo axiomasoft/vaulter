@@ -30,11 +30,11 @@ it('реальный конвейер: detach→reconcile→mark томбств�
 
     // Коммитим блоб и навешиваем настоящее ребро — блоб живой.
     $blob = $store->commit(CasTestHelpers::streamFor('orphan-me'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
 
     // Снимаем единственное ребро: блоб осиротел, но ref_count-КЭШ ещё врёт.
-    $store->detach($version, $blob);
+    CasTestHelpers::unpin($blob, $version);
 
     // Реконсиляция перестраивает кэш из числа рёбер → ref_count = 0.
     $reconciler->reconcile();
@@ -57,9 +57,9 @@ it('реальный конвейер: за время grace sweep не трог
     $gc = app(BlobGarbageCollector::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('full-pipeline'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
-    $store->detach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
+    CasTestHelpers::unpin($blob, $version);
 
     $reconciler->reconcile();
 
@@ -89,8 +89,8 @@ it('реальный конвейер: всё ещё ссылающийся бл
     $gc = app(BlobGarbageCollector::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('still-referenced'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
 
     // Реконсиляция выставит ref_count=1 — в скан кандидатов он не попадёт вовсе.
     $reconciler->reconcile();

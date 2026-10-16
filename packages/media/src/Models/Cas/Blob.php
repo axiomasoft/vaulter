@@ -7,25 +7,21 @@ namespace Vaulter\Media\Models\Cas;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Support\UtcDateTimeCast;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
 
 /**
  * A content-addressable, immutable payload: identified by its
  * sha256 within a dedup scope and stored once on the Flysystem disk under a
  * scope-qualified storage_key. ref_count is a reconciled cache; the liveness
- * truth is the existence of a v_file_revision_blobs edge. The byte handling
- * and GC commit-flow are — this is the schema + model only.
+ * truth is its pins in v_blob_references (D23). The byte handling and GC
+ * commit-flow live in the Cas services — this is the schema + model only.
  *
  * Swappable via configuration key vaulter-media.models.blob.
  *
@@ -33,7 +29,7 @@ use Vaulter\Models\Drive\FileRevisionBlob;
  * @property string|null          $storage_version
  * @property int|string           $id
  * @property int|string|null      $tenant_id
- * @property int|string|null      $drive_id
+ * @property int|string|null      $storage_id
  * @property string               $hash_algo
  * @property string               $sha256
  * @property int                  $size_bytes
@@ -79,26 +75,9 @@ class Blob extends Model
     }
 
     /**
-     * Every file version that references this blob through the edge table.
-     *
-     * @return BelongsToMany<FileRevision, $this, FileRevisionBlob>
-     */
-    public function versions(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            related: app(VaulterConfig::class)->model('file_revision'),
-            table: app(DatabaseConfig::class)->table('file_revision_blobs'),
-            foreignPivotKey: 'blob_id',
-            relatedPivotKey: 'file_revision_id',
-        )
-            ->using(app(VaulterConfig::class)->model('file_revision_blob'))
-            ->withPivot(['role', 'ordinal', 'offset_bytes', 'length_bytes']);
-    }
-
-    /**
      * GC-candidate scope: committed blobs whose ref-count CACHE is zero.
-     * That cache is rebuilt from the edge table by reconciliation, so a committed
-     * blob reaches ref_count<=0 the moment its last edge is detached and
+     * That cache is rebuilt from the pins by reconciliation, so a committed
+     * blob reaches ref_count<=0 the moment its last pin is removed and
      * reconciled — that, not a pre-armed deadline, is what arms the mark scan.
      * The grace window is applied by tombstone() (mark) and enforced by sweep,
      * NOT here: requiring delete_after_at on a still-committed blob would gate the

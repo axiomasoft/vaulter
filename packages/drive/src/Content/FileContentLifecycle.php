@@ -10,7 +10,6 @@ use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Data\Drive\CopyResult;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
@@ -25,7 +24,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
     public function __construct(
         private FileStoreRepository $files,
         private FileRevisionStoreRepository $revisions,
-        private BlobStore $blobs,
+        private RevisionBlobLinks $links,
         private CopyDestinationAdmission $admission,
         private ScanAdmission $scans,
         private ContentAvailabilityGuard $availability,
@@ -134,7 +133,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         foreach ($head->blobs as $blob) {
             /** @var FileRevisionBlob $edge */
             $edge = $blob->getRelationValue('pivot');
-            $this->blobs->attach(version: $revision, blob: $blob, attributes: [
+            $this->links->attach(revision: $revision, blob: $blob, attributes: [
                 'role' => $edge->role,
                 'ordinal' => $edge->ordinal,
                 'offset_bytes' => $edge->offset_bytes,
@@ -154,13 +153,8 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         if (!$file instanceof File) {
             return;
         }
-        foreach ($file->versions()->orderBy('id')->get() as $revision) {
-            foreach ($revision->blobs as $blob) {
-                /** @var FileRevisionBlob $edge */
-                $edge = $blob->getRelationValue('pivot');
-                $this->blobs->detach(version: $revision, blob: $blob, role: $edge->role, ordinal: $edge->ordinal);
-            }
-        }
+        // Every revision's edges and pins go before the node's cascade deletes the rows (D23).
+        $this->links->detachAll($file->versions()->orderBy('id')->pluck('id')->all());
         $this->files->releaseHead($file);
     }
 }

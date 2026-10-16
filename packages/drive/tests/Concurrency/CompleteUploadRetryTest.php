@@ -51,7 +51,7 @@ function flakyBlobStore(int $failures, int &$calls): void
 
         return $real->commitStaged(...$arguments);
     });
-    foreach (['attach', 'detach', 'commit', 'read'] as $method) {
+    foreach (['commit', 'read'] as $method) {
         $store->shouldReceive($method)->andReturnUsing(fn (...$arguments) => $real->{$method}(...$arguments));
     }
     app()->instance(BlobStore::class, $store);
@@ -99,7 +99,7 @@ it('does not retry a non-concurrency failure', function (): void {
         $calls++;
         throw new RuntimeException('disk full');
     });
-    foreach (['attach', 'detach', 'commit', 'read'] as $method) {
+    foreach (['commit', 'read'] as $method) {
         $store->shouldReceive($method)->andReturnUsing(fn (...$arguments) => $real->{$method}(...$arguments));
     }
     app()->instance(BlobStore::class, $store);

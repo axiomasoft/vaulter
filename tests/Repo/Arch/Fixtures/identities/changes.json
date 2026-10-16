@@ -2702,6 +2702,141 @@
             "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.status",
             "kind": "protocol",
             "reason": "P4.6: the model and the BlobStatus enum moved to media (Vaulter\\Media\\Enums\\Cas\\BlobStatus)"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "table:v_blob_references",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "migration:0001_01_01_000102_create_v_blob_references_table.php",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.id",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.blob_id",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.owner_type",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.reference_key",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.created_at",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "constraint:v_blob_references.v_blob_references_pkey",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "constraint:v_blob_references.v_blob_references_pin_uniq",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "fk:v_blob_references.v_blob_references_blob_fk",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.PRIMARY",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_pkey",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_pin_uniq",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_owner_idx",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_blob_id_index",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "renamed",
+            "decision": "D23",
+            "from": "column:v_blobs.drive_id",
+            "id": "column:v_blobs.storage_id",
+            "kind": "schema",
+            "reason": "P4.7: the blob's storage scope is an opaque identifier of the owner's storage, not a drive reference (D23): v_blobs.drive_id becomes storage_id (nullable, no FK); dedup_scope values, the d- key segment and the key format are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D23",
+            "from": "index:v_blobs.v_blobs_drive_id_index",
+            "id": "index:v_blobs.v_blobs_storage_id_index",
+            "kind": "schema",
+            "reason": "P4.7: the blob's storage scope is an opaque identifier of the owner's storage, not a drive reference (D23): v_blobs.drive_id becomes storage_id (nullable, no FK); dedup_scope values, the d- key segment and the key format are unchanged"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "problem:blob_unavailable",
+            "kind": "protocol",
+            "reason": "P4.7: a pin is refused because the blob's bytes are gone (deleting/deleted, or tombstoned without its object) — 409, never retried or cached; the owner holding the bytes commits them again"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "publish:vaulter-media-translations",
+            "kind": "config",
+            "reason": "P4.7: vaulter-media ships the translations of its problem code blob_unavailable (resources/lang, spatie hasTranslations)"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

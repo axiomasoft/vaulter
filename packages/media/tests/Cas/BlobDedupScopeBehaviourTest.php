@@ -11,7 +11,7 @@ use Vaulter\Media\ValueObjects\Cas\BlobScope;
 /**
  * The dedup scope (D18 / H.3, PLAN2.D49) decides what shares one physical object:
  * tenant (tenant_id + sha256; a drive without a tenant keeps to itself), storage
- * (drive_id + sha256) or off (nothing). Nothing is shared across tenants.
+ * (storage_id + sha256) or off (nothing). Nothing is shared across tenants.
  * The scope-qualified storage_key keeps two scopes from ever colliding on one
  * object, so one scope's GC can never touch another's bytes.
  */
@@ -76,9 +76,9 @@ it('storage: одинаковые байты в разных хранилища�
         ->and($a->storage_key)->toStartWith('d-10/')
         ->and($b->storage_key)->toStartWith('d-20/')
         ->and($a->dedup_scope)->toBe('drive')
-        ->and((string) $a->drive_id)->toBe('10')
+        ->and((string) $a->storage_id)->toBe('10')
         ->and($a->tenant_id)->toBeNull()
-        ->and((string) $b->drive_id)->toBe('20')
+        ->and((string) $b->storage_id)->toBe('20')
         ->and($b->tenant_id)->toBeNull();
 });
 

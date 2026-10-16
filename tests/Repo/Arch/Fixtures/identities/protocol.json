@@ -906,6 +906,13 @@
             "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.status",
             "kind": "protocol",
             "reason": "P4.6: the model and the BlobStatus enum moved to media (Vaulter\\Media\\Enums\\Cas\\BlobStatus)"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "problem:blob_unavailable",
+            "kind": "protocol",
+            "reason": "P4.7: a pin is refused because the blob's bytes are gone (deleting/deleted, or tombstoned without its object) — 409, never retried or cached; the owner holding the bytes commits them again"
         }
     ],
     "items": [
@@ -1975,6 +1982,18 @@
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
             },
             "status": 401
+        },
+        {
+            "exception": "Vaulter\\Media\\Exceptions\\Cas\\BlobUnavailableException",
+            "id": "problem:blob_unavailable",
+            "owner": "media",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/media/src/Http/Problems/MediaProblemCodes.php",
+                "symbol": "Vaulter\\Media\\Http\\Problems\\MediaProblemCodes::codes"
+            },
+            "status": 409
         },
         {
             "exception": "Vaulter\\Exceptions\\Drive\\CannotDeleteHeadRevisionException",

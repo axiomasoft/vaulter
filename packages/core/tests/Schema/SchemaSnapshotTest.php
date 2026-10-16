@@ -66,10 +66,10 @@ it('creates the same table set as the pre-P1.10 original in every preset', funct
         $original = schemaSnapshotFixture('original', $driver, $preset);
         $expected = schemaSnapshotFixture('expected', $driver, $preset);
         // The schema is unchanged by P1.10: the new chain and the 0.x chain create the same tables; only the idempotency receipts
-        // (D25, P3.12) and the outbox consumers and deliveries (D29, P3.14) are new.
+        // (D25, P3.12), the outbox consumers and deliveries (D29, P3.14) and the blob pins (D23, P4.7) are new.
         $created = array_values(array_filter(
             array_keys($expected['tables']),
-            static fn (string $table): bool => !str_ends_with($table, 'idempotency_keys') && !str_ends_with($table, 'outbox_consumers') && !str_ends_with($table, 'outbox_deliveries'),
+            static fn (string $table): bool => !str_ends_with($table, 'idempotency_keys') && !str_ends_with($table, 'outbox_consumers') && !str_ends_with($table, 'outbox_deliveries') && !str_ends_with($table, 'blob_references'),
         ));
         expect($created)->toBe(array_keys($original['tables']), $preset);
     }

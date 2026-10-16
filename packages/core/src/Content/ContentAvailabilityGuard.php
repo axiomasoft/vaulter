@@ -74,7 +74,7 @@ final readonly class ContentAvailabilityGuard implements DownloadGuard
             || !$actualRevision->blobs()->whereKey($blob->id)->exists()
             || $blob->size_bytes !== $actualRevision->size_bytes || !hash_equals($blob->sha256, $actualRevision->sha256)
             || ($blob->tenant_id !== null && (string) $blob->tenant_id !== (string) $drive->tenant_id)
-            || ($blob->drive_id !== null && (string) $blob->drive_id !== (string) $drive->id)) {
+            || ($blob->storage_id !== null && (string) $blob->storage_id !== (string) $drive->id)) {
             throw new ContentUnavailableException;
         }
 

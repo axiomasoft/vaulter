@@ -23,9 +23,9 @@ beforeEach(function (): void {
 it('records gc mark and sweep metrics', function (): void {
     $store = app(BlobStore::class);
     $blob = $store->commit(CasTestHelpers::streamFor('gc-metrics'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
-    $store->detach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
+    CasTestHelpers::unpin($blob, $version);
     app(BlobReconciler::class)->reconcile();
 
     app(BlobGarbageCollector::class)->collect(graceHours: 1);

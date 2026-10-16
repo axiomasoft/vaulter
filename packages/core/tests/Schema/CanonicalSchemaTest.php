@@ -23,7 +23,7 @@ it('creates the canonical schema independently of runtime features and legacy ta
         expect($schema->hasTable(app(DatabaseConfig::class)->table($entity)))->toBeTrue();
     }
 
-    foreach (['drives' => ['profile'], 'nodes' => ['drive_id', 'profile'], 'blobs' => ['drive_id'],
+    foreach (['drives' => ['profile'], 'nodes' => ['drive_id', 'profile'], 'blobs' => ['storage_id'],
         'files' => ['current_revision_id', 'revision_count'], 'file_revisions' => ['number', 'sha256', 'declared_mime_type', 'scan_status', 'restored_from_revision_id'],
         'documents' => ['node_id', 'type', 'schema_version', 'current_revision_id', 'revision_count', 'collab_epoch', 'state_version', 'checkpoint_state_version', 'content', 'content_hash', 'content_size', 'yjs_state', 'yjs_state_size', 'last_checkpoint_at'],
         'document_revisions' => ['document_id', 'number', 'schema_version', 'state_version', 'label', 'restored_from_revision_id'],

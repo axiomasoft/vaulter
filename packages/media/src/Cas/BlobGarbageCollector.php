@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Configuration\MediaConfig;
@@ -17,29 +16,33 @@ use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
+use Vaulter\Support\Identity;
 
 /**
  * Two-phase, race-safe blob GC. It is ACL-blind — liveness ≠ the viewer's
  * rights, so a node a user cannot see still pins its blob; GC runs as the system
- * with no panel/workspace context.
+ * with no panel/workspace context. Liveness is the pins of a blob
+ * (v_blob_references, D23) and nothing else: GC reads no owner table, so pins of
+ * a disabled or removed module keep their blobs.
  *
  *  PHASE 1 (mark): scan committed ∧ ref_count(cache)=0 (reconciliation rebuilds
- *  that cache from the edge table, so a blob qualifies once its last edge is
- *  detached and reconciled), then under the per-(scope,sha256) lock RE-VERIFY no
- *  live edge exists in v_file_revision_blobs before tombstoning (grace deadline =
- *  now + grace, armed here so the sweep cannot delete within the grace window).
+ *  that cache from the pins, so a blob qualifies once its last pin is removed and
+ *  reconciled), then under the per-(scope,sha256) lock RE-VERIFY no pin exists
+ *  before tombstoning (grace deadline = now + grace, armed here so the sweep
+ *  cannot delete within the grace window).
  *
  *  PHASE 2 (sweep): take tombstoned blobs past grace, RE-VERIFY under the lock
- *  (a resurrection may have flipped them back to committed), → deleting →
- *  physical delete (scope-qualified key, no cross-scope deletion) → deleted
- *  (idempotent tombstone). On PostgreSQL the sweep runs SERIALIZABLE with
- *  retry-on-40001.
+ *  (a resurrection or a pin may have flipped them back to committed, and a pin may
+ *  have appeared), → deleting → physical delete (scope-qualified key, no
+ *  cross-scope deletion) → deleted (idempotent tombstone). On PostgreSQL the sweep
+ *  runs SERIALIZABLE with retry-on-40001.
  *
- * The advisory lock + UNIQUE (scope, sha256) + resurrection are what make this
- * safe against a concurrent upload-commit: whichever transaction wins the lock
- * acts on rows the other will then re-read; a commit resurrects before a sweep
- * can delete, a sweep that wins re-checks edges before deleting.
+ * The lock + UNIQUE (scope, sha256) + resurrection are what make this safe
+ * against a concurrent commit or pin: whichever transaction wins the lock acts on
+ * rows the other will then re-read; a commit or pin resurrects before a sweep can
+ * delete, a sweep that wins re-checks the pins before deleting, and a pin that
+ * comes after the delete is refused (BlobUnavailableException) so its caller
+ * commits the bytes again.
  */
 #[Internal]
 final readonly class BlobGarbageCollector
@@ -52,11 +55,10 @@ final readonly class BlobGarbageCollector
         private ContentStore $content,
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
-        private FileRevisionBlobStoreRepository $edges,
+        private BlobPinStore $pins,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private MediaConfig $mediaConfig,
-        private VaulterConfig $vaulterConfig,
     ) {}
 
     /**
@@ -135,7 +137,7 @@ final readonly class BlobGarbageCollector
                                 return false;
                             }
 
-                            if ($this->edges->hasLiveEdge($blob)) {
+                            if ($this->pins->isPinned($blob)) {
                                 return false;
                             }
 
@@ -173,7 +175,7 @@ final readonly class BlobGarbageCollector
 
     /**
      * Sweep PENDING blobs from a crashed staging: a pending row older than
-     * the grace window whose commit never finished and that carries no edge. Its
+     * the grace window whose commit never finished and that carries no pin. Its
      * (possibly partial) object is deleted and the row is finalised as a deleted
      * tombstone, all under the lock so a slow-but-live commit is not stolen.
      *
@@ -201,9 +203,9 @@ final readonly class BlobGarbageCollector
                         return false;
                     }
 
-                    // A pending row that grew an edge (a commit landing right now) is
+                    // A pending row that gained a pin (an owner landing right now) is
                     // live — leave it.
-                    if ($this->edges->hasLiveEdge($blob)) {
+                    if ($this->pins->isPinned($blob)) {
                         return false;
                     }
 
@@ -324,7 +326,7 @@ final readonly class BlobGarbageCollector
 
             foreach ($batch as $candidate) {
                 $acted = $this->lockedTransaction($candidate, function (Blob $blob) use ($graceHours): bool {
-                    if ($blob->status !== BlobStatus::Committed || $this->edges->hasLiveEdge($blob)) {
+                    if ($blob->status !== BlobStatus::Committed || $this->pins->isPinned($blob)) {
                         return false;
                     }
 
@@ -354,10 +356,8 @@ final readonly class BlobGarbageCollector
             }
 
             $fresh = $query->get();
-            $edgeModel = $this->vaulterConfig->model('file_revision_blob');
-            /** @var \Illuminate\Support\Collection<int, int|string> $liveIds */
-            $liveIds = $edgeModel::query()->whereIn('blob_id', $batch->modelKeys())->distinct()->pluck('blob_id');
-            $live = array_fill_keys($liveIds->all(), true);
+            // Read after the locks: a pin that committed before them is seen, a later one waits for them.
+            $live = $this->pins->countsFor(array_values($batch->modelKeys()));
             $marked = 0;
 
             foreach ($fresh as $blob) {
@@ -365,7 +365,7 @@ final readonly class BlobGarbageCollector
                     continue;
                 }
 
-                if (isset($live[$blob->id])) {
+                if (isset($live[Identity::stringify($blob->getKey())])) {
                     continue;
                 }
 

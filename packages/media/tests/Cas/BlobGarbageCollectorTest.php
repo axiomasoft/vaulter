@@ -43,8 +43,8 @@ it('фаза 1: НЕ трогает блоб с живым ребром (livenes
     $gc = app(BlobGarbageCollector::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('referenced'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
 
     // ref_count cache is stale (0) but the EDGE exists — the blob enters the scan
     // on ref_count<=0, and GC must re-verify under the lock and skip.

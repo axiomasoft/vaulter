@@ -7,7 +7,6 @@ namespace Vaulter\Media\Contracts\Cas;
 use Vaulter\Attributes\Api;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
-use Vaulter\Models\Drive\FileRevision;
 
 /**
  * The high-level content-addressed blob lifecycle: the race-free CAS.
@@ -16,10 +15,9 @@ use Vaulter\Models\Drive\FileRevision;
  * find-or-create the blob by its per-scope dedup key inside ONE locked
  * transaction, resurrecting a tombstoned match and promoting bytes only when the
  * row is newly created (a dedup hit skips the physical write). There is NO
- * synchronous ref_count++ — liveness truth is the existence of an edge in
- * v_file_revision_blobs, and ref_count is a reconciled cache.
- *
- * attach()/detach() manage those version↔blob edges.
+ * synchronous ref_count++ — the liveness truth is the pins of the blob
+ * ({@see BlobPins}, D23), and ref_count is a reconciled cache of them. An owner
+ * pins the committed blob in the same transaction that records its reference.
  */
 #[Api]
 interface BlobStore
@@ -37,20 +35,6 @@ interface BlobStore
 
     /** Commit prepared bytes without discarding them; the staging caller owns cleanup. */
     public function commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob;
-
-    /**
-     * Create the version↔blob edge in v_file_revision_blobs. The edge — not
-     * ref_count — is the liveness truth.
-     *
-     * @param array{role?: string, ordinal?: int, offset_bytes?: int|null, length_bytes?: int|null} $attributes
-     */
-    public function attach(FileRevision $version, Blob $blob, array $attributes = []): void;
-
-    /**
-     * Remove a version↔blob edge. A blob with no remaining edges becomes a GC
-     * candidate at the next reconciliation; the bytes are NOT deleted here.
-     */
-    public function detach(FileRevision $version, Blob $blob, string $role = 'data', int $ordinal = 0): void;
 
     /**
      * A read stream over a committed blob's canonical bytes, or null when absent.

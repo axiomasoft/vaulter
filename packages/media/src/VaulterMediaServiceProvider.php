@@ -25,7 +25,7 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
 
     public function configurePackage(Package $package): void
     {
-        $package->name('vaulter-media');
+        $package->name('vaulter-media')->hasTranslations();
     }
 
     public function packageRegistered(): void

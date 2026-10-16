@@ -2729,39 +2729,6 @@
             "view": "target"
         },
         {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
-            "kind": "use",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
-            "kind": "name",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::attach",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Contracts/Cas/BlobStore.php",
-            "kind": "name",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Media\\Contracts\\Cas\\BlobStore::detach",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
-            "view": "target"
-        },
-        {
             "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/core/src/Contracts/Webhooks/HostResolver.php",
@@ -4530,28 +4497,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Jobs\\Webhooks\\DeliverWebhook",
             "target": "Vaulter\\Database\\VaulterDatabase",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Models/Cas/Blob.php",
-            "kind": "use",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Models/Cas/Blob.php",
-            "kind": "use",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Drive\\FileRevisionBlob",
             "view": "target"
         },
         {
@@ -18218,83 +18163,6 @@
         },
         {
             "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Cas/BlobGarbageCollector.php",
-            "kind": "use",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Cas/BlobGarbageCollector.php",
-            "kind": "name",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Media\\Cas\\BlobGarbageCollector::__construct",
-            "target": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Cas/BlobReconciler.php",
-            "kind": "use",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Cas/BlobReconciler.php",
-            "kind": "name",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Media\\Cas\\BlobReconciler::__construct",
-            "target": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Cas/BlobStore.php",
-            "kind": "use",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Cas/BlobStore.php",
-            "kind": "use",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/media/src/Cas/BlobStore.php",
-            "kind": "name",
-            "reason": "media ссылается на тип drive, хотя media — зависимость drive: D23 оставляет media только opaque pins, связь с drive-сущностями переходит к drive",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Media\\Cas\\BlobStore::__construct",
-            "target": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
             "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
             "removed_in": "P4",
             "count": 1,
@@ -19012,32 +18880,10 @@
             "category": "reverse-edge",
             "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
             "removed_in": "P4",
-            "count": 1,
-            "file": "packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php",
-            "kind": "name",
-            "symbol": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository::countEdges",
-            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
-            "removed_in": "P4",
-            "count": 1,
+            "count": 2,
             "file": "packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php",
             "kind": "name",
             "symbol": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository::detach",
-            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
-            "removed_in": "P4",
-            "count": 1,
-            "file": "packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php",
-            "kind": "name",
-            "symbol": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository::hasLiveEdge",
             "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "current"
         },

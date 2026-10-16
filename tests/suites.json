@@ -728,6 +728,7 @@
           "files": [
             "packages/media/tests/Arch/ArchTest.php",
             "packages/media/tests/Arch/ConfigurationBoundaryTest.php",
+            "packages/media/tests/Arch/PinsBoundaryTest.php",
             "packages/media/tests/Arch/PublicApiSnapshotTest.php",
             "packages/media/tests/Arch/TestingBoundaryTest.php",
             "packages/media/tests/Unit/BlobScopeTest.php",
@@ -749,7 +750,9 @@
             "serial"
           ],
           "files": [
+            "packages/media/tests/Cas/BlobPinTransactionTest.php",
             "packages/media/tests/Cas/BlobScopeKeyTest.php",
+            "packages/media/tests/Cas/PinSweepRaceTest.php",
             "packages/media/tests/Cas/ScopeKeyReconcileTest.php"
           ]
         },
@@ -780,6 +783,8 @@
             "packages/media/tests/Cas/BlobGcPipelineTest.php",
             "packages/media/tests/Cas/BlobOrphanPruneTest.php",
             "packages/media/tests/Cas/BlobOrphanSweepTest.php",
+            "packages/media/tests/Cas/BlobPinGcTest.php",
+            "packages/media/tests/Cas/BlobPinStatusTest.php",
             "packages/media/tests/Cas/BlobReconcilerTest.php",
             "packages/media/tests/Cas/CasPromoteAtomicTest.php",
             "packages/media/tests/Cas/ColdMutationSurvivorTest.php",
@@ -788,6 +793,7 @@
             "packages/media/tests/Cas/OrphanGraceConfigTest.php",
             "packages/media/tests/Cas/ReconcileBlobsOrphanCommandTest.php",
             "packages/media/tests/Cas/SweepPendingSerializableTest.php",
+            "packages/media/tests/Doctor/BlobPinsCheckTest.php",
             "packages/media/tests/Feature/BootTest.php",
             "packages/media/tests/Observability/P85Section53MediaMetricsTest.php",
             "packages/media/tests/Recipes/MediaRecipeTest.php"
@@ -852,7 +858,9 @@
             "packages/drive/tests/Concurrency/OutermostRetryRealFailureTest.php",
             "packages/drive/tests/Concurrency/QuotaRaceTest.php",
             "packages/drive/tests/Concurrency/QuotaRecountRaceTest.php",
+            "packages/drive/tests/Concurrency/RevisionBlobsRollbackTest.php",
             "packages/drive/tests/Concurrency/RevisionNumberRaceTest.php",
+            "packages/drive/tests/Concurrency/RevisionPinPurgeRaceTest.php",
             "packages/drive/tests/Concurrency/RevisionPruneRaceTest.php",
             "packages/drive/tests/Concurrency/RootTransactionSnapshotTest.php",
             "packages/drive/tests/Concurrency/SameNameUploadRaceTest.php",
@@ -935,6 +943,7 @@
             "packages/drive/tests/Drive/NodeStarPropertiesTest.php",
             "packages/drive/tests/Drive/QuotaLedgerTest.php",
             "packages/drive/tests/Drive/RecountDrivesTest.php",
+            "packages/drive/tests/Drive/RevisionBlobLinksTest.php",
             "packages/drive/tests/Drive/RevisionDeletionLivenessTest.php",
             "packages/drive/tests/Drive/RevisionRetentionTest.php",
             "packages/drive/tests/Drive/StorageManagerTest.php",
@@ -1043,6 +1052,7 @@
             "packages/drive/tests/Arch/OperationsBoundaryTest.php",
             "packages/drive/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/drive/tests/Arch/PublicApiSnapshotTest.php",
+            "packages/drive/tests/Arch/RevisionBlobLinksBoundaryTest.php",
             "packages/drive/tests/Arch/TestingBoundaryTest.php",
             "packages/drive/tests/Configuration/DriveConfigTest.php",
             "packages/drive/tests/Configuration/ModuleRegistrationOrderTest.php",

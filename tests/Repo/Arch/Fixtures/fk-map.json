@@ -3,6 +3,28 @@
     "fks": [
         {
             "columns": [
+                "blob_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "media",
+            "from_table": "v_blob_references",
+            "head": false,
+            "name": "v_blob_references_blob_fk",
+            "on_delete": "restrict",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "media",
+            "to_table": "v_blobs",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
                 "document_id"
             ],
             "deferrable": false,

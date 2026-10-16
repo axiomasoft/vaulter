@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.7",
   "title": "D23: media-pins v_blob_references, GC читает только pins, связи ревизий → drive RevisionBlobLinks",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Media получает таблицу `v_blob_references` (0001_01_01_000102), контракт `BlobPins` с протоколом lock/status, GC и reconcile читают только pins; `BlobStore::attach/detach` удаляются, drive `RevisionBlobLinks` атомарно пишет ребро ревизии и pin; purge-пути снимают pins; down миграции file_revision_blobs освобождает pins drive; `v_blobs.drive_id` → `storage_id`; doctor pins по owner_type; тесты I18 и PG-гонка pin↔sweep.",
   "why": "D23 и протокол pins (architecture#operation-chains, ревизия 3): GC сегодня читает drive-таблицу (обратная зависимость), attach без lock/статуса допускает pin к tombstoned без байтов. Hard risks: потеря байтов живой ревизии (pin после unlink в откаченном sweep), вечный pin при каскадном delete без unpin, deadlock при порядке lock дерева drive и lock blob.",
   "scope": {
@@ -292,6 +292,56 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-16T18:15:17Z",
+    "finished_at": "2026-10-16T19:12:36Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "pins D23: v_blob_references, BlobPinStore, GC/reconcile по pins, RevisionBlobLinks в drive",
+    "deviations": [
+      "BlobPins в Contracts/Cas; pgsql/mysql снимки схемы выведены скриптом без прогона на движках (PLAN4)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T19:12:36Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T19:12:36Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T19:12:36Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-16T19:12:36Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-16T19:12:36Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-16T19:12:36Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-16T19:12:36Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-16T19:12:36Z"
 }

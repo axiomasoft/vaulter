@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Media;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Console\GcBlobsCommand;
 use Vaulter\Media\Console\ReconcileBlobsCommand;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\Doctor\BlobPinsCheck;
+use Vaulter\Media\Http\Problems\MediaProblemCodes;
 use Vaulter\Media\Providers\BindingsRegistrar;
 use Vaulter\Media\Providers\SchedulingRegistrar;
 use Vaulter\Media\Schema\MediaSchema;
@@ -21,8 +24,9 @@ use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\VaulterModule;
 
 /**
- * The media module (D22): the content-addressed store engine, its blob maintenance commands and schedules
- * and the content-scanner and storage-driver capabilities. Auto: the drive needs it and it opens no outbound traffic.
+ * The media module (D22): the content-addressed store engine, the pins that keep blobs alive (D23), its blob
+ * maintenance commands and schedules, the blob_unavailable problem, the pins doctor check and the content-scanner
+ * and storage-driver capabilities. Auto: the drive needs it and it opens no outbound traffic.
  */
 #[Internal]
 final class MediaModule implements OwnsSchema, VaulterModule
@@ -58,6 +62,7 @@ final class MediaModule implements OwnsSchema, VaulterModule
             ->config('vaulter-media', dirname(__DIR__).'/config/vaulter-media.php')
             ->schema(dirname(__DIR__).'/database/migrations')
             ->bindings(BindingsRegistrar::class)
+            ->problems(MediaProblemCodes::class)
             ->commands(GcBlobsCommand::class, ReconcileBlobsCommand::class)
             ->schedule(SchedulingRegistrar::class)
             // The scanner the host names in `vaulter.scan.scanner`; none configured means no scanning.
@@ -65,6 +70,8 @@ final class MediaModule implements OwnsSchema, VaulterModule
             ->providesFromConfig(ContentScanner::class, 'vaulter.scan.scanner')
             // The CAS storage engine the host picks in `vaulter-media.storage_driver` (Flysystem by default).
             ->defineCapability(StorageDriver::class, Cardinality::RequiredSingle)
-            ->providesFromConfig(StorageDriver::class, 'vaulter-media.storage_driver', FlysystemStorageDriver::class);
+            ->providesFromConfig(StorageDriver::class, 'vaulter-media.storage_driver', FlysystemStorageDriver::class)
+            // The pins per owner type, warning about owners whose module is not active (D23).
+            ->slot(DoctorCheck::class, BlobPinsCheck::class, 'media.blobs.pins', key: 'media.blobs.pins');
     }
 }

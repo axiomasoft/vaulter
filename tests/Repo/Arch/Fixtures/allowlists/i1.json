@@ -2908,32 +2908,10 @@
             "category": "domain-in-core",
             "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
             "removed_in": "P4",
-            "count": 1,
-            "file": "packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php",
-            "kind": "name",
-            "symbol": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository::countEdges",
-            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
-            "removed_in": "P4",
-            "count": 1,
+            "count": 2,
             "file": "packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php",
             "kind": "name",
             "symbol": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository::detach",
-            "target": "Vaulter\\Media\\Models\\Cas\\Blob",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
-            "removed_in": "P4",
-            "count": 1,
-            "file": "packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php",
-            "kind": "name",
-            "symbol": "Vaulter\\Repositories\\Drive\\FileRevisionBlobStoreRepository::hasLiveEdge",
             "target": "Vaulter\\Media\\Models\\Cas\\Blob",
             "view": "current"
         },

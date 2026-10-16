@@ -42,7 +42,7 @@ final class KeyColumnInspector
         $references = [
             ['nodes', 'drive_id'],
             ['node_user_states', 'node_id'],
-            ['blobs', 'drive_id'],
+            ['blobs', 'storage_id'],
             ['file_revision_blobs', 'file_revision_id'],
             ['upload_sessions', 'drive_id'],
             ['upload_sessions', 'target_node_id'],

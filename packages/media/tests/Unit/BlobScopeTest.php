@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 it('round trips lossless CAS scope identifiers', function (string $id): void {
-    foreach ([BlobScope::drive($id), BlobScope::tenant($id)] as $scope) {
+    foreach ([BlobScope::storage($id), BlobScope::tenant($id)] as $scope) {
         expect(BlobScope::fromSegment($scope->segment())->key())->toBe($scope->key());
     }
 })->with(['001', '01ARZ3NDEKTSV4RRFFQ69G5FAV', '019a0000-1234-7000-8000-123456789abc', 'host/project', 'équipe']);

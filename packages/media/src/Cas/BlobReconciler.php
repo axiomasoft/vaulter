@@ -14,12 +14,13 @@ use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
-use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Support\Identity;
 
 /**
  * Blob reconciliation: ref_count is a CACHE, not the truth, so it drifts and
- * must be rebuilt from the edge table — the real liveness source. Reconciliation
+ * must be rebuilt from the pins (v_blob_references, D23) — the real liveness
+ * source; the recount runs under the same per-(scope,sha256) lock as a pin, so it
+ * never caches a count a concurrent pin is changing. Reconciliation
  * also surfaces the two integrity hazards a CAS must watch, the inverse images of
  * each other:
  *
@@ -56,13 +57,15 @@ use Vaulter\Support\Identity;
 #[Internal]
 final readonly class BlobReconciler
 {
+    private const int BATCH_SIZE = 1000;
+
     /** Both historical two-shard keys and lossless single-shard keys. */
     private const string KEY_PATTERN = '#^(?<scope>global|[ts](?:\d+|null|[0-9A-HJKMNP-TV-Z]{26})|g|[tdo]-~?[A-Za-z0-9_-]{1,128})/[0-9a-f]{2}/(?:[0-9a-f]{2}/)?(?<sha256>[0-9a-f]{64})$#';
 
     public function __construct(
         private ContentStore $content,
         private BlobStoreRepository $blobs,
-        private FileRevisionBlobStoreRepository $edges,
+        private BlobPinStore $pins,
         private BlobLock $lock,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
@@ -70,8 +73,8 @@ final readonly class BlobReconciler
     ) {}
 
     /**
-     * Rebuild ref_count for every blob from its live edge count and collect the
-     * dangling rows. Returns a report tally.
+     * Rebuild ref_count for every blob from its pins and collect the dangling
+     * rows. Returns a report tally.
      *
      * @return array{reconciled: int, changed: int, dangling: list<string>}
      */
@@ -84,21 +87,16 @@ final readonly class BlobReconciler
         $this->metrics->timing(
             name: 'vaulter_reconcile_duration_seconds',
             operation: function () use (&$reconciled, &$changed, &$dangling): void {
-                foreach ($this->blobModel()::query()->cursor() as $blob) {
-                    /** @var Blob $blob */
-                    $reconciled++;
+                foreach ($this->batches() as $ids) {
+                    foreach ($this->recount($ids) as $blob) {
+                        $reconciled++;
+                        $changed += (int) $blob['changed'];
 
-                    $count = $this->edges->countEdges($blob);
-
-                    if ($blob->ref_count !== $count) {
-                        $this->blobs->setRefCount(blob: $blob, count: $count);
-                        $changed++;
-                    }
-
-                    // A committed blob must have its bytes on disk; a missing object is a
-                    // dangling row the operator should investigate (re-upload or purge).
-                    if ($blob->status === BlobStatus::Committed && !$this->content->exists($blob->storage_key, $blob->disk)) {
-                        $dangling[] = Identity::stringify($blob->getKey());
+                        // A committed blob must have its bytes on disk; a missing object is a
+                        // dangling row the operator should investigate (re-upload or purge).
+                        if ($blob['blob']->status === BlobStatus::Committed && !$this->content->exists($blob['blob']->storage_key, $blob['blob']->disk)) {
+                            $dangling[] = Identity::stringify($blob['blob']->getKey());
+                        }
                     }
                 }
             },
@@ -113,6 +111,73 @@ final readonly class BlobReconciler
             'changed' => $changed,
             'dangling' => $dangling,
         ];
+    }
+
+    /**
+     * Recount one batch inside a transaction that first takes the lock of every blob
+     * in it (PostgreSQL: the advisory locks in their global order; MySQL: the rows
+     * FOR UPDATE in key order), so a pin or unpin of these blobs waits or is seen.
+     *
+     * @param  list<int|string>                       $ids
+     * @return list<array{blob: Blob, changed: bool}>
+     */
+    private function recount(array $ids): array
+    {
+        return $this->database->transaction(function () use ($ids): array {
+            $model = $this->blobModel();
+
+            if ($this->lock->isPostgres()) {
+                $keys = $model::query()->whereKey($ids)->get(['scope_key', 'sha256'])
+                    ->map(static fn (Blob $blob): string => 'cas:'.$blob->scope_key.':'.$blob->sha256)
+                    ->all();
+                $this->lock->acquireMany(array_values($keys));
+            }
+
+            $query = $model::query()->whereKey($ids)->orderBy((new $model)->getKeyName());
+            if ($this->lock->usesRowLock()) {
+                $query->lockForUpdate();
+            }
+
+            $counts = $this->pins->countsFor($ids);
+            $result = [];
+            foreach ($query->get() as $blob) {
+                $count = $counts[Identity::stringify($blob->getKey())] ?? 0;
+                $changed = $blob->ref_count !== $count;
+                if ($changed) {
+                    $this->blobs->setRefCount(blob: $blob, count: $count);
+                }
+                $result[] = ['blob' => $blob, 'changed' => $changed];
+            }
+
+            return $result;
+        });
+    }
+
+    /**
+     * Every blob key in bounded batches, by key (never by offset).
+     *
+     * @return iterable<list<int|string>>
+     */
+    private function batches(): iterable
+    {
+        $model = $this->blobModel();
+        $key = (new $model)->getKeyName();
+        $last = null;
+
+        do {
+            $page = $model::query()->reorder($key)->limit(self::BATCH_SIZE);
+            if ($last !== null) {
+                $page->where($key, '>', $last);
+            }
+            /** @var list<int|string> $ids */
+            $ids = $page->pluck($key)->all();
+            if ($ids === []) {
+                return;
+            }
+            $last = $ids[array_key_last($ids)];
+
+            yield $ids;
+        } while (count($ids) === self::BATCH_SIZE);
     }
 
     /**

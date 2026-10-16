@@ -45,7 +45,7 @@ it('caches the deterministic domain refusals of the owners', function (string $c
 
 it('never caches a 409 whose answer depends on a concurrent request or the host configuration', function (string $code): void {
     expect(fullProblemCatalog()->spec($code)->receipt)->toBe(ReceiptPolicy::Never, $code);
-})->with(['restore_destination_changed', 'upload_conflict', 'upload_offset_mismatch', 'collaboration_unavailable']);
+})->with(['restore_destination_changed', 'upload_conflict', 'upload_offset_mismatch', 'collaboration_unavailable', 'blob_unavailable']);
 
 it('marks the busy and unavailable codes for a retry with backoff', function (string $code): void {
     expect(fullProblemCatalog()->spec($code)->retryable)->toBe(Retryable::WithBackoff, $code);

@@ -10,6 +10,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Events\Drives\DriveDeleted;
 use Vaulter\Drive\Uploads\UploadSessionManager;
@@ -49,6 +50,7 @@ final readonly class PurgeDriveStepAction
         private EventRecorder $recorder,
         private ChangeEntryRepository $changes,
         private ChangeHeadRepository $heads,
+        private RevisionBlobLinks $links,
     ) {}
 
     /** @return bool true when the drive is gone (or was never being deleted), false while children remain */
@@ -109,6 +111,11 @@ final readonly class PurgeDriveStepAction
             if ($root !== null && $nodeClass::query()->where('drive_id', $drive->getKey())->where('parent_id', $root->getKey())->exists()) {
                 return false;
             }
+            // The revisions left on the drive (none after the node purges, unless a node was out of the root's
+            // subtree) lose their edges and pins before the cascade of the drive row would drop them (D23).
+            $files = $this->config->model('file')::query()->select('id')
+                ->whereIn('node_id', $nodeClass::query()->select('id')->where('drive_id', $drive->getKey()));
+            $this->links->detachAll($this->config->model('file_revision')::query()->whereIn('file_id', $files)->orderBy('id')->pluck('id')->all());
             if ($root !== null) {
                 $this->nodes->purgeSubtree(collect([$root->id]));
             }

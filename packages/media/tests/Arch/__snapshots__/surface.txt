@@ -2,10 +2,8 @@
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
 Vaulter\Media\Cas\BlobStore api since 1.0 final readonly class implements Vaulter\Media\Contracts\Cas\BlobStore
-  public function attach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Media\Models\Cas\Blob $blob, array $attributes = []): void
   public function commit(mixed $stream, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
   public function commitStaged(Vaulter\Media\Contracts\Cas\StagedObject $staged, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
-  public function detach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Media\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
   public function read(Vaulter\Media\Models\Cas\Blob $blob): mixed
 
 Vaulter\Media\Configuration\DedupScope api since 1.0 enum: string
@@ -63,11 +61,15 @@ Vaulter\Media\Content\SignedContentUrl api since 1.0 final readonly class
   public string $url
   public function __construct(string $url, DateTimeImmutable $expiresAt, string $contentIdentity, ?string $storageVersion)
 
+Vaulter\Media\Contracts\Cas\BlobPins api since 1.0 interface
+  public function countByOwner(): array
+  public function pin(Vaulter\Media\Models\Cas\Blob $blob, string $ownerType, string $referenceKey): void
+  public function releaseOwner(string $ownerType, ?Closure $keys = null): int
+  public function unpin(Vaulter\Media\Models\Cas\Blob|int|string $blob, string $ownerType, string $referenceKey): void
+
 Vaulter\Media\Contracts\Cas\BlobStore api since 1.0 interface
-  public function attach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Media\Models\Cas\Blob $blob, array $attributes = []): void
   public function commit(mixed $stream, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
   public function commitStaged(Vaulter\Media\Contracts\Cas\StagedObject $staged, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
-  public function detach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Media\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
   public function read(Vaulter\Media\Models\Cas\Blob $blob): mixed
 
 Vaulter\Media\Contracts\Cas\ContentScanner spi:implement since 1.0 interface
@@ -130,6 +132,11 @@ Vaulter\Media\Enums\Cas\ScanVerdict api since 1.0 enum: string
   case Failed = 'failed'
   case Infected = 'infected'
 
+Vaulter\Media\Exceptions\Cas\BlobUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forBlob(int|string $blobId, Vaulter\Media\Enums\Cas\BlobStatus $status): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
 Vaulter\Media\Testing\Contracts\ContentScannerContractTests api since 1.0 final class
   public function assertContentScannerContract(Vaulter\Media\Contracts\Cas\ContentScanner $scanner, array $samples): void
   public function assertUnreadableBytesAreNeverClean(Vaulter\Media\Contracts\Cas\ContentScanner $scanner): void
@@ -145,11 +152,11 @@ Vaulter\Media\Testing\FakeContentScanner api since 1.0 final class implements Va
 
 Vaulter\Media\ValueObjects\Cas\BlobScope api since 1.0 final readonly class
   public function dedupScope(): string
-  public static function drive(string $id): self
   public static function forUpload(string $dedupScope, ?string $tenantId, string $storageId): self
   public static function fromSegment(string $segment): self
   public function key(): string
   public function segment(): string
+  public static function storage(string $id): self
   public function storageId(): ?string
   public static function tenant(string $id): self
   public function tenantId(): ?string

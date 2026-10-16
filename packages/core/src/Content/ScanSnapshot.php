@@ -64,7 +64,7 @@ final readonly class ScanSnapshot
             $edgeClass = $this->config->model('file_revision_blob');
             $edges = $edgeClass::query()->where('file_revision_id', $persisted->id)->get();
             $edge = $edges->first();
-            if ($edge !== null && $edges->count() === 1 && (string) $edge->blob_id === (string) $blob->id && $edge->role === 'data' && (int) $edge->ordinal === 0 && $blob->sha256 === $persisted->sha256 && $blob->size_bytes === $persisted->size_bytes && ($blob->tenant_id === null || (string) $blob->tenant_id === (string) $drive->tenant_id) && ($blob->drive_id === null || (string) $blob->drive_id === (string) $drive->id)) {
+            if ($edge !== null && $edges->count() === 1 && (string) $edge->blob_id === (string) $blob->id && $edge->role === 'data' && (int) $edge->ordinal === 0 && $blob->sha256 === $persisted->sha256 && $blob->size_bytes === $persisted->size_bytes && ($blob->tenant_id === null || (string) $blob->tenant_id === (string) $drive->tenant_id) && ($blob->storage_id === null || (string) $blob->storage_id === (string) $drive->id)) {
                 $identity = new ImmutableContentIdentity($blob->id, $blob->scope_key, $blob->disk, $blob->storage_key, $blob->storage_version, $persisted->sha256, $persisted->size_bytes);
             }
         }

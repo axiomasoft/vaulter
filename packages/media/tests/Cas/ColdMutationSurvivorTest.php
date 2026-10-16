@@ -7,10 +7,10 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Cas\BlobLock;
+use Vaulter\Media\Cas\BlobPinStore;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
@@ -26,7 +26,6 @@ use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\NonListableContentStore;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
-use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Testing\FakeMetricsRecorder;
 
 beforeEach(function (): void {
@@ -42,11 +41,10 @@ function r18Collector(FakeMetricsRecorder $metrics): BlobGarbageCollector
         app(ContentStore::class),
         app(BlobLock::class),
         app(BlobStoreRepository::class),
-        app(FileRevisionBlobStoreRepository::class),
+        app(BlobPinStore::class),
         $metrics,
         app(VaulterDatabase::class),
         mediaConfig: app(MediaConfig::class),
-        vaulterConfig: app(VaulterConfig::class),
     );
 }
 
@@ -55,7 +53,7 @@ function r18Reconciler(FakeMetricsRecorder $metrics): BlobReconciler
     return new BlobReconciler(
         app(ContentStore::class),
         app(BlobStoreRepository::class),
-        app(FileRevisionBlobStoreRepository::class),
+        app(BlobPinStore::class),
         app(BlobLock::class),
         $metrics,
         app(VaulterDatabase::class),
@@ -166,10 +164,10 @@ it('records exact sweep metrics including the zero deletion counter', function (
 it('adds skipped candidates from both collect phases', function (): void {
     $store = app(BlobStoreContract::class);
     $markSkipped = $store->commit(CasTestHelpers::streamFor('mark skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $store->attach(CasTestHelpers::makeVersion(name: 'mark skipped edge'), $markSkipped);
+    CasTestHelpers::pin($markSkipped, CasTestHelpers::reference('mark skipped edge'));
 
     $sweepSkipped = $store->commit(CasTestHelpers::streamFor('sweep skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $store->attach(CasTestHelpers::makeVersion(name: 'sweep skipped edge'), $sweepSkipped);
+    CasTestHelpers::pin($sweepSkipped, CasTestHelpers::reference('sweep skipped edge'));
     $sweepSkipped->forceFill([
         'status' => BlobStatus::Tombstoned,
         'delete_after_at' => now()->subMinute(),
@@ -189,10 +187,8 @@ it('keeps a pending blob seen exactly at the grace cutoff', function (): void {
     $atCutoff->forceFill(['first_seen_at' => now()->subHours(2)])->save();
     $older->forceFill(['first_seen_at' => now()->subHours(2)->subSecond()])->save();
     $referenced->forceFill(['first_seen_at' => now()->subHours(3)])->save();
-    app(BlobStoreContract::class)->attach(
-        CasTestHelpers::makeVersion(name: 'pending referenced edge'),
-        $referenced,
-    );
+    // Seeded: through the protocol the pin would commit the pending row again.
+    CasTestHelpers::seedPin($referenced, 'pending referenced edge');
     $olderStatuses = [];
     Blob::updated(function (Blob $updated) use (&$olderStatuses, $older): void {
         if ($updated->is($older)) {

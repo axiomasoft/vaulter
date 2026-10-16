@@ -27,7 +27,7 @@ use Vaulter\Models\Content\ScanUtcDateTime;
 /**
  * An immutable file version: a monotonic number per file
  * pointing at a content-addressed blob (or a chunk manifest). The version ↔ blob
- * edges in v_file_revision_blobs are the GC truth. Swappable via
+ * edges in v_file_revision_blobs carry the media pins (D23). Swappable via
  * configuration key vaulter.models.file_revision.
  *
  * @property int                  $scan_admission_sequence
@@ -112,7 +112,7 @@ class FileRevision extends Model
     }
 
     /**
-     * Every blob this version references through the edge table — the GC truth.
+     * Every blob this version references through the edge table (each edge pinned, D23).
      *
      * @return BelongsToMany<Blob, $this, FileRevisionBlob>
      */

@@ -14,7 +14,7 @@ use Vaulter\Database\VaulterDatabase;
  * decision from rows read AFTER the lock. That is what makes online GC safe
  * against a concurrent re-commit (a commit that wins the lock resurrects a
  * tombstoned blob before the sweep can see it; a sweep that wins the lock
- * re-checks edge existence before deleting).
+ * re-checks the pins before deleting).
  *
  * Per driver:
  *  - pgsql : pg_advisory_xact_lock(hashtext(scope||sha256)) — a real mutex held

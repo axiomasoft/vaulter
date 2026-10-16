@@ -538,15 +538,14 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `media` `P\Tests\Cas\BlobGcBatchTest::__pest_evaluable_it_caps_sweep_and_pending_batches_while_skipped_rows_stay_eligible"(Vaulter\Enums\Cas\BlobStatus Enum (Tombstoned, 'tombstoned'))"` → `P\Tests\Cas\BlobGcBatchTest::__pest_evaluable_it_caps_sweep_and_pending_batches_while_skipped_rows_stay_eligible"(Vaulter\Media\Enums\Cas\BlobStatus Enum (Tombstoned, 'tombstoned'))"` — P4.6: the dataset label carries the FQCN of the enum, which moved to media (D6)
 - `media` `P\Tests\Cas\BlobGcBatchTest::__pest_evaluable_it_rechecks_status_liveness_and_grace_for_a_materialized_deletion_batch"(Vaulter\Enums\Cas\BlobStatus Enum (Tombstoned, 'tombstoned'))"` → `P\Tests\Cas\BlobGcBatchTest::__pest_evaluable_it_rechecks_status_liveness_and_grace_for_a_materialized_deletion_batch"(Vaulter\Media\Enums\Cas\BlobStatus Enum (Tombstoned, 'tombstoned'))"` — P4.6: the dataset label carries the FQCN of the enum, which moved to media (D6)
 - `media` `P\Tests\Arch\ArchTest::__pest_evaluable_the_package_exposes_no_public_contract_surface__VLT_REL_P2_2_` → `P\Tests\Arch\ArchTest::__pest_evaluable_the_contracts_of_the_package_are_the_CAS_seams_under_Contracts_Cas_and_nothing_else__D6_` — P4.6: media now owns the CAS contracts, the guard states that they are the only ones and interfaces (D6)
-- `media` `P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Doctor_never_uses_the_Testing_namespaces` → `P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_Cas_never_uses_the_Testing_namespaces` — P4.6: the Doctor namespace moved to drive (D33); the boundary is checked for each remaining media namespace (D33)
 - `media` `P\Tests\Recipes\MediaRecipeTest::__pest_evaluable_it_keeps_tenants_apart_under_the_documented_dedup_scope__troubleshooting_guide_.` → `P\Tests\Recipes\MediaRecipeTest::__pest_evaluable_it_keeps_tenants_apart_under_the_documented_dedup_scope__troubleshooting_guide_` — the discovered name no longer ends with a dot (D14)
 
 ## Additions (current − original)
 
 - `repo`: 217 (introduced P1.3)
-- `core`: 457
-- `media`: 37
-- `drive`: 32
+- `core`: 458
+- `media`: 90
+- `drive`: 50
 - `documents`: 10
 - `azgard`: 9
 - `filament`: 0

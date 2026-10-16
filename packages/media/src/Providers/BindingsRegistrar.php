@@ -11,14 +11,17 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Media\Cas\BlobPinStore;
 use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Modules\ModuleBindings;
 
 /**
  * The container wiring of the media module: the configured CAS engine (ContentStore, BlobStore; the
- * StorageDriver is a capability of the manifest) and its config validation, failing at boot on a bad class or value.
+ * StorageDriver is a capability of the manifest), the pins (BlobPins, D23 — not configurable: the GC reads the
+ * same store) and the config validation, failing at boot on a bad class or value.
  */
 #[Internal]
 final class BindingsRegistrar implements ModuleBindings
@@ -45,6 +48,8 @@ final class BindingsRegistrar implements ModuleBindings
 
             return $service;
         });
+
+        $app->bind(BlobPins::class, BlobPinStore::class);
 
         $app->bind('vaulter.config_validator.media', static fn (Container $app): Closure => static function () use ($app): void {
             $config = $app->make(MediaConfig::class);

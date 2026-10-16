@@ -34,10 +34,13 @@ final class DriveSchemaAssertions
                 'created_at', 'updated_at',
             ]],
             ['v_blobs', [
-                'id', 'tenant_id', 'drive_id', 'hash_algo', 'sha256', 'size_bytes',
+                'id', 'tenant_id', 'storage_id', 'hash_algo', 'sha256', 'size_bytes',
                 'disk', 'storage_key', 'status', 'ref_count', 'dedup_scope', 'etag',
                 'md5', 'crc32c', 'chunked', 'encryption_key_id', 'first_seen_at',
                 'committed_at', 'delete_after_at',
+            ]],
+            ['v_blob_references', [
+                'id', 'blob_id', 'owner_type', 'reference_key', 'created_at',
             ]],
             ['v_files', [
                 'id', 'tenant_id', 'node_id', 'current_revision_id', 'mime_type',

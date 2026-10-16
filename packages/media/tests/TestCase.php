@@ -47,7 +47,7 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('vaulter.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the CAS tests assert integer
-        // keys on the Storage→Node→File→Version chain they build.
+        // blob keys.
         $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 
@@ -56,9 +56,8 @@ abstract class TestCase extends OrchestraTestCase
         // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
         SuiteDatabaseConnection::skipOnForeignEngine($this);
 
-        // The migrations of every offered module. The blob tests still build their fixtures on the drive tables (P4.6 takes them out); the drive package is no
-        // dependency of media, so its migrations are named here and its schema class is autoloaded in composer's dev section.
-        $paths = [...SuiteDatabaseConnection::migrationPaths($this->app), dirname(__DIR__, 2).'/drive/database/migrations'];
+        // The migrations of every offered module: the blob tests pin blobs for an opaque owner (D23) and need no drive table.
+        $paths = SuiteDatabaseConnection::migrationPaths($this->app);
         load_migration_paths($this->app, $paths);
         $this->loadMigrationsFrom($paths);
     }

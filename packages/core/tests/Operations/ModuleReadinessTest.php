@@ -64,7 +64,7 @@ it('lists the tables by the module that owns them, from the schema class of each
     $owned = $schemas->allEntities();
 
     expect($schemas->entitiesOf('core'))->toBe(['outbox', 'outbox_consumers', 'outbox_deliveries', 'idempotency_keys'])
-        ->and($schemas->entitiesOf('media'))->toBe(['blobs'])
+        ->and($schemas->entitiesOf('media'))->toBe(['blobs', 'blob_references'])
         ->and($schemas->entitiesOf('webhooks'))->toBe(['webhook_endpoints', 'webhook_deliveries'])
         ->and($schemas->entitiesOf('filament'))->toBe([])
         ->and($schemas->entitiesOf('documents'))->toBe([])

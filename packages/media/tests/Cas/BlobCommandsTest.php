@@ -48,8 +48,8 @@ it('vaulter:blobs:reconcile корректирует ref_count и сообщае
     $store = app(BlobStore::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('reconcile cmd'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
 
     $this->artisan('vaulter:blobs:reconcile')
         ->assertSuccessful();

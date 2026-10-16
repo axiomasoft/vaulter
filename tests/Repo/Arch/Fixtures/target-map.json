@@ -591,6 +591,15 @@
             "package": "media",
             "phase": "stay",
             "role": "migration"
+        },
+        {
+            "action": "keep",
+            "file": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "role": "migration"
         }
     ],
     "members": [
@@ -6589,6 +6598,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Content/RevisionBlobLinks.php",
+            "fqcn": "Vaulter\\Drive\\Content\\RevisionBlobLinks",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Content\\RevisionBlobLinks"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Content/ScanAdmission.php",
             "fqcn": "Vaulter\\Drive\\Content\\ScanAdmission",
             "kind": "final-class",
@@ -12049,6 +12072,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/media/src/Cas/BlobPinStore.php",
+            "fqcn": "Vaulter\\Media\\Cas\\BlobPinStore",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Cas\\BlobPinStore"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/media/src/Cas/BlobReconciler.php",
             "fqcn": "Vaulter\\Media\\Cas\\BlobReconciler",
             "kind": "final-class",
@@ -12231,6 +12268,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/media/src/Contracts/Cas/BlobPins.php",
+            "fqcn": "Vaulter\\Media\\Contracts\\Cas\\BlobPins",
+            "kind": "interface",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Media\\Contracts\\Cas\\BlobPins"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/media/src/Contracts/Cas/BlobStore.php",
             "fqcn": "Vaulter\\Media\\Contracts\\Cas\\BlobStore",
             "kind": "interface",
@@ -12343,6 +12394,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/media/src/Doctor/BlobPinsCheck.php",
+            "fqcn": "Vaulter\\Media\\Doctor\\BlobPinsCheck",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Doctor\\BlobPinsCheck"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/media/src/Enums/Cas/BlobStatus.php",
             "fqcn": "Vaulter\\Media\\Enums\\Cas\\BlobStatus",
             "kind": "enum",
@@ -12381,6 +12446,34 @@
             "rule": "other-packages:prefix:Vaulter\\Media\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Media\\Enums\\Cas\\ScanVerdict"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Exceptions/Cas/BlobUnavailableException.php",
+            "fqcn": "Vaulter\\Media\\Exceptions\\Cas\\BlobUnavailableException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Media\\Exceptions\\Cas\\BlobUnavailableException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Http/Problems/MediaProblemCodes.php",
+            "fqcn": "Vaulter\\Media\\Http\\Problems\\MediaProblemCodes",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Http\\Problems\\MediaProblemCodes"
         },
         {
             "action": "keep",

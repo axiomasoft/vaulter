@@ -23,7 +23,11 @@ final readonly class BlobScope
         return self::identified('tenant', $id);
     }
 
-    public static function drive(string $id): self
+    /**
+     * The scope of one storage (dedup_scope 'drive'): an opaque identifier of the owner's storage, stored as
+     * v_blobs.storage_id. The stored scope value, key prefix and key segment keep their 'drive' spelling.
+     */
+    public static function storage(string $id): self
     {
         return self::identified('drive', $id);
     }
@@ -41,8 +45,8 @@ final readonly class BlobScope
     public static function forUpload(string $dedupScope, ?string $tenantId, string $storageId): self
     {
         return match ($dedupScope) {
-            'tenant' => $tenantId === null ? self::drive($storageId) : self::tenant($tenantId),
-            'drive' => self::drive($storageId),
+            'tenant' => $tenantId === null ? self::storage($storageId) : self::tenant($tenantId),
+            'drive' => self::storage($storageId),
             'off' => self::unshared(),
             default => throw new InvalidArgumentException('Unknown CAS dedup scope "'.$dedupScope.'"; use tenant, drive or off.'),
         };

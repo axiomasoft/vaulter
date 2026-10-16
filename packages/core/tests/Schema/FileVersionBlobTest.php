@@ -5,18 +5,21 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Tests\Schema\ForceCreates;
 
 /**
- * The file ↔ version ↔ blob chain and the v_file_revision_blobs edge (the GC
- * truth, §2.4): relations resolve through the swappable model map.
+ * The file ↔ version ↔ blob chain and the v_file_revision_blobs edge with its
+ * media pin (D23): relations resolve through the swappable model map.
  */
 beforeEach(function (): void {
     $storage = ForceCreates::make(Drive::class, [
@@ -62,17 +65,18 @@ it('file -> versions -> blob связаны', function (): void {
 
 it('ребро version<->blob — это GC-истина через pivot', function (): void {
     // FileRevisionBlob is fully guarded (P1.4/F-P1.8-02) — the production write
-    // path is the query-builder repository, not Eloquent's own relation
-    // attach() (which routes pivot attributes through fill()/mass-assignment
-    // and would now throw MassAssignmentException).
-    app(FileRevisionBlobStoreRepository::class)->attach($this->version, $this->blob, [
+    // path is the drive's RevisionBlobLinks over the query-builder repository, not
+    // Eloquent's own relation attach(); it writes the edge and its media pin (D23)
+    // inside one transaction.
+    app(VaulterDatabase::class)->transaction(fn () => app(RevisionBlobLinks::class)->attach($this->version, $this->blob, [
         'role' => 'data',
         'ordinal' => 0,
-    ]);
+    ]));
 
     expect($this->version->blobs()->count())->toBe(1)
-        ->and($this->blob->versions()->count())->toBe(1)
-        ->and($this->version->blobs()->first()->pivot->role)->toBe('data');
+        ->and(FileRevisionBlob::query()->where('blob_id', $this->blob->getKey())->count())->toBe(1)
+        ->and($this->version->blobs()->first()->pivot->role)->toBe('data')
+        ->and(app(BlobPins::class)->countByOwner())->toBe([RevisionBlobLinks::OWNER_TYPE => 1]);
 });
 
 it('number монотонно уникален на файл', function (): void {

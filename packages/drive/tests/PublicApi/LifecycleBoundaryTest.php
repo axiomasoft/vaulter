@@ -19,10 +19,12 @@ use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
@@ -32,7 +34,6 @@ use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
@@ -84,6 +85,8 @@ function lifecycleBoundaryEdges(FileRevision $revision): array
         'ordinal' => $blob->pivot->ordinal,
         'offset_bytes' => $blob->pivot->offset_bytes,
         'length_bytes' => $blob->pivot->length_bytes,
+        // Every edge carries its own media pin (D23).
+        'pinned' => in_array(RevisionBlobLinks::referenceKey($revision->id, $blob->pivot->role, $blob->pivot->ordinal), RevisionBlobPins::keys($blob), true),
     ])->sortBy(fn (array $edge): string => $edge['role'].':'.$edge['ordinal'])->values()->all();
 }
 
@@ -135,10 +138,11 @@ it('copies and restores immutable payload identity edge attributes and metadata 
         'keep_forever' => true,
     ])->save()));
     DriveTestHelpers::insideOperation(); // the CAS edge is attached by hand, outside an operation
-    app(BlobStore::class)->attach(version: $original, blob: $blob, attributes: [
+    app(VaulterDatabase::class)->transaction(fn () => app(RevisionBlobLinks::class)->attach(revision: $original, blob: $blob, attributes: [
         'role' => 'chunk', 'ordinal' => 7, 'offset_bytes' => 1, 'length_bytes' => 3,
-    ]);
+    ]));
     $edges = lifecycleBoundaryEdges($original);
+    expect(array_column($edges, 'pinned'))->toBe([true, true]);
     $originalBeforeCopy = $original->fresh()->getAttributes();
     $copy = $this->system->nodes()->copy($node, options: new CopyOptions(name: 'copied.txt'));
     $copied = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->firstOrFail();

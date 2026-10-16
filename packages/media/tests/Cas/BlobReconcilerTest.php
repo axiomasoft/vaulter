@@ -23,10 +23,10 @@ it('пересчитывает ref_count из числа рёбер', function (
 
     $blob = $store->commit(CasTestHelpers::streamFor('counted'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
-    $v1 = CasTestHelpers::makeVersion(versionNo: 1, name: 'a');
-    $v2 = CasTestHelpers::makeVersion(versionNo: 1, name: 'b');
-    $store->attach($v1, $blob);
-    $store->attach($v2, $blob);
+    $v1 = CasTestHelpers::reference('a');
+    $v2 = CasTestHelpers::reference('b');
+    CasTestHelpers::pin($blob, $v1);
+    CasTestHelpers::pin($blob, $v2);
 
     // Commit never bumps ref_count (H.3); the cache is stale at 0.
     expect($blob->fresh()->ref_count)->toBe(0);
@@ -43,12 +43,12 @@ it('сбрасывает ref_count к 0, когда все рёбра удале
     $store = app(BlobStore::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('orphaned'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
 
     // Stale cache pretends it is referenced 5 times.
     $blob->forceFill(['ref_count' => 5])->save();
-    $store->detach($version, $blob);
+    CasTestHelpers::unpin($blob, $version);
 
     app(BlobReconciler::class)->reconcile();
 

@@ -52,7 +52,7 @@ final readonly class BlobStoreRepository
         $existing = $this->lockedLookup(sha256: $sha256, scope: $scope);
 
         if ($existing !== null) {
-            $this->resurrectIfTombstoned($existing);
+            $this->resurrect($existing);
 
             return ['blob' => $existing, 'created' => false];
         }
@@ -80,7 +80,7 @@ final readonly class BlobStoreRepository
                 throw new \RuntimeException("Lost the blob INSERT race for {$sha256} but the winning row is not visible.");
             }
 
-            $this->resurrectIfTombstoned($winner);
+            $this->resurrect($winner);
 
             return ['blob' => $winner, 'created' => false];
         }
@@ -89,7 +89,7 @@ final readonly class BlobStoreRepository
     /**
      * Mark a committed, unreferenced blob as tombstoned with its grace deadline
      * (GC phase 1). Caller holds the per-(scope,sha256) lock and has re-verified
-     * no live edge.
+     * no pin.
      */
     public function tombstone(Blob $blob, int $graceHours): void
     {
@@ -123,7 +123,7 @@ final readonly class BlobStoreRepository
     }
 
     /**
-     * Overwrite the ref_count CACHE from a freshly counted edge total
+     * Overwrite the ref_count CACHE from a freshly counted pin total
      * (reconciliation). This is the only writer of ref_count — commit never
      * touches it (no hot-row).
      */
@@ -185,6 +185,20 @@ final readonly class BlobStoreRepository
     }
 
     /**
+     * Re-read a single blob FOR UPDATE on every driver that has row locks (SQLite
+     * ignores the clause and serialises writers anyway): the pin protocol (D23) takes
+     * the row lock after the per-(scope,sha256) lock, so a sweep and a pin of the
+     * same blob are ordered on PostgreSQL by both.
+     */
+    public function lockRow(Blob $blob): Blob
+    {
+        /** @var Blob $fresh */
+        $fresh = $this->query()->whereKey($blob->getKey())->lockForUpdate()->firstOrFail();
+
+        return $fresh;
+    }
+
+    /**
      * Look up the blob for a content address within its dedup scope, taking the
      * MySQL row lock when that driver is the lock mechanism.
      */
@@ -213,7 +227,7 @@ final readonly class BlobStoreRepository
         $blob = new ($this->mediaConfig->blobModel());
         $blob->forceFill([
             'tenant_id' => $scope->dedupScope() === 'drive' ? null : $tenantId,
-            'drive_id' => $scope->dedupScope() === 'drive' ? $storageId : null,
+            'storage_id' => $scope->dedupScope() === 'drive' ? $storageId : null,
             'hash_algo' => 'sha256',
             'sha256' => $sha256,
             'size_bytes' => $sizeBytes,
@@ -234,11 +248,12 @@ final readonly class BlobStoreRepository
      * Resurrection: a commit that finds a tombstoned blob un-tombstones it
      * (→ committed, clear delete_after_at) in the same locked transaction. A
      * deleting/deleted row is also resurrected — its bytes will be re-promoted by
-     * BlobStore since the canonical object may already be gone.
+     * BlobStore since the canonical object may already be gone. A pending row is left
+     * to its commit; a pin that found its bytes asks for $pending (D23).
      */
-    private function resurrectIfTombstoned(Blob $blob): void
+    public function resurrect(Blob $blob, bool $pending = false): void
     {
-        if ($blob->status === BlobStatus::Committed || $blob->status === BlobStatus::Pending) {
+        if ($blob->status === BlobStatus::Committed || ($blob->status === BlobStatus::Pending && !$pending)) {
             return;
         }
 

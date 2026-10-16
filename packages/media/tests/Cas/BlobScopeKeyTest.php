@@ -11,6 +11,7 @@ use Vaulter\Media\Contracts\Cas\ContentStore;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
+use Vaulter\Schema\IdStrategyResolver;
 
 it('isolates real identifier strategies across dedup scopes and GC', function (string $strategy, string $dedup): void {
     config()->set('vaulter.ids.strategy', $strategy);
@@ -20,24 +21,24 @@ it('isolates real identifier strategies across dedup scopes and GC', function (s
     expect($db->getDatabaseName() === ':memory:' || str_ends_with($db->getDatabaseName(), '_test'))->toBeTrue();
     $this->artisan('migrate:fresh', ['--force' => true])->assertSuccessful();
     Storage::fake('local');
-    $aVersion = CasTestHelpers::makeVersion();
-    $bVersion = CasTestHelpers::makeVersion();
-    $aStorage = $aVersion->file->node->storage;
-    $bStorage = $bVersion->file->node->storage;
-    $aStorage->forceFill(['tenant_id' => (string) $aStorage->getKey(), 'owner_id' => (string) $aStorage->getKey()])->save();
-    $bStorage->forceFill(['tenant_id' => (string) $bStorage->getKey(), 'owner_id' => (string) $bStorage->getKey()])->save();
+    // Opaque storage identifiers of the strategy (media knows no drive): each is its own tenant too.
+    $ids = app(IdStrategyResolver::class)->resolve($strategy);
+    $aStorage = (string) ($ids->newId() ?? 101);
+    $bStorage = (string) ($ids->newId() ?? 102);
+    $aVersion = CasTestHelpers::reference();
+    $bVersion = CasTestHelpers::reference();
     $store = app(BlobStore::class);
-    $a = $store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $aStorage->tenant_id, (string) $aStorage->getKey()));
-    $b = $store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $bStorage->tenant_id, (string) $bStorage->getKey()));
-    $store->attach($aVersion, $a);
-    $store->attach($bVersion, $b);
+    $a = $store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $aStorage, $aStorage));
+    $b = $store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $bStorage, $bStorage));
+    CasTestHelpers::pin($a, $aVersion);
+    CasTestHelpers::pin($b, $bVersion);
     expect($a->scope_key)->not->toBe($b->scope_key)
         ->and($a->getKey())->not->toBe($b->getKey())->and($a->storage_key)->not->toBe($b->storage_key);
     expect(app(BlobReconciler::class)->sweepOrphans('local', 0, false)['orphans'])->toBe([]);
     // A rowless object must actually be recognized in each new scope layout.
     $orphanKeys = [];
     foreach ([$aStorage, $bStorage] as $index => $storage) {
-        $scope = BlobScope::forUpload($dedup, $storage->tenant_id, (string) $storage->getKey());
+        $scope = BlobScope::forUpload($dedup, $storage, $storage);
         $key = app(ContentStore::class)->keyFor($scope, hash('sha256', 'orphan '.$index));
         Storage::disk('local')->put($key, 'orphan '.$index);
         CasTestHelpers::ageObject($key, 48);
@@ -48,8 +49,8 @@ it('isolates real identifier strategies across dedup scopes and GC', function (s
     sort($orphanKeys);
     expect($orphans)->toBe($orphanKeys);
     Storage::disk('local')->delete($orphanKeys);
-    // Purge the first revision's edges, then sweep its past-grace tombstone.
-    $aVersion->delete();
+    // Release the first owner's pin, then sweep its past-grace tombstone.
+    CasTestHelpers::unpin($a, $aVersion);
     $a->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subHour()])->save();
     app(BlobGarbageCollector::class)->sweep();
     Storage::disk($b->disk)->assertExists($b->storage_key);
