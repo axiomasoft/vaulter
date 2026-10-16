@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Sharing;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** The share link would outlive the drive policy's maxShareLinkTtlDays. */
+#[Api]
 final class ShareLinkTtlExceededException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

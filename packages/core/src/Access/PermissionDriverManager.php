@@ -12,6 +12,7 @@ use Vaulter\Access\Drivers\GatePermissionDriver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
@@ -30,6 +31,7 @@ use Vaulter\Profiles\ProfileRegistry;
  *
  * The default key is 'database' — the standalone {@see DatabasePermissionDriver}.
  */
+#[Internal]
 final class PermissionDriverManager
 {
     /**

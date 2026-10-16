@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\App;
 use InvalidArgumentException;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\GrantScope;
@@ -25,8 +27,10 @@ use Vaulter\Testing\Fixtures\FixtureOwner;
  * on $parent, and $child below it with inheritance restricted and no grant of its own.
  * Every driver that adds no roles or override must decide the same on it.
  */
+#[Api]
 final readonly class PermissionFixture
 {
+    #[Internal]
     public function __construct(
         public Drive $drive,
         public Node $parent,

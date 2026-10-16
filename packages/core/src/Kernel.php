@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Modules\Capabilities;
 use Vaulter\Modules\CompiledModules;
@@ -18,6 +20,7 @@ use Vaulter\Modules\ModuleState;
  * provide and contribute. Sealed once by the core provider before any provider boots; an invalid
  * graph activates nothing and every read of capabilities or slots throws {@see ModuleGraphException}.
  */
+#[Api]
 final class Kernel
 {
     private CompiledModules|InvalidModuleGraph|null $state = null;
@@ -26,9 +29,11 @@ final class Kernel
 
     private ?ExtensionRegistry $extensions = null;
 
+    #[Internal]
     public function __construct(private readonly Container $container) {}
 
-    /** @internal Called once by the core provider's booting callback. */
+    /** Called once by the core provider's booting callback. */
+    #[Internal]
     public function seal(CompiledModules|InvalidModuleGraph $state): void
     {
         if ($this->state !== null) {
@@ -97,10 +102,11 @@ final class Kernel
     }
 
     /**
-     * @internal the sealed declarations, for the kernel's own wiring
+     * the sealed declarations, for the kernel's own wiring
      *
      * @throws ModuleGraphException
      */
+    #[Internal]
     public function compiled(): CompiledModules
     {
         return match (true) {

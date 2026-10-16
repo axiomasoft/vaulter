@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
@@ -18,8 +20,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
 /**
  * A folder was created in a storage tree.
  */
+#[Api]
 final readonly class FolderCreated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         ActorRef $actor,

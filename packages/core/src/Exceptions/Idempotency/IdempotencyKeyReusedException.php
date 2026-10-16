@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Idempotency;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * The idempotency key was already used by the same actor for this operation with a different request
  * (D25). Nothing ran; the stored outcome belongs to the first request. Use a fresh key for a new request.
  */
+#[Api]
 final class IdempotencyKeyReusedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

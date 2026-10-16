@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Files;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\CopyDestinationAdmission;
@@ -26,6 +27,7 @@ use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
+#[Internal]
 final readonly class RestoreFileRevisionAction
 {
     public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder) {}

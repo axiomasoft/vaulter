@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 
 /**
@@ -11,6 +12,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
  * as {@see DocumentsConfig::parseRoom()} reads them.
  * Ids stay strings, the way every public id is compared.
  */
+#[Api]
 final readonly class RoomRef
 {
     public function __construct(

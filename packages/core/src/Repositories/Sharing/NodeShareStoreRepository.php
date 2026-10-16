@@ -6,6 +6,7 @@ namespace Vaulter\Repositories\Sharing;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\Role;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Drive\Node;
@@ -18,6 +19,7 @@ use Vaulter\Models\Sharing\NodeShare;
  * does. Authorization and token minting/hashing happen upstream (Action); this is
  * pure row work.
  */
+#[Internal]
 final class NodeShareStoreRepository
 {
     public function __construct(

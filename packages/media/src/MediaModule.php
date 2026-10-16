@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Doctor\DoctorCheck;
@@ -24,6 +25,7 @@ use Vaulter\Modules\VaulterModule;
  * The media module (D22): the content-addressed store engine, its blob maintenance commands and schedules,
  * its doctor checks and the content-scanner and storage-driver capabilities. Auto: the drive needs it and it opens no outbound traffic.
  */
+#[Internal]
 final class MediaModule implements VaulterModule
 {
     public function id(): ModuleId

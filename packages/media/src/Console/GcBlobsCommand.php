@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Configuration\MediaConfig;
@@ -17,6 +18,7 @@ use Vaulter\VaulterManager;
  * crashed-staging PENDING rows. The grace window comes from the configuration key ('vaulter.gc.
  * grace_hours') (floored at 1h) unless --grace overrides it.
  */
+#[Internal]
 final class GcBlobsCommand extends Command
 {
     use OpensWriteScope;

@@ -6,6 +6,7 @@ namespace Vaulter\Http\Controllers\Webhooks;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Actions\Webhooks\UpdateWebhookEndpointAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException;
 use Vaulter\Http\Requests\Webhooks\UpdateWebhookEndpointRequest;
 use Vaulter\Http\Resources\Webhooks\WebhookEndpointResource;
@@ -13,6 +14,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Repositories\Webhooks\WebhookEndpointReadRepository;
 use Vaulter\Webhooks\WebhookEndpointWrites;
 
+#[Internal]
 final readonly class UpdateWebhookEndpointController
 {
     public function __construct(private WebhookEndpointReadRepository $endpoints, private UpdateWebhookEndpointAction $update, private WebhookEndpointWrites $writes) {}

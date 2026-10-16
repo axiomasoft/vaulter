@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Profiles;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * Thrown when a storage panel is looked up by an id that is not registered in
  * the ProfileRegistry (configuration key vaulter.profiles.providers plus the default panel).
  */
+#[Api]
 final class UnknownProfileException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

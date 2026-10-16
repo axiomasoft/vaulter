@@ -6,6 +6,7 @@ namespace Vaulter\Azgard;
 
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 
@@ -36,6 +37,7 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
  * else the panel of the request, else the panel of the user model (AzGuard throws when
  * none applies). Vaulter's default `documents.*` map names local keys of that panel.
  */
+#[Internal]
 final readonly class AzgardGuardAdapter implements AzgardGuard
 {
     public function __construct(

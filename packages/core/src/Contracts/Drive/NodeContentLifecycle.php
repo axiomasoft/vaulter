@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Drive;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Data\Drive\CopyResult;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
 
+#[Spi(SpiKind::Implement)]
 interface NodeContentLifecycle
 {
     public function kind(): NodeKind;

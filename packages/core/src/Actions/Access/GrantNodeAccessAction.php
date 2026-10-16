@@ -7,6 +7,7 @@ namespace Vaulter\Actions\Access;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
@@ -29,6 +30,7 @@ use Vaulter\Repositories\Access\GrantStoreRepository;
  * (controller/policy) before reaching the Action — the Action persists, it does
  * not re-authorize.
  */
+#[Internal]
 final readonly class GrantNodeAccessAction
 {
     public function __construct(

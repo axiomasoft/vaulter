@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * oversized body is refused before it is buffered whole — a broken/hostile receiver
  * cannot OOM the delivery worker.
  */
+#[Internal]
 final class WebhookResponseTooLargeException extends VaulterException
 {
     public static function declared(int $bytes, int $limit): self

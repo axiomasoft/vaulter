@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * A capability a {@see StorageDriver} implements to declare it can ENUMERATE the
  * disk and report object age. It is the seam the orphan
@@ -18,6 +21,7 @@ namespace Vaulter\Contracts\Cas;
  * non-listable and skipped, never a fatal error). The standalone Flysystem storage
  * driver (vaulter-media) implements it out of the box.
  */
+#[Spi(SpiKind::Implement)]
 interface ListableStorageDriver
 {
     /**

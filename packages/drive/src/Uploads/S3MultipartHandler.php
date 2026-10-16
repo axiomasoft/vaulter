@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
@@ -39,6 +40,7 @@ use Vaulter\Support\LoadTier;
  * production. A host wanting true presigned-PUT parts swaps this handler for one that
  * mints presigned URLs in initialise(); the record/complete contract is unchanged.
  */
+#[Internal]
 final readonly class S3MultipartHandler implements UploadProtocolHandler
 {
     public function __construct(

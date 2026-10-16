@@ -6,12 +6,14 @@ namespace Vaulter\Http\Controllers\Sharing;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Http\Resources\Sharing\ShareResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** The live share links of a node (Share); tokens are never listed. */
+#[Internal]
 final readonly class ListSharesController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts) {}

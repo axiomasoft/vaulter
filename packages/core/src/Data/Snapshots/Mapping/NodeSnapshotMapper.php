@@ -6,6 +6,7 @@ namespace Vaulter\Data\Snapshots\Mapping;
 
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Collection;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\NodeSnapshotContributor;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Page;
@@ -23,9 +24,10 @@ use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * @internal Models to NodeSnapshot, in batches: one query for the file heads, one for
+ * Models to NodeSnapshot, in batches: one query for the file heads, one for
  *           the viewer's stars and one for document heads, whatever the page size.
  */
+#[Internal]
 final readonly class NodeSnapshotMapper
 {
     /** The fragment the snapshot has a place for; every other key is a core key of the snapshot or unknown to it. */

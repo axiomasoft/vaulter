@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Collaboration;
 
 use Vaulter\Access\AccessResolver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\HostUserResolver;
@@ -33,9 +34,8 @@ use Vaulter\Support\Identity;
  * tenant, the drive is active (archived: read-only), the room's epoch is the
  * document's current one, and the token subject's rights now. A revoked Edit therefore
  * takes effect on the hub's next call.
- *
- * @internal
  */
+#[Internal]
 final readonly class CollaborationHub
 {
     public function __construct(

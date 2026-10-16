@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Collaboration;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Data\Collaboration\RoomRef;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 
@@ -19,9 +20,8 @@ use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
  *                     re-check it against the live document and rights.
  *   - schemaVersion — the schema the session was issued for.
  *   - tenant        — the node's tenant when the token was issued, or null.
- *
- * @internal
  */
+#[Internal]
 final readonly class CollaborationCall
 {
     public function __construct(

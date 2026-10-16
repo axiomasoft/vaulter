@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Exceptions\Database;
 
 use Throwable;
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * A bounded outermost retry exhausted its attempts on a deadlock or serialization
  * failure. The request is safe to repeat, so the response says so instead of a 500.
  */
+#[Api]
 final class ConcurrentUpdateException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

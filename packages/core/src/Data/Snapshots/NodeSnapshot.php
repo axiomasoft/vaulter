@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Data\Snapshots;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Drive\NodeKind;
 
 /**
@@ -12,13 +14,13 @@ use Vaulter\Enums\Drive\NodeKind;
  * snapshot itself) back to any operation. Actor fields hold the host key of the
  * user, or null for the system.
  */
+#[Api]
 final readonly class NodeSnapshot
 {
     /**
-     * @internal
-     *
      * @param array<string, array<string, string>> $properties namespace => key => value
      */
+    #[Internal]
     public function __construct(
         public string $id,
         public string $driveId,

@@ -9,14 +9,16 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 use Traversable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
 use Vaulter\Models\Drive\Node;
 
 /**
- * @internal Queries return models; the public listing type is {@see Page}.
+ * Queries return models; the public listing type is {@see Page}.
  *
  * @implements IteratorAggregate<int, Node>
  */
+#[Internal]
 final readonly class NodePage implements Countable, IteratorAggregate, JsonSerializable
 {
     /** @param list<Node> $items */

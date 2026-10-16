@@ -6,6 +6,7 @@ namespace Vaulter\Http\Resources\Sharing;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\MintedShareLink;
 
 /**
@@ -15,6 +16,7 @@ use Vaulter\Data\Snapshots\MintedShareLink;
  *
  * @mixin MintedShareLink
  */
+#[Internal]
 final class MintedShareResource extends JsonResource
 {
     /** @param string $urlBase the public share URL base the token is appended to */

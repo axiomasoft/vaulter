@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Webhooks\UpdateWebhookEndpointInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -29,6 +30,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  *
  * Authorization is enforced by the caller before the Action runs.
  */
+#[Internal]
 final readonly class UpdateWebhookEndpointAction
 {
     public function __construct(

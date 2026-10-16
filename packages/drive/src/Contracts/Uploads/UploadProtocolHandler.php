@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Contracts\Uploads;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 
@@ -21,6 +23,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
  * — assembled bytes ALWAYS go through the one race-free CAS, server-rehashed — holds
  * identically for both protocols.
  */
+#[Spi(SpiKind::Implement)]
 interface UploadProtocolHandler
 {
     /**

@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Output\OutputInterface;
+use Vaulter\Attributes\Internal;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorReport;
@@ -19,6 +20,7 @@ use Vaulter\Kernel;
  * Read-only diagnosis of the host's Vaulter setup. It never repairs anything; a finding's
  * hint names the command that does.
  */
+#[Internal]
 final class DoctorCommand extends Command
 {
     protected $signature = 'vaulter:doctor

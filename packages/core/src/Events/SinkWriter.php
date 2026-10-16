@@ -6,6 +6,8 @@ namespace Vaulter\Events;
 
 use Illuminate\Database\Connection;
 use LogicException;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Database\VaulterDatabase;
 
 /**
@@ -14,6 +16,7 @@ use Vaulter\Database\VaulterDatabase;
  * outbox of one event, so a sink can hand a value to the ones after it — the drive's change journal shares
  * its seq, which the outbox envelope carries.
  */
+#[Spi(SpiKind::Call)]
 final class SinkWriter
 {
     /** The change-journal seq of the event, shared by the drive's journal sink. */

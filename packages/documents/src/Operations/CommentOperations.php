@@ -6,6 +6,8 @@ namespace Vaulter\Documents\Operations;
 
 use Closure;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveExtension;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
@@ -39,8 +41,10 @@ use Vaulter\Support\Identity;
  * A comment id is resolved only inside the addressed node, so another node's comment
  * is "not found" (comment_not_found). The drive profile must enable comments.
  */
+#[Api]
 final readonly class CommentOperations implements DriveExtension
 {
+    #[Internal]
     public function __construct(
         private DriveContext $context,
         private NodeLocator $locator,

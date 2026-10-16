@@ -7,10 +7,12 @@ namespace Vaulter\Http\Controllers\Webhooks;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vaulter\Actions\Webhooks\DeleteWebhookEndpointAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException;
 use Vaulter\Repositories\Webhooks\WebhookEndpointReadRepository;
 use Vaulter\Webhooks\WebhookEndpointWrites;
 
+#[Internal]
 final readonly class DeleteWebhookEndpointController
 {
     public function __construct(private WebhookEndpointReadRepository $endpoints, private DeleteWebhookEndpointAction $delete, private WebhookEndpointWrites $writes) {}

@@ -6,9 +6,11 @@ namespace Vaulter\Data\Snapshots\Mapping;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use Vaulter\Attributes\Internal;
 use Vaulter\Support\Identity;
 
 /** @internal Scalar conversions shared by the snapshot mappers. */
+#[Internal]
 final readonly class SnapshotValue
 {
     private function __construct() {}

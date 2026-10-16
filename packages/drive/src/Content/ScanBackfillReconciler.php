@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Content;
 
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Actions\Content\RequestScanWorkAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
@@ -14,6 +15,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
+#[Internal]
 final readonly class ScanBackfillReconciler
 {
     public function __construct(private VaulterConfig $config, private VaulterDatabase $database,

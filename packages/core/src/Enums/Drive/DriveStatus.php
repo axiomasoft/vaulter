@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Drive;
 
+use Vaulter\Attributes\Api;
+
 /**
  * The lifecycle of a drive. An archived drive is read-only; a drive
  * being deleted is invisible to everyone but the system purge. Clients must treat a
@@ -11,6 +13,7 @@ namespace Vaulter\Enums\Drive;
  *
  * @closed
  */
+#[Api]
 enum DriveStatus: string
 {
     case Active = 'active';

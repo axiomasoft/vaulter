@@ -6,6 +6,7 @@ namespace Vaulter\Doctor;
 
 use Illuminate\Contracts\Container\Container;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Kernel;
 
@@ -14,6 +15,7 @@ use Vaulter\Kernel;
  * is the check's own key. Checks a host tags `vaulter.doctor_checks` join them (the packages declare
  * theirs in their manifests).
  */
+#[Internal]
 final readonly class DoctorRegistry
 {
     public const string TAG = 'vaulter.doctor_checks';

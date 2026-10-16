@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\DocumentHeadSnapshot;
 use Vaulter\Data\Snapshots\FileHeadSnapshot;
 use Vaulter\Data\Snapshots\NodeSnapshot;
@@ -21,9 +22,8 @@ use Vaulter\Idempotency\ResourceRef;
  * The receipt of a write that answers a {@see NodeSnapshot} (folders.create, nodes.rename): the snapshot built from
  * the locked state at commit, field by field, so a replay returns exactly what the first request returned — its
  * ETag is historical and never satisfies a later If-Match by itself. Version 1.
- *
- * @internal
  */
+#[Internal]
 final class NodeSnapshotCodec implements ReceiptCodec
 {
     public const string KIND = 'drive.node-snapshot';

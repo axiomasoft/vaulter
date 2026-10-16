@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Observability;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
+#[Internal]
 final class NullMetricsRecorder implements MetricsRecorder
 {
     /** @param array<string, bool|int|float|string> $labels */

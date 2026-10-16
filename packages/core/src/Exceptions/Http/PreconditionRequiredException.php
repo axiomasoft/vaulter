@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Http;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * A mutating request omitted the validator header the route requires (RFC 6585 428),
  * so the server cannot tell which representation the client saw.
  */
+#[Api]
 final class PreconditionRequiredException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

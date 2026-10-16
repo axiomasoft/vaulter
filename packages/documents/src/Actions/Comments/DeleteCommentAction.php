@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Comments;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
@@ -22,6 +23,7 @@ use Vaulter\Support\TreeGuard;
  * {@see CommentDeleted} is delivered after the outermost commit; the in-memory model
  * still carries its id/node_id for the broadcast payload.
  */
+#[Internal]
 final readonly class DeleteCommentAction
 {
     public function __construct(

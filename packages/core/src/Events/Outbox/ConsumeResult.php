@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Outbox;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * What an {@see OutboxConsumer} did with one envelope: done, retry later (with backoff until the attempt budget
  * runs out), or dead at once.
  */
+#[Spi(SpiKind::Call)]
 final readonly class ConsumeResult
 {
     public const string DONE = 'done';

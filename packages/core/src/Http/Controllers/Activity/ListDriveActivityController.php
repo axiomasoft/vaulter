@@ -6,6 +6,7 @@ namespace Vaulter\Http\Controllers\Activity;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Support\LoadTier;
 
 /** The drive's activity the caller may see (View on the root), newest first. */
+#[Internal]
 final readonly class ListDriveActivityController
 {
     public function __construct(private HttpOperationContextFactory $contexts, private MetricsRecorder $metrics, private VaulterConfig $config) {}

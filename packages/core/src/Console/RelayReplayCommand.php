@@ -6,6 +6,7 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Events\Outbox\OutboxRelay;
 
@@ -15,6 +16,7 @@ use Vaulter\Events\Outbox\OutboxRelay;
  * range covers. --ack-only acknowledges the loss without a replay. Exits 1 when part of the range is no longer in
  * the outbox, and prints the range it covered.
  */
+#[Internal]
 final class RelayReplayCommand extends Command
 {
     use OpensWriteScope;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\PruneWebhooksCommand;
 use Vaulter\Console\RedeliverWebhooksCommand;
 use Vaulter\Console\RetryWebhooksCommand;
@@ -21,6 +22,7 @@ use Vaulter\Modules\VaulterModule;
  * secret configuration, so activating it without any is not an error. It relays drive events, so it
  * requires the drive module.
  */
+#[Internal]
 final class WebhooksModule implements VaulterModule
 {
     public function id(): ModuleId

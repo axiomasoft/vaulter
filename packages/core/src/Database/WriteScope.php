@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Database;
 
 use Closure;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 
@@ -15,9 +16,8 @@ use Vaulter\Exceptions\Database\WriteOutsideOperationException;
  * cannot bypass the invariants and the authorization of the Operations by saving a
  * model it got hold of). Bound as a scoped service: one counter per request, job or
  * Octane tick. It is not a sandbox; DB::table() and raw SQL are not intercepted.
- *
- * @internal
  */
+#[Internal]
 final class WriteScope
 {
     private int $depth = 0;

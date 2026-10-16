@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -42,6 +43,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * root node, and root_node_id is repointed at it once it exists (the schema leaves
  * that pair without a hard FK to dodge the chicken-and-egg insert order).
  */
+#[Internal]
 final readonly class DriveProvisioner
 {
     public function __construct(

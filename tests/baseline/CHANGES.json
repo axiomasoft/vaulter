@@ -4431,6 +4431,16 @@
       ],
       "reason": "the neutral outbox schema (D29)",
       "decision": "D29"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Arch\\PublicApiSnapshotTest::__pest_evaluable_vaulter_core_public_API_surface_matches_the_frozen_golden__VLT_REL_P2_2_",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Arch\\SurfaceManifestTest::__pest_evaluable_it_keeps_the_committed_surface_manifest_of_core_equal_to_the_attributes_of_its_code",
+        "P\\Packages\\core\\tests\\Arch\\SurfaceManifestTest::__pest_evaluable_it_marks_every_type_of_core_with_exactly_one_surface_attribute"
+      ],
+      "reason": "the hand-listed contract snapshot of core is replaced by the manifest generated from the #[Api]/#[Spi]/#[Internal] attributes (packages/*/tests/Arch/__snapshots__/surface.txt)",
+      "decision": "D27"
     }
   ],
   "additions": {

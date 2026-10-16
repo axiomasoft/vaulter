@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use stdClass;
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Data\Snapshots\NodeSnapshot;
@@ -24,6 +25,7 @@ use Vaulter\ValueObjects\Handlers\NodePresentation;
  * is the caller's representation tag: it changes whenever anything below changes for
  * this caller, its abilities and starred flag included.
  */
+#[Internal]
 final class NodeResource extends JsonResource
 {
     /** @var array<string, mixed> */

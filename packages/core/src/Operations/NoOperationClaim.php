@@ -6,14 +6,14 @@ namespace Vaulter\Operations;
 
 use Closure;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Idempotency\IdempotentWrite;
 
 /**
  * A pipeline without idempotency (a runner built by hand in a test): a key is refused before the
  * transaction, so it is never silently ignored.
- *
- * @internal
  */
+#[Internal]
 final readonly class NoOperationClaim implements OperationClaim
 {
     public function admit(Operation $operation, ?IdempotentWrite $idempotency): void

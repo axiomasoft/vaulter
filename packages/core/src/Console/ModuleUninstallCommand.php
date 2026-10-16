@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleState;
@@ -19,6 +20,7 @@ use Vaulter\Modules\VaulterModule;
  * (roll the owner's migrations back) and `--purge` (delete its rows and pins) refuse until P4 splits the
  * create-migrations by owner. Never drops a table it does not own, and disabling a module never calls it.
  */
+#[Internal]
 final class ModuleUninstallCommand extends Command
 {
     protected $signature = 'vaulter:module:uninstall

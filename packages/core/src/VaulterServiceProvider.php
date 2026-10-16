@@ -8,6 +8,7 @@ use Illuminate\Console\Application as Artisan;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\RoutesConfig;
@@ -27,6 +28,7 @@ use Vaulter\Webhooks\WebhooksModule;
  * it compiles every offered manifest once all providers registered, seals the result and applies the
  * declarations of the active modules (ADR-0027). It registers nothing else itself.
  */
+#[Api]
 final class VaulterServiceProvider extends PackageServiceProvider
 {
     use OffersModules;

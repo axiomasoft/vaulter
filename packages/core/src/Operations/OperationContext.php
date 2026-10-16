@@ -6,6 +6,7 @@ namespace Vaulter\Operations;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;
@@ -16,6 +17,7 @@ use Vaulter\ValueObjects\Operations\TenantRef;
  * so the kernel's operation pipeline needs no module's ORM. Drive paths receive a
  * DriveContext, which pairs this context with the bound drive.
  */
+#[Api]
 final readonly class OperationContext
 {
     /** The reason a system actor runs this operation; null for any other actor. */

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Idempotency\IdempotencyDigest;
 use Vaulter\Idempotency\IdempotencyOutcome;
 
@@ -22,6 +23,7 @@ use Vaulter\Idempotency\IdempotencyOutcome;
  *
  * The IETF idempotency-key draft expired unpublished; this follows its shape without claiming conformance.
  */
+#[Internal]
 final readonly class ReadIdempotencyKey
 {
     public const string ALIAS = 'vaulter.idempotency';

@@ -7,11 +7,13 @@ namespace Vaulter\Documents\Console;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 
 /**
  * Scaffolds a host-owned document exporter. Registration stays explicit: the command
  * prints the config line instead of editing the host's config.
  */
+#[Internal]
 final class MakeExporterCommand extends Command
 {
     protected $signature = 'vaulter:make:exporter

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Outbox;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Events\EventTypeContract;
 
 /**
@@ -16,6 +18,7 @@ use Vaulter\Events\EventTypeContract;
  * A consumer changes the core tables only through {@see DeliveryControl}; it deduplicates by
  * {@see OutboxEnvelope::$eventId} and expects no order between events.
  */
+#[Spi(SpiKind::Implement)]
 interface OutboxConsumer
 {
     /** The consumer id; equal to the id of its slot contribution. */

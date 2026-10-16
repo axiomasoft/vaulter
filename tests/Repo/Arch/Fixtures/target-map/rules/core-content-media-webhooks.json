@@ -33,70 +33,60 @@
             "match": "prefix",
             "value": "Vaulter\\Cas\\",
             "owner": "media",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Cas (1) -> media (the blob lock is the media GC/promote lock)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Contracts\\Cas\\",
             "owner": "media",
-            "surface": "Spi:Implement",
             "why": "architecture#ownership-map: Contracts/Cas/* -> media; storage drivers, content stores, scanners and signers are implemented by hosts and adapters (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Cas\\BlobStore",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Cas -> media; the blob store drive calls (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Cas\\StagedObject",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Cas -> media; handle returned by the staging API of BlobStore (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Models\\Cas\\",
             "owner": "media",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Models/Cas/Blob -> media (Eloquent, D27 internal)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Repositories\\Cas\\",
             "owner": "media",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Repositories/Cas -> media"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Enums\\Cas\\",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map: Enums by domain owner: BlobStatus/ScanVerdict/ScanMode are visible from the ContentScanner SPI and media signatures"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\ValueObjects\\Cas\\",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map: ValueObjects by domain owner: BlobScope is visible from BlobStore (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Content\\ScanResult",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map Content + D28 (scan_* and scan state are drive): pure scanner result value, the return type of the ContentScanner SPI"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Content\\ScanInput",
             "owner": "media",
-            "surface": "Api",
             "note": "open: carries drive vocabulary (revisionId, driveId, tenantId); the media SPI needs a neutral input shape (P3/P4)",
             "why": "architecture#ownership-map Content + D28 (scan_* and scan state are drive): the input of the ContentScanner SPI"
         },
@@ -104,196 +94,168 @@
             "match": "fqcn",
             "value": "Vaulter\\Content\\ImmutableContentIdentity",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map Content: identity of exact blob bytes, the argument of the media DirectContentUrlSigner contract (no reverse media->drive reference)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Content\\SignedContentUrl",
             "owner": "media",
-            "surface": "Api",
             "why": "architecture#ownership-map Content: the capability returned by the media DirectContentUrlSigner contract (no reverse media->drive reference); delivery orchestration (ContentDelivery) stays drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Content\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map Content + D28 (scan_* and scan state are drive): scan state, lease/retry/admission, quarantine, delivery -> drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Content\\ScanPolicySpec",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map Content + D28 (scan_* and scan state are drive): scan policy (predicate, rollout, admission sequence) belongs to scan admission -> drive (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Content\\ContentAvailabilityGuard",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map Content + D28 (scan_* and scan state are drive): ContentAvailabilityGuard is drive (quarantine/availability of revisions)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Content\\ContentDelivery",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map Content: delivery/URL signing orchestration -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Actions\\Content\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map Actions/Content + D28 (scan_* and scan state are drive): scan work lease/retry/settle actions -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Models\\Content\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map Models/Content + D28 (scan_* and scan state are drive): all scan_* tables have drive/revision/obligation FK -> drive (Eloquent, D27 internal)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Repositories\\Content\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map Repositories/Content + D28 (scan_* and scan state are drive): scan state repositories -> drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Content\\ScanPolicyResolver",
             "owner": "drive",
-            "surface": "Spi:Implement",
             "why": "architecture#ownership-map Contracts/Content + D28 (scan_* and scan state are drive): resolves the scan policy of a drive/revision -> drive; implementable by hosts"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Content\\ScanWorkSettings",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map Contracts/Content + D28 (scan_* and scan state are drive): lease/attempt settings of scan work -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Exceptions\\Content\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Exceptions by domain owner: quarantine exception a host catches on content access -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#packages / architecture#ownership-map: Webhooks (all but the outbox) -> webhooks (signing, SSRF guard, retry, secrets)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Webhooks\\StandardWebhookVerifier",
             "owner": "webhooks",
-            "surface": "Api",
             "why": "architecture#packages / architecture#ownership-map: Webhooks (all but the outbox) -> webhooks; the receiver-side verifier a host may use to check signatures"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Webhooks\\Events\\WebhookEndpointDisabled",
             "owner": "webhooks",
-            "surface": "Api",
             "why": "architecture#packages / architecture#ownership-map: Webhooks (all but the outbox) -> webhooks; domain event of the webhooks module consumed by host listeners"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Actions\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Actions/Webhooks -> webhooks"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Contracts\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Spi:Implement",
             "why": "architecture#packages: OutboundUrlGuard and HostResolver contracts belong to webhooks and are overridden by hosts (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Models\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Models/Webhooks/{WebhookEndpoint,WebhookDelivery} -> webhooks (Eloquent, D27 internal)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Repositories\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Repositories/Webhooks -> webhooks"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Jobs\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Jobs/Webhooks -> webhooks (queued job class names are a protocol identity, P2.3)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Controllers\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http/Controllers/Webhooks -> webhooks (admin HTTP is identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Data\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Data by domain owner: webhook endpoint inputs/results; no PHP Operation exposes them"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Exceptions\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Exceptions by domain owner: webhook exceptions are rendered as problems; no PHP Operation throws them to hosts"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\ValueObjects\\Webhooks\\",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: ValueObjects by domain owner: pinned outbound endpoint of the SSRF guard"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Policies\\WebhookEndpointPolicy",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Policies -> webhooks (policy of webhook endpoints)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Console\\PruneWebhooksCommand",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Console/{Relay,Retry,Redeliver,Prune}WebhooksCommand -> webhooks (prune; CLI is identity surface)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Console\\RedeliverWebhooksCommand",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Console/{Relay,Retry,Redeliver,Prune}WebhooksCommand -> webhooks (redeliver; CLI is identity surface)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Console\\RetryWebhooksCommand",
             "owner": "webhooks",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Console/{Relay,Retry,Redeliver,Prune}WebhooksCommand -> webhooks (retry; CLI is identity surface)"
         }
     ]

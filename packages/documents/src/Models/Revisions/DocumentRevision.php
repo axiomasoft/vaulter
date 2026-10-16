@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Content\OpaqueContent;
@@ -45,6 +46,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property-read Document              $document
  * @property-read DocumentRevision|null $restoredFrom
  */
+#[Internal]
 class DocumentRevision extends Model
 {
     use GuardsWrites;

@@ -6,6 +6,7 @@ namespace Vaulter\Access\ValueObjects;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 
@@ -19,6 +20,7 @@ use Vaulter\Models\Drive\Node;
  * When there is no acting user (an unauthenticated/system context), every flag is
  * false: the client shows a read-only shell rather than mis-advertising actions.
  */
+#[Internal]
 final readonly class NodeAbilities
 {
     /**

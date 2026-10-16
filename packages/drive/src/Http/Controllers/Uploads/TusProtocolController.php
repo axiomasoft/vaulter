@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Http\Controllers\Uploads;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -45,6 +46,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * drive is resolved tenant-scoped and the operations then decide, so an unknown,
  * foreign or someone else's session all answer not found.
  */
+#[Internal]
 final class TusProtocolController
 {
     private const string TUS_VERSION = '1.0.0';

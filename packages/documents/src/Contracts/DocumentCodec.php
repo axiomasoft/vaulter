@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 
 /** Turns raw client JSON into the content of one document type. */
+#[Spi(SpiKind::Implement)]
 interface DocumentCodec
 {
     /**

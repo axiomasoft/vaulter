@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Cas;
 
 use RuntimeException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\ListableContentStore;
 use Vaulter\Contracts\Cas\ListableStorageDriver;
@@ -21,6 +22,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  * cannot clobber, and on S3 attaches x-amz-checksum-sha256 for server-side
  * verification (config-aware; ignored by the local/sqlite test disk).
  */
+#[Internal]
 final readonly class Sha256ContentStore implements ContentStore, ListableContentStore
 {
     /**

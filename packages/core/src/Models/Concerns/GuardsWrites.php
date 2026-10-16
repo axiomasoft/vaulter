@@ -7,6 +7,7 @@ namespace Vaulter\Models\Concerns;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
+use Vaulter\Attributes\Api;
 use Vaulter\Database\GuardedBuilder;
 use Vaulter\Database\GuardedCteBuilder;
 use Vaulter\Database\WriteScope;
@@ -24,6 +25,7 @@ use Vaulter\Database\WriteScope;
  *
  * @mixin Model
  */
+#[Api]
 trait GuardsWrites
 {
     #[\Override]

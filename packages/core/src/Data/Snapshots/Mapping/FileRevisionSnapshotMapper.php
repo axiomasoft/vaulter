@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Snapshots\Mapping;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Enums\Drive\ScanStatus;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 
 /** @internal */
+#[Internal]
 final readonly class FileRevisionSnapshotMapper
 {
     public function map(FileRevision $revision, File $file): FileRevisionSnapshot

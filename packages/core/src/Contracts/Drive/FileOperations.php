@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Drive;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Drive\FileStream;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\RevisionOptions;
@@ -15,6 +16,7 @@ use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
 use Vaulter\Exceptions\Drive\RevisionPinnedException;
 
+#[Api]
 interface FileOperations
 {
     public function upload(UploadSource $source, ?UploadOptions $options = null): NodeSnapshot;

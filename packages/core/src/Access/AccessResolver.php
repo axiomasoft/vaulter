@@ -14,6 +14,7 @@ use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
@@ -49,6 +50,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * Expiry is read-time (filtered in the grant query). The ancestor walk is bounded
  * to the drive and to NodeReadRepository::DEFAULT_MAX_DEPTH.
  */
+#[Internal]
 final class AccessResolver
 {
     public function __construct(

@@ -12,11 +12,13 @@ use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
 
 use Vaulter\Access\PermissionDriverCatalog;
+use Vaulter\Attributes\Internal;
 
 /**
  * Publishes the config of every installed Vaulter package and prints the host
  * settings it will not touch: host config and .env stay under the host's control.
  */
+#[Internal]
 final class InstallCommand extends Command
 {
     private const string DEFAULT_MIDDLEWARE = 'auth:sanctum';

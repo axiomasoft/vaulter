@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
@@ -17,6 +18,7 @@ use Vaulter\Models\Drive\FileRevisionBlob;
  * reconciled cache. Opens no transactions (the caller wraps it). Idempotent
  * upsert so a re-attach of the same (version, blob, role, ordinal) is a no-op.
  */
+#[Internal]
 final readonly class FileRevisionBlobStoreRepository
 {
     public function __construct(

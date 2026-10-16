@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Sharing;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** A share link cannot carry this role for this audience. */
+#[Api]
 final class ShareRoleNotAllowedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

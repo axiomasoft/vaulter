@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Uploads;
 use InvalidArgumentException;
 use RuntimeException;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Content\UploadCleanupReconciler;
@@ -27,6 +28,7 @@ use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Support\NodeName;
 
+#[Internal]
 final readonly class CompleteUploadAction
 {
     public function __construct(

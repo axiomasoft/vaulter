@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Configuration\ChangesConfig;
 use Vaulter\Configuration\DownloadsConfig;
@@ -38,6 +39,7 @@ use Vaulter\VaulterManager;
  * sharing, listing and downloads config, file handlers and presentation, the drive read repository, the
  * `Vaulter` manager and the public-share and upload rate limiters.
  */
+#[Internal]
 final class DriveSliceRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

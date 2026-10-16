@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Documents;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\ContentDecoder;
@@ -36,6 +37,7 @@ use Vaulter\Support\TreeGuard;
  * One outer transaction under T → N → D locks; a single after-commit event when the
  * write changed something.
  */
+#[Internal]
 final readonly class UpdateDocumentContentAction
 {
     public function __construct(

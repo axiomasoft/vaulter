@@ -7,6 +7,7 @@ namespace Vaulter\Media\Providers;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
@@ -19,6 +20,7 @@ use Vaulter\Modules\ModuleBindings;
  * The container wiring of the media module: the configured CAS engine (ContentStore, BlobStore; the
  * StorageDriver is a capability of the manifest) and its config validation, failing at boot on a bad class or value.
  */
+#[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

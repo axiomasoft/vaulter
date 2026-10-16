@@ -6,6 +6,7 @@ namespace Vaulter\Content;
 
 use DateTimeImmutable;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DownloadsConfig;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
@@ -25,6 +26,7 @@ use Vaulter\Sharing\ShareContext;
 use Vaulter\Sharing\ShareResolver;
 
 /** Every new byte or capability request enters fresh authorization and availability. */
+#[Internal]
 final readonly class ContentDelivery
 {
     public function __construct(private NodeLocator $locator, private OperationGuard $access, private ContentAvailabilityGuard $availability, private DownloadGuards $guards, private BlobStore $blobs, private DownloadsConfig $downloads, private ScanEvidenceRepository $evidence, private FileRevisionSnapshotMapper $revisions) {}

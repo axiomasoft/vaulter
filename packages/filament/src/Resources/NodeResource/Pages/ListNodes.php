@@ -6,8 +6,10 @@ namespace Vaulter\Filament\Resources\NodeResource\Pages;
 
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Table;
+use Vaulter\Attributes\Internal;
 use Vaulter\Filament\Resources\NodeResource;
 
+#[Internal]
 final class ListNodes extends ListRecords
 {
     protected static string $resource = NodeResource::class;

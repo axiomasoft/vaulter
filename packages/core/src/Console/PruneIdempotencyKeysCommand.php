@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Idempotency\IdempotencyStore;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Idempotency\IdempotencyStore;
  * {@see self::BATCH}. Only completed receipts are deleted: a claim is never committed, so there is none to prune.
  * An expired receipt is already ignored by a retry; pruning only reclaims space. Scheduled daily.
  */
+#[Internal]
 final class PruneIdempotencyKeysCommand extends Command
 {
     public const int BATCH = 1000;

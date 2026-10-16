@@ -7,6 +7,7 @@ namespace Vaulter\Http\Controllers\Webhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Resources\Webhooks\WebhookDeliveryResource;
@@ -15,6 +16,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
 use Vaulter\Repositories\Webhooks\WebhookEndpointReadRepository;
 
+#[Internal]
 final readonly class ListWebhookDeliveriesController
 {
     public function __construct(private WebhookEndpointReadRepository $endpoints, private WebhookDeliveryStoreRepository $deliveries) {}

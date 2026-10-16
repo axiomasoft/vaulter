@@ -9,7 +9,9 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use LogicException;
+use Vaulter\Attributes\Api;
 
+#[Api]
 final readonly class Actor
 {
     private function __construct(

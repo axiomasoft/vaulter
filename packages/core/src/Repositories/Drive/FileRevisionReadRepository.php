@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
@@ -20,6 +21,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * M2 will route these through the access-aware queryForUser() seam; this slice
  * runs open.
  */
+#[Internal]
 final class FileRevisionReadRepository
 {
     public function __construct(

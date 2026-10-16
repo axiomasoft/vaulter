@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
@@ -16,6 +17,7 @@ use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
  *
  * Authorization is enforced by the caller before the Action runs.
  */
+#[Internal]
 final readonly class DeleteWebhookEndpointAction
 {
     public function __construct(

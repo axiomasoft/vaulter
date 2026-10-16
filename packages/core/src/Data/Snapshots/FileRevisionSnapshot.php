@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Data\Snapshots;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Drive\ScanStatus;
 
 /** Read-only view of one revision of a file. */
+#[Api]
 final readonly class FileRevisionSnapshot
 {
-    /** @internal */
+    #[Internal]
     public function __construct(
         public string $id,
         public string $fileNodeId,

@@ -6,9 +6,11 @@ namespace Vaulter\Tenancy;
 
 use Closure;
 use Fiber;
+use Vaulter\Attributes\Internal;
 use WeakMap;
 
 /** @internal Scoped, fiber-local maintenance state; never serialized into jobs. */
+#[Internal]
 final class TenancyBypass
 {
     /** @var WeakMap<object, int> */

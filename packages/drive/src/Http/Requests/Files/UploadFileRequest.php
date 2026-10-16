@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Requests\Files;
 
 use Illuminate\Http\UploadedFile;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
@@ -13,6 +14,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * absent) and an optional stored name. A new revision of an existing file goes to
  * POST files/{node}/revisions instead.
  */
+#[Internal]
 final class UploadFileRequest extends VaulterFormRequest
 {
     /**

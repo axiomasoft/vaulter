@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Content;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
@@ -33,11 +34,11 @@ use Vaulter\Support\Int64Counter;
  * write and collab_epoch whenever open collaboration rooms must not write back
  * (restore, an external replace). v_nodes.sequence is never touched — renaming a
  * document and editing it do not invalidate each other.
- *
- * @internal
  */
+#[Internal]
 final readonly class DocumentStateWriter
 {
+    #[Internal]
     public function __construct(
         private DocumentStoreRepository $documents,
         private DocumentRevisionStoreRepository $revisions,

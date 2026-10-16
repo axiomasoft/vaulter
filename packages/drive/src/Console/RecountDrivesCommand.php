@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Drive\Actions\Drives\RecountDriveQuotaAction;
@@ -20,6 +21,7 @@ use Vaulter\VaulterManager;
  * report the drift it finds. --dry-run reads and reports without writing.
  * It runs as maintenance outside any tenant, scoped to the drives it names.
  */
+#[Internal]
 final class RecountDrivesCommand extends Command
 {
     use OpensWriteScope;

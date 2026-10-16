@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Trash;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeTrashed;
@@ -18,6 +19,7 @@ use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
+#[Internal]
 final readonly class TrashNodeAction
 {
     public function __construct(

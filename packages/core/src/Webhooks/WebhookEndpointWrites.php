@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
@@ -25,8 +26,9 @@ use Vaulter\ValueObjects\Operations\TenantRef;
  * webhooks module: the request's user acts, the `manage` ability on endpoints is checked inside
  * the operation's transaction, and the endpoint (or the endpoint collection) is the scope.
  *
- * @internal used by the webhook endpoint controllers
+ * used by the webhook endpoint controllers
  */
+#[Internal]
 final readonly class WebhookEndpointWrites
 {
     public function __construct(

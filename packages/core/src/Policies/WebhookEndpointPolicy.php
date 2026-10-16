@@ -6,6 +6,7 @@ namespace Vaulter\Policies;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\WebhooksConfig;
 
 /**
@@ -20,6 +21,7 @@ use Vaulter\Configuration\WebhooksConfig;
  * requires auth); a host MUST define the ability in production. There is deliberately
  * no per-model argument: an endpoint is install-global, not owned by a node/storage.
  */
+#[Internal]
 final class WebhookEndpointPolicy
 {
     public function __construct(

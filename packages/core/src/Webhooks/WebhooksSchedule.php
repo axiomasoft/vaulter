@@ -6,11 +6,13 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar;
 
 /** Retry and prune of the webhooks module on the host scheduler; the outbox relay is core's (D29). */
+#[Internal]
 final class WebhooksSchedule implements ModuleSchedule
 {
     public const array KEYS = ['webhooks_retry', 'webhooks_prune'];

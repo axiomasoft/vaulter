@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Operations;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Support\Identity;
 
 /**
  * The tenant an operation runs for, tagged so that "no tenant" is an explicit value
  * (`none`) rather than a null that would weaken uniqueness or comparisons.
  */
+#[Api]
 final readonly class TenantRef
 {
     public const string NONE = 'none';

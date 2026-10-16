@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
@@ -21,6 +22,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  *
  * @property list<int|string> $nodeIds
  */
+#[Api]
 final readonly class NodePurged extends DomainEvent
 {
     public const int LISTED_NODE_IDS = 1000;

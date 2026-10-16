@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
@@ -16,8 +17,9 @@ use Vaulter\Models\Drive\FileRevision;
  * by the tenancy constraint: scan workers run outside a tenant request, so the scan Actions check tenant,
  * drive and content identity explicitly instead. Keep every such unconstrained read in this class.
  *
- * @internal Scan Actions only.
+ * Scan Actions only.
  */
+#[Internal]
 final readonly class ScanAuthorityRepository
 {
     public function __construct(private VaulterConfig $config) {}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * A properties patch broke the contract of or the drive policy limits.
  * `reason` is one of the stable codes below.
  */
+#[Api]
 final class InvalidPropertiesException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

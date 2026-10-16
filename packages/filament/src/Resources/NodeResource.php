@@ -25,6 +25,7 @@ use Illuminate\Validation\ValidationException;
 use LogicException;
 use Override;
 use UnitEnum;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Enums\Access\Ability;
@@ -49,6 +50,7 @@ use Vaulter\Models\Drive\Node;
  *
  * @phpstan-import-type NodeRow from PanelNodes
  */
+#[Internal]
 final class NodeResource extends Resource
 {
     protected static ?string $model = Node::class;

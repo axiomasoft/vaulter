@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Operations;
 use Closure;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\NodeOperations as Contract;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\ListOptions;
@@ -44,8 +46,10 @@ use Vaulter\Operations\OperationSpec;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\TreeGuard;
 
+#[Api]
 final readonly class NodeOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes, private StarNodeAction $starAction, private SetNodePropertiesAction $propertiesAction, private NodePageQuery $pages, private NodeSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     public function find(NodeSnapshot|string|int $node): NodeSnapshot

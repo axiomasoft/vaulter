@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
@@ -12,8 +14,10 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
  * a positive integer; an invalid one is refused rather than clamped, since a silently clamped settle window
  * could let reconciliation skip a late commit.
  */
+#[Api]
 final readonly class OutboxConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     /** Seconds an event must be old before reconciliation trusts that no smaller seq can still commit. */

@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 
 /**
  * The contributions of the active modules to each slot, read from the sealed registry. The consumer
  * that owns a slot enforces its kind (veto, narrowing, batch fragments, one call of `next`).
  */
+#[Api]
 final readonly class ExtensionRegistry
 {
+    #[Internal]
     public function __construct(
         private CompiledModules $modules,
         private Container $container,

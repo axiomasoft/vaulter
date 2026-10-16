@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Drive;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * eager quota). Checked BEFORE the blob is committed so we never store bytes we
  * must immediately reject. A null quota means unlimited and never throws.
  */
+#[Api]
 class QuotaExceededException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

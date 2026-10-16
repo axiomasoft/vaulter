@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 
 /**
  * logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads).
  *
  * Routes are resolved by their name.
  */
+#[Internal]
 final class VaulterThrottledRouteMap
 {
     /** @var array<string, string> route name => logical route id */

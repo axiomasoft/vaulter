@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\DownloadGuards;
 use Vaulter\Contracts\Tenancy\TenantResolver;
@@ -59,6 +60,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * nothing (the redemption is owned by RedeemShareLinkAction, called by
  * ResolveShareToken) and never accepts a Request.
  */
+#[Internal]
 final readonly class ShareResolver
 {
     public function __construct(

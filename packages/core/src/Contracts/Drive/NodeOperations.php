@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Drive;
 
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\MoveOptions;
@@ -12,6 +13,7 @@ use Vaulter\Data\Drive\SearchOptions;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 
+#[Api]
 interface NodeOperations
 {
     public function find(NodeSnapshot|string|int $node): NodeSnapshot;

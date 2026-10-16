@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Problems;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
@@ -18,6 +19,7 @@ use Vaulter\Http\Problems\Retryable;
  * The problem codes of the drive package: a stable public contract, so a code is added
  * here, in lang/{en,ru}/problems.php and in the reference docs together.
  */
+#[Internal]
 final class DriveProblemCodes implements ProblemCodeSource
 {
     public function translationNamespace(): string

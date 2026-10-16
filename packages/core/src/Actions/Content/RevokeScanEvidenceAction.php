@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Content;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Operations\DriveContext;
@@ -14,8 +15,9 @@ use Vaulter\Repositories\Content\ScanEvidenceRepository;
 /**
  * Revokes scan evidence so it stops qualifying as clean proof; infection stays sticky.
  *
- * @internal Trusted scoped maintenance only. Lock order: tree shared, node, file, revision, blob, then the evidence row.
+ * Trusted scoped maintenance only. Lock order: tree shared, node, file, revision, blob, then the evidence row.
  */
+#[Internal]
 final readonly class RevokeScanEvidenceAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence) {}

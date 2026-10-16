@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
@@ -13,6 +14,7 @@ use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
  * format (a spreadsheet workbook, a host's own widget); the server only bounds its
  * size.
  */
+#[Api]
 final readonly class OpaqueJsonCodec implements DocumentCodec
 {
     public function __construct(private ?int $maxSizeBytes = null) {}

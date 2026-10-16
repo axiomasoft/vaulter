@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
@@ -23,6 +24,7 @@ use Vaulter\VaulterManager;
  * drive, in this process. Schedule it daily, like vaulter:trash:purge; a drive that
  * fails is logged and the others still run.
  */
+#[Internal]
 final class PruneRevisionsCommand extends Command
 {
     use OpensWriteScope;

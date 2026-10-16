@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content\TipTap;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 
 /**
@@ -20,6 +21,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
  * The markdown schema is closed: only what Markdown can represent, so a markdown
  * document always exports without loss.
  */
+#[Api]
 final readonly class TipTapSchema
 {
     /**

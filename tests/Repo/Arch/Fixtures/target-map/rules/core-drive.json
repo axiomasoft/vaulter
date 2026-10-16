@@ -55,354 +55,301 @@
             "match": "prefix",
             "value": "Vaulter\\Models\\Drive\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Models/Drive -> drive (Eloquent, D27 internal)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Models\\Activity\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Models/Activity -> drive (Eloquent, D27 internal)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Repositories\\Drive\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Repositories/Drive -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Repositories\\Activity\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Repositories/Activity -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Repositories\\Changes\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Repositories/Changes -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Controllers\\Activity\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http controllers of Activity are domain controllers -> drive (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Http\\Controllers\\Changes\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Http controllers of Changes are domain controllers -> drive (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Queries\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Queries (2) -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Activity\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Activity (1) -> drive (EventSink of drive)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Changes\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Changes (2) -> drive (EventSink of drive)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Quota\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Quota (1) -> drive"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Data\\Activity\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Data by domain owner: the activity command is an Action input, not host API"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Data\\Changes\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Data by domain owner: change feed pages are read through REST, no PHP Operation exposes them today"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Enums\\Changes\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Enums by domain owner: change-feed enums are carried by REST payloads"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Support\\DriveLifecycle",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Support helper of the drive lifecycle -> drive (owner of the concept)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Support\\DriveNameRules",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Support helper of drive names -> drive (owner of the concept)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Support\\NodeName",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Support: NodeName is domain naming -> drive (architecture#kernel: no NodeName in core)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Support\\TreeGuard",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Support helper of tree invariants -> drive (owner of the concept)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Operations\\ChangeOperations",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Operations/ChangeOperations -> drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Operations\\NodeSequence",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Operations/NodeSequence -> drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Console\\PruneChangesCommand",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Console/PruneChangesCommand -> drive (CLI is identity surface)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Console\\ResetChangesCommand",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Console/ResetChangesCommand -> drive (CLI is identity surface)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Console\\MakeFileHandlerCommand",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Console: the file handler scaffold is a drive concept -> drive (CLI is identity surface)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Console\\MakeProfileCommand",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Console: the profile scaffold is a drive concept -> drive (CLI is identity surface)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Contracts\\Drive\\",
             "owner": "drive",
-            "surface": "Spi:Implement",
             "why": "architecture#ownership-map: Contracts/Drive/* -> drive; the lifecycle/head contracts are implemented by modules (documents, scanners)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Drive\\FileOperations",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Drive -> drive; typed operations/handle a host calls (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Drive\\FolderOperations",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Drive -> drive; typed operations/handle a host calls (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Drive\\NodeOperations",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Drive -> drive; typed operations/handle a host calls (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Drive\\TrashOperations",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Drive -> drive; typed operations/handle a host calls (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Drive\\DriveHandle",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Drive -> drive; typed operations/handle a host calls (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Drive\\DriveHandleFactory",
             "owner": "drive",
-            "surface": "Internal",
-            "note": "baseline: public in the 0.x snapshot; after the entry point moves to drive (D10) it has no consumer outside drive; P3 decides publication (D27)",
+            "note": "baseline: public in the 0.x snapshot; after the entry point moves to drive (D10) it has no consumer outside drive; P3.17 decided: Internal (D27)",
             "why": "architecture#ownership-map: Contracts/Drive -> drive; the factory VaulterManager probes (architecture#entry-point), no consumer outside drive once the entry point moves"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Contracts\\Handlers\\",
             "owner": "drive",
-            "surface": "Spi:Implement",
             "why": "architecture#ownership-map: Contracts/Handlers/* -> drive; handlers and presenters are implemented by hosts and modules"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Handlers\\FileHandlerRegistry",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Handlers -> drive; hosts register handlers through the registry (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Contracts\\Presentation\\",
             "owner": "drive",
-            "surface": "Spi:Implement",
             "why": "architecture#ownership-map: Contracts/Presentation/* -> drive; KindPresenter is implemented by modules (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Contracts\\Activity\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Contracts/Activity -> drive; typed ActivityOperations a host calls (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Contracts\\Profiles\\ProfileOption",
             "owner": "drive",
-            "surface": "Spi:Implement",
             "why": "architecture#extension-system: ProfileOption is the drive slot (Handler keyed by option name) that replaced Contracts/Profiles/CommentsFeature; documents implements it"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Handlers\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Handlers (6) -> drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Handlers\\AbstractFileHandler",
             "owner": "drive",
-            "surface": "Spi:Implement",
             "why": "architecture#ownership-map: Handlers -> drive; hosts extend it to write a handler (base of the FileHandler SPI)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Naming\\",
             "owner": "drive",
-            "surface": {
-                "interface": "Spi:Implement",
-                "*": "Api"
-            },
             "why": "architecture#ownership-map: Naming (3) -> drive; NamePolicy is implemented by hosts, the built-in policies are selected by hosts (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Profiles\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: Profiles (11) -> drive"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Profiles\\DrivePolicy",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Profiles -> drive; the profile model hosts configure (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Profiles\\DrivePolicyBuilder",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Profiles -> drive; the profile model hosts configure (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Profiles\\Profile",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Profiles -> drive; the profile model hosts configure (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Profiles\\ProfileRegistry",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Profiles -> drive; the profile model hosts configure (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Profiles\\RevisionRetentionPolicy",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Profiles -> drive; the profile model hosts configure (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Profiles\\UploadPolicy",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Profiles -> drive; the profile model hosts configure (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Profiles\\ProfileProvider",
             "owner": "drive",
-            "surface": "Spi:Implement",
             "why": "architecture#ownership-map: Profiles -> drive; hosts extend it to provide profiles (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Data\\Drive\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Data by domain owner: Operation options/results (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Data\\Snapshots\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Data/Snapshots -> drive; snapshots are the supported outputs that replace Eloquent models (D27, baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Data\\Snapshots\\Mapping\\",
             "owner": "drive",
-            "surface": "Internal",
             "why": "architecture#ownership-map: snapshot mappers of drive concepts -> drive (the mappers read Eloquent models, D27 internal)"
         },
         {
@@ -411,7 +358,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "generic base of snapshot mappers; drive mappers depend on it (kernel -> no domain knowledge)",
             "why": "architecture#kernel: Снимки — base rules of snapshot mappers stay in the kernel; SnapshotValue is the generic scalar/time/id conversion shared by the mappers"
         },
@@ -419,21 +365,18 @@
             "match": "prefix",
             "value": "Vaulter\\Enums\\Drive\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Enums by domain owner: drive enums are visible from options and snapshots (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Enums\\Handlers\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Enums by domain owner: Capability is visible from handler descriptors"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Enums\\Operations\\OperationKind",
             "owner": "drive",
-            "surface": "Api",
             "note": "closed enum leaves the kernel; the kernel pipeline uses open operation names (P3)",
             "why": "architecture#kernel: у core нет closed OperationKind enum -> drive (baseline (core PublicApiSnapshot) lists it)"
         },
@@ -441,42 +384,36 @@
             "match": "prefix",
             "value": "Vaulter\\ValueObjects\\Handlers\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: ValueObjects by domain owner: handler descriptors (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Exceptions\\Changes\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Exceptions by domain owner: change feed exceptions a host catches"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Exceptions\\Drive\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Exceptions by domain owner: drive state, quota and revisions exceptions a host catches"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Exceptions\\Files\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Exceptions by domain owner: file content exceptions a host catches"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Exceptions\\Nodes\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Exceptions by domain owner: tree nodes exceptions a host catches"
         },
         {
             "match": "prefix",
             "value": "Vaulter\\Exceptions\\Profiles\\",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Exceptions by domain owner: profiles exceptions a host catches"
         },
         {
@@ -485,7 +422,6 @@
             "owner": "core",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "note": "thrown by the core Int64Counter (node sequence, state version, epoch)",
             "why": "architecture#kernel: Идентичность — the generic BIGINT counter contract (Int64Counter) stays in core and throws it"
         },
@@ -493,28 +429,24 @@
             "match": "fqcn",
             "value": "Vaulter\\Operations\\ActivityOperations",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Operations/ActivityOperations -> drive (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Operations\\DriveContext",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#kernel: the drive-bound operation context (OperationContext + Drive) is owned by drive; core namespace until P4 (P3.8)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Operations\\NodeLocator",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Operations/NodeLocator -> drive (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
             "value": "Vaulter\\Concerns\\HasDrives",
             "owner": "drive",
-            "surface": "Api",
             "why": "architecture#ownership-map: Concerns/HasDrives -> drive; the trait a host owner model uses (host-input type)"
         },
         {
@@ -523,7 +455,6 @@
             "owner": "drive",
             "action": "replace",
             "phase": "P4",
-            "surface": "Api",
             "target": "Vaulter\\Drive\\Vaulter",
             "note": "replaced by Vaulter\\Drive\\Vaulter (#[Api], final); withoutTenancy moves to core Tenancy::without",
             "why": "architecture#entry-point: VaulterManager moves to drive as the typed Vaulter\\Drive\\Vaulter (D10)"
@@ -534,7 +465,6 @@
             "owner": "drive",
             "action": "replace",
             "phase": "P4",
-            "surface": "Api",
             "target": "Vaulter\\Drive\\Facades\\Vaulter",
             "note": "replaced by Vaulter\\Drive\\Facades\\Vaulter; the Laravel alias Vaulter is declared by drive",
             "why": "architecture#entry-point: the facade moves to drive; the old FQCN is deleted without class_alias (D21)"

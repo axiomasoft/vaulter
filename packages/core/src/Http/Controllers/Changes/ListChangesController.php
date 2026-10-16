@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Controllers\Changes;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Changes\NodeChange;
 use Vaulter\Data\Snapshots\NodeSnapshot;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
  * The changes after a cursor, projected for the reader. The abilities of every node in
  * the page come from one batch evaluation.
  */
+#[Internal]
 final readonly class ListChangesController
 {
     public function __construct(private HttpOperationContextFactory $contexts) {}

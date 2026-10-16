@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Trash;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Http\Support\HttpOperationContextFactory;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * (409 node_not_trashed otherwise); If-Match is required, and a stale one leaves the
  * node and its stored bytes untouched.
  */
+#[Internal]
 final readonly class PurgeNodeController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

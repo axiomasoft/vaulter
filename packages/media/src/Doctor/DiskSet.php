@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Doctor;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Profiles\ProfileRegistry;
 
 /** The disks a Vaulter install stores content on: the media default and each profile's own. */
+#[Internal]
 final class DiskSet
 {
     /** @return list<string> sorted, without duplicates */

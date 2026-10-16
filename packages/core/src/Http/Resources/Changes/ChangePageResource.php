@@ -7,6 +7,7 @@ namespace Vaulter\Http\Resources\Changes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Changes\ChangePage;
 use Vaulter\Data\Changes\NodeChange;
 
@@ -14,6 +15,7 @@ use Vaulter\Data\Changes\NodeChange;
  * A page of the change journal. Unlike listings it always returns a cursor: the one to
  * store and continue from, now if has_more, later otherwise.
  */
+#[Internal]
 final class ChangePageResource
 {
     /**

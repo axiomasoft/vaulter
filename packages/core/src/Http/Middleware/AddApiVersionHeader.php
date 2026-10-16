@@ -7,12 +7,14 @@ namespace Vaulter\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Attributes\Internal;
 
 /**
  * Marks every response of the versioned API with its major version, so a client can
  * refuse a server it was not built for. The unversioned routes still sharing the stack
  * are left as they are.
  */
+#[Internal]
 final class AddApiVersionHeader
 {
     public const string HEADER = 'X-Vaulter-Api-Version';

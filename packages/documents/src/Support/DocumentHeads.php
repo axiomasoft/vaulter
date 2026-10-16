@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Support;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\NodeSnapshotContributor;
 use Vaulter\Data\Snapshots\DocumentHeadSnapshot;
 use Vaulter\Documents\Models\Documents\Document;
@@ -14,9 +15,8 @@ use Vaulter\Models\Drive\Node;
 /**
  * The `documents.heads` contribution to the drive's node snapshots: the `document` fragment of
  * document nodes, one query for the whole page.
- *
- * @internal
  */
+#[Internal]
 final readonly class DocumentHeads implements NodeSnapshotContributor
 {
     public const string KEY = 'document';

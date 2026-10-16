@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace Vaulter\Data\Snapshots;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Drive\DriveStatus;
 
 /**
  * Read-only view of a drive. Built by Vaulter; the constructor is not part of the
  * public contract.
  */
+#[Api]
 final readonly class DriveSnapshot
 {
-    /** @internal */
+    #[Internal]
     public function __construct(
         public string $id,
         public string $ownerType,

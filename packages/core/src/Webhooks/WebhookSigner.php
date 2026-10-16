@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * Signs webhook deliveries as the Standard Webhooks spec defines: HMAC-SHA256 over
  * "{webhook-id}.{webhook-timestamp}.{body}" keyed by the decoded whsec_ secret,
@@ -12,6 +14,7 @@ namespace Vaulter\Webhooks;
  *
  * Stateless: it computes digests and nothing else.
  */
+#[Internal]
 final class WebhookSigner
 {
     public function sign(string $webhookId, int $timestamp, string $body, string $secret): string

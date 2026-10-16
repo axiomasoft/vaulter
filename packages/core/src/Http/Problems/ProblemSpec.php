@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Http\Problems;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 
 /**
  * One problem code of a module (architecture#errors, D25): the HTTP status, the exception that carries it,
  * whether a client may retry and whether an idempotent operation caches it as its receipt. The default
  * receipt is `Never`: a code is cached only when its owner declares the outcome deterministic.
  */
+#[Api]
 final readonly class ProblemSpec
 {
     /**

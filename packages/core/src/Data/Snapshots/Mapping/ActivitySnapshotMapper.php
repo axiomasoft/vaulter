@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Snapshots\Mapping;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Models\Activity\Activity;
 
 /** @internal Maps rows already projected by VisibleActivityQuery. */
+#[Internal]
 final readonly class ActivitySnapshotMapper
 {
     public function map(Activity $activity): ActivityEntrySnapshot

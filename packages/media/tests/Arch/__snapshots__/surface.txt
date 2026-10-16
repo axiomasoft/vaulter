@@ -1,0 +1,27 @@
+# Surface manifest of the package `media` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
+# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
+
+Vaulter\Media\Cas\BlobStore api since 1.0 final readonly class implements Vaulter\Contracts\Cas\BlobStore
+  public function attach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
+  public function commit(mixed $stream, Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Models\Cas\Blob
+  public function commitStaged(Vaulter\Contracts\Cas\StagedObject $staged, Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Models\Cas\Blob
+  public function detach(Vaulter\Models\Drive\FileRevision $version, Vaulter\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
+  public function read(Vaulter\Models\Cas\Blob $blob): mixed
+
+Vaulter\Media\Configuration\DedupScope api since 1.0 enum: string
+  case Drive = 'drive'
+  case Off = 'off'
+  case Tenant = 'tenant'
+
+Vaulter\Media\Configuration\MediaConfig api since 1.0 final readonly class
+  public function blobStore(): string
+  public function contentStore(): string
+  public function dedupScope(): Vaulter\Media\Configuration\DedupScope
+  public function disk(): string
+  public function gcGraceHours(int $override = 0): int
+  public function orphanGraceHours(int $override = 0): int
+  public function storageDriver(): string
+
+Vaulter\Media\VaulterMediaServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
+  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
+  public function packageRegistered(): void

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\FolderOperations as Contract;
 use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -21,8 +23,10 @@ use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
 
+#[Api]
 final readonly class FolderOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private CreateFolderAction $createAction, private NodeSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     public function create(string $name, NodeSnapshot|string|int|null $parent = null, ?CreateFolderOptions $options = null): NodeSnapshot

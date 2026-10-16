@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Drive;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
@@ -15,6 +17,7 @@ use Vaulter\Sharing\ShareContext;
  * download and the direct-signed URL all call every active guard before a byte or a capability leaves.
  * A guard denies by throwing; any exception, not only {@see ContentUnavailableException}, denies (fail-closed).
  */
+#[Spi(SpiKind::Implement)]
 interface DownloadGuard
 {
     /** @throws ContentUnavailableException to deny; the caller's own context decides the lane */

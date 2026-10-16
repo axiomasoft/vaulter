@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor\Checks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\IdsConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Database\VaulterDatabase;
@@ -11,6 +12,7 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Schema\KeyColumnInspector;
 
+#[Internal]
 final readonly class SchemaKeyTypesCheck implements DoctorCheck
 {
     public function __construct(private VaulterDatabase $database, private KeyColumnInspector $inspector, private IdsConfig $ids) {}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Models\Content\ScanBackfillRun;
@@ -11,6 +12,7 @@ use Vaulter\Models\Content\ScanPolicyState;
 use Vaulter\Models\Drive\Drive;
 
 /** @internal Persisted per-drive scan activation state and its backfill run; activation itself is ActivateScanPolicyAction. */
+#[Internal]
 final readonly class ScanPolicyStateRepository
 {
     public function __construct(private VaulterConfig $config, private ScanAuthorityRepository $authority) {}

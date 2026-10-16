@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -16,6 +17,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\VaulterManager;
 
+#[Internal]
 final class ReconcileScanWorkCommand extends Command
 {
     use OpensWriteScope;

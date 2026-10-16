@@ -6,6 +6,7 @@ namespace Vaulter\Http\Requests\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Enums\Sharing\ShareAudience;
@@ -17,6 +18,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * `max_uses: null` remove the password and the budget. The token, the role and
  * the scope cannot be changed here.
  */
+#[Internal]
 final class UpdateShareLinkRequest extends VaulterFormRequest
 {
     /**

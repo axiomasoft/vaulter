@@ -6,10 +6,12 @@ namespace Vaulter\Drive\Http\Controllers\Trash;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 
 /** Purge every trash root of the drive the caller may delete; the others stay. */
+#[Internal]
 final readonly class EmptyTrashController
 {
     public function __construct(private HttpOperationContextFactory $contexts) {}

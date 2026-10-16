@@ -6,11 +6,13 @@ namespace Vaulter\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
+use Vaulter\Attributes\Internal;
 
 /**
  * Load-stand tier label (`S0`/`S`/`M`/`L`) from host middleware.
  * Package seams read only this context — never load env/config directly.
  */
+#[Internal]
 final class LoadTier
 {
     public const string REQUEST_ATTRIBUTE = 'vaulter_load_tier';

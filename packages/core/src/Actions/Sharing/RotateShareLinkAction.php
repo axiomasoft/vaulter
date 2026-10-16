@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Sharing;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\RotateShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
@@ -21,9 +22,8 @@ use Vaulter\Sharing\ShareTokenMinter;
  * resolving the moment this commits, the generation moves on so link sessions
  * opened with the old token are void, and everything else about the link — role,
  * audience, expiry, budget, password — stays. The new raw token is returned once.
- *
- * @internal
  */
+#[Internal]
 final readonly class RotateShareLinkAction
 {
     public function __construct(

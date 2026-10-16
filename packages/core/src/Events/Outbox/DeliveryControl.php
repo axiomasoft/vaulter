@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Events\Outbox;
 
 use Illuminate\Database\Query\Builder;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 
@@ -19,6 +21,7 @@ use Vaulter\Database\VaulterDatabase;
  * last saved cursor of this attempt: a consumer whose transaction rolled back must give up the delivery (throw or
  * return a retry) rather than go on from it.
  */
+#[Spi(SpiKind::Call)]
 final class DeliveryControl
 {
     public function __construct(

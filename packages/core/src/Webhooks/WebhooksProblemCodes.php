@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotFoundException;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException;
@@ -18,6 +19,7 @@ use Vaulter\Http\Problems\ReceiptPolicy;
  * the webhooks code. A stable public contract, so a code is added here, in lang/{en,ru}/problems.php and in
  * the reference docs together.
  */
+#[Internal]
 final class WebhooksProblemCodes implements ProblemCodeSource
 {
     public function translationNamespace(): string

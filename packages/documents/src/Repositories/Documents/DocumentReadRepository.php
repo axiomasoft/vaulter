@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Repositories\Documents;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Models\Drive\Node;
 
 /**
  * Lookups of the document aggregate of a node. Opens no transactions and makes no
  * access decisions.
- *
- * @internal
  */
+#[Internal]
 final class DocumentReadRepository
 {
     public function forNode(Node $node): ?Document

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
+#[Internal]
 final class WebhookEndpointNotFoundException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

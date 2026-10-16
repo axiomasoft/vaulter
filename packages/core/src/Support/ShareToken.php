@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * The bearer share-token hashing primitives (hardening). The raw token
  * is hashed with sha256 to a char(64) the DB stores as token_hash; the raw token
@@ -13,6 +15,7 @@ namespace Vaulter\Support;
  *
  * Technical axis — no domain knowledge, no model references.
  */
+#[Internal]
 final class ShareToken
 {
     /**

@@ -6,6 +6,7 @@ namespace Vaulter\Http\Controllers\Sharing;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Sharing\ShareNotFoundException;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\SharedNodeResolver;
 use Vaulter\Models\Drive\Node;
 
 /** The children of a shared folder; an item link exposes one node and lists nothing. */
+#[Internal]
 final readonly class ListPublicShareNodesController
 {
     public function __construct(private SharedNodeResolver $nodes) {}

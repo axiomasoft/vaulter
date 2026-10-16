@@ -6,6 +6,7 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ChangesConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
@@ -21,6 +22,7 @@ use Vaulter\Repositories\Changes\ChangeHeadRepository;
  * its cursor expired (410), never a silent gap. Mutations of the drive wait for at most
  * one batch.
  */
+#[Internal]
 final class PruneChangesCommand extends Command
 {
     use OpensWriteScope;

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
 
@@ -16,6 +17,7 @@ use Vaulter\Data\Page;
  * Lists are cursor-paginated and never count the total, which would cost a scan of
  * everything the caller can see on every page.
  */
+#[Api]
 final class PageResponse
 {
     public const int DEFAULT_PER_PAGE = 50;

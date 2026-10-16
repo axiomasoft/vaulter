@@ -8,6 +8,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
@@ -16,6 +17,7 @@ use Vaulter\Modules\ModuleBindings;
 use Vaulter\Policies\NodePolicy;
 
 /** Drive access located in core (D39), declared by DriveModule: permission drivers, the operation guard and the node policy. */
+#[Internal]
 final class AccessRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

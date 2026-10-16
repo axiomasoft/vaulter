@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
@@ -29,6 +30,7 @@ use Vaulter\VaulterManager;
  * rule is the backstop for any orphaned multipart the table never saw (the CAS bucket
  * itself stays UNVERSIONED — lifecycle is never a blob-deletion mechanism).
  */
+#[Internal]
 final class SweepUploadsCommand extends Command
 {
     use OpensWriteScope;

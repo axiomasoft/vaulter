@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
@@ -144,7 +145,7 @@ if (!function_exists('vaulterSnapshotInterface')) {
         foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             $doc = $method->getDocComment();
 
-            if ($doc !== false && str_contains($doc, '@internal')) {
+            if (($doc !== false && str_contains($doc, '@internal')) || $method->getAttributes(Internal::class) !== []) {
                 continue;
             }
 
@@ -197,7 +198,7 @@ if (!function_exists('vaulterSnapshotContracts')) {
 
             $doc = $reflection->getDocComment();
 
-            if ($doc !== false && str_contains($doc, '@internal')) {
+            if (($doc !== false && str_contains($doc, '@internal')) || $reflection->getAttributes(Internal::class) !== []) {
                 continue;
             }
 

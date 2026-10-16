@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * A slot contract, the module that owns it, its kind and how many contributions it takes.
- *
- * @internal
  */
+#[Internal]
 final readonly class SlotDefinition
 {
     /** @param class-string $contract */

@@ -7,6 +7,7 @@ namespace Vaulter\Actions\Sharing;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Data\Sharing\UpdateShareLinkInput;
@@ -27,9 +28,8 @@ use Vaulter\Sharing\ShareLinkRules;
  * budget, password and audience. The link row is locked after the node, so a
  * concurrent revoke or rotate and this update serialize. The new expiry obeys the
  * same bounds as at creation.
- *
- * @internal
  */
+#[Internal]
 final readonly class UpdateShareLinkAction
 {
     public function __construct(

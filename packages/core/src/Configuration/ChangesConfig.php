@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
  * Typed accessors over config('vaulter.changes.*'), the drive change journal
  * . The journal itself is switched by vaulter.features.changes.
  */
+#[Api]
 final readonly class ChangesConfig
 {
     private const int DEFAULT_RETENTION_DAYS = 30;
@@ -20,6 +23,7 @@ final readonly class ChangesConfig
     /** A larger page would hold one request's visibility batch for too long. */
     private const int MAX_PAGE_SIZE = 10000;
 
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     /** Days an entry stays readable; a cursor older than that expires (410). */

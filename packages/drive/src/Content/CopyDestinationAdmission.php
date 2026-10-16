@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Models\Drive\FileRevision;
@@ -12,6 +13,7 @@ use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 
+#[Internal]
 final readonly class CopyDestinationAdmission
 {
     public function __construct(private ProfilePolicy $policy, private ProfileRegistry $profiles, private ScanEvidenceRepository $evidence) {}

@@ -7,6 +7,7 @@ namespace Vaulter\Actions\Sharing;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Data\Sharing\CreateShareLinkInput;
@@ -40,6 +41,7 @@ use Vaulter\Sharing\ShareTokenMinter;
  * Authorization (the actor may Share the node) is enforced by the caller before
  * reaching the Action — the Action mints + persists, it does not re-authorize.
  */
+#[Internal]
 final readonly class CreateShareLinkAction
 {
     public function __construct(

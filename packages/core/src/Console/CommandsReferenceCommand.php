@@ -9,6 +9,7 @@ use Illuminate\Container\Container as ContainerInstance;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
+use Vaulter\Attributes\Internal;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\VaulterModule;
@@ -18,6 +19,7 @@ use Vaulter\Modules\VaulterModule;
  * commands. With --check nothing is written and the exit code says whether the docs
  * are current (for CI).
  */
+#[Internal]
 final class CommandsReferenceCommand extends Command
 {
     public const START = '<!-- vaulter:commands-reference:start -->';

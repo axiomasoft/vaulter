@@ -11,6 +11,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
@@ -39,6 +40,7 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  * Every Gate check goes through Gate::forUser($actor) so the driver is stateless and
  * never depends on the currently-authenticated user.
  */
+#[Internal]
 final class GatePermissionDriver implements PermissionDriver
 {
     public function __construct(

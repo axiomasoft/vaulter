@@ -8,6 +8,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
@@ -31,6 +32,7 @@ use Vaulter\Support\Identity;
  *
  * @mixin Node
  */
+#[Internal]
 final class SharedNodeResource extends JsonResource
 {
     /**

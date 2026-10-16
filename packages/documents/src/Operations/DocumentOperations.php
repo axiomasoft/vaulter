@@ -7,6 +7,8 @@ namespace Vaulter\Documents\Operations;
 use Closure;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveExtension;
 use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Data\Drive\ListOptions;
@@ -79,8 +81,10 @@ use Vaulter\Profiles\ProfilePolicy;
  * room is read-only. Content that reads only partly under its type
  * (DocumentSnapshot::$editable = false) is not overwritten: 409 document_content_degraded.
  */
+#[Api]
 final readonly class DocumentOperations implements DriveExtension
 {
+    #[Internal]
     public function __construct(
         private DriveContext $context,
         private NodeLocator $locator,
@@ -160,10 +164,11 @@ final readonly class DocumentOperations implements DriveExtension
     }
 
     /**
-     * @internal The HTTP autosave, which may also carry the binary Yjs state.
+     * The HTTP autosave, which may also carry the binary Yjs state.
      *
      * @param array<string, mixed> $content
      */
+    #[Internal]
     public function updateContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState = null, ?int $expectedStateVersion = null): DocumentSnapshot
     {
         return $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $yjsState, $expectedStateVersion));
@@ -208,10 +213,11 @@ final readonly class DocumentOperations implements DriveExtension
     }
 
     /**
-     * @internal The HTTP history listing keeps its cursor-paginator JSON until REST v1.
+     * The HTTP history listing keeps its cursor-paginator JSON until REST v1.
      *
      * @return CursorPaginator<int, DocumentRevisionSnapshot>
      */
+    #[Internal]
     public function revisionPage(NodeSnapshot|string|int $document, ?ListOptions $options = null): CursorPaginator
     {
         $node = $this->document($document, Ability::View, OperationKind::Metadata);

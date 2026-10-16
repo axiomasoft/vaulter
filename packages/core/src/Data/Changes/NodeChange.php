@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Changes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Changes\ChangeOperation;
 use Vaulter\Enums\Changes\ChangeReason;
@@ -14,6 +15,7 @@ use Vaulter\Enums\Changes\ChangeReason;
  * carries no snapshot: the node is gone for this reader, and a removed folder takes
  * its whole subtree with it.
  */
+#[Internal]
 final readonly class NodeChange
 {
     public function __construct(

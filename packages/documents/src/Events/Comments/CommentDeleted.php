@@ -8,6 +8,8 @@ use Carbon\CarbonImmutable;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -23,8 +25,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * on the node's private collaboration channel so open editors drop it live. The model
  * still carries its id/node_id in memory after the delete, so the payload is complete.
  */
+#[Api]
 final readonly class CommentDeleted extends DomainEvent implements ShouldBroadcast
 {
+    #[Internal]
     public function __construct(
         public NodeComment $comment,
         ActorRef $actor,

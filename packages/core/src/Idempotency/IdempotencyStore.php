@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 use LogicException;
 use stdClass;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Idempotency\OperationInProgressException;
@@ -25,9 +26,8 @@ use Vaulter\Schema\IdStrategyResolver;
  *
  * A wait that times out leaves no transaction to continue (Postgres aborts it): the operation is refused with
  * `operation_in_progress` and rolled back as a whole.
- *
- * @internal
  */
+#[Internal]
 final class IdempotencyStore
 {
     public const string ENTITY = 'idempotency_keys';

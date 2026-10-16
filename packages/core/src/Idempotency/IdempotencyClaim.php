@@ -9,6 +9,7 @@ use Illuminate\Contracts\Config\Repository;
 use InvalidArgumentException;
 use LogicException;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
@@ -27,9 +28,8 @@ use Vaulter\Operations\OperationClaim;
  * - otherwise run the attempt under a savepoint: a result is encoded into the receipt in the same transaction; a
  *   refusal whose code is `receipt: cacheable` rolls back to the savepoint (the mutation and its event sinks) and
  *   is stored instead; any other failure rolls back everything, the claim included.
- *
- * @internal
  */
+#[Internal]
 final readonly class IdempotencyClaim implements OperationClaim
 {
     /** The receipt kind of a stored refusal. */

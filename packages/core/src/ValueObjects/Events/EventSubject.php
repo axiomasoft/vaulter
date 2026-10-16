@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Events;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Support\Identity;
 
 /**
  * What an event is about: the resource a consumer fetches to see the new state.
  * The id is a string whatever the id strategy.
  */
+#[Api]
 final readonly class EventSubject
 {
     public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload'];

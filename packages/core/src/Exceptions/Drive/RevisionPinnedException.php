@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Drive;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
 
 /** A pinned (keep_forever) revision is never deleted, by the API or by the pruning (P4-I19). */
+#[Api]
 final class RevisionPinnedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

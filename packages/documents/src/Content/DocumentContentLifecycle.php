@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Content;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Data\Drive\CopyResult;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -21,14 +22,14 @@ use Vaulter\Operations\DriveContext;
  * transaction of CopyNodeAction / PurgeNodeAction, which already hold the tree and
  * node locks, so this class only takes the document row lock the action's order
  * leaves for it.
- *
- * @internal
  */
+#[Internal]
 final readonly class DocumentContentLifecycle implements NodeContentLifecycle
 {
     /** Revisions deleted per statement, so a long history never becomes one huge delete. */
     private const int PURGE_BATCH = 500;
 
+    #[Internal]
     public function __construct(
         private DocumentStoreRepository $documents,
         private DocumentStateWriter $writer,

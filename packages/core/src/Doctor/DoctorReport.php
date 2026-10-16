@@ -6,7 +6,9 @@ namespace Vaulter\Doctor;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Vaulter\Attributes\Internal;
 
+#[Internal]
 final readonly class DoctorReport
 {
     public const string SCHEMA = 'vaulter.doctor/v1';

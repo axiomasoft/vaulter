@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Access;
 
+use Vaulter\Attributes\Api;
+
 /**
  * The internal bitmask behind {@see Ability}: exactly one bit per ability, so a
  * role's ability set folds into one int and a union of roles is a bitwise OR.
@@ -13,6 +15,7 @@ namespace Vaulter\Enums\Access;
  *   VIEW=1  EDIT=2  CREATE=4  DELETE=8  SHARE=16  COMMENT=32  DOWNLOAD=64
  *   MOVE=128  COPY=256  TRASH=512  RESTORE=1024  MANAGE=2048
  */
+#[Api]
 enum Permission: int
 {
     case View = 1;

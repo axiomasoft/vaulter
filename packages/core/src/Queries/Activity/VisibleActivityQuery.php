@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Cursor;
 use InvalidArgumentException;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ListingConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
@@ -20,8 +21,9 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
 
 /**
- * @internal Bounded exact scan; cursors advance over every examined candidate.
+ * Bounded exact scan; cursors advance over every examined candidate.
  */
+#[Internal]
 final readonly class VisibleActivityQuery
 {
     /** Context keys that describe who holds access; only a Share-capable reader sees them. */

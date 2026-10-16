@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Profiles;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 
 /**
@@ -20,6 +21,7 @@ use Vaulter\Exceptions\Profiles\InvalidProfileException;
  * protectPinned cannot be switched off in 1.0; it is a field so that a later release
  * can add the option without changing the shape.
  */
+#[Api]
 final readonly class RevisionRetentionPolicy
 {
     public function __construct(

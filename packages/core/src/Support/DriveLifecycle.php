@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Drive\DriveArchivedException;
@@ -19,8 +20,9 @@ use Vaulter\Operations\DriveContext;
  * flip that committed in between. An archived drive refuses every non-system writer; a
  * drive being deleted exists for the system 'drive-purge' only.
  *
- * @internal shared by the Drive and Documents Actions; not a public extension point
+ * shared by the Drive and Documents Actions; not a public extension point
  */
+#[Internal]
 final readonly class DriveLifecycle
 {
     public function __construct(private VaulterConfig $config) {}

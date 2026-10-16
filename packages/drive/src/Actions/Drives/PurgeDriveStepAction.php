@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Drives;
 
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
@@ -32,6 +33,7 @@ use Vaulter\VaulterManager;
  * children left one last transaction removes the root, the drive's change journal and
  * the drive row. Activity and outbox rows stay as history. Safe to repeat after any crash.
  */
+#[Internal]
 final readonly class PurgeDriveStepAction
 {
     public const int BATCH = 100;

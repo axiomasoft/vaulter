@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\QueryException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -19,6 +20,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
  * no business decision: received_bytes is advanced from the bytes the caller already
  * staged, and the status moves are pure row writes.
  */
+#[Internal]
 final class UploadSessionStoreRepository
 {
     public function __construct(

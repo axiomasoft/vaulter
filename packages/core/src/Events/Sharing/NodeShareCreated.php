@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Events\Sharing;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Sharing\NodeShare;
@@ -19,8 +21,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * NodeShare (token_hash only — never the raw token); the token prefix is recorded in
  * the activity feed only.
  */
+#[Api]
 final readonly class NodeShareCreated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public NodeShare $share,
         ActorRef $actor,

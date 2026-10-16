@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor\Checks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
@@ -15,6 +16,7 @@ use Vaulter\Events\Outbox\OutboxStore;
  * range is replayed or the loss acknowledged with vaulter:relay:replay. A paused consumer, which still holds
  * retention, is a warning.
  */
+#[Internal]
 final readonly class OutboxConsumerGapCheck implements DoctorCheck
 {
     public function __construct(private OutboxStore $store) {}

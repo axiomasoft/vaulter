@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -42,6 +43,7 @@ use Vaulter\Models\Drive\Node;
  * @property Carbon|null               $updated_at
  * @property-read Node $node
  */
+#[Internal]
 class NodeComment extends Model
 {
     use GuardsWrites;

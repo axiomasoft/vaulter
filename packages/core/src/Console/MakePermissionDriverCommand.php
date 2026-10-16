@@ -7,11 +7,13 @@ namespace Vaulter\Console;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 
 /**
  * Scaffolds a host-owned permission driver with a Pest test on its contract suite. Registration stays
  * explicit: the command prints the config line instead of editing the host's config.
  */
+#[Internal]
 final class MakePermissionDriverCommand extends Command
 {
     protected $signature = 'vaulter:make:permission-driver

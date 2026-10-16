@@ -37,8 +37,8 @@
             "packages/core/tests/Arch/OperationsUseRunnerTest.php",
             "packages/core/tests/Arch/ProvidersDeclareOnlyTest.php",
             "packages/core/tests/Arch/PublicApiReturnTypesTest.php",
-            "packages/core/tests/Arch/PublicApiSnapshotTest.php",
             "packages/core/tests/Arch/ServiceLocatorRatchetTest.php",
+            "packages/core/tests/Arch/SurfaceManifestTest.php",
             "packages/core/tests/Arch/TestingBoundaryTest.php",
             "packages/core/tests/Changes/ChangeCursorTest.php",
             "packages/core/tests/Events/EventCatalogTest.php",
@@ -149,6 +149,7 @@
             "packages/core/tests/Concurrency/IdempotencyRaceTest.php",
             "packages/core/tests/Events/EventSinkContractTest.php",
             "packages/core/tests/Idempotency/IdempotencyContractTest.php",
+            "packages/core/tests/Modules/AcmeModuleContractTest.php",
             "packages/core/tests/Operations/OperationRunnerContractTest.php",
             "packages/core/tests/Tenancy/TenantProvisioningRaceTest.php"
           ]
@@ -667,6 +668,7 @@
             "packages/core/tests/Http/Problems/ProblemMetaRedactionTest.php",
             "packages/core/tests/Http/Problems/ProblemRendererTest.php",
             "packages/core/tests/Http/Problems/ProblemSpecRulesTest.php",
+            "packages/core/tests/Modules/ActivationMatrixTest.php",
             "packages/core/tests/Modules/ActivationTest.php",
             "packages/core/tests/Modules/DriveDisabledTest.php",
             "packages/core/tests/Modules/InvalidModuleGraphConsoleTest.php",
@@ -693,6 +695,7 @@
             "serial"
           ],
           "files": [
+            "packages/core/tests/Modules/ActivationCacheTest.php",
             "packages/core/tests/Modules/RouteCacheActivationTest.php"
           ]
         }
@@ -1743,6 +1746,8 @@
             "tests/Repo/Arch/BoundaryScanTest.php",
             "tests/Repo/Arch/IdentitiesTest.php",
             "tests/Repo/Arch/InventoryHarnessTest.php",
+            "tests/Repo/Arch/SurfaceManifestTest.php",
+            "tests/Repo/Arch/SurfaceRulesTest.php",
             "tests/Repo/Arch/TargetMapTest.php",
             "tests/Repo/TestGroupsTest.php",
             "tests/Repo/TestRunnerTest.php",

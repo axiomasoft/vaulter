@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Drives;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -15,6 +16,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * The last row of a drive is gone: its purge finished. The row no longer
  * exists, so the event carries its ids, tenant and profile.
  */
+#[Api]
 final readonly class DriveDeleted extends DomainEvent
 {
     public function __construct(

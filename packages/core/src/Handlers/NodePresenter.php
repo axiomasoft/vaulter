@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Handlers;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Handlers\NodePresenter as NodePresenterContract;
 use Vaulter\Contracts\Presentation\KindPresenter;
 use Vaulter\Data\Snapshots\NodeSnapshot;
@@ -22,6 +23,7 @@ use Vaulter\ValueObjects\Handlers\NodePresentation;
  * every handler satisfies it, so resolution always yields the most specific match), and
  * that handler's capabilities and viewer describe the file. No persistence, no Request.
  */
+#[Internal]
 final class NodePresenter implements NodePresenterContract
 {
     public function __construct(

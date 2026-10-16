@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Folders;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Support\DriveNameRules;
 
 /** POST drives/{drive}/folders: the folder name and its parent (the drive root when absent). */
+#[Internal]
 final class CreateFolderRequest extends VaulterFormRequest
 {
     /**

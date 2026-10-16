@@ -8,6 +8,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 
 /**
@@ -26,6 +27,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
  *
  * The endpoints are never open: without either secret every call is rejected.
  */
+#[Internal]
 final readonly class CollaborationCallResolver
 {
     /**

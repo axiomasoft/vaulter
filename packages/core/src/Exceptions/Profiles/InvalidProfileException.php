@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Profiles;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -16,6 +17,7 @@ use Vaulter\Exceptions\VaulterException;
  * Failing loud at boot (not at runtime) keeps a broken panel from silently
  * corrupting reads/writes once a request lands.
  */
+#[Api]
 final class InvalidProfileException extends VaulterException
 {
     public static function missingClass(string $panel, string $kind, string $fqcn): self

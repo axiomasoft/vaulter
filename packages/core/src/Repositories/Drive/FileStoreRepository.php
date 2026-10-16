@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Drive;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\File;
 
@@ -12,6 +13,7 @@ use Vaulter\Models\Drive\File;
  * . Bare create + head/version-count bookkeeping. Opens NO transactions —
  * UploadFileAction wraps it.
  */
+#[Internal]
 final class FileStoreRepository
 {
     public function __construct(

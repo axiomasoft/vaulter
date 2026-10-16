@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 
@@ -15,6 +16,7 @@ use Vaulter\Exceptions\Access\UnknownRoleException;
  * A positive grant: the subject gets the newest version of the named role on the
  * node (and, for subtree, below it up to the next inheritance boundary).
  */
+#[Api]
 final readonly class GrantInput
 {
     /**

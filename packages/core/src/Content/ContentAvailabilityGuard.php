@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Drive\DownloadGuard;
@@ -22,9 +23,8 @@ use Vaulter\Tenancy\TenancyBoundary;
 /**
  * The drive's `drive.content-availability` contribution to the DownloadGuard slot. Availability never grants
  * ACL or a private scanner capability.
- *
- * @internal
  */
+#[Internal]
 final readonly class ContentAvailabilityGuard implements DownloadGuard
 {
     public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}

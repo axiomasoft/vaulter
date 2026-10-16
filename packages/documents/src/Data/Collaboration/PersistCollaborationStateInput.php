@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Models\Drive\Node;
 
@@ -27,8 +29,10 @@ use Vaulter\Models\Drive\Node;
  *                     epoch while there is no Yjs state) refuses the seed with the same
  *                     409, and the hub loads again. Null skips the check.
  */
+#[Api]
 final readonly class PersistCollaborationStateInput
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public string $yjsState,

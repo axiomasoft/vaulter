@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Content;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanEvidence;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanSnapshot;
@@ -18,8 +19,9 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
 /**
  * Settles a fresh request clean from exact-byte proof of the same scope, with its own evidence row.
  *
- * @internal Runs inside the request transaction, which already holds the revision-family locks; the work row is locked last.
+ * Runs inside the request transaction, which already holds the revision-family locks; the work row is locked last.
  */
+#[Internal]
 final readonly class ReuseScanEvidenceAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work) {}

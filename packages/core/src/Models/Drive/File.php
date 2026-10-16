@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -32,6 +33,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * @property Carbon|null     $updated_at
  * @property-read FileRevision|null $currentRevision
  */
+#[Internal]
 class File extends Model
 {
     use GuardsWrites;

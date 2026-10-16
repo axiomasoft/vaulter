@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Attributes\Internal;
 
 /**
  * Gives every Vaulter request one correlation id: a well-formed incoming X-Request-Id is
@@ -15,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
  * fresh ULID. The id travels with the operation (activity, outbox) and is echoed on every
  * response, errors and 304 included.
  */
+#[Internal]
 final class AssignCorrelationId
 {
     public const string ATTRIBUTE = 'vaulter.request_id';

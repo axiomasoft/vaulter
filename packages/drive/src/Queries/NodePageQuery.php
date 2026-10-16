@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Queries;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 use Vaulter\Access\ExactListing;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\NodePage;
@@ -15,6 +16,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\NodeUserState;
 use Vaulter\Operations\DriveContext;
 
+#[Internal]
 final readonly class NodePageQuery
 {
     public function __construct(private ExactListing $listing, private VaulterConfig $config) {}

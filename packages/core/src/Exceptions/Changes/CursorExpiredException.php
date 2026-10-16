@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Changes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * The entries after a change cursor are no longer all there: the retention prune
  * deleted some of them, or the journal was reset. The client resynchronizes.
  */
+#[Api]
 final class CursorExpiredException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Throwable;
 use Vaulter\Actions\Webhooks\RedeliverWebhookAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException;
@@ -21,6 +22,7 @@ use Vaulter\Support\Identity;
  * RedeliverWebhookAction, so the receiver gets the same webhook-id and an inactive
  * endpoint is refused. Only rows still inside the retention window exist to redeliver.
  */
+#[Internal]
 final class RedeliverWebhooksCommand extends Command
 {
     use OpensWriteScope;

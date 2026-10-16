@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Drive;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 
+#[Api]
 interface TrashOperations
 {
     /** @return Page<NodeSnapshot> */

@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Bus;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -40,6 +41,7 @@ use Vaulter\Support\Identity;
  * afterwards never receives older events. A save of a document without a checkpoint is written to the outbox as
  * not external and reaches no endpoint. Deliveries are at least once over HTTP; receivers dedupe on the event id.
  */
+#[Internal]
 final readonly class WebhookFanoutConsumer implements OutboxConsumer
 {
     public const string ID = 'webhooks.fanout';

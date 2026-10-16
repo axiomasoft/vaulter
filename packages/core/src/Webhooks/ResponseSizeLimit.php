@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\WebhookResponseTooLargeException;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\Webhooks\WebhookResponseTooLargeException;
  * Guzzle on_headers hook — before the body is read — and the buffering sink is bounded
  * so an UNDECLARED oversize body spills to a temp file instead of RAM.
  */
+#[Internal]
 final class ResponseSizeLimit
 {
     /**

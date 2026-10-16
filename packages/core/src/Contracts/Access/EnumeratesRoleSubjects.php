@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Access;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * A capability marker: the {@see PermissionDriver} implementing it declares
  * that its `subjectsFor()` DOES expand an actor into role/group/team {@see Subject}s,
@@ -26,4 +29,5 @@ namespace Vaulter\Contracts\Access;
  * cleanest way for a host role driver to declare the capability, but overriding
  * `subjectsFor()` alone already suffices for role grants to be accepted.
  */
+#[Spi(SpiKind::Implement)]
 interface EnumeratesRoleSubjects {}

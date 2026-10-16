@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * The installed modules do not form a valid graph, so no module is active: the reasons are printed by
  * `vaulter:modules` and `vaulter:doctor`.
  */
+#[Api]
 final class ModuleGraphException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

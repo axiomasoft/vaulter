@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Sharing;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * The outcome of resolving a bearer share-token. It distinguishes the
  * denial reasons the public HTTP layer must translate to different statuses:
@@ -18,6 +20,7 @@ namespace Vaulter\Sharing;
  *  - LoginRequired → the share's audience needs a signed-in host user and none is
  *                    present (401).
  */
+#[Internal]
 enum ShareResolution: string
 {
     case Ok = 'ok';

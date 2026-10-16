@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Access;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;
 
@@ -14,6 +15,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *
  * The stored column value is item|subtree, defaulting to subtree.
  */
+#[Api]
 enum GrantScope: string
 {
     use HasLabel;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Handlers;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
@@ -24,6 +26,7 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
  *
  * Every new handler is a SemVer-frozen public API from its release.
  */
+#[Spi(SpiKind::Implement)]
 interface FileHandler
 {
     /**

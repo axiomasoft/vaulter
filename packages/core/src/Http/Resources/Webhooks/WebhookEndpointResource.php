@@ -6,6 +6,7 @@ namespace Vaulter\Http\Resources\Webhooks;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
@@ -16,6 +17,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  *
  * @mixin WebhookEndpoint
  */
+#[Internal]
 final class WebhookEndpointResource extends JsonResource
 {
     private ?string $secret = null;

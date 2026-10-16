@@ -9,6 +9,7 @@ use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Activity\ActivitySink;
+use Vaulter\Attributes\Internal;
 use Vaulter\Changes\ChangeJournalSink;
 use Vaulter\Console\MakeFileHandlerCommand;
 use Vaulter\Console\MakePermissionDriverCommand;
@@ -81,6 +82,7 @@ use Vaulter\VaulterServiceProvider;
  * shares, activity and the change feed, the change-journal and scaffolding commands, two doctor checks, the
  * drive's event types with the activity and change-journal event sinks, and the drive part of the core bindings. `vaulter.modules.drive = false` removes all of it.
  */
+#[Internal]
 final class DriveModule implements VaulterModule
 {
     /** @var array<string, class-string<DoctorCheck>> doctor key => check */

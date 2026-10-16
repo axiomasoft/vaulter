@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Changes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Changes\ChangeJournal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
@@ -13,9 +14,8 @@ use Vaulter\Support\Identity;
  * Row work for v_drive_change_heads, the per-drive counter of the change journal. It
  * opens no transactions: {@see ChangeJournal} raises the counter inside the mutation's
  * transaction, the prune and reset commands inside their own.
- *
- * @internal
  */
+#[Internal]
 final readonly class ChangeHeadRepository
 {
     public function __construct(

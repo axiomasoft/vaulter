@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Files;
 
+use Vaulter\Attributes\Api;
+
+#[Api]
 final readonly class UploadFacts
 {
     public function __construct(

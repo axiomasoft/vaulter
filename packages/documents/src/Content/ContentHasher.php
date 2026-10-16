@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
+use Vaulter\Attributes\Api;
+
 /**
  * The content_hash and content_size every document content carries: sha256 and byte
  * length of the JSON encoding of the payload. One definition for all codecs, so the
@@ -13,6 +15,7 @@ namespace Vaulter\Documents\Content;
  * with its own key order, so a copy or a restore that re-reads stored content must still
  * get the hash the content was stored with.
  */
+#[Api]
 final class ContentHasher
 {
     /** @param array<array-key, mixed> $content */

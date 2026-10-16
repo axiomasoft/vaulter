@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Content;
 
+use Vaulter\Attributes\Api;
+
+#[Api]
 final readonly class ImmutableContentIdentity
 {
     public function __construct(public int|string $blobId, public string $scopeKey, public string $disk, public string $storageKey, public ?string $storageVersion, public string $sha256, public int $size)

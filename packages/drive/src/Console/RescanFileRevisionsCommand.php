@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Vaulter\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
@@ -30,6 +31,7 @@ use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\VaulterManager;
 
+#[Internal]
 final class RescanFileRevisionsCommand extends Command
 {
     use OpensWriteScope;

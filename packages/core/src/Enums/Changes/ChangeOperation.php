@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Changes;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * What a change-journal entry tells a syncing client to do with a node.
  *
@@ -12,6 +14,7 @@ namespace Vaulter\Enums\Changes;
  *
  * @closed The string values are stored and never change.
  */
+#[Internal]
 enum ChangeOperation: string
 {
     case Upsert = 'upsert';

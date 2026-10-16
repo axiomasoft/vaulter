@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Handlers;
 
+use Vaulter\Attributes\Api;
+
 /**
  * The immutable description of a file the {@see
  * \Vaulter\Handlers\FileHandlerRegistry} resolves a handler for. It carries everything the registry needs to route — the claimed (client)
@@ -15,6 +17,7 @@ namespace Vaulter\ValueObjects\Handlers;
  * and only falls back to claimedMime when no sniff is available — so a spoofed
  * Content-Type can never force an editable/preview handler onto hostile bytes.
  */
+#[Api]
 final readonly class FileDescriptor
 {
     public function __construct(

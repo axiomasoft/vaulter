@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
@@ -22,6 +23,7 @@ use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
 
+#[Internal]
 final class PurgeTrashCommand extends Command
 {
     use OpensWriteScope;

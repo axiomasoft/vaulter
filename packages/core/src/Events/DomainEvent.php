@@ -6,6 +6,7 @@ namespace Vaulter\Events;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
@@ -24,6 +25,7 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * two events, while the same event recorded again (a retried job holding the
  * instance it built) is a no-op.
  */
+#[Api]
 abstract readonly class DomainEvent
 {
     public string $eventId;

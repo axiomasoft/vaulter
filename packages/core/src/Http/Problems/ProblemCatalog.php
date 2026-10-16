@@ -7,6 +7,7 @@ namespace Vaulter\Http\Problems;
 use Closure;
 use Illuminate\Contracts\Translation\Translator;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 
 /**
  * Every problem code the HTTP surface can answer with: the codes the active modules declare with
@@ -14,6 +15,7 @@ use InvalidArgumentException;
  * `retryable` hint of a problem body, of the receipt policy of idempotent operations (D25) and of the
  * localized `title`/`detail`.
  */
+#[Internal]
 final class ProblemCatalog
 {
     public const string TYPE_BASE = 'https://github.com/axiomasoft/vaulter/blob/main/docs/reference/errors.md#';

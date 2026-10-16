@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Problems;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Changes\CursorExpiredException;
 use Vaulter\Exceptions\Changes\InvalidCursorException;
@@ -47,6 +48,7 @@ use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
  * Visibility (404), authentication and authorization codes are never cached as an idempotency receipt; a
  * deterministic domain refusal (409, 412, 413, 422) is (D25).
  */
+#[Internal]
 final class DriveSliceProblemCodes implements ProblemCodeSource
 {
     public function translationNamespace(): string

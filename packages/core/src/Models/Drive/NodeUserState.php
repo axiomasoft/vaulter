@@ -7,6 +7,7 @@ namespace Vaulter\Models\Drive;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -15,7 +16,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
- * @internal One actor's personal state of a node: starred_at today.
+ * One actor's personal state of a node: starred_at today.
  * Personal state never changes the node's sequence or timestamps.
  *
  * @property int|string      $id
@@ -28,6 +29,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * @property Carbon|null     $updated_at
  * @property-read Node $node
  */
+#[Internal]
 class NodeUserState extends Model
 {
     use GuardsWrites;

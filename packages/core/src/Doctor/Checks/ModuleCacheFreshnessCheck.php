@@ -8,6 +8,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
@@ -21,6 +22,7 @@ use Vaulter\Modules\ModuleApplier;
  * carry the module fingerprint they were loaded under; a mismatch, or an active module whose routes are
  * missing from the cache, means the caches must be rebuilt (`php artisan optimize`) and the workers restarted.
  */
+#[Internal]
 final readonly class ModuleCacheFreshnessCheck implements DoctorCheck
 {
     public function __construct(private Kernel $kernel, private Router $router, private Application $app) {}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Nodes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
@@ -40,6 +41,7 @@ use Vaulter\Support\TreeGuard;
  *
  * Operations authorize before this command; locked invariants remain in the Action.
  */
+#[Internal]
 final readonly class MoveNodeAction
 {
     public function __construct(

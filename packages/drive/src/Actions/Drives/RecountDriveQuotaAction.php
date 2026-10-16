@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Quota\QuotaCalculator;
@@ -16,6 +17,7 @@ use Vaulter\Repositories\Drive\DriveStoreRepository;
  * the revisions sum to at that moment, never by a number read before a concurrent
  * change. Running it again changes nothing.
  */
+#[Internal]
 final readonly class RecountDriveQuotaAction
 {
     public function __construct(private VaulterDatabase $database, private QuotaCalculator $quota, private DriveStoreRepository $drives) {}

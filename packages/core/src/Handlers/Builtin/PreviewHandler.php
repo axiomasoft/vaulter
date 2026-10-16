@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Handlers\Builtin;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
@@ -21,6 +22,7 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
  * wants sandboxed HTML/SVG preview registers its own handler with an explicit
  * sandbox prop; core never inlines active content by default.
  */
+#[Internal]
 final class PreviewHandler implements FileHandler
 {
     public const int PRIORITY = 80;

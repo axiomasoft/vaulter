@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
@@ -39,6 +40,7 @@ use Vaulter\VaulterManager;
  * the head or was pinned after the choice is skipped, not an error. Re-running
  * converges: a revision is either still a candidate or gone.
  */
+#[Internal]
 final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable;

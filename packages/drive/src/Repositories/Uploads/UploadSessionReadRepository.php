@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Repositories\Uploads;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -18,6 +19,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * address a session by its client upload_id handle; the sweeper scans the stale
  * candidates. No transactions, no mutations.
  */
+#[Internal]
 final class UploadSessionReadRepository
 {
     public function __construct(

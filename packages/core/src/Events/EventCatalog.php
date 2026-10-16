@@ -6,6 +6,7 @@ namespace Vaulter\Events;
 
 use Closure;
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Modules\ModuleId;
 
 /**
@@ -18,6 +19,7 @@ use Vaulter\Modules\ModuleId;
  * the types of an installed module that is switched off, so the rows it recorded before stay readable (D22:
  * switching a module off keeps its data).
  */
+#[Api]
 final class EventCatalog
 {
     /** @var array<string, array{type: EventTypeContract, module: string}>|null */

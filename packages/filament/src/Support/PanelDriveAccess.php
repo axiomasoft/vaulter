@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Filament\Support;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Exceptions\VaulterException;
@@ -17,6 +18,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * handle's own decision (the root node must be viewable); the panel never evaluates
  * grants itself, so a driver or role change in core reaches the panel without a change here.
  */
+#[Internal]
 final readonly class PanelDriveAccess
 {
     public function __construct(private VaulterConfig $config, private TenancyBoundary $boundary) {}

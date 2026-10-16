@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Casts\BinaryString;
@@ -30,8 +31,6 @@ use Vaulter\Models\Drive\Node;
  * working state — the content every editor sees right now — and points at its head
  * checkpoint. Checkpoints are immutable {@see DocumentRevision} rows. Only
  * DocumentStateWriter writes the working state.
- *
- * @internal
  *
  * @property int|string                $id
  * @property int|string|null           $tenant_id
@@ -56,6 +55,7 @@ use Vaulter\Models\Drive\Node;
  * @property-read Node                  $node
  * @property-read DocumentRevision|null $currentRevision
  */
+#[Internal]
 class Document extends Model
 {
     use GuardsWrites;

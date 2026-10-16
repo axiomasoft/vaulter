@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Queries;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Drive\SearchOptions;
@@ -12,6 +13,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
+#[Internal]
 final readonly class SearchQuery
 {
     public function __construct(private NodePageQuery $pages, private NodeReadRepository $nodes) {}

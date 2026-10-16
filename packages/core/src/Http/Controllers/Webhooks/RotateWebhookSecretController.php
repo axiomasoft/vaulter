@@ -6,6 +6,7 @@ namespace Vaulter\Http\Controllers\Webhooks;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Actions\Webhooks\RotateWebhookSecretAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException;
 use Vaulter\Http\Requests\Webhooks\RotateWebhookSecretRequest;
 use Vaulter\Http\Resources\Webhooks\WebhookEndpointResource;
@@ -13,6 +14,7 @@ use Vaulter\Repositories\Webhooks\WebhookEndpointReadRepository;
 use Vaulter\Webhooks\WebhookEndpointWrites;
 
 /** A new signing secret, returned once; the old one keeps verifying during the overlap. */
+#[Internal]
 final readonly class RotateWebhookSecretController
 {
     public function __construct(private WebhookEndpointReadRepository $endpoints, private RotateWebhookSecretAction $rotate, private WebhookEndpointWrites $writes) {}

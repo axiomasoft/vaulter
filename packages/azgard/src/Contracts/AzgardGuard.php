@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard\Contracts;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * The NARROW Vaulter-owned seam the host's AzGuard-backed actor satisfies (master
  * plan / docs/adr/0007-pluggable-authorization.md). It exposes EXACTLY the two checks the
@@ -29,6 +32,7 @@ namespace Vaulter\Azgard\Contracts;
  * assignment scope type of the panel. The driver passes the workspace type string
  * through untouched — it never resolves the alias itself.
  */
+#[Spi(SpiKind::Implement)]
 interface AzgardGuard
 {
     /**

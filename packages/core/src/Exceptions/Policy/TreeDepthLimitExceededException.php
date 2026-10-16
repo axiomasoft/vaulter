@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Policy;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** The operation would place a node deeper below the root than the drive policy's maxFolderDepth. */
+#[Api]
 final class TreeDepthLimitExceededException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Api;
 
 /**
  * Safely stringifies model keys / auth identifiers (which Eloquent types as mixed).
  */
+#[Api]
 final class Identity
 {
     public static function stringify(mixed $value): string

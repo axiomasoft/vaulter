@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Actions\Trash;
 
 use InvalidArgumentException;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
@@ -24,6 +25,7 @@ use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
+#[Internal]
 final readonly class PurgeNodeAction
 {
     public function __construct(

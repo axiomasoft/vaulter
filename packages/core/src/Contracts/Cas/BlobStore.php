@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\ValueObjects\Cas\BlobScope;
@@ -20,6 +21,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  *
  * attach()/detach() manage those version↔blob edges.
  */
+#[Api]
 interface BlobStore
 {
     /**

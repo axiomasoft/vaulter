@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Support;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -14,6 +15,7 @@ use Vaulter\Exceptions\VaulterException;
  * is not instantiable.") surfaced with no mention of "vaulter" or which composer
  * package to require — a host had to guess.
  */
+#[Api]
 final class MissingPackageException extends VaulterException
 {
     /**

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Http\Controllers\Access;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\Access\CreateGrantRequest;
 use Vaulter\Http\Resources\Access\GrantResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
+#[Internal]
 final readonly class CreateGrantController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts) {}

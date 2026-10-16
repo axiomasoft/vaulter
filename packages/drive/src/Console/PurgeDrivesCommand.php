@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
@@ -20,6 +21,7 @@ use Vaulter\VaulterManager;
  * Start or resume the purge of the drives that are being deleted. The
  * purge itself is idempotent, so running this again after a crash finishes the job.
  */
+#[Internal]
 final class PurgeDrivesCommand extends Command
 {
     use OpensWriteScope;

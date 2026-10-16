@@ -7,6 +7,7 @@ namespace Vaulter\Filament;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Override;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Filament\Configuration\FilamentConfig;
 use Vaulter\Filament\Resources\ActivityResource;
@@ -29,6 +30,7 @@ use Vaulter\Filament\Resources\NodeShareResource;
  * Resources resolve their model through VaulterConfig::model(), so a host
  * that swaps a model keeps being governed by these resources.
  */
+#[Api]
 final class VaulterPlugin implements Plugin
 {
     public static function make(): static

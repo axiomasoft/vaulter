@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing\Support;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * A stream wrapper whose reads always fail, to prove that a scanner never reports clean
  * for bytes it could not read.
- *
- * @internal
  */
+#[Internal]
 final class FailingStream
 {
     public const string SCHEME = 'vaulter-failing';

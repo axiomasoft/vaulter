@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Drive;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
 
 /** The current revision of a file is its content; it goes only with the file (P4-I19). */
+#[Api]
 final class CannotDeleteHeadRevisionException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

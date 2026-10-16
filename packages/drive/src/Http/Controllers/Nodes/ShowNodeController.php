@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Http\Resources\NodeResponses;
@@ -25,6 +26,7 @@ use Vaulter\Http\Support\Preconditions;
  * `?include=breadcrumb,children` adds the visible ancestors and the first page of a
  * folder's children; that response is a different variant and carries no ETag.
  */
+#[Internal]
 final readonly class ShowNodeController
 {
     private const array INCLUDES = ['breadcrumb', 'children'];

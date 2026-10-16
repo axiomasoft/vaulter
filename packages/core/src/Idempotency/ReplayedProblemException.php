@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * and headers the first request answered with, rendered again (title and detail come from the catalogue in the
  * current locale). Nothing ran on the replay.
  */
+#[Api]
 final class ReplayedProblemException extends VaulterException implements ProblemException
 {
     /**

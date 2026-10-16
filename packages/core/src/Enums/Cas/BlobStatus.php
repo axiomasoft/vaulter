@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Cas;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;
 
@@ -25,6 +26,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *  - Deleted     — bytes gone; the row is kept as an idempotent tombstone so a
  *                  re-run of the sweep is a no-op.
  */
+#[Api]
 enum BlobStatus: string
 {
     use HasLabel;

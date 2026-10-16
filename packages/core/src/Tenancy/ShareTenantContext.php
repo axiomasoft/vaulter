@@ -6,10 +6,12 @@ namespace Vaulter\Tenancy;
 
 use Closure;
 use Fiber;
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Drive\Drive;
 use WeakMap;
 
 /** @internal Token-authorized, drive-limited issuer evaluation; not maintenance bypass. */
+#[Internal]
 final class ShareTenantContext
 {
     /** @var WeakMap<object, Drive> */

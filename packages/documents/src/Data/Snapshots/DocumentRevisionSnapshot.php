@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Data\Snapshots;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 
 /**
  * Read-only view of one immutable checkpoint of a document. A checkpoint never changes
  * after it is written except for its retention pin, so its id always names the same
  * content.
  */
+#[Api]
 final readonly class DocumentRevisionSnapshot
 {
-    /** @internal */
+    #[Internal]
     public function __construct(
         public string $id,
         public string $documentId,

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Drive;
 
+use Vaulter\Attributes\Api;
+
 /**
  * How full a drive is against its quota.
  *
  * @closed
  */
+#[Api]
 enum QuotaState: string
 {
     case Normal = 'normal';

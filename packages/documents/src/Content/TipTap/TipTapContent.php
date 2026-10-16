@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content\TipTap;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Content\ContentHasher;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
@@ -33,6 +34,7 @@ use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
  * taste; sanitising a URL is not. See {@see TipTapSchema::urlAttributes()} for how a
  * host attribute is recognised.
  */
+#[Api]
 final readonly class TipTapContent implements DocumentContent
 {
     /**

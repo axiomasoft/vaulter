@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Requests\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -11,6 +12,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * alongside the new one for that long, so the subscriber can switch without dropping
  * deliveries; the action caps it.
  */
+#[Internal]
 final class RotateWebhookSecretRequest extends VaulterFormRequest
 {
     /**

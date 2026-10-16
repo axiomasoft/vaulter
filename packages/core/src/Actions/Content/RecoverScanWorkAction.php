@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Content;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Content\ScanObligation;
@@ -13,8 +14,9 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
 /**
  * Recovery only writes a failed snapshot, never invokes clean settle after lease expiry.
  *
- * @internal Locks only the work row.
+ * Locks only the work row.
  */
+#[Internal]
 final readonly class RecoverScanWorkAction
 {
     public function __construct(private VaulterDatabase $database, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Media\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
@@ -13,8 +15,10 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
 
+#[Api]
 final readonly class MediaConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function disk(): string

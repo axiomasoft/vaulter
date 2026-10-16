@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Data\Webhooks\RotatedWebhookSecret;
 use Vaulter\Database\VaulterDatabase;
@@ -19,6 +20,7 @@ use Vaulter\Webhooks\WebhookSecret;
  *
  * Authorization is enforced by the caller before the Action runs.
  */
+#[Internal]
 final readonly class RotateWebhookSecretAction
 {
     private const int MAX_OVERLAP_SECONDS = 604800;

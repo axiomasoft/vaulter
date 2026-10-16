@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Webhooks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  * The secret is what the receiver verifies HMAC signatures with; the resource never
  * re-serializes it from the stored row, so this is the single moment it is visible.
  */
+#[Internal]
 final readonly class RegisteredWebhookEndpoint
 {
     public function __construct(

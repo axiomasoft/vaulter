@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Access;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * A capability a {@see PermissionDriver} implements to declare that v_node_grants is the
  * SOLE authority for read-visibility. When {@see
@@ -27,6 +30,7 @@ namespace Vaulter\Contracts\Access;
  * to return false (it can now reach un-anchored nodes, so narrowing would hide them). A
  * pure subject-broadening subclass that introduces no new authority keeps returning true.
  */
+#[Spi(SpiKind::Implement)]
 interface GrantAuthoritativeDriver
 {
     /**

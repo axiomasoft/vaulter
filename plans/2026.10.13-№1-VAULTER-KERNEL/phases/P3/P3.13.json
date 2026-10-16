@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.13",
   "title": "Каталог событий как вклады модулей (D38) и слот EventSink для activity/changes",
-  "status": "in_progress",
+  "status": "done",
   "summary": "`EventType` ядра разделён: ядро держит EventTypeContract/EventSpec(external)/EventCatalog, drive — `DriveEventType` (25 cases), documents — `DocumentEventType` (7 cases); EventRecorder вызывает EventSink-вклады (`drive.activity`, `drive.changes`) и больше не знает ActivityRecorder/ChangeJournal/feature-флагов; `vaulter:events` и docs строятся из каталога; строковые значения событий неизменны.",
   "why": "architecture#events, D38: закрытый enum со значениями всех модулей нарушает D5/I1; activity/changes — EventSink drive. Риски: семантика «первый sink отличает replay», порядок journal → outbox (seq), дубль значения событий между модулями.",
   "scope": {
@@ -251,12 +251,84 @@
   },
   "result": {
     "started_at": "2026-10-14T18:21:39Z",
+    "finished_at": "2026-10-15T06:39:52Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "effort": "high",
       "session": "4d58b15b-bba9-4c93-b6d2-3049eaea3533"
-    }
+    },
+    "notes": "Ревью grok-4.7 (дорожка E approve), прогоны в artifacts/P3.13-P3.15/runs",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      }
+    ],
+    "commits": [
+      "05656b11"
+    ]
   },
-  "updated_at": "2026-10-14T18:21:39Z"
+  "updated_at": "2026-10-15T06:39:52Z"
 }

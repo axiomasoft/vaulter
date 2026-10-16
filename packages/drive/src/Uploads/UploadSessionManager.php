@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Snapshots\NodeSnapshot;
@@ -51,6 +52,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * CommitUploadAction — the manager only moves the session's state and cleans up the
  * staged temp + protocol state on abort/expire.
  */
+#[Internal]
 final readonly class UploadSessionManager
 {
     public function __construct(

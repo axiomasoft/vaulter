@@ -6,6 +6,7 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use RuntimeException;
+use Vaulter\Attributes\Internal;
 
 /**
  * Regenerates the key table of the reference docs from the config files of every
@@ -15,6 +16,7 @@ use RuntimeException;
  * The files are read with the tokenizer instead of being included, so a default that
  * calls env() shows its variable and fallback rather than the value of this machine.
  */
+#[Internal]
 final class ConfigReferenceCommand extends Command
 {
     /** @var list<bool> per token: whether whitespace preceded it in the file */

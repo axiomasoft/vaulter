@@ -6,6 +6,7 @@ namespace Vaulter\Doctor\Checks;
 
 use Throwable;
 use Vaulter\Access\PermissionDriverCatalog;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
@@ -13,6 +14,7 @@ use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
+#[Internal]
 final readonly class AccessDriverCheck implements DoctorCheck
 {
     public function __construct(private AccessConfig $access, private PermissionDriverCatalog $drivers) {}

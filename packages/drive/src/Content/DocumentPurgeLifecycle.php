@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Contracts\Drive\PurgeOnlyContentLifecycle;
@@ -18,6 +19,7 @@ use Vaulter\Operations\DriveContext;
  * The purge a document gets when the documents package is not installed; that package
  * registers the full lifecycle, which replaces this one.
  */
+#[Internal]
 final readonly class DocumentPurgeLifecycle implements NodeContentLifecycle, PurgeOnlyContentLifecycle
 {
     public function __construct(

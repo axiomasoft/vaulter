@@ -7,6 +7,7 @@ namespace Vaulter\Sharing;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\Role;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
@@ -21,6 +22,7 @@ use Vaulter\Profiles\ProfileRegistry;
  * created or changed and again on every visit, so tightening a rule takes effect on
  * links that already exist.
  */
+#[Internal]
 final readonly class ShareLinkRules
 {
     /** Roles a link can carry whatever the audience. */

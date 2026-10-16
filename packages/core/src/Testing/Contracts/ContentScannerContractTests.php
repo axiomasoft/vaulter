@@ -7,6 +7,7 @@ namespace Vaulter\Testing\Contracts;
 use DateTimeImmutable;
 use PHPUnit\Framework\Assert;
 use Throwable;
+use Vaulter\Attributes\Api;
 use Vaulter\Content\ScanInput;
 use Vaulter\Content\ScanResult;
 use Vaulter\Contracts\Cas\ContentScanner;
@@ -30,6 +31,7 @@ use Vaulter\Testing\Support\FailingStream;
  * infected are verdicts, the rest are failures with that reason, and only a timeout is
  * worth retrying.
  */
+#[Api]
 final class ContentScannerContractTests
 {
     private const array FAILURES = [

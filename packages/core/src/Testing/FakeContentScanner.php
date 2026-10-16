@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Testing;
 
 use Throwable;
+use Vaulter\Attributes\Api;
 use Vaulter\Content\ScanInput;
 use Vaulter\Content\ScanResult;
 use Vaulter\Contracts\Cas\ContentScanner;
@@ -18,6 +19,7 @@ use Vaulter\Enums\Cas\ScanVerdict;
  * Its key and version must equal the scan.scanner_key / scan.scanner_version the
  * application is configured with: the scan work is bound to that identity.
  */
+#[Api]
 final class FakeContentScanner implements ContentScanner
 {
     /** @var list<array{revisionId: int|string, driveId: int|string, tenantId: int|string|null, scopeKey: string, sha256: string, bytes: string}> */

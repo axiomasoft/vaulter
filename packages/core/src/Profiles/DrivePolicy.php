@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Profiles;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Naming\NamePolicy;
 use Vaulter\Naming\PermissiveNamePolicy;
@@ -18,6 +19,7 @@ use Vaulter\Naming\PortableNamePolicy;
  * maxShareLinkTtlDays is enforced by share links; revisionRetention by
  * the revision pruning.
  */
+#[Api]
 final readonly class DrivePolicy
 {
     public function __construct(

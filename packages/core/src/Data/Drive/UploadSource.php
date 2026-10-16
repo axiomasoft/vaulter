@@ -10,7 +10,10 @@ use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 
+#[Api]
 final readonly class UploadSource
 {
     /** @var ArrayObject<int, resource> */
@@ -103,7 +106,7 @@ final readonly class UploadSource
         return $this->size;
     }
 
-    /** @internal @return resource|StreamInterface */
+    #[Internal]
     public function openForReading(): mixed
     {
         if ($this->kind === 'stream' || $this->kind === 'psr') {
@@ -146,7 +149,7 @@ final readonly class UploadSource
         }
     }
 
-    /** @internal */
+    #[Internal]
     public function releaseIfOwned(mixed $handle): void
     {
         foreach ($this->ownedHandles as $key => $owned) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Sharing;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Sharing\NodeShare;
 
 /**
@@ -13,10 +14,12 @@ use Vaulter\Models\Sharing\NodeShare;
  * controller can return it exactly once. It is never persisted and never
  * serialized by any Resource.
  *
- * @internal The public result is {@see \Vaulter\Data\Snapshots\MintedShareLink}.
+ * The public result is {@see \Vaulter\Data\Snapshots\MintedShareLink}.
  */
+#[Internal]
 final readonly class MintedShareLink
 {
+    #[Internal]
     public function __construct(
         public NodeShare $share,
         public string $token,

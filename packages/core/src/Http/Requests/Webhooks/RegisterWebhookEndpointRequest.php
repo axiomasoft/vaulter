@@ -6,6 +6,7 @@ namespace Vaulter\Http\Requests\Webhooks;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\Rule;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Data\Webhooks\RegisterWebhookEndpointInput;
 use Vaulter\Events\EventCatalog;
@@ -25,6 +26,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * a 422 instead of only failing at delivery. This is UX/defence-in-depth — the binding
  * barrier is on the delivery path (DNS can flip between register and deliver).
  */
+#[Internal]
 final class RegisterWebhookEndpointRequest extends VaulterFormRequest
 {
     /**

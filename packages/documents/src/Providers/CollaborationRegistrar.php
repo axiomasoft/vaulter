@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Broadcast;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Collaboration\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -18,6 +19,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleBindings;
 
 /** The collaboration wiring of the documents module until collaboration becomes its own module (P5, D32). */
+#[Internal]
 final class CollaborationRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

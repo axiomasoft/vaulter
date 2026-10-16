@@ -6,6 +6,7 @@ namespace Vaulter\Access;
 
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
@@ -23,6 +24,7 @@ use Vaulter\Operations\NodeLocator;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Tenancy\TenancyBoundary;
 
+#[Internal]
 final readonly class OperationGuard
 {
     /** The only system reason allowed to touch a drive being deleted. */

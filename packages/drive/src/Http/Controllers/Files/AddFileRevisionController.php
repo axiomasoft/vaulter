@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Files;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Http\Requests\Files\AddFileRevisionRequest;
@@ -15,6 +16,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Upload the next revision of a file (Edit); If-Match is required. */
+#[Internal]
 final readonly class AddFileRevisionController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Uploads;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
@@ -17,8 +19,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * after its staged temp and protocol-side state were released. The sweeper is a
  * system actor.
  */
+#[Api]
 final readonly class UploadExpired extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public UploadSession $session,
         ActorRef $actor,

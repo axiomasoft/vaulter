@@ -11,10 +11,12 @@ use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\IdStrategy;
 
 /** The shared Vaulter schema. Runtime features never control table existence. */
+#[Internal]
 final class SchemaBuilder
 {
     /**

@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\ValueObjects\GrantSet;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -30,6 +31,7 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Identity;
 
 /** @internal Read adapters for the existing browser and panel representations. */
+#[Internal]
 final readonly class NodeBrowserQuery
 {
     public function __construct(

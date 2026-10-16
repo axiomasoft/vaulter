@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
@@ -17,6 +18,7 @@ use Vaulter\Http\Support\RepresentationTag;
  * on who reads it, which is why its tag is the generation alone and two callers with
  * different roles get the same body and the same ETag.
  */
+#[Internal]
 final class DocumentContentResource extends JsonResource
 {
     public function __construct(DocumentSnapshot $document)

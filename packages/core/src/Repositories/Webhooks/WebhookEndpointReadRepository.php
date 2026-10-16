@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Webhooks;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
@@ -13,6 +14,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  * admin listing + single lookup for the management surface. Authorization is the
  * controller's job (a global manage ability); this repository only shapes queries.
  */
+#[Internal]
 final readonly class WebhookEndpointReadRepository
 {
     public function __construct(

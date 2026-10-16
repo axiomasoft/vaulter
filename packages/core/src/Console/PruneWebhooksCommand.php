@@ -6,6 +6,7 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -26,6 +27,7 @@ use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
  *
  * While the webhooks module is inactive the command no-ops with a notice.
  */
+#[Internal]
 final class PruneWebhooksCommand extends Command
 {
     use OpensWriteScope;

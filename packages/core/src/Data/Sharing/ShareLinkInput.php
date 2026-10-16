@@ -6,6 +6,7 @@ namespace Vaulter\Data\Sharing;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 
@@ -20,6 +21,7 @@ use Vaulter\Enums\Sharing\ShareAudience;
  * The raw bearer token is NOT part of this command — it is minted inside the Action
  * and returned once via the result; only its hash + prefix are persisted.
  */
+#[Api]
 final readonly class ShareLinkInput
 {
     public function __construct(

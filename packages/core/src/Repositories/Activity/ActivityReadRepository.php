@@ -6,6 +6,7 @@ namespace Vaulter\Repositories\Activity;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Activity\Activity;
@@ -23,6 +24,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * desc), so the consumer only attaches the cursor. An optional verb filter narrows
  * any scope.
  */
+#[Internal]
 final class ActivityReadRepository
 {
     public function __construct(

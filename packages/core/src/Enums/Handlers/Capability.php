@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Handlers;
 
+use Vaulter\Attributes\Api;
 use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 
 /**
@@ -15,6 +16,7 @@ use Vaulter\ValueObjects\Handlers\ContentCapabilities;
  * (the registry, keyed by mime/extension strings, is the source of truth; the
  * enums are only built-in sugar).
  */
+#[Api]
 enum Capability: string
 {
     case Edit = 'edit';

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Data\Drive;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Snapshots\FileRevisionSnapshot;
 
+#[Api]
 final readonly class FileStream
 {
     /** @param resource $stream The caller closes the stream after consumption. */

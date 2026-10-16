@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * Bounded `size_bucket` labels for multipart assembly metrics.
  */
+#[Internal]
 final class AssembleSizeBucket
 {
     private const int BYTES_8_MIB = 8 * 1024 * 1024;

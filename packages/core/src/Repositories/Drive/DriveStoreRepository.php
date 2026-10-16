@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Drive;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Drive\DriveStatus;
@@ -17,6 +18,7 @@ use Vaulter\Models\Drive\Drive;
  * incremented within the upload transaction, decremented only on
  * forceDelete (trashed bytes still occupy storage).
  */
+#[Internal]
 final class DriveStoreRepository
 {
     public function __construct(

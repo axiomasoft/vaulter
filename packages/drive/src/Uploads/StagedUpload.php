@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -36,6 +37,7 @@ use Vaulter\Models\Drive\Drive;
  * back through ContentStore::stage, so the invariant (hash the local staged
  * file) still holds at the moment of commit.
  */
+#[Internal]
 final readonly class StagedUpload
 {
     /**

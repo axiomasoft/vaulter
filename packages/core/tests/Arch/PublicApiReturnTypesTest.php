@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Access\AccessOperations;
 use Vaulter\Contracts\Activity\ActivityOperations;
 use Vaulter\Contracts\Drive\DriveHandle;
@@ -58,7 +59,7 @@ function leaks(string $class): array
 {
     $leaks = [];
     foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-        if ($method->isConstructor() || str_contains((string) $method->getDocComment(), '@internal')) {
+        if ($method->isConstructor() || str_contains((string) $method->getDocComment(), '@internal') || $method->getAttributes(Internal::class) !== []) {
             continue;
         }
         foreach (leakedTypes($method->getReturnType()) as $type) {

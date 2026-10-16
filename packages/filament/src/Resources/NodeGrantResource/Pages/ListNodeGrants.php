@@ -7,8 +7,10 @@ namespace Vaulter\Filament\Resources\NodeGrantResource\Pages;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 use Override;
+use Vaulter\Attributes\Internal;
 use Vaulter\Filament\Resources\NodeGrantResource;
 
+#[Internal]
 final class ListNodeGrants extends ListRecords
 {
     protected static string $resource = NodeGrantResource::class;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Normalizer;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Naming\NamePolicy;
 
@@ -19,6 +20,7 @@ use Vaulter\Naming\NamePolicy;
  * permissive policy) or refused (the portable policy) — never silently changed.
  * These base rules hold under every {@see NamePolicy}.
  */
+#[Internal]
 final class NodeName
 {
     /** The width of the v_nodes.name column. */

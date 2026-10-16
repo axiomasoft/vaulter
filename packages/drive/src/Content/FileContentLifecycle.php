@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
@@ -18,6 +19,7 @@ use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
 
+#[Internal]
 final readonly class FileContentLifecycle implements NodeContentLifecycle
 {
     public function __construct(

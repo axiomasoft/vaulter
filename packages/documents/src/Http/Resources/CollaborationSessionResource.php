@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 
 /**
@@ -13,6 +14,7 @@ use Vaulter\Documents\Data\Collaboration\CollaborationSession;
  * (`rw` or `ro`) and the short-lived token the hub checks again on every call. The
  * token is shown once, so the response is never stored.
  */
+#[Internal]
 final class CollaborationSessionResource extends JsonResource
 {
     public function __construct(CollaborationSession $session)

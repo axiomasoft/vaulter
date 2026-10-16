@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Shared;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -24,6 +25,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * registered). Abilities come from one batch per drive on the page, and a node whose
  * drive the caller may no longer reach (another tenant, being deleted) is left out.
  */
+#[Internal]
 final readonly class ListSharedWithMeController
 {
     public function __construct(

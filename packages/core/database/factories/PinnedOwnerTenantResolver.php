@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Database\Factories;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Tenancy\ResolvesOwnerTenant;
 
 /**
  * A pinned tenant that still lets the replaced resolver say which tenant an owner is in.
- *
- * @internal
  */
+#[Internal]
 final readonly class PinnedOwnerTenantResolver extends PinnedTenantResolver implements ResolvesOwnerTenant
 {
     public function __construct(int|string|null $tenant, private ResolvesOwnerTenant $replaced)

@@ -6,6 +6,8 @@ namespace Vaulter\Events\Access;
 
 use Carbon\CarbonImmutable;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
@@ -21,8 +23,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * so the event carries the node and the subject (a value object) plus how many
  * rows were removed.
  */
+#[Api]
 final readonly class NodeGrantRevoked extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public Subject $subject,

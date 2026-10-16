@@ -10,7 +10,6 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
 
 Vaulter\Drive\Configuration\DriveConfig
-  __construct(\Illuminate\Contracts\Config\Repository $config)
   allowedMimeTypes(): array
   blockedExtensions(): array
   chunkSize(): int
@@ -32,7 +31,6 @@ Vaulter\Drive\Configuration\DriveConfig
   validateScanWork(bool $requireBroker = false): void
 
 Vaulter\Drive\Events\Drives\DriveArchived
-  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -49,7 +47,6 @@ Vaulter\Drive\Events\Drives\DriveArchived
   readonly string $eventId
 
 Vaulter\Drive\Events\Drives\DriveCreated
-  __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -88,7 +85,6 @@ Vaulter\Drive\Events\Drives\DriveDeleted
   readonly string $profile
 
 Vaulter\Drive\Events\Drives\DriveUnarchived
-  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -105,7 +101,6 @@ Vaulter\Drive\Events\Drives\DriveUnarchived
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileRevisionAdded
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int $versionNo, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -125,7 +120,6 @@ Vaulter\Drive\Events\Files\FileRevisionAdded
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileRevisionDeleted
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, int|string $revisionId, int $revisionNo, int $sizeBytes, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -146,7 +140,6 @@ Vaulter\Drive\Events\Files\FileRevisionDeleted
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileUploaded
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -165,7 +158,6 @@ Vaulter\Drive\Events\Files\FileUploaded
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\FolderCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -182,7 +174,6 @@ Vaulter\Drive\Events\Nodes\FolderCreated
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeCopied
-  __construct(\Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -200,7 +191,6 @@ Vaulter\Drive\Events\Nodes\NodeCopied
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeMoved
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $fromParentId, int|null|string $toParentId, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -240,7 +230,6 @@ Vaulter\Drive\Events\Nodes\NodePurged
   readonly string $profile
 
 Vaulter\Drive\Events\Nodes\NodeRenamed
-  __construct(\Vaulter\Models\Drive\Node $node, string $fromName, string $toName, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -259,7 +248,6 @@ Vaulter\Drive\Events\Nodes\NodeRenamed
   readonly string $toName
 
 Vaulter\Drive\Events\Nodes\NodeRestored
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -276,7 +264,6 @@ Vaulter\Drive\Events\Nodes\NodeRestored
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeTrashed
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -293,7 +280,6 @@ Vaulter\Drive\Events\Nodes\NodeTrashed
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeUpdated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -310,7 +296,6 @@ Vaulter\Drive\Events\Nodes\NodeUpdated
   readonly string $eventId
 
 Vaulter\Drive\Events\Uploads\UploadAborted
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -327,7 +312,6 @@ Vaulter\Drive\Events\Uploads\UploadAborted
   readonly string $eventId
 
 Vaulter\Drive\Events\Uploads\UploadExpired
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
@@ -344,7 +328,6 @@ Vaulter\Drive\Events\Uploads\UploadExpired
   readonly string $eventId
 
 Vaulter\Drive\Events\Uploads\UploadInitiated
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array

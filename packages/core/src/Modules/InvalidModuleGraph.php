@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * The outcome of a compilation that failed: every reason, and nothing activated.
- *
- * @internal
  */
+#[Internal]
 final readonly class InvalidModuleGraph
 {
     /** @param list<string> $reasons */

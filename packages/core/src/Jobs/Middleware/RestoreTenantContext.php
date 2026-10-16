@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Auth;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Tenancy\TenancyBoundary;
@@ -16,6 +17,7 @@ use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /** Host restoration middleware precedes this validator; TenantResolver is read-only. */
+#[Internal]
 final class RestoreTenantContext
 {
     private ?Actor $actor = null;

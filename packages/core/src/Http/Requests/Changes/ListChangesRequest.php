@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Requests\Changes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ChangesConfig;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
@@ -11,6 +12,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * A page of the change journal: the cursor from changes/start or from the previous
  * page, and how many changes at most.
  */
+#[Internal]
 final class ListChangesRequest extends VaulterFormRequest
 {
     public const int DEFAULT_LIMIT = 100;

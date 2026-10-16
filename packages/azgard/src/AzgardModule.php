@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Doctor\AzgardDependencyCheck;
 use Vaulter\Azgard\Providers\BindingsRegistrar;
@@ -20,6 +21,7 @@ use Vaulter\Modules\VaulterModule;
  * config (`vaulter.access.permission_driver = 'azgard'`). It extends the drive's access, so it requires the
  * drive module.
  */
+#[Internal]
 final class AzgardModule implements VaulterModule
 {
     public function id(): ModuleId

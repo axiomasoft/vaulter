@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Doctor;
 
 use Illuminate\Contracts\Container\Container;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
@@ -16,6 +17,7 @@ use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 
 /** A scan policy that is on needs a scanner that resolves and answers to the identity the policy names. */
+#[Internal]
 final readonly class ScanScannerCheck implements DoctorCheck
 {
     public function __construct(private Container $container, private ProfilePolicy $policy, private ProfileRegistry $profiles) {}

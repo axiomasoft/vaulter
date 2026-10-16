@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor\Checks;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
+#[Internal]
 final readonly class WebhooksDeliveriesCheck implements DoctorCheck
 {
     public function __construct(private VaulterConfig $config) {}

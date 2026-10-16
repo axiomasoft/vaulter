@@ -6,7 +6,9 @@ namespace Vaulter\ValueObjects\Access;
 
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 
+#[Api]
 final readonly class OwnerRef
 {
     public function __construct(public string $type, public int|string $id)

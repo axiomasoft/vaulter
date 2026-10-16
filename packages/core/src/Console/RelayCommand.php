@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Events\Outbox\OutboxRelay;
 
@@ -14,6 +15,7 @@ use Vaulter\Events\Outbox\OutboxRelay;
  * while work remains, for at most --max-seconds. Idempotent and fenced: overlapping runs never deliver one row
  * twice under the same lease; the schedule runs it every minute without overlapping.
  */
+#[Internal]
 final class RelayCommand extends Command
 {
     use OpensWriteScope;

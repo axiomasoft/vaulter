@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Activity;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Events\DomainEvent;
@@ -21,9 +22,8 @@ use Vaulter\Support\RequestContext;
  *
  * This is the anti-NC-fan-out core: ONE row per event, never a per-affected-
  * user fan-out. Recipients are resolved at READ by scoping the feed.
- *
- * @internal
  */
+#[Internal]
 final readonly class ActivityRecorder
 {
     public function __construct(

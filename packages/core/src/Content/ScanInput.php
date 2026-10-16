@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Content;
 
 use DateTimeImmutable;
+use Vaulter\Attributes\Api;
 
+#[Api]
 final readonly class ScanInput
 {
     /** @param resource $stream */

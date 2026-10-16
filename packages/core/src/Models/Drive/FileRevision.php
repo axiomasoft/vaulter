@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\Factories\FileRevisionFactory;
@@ -52,6 +53,7 @@ use Vaulter\Models\Content\ScanUtcDateTime;
  * @property Carbon|null          $superseded_at
  * @property Carbon|null          $client_modified_at
  */
+#[Internal]
 class FileRevision extends Model
 {
     use GuardsWrites;

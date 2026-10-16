@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Node;
 
 /** A node trashed together with a folder is restored through that folder. */
+#[Api]
 final class NodeTrashedByAncestorException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

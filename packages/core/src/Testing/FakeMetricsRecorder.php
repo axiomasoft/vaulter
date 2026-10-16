@@ -6,12 +6,14 @@ namespace Vaulter\Testing;
 
 use RuntimeException;
 use Throwable;
+use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
 /**
  * In-memory {@see MetricsRecorder} for package and host tests. Lives in
  * src/Testing/ so consumers can assert emissions without a metrics backend.
  */
+#[Api]
 final class FakeMetricsRecorder implements MetricsRecorder
 {
     /** @var list<array{type: string, name: string, value: int|float, labels: array<string, string>}> */

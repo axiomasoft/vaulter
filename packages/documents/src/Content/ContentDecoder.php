@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
@@ -25,9 +26,8 @@ use Vaulter\Documents\Types\UnknownDocumentType;
  * gone reads as opaque JSON, an older schema is upgraded on the fly when the type can
  * (history is not rewritten), and content the codec only partly understands is marked
  * lossy so it is never saved back.
- *
- * @internal
  */
+#[Internal]
 final readonly class ContentDecoder
 {
     public function __construct(

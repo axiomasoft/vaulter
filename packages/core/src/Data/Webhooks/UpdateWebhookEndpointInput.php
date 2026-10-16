@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Webhooks;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * The command DTO for updating a webhook endpoint.
  * Each field is nullable so a PATCH may touch only what it sends — a null field is
@@ -14,6 +16,7 @@ namespace Vaulter\Data\Webhooks;
  * Built from a validated request and consumed ONLY by
  * {@see UpdateWebhookEndpointAction}.
  */
+#[Internal]
 final readonly class UpdateWebhookEndpointInput
 {
     /**

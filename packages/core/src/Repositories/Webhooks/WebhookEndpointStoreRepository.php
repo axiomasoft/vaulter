@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Webhooks;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
@@ -14,6 +15,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  * and opens NO transaction (the Action owns it). It never generates a signing secret:
  * the Action mints it (returned once) and hands the stored value here.
  */
+#[Internal]
 final readonly class WebhookEndpointStoreRepository
 {
     public function __construct(

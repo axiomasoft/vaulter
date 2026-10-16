@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Handlers;
 
+use Vaulter\Attributes\Api;
+
 /**
  * What a client may do with a node's content: a file handler declares it per file, a
  * document type for its documents. The content's shape is never a capability — a
@@ -19,6 +21,7 @@ namespace Vaulter\ValueObjects\Handlers;
  * sandbox (see PreviewHandler) — the client decides the sandboxing, the capability
  * only advertises that a preview exists.
  */
+#[Api]
 final readonly class ContentCapabilities
 {
     public function __construct(

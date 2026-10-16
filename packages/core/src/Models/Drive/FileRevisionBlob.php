@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Models\Drive;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -22,6 +23,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property int|null   $offset_bytes
  * @property int|null   $length_bytes
  */
+#[Internal]
 class FileRevisionBlob extends Pivot
 {
     use GuardsWrites;

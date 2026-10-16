@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Files;
 
 use Psr\Http\Message\StreamInterface;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Uploads\PreparedUpload;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Models\Drive\Drive;
@@ -19,11 +21,13 @@ use Vaulter\Models\Drive\Node;
  *   - new version → $targetNode set (the existing kind=file node); $into/$name
  *     are ignored (the node keeps its place and name).
  */
+#[Api]
 final readonly class IngestFileInput
 {
     /**
      * @param resource|StreamInterface $stream a borrowed stream at its current position
      */
+    #[Internal]
     public function __construct(
         public Drive $storage,
         public mixed $stream,

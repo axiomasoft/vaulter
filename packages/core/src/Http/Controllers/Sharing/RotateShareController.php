@@ -6,12 +6,14 @@ namespace Vaulter\Http\Controllers\Sharing;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Http\Resources\Sharing\MintedShareResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Replace a link's token: the old token and its visits stop working at once. */
+#[Internal]
 final readonly class RotateShareController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private SharingConfig $sharing) {}

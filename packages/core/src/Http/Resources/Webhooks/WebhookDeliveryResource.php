@@ -6,6 +6,7 @@ namespace Vaulter\Http\Resources\Webhooks;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 
@@ -15,6 +16,7 @@ use Vaulter\Models\Webhooks\WebhookDelivery;
  *
  * @mixin WebhookDelivery
  */
+#[Internal]
 final class WebhookDeliveryResource extends JsonResource
 {
     /**

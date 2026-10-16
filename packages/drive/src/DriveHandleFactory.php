@@ -7,6 +7,7 @@ namespace Vaulter\Drive;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle as Contract;
 use Vaulter\Contracts\Drive\DriveHandleFactory as Factory;
@@ -14,6 +15,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 
+#[Internal]
 final readonly class DriveHandleFactory implements Factory
 {
     public function __construct(private Container $container, private VaulterConfig $config)

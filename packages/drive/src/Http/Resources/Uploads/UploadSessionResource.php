@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Http\Resources\Uploads;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 
@@ -16,6 +17,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
  *
  * @mixin UploadSession
  */
+#[Internal]
 final class UploadSessionResource extends JsonResource
 {
     /**

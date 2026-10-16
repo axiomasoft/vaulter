@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Vaulter\Actions\Content\ActivateScanPolicyAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanSnapshot;
@@ -19,6 +20,7 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 
+#[Internal]
 final readonly class ScanPolicyResolver implements Resolver
 {
     public function __construct(private ProfilePolicy $profilesPolicy, private ProfileRegistry $profiles,

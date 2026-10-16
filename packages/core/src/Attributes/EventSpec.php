@@ -18,6 +18,7 @@ use Vaulter\Events\EventTypeContract;
  * the drive's event sinks — the activity feed and the change journal (`upsert`, `remove`, or null when the
  * type is not journalled); the kernel does not read them.
  */
+#[Api]
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 final readonly class EventSpec
 {

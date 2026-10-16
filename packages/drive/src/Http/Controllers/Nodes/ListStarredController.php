@@ -6,12 +6,14 @@ namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 
 /** The caller's starred nodes of a drive that it can still see, newest star first. */
+#[Internal]
 final readonly class ListStarredController
 {
     public function __construct(private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

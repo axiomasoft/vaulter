@@ -7,6 +7,7 @@ namespace Vaulter\Http\Resources\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use stdClass;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 
@@ -17,6 +18,7 @@ use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
  *
  * @mixin ActivityEntrySnapshot
  */
+#[Internal]
 final class ActivityResource extends JsonResource
 {
     /** @param string $nodeType the morph type activity rows use for a node target */

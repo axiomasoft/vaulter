@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Events\Outbox\OutboxStore;
 
 /** An outbox consumer whose oldest due delivery waits too long: the relay does not run or cannot keep up (D29). */
+#[Internal]
 final readonly class OutboxLagCheck implements DoctorCheck
 {
     /** Seconds the oldest due delivery may wait for the relay before the lag is reported. */

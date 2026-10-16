@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Enums\Drive;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Icon;
 use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasIcon;
@@ -20,6 +21,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *  - document — a structured document of a registered document type, payload in v_documents.
  *  - shortcut — a pointer to another node (shortcut_target_id).
  */
+#[Api]
 enum NodeKind: string
 {
     use HasIcon;

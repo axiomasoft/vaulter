@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use RuntimeException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 
 /**
@@ -19,6 +20,7 @@ use Vaulter\Database\VaulterDatabase;
  * because the model now carries the `encrypted` cast: reading a still-plaintext row
  * through the model would throw a DecryptException on hydration.
  */
+#[Internal]
 final class SigningSecretEncryptor
 {
     public function __construct(private readonly VaulterDatabase $database) {}

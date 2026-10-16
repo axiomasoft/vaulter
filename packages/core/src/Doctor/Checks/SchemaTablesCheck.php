@@ -6,6 +6,7 @@ namespace Vaulter\Doctor\Checks;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Migrations\MigrationRepositoryInterface;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Database\VaulterDatabase;
@@ -13,6 +14,7 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Operations\ModuleReadiness;
 
+#[Internal]
 final readonly class SchemaTablesCheck implements DoctorCheck
 {
     /** The entity keys of the tables core's migrations create, drive and documents data included. */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -11,6 +12,7 @@ use Vaulter\Exceptions\VaulterException;
  * incomplete: firebase/php-jwt missing, or no signing/webhook secret set. These
  * are operator-fixable setup errors, surfaced loud rather than failing open.
  */
+#[Api]
 final class CollaborationConfigException extends VaulterException
 {
     public static function missingJwt(): self

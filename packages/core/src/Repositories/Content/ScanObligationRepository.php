@@ -7,6 +7,7 @@ namespace Vaulter\Repositories\Content;
 use DateTimeImmutable;
 use DateTimeZone;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Content\ScanObligation;
@@ -15,8 +16,9 @@ use Vaulter\Models\Content\ScanRequest;
 /**
  * Persistence of scan work rows and their request ledger; transitions live in Vaulter\Actions\Content.
  *
- * @internal Hosts reach scan work through the drive scan commands and jobs.
+ * Hosts reach scan work through the drive scan commands and jobs.
  */
+#[Internal]
 final readonly class ScanObligationRepository
 {
     public function __construct(private VaulterConfig $config, private VaulterDatabase $database) {}

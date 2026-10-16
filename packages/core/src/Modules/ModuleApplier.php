@@ -12,6 +12,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Routing\Router;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -21,9 +22,8 @@ use Vaulter\Http\Middleware\EnsureModuleActive;
  * Applies the sealed declarations of the active modules to the application (architecture#module-system,
  * lifecycle). `register()` runs in the core provider's booting callback, after compilation and before any
  * provider boots; `boot()` runs while the core provider boots. Nothing here reads the database or the network.
- *
- * @internal
  */
+#[Internal]
 final class ModuleApplier
 {
     /** The route default that carries the module fingerprint into a route cache. */

@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -37,6 +38,7 @@ use Vaulter\Operations\NodeLocator;
  * 428 or 412), and the matching sequence is what the operation then checks again,
  * atomically, while it writes.
  */
+#[Internal]
 final readonly class NodeResponses
 {
     public function __construct(

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use function Illuminate\Support\enum_value;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\DatabaseConfig;
 
 /**
@@ -25,6 +26,7 @@ use Vaulter\Configuration\DatabaseConfig;
  *
  * @mixin Model
  */
+#[Api]
 trait ResolvesVaulterConnection
 {
     #[\Override]

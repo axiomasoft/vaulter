@@ -6,11 +6,13 @@ namespace Vaulter\Documents\Http\Controllers\Comments;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Delete a comment (its author, or Manage on the node). */
+#[Internal]
 final readonly class DeleteCommentController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}

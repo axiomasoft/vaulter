@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Node;
 
 /** The original parent is gone or trashed and no destination was given. */
+#[Api]
 final class RestoreDestinationRequiredException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

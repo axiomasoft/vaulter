@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Uploads;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Operations\DriveContext;
 
+#[Internal]
 final readonly class AbortUploadAction
 {
     public function __construct(private UploadSessionManager $manager, private CompleteUploadAction $complete) {}

@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Http\Controllers\Revisions;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Resources\DocumentResponses;
 use Vaulter\Http\Support\HttpOperationContextFactory;
@@ -16,6 +17,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * never changed and open collaboration rooms move to a new epoch, so If-Match is required
  * and is compared with the content's current tag.
  */
+#[Internal]
 final readonly class RestoreDocumentRevisionController
 {
     public function __construct(

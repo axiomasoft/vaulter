@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Presentation;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Presentation\KindPresenter;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Content\ContentDecoder;
@@ -19,8 +21,10 @@ use Vaulter\ValueObjects\Handlers\NodePresentation;
  * installed shows the read-only `vaulter/unsupported` viewer. Only the type key leaves
  * this class, never the type's class.
  */
+#[Api]
 final readonly class DocumentPresenter implements KindPresenter
 {
+    #[Internal]
     public function __construct(private ContentDecoder $decoder) {}
 
     public function kind(): NodeKind

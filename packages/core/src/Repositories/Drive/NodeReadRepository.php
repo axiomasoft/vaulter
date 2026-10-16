@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\AccessScope;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
@@ -39,6 +40,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * candidate IDs. Candidates require exact AccessResolver evaluation before display;
  * the REST listings and admin table apply that after fetching each page.
  */
+#[Internal]
 final class NodeReadRepository
 {
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Exceptions\Access;
 
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -17,6 +18,7 @@ use Vaulter\Exceptions\VaulterException;
  * loud; in production the write is only logged (the direction of failure is safe —
  * an inert grant grants nothing).
  */
+#[Api]
 final class UnenumerableGrantSubjectException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

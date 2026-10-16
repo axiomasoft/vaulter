@@ -6,6 +6,7 @@ namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\NodeUserState;
 use Vaulter\Support\Identity;
@@ -16,6 +17,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * takes no tree locks and never touches the node row: it changes neither the
  * node's sequence nor its timestamps.
  */
+#[Internal]
 final readonly class NodeUserStateRepository
 {
     /** Idempotent: starring a starred node keeps its original starred_at. */

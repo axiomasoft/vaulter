@@ -6,6 +6,7 @@ namespace Vaulter\Sharing;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Identity;
 
@@ -18,6 +19,7 @@ use Vaulter\Support\Identity;
  * link, or changing one of those voids it. It carries no secret and grants nothing
  * by itself — every request still passes the full resolve.
  */
+#[Internal]
 final readonly class ShareSession
 {
     public const string HEADER = 'X-Share-Session';

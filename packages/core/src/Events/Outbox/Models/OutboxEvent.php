@@ -7,6 +7,7 @@ namespace Vaulter\Events\Outbox\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -35,6 +36,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  *
  * @method static Builder<static> query()
  */
+#[Internal]
 class OutboxEvent extends Model
 {
     use GuardsWrites;

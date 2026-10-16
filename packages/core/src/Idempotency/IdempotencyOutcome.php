@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Idempotency;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * Whether the keyed write of the current request was answered from a receipt: the HTTP middleware reads it to
  * stamp `Idempotent-Replayed: true`. Scoped to the request (or job).
- *
- * @internal
  */
+#[Internal]
 final class IdempotencyOutcome
 {
     private bool $replayed = false;

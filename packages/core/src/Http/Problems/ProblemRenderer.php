@@ -22,6 +22,7 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -33,6 +34,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
  * member comes from the code's spec (architecture#errors); a `with_backoff` code carries
  * `Retry-After` when its exception names the delay.
  */
+#[Internal]
 final readonly class ProblemRenderer
 {
     private const string ROUTE_PREFIX = 'vaulter.v1.';

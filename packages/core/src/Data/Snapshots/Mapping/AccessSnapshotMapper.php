@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Snapshots\Mapping;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\GrantSnapshot;
 use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Sharing\NodeShare;
 
 /** @internal Grants and share links to their snapshots. */
+#[Internal]
 final readonly class AccessSnapshotMapper
 {
     public function grant(NodeGrant $grant): GrantSnapshot

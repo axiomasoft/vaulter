@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Doctor;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
@@ -11,6 +12,7 @@ use Vaulter\Media\Configuration\DedupScope;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Profiles\ProfileRegistry;
 
+#[Internal]
 final readonly class DedupScopeCheck implements DoctorCheck
 {
     public function __construct(private MediaConfig $config, private ProfileRegistry $profiles) {}

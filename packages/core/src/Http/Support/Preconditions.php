@@ -6,6 +6,7 @@ namespace Vaulter\Http\Support;
 
 use Illuminate\Http\Request;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
 use Vaulter\Exceptions\Nodes\StaleNodeException;
@@ -22,6 +23,7 @@ use Vaulter\Exceptions\Nodes\StaleNodeException;
  * returned sequence or state version to the operation, whose compare-and-set in the
  * writing transaction refuses a change that slipped in after the comparison.
  */
+#[Internal]
 final class Preconditions
 {
     private const string IF_MATCH = 'If-Match';

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Events\EventsReference;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Events\EventsReference;
  * every type in the event catalogue. With --check nothing is written and the exit code says whether the
  * docs are current (for CI).
  */
+#[Internal]
 final class EventsReferenceCommand extends Command
 {
     protected $signature = 'vaulter:events:reference

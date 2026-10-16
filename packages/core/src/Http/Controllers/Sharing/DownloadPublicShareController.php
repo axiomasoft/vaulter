@@ -6,6 +6,7 @@ namespace Vaulter\Http\Controllers\Sharing;
 
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
@@ -19,6 +20,7 @@ use Vaulter\Http\Support\SharedNodeResolver;
  * whose role cannot download (a previewer) gets 403: it may show the file, never hand
  * out the original.
  */
+#[Internal]
 final readonly class DownloadPublicShareController
 {
     public function __construct(private SharedNodeResolver $nodes, private ContentResponder $content) {}

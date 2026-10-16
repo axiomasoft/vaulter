@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
@@ -18,6 +19,7 @@ use Vaulter\VaulterManager;
  * listing. For a database restored from a backup, or when an operator knows the
  * journal no longer matches the drive (the journal was switched off for a while).
  */
+#[Internal]
 final class ResetChangesCommand extends Command
 {
     use OpensWriteScope;

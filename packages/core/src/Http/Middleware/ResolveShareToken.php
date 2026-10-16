@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Sharing\ShareNotFoundException;
 use Vaulter\Exceptions\Sharing\SharePasswordRequiredException;
@@ -37,6 +38,7 @@ use Vaulter\Sharing\ShareSession;
  *
  * Downstream controllers read the context via {@see self::context()}.
  */
+#[Internal]
 final class ResolveShareToken
 {
     /**

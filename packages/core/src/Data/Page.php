@@ -8,6 +8,8 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 use Traversable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 
 /**
  * One page of a cursor-paginated public listing. The cursor is an opaque string:
@@ -17,13 +19,13 @@ use Traversable;
  *
  * @implements IteratorAggregate<int, T>
  */
+#[Api]
 final readonly class Page implements Countable, IteratorAggregate
 {
     /**
-     * @internal
-     *
      * @param list<T> $items
      */
+    #[Internal]
     public function __construct(public array $items, public ?string $nextCursor, public int $scanned = 0) {}
 
     public function hasMore(): bool

@@ -6,6 +6,7 @@ namespace Vaulter\Providers;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\DatabaseConfig;
@@ -40,6 +41,7 @@ use Vaulter\Tenancy\TenancyBypass;
  * The container wiring of the core module ({@see CoreModule}): config, database, ids, tenancy and
  * observability. The drive slices located in core are wired by {@see DriveSliceRegistrar} (D39).
  */
+#[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

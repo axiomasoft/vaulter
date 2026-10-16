@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Controllers\Comments;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\AddCommentRequest;
 use Vaulter\Documents\Http\Resources\CommentResource;
@@ -12,6 +13,7 @@ use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Add a comment, or a reply to one of the node's comments (Comment). */
+#[Internal]
 final readonly class AddCommentController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}

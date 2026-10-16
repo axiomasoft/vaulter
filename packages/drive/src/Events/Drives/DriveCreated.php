@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Drives;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Drive;
@@ -19,8 +21,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * A storage container was provisioned for a host entity, together with its
  * auto-created root folder node.
  */
+#[Api]
 final readonly class DriveCreated extends DomainEvent
 {
+    #[Internal]
     public function __construct(
         public Drive $storage,
         public Node $root,

@@ -8,12 +8,14 @@ use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Kernel;
 
+#[Internal]
 final readonly class AzgardDependencyCheck implements DoctorCheck
 {
     public function __construct(private Container $container, private Repository $config) {}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Content;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -12,6 +13,7 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 
+#[Internal]
 final readonly class OffScanPolicyResolver implements ScanPolicyResolver
 {
     public function __construct(private ProfilePolicy $policy, private ProfileRegistry $profiles) {}

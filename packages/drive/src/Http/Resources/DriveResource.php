@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\DriveSnapshot;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Data\Snapshots\QuotaSnapshot;
@@ -15,6 +16,7 @@ use Vaulter\Data\Snapshots\QuotaSnapshot;
  * the root folder a client opens into and the quota accounting. What the caller may do
  * there is the root node's abilities, read from the node itself.
  */
+#[Internal]
 final class DriveResource extends JsonResource
 {
     public function __construct(DriveSnapshot $drive, private readonly QuotaSnapshot $quota, private readonly string $rootNodeId)

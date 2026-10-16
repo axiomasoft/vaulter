@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Content;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanResult;
@@ -20,8 +21,9 @@ use Vaulter\Tenancy\TenancyBoundary;
 /**
  * Records a scanner verdict for a live lease and quarantines infected content in the same transaction.
  *
- * @internal Lock order: tree shared, node, file, revision, blob, then the work row. No scanner IO runs inside.
+ * Lock order: tree shared, node, file, revision, blob, then the work row. No scanner IO runs inside.
  */
+#[Internal]
 final readonly class SettleScanWorkAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Events;
 
 use Vaulter\Attributes\EventSpec;
+use Vaulter\Attributes\Internal;
 
 /**
  * Renders the event catalogue table of the reference docs from the {@see EventSpec} of every type in the
  * {@see EventCatalog} of the installed modules, so the docs cannot drift from the code.
  */
+#[Internal]
 final readonly class EventsReference
 {
     public const START = '<!-- events:start -->';

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\Roles;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 
@@ -18,6 +19,7 @@ use Vaulter\Exceptions\Access\UnknownRoleException;
  *   organizer  writer + share
  *   owner      organizer + manage (access), delete (permanent)
  */
+#[Api]
 final class RoleRegistry
 {
     public const string PREVIEWER = 'previewer';

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Sharing;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * The resolver's result envelope: a {@see ShareResolution} status plus
  * the {@see ShareContext} when (and only when) the status is Ok. Immutable — the
  * public HTTP layer reads the status to choose 404 / 401 / proceed.
  */
+#[Internal]
 final readonly class ShareResult
 {
     private function __construct(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor;
 
 use Illuminate\Database\Query\Builder;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
@@ -14,6 +15,7 @@ use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Support\Identity;
 
 /** Scan work is scoped by drive and tenant; work outside its drive's scope is never completed correctly. */
+#[Internal]
 final readonly class ScanScopeCheck implements DoctorCheck
 {
     public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies) {}

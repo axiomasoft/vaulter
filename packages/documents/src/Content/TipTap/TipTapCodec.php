@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content\TipTap;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Content\ReadContent;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
@@ -13,6 +14,7 @@ use Vaulter\Documents\Contracts\DocumentContent;
  * lenient on read ({@see decodeForRead()}), and honest about what the lenient read
  * dropped.
  */
+#[Api]
 final readonly class TipTapCodec implements DocumentCodec
 {
     public function __construct(

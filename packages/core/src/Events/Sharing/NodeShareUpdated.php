@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Events\Sharing;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Sharing\NodeShare;
@@ -18,9 +20,11 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * A live share link was changed without touching its token. Only the names of the
  * changed fields are reported: the new values (a password above all) stay out.
  */
+#[Api]
 final readonly class NodeShareUpdated extends DomainEvent
 {
     /** @param list<string> $changed */
+    #[Internal]
     public function __construct(
         public NodeShare $share,
         public array $changed,

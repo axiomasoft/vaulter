@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\IdsConfig;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Exceptions\Schema\UnknownIdStrategyException;
@@ -17,6 +18,7 @@ use Vaulter\Exceptions\Schema\UnknownIdStrategyException;
  * The resolver is registered as a container singleton, so the resolved instance
  * map is cached for the lifetime of the request/worker.
  */
+#[Internal]
 final class IdStrategyResolver
 {
     public function __construct(private readonly IdsConfig $idsConfig) {}

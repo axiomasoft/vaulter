@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Uploads;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Http\Requests\VaulterFormRequest;
@@ -14,6 +15,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * declared size, mime and metadata. A declared sha256 is accepted but never trusted as
  * the content address: the assembled bytes are hashed again when they are committed.
  */
+#[Internal]
 final class CreateUploadSessionRequest extends VaulterFormRequest
 {
     /**

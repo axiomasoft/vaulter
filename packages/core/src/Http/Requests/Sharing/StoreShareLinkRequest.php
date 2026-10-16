@@ -7,6 +7,7 @@ namespace Vaulter\Http\Requests\Sharing;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantScope;
@@ -26,6 +27,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * defaults to `$sharingConfig->defaultTtlHours()` in {@see CreateShareLinkAction},
  * which this request never sees.
  */
+#[Internal]
 final class StoreShareLinkRequest extends VaulterFormRequest
 {
     /**

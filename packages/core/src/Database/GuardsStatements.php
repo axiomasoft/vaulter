@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Database;
 
 use Illuminate\Support\Collection;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 
 /**
  * Makes every statement of a query builder that changes rows check the
  * {@see WriteScope} first, so mass update/delete/upsert/increment cannot bypass what
  * the model events would have caught (they fire for neither).
- *
- * @internal
  */
+#[Internal]
 trait GuardsStatements
 {
     private ?WriteScope $writeScope = null;

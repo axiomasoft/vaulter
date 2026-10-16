@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Cas\ContentStore;
@@ -41,6 +42,7 @@ use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
  * acts on rows the other will then re-read; a commit resurrects before a sweep
  * can delete, a sweep that wins re-checks edges before deleting.
  */
+#[Internal]
 final readonly class BlobGarbageCollector
 {
     private const int BATCH_SIZE = 1000;

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Actions\Content\SupersedeScanWorkAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -19,6 +20,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 
+#[Internal]
 final readonly class ScanWorkReconciler
 {
     public function __construct(private VaulterDatabase $database, private VaulterConfig $config,

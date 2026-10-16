@@ -6,6 +6,7 @@ namespace Vaulter\Actions\Access;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\Role;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\InheritanceRestriction;
@@ -32,8 +33,9 @@ use Vaulter\Support\Identity;
  * subject and scope cannot hold two lifetimes, so where a direct subtree grant
  * already exists the conflict resolves towards less access (see keepsDirect()).
  *
- * @internal Authorization (Manage on the node) belongs to AccessOperations.
+ * Authorization (Manage on the node) belongs to AccessOperations.
  */
+#[Internal]
 final readonly class SetNodeInheritanceAction
 {
     public function __construct(

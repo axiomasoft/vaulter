@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Nodes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
@@ -26,6 +27,7 @@ use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
+#[Internal]
 final readonly class CopyNodeAction
 {
     public function __construct(

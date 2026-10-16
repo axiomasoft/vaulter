@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Drive;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** An archived drive is read-only. */
+#[Api]
 final class DriveArchivedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

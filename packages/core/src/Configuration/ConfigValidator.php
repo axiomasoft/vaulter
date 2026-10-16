@@ -9,6 +9,8 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Access\PermissionDriverCatalog;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Tenancy\TenantResolver;
@@ -23,8 +25,10 @@ use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Webhooks\WebhooksSchedule;
 
+#[Api]
 final readonly class ConfigValidator
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function validate(VaulterConfig $config, Application $app): void

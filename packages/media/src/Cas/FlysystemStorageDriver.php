@@ -9,6 +9,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\UnableToRetrieveMetadata;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Media\Configuration\MediaConfig;
@@ -20,6 +21,7 @@ use Vaulter\Media\Configuration\MediaConfig;
  * applied only when the underlying disk is an object store, degrading gracefully
  * to a best-effort exists() guard on the local / sqlite-test disk.
  */
+#[Internal]
 final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriver
 {
     public function __construct(
