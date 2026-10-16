@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.19",
   "title": "Квалификационный прогон P3 (D31: без полной матрицы)",
-  "status": "todo",
+  "status": "done",
   "summary": "Последний пункт P3: быстрая линия всех default-наборов, baseline compare, static quality всех PHP-пакетов, inventory/repo, серверные database-линии pgsql для пакетов, где P3 менял schema/query/transaction/locking (core, drive, documents), serial-гонки P3, schema snapshots compare, Node/Vue проверки затронутого vue; отчёт `artifacts/P3.19/qualification.md`.",
   "why": "D4/D31: каждая фаза заканчивается квалификацией; полная матрица — при закрытии плана (P7). Отчёт обязан честно назвать pending/skipped.",
   "scope": {
@@ -188,6 +188,83 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:45:11Z"
+  "result": {
+    "started_at": "2026-10-16T05:40:04Z",
+    "finished_at": "2026-10-16T05:55:26Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "671b21e6-8259-483a-a49b-b4271fe70bca"
+    },
+    "notes": "Qualification green; stale baseline lists warned (V2); MySQL/full matrix deferred to P7",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-16T05:55:26Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-16T05:55:26Z"
 }
