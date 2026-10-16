@@ -51,9 +51,5 @@ The complete tree of all layers is in the dock maind «Decision Tree: Project Se
 
 ## Project Communications
 
-<<<<<<< HEAD
 - namespaces: `axioma` · scope: `project:vaulter` · linked to: azguard.
-=======
-- namespaces: `axioma` · scope: `project:vaulter` · linked to: azguard.
->>>>>>> 51553172ca3a2ac70c8cf36bb44631d739f46859
 - current connections: `maind graph --project vaulter`.

@@ -5,6 +5,30 @@
   },
   "plugins": [
     {
+      "name": "analyst",
+      "source": {
+        "source": "local",
+        "path": "./.agents/plugins/bundles/analyst"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "ecosystem"
+    },
+    {
+      "name": "brain",
+      "source": {
+        "source": "local",
+        "path": "./.agents/plugins/bundles/brain"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "ecosystem"
+    },
+    {
       "name": "core",
       "source": {
         "source": "local",
@@ -17,6 +41,30 @@
       "category": "meta"
     },
     {
+      "name": "devops",
+      "source": {
+        "source": "local",
+        "path": "./.agents/plugins/bundles/devops"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "infrastructure"
+    },
+    {
+      "name": "harness",
+      "source": {
+        "source": "local",
+        "path": "./.agents/plugins/bundles/harness"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "ecosystem"
+    },
+    {
       "name": "laravel-testing",
       "source": {
         "source": "local",
@@ -27,6 +75,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "engineering"
+    },
+    {
+      "name": "maind",
+      "source": {
+        "source": "local",
+        "path": "./.agents/plugins/bundles/maind"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "ecosystem"
     },
     {
       "name": "oss-dev",
@@ -65,6 +125,18 @@
       "category": "engineering"
     },
     {
+      "name": "planner",
+      "source": {
+        "source": "local",
+        "path": "./.agents/plugins/bundles/planner"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "ecosystem"
+    },
+    {
       "name": "quality",
       "source": {
         "source": "local",
@@ -75,18 +147,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "engineering"
-    },
-    {
-      "name": "task",
-      "source": {
-        "source": "local",
-        "path": "./.agents/plugins/bundles/task"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "ecosystem"
     }
   ]
 }
