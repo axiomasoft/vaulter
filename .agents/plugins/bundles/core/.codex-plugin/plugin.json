@@ -1,8 +1,0 @@
-{
-  "name": "core",
-  "version": "0.21.1",
-  "description": "Curated always-on core skills",
-  "skills": [
-    "./skills"
-  ]
-}
