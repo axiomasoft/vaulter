@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Models\Drive\Node;
 
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');

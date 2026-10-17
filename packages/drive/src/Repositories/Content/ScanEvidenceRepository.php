@@ -13,10 +13,10 @@ use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Content\ScanRequest;
+use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Models\Drive\FileRevision;
 
 /** @internal Immutable scan evidence persistence; availability decisions go through ContentAvailabilityGuard. */
 #[Internal]

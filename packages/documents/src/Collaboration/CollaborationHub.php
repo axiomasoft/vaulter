@@ -19,11 +19,11 @@ use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Support\Identity;
 
 /**

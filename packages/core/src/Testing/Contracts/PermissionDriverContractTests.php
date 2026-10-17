@@ -14,8 +14,8 @@ use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 
 /**
  * Reusable assertions for a host driver in pass-through mode. The host supplies a

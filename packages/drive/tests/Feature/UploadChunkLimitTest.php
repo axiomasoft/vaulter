@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

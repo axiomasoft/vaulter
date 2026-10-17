@@ -15,7 +15,7 @@ use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

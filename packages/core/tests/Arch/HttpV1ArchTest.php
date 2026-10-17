@@ -13,8 +13,8 @@ use Vaulter\Drive\Access\AccessResolver;
  * point for bytes and signed URLs.
  */
 const V1_CONTROLLER_NAMESPACES = [
-    'Vaulter\Http\Controllers\Activity',
-    'Vaulter\Http\Controllers\Changes',
+    'Vaulter\Drive\Http\Controllers\Activity',
+    'Vaulter\Drive\Http\Controllers\Changes',
     'Vaulter\Http\Controllers\Webhooks',
 ];
 
@@ -25,13 +25,19 @@ arch('v1 controllers are final single-action classes')
     ->toHaveSuffix('Controller');
 
 it('gives v1 controllers no public method besides the constructor and __invoke', function (): void {
-    $root = dirname(__DIR__, 2).'/src/Http/Controllers';
     $offenders = [];
-    foreach ((new Finder)->files()->in([$root.'/Activity', $root.'/Changes', $root.'/Webhooks'])->name('*.php') as $file) {
-        $class = 'Vaulter\\Http\\Controllers\\'.str_replace(['/', '.php'], ['\\', ''], substr($file->getPathname(), strlen($root) + 1));
-        foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if (!in_array($method->getName(), ['__construct', '__invoke'], true)) {
-                $offenders[] = $class.'::'.$method->getName();
+    // Activity and Changes moved to vaulter-drive with the drive domain (P4.10); Webhooks stay until P4.13.
+    $roots = [
+        [dirname(__DIR__, 3).'/drive/src/Http/Controllers', 'Vaulter\\Drive\\Http\\Controllers\\', ['Activity', 'Changes']],
+        [dirname(__DIR__, 2).'/src/Http/Controllers', 'Vaulter\\Http\\Controllers\\', ['Webhooks']],
+    ];
+    foreach ($roots as [$root, $namespace, $directories]) {
+        foreach ((new Finder)->files()->in(array_map(static fn (string $directory): string => $root.'/'.$directory, $directories))->name('*.php') as $file) {
+            $class = $namespace.str_replace(['/', '.php'], ['\\', ''], substr($file->getPathname(), strlen($root) + 1));
+            foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                if (!in_array($method->getName(), ['__construct', '__invoke'], true)) {
+                    $offenders[] = $class.'::'.$method->getName();
+                }
             }
         }
     }

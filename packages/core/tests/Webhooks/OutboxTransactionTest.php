@@ -6,11 +6,11 @@ use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
+use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Models\Activity\Activity;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\ValueObjects\Access\ActorRef;
 

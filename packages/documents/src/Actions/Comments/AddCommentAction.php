@@ -10,13 +10,13 @@ use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Events\Comments\CommentAdded;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Add a comment to a node (docs/adr/0014-legacy-docvault-strangler.md шаг 1). The author is the operation's actor — a

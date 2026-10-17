@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Http\Controllers\Search;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\SearchOptions;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\SearchOptions;
 use Vaulter\Drive\Http\Requests\Search\SearchNodesRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Http\Resources\PageResponse;

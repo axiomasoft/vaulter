@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 use Illuminate\Http\Request;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 arch('all package code declares strict types')
     ->expect('Vaulter')
@@ -26,21 +26,14 @@ arch('the package never depends on the host application (E5.1)')
  * copy-pasted from the consuming app while building a feature) breaks installability
  * in a clean host that does not carry that class.
  *
- * `Console/MakeProfileCommand.php` is a deliberate, allow-listed exception: it is a
- * scaffolding command (`make:vaulter-panel`) that EMITS the string `App\Vaulter\Panels`
- * as the target namespace for code it generates INTO the host application — the
- * package itself never imports or executes anything under `App\*`.
+ * The scaffolding commands that EMIT `App\*` as the namespace of code generated INTO the host
+ * moved with their domains (vaulter-drive); the core has none left.
  */
 test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
     $src = __DIR__.'/../../src';
     $offenders = [];
 
-    // Scaffolding commands legitimately emit `App\*` as a STRING (the namespace of
-    // generated host code), never as a real import/dependency of the package itself.
-    $allowlist = [
-        'Console/MakeProfileCommand.php',
-        'Console/MakeFileHandlerCommand.php',
-    ];
+    $allowlist = [];
 
     /** @var Iterator<SplFileInfo> $files */
     $files = new RegexIterator(
@@ -154,10 +147,10 @@ arch('the document handler registry and its handlers are final')
 arch('the core-owned handler engine and its baseline handlers are final (P0.4/D10)')
     ->expect('Vaulter\Engines')
     ->toBeFinal()
-    ->ignoring('Vaulter\Handlers\AbstractFileHandler');
+    ->ignoring('Vaulter\Drive\Handlers\AbstractFileHandler');
 
 arch('the FileHandler contract is an interface (H.5)')
-    ->expect('Vaulter\Contracts\Handlers\FileHandler')
+    ->expect('Vaulter\Drive\Contracts\Handlers\FileHandler')
     ->toBeInterface();
 
 arch('actions are final')
@@ -415,20 +408,20 @@ test('split classes resolve under their canonical domain namespace', function ()
     // class MUST exist at exactly this canonical per-domain FQCN. A regression that
     // leaves a class flat or under a wrong domain makes class_exists() false here.
     $expected = [
-        'Vaulter\Models\Drive\Node',
+        'Vaulter\Drive\Models\Node',
         'Vaulter\Media\Models\Cas\Blob',
         'Vaulter\Drive\Models\Access\NodeGrant',
         'Vaulter\Drive\Models\Sharing\NodeShare',
         'Vaulter\Drive\Models\Uploads\UploadSession',
-        'Vaulter\Models\Activity\Activity',
+        'Vaulter\Drive\Models\Activity\Activity',
         'Vaulter\Documents\Models\Revisions\DocumentRevision',
-        'Vaulter\Enums\Drive\NodeKind',
+        'Vaulter\Drive\Enums\NodeKind',
         'Vaulter\Drive\Enums\Access\Ability',
         'Vaulter\Drive\Events\Sharing\NodeShareCreated',
         'Vaulter\Drive\Exceptions\Nodes\NodeCycleException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
-        'Vaulter\Exceptions\Profiles\UnknownProfileException',
-        'Vaulter\Repositories\Drive\NodeReadRepository',
+        'Vaulter\Drive\Exceptions\Profiles\UnknownProfileException',
+        'Vaulter\Drive\Repositories\NodeReadRepository',
         'Vaulter\Media\Contracts\Cas\BlobStore',
         'Vaulter\Drive\Contracts\Access\PermissionDriver',
         'Vaulter\Documents\Content\TipTap\TipTapContent',
@@ -557,26 +550,24 @@ function coreReferencesTo(string $root): array
 }
 
 /**
- * P4 ownership move (D10, D40): the access model and sharing now live in vaulter-drive while the rest of the drive domain
- * still sits in core until P4.10–P4.12. These core files name `Vaulter\Drive\` types in the meantime; the list is a ratchet:
+ * P4 ownership move (D10, D40): the drive domain (models, repositories, snapshots, profiles, activity, changes) now lives in
+ * vaulter-drive while the HTTP/config/kernel slice still sits in core until P4.11–P4.12. These core files name `Vaulter\Drive\` types in the meantime; the list is a ratchet:
  * it must shrink as the files move, it is empty from P4.16 (I1 blocks), and a file that stops referencing drive has to leave it.
  */
 test('core source references the extracted vaulter-drive package only from the files that move to it (P2 #5 / D1, P4.8)', function (): void {
     $src = (string) realpath(__DIR__.'/../../src');
     $transitional = [
+        'Actions/Webhooks/RegisterWebhookEndpointAction.php',
+        'Actions/Webhooks/UpdateWebhookEndpointAction.php',
         'Configuration/AccessConfig.php',
         'Configuration/ConfigValidator.php',
         'Configuration/ScanConfig.php',
         'Configuration/SharingConfig.php',
         'Configuration/VaulterConfig.php',
         'Console/InstallCommand.php',
-        'Contracts/Drive/DownloadGuard.php',
-        'Contracts/Drive/DriveHandle.php',
-        'Contracts/Drive/NodeOperations.php',
-        'Data/Snapshots/GrantSnapshot.php',
-        'Data/Snapshots/Mapping/AccessSnapshotMapper.php',
-        'Data/Snapshots/ShareLinkSnapshot.php',
         'Doctor/Checks/AccessDriverCheck.php',
+        'Events/DomainEvent.php',
+        'Exceptions/Registry/DuplicateNodeContentLifecycleException.php',
         'Facades/Vaulter.php',
         'Http/Middleware/ResolveShareToken.php',
         'Http/Problems/CoreProblemCodes.php',
@@ -585,25 +576,33 @@ test('core source references the extracted vaulter-drive package only from the f
         'Http/Requests/Access/RestrictInheritanceRequest.php',
         'Http/Requests/Sharing/StoreShareLinkRequest.php',
         'Http/Requests/Sharing/UpdateShareLinkRequest.php',
+        'Http/Resources/Access/GrantResource.php',
+        'Http/Resources/Activity/ActivityResource.php',
         'Http/Resources/Changes/ChangePageResource.php',
         'Http/Resources/Changes/ChangeResource.php',
         'Http/Resources/Drive/NodeResource.php',
+        'Http/Resources/PageResponse.php',
+        'Http/Resources/Sharing/MintedShareResource.php',
+        'Http/Resources/Sharing/ShareResource.php',
+        'Http/Resources/Sharing/SharedNodeResource.php',
         'Http/Support/ContentResponder.php',
         'Http/Support/HttpOperationContextFactory.php',
+        'Http/Support/HttpResourceResolver.php',
+        'Http/Support/Preconditions.php',
         'Http/Support/SharedNodeResolver.php',
-        'Models/Drive/FileRevision.php',
-        'Operations/ActivityOperations.php',
-        'Operations/ChangeOperations.php',
-        'Profiles/DrivePolicyEnforcer.php',
-        'Profiles/ProfilePolicy.php',
+        'Jobs/Middleware/RestoreTenantContext.php',
+        'Models/Concerns/StampsDriveTenant.php',
         'Providers/AccessRegistrar.php',
         'Providers/DriveSliceRegistrar.php',
-        'Queries/Activity/VisibleActivityQuery.php',
-        'Repositories/Drive/NodeReadRepository.php',
-        'Support/DriveLifecycle.php',
+        'Tenancy/ShareTenantContext.php',
+        'Tenancy/TenancyBoundary.php',
+        'Testing/Contracts/FileHandlerContractTests.php',
         'Testing/Contracts/PermissionDriverContractTests.php',
         'Testing/Contracts/PermissionFixture.php',
+        'Testing/Events/EventConformance.php',
+        'Testing/InteractsWithVaulter.php',
         'Testing/NullPermissionDriver.php',
+        'ValueObjects/Events/JournalEffect.php',
         'VaulterManager.php',
     ];
     $found = array_map(static fn (string $path): string => substr((string) realpath($path), strlen($src) + 1), coreReferencesTo('Drive'));
@@ -750,7 +749,6 @@ arch('domain exceptions implement the HTTP problem contract')
         'Vaulter\Exceptions\VaulterException',
         // P2.5 configuration failures stop boot before any endpoint can respond.
         'Vaulter\Exceptions\Configuration\InvalidConfigurationException',
-        'Vaulter\Exceptions\Profiles\InvalidProfileException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Support\MissingPackageException',
         'Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException',

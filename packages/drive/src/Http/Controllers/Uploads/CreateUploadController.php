@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Uploads;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;

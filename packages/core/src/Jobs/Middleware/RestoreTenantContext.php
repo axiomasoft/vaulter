@@ -9,7 +9,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Auth;
 use Vaulter\Attributes\Internal;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Tenancy\TenancyBypass;

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Contracts\Drive\PurgeOnlyContentLifecycle;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Contracts\PurgeOnlyContentLifecycle;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 
 #[Internal]

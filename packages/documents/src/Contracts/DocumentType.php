@@ -6,8 +6,8 @@ namespace Vaulter\Documents\Contracts;
 
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
  * A kind of structured document (rich text, markdown, a spreadsheet, a host's own),

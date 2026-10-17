@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Contracts\Content;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Content\ScanPolicySpec;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\FileRevision;
 
 /** Persisted scan activation is supplied by the drive runtime. */
 #[Internal]

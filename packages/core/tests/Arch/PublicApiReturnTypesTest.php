@@ -9,17 +9,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Activity\ActivityOperations;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Contracts\Drive\FileOperations;
-use Vaulter\Contracts\Drive\FolderOperations;
-use Vaulter\Contracts\Drive\NodeOperations;
-use Vaulter\Contracts\Drive\TrashOperations;
 use Vaulter\Drive\Contracts\Access\AccessOperations;
+use Vaulter\Drive\Contracts\Activity\ActivityOperations;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Contracts\FileOperations;
+use Vaulter\Drive\Contracts\FolderOperations;
+use Vaulter\Drive\Contracts\NodeOperations;
 use Vaulter\Drive\Contracts\Sharing\ShareOperations;
+use Vaulter\Drive\Contracts\TrashOperations;
 use Vaulter\Drive\Operations\AccessOperations as CoreAccessOperations;
+use Vaulter\Drive\Operations\ActivityOperations as CoreActivityOperations;
 use Vaulter\Drive\Operations\ShareOperations as CoreShareOperations;
-use Vaulter\Operations\ActivityOperations as CoreActivityOperations;
 
 /**
  * PLAN2.P4.13 (D44): no public Operations/handle method returns or takes an Eloquent

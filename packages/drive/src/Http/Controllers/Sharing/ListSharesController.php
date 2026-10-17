@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Http\Controllers\Sharing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\ShareLinkSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Http\Resources\Sharing\ShareResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;

@@ -13,9 +13,9 @@ use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Models\Activity\Activity;
 use Vaulter\Testing\Support\CanonicalJson;
 
 /**

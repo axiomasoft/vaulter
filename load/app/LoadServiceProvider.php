@@ -24,6 +24,7 @@ use Throwable;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
@@ -58,7 +59,6 @@ use Vaulter\Load\Observability\OpenTelemetryTraceRecorder;
 use Vaulter\Load\Observability\QueryTraceRecorder;
 use Vaulter\Load\Observability\RedisMetricsRegistry;
 use Vaulter\Load\Webhooks\LoadSinkOutboundUrlGuard;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 use Vaulter\Testing\Fixtures\TestUser;
 

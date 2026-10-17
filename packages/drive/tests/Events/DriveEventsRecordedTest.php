@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
+use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\TestCase;
@@ -16,8 +18,6 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Support\CanonicalJson;
 

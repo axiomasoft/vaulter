@@ -6,9 +6,9 @@ use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /*
  * Standalone baseline: tenancy is disabled by default, so low-level model queries

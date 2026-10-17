@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.10",
   "title": "Drive C: доменная модель drive (модели, репозитории, снапшоты, профили, хендлеры, активность, изменения) из core",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`move-types --owner=drive --rule-file=core-drive` без VaulterManager/фасада (154 типа) + фабрики `packages/core/database/factories` → `packages/drive/database/factories` (`Vaulter\\Drive\\Database\\Factories\\`); drive-тесты core (Activity, ActivityGate, Changes, Profiles, Naming, Drive, drive-части Feature/Http/Concurrency/Schema/Console/Doctor) → drive.",
   "why": "D10, architecture#ownership-map. Самый крупный перенос: модели/репозитории/Data\\Snapshots используются всеми пакетами. Риск: морф/FQCN-строки в `vaulter.models.*` дефолтах (alias D34 уже стабилен), factories PSR-4 и Eloquent `newFactory()`; core-тесты, которые на самом деле проверяют ядро (Outbox, Modules, Operations, Idempotency), остаются в core и переходят на фикстуры/кит.",
   "scope": {
@@ -246,6 +246,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T00:57:50Z",
+    "finished_at": "2026-10-17T01:47:12Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "154 типа + 6 фабрик + stubs + ~80 тестов → drive; move-types принимает отдельные файлы тестов",
+    "deviations": [
+      "V1 красный по букве: core/src/Data/Snapshots/Mapping/SnapshotValue.php остаётся в core (ядро-база мапперов по правилу core-drive); VaulterFactory → drive (правило core-kernel изменено); media/composer.json временный autoload-dev ../drive до P4.11; vendor installed.json пропатчен локально"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 1,
+        "at": "2026-10-17T01:47:12Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T01:47:12Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T01:47:12Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T01:47:12Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T01:47:12Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T01:47:12Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T01:47:12Z"
 }

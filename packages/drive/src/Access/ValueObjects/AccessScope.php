@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access\ValueObjects;
 
 use Vaulter\Attributes\Api;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /** Node-blind identity coordinates for the selected profile's permission driver. */

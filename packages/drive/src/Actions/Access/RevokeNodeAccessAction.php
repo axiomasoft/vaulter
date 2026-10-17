@@ -8,10 +8,10 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Access\RevokeGrantInput;
 use Vaulter\Drive\Events\Access\NodeGrantRevoked;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /** @internal Authorization belongs to AccessOperations; membership is also enforced here. */
 #[Internal]

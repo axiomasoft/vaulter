@@ -6,11 +6,11 @@ namespace Vaulter\Drive\Content;
 
 use LogicException;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Repositories\FileRevisionBlobStoreRepository;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Support\Identity;
 
 /**

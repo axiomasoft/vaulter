@@ -13,10 +13,10 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 
 /**
  * Pin a checkpoint out of the prune window (keep_forever) or release the pin, the one

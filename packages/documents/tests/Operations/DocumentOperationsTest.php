@@ -2,10 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Data\Drive\CreateFolderOptions;
-use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
@@ -27,18 +24,21 @@ use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\CreateFolderOptions;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
 
 /**
  * PLAN2.P4.8: DocumentOperations returns snapshots, keeps the content validator

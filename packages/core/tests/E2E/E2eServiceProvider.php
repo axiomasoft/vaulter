@@ -15,10 +15,10 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Operations\DriveContext;
 
 /**
  * Провайдер e2e-стенда realtime-коллаборации (P1.1 мастер-плана).

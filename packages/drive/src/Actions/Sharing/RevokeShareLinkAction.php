@@ -9,11 +9,11 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Sharing\RevokeShareInput;
 use Vaulter\Drive\Events\Sharing\NodeShareRevoked;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /** @internal Revocation commits before subsequent share resolution can succeed. */
 #[Internal]

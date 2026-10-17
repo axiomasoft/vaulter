@@ -21,17 +21,17 @@ use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Media\Content\ScanInput;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
 beforeEach(fn () => DriveTestHelpers::insideOperation());

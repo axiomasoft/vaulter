@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Documents;
 
 use Vaulter\Attributes\Api;
-use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Drive\Contracts\DriveHandle;
 
 #[Api]
 final readonly class DocumentsManager

@@ -6,7 +6,7 @@ namespace Vaulter\Filament\Support;
 
 use Illuminate\Support\Facades\Facade;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
 
 /**
  * The container bridge for Filament's static resources; dependencies belong to the service.

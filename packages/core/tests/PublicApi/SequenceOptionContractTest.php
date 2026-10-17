@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Data\Drive\MoveOptions;
-use Vaulter\Data\Drive\RevisionOptions;
+use Vaulter\Drive\Data\MoveOptions;
+use Vaulter\Drive\Data\RevisionOptions;
 
 it('preserves optional signed int64 sequence bounds at constructor and fluent boundaries', function (string $class): void {
     expect(PHP_INT_SIZE)->toBe(8);

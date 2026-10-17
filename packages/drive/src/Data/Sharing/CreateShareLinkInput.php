@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Sharing;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /** @internal */
 #[Internal]

@@ -9,8 +9,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
-use Vaulter\Models\Drive\Node;
 
 /**
  * Write-side row work for v_node_shares. It persists ONLY the token's

@@ -1876,7 +1876,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Activity\\Activity",
+            "default": "Vaulter\\Drive\\Models\\Activity\\Activity",
             "id": "config:vaulter.models.activity",
             "owner": "drive",
             "registered_defaults": true,
@@ -1887,7 +1887,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Drive\\Drive",
+            "default": "Vaulter\\Drive\\Models\\Drive",
             "id": "config:vaulter.models.drive",
             "owner": "drive",
             "registered_defaults": true,
@@ -1898,7 +1898,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Drive\\File",
+            "default": "Vaulter\\Drive\\Models\\File",
             "id": "config:vaulter.models.file",
             "owner": "drive",
             "registered_defaults": true,
@@ -1909,7 +1909,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Drive\\FileRevision",
+            "default": "Vaulter\\Drive\\Models\\FileRevision",
             "id": "config:vaulter.models.file_revision",
             "owner": "drive",
             "registered_defaults": true,
@@ -1920,7 +1920,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Drive\\FileRevisionBlob",
+            "default": "Vaulter\\Drive\\Models\\FileRevisionBlob",
             "id": "config:vaulter.models.file_revision_blob",
             "owner": "drive",
             "registered_defaults": true,
@@ -1942,7 +1942,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Drive\\Node",
+            "default": "Vaulter\\Drive\\Models\\Node",
             "id": "config:vaulter.models.node",
             "owner": "drive",
             "registered_defaults": true,
@@ -2220,7 +2220,7 @@
             }
         },
         {
-            "default": "Vaulter\\Profiles\\DefaultProfile",
+            "default": "Vaulter\\Drive\\Profiles\\DefaultProfile",
             "id": "config:vaulter.profiles.default",
             "owner": "drive",
             "registered_defaults": true,

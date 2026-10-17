@@ -17,6 +17,7 @@ use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Kernel;
@@ -25,7 +26,6 @@ use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Media\Testing\FakeContentScanner;
-use Vaulter\Operations\DriveContext;
 
 // The fixtures drive Vaulter's own actions directly; its entry points open the write scope, these calls do not.
 beforeEach(fn () => DriveTestHelpers::insideOperation());

@@ -11,11 +11,11 @@ use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Mark a node comment thread resolved (docs/adr/0014-legacy-docvault-strangler.md шаг 1). Stamps (resolved_at,

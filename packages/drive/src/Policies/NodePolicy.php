@@ -8,7 +8,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * The Drive authorization policy: a thin delegation to the Vaulter-owned

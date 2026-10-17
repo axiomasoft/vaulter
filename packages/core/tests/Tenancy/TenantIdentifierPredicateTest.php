@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Schema\Blueprint;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\TestCase;

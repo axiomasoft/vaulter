@@ -9,6 +9,10 @@ declare(strict_types=1);
 return [
     'database' => [
         'Concurrency',
+        'Schema',
+        'Changes/ChangeFeedReadTest.php',
+        'Changes/ChangeJournalTest.php',
+        'Changes/PruneChangesCommandTest.php',
         'Changes/DriveChangesEndToEndTest.php',
         'Access/AccessAwareListingTest.php',
         'Access/EvaluateManyEquivalenceTest.php',
@@ -35,6 +39,7 @@ return [
     // Every forked race of the Concurrency folder (CompleteUploadRetryTest does not fork: it stays in the parallel lane).
     'serial' => [
         'Sharing/ShareSecurityBoundaryTest.php',
+        'Concurrency/ChangeJournalRaceTest.php',
         'Concurrency/CompleteUploadRaceTest.php',
         'Concurrency/DedicatedConnectionTest.php',
         'Concurrency/DriveArchiveRaceTest.php',
@@ -57,6 +62,7 @@ return [
     'stand' => [],
     // Files whose every test skips on SQLite (verified by the skip counts of P1.5): no schema is built for them there.
     'engine:server' => [
+        'Concurrency/ChangeJournalRaceTest.php',
         'Concurrency/CompleteUploadRaceTest.php',
         'Concurrency/DedicatedConnectionTest.php',
         'Concurrency/DriveArchiveRaceTest.php',

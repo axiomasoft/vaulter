@@ -27,15 +27,15 @@ use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Filament\Support\PanelNodes;
-use Vaulter\Models\Drive\Node;
 
 /**
  * The Drive-node admin surface — the heart of the panel. It lists the unified

@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

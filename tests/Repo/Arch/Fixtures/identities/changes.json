@@ -2411,49 +2411,49 @@
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },

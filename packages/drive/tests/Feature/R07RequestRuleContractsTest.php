@@ -5,15 +5,15 @@ declare(strict_types=1);
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(function (): void {

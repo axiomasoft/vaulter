@@ -6,9 +6,9 @@ namespace Vaulter\Testing\Events;
 
 use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Models\Activity\Activity;
 
 /**
  * Compares what the real Actions record with the EventSpec of each type: the keys and

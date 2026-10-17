@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Queries;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\NodePage;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\ExactListing;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\NodePage;
 use Vaulter\ValueObjects\Access\Actor;
 
 /** @internal The current global shared listing; each page evaluates exact View. */

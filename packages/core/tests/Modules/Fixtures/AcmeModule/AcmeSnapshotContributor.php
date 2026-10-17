@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Modules\Fixtures\AcmeModule;
 
-use Vaulter\Contracts\Drive\NodeSnapshotContributor;
+use Vaulter\Drive\Contracts\NodeSnapshotContributor;
 
 /**
  * Tries to add its own fragment to the snapshots of a page. The snapshot has no place for a fragment of a

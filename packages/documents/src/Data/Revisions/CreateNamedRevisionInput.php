@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Data\Revisions;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Command for CreateNamedRevisionAction: checkpoint a document's

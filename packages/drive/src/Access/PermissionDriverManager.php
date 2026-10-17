@@ -19,7 +19,7 @@ use Vaulter\Drive\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Exceptions\Access\MissingPermissionDriverException;
-use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 
 /**
  * Resolves the active {@see PermissionDriver} from the driver catalog (the module slot and the host's

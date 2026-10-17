@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Facades\Vaulter;
 
 // The fragments below are copied into the guides byte for byte; the guides' own `use` lines are

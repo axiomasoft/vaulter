@@ -9,12 +9,12 @@ use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Media\Content\ScanInput;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Operations\DriveContext;
 
 it('SEC-R12 refuses wrong scoped jobs before scanner reads and closes the trusted stream', function (): void {
     Storage::fake('local');

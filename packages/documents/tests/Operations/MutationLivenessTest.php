@@ -23,11 +23,11 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Exceptions\DriveArchivedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\Drive\DriveArchivedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
 
 /**
  * PLAN2.F05/F06: a writer that holds the tree lock and the node lock re-checks that

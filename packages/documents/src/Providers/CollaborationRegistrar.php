@@ -15,7 +15,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Modules\ModuleBindings;
 
 /** The collaboration wiring of the documents module until collaboration becomes its own module (P5, D32). */

@@ -1,17 +1,16 @@
 <?php
 
 declare(strict_types=1);
-use Vaulter\Operations\ActivityOperations;
+use Vaulter\Drive\Operations\ActivityOperations;
 
 arch('core v1 controllers use Operations rather than Actions or Repositories')
     ->expect([
-        'Vaulter\Http\Controllers\Activity',
-        'Vaulter\Http\Controllers\Changes',
-    ])->not->toUse(['Vaulter\Actions', 'Vaulter\Repositories']);
+        'Vaulter\Drive\Http\Controllers\Activity',
+        'Vaulter\Drive\Http\Controllers\Changes',
+    ])->not->toUse(['Vaulter\Actions', 'Vaulter\Repositories', 'Vaulter\Drive\Actions', 'Vaulter\Drive\Repositories']);
 
-// Access and Share operations moved to vaulter-drive (P4.8); Activity stays until P4.10 and reads only the access types that moved.
+// Activity Operations moved to vaulter-drive (P4.10); they read through the activity repositories, never the write Actions.
 arch('core activity Operations depend on the drive package only through the moved access types')
     ->expect([
         ActivityOperations::class,
-    ])->not->toUse('Vaulter\Drive')
-    ->ignoring(['Vaulter\Drive\Access', 'Vaulter\Drive\Enums\Access']);
+    ])->not->toUse(['Vaulter\Drive\Actions', 'Vaulter\Actions']);

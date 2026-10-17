@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Routing\Route;
-use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
+use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleState;

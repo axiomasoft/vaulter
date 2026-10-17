@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Data\Files;
 use Psr\Http\Message\StreamInterface;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Uploads\PreparedUpload;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 
 /**
  * Upload bytes and intent. The shared preparation reads the stream from its current

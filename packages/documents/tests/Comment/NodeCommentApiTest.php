@@ -8,8 +8,8 @@ use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

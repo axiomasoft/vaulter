@@ -5,13 +5,13 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\Node;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

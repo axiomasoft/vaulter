@@ -12,8 +12,8 @@ use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

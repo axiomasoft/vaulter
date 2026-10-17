@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\VaulterManager;
 
 it('merges the vaulter config', function (): void {

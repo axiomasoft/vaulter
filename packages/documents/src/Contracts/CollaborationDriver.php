@@ -8,7 +8,7 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * The realtime-collaboration transport for document nodes. A Hocuspocus driver joins

@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Drive\DownloadGuard;
 use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\DownloadGuards;
+use Vaulter\Drive\Contracts\DownloadGuard;
+use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Tests\Content\Fixtures\DownloadGuardProvider;
 use Vaulter\Drive\Tests\Content\Fixtures\FirstDownloadGuard;
 use Vaulter\Drive\Tests\Content\Fixtures\RecordingDownloadGuard;
 use Vaulter\Drive\Tests\Content\Fixtures\SecondDownloadGuard;
-use Vaulter\Exceptions\Files\ContentUnavailableException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Kernel;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\Concerns\FreshApplication;
 
 function downloadGuards(): DownloadGuards

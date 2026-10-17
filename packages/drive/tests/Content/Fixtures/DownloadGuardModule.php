@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Tests\Content\Fixtures;
 
-use Vaulter\Contracts\Drive\DownloadGuard;
+use Vaulter\Drive\Contracts\DownloadGuard;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;

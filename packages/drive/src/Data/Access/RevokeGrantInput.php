@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Data\Access;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Access\NodeGrant;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /** @internal */
 #[Internal]

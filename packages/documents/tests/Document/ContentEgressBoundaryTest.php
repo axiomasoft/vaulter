@@ -8,10 +8,10 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
 
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');

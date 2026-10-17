@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Tests\Http\DriveV1;

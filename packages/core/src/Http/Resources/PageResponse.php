@@ -9,8 +9,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Vaulter\Attributes\Api;
-use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
+use Vaulter\Drive\Data\ListOptions;
 
 /**
  * The one list envelope of the versioned API: `{data, meta: {next_cursor, per_page}}`.

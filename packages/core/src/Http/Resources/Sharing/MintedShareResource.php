@@ -7,7 +7,7 @@ namespace Vaulter\Http\Resources\Sharing;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\MintedShareLink;
+use Vaulter\Drive\Data\Snapshots\MintedShareLink;
 
 /**
  * A share link right after it was created or rotated: the only response that carries

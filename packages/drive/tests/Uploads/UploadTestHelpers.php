@@ -6,13 +6,13 @@ namespace Vaulter\Drive\Tests\Uploads;
 
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 
 /**
  * Shared builders for the resumable-upload slice tests (M3a): a real Storage with a

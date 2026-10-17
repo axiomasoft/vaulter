@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

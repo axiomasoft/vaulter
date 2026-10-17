@@ -8,14 +8,14 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver as Resolver;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Enums\Cas\ScanMode;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]

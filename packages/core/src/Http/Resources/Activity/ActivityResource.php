@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use stdClass;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
 
 /**
  * One activity entry after the visibility projection: what happened, to which node,

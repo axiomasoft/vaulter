@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
 use Vaulter\Drive\Content\RevisionBlobLinks;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Media\Cas\BlobGarbageCollector;
@@ -20,9 +23,6 @@ use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
 
 /*
  * The drive's revision links (D23, P4/P5): every edge in v_file_revision_blobs carries a media pin

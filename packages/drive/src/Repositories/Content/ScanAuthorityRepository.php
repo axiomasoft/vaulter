@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Repositories\Content;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\FileRevision;
 
 /**
  * Fresh reads of the rows scan work validates against.

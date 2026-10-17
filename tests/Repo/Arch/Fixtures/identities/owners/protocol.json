@@ -207,12 +207,6 @@
         },
         {
             "match": "prefix",
-            "value": "morph:Vaulter\\Concerns\\HasDrives",
-            "owner": "drive",
-            "why": "the host trait that owns drives"
-        },
-        {
-            "match": "prefix",
             "value": "morph:Vaulter\\Documents\\",
             "owner": "documents",
             "why": "documents models"
@@ -222,30 +216,6 @@
             "value": "morph:Vaulter\\Drive\\",
             "owner": "drive",
             "why": "drive code"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Http\\Controllers\\Activity\\",
-            "owner": "drive",
-            "why": "Activity -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Models\\Drive\\",
-            "owner": "drive",
-            "why": "drive models"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Queries\\Activity\\",
-            "owner": "drive",
-            "why": "Activity -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Repositories\\",
-            "owner": "drive",
-            "why": "activity and drive repositories"
         },
         {
             "match": "prefix",
@@ -300,12 +270,6 @@
             "value": "serialized:cast:Vaulter\\Drive\\",
             "owner": "drive",
             "why": "drive models"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:cast:Vaulter\\Models\\",
-            "owner": "drive",
-            "why": "Models/{Access,Activity,Content,Drive,Sharing} -> drive"
         },
         {
             "match": "prefix",
@@ -448,8 +412,8 @@
             "owner": "drive",
             "format": "base64url(json{v,t,d,e,a}) \".\" base64url(HMAC-SHA256(json, hmac-sha256('vaulter.changes.cursor', app key))); opaque to clients",
             "source": {
-                "file": "packages/core/src/Changes/ChangeCursor.php",
-                "symbol": "Vaulter\\Changes\\ChangeCursor::encode"
+                "file": "packages/drive/src/Changes/ChangeCursor.php",
+                "symbol": "Vaulter\\Drive\\Changes\\ChangeCursor::encode"
             },
             "why": "position in a drive's change journal"
         },

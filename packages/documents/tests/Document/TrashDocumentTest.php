@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

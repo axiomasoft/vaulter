@@ -26,9 +26,9 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleBindings;
 
 /**

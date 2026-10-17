@@ -15,11 +15,11 @@ use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
-use Vaulter\Models\Drive\Node;
 
 /**
  * A bearer share-link on a node — the SEPARATE public sharing

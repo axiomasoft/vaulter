@@ -8,14 +8,14 @@ use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
 
 /** @internal Reloads authority and the immutable edge; passed attributes are never trusted. */
 #[Internal]

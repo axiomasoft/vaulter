@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Support\DriveNameRules;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Support\DriveNameRules;
 
 /** PATCH nodes/{node}: the only field a node update changes is its name. */
 #[Internal]

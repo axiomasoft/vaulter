@@ -9,8 +9,8 @@ use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /** Breaks the type contract: the key is not vendor/name. */
 final readonly class BrokenDocumentType implements DocumentType

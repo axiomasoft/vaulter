@@ -9,9 +9,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]

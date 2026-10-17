@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
-use Vaulter\Contracts\Profiles\ProfileOption;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Collaboration\RoomRef;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Profiles\CommentsProfileOption;
+use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 

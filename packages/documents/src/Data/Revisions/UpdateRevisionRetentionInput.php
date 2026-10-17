@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Data\Revisions;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Command for UpdateRevisionRetentionAction: pin a checkpoint of the node's document

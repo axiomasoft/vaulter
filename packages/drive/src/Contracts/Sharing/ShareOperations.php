@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Contracts\Sharing;
 
 use Vaulter\Attributes\Api;
-use Vaulter\Data\Snapshots\MintedShareLink;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Data\Snapshots\MintedShareLink;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 
 #[Api]
 interface ShareOperations

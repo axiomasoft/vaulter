@@ -9,12 +9,12 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\CoreModule;
 use Vaulter\Drive\DriveModule;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Fixtures\Panels\OverrideDefaultProfile;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Media\MediaModule;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleCompiler;
-use Vaulter\Tests\Fixtures\Panels\OverrideDefaultProfile;
 
 it('validates canonical configuration defaults', function (): void {
     $repository = new Repository(['vaulter' => require __DIR__.'/../../config/vaulter.php']);

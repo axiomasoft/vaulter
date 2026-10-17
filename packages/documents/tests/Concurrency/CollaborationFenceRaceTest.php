@@ -13,8 +13,8 @@ use Vaulter\Documents\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Documents\Exceptions\CollaborationSeedConflictException;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
 

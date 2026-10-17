@@ -16,7 +16,7 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Trash\TrashNodeAction;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**

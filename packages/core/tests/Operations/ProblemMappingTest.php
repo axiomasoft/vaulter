@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Http\Problems\ProblemRenderer;
 use Vaulter\Tests\TestCase;
 

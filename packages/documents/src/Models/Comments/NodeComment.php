@@ -13,10 +13,10 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Drive\Node;
 
 /**
  * A comment on a NODE (docs/adr/0014-legacy-docvault-strangler.md шаг 1) — the additive parity twin of the legacy

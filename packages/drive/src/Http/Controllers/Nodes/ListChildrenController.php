@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Http\Requests\Nodes\ListChildrenRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Http\Resources\PageResponse;

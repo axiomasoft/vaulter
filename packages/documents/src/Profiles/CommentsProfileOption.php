@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Profiles;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Profiles\ProfileOption;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Profiles\Profile;
+use Vaulter\Drive\Contracts\Profiles\ProfileOption;
+use Vaulter\Drive\Profiles\Profile;
 
 /**
  * The `comments` profile option: comments are globally on while `vaulter-documents.comments.enabled` is; a

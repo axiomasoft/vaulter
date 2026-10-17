@@ -12,10 +12,10 @@ use Vaulter\Drive\Access\ValueObjects\Decision;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

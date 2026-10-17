@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Data\Documents;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Command for UpdateDocumentContentAction — the autosave path: write

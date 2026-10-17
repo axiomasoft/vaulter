@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Profiles\ProfileRegistry;
 
 /** The disks a Vaulter install stores content on: the media default and each profile's own. */
 #[Internal]

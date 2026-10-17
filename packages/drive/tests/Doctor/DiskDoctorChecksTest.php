@@ -16,10 +16,10 @@ use Vaulter\Drive\Doctor\DedupScopeCheck;
 use Vaulter\Drive\Doctor\DiskProbeCheck;
 use Vaulter\Drive\Doctor\DiskSet;
 use Vaulter\Drive\DriveModule;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\MediaModule;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
 
 /** @return list<DoctorFinding> */
 function mediaFindings(string $key, bool $production = false, bool $probe = false): array

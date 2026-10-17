@@ -8,9 +8,9 @@ use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanSnapshot;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
-use Vaulter\Operations\DriveContext;
 
 /**
  * Revokes scan evidence so it stops qualifying as clean proof; infection stays sticky.

@@ -8,9 +8,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Media\Configuration\DedupScope;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Profiles\ProfileRegistry;
 
 #[Internal]
 final readonly class DedupScopeCheck implements DoctorCheck

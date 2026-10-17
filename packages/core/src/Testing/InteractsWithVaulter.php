@@ -15,12 +15,12 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Api;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Events\EventTypeContract;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\ProfileRegistry;
 
 /**
  * Test helpers for an application that embeds Vaulter. Everything goes through the

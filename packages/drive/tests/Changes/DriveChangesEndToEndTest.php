@@ -3,21 +3,21 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Changes\ChangeOperation;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Enums\Changes\ChangeOperation;
-use Vaulter\Enums\Drive\NodeKind;
 
 /**
  * A syncing client end to end (PLAN2.D50, D59): it lists the drive once, takes the

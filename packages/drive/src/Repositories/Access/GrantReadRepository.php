@@ -12,7 +12,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Models\Access\NodeGrant;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**

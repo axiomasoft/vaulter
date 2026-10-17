@@ -6,14 +6,14 @@ namespace Vaulter\Documents\Presentation;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Presentation\KindPresenter;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Models\Documents\Document;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\Node;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\NodePresentation;
+use Vaulter\Drive\Contracts\Presentation\KindPresenter;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 
 /**
  * Presents a document node by its document type, never by its mime: no file handler

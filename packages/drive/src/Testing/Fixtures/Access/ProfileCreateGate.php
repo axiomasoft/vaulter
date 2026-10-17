@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Testing\Fixtures\Access;
 
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Attributes\Internal;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 
 #[Internal]
 final class ProfileCreateGate

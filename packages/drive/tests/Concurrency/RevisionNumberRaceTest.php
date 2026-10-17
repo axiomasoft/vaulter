@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Repositories\FileRevisionStoreRepository;
+use Vaulter\Drive\Repositories\FileStoreRepository;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
-use Vaulter\Repositories\Drive\FileStoreRepository;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
 

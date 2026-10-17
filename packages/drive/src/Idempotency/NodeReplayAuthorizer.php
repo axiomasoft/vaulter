@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Idempotency;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Idempotency\ReplayAuthorizer;
 use Vaulter\Idempotency\ResourceRef;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /**
  * The current authorization of a replayed node write (D25, architecture#operation-chains «Replay»), with the same

@@ -10,38 +10,38 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Activity\ActivityOperations;
-use Vaulter\Contracts\Drive\DriveExtension;
-use Vaulter\Contracts\Drive\DriveHandle as Contract;
-use Vaulter\Contracts\Drive\FileOperations;
-use Vaulter\Contracts\Drive\FolderOperations;
-use Vaulter\Contracts\Drive\NodeOperations;
-use Vaulter\Contracts\Drive\TrashOperations;
-use Vaulter\Data\Snapshots\DriveSnapshot;
-use Vaulter\Data\Snapshots\Mapping\DriveSnapshotMapper;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Data\Snapshots\QuotaSnapshot;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
 use Vaulter\Drive\Actions\Drives\UnarchiveDriveAction;
 use Vaulter\Drive\Contracts\Access\AccessOperations;
+use Vaulter\Drive\Contracts\Activity\ActivityOperations;
+use Vaulter\Drive\Contracts\DriveExtension;
+use Vaulter\Drive\Contracts\DriveHandle as Contract;
+use Vaulter\Drive\Contracts\FileOperations;
+use Vaulter\Drive\Contracts\FolderOperations;
+use Vaulter\Drive\Contracts\NodeOperations;
 use Vaulter\Drive\Contracts\Sharing\ShareOperations;
+use Vaulter\Drive\Contracts\TrashOperations;
+use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
+use Vaulter\Drive\Data\Snapshots\Mapping\DriveSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\QuotaSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\ChangeOperations;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Operations\UploadOperations;
-use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Kernel;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\Modules\MissingExtensionException;
-use Vaulter\Operations\ChangeOperations;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -208,7 +208,7 @@ final readonly class DriveHandle implements Contract
 
     public function activity(): ActivityOperations
     {
-        return $this->operations(\Vaulter\Operations\ActivityOperations::class);
+        return $this->operations(Operations\ActivityOperations::class);
     }
 
     public function changes(): ChangeOperations

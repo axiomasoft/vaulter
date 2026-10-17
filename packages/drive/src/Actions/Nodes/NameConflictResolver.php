@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Nodes;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Naming\NamePolicy;
-use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\NodeName;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Naming\NamePolicy;
+use Vaulter\Drive\Repositories\NodeReadRepository;
+use Vaulter\Drive\Support\NodeName;
 
 #[Internal]
 final readonly class NameConflictResolver

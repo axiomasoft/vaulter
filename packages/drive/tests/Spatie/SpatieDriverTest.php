@@ -14,9 +14,9 @@ use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\Access\SpatieUser;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**

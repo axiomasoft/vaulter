@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Http\Support;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Repositories\Drive\DriveReadRepository;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Repositories\DriveReadRepository;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 
 /**
  * Turns the scalar route parameters of the versioned API into the drive an operation

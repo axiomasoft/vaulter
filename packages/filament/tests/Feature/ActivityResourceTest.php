@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Repositories\Activity\ActivityReadRepository;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Repositories\Activity\ActivityReadRepository;
 
 it('resolves the configured activity model (swappable)', function (): void {
     expect(ActivityResource::getModel())->toBe(Activity::class);

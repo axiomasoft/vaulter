@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Drive\Node;
 
 /*
  * NOTE on test level. Full Livewire page rendering of a Filament 5 resource under

@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Tests\Http;
 
 use Illuminate\Testing\TestResponse;
 use Orchestra\Testbench\TestCase;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Testing\Http\V1;
 
 /** Fixtures of the drive REST v1 suite on top of the core V1 helpers. */

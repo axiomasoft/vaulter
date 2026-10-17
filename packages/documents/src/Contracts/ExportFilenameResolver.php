@@ -8,7 +8,7 @@ use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * The export filename scheme for {@see ExportDocumentAction}.

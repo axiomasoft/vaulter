@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /** @internal Server-owned tenant stamping; host model scopes remain additional. */

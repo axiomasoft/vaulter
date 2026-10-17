@@ -12,7 +12,7 @@ use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
 

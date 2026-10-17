@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Tests\Fixtures\FakeExporter;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry;
+use Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 use Vaulter\Exceptions\Support\MissingPackageException;
-use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Concerns\FreshApplication;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 use Vaulter\VaulterManager;
 
 /*

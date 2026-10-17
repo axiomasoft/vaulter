@@ -16,11 +16,11 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
-use Vaulter\Models\Drive\Node;
 
 /**
  * A positive per-node grant: a subject morph (user|role|team — a registered alias)

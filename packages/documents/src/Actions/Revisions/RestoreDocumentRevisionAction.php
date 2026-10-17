@@ -19,11 +19,11 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Restore a document to an earlier checkpoint — copy-forward: the

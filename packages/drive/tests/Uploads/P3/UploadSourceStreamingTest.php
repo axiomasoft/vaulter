@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use GuzzleHttp\Psr7\Stream;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;

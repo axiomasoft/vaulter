@@ -7,8 +7,8 @@ namespace Vaulter\Http\Resources\Access;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\GrantSnapshot;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
 
 /**
  * A role granted on a node: who holds which role, how far down it reaches and until

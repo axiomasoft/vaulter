@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Data\Files;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
 
 /**
  * What one ingest committed: the file node and the revision this very call created.

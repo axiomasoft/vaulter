@@ -11,10 +11,10 @@ use Vaulter\Drive\Content\ScanEvidence;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Models\Content\ScanObligation;
+use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
-use Vaulter\Models\Drive\FileRevision;
 
 /**
  * Settles a fresh request clean from exact-byte proof of the same scope, with its own evidence row.

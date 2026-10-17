@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Testing\Activity;
 
 use Illuminate\Database\Eloquent\Collection;
 use Vaulter\Attributes\Internal;
-use Vaulter\Models\Activity\Activity;
+use Vaulter\Drive\Models\Activity\Activity;
 
 /**
  * Builders for the M2c-activity feed tests (§2.9): inspect the append-only rows the

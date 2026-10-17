@@ -19,8 +19,8 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Support\Int64Counter;
 

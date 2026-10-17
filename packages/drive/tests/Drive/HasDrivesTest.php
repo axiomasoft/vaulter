@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Concerns\HasDrives;
+use Vaulter\Drive\Concerns\HasDrives;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Drive\Models\Drive;
 
 final class HasDrivesHost extends Model
 {

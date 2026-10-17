@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Drive\Drive;
 
 it('resolves the configured drive model (swappable)', function (): void {
     expect(DriveResource::getModel())->toBe(Drive::class);

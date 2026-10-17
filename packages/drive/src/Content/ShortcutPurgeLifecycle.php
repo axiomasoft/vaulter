@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Contracts\Drive\PurgeOnlyContentLifecycle;
-use Vaulter\Data\Drive\CopyResult;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Contracts\PurgeOnlyContentLifecycle;
+use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 
 #[Internal]
 final readonly class ShortcutPurgeLifecycle implements NodeContentLifecycle, PurgeOnlyContentLifecycle

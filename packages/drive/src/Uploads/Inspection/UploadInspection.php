@@ -8,10 +8,10 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Profiles\UploadPolicy;
 use Vaulter\Kernel;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Profiles\UploadPolicy;
 
 /** @internal Global and profile allow predicates are both evaluated. */
 #[Internal]

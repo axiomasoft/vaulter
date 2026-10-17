@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
@@ -16,7 +17,6 @@ use Vaulter\Drive\Uploads\UploadsOf;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Media\Contracts\Cas\BlobStore;
-use Vaulter\Models\Drive\FileRevision;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

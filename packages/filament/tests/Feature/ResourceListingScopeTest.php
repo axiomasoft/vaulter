@@ -6,6 +6,9 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
@@ -15,9 +18,6 @@ use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Filament\Tests\Fixtures\MutableTenantResolver;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
 
 /*
  * F-P1.10-01 (Major) — the four previously-unscoped Filament resources

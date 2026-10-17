@@ -10,16 +10,16 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
 use Vaulter\Drive\Models\Content\ScanObligation;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
 
 /**
  * Fence, counter and terminal-state rules shared by the scan work Actions.

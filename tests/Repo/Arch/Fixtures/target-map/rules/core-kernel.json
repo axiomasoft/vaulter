@@ -404,44 +404,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Database\\Factories\\VaulterFactory",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#ownership-map: database/factories — the abstract factory base stays with VaulterDatabase in core; module factories extend it (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Database\\Factories\\DriveFactory",
-            "owner": "drive",
-            "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Database\\Factories\\FileRevisionFactory",
-            "owner": "drive",
-            "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Database\\Factories\\NodeFactory",
-            "owner": "drive",
-            "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Database\\Factories\\PinnedOwnerTenantResolver",
-            "owner": "drive",
-            "why": "architecture#ownership-map: database/factories -> module of the model: tenant pin helper used by the drive factories"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Database\\Factories\\PinnedTenantResolver",
-            "owner": "drive",
-            "why": "architecture#ownership-map: database/factories -> module of the model: tenant pin helper used by the drive factories"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Doctor\\DoctorCheckResult",
             "owner": "core",
             "action": "keep",

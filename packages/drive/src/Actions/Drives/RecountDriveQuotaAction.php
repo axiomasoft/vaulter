@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Actions\Drives;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Quota\QuotaCalculator;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Quota\QuotaCalculator;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
 
 /**
  * Recount one drive's eager used_bytes from its retained revisions. The

@@ -9,8 +9,8 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Quota\QuotaCalculator;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Quota\QuotaCalculator;
 use Vaulter\Support\Identity;
 
 /**

@@ -11,7 +11,7 @@ use Vaulter\Documents\Contracts\CollaborationDriver;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Exceptions\CollaborationConfigException;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Support\Identity;
 
 /**

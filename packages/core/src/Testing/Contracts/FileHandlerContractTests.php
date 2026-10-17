@@ -6,8 +6,8 @@ namespace Vaulter\Testing\Contracts;
 
 use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Api;
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
 
 /**
  * What a file handler must keep for the registry to route to it and cache the result:

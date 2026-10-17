@@ -10,7 +10,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
-use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Drive\Enums\DriveStatus;
 
 #[Internal]
 final readonly class DrivesDeletingCheck implements DoctorCheck

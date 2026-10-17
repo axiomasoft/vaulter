@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

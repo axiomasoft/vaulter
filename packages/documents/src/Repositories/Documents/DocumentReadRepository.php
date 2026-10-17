@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Repositories\Documents;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Documents\Document;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Lookups of the document aggregate of a node. Opens no transactions and makes no

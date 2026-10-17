@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Contracts\Drive\DriveHandleFactory;
-use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandleFactory;
+use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\Modules\MissingExtensionException;
-use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tenancy\Tenancy;
 
 #[Api]

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
-use Vaulter\Data\Snapshots\ShareLinkSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 
 /**
  * A share link as its owner sees it. The token is never part of it: only the store

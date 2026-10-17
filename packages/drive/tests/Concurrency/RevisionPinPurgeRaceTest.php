@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Media\Cas\BlobGarbageCollector;

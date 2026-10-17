@@ -7,13 +7,13 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

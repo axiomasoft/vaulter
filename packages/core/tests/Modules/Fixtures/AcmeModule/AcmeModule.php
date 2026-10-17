@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Modules\Fixtures\AcmeModule;
 
 use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Contracts\Drive\DownloadGuard;
-use Vaulter\Contracts\Drive\NodeSnapshotContributor;
+use Vaulter\Drive\Contracts\DownloadGuard;
+use Vaulter\Drive\Contracts\NodeSnapshotContributor;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Modules\Activation;

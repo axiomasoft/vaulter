@@ -21,15 +21,15 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Content\OffScanPolicyResolver;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Drive\Handlers\FileHandlerRegistry;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Modules\ModuleBindings;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\ShareTenantContext;
 use Vaulter\VaulterManager;
@@ -96,7 +96,7 @@ final class DriveSliceRegistrar implements ModuleBindings
         // fail-loud — the engine always exists; only extra formats need a package
         // installed).
         $app->singleton(FileHandlerRegistry::class);
-        $app->bind(\Vaulter\Contracts\Handlers\FileHandlerRegistry::class, FileHandlerRegistry::class);
+        $app->bind(\Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry::class, FileHandlerRegistry::class);
 
         // The preview and download-only baseline is the drive module's contribution to the FileHandler slot,
         // so a stale or emptied host `handlers` config cannot drop it; `vaulter.file_handlers` stays the host's tag.

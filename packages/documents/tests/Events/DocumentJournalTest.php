@@ -9,7 +9,8 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
-use Vaulter\Enums\Changes\ChangeOperation;
+use Vaulter\Drive\Enums\Changes\ChangeOperation;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 
 /**
@@ -78,4 +79,11 @@ it('journals a restore as the newest upsert of the document', function (): void 
         ->and($page->changes)->toHaveCount(1)
         ->and($page->changes[0]->operation)->toBe(ChangeOperation::Upsert)
         ->and($page->changes[0]->node?->id)->toBe((string) $node->id);
+});
+
+it('journals exactly the created, updated and restored document types of the catalogue', function (): void {
+    $journalled = array_values(array_filter(DocumentEventType::cases(), static fn (EventTypeContract $type): bool => $type->spec()->journal !== null));
+
+    expect(array_map(static fn (EventTypeContract $type): string => (string) $type->value, $journalled))
+        ->toEqualCanonicalizing(['document.created', 'document.updated', 'document.restored']);
 });

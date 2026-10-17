@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Uploads;
 
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle as Contract;
+use Vaulter\Drive\Contracts\DriveHandle as Contract;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\Operations\UploadOperations;
 

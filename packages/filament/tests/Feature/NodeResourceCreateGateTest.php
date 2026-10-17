@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
 
 it('applies the selected profile create gate to folder options and canonical folder creation', function (bool $allow): void {
     $this->actingAs(DriveBuilder::user());

@@ -12,10 +12,10 @@ use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Tenancy\ResolvesOwnerTenant;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
 /** @internal Central boundary; resolver values and supplied models are never cached. */

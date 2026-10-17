@@ -5,10 +5,6 @@ declare(strict_types=1);
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\PermissionDriverManager;
@@ -19,19 +15,23 @@ use Vaulter\Drive\Access\ValueObjects\Decision;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
 
 // D30 (variant A): COPY needs View and Copy on EVERY active descendant, not only on the root.
 

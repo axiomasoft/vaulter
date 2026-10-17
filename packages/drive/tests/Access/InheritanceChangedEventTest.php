@@ -6,13 +6,13 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
+use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Operations\AccessOperations;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\Support\CanonicalJson;
 
 uses(EnablesWebhooksModule::class);

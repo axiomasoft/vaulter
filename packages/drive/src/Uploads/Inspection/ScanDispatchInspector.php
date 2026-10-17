@@ -8,8 +8,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\UploadPolicy;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\UploadPolicy;
 
 #[Internal]
 final readonly class ScanDispatchInspector implements UploadInspector

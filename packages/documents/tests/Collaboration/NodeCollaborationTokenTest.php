@@ -8,9 +8,9 @@ use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

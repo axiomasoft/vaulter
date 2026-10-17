@@ -8,19 +8,19 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
+use Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\RevisionPinnedException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
+use Vaulter\Drive\Repositories\FileRevisionStoreRepository;
+use Vaulter\Drive\Repositories\FileStoreRepository;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
-use Vaulter\Exceptions\Drive\RevisionPinnedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
-use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
-use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Delete one non-current revision of a file — the single path of the API

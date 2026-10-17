@@ -9,12 +9,12 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\DocumentHeadSnapshot;
-use Vaulter\Data\Snapshots\FileHeadSnapshot;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Data\Snapshots\ViewerStateSnapshot;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\ScanStatus;
+use Vaulter\Drive\Data\Snapshots\DocumentHeadSnapshot;
+use Vaulter\Drive\Data\Snapshots\FileHeadSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\ViewerStateSnapshot;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\ScanStatus;
 use Vaulter\Idempotency\ReceiptCodec;
 use Vaulter\Idempotency\ResourceRef;
 

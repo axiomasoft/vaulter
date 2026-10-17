@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests\Content\Fixtures;
 
 use Throwable;
-use Vaulter\Contracts\Drive\DownloadGuard;
+use Vaulter\Drive\Contracts\DownloadGuard;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Sharing\ShareContext;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
 
 /** Records every check; the second guard throws what a test sets. */
 abstract class RecordingDownloadGuard implements DownloadGuard

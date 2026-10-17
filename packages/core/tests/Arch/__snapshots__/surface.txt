@@ -37,11 +37,6 @@ Vaulter\Attributes\SpiKind api since 1.0 enum: string
   case Call = 'call'
   case Implement = 'implement'
 
-Vaulter\Concerns\HasDrives api since 1.0 trait
-  public static function bootHasDrives(): void
-  public function drive(?string $profile = null): Vaulter\Contracts\Drive\DriveHandle
-  public function drives(): Illuminate\Database\Eloquent\Relations\MorphMany
-
 Vaulter\Configuration\AccessConfig api since 1.0 final readonly class
   public function gateAbilityMap(): array
   public function gateCreateAbility(): string
@@ -182,101 +177,10 @@ Vaulter\Configuration\WebhooksConfig api since 1.0 final readonly class
   public function timeout(): int
   public function urlGuard(): string
 
-Vaulter\Contracts\Activity\ActivityOperations api since 1.0 interface
-  public function forDrive(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-  public function forNode(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-
 Vaulter\Contracts\Doctor\DoctorCheck spi:implement since 1.0 interface
   public function key(): string
   public function run(Vaulter\Doctor\DoctorContext $context): array
   public function title(): string
-
-Vaulter\Contracts\Drive\DownloadGuard spi:implement since 1.0 interface
-  public function check(Vaulter\Drive\Sharing\ShareContext|Vaulter\Operations\DriveContext $context, Vaulter\Models\Drive\Node $node, Vaulter\Models\Drive\FileRevision $revision): void
-
-Vaulter\Contracts\Drive\DriveExtension spi:implement since 1.0 interface
-
-Vaulter\Contracts\Drive\DriveHandle api since 1.0 interface
-  public function access(): Vaulter\Drive\Contracts\Access\AccessOperations
-  public function actingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): static
-  public function activity(): Vaulter\Contracts\Activity\ActivityOperations
-  public function actor(): Vaulter\ValueObjects\Access\Actor
-  public function archive(): Vaulter\Data\Snapshots\DriveSnapshot
-  public function asSystem(string $reason): static
-  public function changes(): Vaulter\Operations\ChangeOperations
-  public function delete(): Vaulter\Data\Snapshots\DriveSnapshot
-  public function extension(string $operations): object
-  public function files(): Vaulter\Contracts\Drive\FileOperations
-  public function folders(): Vaulter\Contracts\Drive\FolderOperations
-  public function nodes(): Vaulter\Contracts\Drive\NodeOperations
-  public function profile(): Vaulter\Profiles\Profile
-  public function quota(): Vaulter\Data\Snapshots\QuotaSnapshot
-  public function root(): Vaulter\Data\Snapshots\NodeSnapshot
-  public function shares(): Vaulter\Drive\Contracts\Sharing\ShareOperations
-  public function snapshot(): Vaulter\Data\Snapshots\DriveSnapshot
-  public function trash(): Vaulter\Contracts\Drive\TrashOperations
-  public function unarchive(): Vaulter\Data\Snapshots\DriveSnapshot
-  public function withCorrelationId(string $correlationId): static
-  public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
-
-Vaulter\Contracts\Drive\FileOperations api since 1.0 interface
-  public function addRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Drive\UploadSource $source, ?Vaulter\Data\Drive\RevisionOptions $options = null): Vaulter\Data\Snapshots\FileRevisionSnapshot
-  public function deleteRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision): void
-  public function read(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|null|string $revision = null): Vaulter\Data\Drive\FileStream
-  public function restoreRevision(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, ?int $expectedSequence = null): Vaulter\Data\Snapshots\FileRevisionSnapshot
-  public function revisions(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-  public function setRevisionRetention(Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, bool $keepForever): Vaulter\Data\Snapshots\FileRevisionSnapshot
-  public function upload(Vaulter\Data\Drive\UploadSource $source, ?Vaulter\Data\Drive\UploadOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
-
-Vaulter\Contracts\Drive\FolderOperations api since 1.0 interface
-  public function create(string $name, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?Vaulter\Data\Drive\CreateFolderOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
-
-Vaulter\Contracts\Drive\NodeContentLifecycle spi:implement since 1.0 interface
-  public function copy(Vaulter\Operations\DriveContext $context, Vaulter\Models\Drive\Node $source, Vaulter\Models\Drive\Node $copy): Vaulter\Data\Drive\CopyResult
-  public function kind(): Vaulter\Enums\Drive\NodeKind
-  public function purge(Vaulter\Operations\DriveContext $context, Vaulter\Models\Drive\Node $node): void
-
-Vaulter\Contracts\Drive\NodeOperations api since 1.0 interface
-  public function abilities(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Drive\Access\ValueObjects\NodeAbilities
-  public function abilitiesMany(array $nodes): array
-  public function children(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $folder = null, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-  public function copy(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, ?Vaulter\Data\Drive\CopyOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
-  public function find(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
-  public function move(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination, ?Vaulter\Data\Drive\MoveOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
-  public function properties(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
-  public function rename(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, string $name, ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
-  public function search(string $term, ?Vaulter\Data\Drive\SearchOptions $options = null): Vaulter\Data\Page
-  public function setProperties(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
-  public function star(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
-  public function starred(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-  public function trash(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): Vaulter\Data\Snapshots\NodeSnapshot
-  public function unstar(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Data\Snapshots\NodeSnapshot
-
-Vaulter\Contracts\Drive\NodeSnapshotContributor spi:implement since 1.0 interface
-  public function contribute(array $nodes): array
-  public function key(): string
-
-Vaulter\Contracts\Drive\TrashOperations api since 1.0 interface
-  public function empty(): int
-  public function list(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-  public function purge(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): void
-  public function restore(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Data\Drive\RestoreOptions $options = null): Vaulter\Data\Snapshots\NodeSnapshot
-
-Vaulter\Contracts\Handlers\FileHandler spi:implement since 1.0 interface
-  public function capabilities(Vaulter\ValueObjects\Handlers\FileDescriptor $file): Vaulter\ValueObjects\Handlers\ContentCapabilities
-  public function extensions(): array
-  public function key(): string
-  public function mimeTypes(): array
-  public function priority(): int
-  public function viewer(Vaulter\ValueObjects\Handlers\FileDescriptor $file): Vaulter\ValueObjects\Handlers\ViewerDescriptor
-
-Vaulter\Contracts\Handlers\FileHandlerRegistry api since 1.0 interface
-  public function all(): array
-  public function register(Vaulter\Contracts\Handlers\FileHandler|string $handler): void
-  public function resolve(Vaulter\ValueObjects\Handlers\FileDescriptor $file, Vaulter\Enums\Handlers\Capability $capability = \Vaulter\Enums\Handlers\Capability::Download): Vaulter\Contracts\Handlers\FileHandler
-
-Vaulter\Contracts\Handlers\NodePresenter spi:implement since 1.0 interface
-  public function present(Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Handlers\NodePresentation
 
 Vaulter\Contracts\IdStrategy spi:implement since 1.0 interface
   public function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
@@ -295,15 +199,6 @@ Vaulter\Contracts\Observability\MetricsRecorder spi:implement since 1.0 interfac
 Vaulter\Contracts\Observability\TraceRecorder spi:implement since 1.0 interface
   public function span(string $name, callable $operation, array $attributes = []): mixed
 
-Vaulter\Contracts\Presentation\KindPresenter spi:implement since 1.0 interface
-  public function kind(): Vaulter\Enums\Drive\NodeKind
-  public function present(Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Handlers\NodePresentation
-
-Vaulter\Contracts\Profiles\ProfileOption spi:implement since 1.0 interface
-  public function enabled(): bool
-  public function name(): string
-  public function validate(Vaulter\Profiles\Profile $profile): void
-
 Vaulter\Contracts\Tenancy\ResolvesOwnerTenant spi:implement since 1.0 interface
   public function tenantOf(Illuminate\Database\Eloquent\Model $owner): int|null|string
 
@@ -317,107 +212,6 @@ Vaulter\Contracts\Webhooks\OutboundUrlGuard spi:implement since 1.0 interface
   public function isAllowed(string $url): void
   public function pin(string $url): Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
 
-Vaulter\Data\Drive\CopyOptions api since 1.0 final readonly class
-  public ?string $name
-  public Vaulter\Enums\Drive\OnNameConflict $onConflict
-  public function __construct(?string $name = null, Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Rename)
-  public static function make(): self
-  public function name(?string $name): self
-  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
-
-Vaulter\Data\Drive\CopyResult api since 1.0 final readonly class
-  public int $addedBytes
-  public function __construct(int $addedBytes)
-
-Vaulter\Data\Drive\CreateFolderOptions api since 1.0 final readonly class
-  public Vaulter\Enums\Drive\OnNameConflict $onConflict
-  public function __construct(Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Fail)
-  public static function make(): self
-  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
-
-Vaulter\Data\Drive\FileStream api since 1.0 final readonly class
-  public string $filename
-  public string $mimeType
-  public Vaulter\Data\Snapshots\FileRevisionSnapshot $revision
-  public string $sha256
-  public int $size
-  public mixed $stream
-  public function __construct(mixed $stream, string $filename, string $mimeType, int $size, string $sha256, Vaulter\Data\Snapshots\FileRevisionSnapshot $revision)
-
-Vaulter\Data\Drive\ListOptions api since 1.0 final readonly class
-  public ?string $cursor
-  public bool $descending
-  public array $kinds
-  public int $perPage
-  public Vaulter\Enums\Drive\NodeSort $sort
-  public function __construct(int $perPage = 50, ?string $cursor = null, Vaulter\Enums\Drive\NodeSort $sort = \Vaulter\Enums\Drive\NodeSort::Default, bool $descending = false, array $kinds = [])
-  public function cursor(?string $cursor): self
-  public function descending(bool $descending): self
-  public function kinds(array $kinds): self
-  public static function make(): self
-  public function perPage(int $perPage): self
-  public function sort(Vaulter\Enums\Drive\NodeSort $sort, bool $descending = false): self
-
-Vaulter\Data\Drive\MoveOptions api since 1.0 final readonly class
-  public ?int $expectedSequence
-  public Vaulter\Enums\Drive\OnNameConflict $onConflict
-  public function __construct(?int $expectedSequence = null, Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Fail)
-  public function expectedSequence(?int $expectedSequence): self
-  public static function make(): self
-  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
-
-Vaulter\Data\Drive\RestoreOptions api since 1.0 final readonly class
-  public Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination
-  public ?int $expectedSequence
-  public Vaulter\Enums\Drive\OnNameConflict $onConflict
-  public function __construct(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Rename, ?int $expectedSequence = null)
-  public function destination(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination): self
-  public function expectedSequence(?int $expectedSequence): self
-  public static function make(): self
-  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
-
-Vaulter\Data\Drive\RevisionOptions api since 1.0 final readonly class
-  public ?string $declaredMimeType
-  public ?int $expectedSequence
-  public function __construct(?int $expectedSequence = null, ?string $declaredMimeType = null)
-  public function declaredMimeType(?string $declaredMimeType): self
-  public function expectedSequence(?int $expectedSequence): self
-  public static function make(): self
-
-Vaulter\Data\Drive\SearchOptions api since 1.0 final readonly class
-  public ?string $cursor
-  public int $perPage
-  public Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within
-  public function __construct(int $perPage = 50, ?string $cursor = null, Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within = null)
-  public function cursor(?string $cursor): self
-  public static function make(): self
-  public function perPage(int $perPage): self
-  public function within(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within): self
-
-Vaulter\Data\Drive\UploadOptions api since 1.0 final readonly class
-  public ?DateTimeInterface $clientModifiedAt
-  public ?string $declaredMimeType
-  public ?string $name
-  public Vaulter\Enums\Drive\OnNameConflict $onConflict
-  public Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent
-  public function __construct(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?string $name = null, Vaulter\Enums\Drive\OnNameConflict $onConflict = \Vaulter\Enums\Drive\OnNameConflict::Fail, ?string $declaredMimeType = null, ?DateTimeInterface $clientModifiedAt = null)
-  public function clientModifiedAt(?DateTimeInterface $clientModifiedAt): self
-  public function declaredMimeType(?string $declaredMimeType): self
-  public static function make(): self
-  public function name(?string $name): self
-  public function onConflict(Vaulter\Enums\Drive\OnNameConflict $onConflict): self
-  public function parent(Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent): self
-
-Vaulter\Data\Drive\UploadSource api since 1.0 final readonly class
-  public function declaredMimeType(): ?string
-  public function declaredSize(): ?int
-  public static function fromPath(string $path, ?string $name = null): self
-  public static function fromPsrStream(Psr\Http\Message\StreamInterface $stream, string $name): self
-  public static function fromStream($stream, string $name, ?int $size = null): self
-  public static function fromString(string $bytes, string $name): self
-  public static function fromUploadedFile(Illuminate\Http\UploadedFile $file): self
-  public function name(): string
-
 Vaulter\Data\Page api since 1.0 final readonly class implements Countable, IteratorAggregate
   public array $items
   public ?string $nextCursor
@@ -425,168 +219,6 @@ Vaulter\Data\Page api since 1.0 final readonly class implements Countable, Itera
   public function count(): int
   public function getIterator(): Traversable
   public function hasMore(): bool
-
-Vaulter\Data\Snapshots\ActivityEntrySnapshot api since 1.0 final readonly class
-  public ?string $actorId
-  public ?string $actorType
-  public array $context
-  public DateTimeImmutable $createdAt
-  public ?string $driveId
-  public string $id
-  public ?string $ip
-  public ?string $requestId
-  public ?string $targetId
-  public ?string $targetType
-  public ?string $userAgent
-  public string $verb
-
-Vaulter\Data\Snapshots\DocumentHeadSnapshot api since 1.0 final readonly class
-  public int $epoch
-  public ?string $headRevisionId
-  public int $schemaVersion
-  public int $stateVersion
-  public string $type
-  public bool $typeAvailable
-
-Vaulter\Data\Snapshots\DriveSnapshot api since 1.0 final readonly class
-  public DateTimeImmutable $createdAt
-  public string $id
-  public string $name
-  public string $ownerId
-  public string $ownerType
-  public string $profile
-  public Vaulter\Enums\Drive\DriveStatus $status
-  public ?string $tenantId
-
-Vaulter\Data\Snapshots\FileHeadSnapshot api since 1.0 final readonly class
-  public string $fileId
-  public ?string $mimeType
-  public string $revisionId
-  public int $revisionNumber
-  public Vaulter\Enums\Drive\ScanStatus $scanStatus
-  public string $sha256
-  public int $sizeBytes
-
-Vaulter\Data\Snapshots\FileRevisionSnapshot api since 1.0 final readonly class
-  public ?DateTimeImmutable $clientModifiedAt
-  public DateTimeImmutable $createdAt
-  public ?string $createdBy
-  public ?string $declaredMimeType
-  public string $fileNodeId
-  public string $id
-  public bool $isHead
-  public bool $keepForever
-  public ?string $mimeType
-  public int $number
-  public ?string $restoredFromRevisionId
-  public Vaulter\Enums\Drive\ScanStatus $scanStatus
-  public string $sha256
-  public int $sizeBytes
-
-Vaulter\Data\Snapshots\GrantSnapshot api since 1.0 final readonly class
-  public DateTimeImmutable $createdAt
-  public ?DateTimeImmutable $expiresAt
-  public ?string $grantedBy
-  public string $id
-  public string $nodeId
-  public string $role
-  public int $roleVersion
-  public Vaulter\Drive\Enums\Access\GrantScope $scope
-  public Vaulter\Drive\Access\ValueObjects\Subject $subject
-
-Vaulter\Data\Snapshots\MintedShareLink api since 1.0 final readonly class
-  public Vaulter\Data\Snapshots\ShareLinkSnapshot $link
-  public string $token
-
-Vaulter\Data\Snapshots\NodeSnapshot api since 1.0 final readonly class
-  public ?DateTimeImmutable $contentModifiedAt
-  public ?string $contentModifiedBy
-  public DateTimeImmutable $createdAt
-  public ?string $createdBy
-  public ?Vaulter\Data\Snapshots\DocumentHeadSnapshot $document
-  public string $driveId
-  public ?string $extension
-  public ?Vaulter\Data\Snapshots\FileHeadSnapshot $file
-  public string $id
-  public bool $inheritsAccess
-  public Vaulter\Enums\Drive\NodeKind $kind
-  public ?string $mimeType
-  public string $name
-  public ?string $parentId
-  public array $properties
-  public int $sequence
-  public int $sizeBytes
-  public bool $trashRoot
-  public ?DateTimeImmutable $trashedAt
-  public ?string $trashedBy
-  public DateTimeImmutable $updatedAt
-  public ?string $updatedBy
-  public ?Vaulter\Data\Snapshots\ViewerStateSnapshot $viewer
-
-Vaulter\Data\Snapshots\QuotaSnapshot api since 1.0 final readonly class
-  public ?int $limitBytes
-  public ?int $remainingBytes
-  public Vaulter\Enums\Drive\QuotaState $state
-  public int $trashedBytes
-  public int $usedBytes
-
-Vaulter\Data\Snapshots\ShareLinkSnapshot api since 1.0 final readonly class
-  public Vaulter\Drive\Enums\Sharing\ShareAudience $audience
-  public DateTimeImmutable $createdAt
-  public ?string $createdBy
-  public ?DateTimeImmutable $expiresAt
-  public string $id
-  public ?int $maxUses
-  public string $nodeId
-  public bool $passwordProtected
-  public ?DateTimeImmutable $revokedAt
-  public string $role
-  public int $roleVersion
-  public Vaulter\Drive\Enums\Access\GrantScope $scope
-  public int $tokenGeneration
-  public string $tokenPrefix
-  public int $useCount
-
-Vaulter\Data\Snapshots\ViewerStateSnapshot api since 1.0 final readonly class
-  public bool $starred
-
-Vaulter\Database\Factories\DriveFactory api since 1.0 final class extends Vaulter\Database\Factories\VaulterFactory
-  protected $model = \Vaulter\Models\Drive\Drive::class
-  public function definition(): array
-  public function for($factory, $relationship = null)
-  protected function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
-  public function profile(string $profile): static
-
-Vaulter\Database\Factories\FileRevisionFactory api since 1.0 final class extends Vaulter\Database\Factories\VaulterFactory
-  protected $model = \Vaulter\Models\Drive\FileRevision::class
-  public function bytes(string $bytes, ?string $mimeType = 'text/plain'): static
-  public function definition(): array
-  public function for($factory, $relationship = null)
-  public function in(Vaulter\Models\Drive\Drive $drive): static
-  protected function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
-
-Vaulter\Database\Factories\NodeFactory api since 1.0 final class extends Vaulter\Database\Factories\VaulterFactory
-  protected $model = \Vaulter\Models\Drive\Node::class
-  public function definition(): array
-  public function file(string $bytes = 'fixture', ?string $mimeType = 'text/plain'): static
-  public function folder(): static
-  public function in(Vaulter\Models\Drive\Drive|Vaulter\Models\Drive\Node $container): static
-  protected function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
-
-Vaulter\Database\Factories\VaulterFactory api since 1.0 abstract class extends Illuminate\Database\Eloquent\Factories\Factory
-  protected array $vaulter = []
-  public function forTenant(int|string $tenant): static
-  public function insert(array $attributes = [], ?Illuminate\Database\Eloquent\Model $parent = null): void
-  protected function newInstance(array $arguments = [])
-  protected abstract function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
-  protected function stateArray(string $key): ?array
-  protected function stateObject(string $key, string $class): ?object
-  protected function stateString(string $key, ?string $default = null): ?string
-  protected function stateText(string $key, string $default): string
-  protected function store(Illuminate\Support\Collection $results)
-  protected function system(Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): Vaulter\Contracts\Drive\DriveHandle
-  protected function withTenant(Closure $callback): mixed
-  protected function withVaulter(array $state): static
 
 Vaulter\Database\VaulterDatabase api since 1.0 final class
   public function advisoryLock(string $key): void
@@ -630,44 +262,6 @@ Vaulter\Doctor\DoctorSeverity api since 1.0 enum: string
   case Ok = 'ok'
   case Warning = 'warning'
 
-Vaulter\Enums\Drive\DriveStatus api since 1.0 enum: string
-  case Active = 'active'
-  case Archived = 'archived'
-  case Deleting = 'deleting'
-
-Vaulter\Enums\Drive\NodeKind api since 1.0 enum: string uses Vaulter\Support\Concerns\HasIcon, Vaulter\Support\Concerns\HasLabel
-  case Document = 'document'
-  case File = 'file'
-  case Folder = 'folder'
-  case Shortcut = 'shortcut'
-  public function isDocument(): bool
-  public static function values(): array
-
-Vaulter\Enums\Drive\NodeSort api since 1.0 enum: string
-  case Default = 'default'
-  case Name = 'name'
-  case Size = 'size'
-  case UpdatedAt = 'updated_at'
-
-Vaulter\Enums\Drive\OnNameConflict api since 1.0 enum: string
-  case AddRevision = 'add_revision'
-  case Fail = 'fail'
-  case Rename = 'rename'
-
-Vaulter\Enums\Drive\QuotaState api since 1.0 enum: string
-  case Critical = 'critical'
-  case Exceeded = 'exceeded'
-  case Nearing = 'nearing'
-  case Normal = 'normal'
-  public static function for(?int $limitBytes, int $usedBytes): self
-
-Vaulter\Enums\Drive\ScanStatus api since 1.0 enum: string
-  case Clean = 'clean'
-  case Failed = 'failed'
-  case Infected = 'infected'
-  case NotRequired = 'not_required'
-  case Pending = 'pending'
-
 Vaulter\Enums\Events\DriveEventType api since 1.0 enum: string implements Vaulter\Events\EventTypeContract uses Vaulter\Events\Concerns\DescribesEvent
   case DriveArchived = 'drive.archived'
   case DriveCreated = 'drive.created'
@@ -695,20 +289,6 @@ Vaulter\Enums\Events\DriveEventType api since 1.0 enum: string implements Vaulte
   case UploadExpired = 'upload.expired'
   case UploadInitiated = 'upload.initiated'
 
-Vaulter\Enums\Handlers\Capability api since 1.0 enum: string
-  case Collaborate = 'collaborate'
-  case Download = 'vaulter/download'
-  case Edit = 'edit'
-  case Preview = 'vaulter/preview'
-  case Thumbnail = 'thumbnail'
-  public function satisfiedBy(Vaulter\ValueObjects\Handlers\ContentCapabilities $capabilities): bool
-
-Vaulter\Enums\Operations\OperationKind api since 1.0 enum: string
-  case ContentEgress = 'content_egress'
-  case Metadata = 'metadata'
-  case Mutation = 'mutation'
-  case Purge = 'purge'
-
 Vaulter\Events\Concerns\DescribesEvent spi:implement since 1.0 trait uses Vaulter\Support\Concerns\HasLabel
   public function spec(): Vaulter\Attributes\EventSpec
 
@@ -724,9 +304,9 @@ Vaulter\Events\DomainEvent api since 1.0 abstract readonly class
   protected static function id(mixed $value): ?string
   public function isExternal(): bool
   public function journal(): ?Vaulter\ValueObjects\Events\JournalEffect
-  protected static function nodeScope(Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Events\EventScope
-  protected static function nodeSubject(Vaulter\Models\Drive\Node $node): Vaulter\ValueObjects\Events\EventSubject
-  protected static function nodeUpsert(Vaulter\Models\Drive\Node $node, bool $subtree = false, ?int $sequence = null): Vaulter\ValueObjects\Events\JournalEffect
+  protected static function nodeScope(Vaulter\Drive\Models\Node $node): Vaulter\ValueObjects\Events\EventScope
+  protected static function nodeSubject(Vaulter\Drive\Models\Node $node): Vaulter\ValueObjects\Events\EventSubject
+  protected static function nodeUpsert(Vaulter\Drive\Models\Node $node, bool $subtree = false, ?int $sequence = null): Vaulter\ValueObjects\Events\JournalEffect
   public abstract function scope(): Vaulter\ValueObjects\Events\EventScope
   public function sequence(): ?int
   public abstract function subject(): Vaulter\ValueObjects\Events\EventSubject
@@ -820,18 +400,6 @@ Vaulter\Exceptions\Access\MissingActorException api since 1.0 final class extend
   public function problemCode(): string
   public static function required(): self
 
-Vaulter\Exceptions\Changes\CursorExpiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function httpStatus(): int
-  public function problemCode(): string
-  public static function pruned(): self
-  public static function reset(): self
-
-Vaulter\Exceptions\Changes\InvalidCursorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function httpStatus(): int
-  public static function malformed(): self
-  public static function otherDrive(): self
-  public function problemCode(): string
-
 Vaulter\Exceptions\Concerns\ProvidesProblemDetails api since 1.0 trait
   public function problemDetails(): array
   public function problemHeaders(): array
@@ -852,36 +420,6 @@ Vaulter\Exceptions\Database\ConcurrentUpdateException api since 1.0 final class 
 
 Vaulter\Exceptions\Database\WriteOutsideOperationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct(string $target, ?string $caller = null)
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forRevision(int|string $revisionId): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Drive\DriveArchivedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forDrive(int|string $driveId): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Drive\InvalidDriveStateException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function for(int|string $driveId, string $operation, Vaulter\Enums\Drive\DriveStatus|string $status): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Drive\QuotaExceededException api since 1.0 class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forStorage(int|string $storageId, int $quotaBytes, int $usedBytes, int $incomingBytes): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Drive\RevisionPinnedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forRevision(int|string $revisionId): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Files\ContentUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function __construct()
   public function httpStatus(): int
   public function problemCode(): string
 
@@ -909,127 +447,8 @@ Vaulter\Exceptions\Modules\ModuleNotReadyException api since 1.0 final class ext
   public static function missingTables(string $module, array $missing): self
   public function problemCode(): string
 
-Vaulter\Exceptions\Nodes\InvalidCursorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function httpStatus(): int
-  public static function invalid(): self
-  public function problemCode(): string
-  public function problemDetails(): array
-
-Vaulter\Exceptions\Nodes\InvalidDestinationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function httpStatus(): int
-  public static function notAFolder(Vaulter\Models\Drive\Node $destination): self
-  public static function otherDrive(Vaulter\Models\Drive\Node $destination, int|string $storageId): self
-  public function problemCode(): string
-  public static function rootIsImmutable(Vaulter\Models\Drive\Node $root, string $operation): self
-  public static function trashed(Vaulter\Models\Drive\Node $node): self
-
-Vaulter\Exceptions\Nodes\InvalidNodeNameException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public const string CONTROL_CHAR = 'control_char'
-  public const string EMPTY = 'empty'
-  public const string LEADING_OR_TRAILING_SPACE = 'leading_or_trailing_space'
-  public const string PATH_ALIAS = 'path_alias'
-  public const string RESERVED_CHAR = 'reserved_char'
-  public const string RESERVED_NAME = 'reserved_name'
-  public const string SEPARATOR = 'separator'
-  public const string TOO_LONG = 'too_long'
-  public const string TRAILING_DOT_OR_SPACE = 'trailing_dot_or_space'
-  public readonly string $reason
-  public static function forName(string $name, string $reason): self
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-
-Vaulter\Exceptions\Nodes\InvalidPropertiesException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public const string KEY = 'key'
-  public const string NAMESPACE = 'namespace'
-  public const string RESERVED_NAMESPACE = 'reserved_namespace'
-  public const string TOO_LARGE = 'too_large'
-  public const string TOO_MANY = 'too_many'
-  public const string VALUE_TOO_LONG = 'value_too_long'
-  public readonly string $reason
-  public static function because(string $reason, string $subject = ''): self
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-
-Vaulter\Exceptions\Nodes\NodeNameConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forName(string $name, int|null|string $parentId): self
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-
-Vaulter\Exceptions\Nodes\NodeNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forId(int|string $id): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Nodes\NodeNotTrashedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forNode(Vaulter\Models\Drive\Node $node): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forNode(Vaulter\Models\Drive\Node $node, int|string $trashRootId): self
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-  public function trashRootId(): int|string
-
-Vaulter\Exceptions\Nodes\NotAFileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function __construct()
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Nodes\RestoreDestinationChangedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function __construct()
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forNode(Vaulter\Models\Drive\Node $node): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
 Vaulter\Exceptions\Nodes\SequenceOverflowException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public function __construct()
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Nodes\StaleNodeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function __construct(?string $nodeId = null)
-  public static function forNode(int|string $nodeId): self
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-
-Vaulter\Exceptions\Nodes\StorageNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forId(int|string $id): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forBound(int $bound): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Nodes\UnsupportedNodeKindException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public function __construct()
-  public static function forKind(Vaulter\Enums\Drive\NodeKind $kind): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Profiles\InvalidProfileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
-  public static function idStrategyWithoutOwnTables(string $panel): self
-  public static function missingClass(string $panel, string $kind, string $fqcn): self
-  public static function notInstanceOf(string $panel, string $kind, string $fqcn, string $contract): self
-
-Vaulter\Exceptions\Profiles\ProfileRestrictionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forOperation(string $operation): self
-  public function httpStatus(): int
-  public function problemCode(): string
-
-Vaulter\Exceptions\Profiles\UnknownProfileException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public static function forName(string $name, array $known): self
   public function httpStatus(): int
   public function problemCode(): string
 
@@ -1068,9 +487,6 @@ Vaulter\Facades\Vaulter api since 1.0 final class extends Illuminate\Support\Fac
   @method static mixed withoutTenancy(Closure $callback)
   protected static function getFacadeAccessor(): string
 
-Vaulter\Handlers\AbstractFileHandler spi:implement since 1.0 abstract class implements Vaulter\Contracts\Handlers\FileHandler
-  public function extensions(): array
-
 Vaulter\Http\Controllers\Controller api since 1.0 abstract class uses Illuminate\Foundation\Auth\Access\AuthorizesRequests
   protected function actorId(Illuminate\Http\Request $request): int|null|string
   protected function scalarId(Illuminate\Http\Request $request, string $key): int|string
@@ -1108,7 +524,7 @@ Vaulter\Http\Resources\PageResponse api since 1.0 final class
   public const int MAX_PER_PAGE = 200
   public static function cursor(Illuminate\Http\Request $request): ?string
   public static function fromPaginator(Illuminate\Contracts\Pagination\CursorPaginator $paginator, callable $map): Illuminate\Http\JsonResponse
-  public static function listOptions(Illuminate\Http\Request $request): Vaulter\Data\Drive\ListOptions
+  public static function listOptions(Illuminate\Http\Request $request): Vaulter\Drive\Data\ListOptions
   public static function make(Vaulter\Data\Page $page, callable $map, int $perPage): Illuminate\Http\JsonResponse
   public static function perPage(Illuminate\Http\Request $request): int
 
@@ -1288,36 +704,6 @@ Vaulter\Modules\VaulterModule spi:implement since 1.0 interface
   public function requires(): array
   public function version(): string
 
-Vaulter\Naming\NamePolicy spi:implement since 1.0 interface
-  public function apply(string $name): string
-  public function key(): string
-
-Vaulter\Naming\PermissiveNamePolicy api since 1.0 final readonly class implements Vaulter\Naming\NamePolicy
-  public const string KEY = 'permissive-v1'
-  public function apply(string $name): string
-  public function key(): string
-
-Vaulter\Naming\PortableNamePolicy api since 1.0 final readonly class implements Vaulter\Naming\NamePolicy
-  public const string KEY = 'portable-v1'
-  public function apply(string $name): string
-  public function key(): string
-
-Vaulter\Operations\ActivityOperations api since 1.0 final readonly class implements Vaulter\Contracts\Activity\ActivityOperations
-  public function forDrive(?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-  public function forNode(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Data\Drive\ListOptions $options = null): Vaulter\Data\Page
-
-Vaulter\Operations\DriveContext api since 1.0 final readonly class
-  public Vaulter\ValueObjects\Access\Actor $actor
-  public string $correlationId
-  public Vaulter\Models\Drive\Drive $drive
-  public ?string $idempotencyKey
-  public Vaulter\Operations\OperationContext $operation
-  public static function for(Vaulter\Models\Drive\Drive $drive, Vaulter\ValueObjects\Access\Actor $actor, string $correlationId, ?string $idempotencyKey = null, ?string $requestFingerprint = null): self
-  public static function system(Vaulter\Models\Drive\Drive $drive, string $reason, ?string $correlationId = null): self
-
-Vaulter\Operations\NodeLocator api since 1.0 final readonly class
-  public function find(Vaulter\Operations\DriveContext $context, Vaulter\Data\Snapshots\NodeSnapshot|Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): Vaulter\Models\Drive\Node
-
 Vaulter\Operations\Operation api since 1.0 final readonly class
   public int $attemptNo
   public Vaulter\Operations\OperationContext $context
@@ -1354,89 +740,6 @@ Vaulter\Operations\OperationSpec api since 1.0 final readonly class
   public bool $mutating
   public string $name
   public function __construct(string $name, Vaulter\Modules\ModuleId $module, bool $mutating = true)
-
-Vaulter\Profiles\DrivePolicy api since 1.0 final readonly class
-  public ?int $maxFileBytes
-  public int $maxFolderChildren
-  public int $maxFolderDepth
-  public int $maxPropertiesBytes
-  public int $maxPropertyCount
-  public ?int $maxShareLinkTtlDays
-  public string $namePolicy
-  public Vaulter\Profiles\RevisionRetentionPolicy $revisionRetention
-  public function __construct(string $namePolicy = \Vaulter\Naming\PortableNamePolicy::KEY, int $maxFolderDepth = 100, int $maxFolderChildren = 10000, ?int $maxFileBytes = null, int $maxPropertiesBytes = 16384, int $maxPropertyCount = 100, ?int $maxShareLinkTtlDays = null, Vaulter\Profiles\RevisionRetentionPolicy $revisionRetention = new \Vaulter\Profiles\RevisionRetentionPolicy())
-  public function names(): Vaulter\Naming\NamePolicy
-
-Vaulter\Profiles\DrivePolicyBuilder api since 1.0 final class
-  public function __construct(Vaulter\Profiles\DrivePolicy $from = new \Vaulter\Profiles\DrivePolicy())
-  public function build(): Vaulter\Profiles\DrivePolicy
-  public function maxFileBytes(?int $bytes): static
-  public function maxFolderChildren(int $children): static
-  public function maxFolderDepth(int $depth): static
-  public function maxPropertiesBytes(int $bytes): static
-  public function maxPropertyCount(int $count): static
-  public function maxShareLinkTtlDays(?int $days): static
-  public function namePolicy(string $key): static
-  public function revisionRetention(Vaulter\Profiles\RevisionRetentionPolicy $policy): static
-
-Vaulter\Profiles\Profile api since 1.0 final class
-  public function comments(bool $enabled = true): static
-  public function commentsEnabled(): bool
-  public function defaultQuota(?int $bytes): static
-  public function disk(string $disk): static
-  public function documentTypes(string ...$typeKeys): static
-  public function drivePolicy(callable $configure): static
-  public function getDefaultQuota(): ?int
-  public function getDisk(): ?string
-  public function getDocumentTypes(): array
-  public function getDrivePolicy(): Vaulter\Profiles\DrivePolicy
-  public function getKey(): string
-  public function getOwners(): array
-  public function getPermissionDriver(): ?string
-  public function getRevisionLimit(): ?int
-  public function getTrashRetentionDays(): ?int
-  public function getUploadPolicy(): Vaulter\Profiles\UploadPolicy
-  public function grants(bool $enabled = true): static
-  public function grantsEnabled(): bool
-  public function key(string $key): static
-  public function owners(string ...$modelClasses): static
-  public function permissionDriver(string $driverKey): static
-  public function revisionLimit(?int $max): static
-  public function shareLinks(bool $enabled = true): static
-  public function shareLinksEnabled(): bool
-  public function trashRetentionDays(?int $days): static
-  public function uploads(Vaulter\Profiles\UploadPolicy $policy): static
-
-Vaulter\Profiles\ProfileProvider spi:implement since 1.0 abstract class
-  public abstract function profile(Vaulter\Profiles\Profile $profile): Vaulter\Profiles\Profile
-  public function resolve(): Vaulter\Profiles\Profile
-
-Vaulter\Profiles\ProfileRegistry api since 1.0 final class
-  public function __construct(?Illuminate\Contracts\Container\Container $container = null)
-  public function all(): array
-  public function default(): Vaulter\Profiles\Profile
-  public function freeze(): void
-  public static function fromConfig(array $providerClasses, string $defaultClass, ?Illuminate\Contracts\Container\Container $container = null): self
-  public function get(string $key): Vaulter\Profiles\Profile
-  public function has(string $key): bool
-  public function register(Vaulter\Profiles\Profile|Vaulter\Profiles\ProfileProvider|string $profile): void
-
-Vaulter\Profiles\RevisionRetentionPolicy api since 1.0 final readonly class
-  public ?int $maxNoncurrentAgeDays
-  public ?int $maxNoncurrentRevisions
-  public int $minNoncurrentAgeDays
-  public bool $protectPinned
-  public function __construct(?int $maxNoncurrentRevisions = 100, ?int $maxNoncurrentAgeDays = null, int $minNoncurrentAgeDays = 7, bool $protectPinned = true)
-  public function prunes(): bool
-
-Vaulter\Profiles\UploadPolicy api since 1.0 final readonly class
-  public array $allowedMimeTypes
-  public array $blockedExtensions
-  public ?int $maxFileSize
-  public ?bool $requireScan
-  public ?Vaulter\Media\Enums\Cas\ScanMode $scanMode
-  public ?string $scanPolicyVersion
-  public function __construct(?int $maxFileSize = null, array $allowedMimeTypes = [], array $blockedExtensions = [], ?bool $requireScan = null, ?Vaulter\Media\Enums\Cas\ScanMode $scanMode = null, ?string $scanPolicyVersion = null)
 
 Vaulter\Schema\HostKeyColumns api since 1.0 final class
   public static function add(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
@@ -1487,20 +790,20 @@ Vaulter\Tenancy\Tenancy api since 1.0 final class
   public static function without(Closure $callback): mixed
 
 Vaulter\Testing\Contracts\FileHandlerContractTests api since 1.0 final class
-  public function assertFileHandlerContract(Vaulter\Contracts\Handlers\FileHandler $handler, ?Vaulter\ValueObjects\Handlers\FileDescriptor $claimed = null): void
+  public function assertFileHandlerContract(Vaulter\Drive\Contracts\Handlers\FileHandler $handler, ?Vaulter\Drive\ValueObjects\Handlers\FileDescriptor $claimed = null): void
 
 Vaulter\Testing\Contracts\ModuleContractTests api since 1.0 final class
   public function assertModuleContract(Vaulter\Modules\VaulterModule $module, array $requires = []): void
 
 Vaulter\Testing\Contracts\PermissionDriverContractTests api since 1.0 final class
-  public function assertPermissionDriverContract(Vaulter\Drive\Access\AccessResolver $resolver, Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Models\Drive\Node $parent, Vaulter\Models\Drive\Node $child): void
+  public function assertPermissionDriverContract(Vaulter\Drive\Access\AccessResolver $resolver, Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Drive\Models\Node $parent, Vaulter\Drive\Models\Node $child): void
   public function assertSameDecisionsAsReference(Vaulter\Drive\Contracts\Access\PermissionDriver $driver, ?Vaulter\Testing\Contracts\PermissionFixture $fixture = null): void
 
 Vaulter\Testing\Contracts\PermissionFixture api since 1.0 final readonly class
   public Illuminate\Contracts\Auth\Access\Authorizable $actor
-  public Vaulter\Models\Drive\Node $child
-  public Vaulter\Models\Drive\Drive $drive
-  public Vaulter\Models\Drive\Node $parent
+  public Vaulter\Drive\Models\Node $child
+  public Vaulter\Drive\Models\Drive $drive
+  public Vaulter\Drive\Models\Node $parent
   public static function build(?Illuminate\Database\Eloquent\Model $owner = null, ?Illuminate\Contracts\Auth\Access\Authorizable $actor = null): self
 
 Vaulter\Testing\FakeMetricsRecorder api since 1.0 final class implements Vaulter\Contracts\Observability\MetricsRecorder
@@ -1519,8 +822,8 @@ Vaulter\Testing\FakeTraceRecorder api since 1.0 final class implements Vaulter\C
   public function spans(): array
 
 Vaulter\Testing\InteractsWithVaulter api since 1.0 trait
-  public function assertNodeNotVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Models\Drive\Node|string $node): void
-  public function assertNodeVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Models\Drive\Node|string $node): void
+  public function assertNodeNotVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Drive\Models\Node|string $node): void
+  public function assertNodeVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Drive\Models\Node|string $node): void
   public function assertVaulterEventNotRecorded(Vaulter\Events\EventTypeContract $type): void
   public function assertVaulterEventRecorded(Vaulter\Events\EventTypeContract $type, ?callable $where = null): void
   public function vaulterActingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): Closure
@@ -1559,44 +862,6 @@ Vaulter\ValueObjects\Events\EventSubject api since 1.0 final readonly class
   public string $type
   public function __construct(string $type, mixed $id)
 
-Vaulter\ValueObjects\Handlers\ContentCapabilities api since 1.0 final readonly class
-  public bool $collaborative
-  public bool $downloadable
-  public bool $editable
-  public bool $previewable
-  public bool $thumbnailable
-  public function __construct(bool $editable = false, bool $previewable = false, bool $downloadable = true, bool $thumbnailable = false, bool $collaborative = false)
-  public static function downloadOnly(): self
-  public function toArray(): array
-
-Vaulter\ValueObjects\Handlers\FileDescriptor api since 1.0 final readonly class
-  public ?string $claimedMime
-  public ?string $detectedMime
-  public ?string $extension
-  public string $filename
-  public int|string $nodeId
-  public ?string $objectHash
-  public int $size
-  public function __construct(int|string $nodeId, string $filename, ?string $extension = null, ?string $claimedMime = null, ?string $detectedMime = null, ?string $objectHash = null, int $size = 0)
-  public function canonicalMime(): ?string
-  public static function make(int|string $nodeId, string $filename, ?string $extension = null, ?string $claimedMime = null, ?string $detectedMime = null, ?string $objectHash = null, int $size = 0): self
-  public function normalizedExtension(): ?string
-
-Vaulter\ValueObjects\Handlers\NodePresentation api since 1.0 final readonly class
-  public Vaulter\ValueObjects\Handlers\ContentCapabilities $capabilities
-  public ?string $documentType
-  public ?string $id
-  public bool $typeAvailable
-  public Vaulter\ValueObjects\Handlers\ViewerDescriptor $ui
-  public function __construct(?string $id, Vaulter\ValueObjects\Handlers\ContentCapabilities $capabilities, Vaulter\ValueObjects\Handlers\ViewerDescriptor $ui, ?string $documentType = null, bool $typeAvailable = true)
-  public function toArray(): array
-
-Vaulter\ValueObjects\Handlers\ViewerDescriptor api since 1.0 final readonly class
-  public string $key
-  public array $props
-  public function __construct(string $key, array $props = [])
-  public function toArray(): array
-
 Vaulter\ValueObjects\Operations\ScopeRef api since 1.0 final readonly class
   public const string DRIVE = 'drive'
   public string $id
@@ -1617,11 +882,11 @@ Vaulter\ValueObjects\Operations\TenantRef api since 1.0 final readonly class
   public static function of(mixed $key): self
 
 Vaulter\VaulterManager api since 1.0 final readonly class
-  public function drive(Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): Vaulter\Contracts\Drive\DriveHandle
-  public function findDrive(Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?Vaulter\Contracts\Drive\DriveHandle
-  public function handlers(): Vaulter\Contracts\Handlers\FileHandlerRegistry
+  public function drive(Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): Vaulter\Drive\Contracts\DriveHandle
+  public function findDrive(Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?Vaulter\Drive\Contracts\DriveHandle
+  public function handlers(): Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
   public function permissions(): Vaulter\Drive\Access\PermissionDriverManager
-  public function profiles(): Vaulter\Profiles\ProfileRegistry
+  public function profiles(): Vaulter\Drive\Profiles\ProfileRegistry
   public function withoutTenancy(Closure $callback): mixed
 
 Vaulter\VaulterServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules

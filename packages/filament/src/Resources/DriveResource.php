@@ -17,10 +17,10 @@ use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Filament\Resources\DriveResource\Pages\ListDrives;
 use Vaulter\Filament\Resources\DriveResource\Pages\ViewDrive;
 use Vaulter\Filament\Support\PanelDrives;
-use Vaulter\Models\Drive\Drive;
 
 /**
  * The drive admin surface: a read-mostly view of

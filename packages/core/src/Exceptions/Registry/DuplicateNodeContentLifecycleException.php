@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Exceptions\Registry;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;

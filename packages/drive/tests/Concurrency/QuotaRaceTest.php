@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevisionBlob;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
 

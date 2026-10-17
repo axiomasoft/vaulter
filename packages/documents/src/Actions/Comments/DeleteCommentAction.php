@@ -10,11 +10,11 @@ use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Permanently delete a node comment (docs/adr/0014-legacy-docvault-strangler.md шаг 1 — no soft-delete), under T

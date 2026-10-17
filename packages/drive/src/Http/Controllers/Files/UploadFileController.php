@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Http\Controllers\Files;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Http\Requests\Files\UploadFileRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 

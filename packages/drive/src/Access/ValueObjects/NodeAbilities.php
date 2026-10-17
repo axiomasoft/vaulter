@@ -8,7 +8,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Per-node computed permissions for the front-end, generalising the

@@ -8,13 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use stdClass;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Drive\Contracts\Handlers\NodePresenter;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 use Vaulter\Http\Support\RepresentationTag;
-use Vaulter\ValueObjects\Handlers\NodePresentation;
 
 /**
  * The versioned node representation. It is built only from what the operations

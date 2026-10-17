@@ -18,13 +18,13 @@ use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 beforeEach(function (): void {

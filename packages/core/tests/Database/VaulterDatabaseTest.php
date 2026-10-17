@@ -8,10 +8,10 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
 

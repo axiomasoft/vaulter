@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Data\Drive\CreateFolderOptions;
-use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Facades\Documents;
+use Vaulter\Drive\Data\CreateFolderOptions;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Facades\Vaulter;
 
 // The fragments below are copied into the guides byte for byte; the guides' own `use` lines are

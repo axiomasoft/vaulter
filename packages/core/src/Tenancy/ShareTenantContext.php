@@ -7,7 +7,7 @@ namespace Vaulter\Tenancy;
 use Closure;
 use Fiber;
 use Vaulter\Attributes\Internal;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Drive\Models\Drive;
 use WeakMap;
 
 /** @internal Token-authorized, drive-limited issuer evaluation; not maintenance bypass. */

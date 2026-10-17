@@ -8,9 +8,9 @@ use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileDenyDriver;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

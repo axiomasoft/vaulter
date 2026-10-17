@@ -15,10 +15,10 @@ use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Events\Access\NodeGrantRevoked;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
 
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');

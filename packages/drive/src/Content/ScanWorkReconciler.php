@@ -15,9 +15,9 @@ use Vaulter\Drive\Actions\Content\SupersedeScanWorkAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Models\Content\ScanObligation;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]

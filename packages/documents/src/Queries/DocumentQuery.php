@@ -11,7 +11,6 @@ use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
@@ -21,8 +20,9 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Enums\Drive\NodeSort;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Enums\NodeSort;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Reads behind the documents operations. Every lookup is bound to the node the caller

@@ -10,23 +10,23 @@ use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\ScheduleConfig;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\DocumentPurgeLifecycle;
 use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Modules\ModuleBindings;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
 
 /**
  * The container wiring of the drive module ({@see DriveModule}): drive config, scan policy and

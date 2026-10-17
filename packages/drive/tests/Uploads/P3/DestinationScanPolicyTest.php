@@ -15,14 +15,14 @@ use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
 
 it('SEC-R03 COPY owns fresh admission and clean evidence without copying a source lease', function (): void {
     Storage::fake('local');

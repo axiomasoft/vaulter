@@ -12,20 +12,20 @@ use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Operations\NodeSequence;
+use Vaulter\Drive\Profiles\DrivePolicyEnforcer;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
+use Vaulter\Drive\Repositories\FileRevisionStoreRepository;
+use Vaulter\Drive\Repositories\FileStoreRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\NodeSequence;
-use Vaulter\Profiles\DrivePolicyEnforcer;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
-use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
-use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 #[Internal]
 final readonly class RestoreFileRevisionAction

@@ -6,10 +6,10 @@ namespace Vaulter\Filament\Support;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 

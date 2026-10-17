@@ -437,7 +437,7 @@ describe('committed fixtures', function (): void {
             ->and($items['problem:rate_limited']['owner'])->toBe('core')
             ->and($items['problem:permission_denied']['owner'])->toBe('core')
             ->and($items['serialized:queue:Vaulter\Jobs\Webhooks\DeliverWebhook']['owner'])->toBe('webhooks')
-            ->and($items['serialized:config:vaulter.models.node']['fqcns'])->toBe(['Vaulter\Models\Drive\Node'])
+            ->and($items['serialized:config:vaulter.models.node']['fqcns'])->toBe(['Vaulter\Drive\Models\Node'])
             ->and($items['format:cas-key']['manual'])->toBeTrue()
             ->and($items['format:jwt-claims-room']['owner'])->toBe('collaboration');
     });

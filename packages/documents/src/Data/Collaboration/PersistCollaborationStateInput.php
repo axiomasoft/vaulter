@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Data\Collaboration;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Command for {@see PersistCollaborationStateAction} — a store from the collaboration

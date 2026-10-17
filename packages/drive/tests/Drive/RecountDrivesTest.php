@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Quota\QuotaCalculator;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Quota\QuotaCalculator;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());

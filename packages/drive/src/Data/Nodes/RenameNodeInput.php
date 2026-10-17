@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Data\Nodes;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 #[Api]
 final readonly class RenameNodeInput

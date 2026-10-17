@@ -7,9 +7,9 @@ namespace Vaulter\Documents\Data\Documents;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Command for CreateDocumentAction: a kind=document node under a folder (or the

@@ -10,16 +10,16 @@ use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Files\UploadFacts;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
 use Vaulter\Media\Cas\StagedTempObject;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
-use Vaulter\Models\Drive\Drive;
 
 /**
  * The staged temp for a resumable upload. The bytes accumulate on the

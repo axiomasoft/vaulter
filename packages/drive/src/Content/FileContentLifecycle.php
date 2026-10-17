@@ -6,16 +6,16 @@ namespace Vaulter\Drive\Content;
 
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Data\Drive\CopyResult;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
-use Vaulter\Repositories\Drive\FileStoreRepository;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\FileRevisionStoreRepository;
+use Vaulter\Drive\Repositories\FileStoreRepository;
 
 #[Internal]
 final readonly class FileContentLifecycle implements NodeContentLifecycle

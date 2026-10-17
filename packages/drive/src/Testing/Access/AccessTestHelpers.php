@@ -6,19 +6,19 @@ namespace Vaulter\Drive\Testing\Access;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\GrantSnapshot;
-use Vaulter\Data\Snapshots\MintedShareLink;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
+use Vaulter\Drive\Data\Snapshots\MintedShareLink;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

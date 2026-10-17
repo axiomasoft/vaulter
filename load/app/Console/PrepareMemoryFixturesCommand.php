@@ -10,6 +10,8 @@ use RuntimeException;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\Uploads\UploadModels;
@@ -20,8 +22,6 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

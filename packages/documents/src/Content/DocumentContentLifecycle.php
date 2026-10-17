@@ -6,16 +6,16 @@ namespace Vaulter\Documents\Content;
 
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Data\Drive\CopyResult;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 
 /**
  * Content of a kind=document node for copy and purge. Both run inside the Vaulter

@@ -11,9 +11,9 @@ use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
 use Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\SubclassedRoleDriver;
-use Vaulter\Operations\DriveContext;
 
 /**
  * F-P1.2-01 — a grant addressed to a role/team subject under a host-role driver that

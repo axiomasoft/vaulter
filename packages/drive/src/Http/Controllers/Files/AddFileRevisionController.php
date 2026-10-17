@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Http\Controllers\Files;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Drive\RevisionOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\RevisionOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Files\AddFileRevisionRequest;
 use Vaulter\Drive\Http\Resources\FileRevisionResource;

@@ -6,12 +6,12 @@ namespace Vaulter\Drive\Content;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Media\Enums\Cas\ScanMode;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
 
 #[Internal]
 final readonly class CopyDestinationAdmission

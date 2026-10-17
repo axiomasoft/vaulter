@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Drive\MoveOptions;
+use Vaulter\Drive\Data\MoveOptions;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Nodes\MoveNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;

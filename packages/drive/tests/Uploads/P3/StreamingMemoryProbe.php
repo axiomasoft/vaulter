@@ -7,7 +7,7 @@ require dirname(__DIR__, 3).'/vendor/autoload.php';
 use GuzzleHttp\Psr7\Stream;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\TextUI\Configuration\Builder;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Facades\Vaulter;

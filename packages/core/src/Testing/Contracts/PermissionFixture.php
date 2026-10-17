@@ -16,9 +16,9 @@ use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\FixtureActor;
 use Vaulter\Testing\Fixtures\FixtureOwner;
 

@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Contracts\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Attributes\Api;
-use Vaulter\Data\Snapshots\GrantSnapshot;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
 use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
 

@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Data\Uploads;
 
 use InvalidArgumentException;
 use Vaulter\Attributes\Api;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 #[Api]
 final readonly class InitiateUploadInput

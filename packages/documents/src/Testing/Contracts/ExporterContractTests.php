@@ -14,7 +14,7 @@ use Vaulter\Documents\Exceptions\DuplicateDocumentExporterException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * What a document exporter must keep, for the host's own exporters as well as the

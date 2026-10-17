@@ -14,7 +14,7 @@ use Vaulter\Drive\Models\Sharing\NodeShare;
  * controller can return it exactly once. It is never persisted and never
  * serialized by any Resource.
  *
- * The public result is {@see \Vaulter\Data\Snapshots\MintedShareLink}.
+ * The public result is {@see \Vaulter\Drive\Data\Snapshots\MintedShareLink}.
  */
 #[Internal]
 final readonly class MintedShareLink

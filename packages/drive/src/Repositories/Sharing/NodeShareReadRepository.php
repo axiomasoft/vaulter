@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**

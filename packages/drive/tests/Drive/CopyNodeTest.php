@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\Node;
 
 beforeEach(function (): void {
     Storage::fake('local');

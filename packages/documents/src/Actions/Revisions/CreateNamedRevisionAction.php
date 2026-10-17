@@ -12,11 +12,11 @@ use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Checkpoint a document's current working state as a NAMED (non-autosave) revision

@@ -9,22 +9,22 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Queries\NodeBrowserQuery;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\Preconditions;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /**
  * How the drive routes answer with nodes. Every node goes out as the caller's own

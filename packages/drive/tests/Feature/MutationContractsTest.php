@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Events\Drives\DriveCreated;
+use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Activity\Activity;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Support\CanonicalJson;
 

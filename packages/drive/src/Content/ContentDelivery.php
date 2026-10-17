@@ -7,24 +7,24 @@ namespace Vaulter\Drive\Content;
 use DateTimeImmutable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DownloadsConfig;
-use Vaulter\Data\Drive\FileStream;
-use Vaulter\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
 use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Data\FileStream;
+use Vaulter\Drive\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
 use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Drive\Sharing\ShareResolver;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Exceptions\Files\ContentUnavailableException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Media\Content\SignedContentUrl;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /** Every new byte or capability request enters fresh authorization and availability. */
 #[Internal]

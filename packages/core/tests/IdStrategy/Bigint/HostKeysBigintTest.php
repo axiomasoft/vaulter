@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Activity\RecordActivityCommand;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Tests\Fixtures\HostKeyUser;
 
 it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', function (): void {

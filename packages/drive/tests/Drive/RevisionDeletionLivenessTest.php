@@ -5,15 +5,15 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Operations\DriveContext;
 use Vaulter\ValueObjects\Access\Actor;
 
 it('refuses a late revision deletion after trash without changing history, quota or CAS edges', function (bool $system): void {

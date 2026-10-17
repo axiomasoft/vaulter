@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Data\Trash;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 #[Api]
 final readonly class TrashNodeInput

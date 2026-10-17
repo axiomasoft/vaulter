@@ -13,13 +13,13 @@ use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Content\ScanWorkTransitions;
 use Vaulter\Drive\Models\Content\ScanObligation;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**

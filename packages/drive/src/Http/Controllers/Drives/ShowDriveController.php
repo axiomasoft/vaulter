@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Controllers\Drives;
 
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Http\Resources\DriveResource;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 

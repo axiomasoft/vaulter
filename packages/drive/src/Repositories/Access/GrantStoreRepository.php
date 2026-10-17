@@ -13,7 +13,7 @@ use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Models\Access\NodeGrant;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Write-side row work for v_node_grants. Idempotent upsert on the grant-

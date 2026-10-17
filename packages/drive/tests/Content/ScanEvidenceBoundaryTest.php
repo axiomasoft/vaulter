@@ -16,6 +16,12 @@ use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanRequest;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Media\Content\ScanInput;
@@ -23,12 +29,6 @@ use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
 
 /** Real persisted scope and exact CAS edge, independent from upload orchestration. */
 function scanBoundaryFixture(?Blob $sharedBlob = null, ?Drive $drive = null): array

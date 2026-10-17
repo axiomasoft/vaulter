@@ -12,9 +12,9 @@ use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\TestCase;
 use Vaulter\ValueObjects\Access\Actor;
 

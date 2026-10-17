@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Exceptions\Nodes\InvalidPropertiesException;
+use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
+use Vaulter\Drive\Models\NodeUserState;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\Nodes\InvalidPropertiesException;
-use Vaulter\Exceptions\Nodes\StaleNodeException;
-use Vaulter\Models\Drive\NodeUserState;
 
 beforeEach(fn () => Storage::fake('local'));
 

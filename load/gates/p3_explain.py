@@ -33,7 +33,7 @@ HOT_FAMILIES = (
 CODE_ANCHOR_QUERIES: tuple[dict[str, Any], ...] = (
     {
         'anchor_id': 'NodeReadRepository::candidateNodeIds',
-        'code_anchor': 'packages/core/src/Repositories/Drive/NodeReadRepository.php:491',
+        'code_anchor': 'packages/drive/src/Repositories/NodeReadRepository.php:491',
         'op_ids': ['OP-12', 'OP-13', 'OP-14', 'OP-15'],
         'parameter_class': 'many_grant_median',
         'family': 'v_nodes',

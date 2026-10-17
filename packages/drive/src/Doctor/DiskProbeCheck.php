@@ -10,9 +10,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
-use Vaulter\Profiles\ProfileRegistry;
 
 /**
  * The one check that writes: it puts a test object on each disk, reads it back and deletes it,

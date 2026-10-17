@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
-use Vaulter\Models\Drive\Drive;
 
 beforeEach(function (): void {
     Storage::fake('local');

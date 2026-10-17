@@ -7,8 +7,8 @@ namespace Vaulter\Http\Resources\Changes;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Changes\NodeChange;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
+use Vaulter\Drive\Data\Changes\NodeChange;
 use Vaulter\Http\Resources\Drive\NodeResource;
 
 /**

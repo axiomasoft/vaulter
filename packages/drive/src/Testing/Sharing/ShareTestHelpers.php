@@ -7,14 +7,14 @@ namespace Vaulter\Drive\Testing\Sharing;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Support\ShareToken;
-use Vaulter\Models\Drive\Node;
 
 /**
  * Builders for the M2c bearer-share tests (§2.7): write a share row directly with a

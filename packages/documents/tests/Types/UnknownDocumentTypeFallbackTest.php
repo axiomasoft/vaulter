@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Handlers\NodePresenter;
-use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
@@ -16,6 +14,8 @@ use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\Types\SpreadsheetDocumentType;
+use Vaulter\Drive\Contracts\Handlers\NodePresenter;
+use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 

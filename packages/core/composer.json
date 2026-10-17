@@ -55,8 +55,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Vaulter\\": "src/",
-            "Vaulter\\Database\\Factories\\": "database/factories/"
+            "Vaulter\\": "src/"
         }
     },
     "autoload-dev": {

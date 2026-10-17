@@ -10,7 +10,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Drive\Enums\Access\Ability;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Mints a {@see CollaborationSession} for an actor whose access was already decided.

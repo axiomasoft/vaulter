@@ -6,14 +6,14 @@ namespace Vaulter\Drive\Content;
 
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DownloadGuard;
+use Vaulter\Drive\Contracts\DownloadGuard;
+use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Kernel;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
 
 /**
  * Runs every active {@see DownloadGuard} on each delivery path, in the order of the slot. The first guard

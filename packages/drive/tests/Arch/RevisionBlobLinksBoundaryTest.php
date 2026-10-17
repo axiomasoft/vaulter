@@ -37,7 +37,7 @@ it('lets only RevisionBlobLinks use the edge repository', function (): void {
     foreach (revisionLinksCode('packages/drive/src', 'packages/core/src', 'packages/documents/src', 'packages/media/src') as $path => $code) {
         if (str_contains($code, 'FileRevisionBlobStoreRepository') && !in_array($path, [
             'packages/drive/src/Content/RevisionBlobLinks.php',
-            'packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php',
+            'packages/drive/src/Repositories/FileRevisionBlobStoreRepository.php',
         ], true)) {
             $users[] = $path;
         }
@@ -66,7 +66,7 @@ it('recognises an edge write in each of its shapes', function (string $code): vo
 it('writes no revision edge outside the repository', function (): void {
     $writers = [];
     foreach (revisionLinksCode('packages/drive/src', 'packages/core/src', 'packages/documents/src') as $path => $code) {
-        if ($path === 'packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php') {
+        if ($path === 'packages/drive/src/Repositories/FileRevisionBlobStoreRepository.php') {
             continue;
         }
         if (revisionLinksWritesEdge($code)) {

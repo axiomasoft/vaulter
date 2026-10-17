@@ -8,8 +8,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
 /**

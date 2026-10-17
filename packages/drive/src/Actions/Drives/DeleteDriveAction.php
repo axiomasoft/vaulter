@@ -6,11 +6,11 @@ namespace Vaulter\Drive\Actions\Drives;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
 
 /**
  * active|archived → deleting, then an asynchronous, idempotent purge of the whole

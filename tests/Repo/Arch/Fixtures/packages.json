@@ -30,8 +30,7 @@
             "dir": "packages/core",
             "exists": true,
             "psr4": {
-                "Vaulter\\": "src/",
-                "Vaulter\\Database\\Factories\\": "database/factories/"
+                "Vaulter\\": "src/"
             },
             "target_require": []
         },
@@ -60,7 +59,8 @@
             "dir": "packages/drive",
             "exists": true,
             "psr4": {
-                "Vaulter\\Drive\\": "src/"
+                "Vaulter\\Drive\\": "src/",
+                "Vaulter\\Drive\\Database\\Factories\\": "database/factories/"
             },
             "target_require": [
                 "core",

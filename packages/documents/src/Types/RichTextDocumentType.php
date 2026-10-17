@@ -12,8 +12,8 @@ use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /** Rich text edited in the TipTap editor, collaboratively over Yjs. */
 #[Api]

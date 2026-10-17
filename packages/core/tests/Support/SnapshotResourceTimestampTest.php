@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
-use Vaulter\Data\Snapshots\GrantSnapshot;
-use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
+use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;

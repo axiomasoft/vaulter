@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Testing\Fixtures\Panels;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileProvider;
 
 /** A shared-schema team profile with local grants and share links disabled. */
 #[Internal]

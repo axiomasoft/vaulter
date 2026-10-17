@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Data\Export;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Command for ExportDocumentAction: render $node in $format, from $revision (a

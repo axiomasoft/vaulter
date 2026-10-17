@@ -20,11 +20,11 @@ use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Database\Factories\DocumentFactory;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Support\DocumentTypeKey;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
-use Vaulter\Models\Drive\Node;
 
 /**
  * The document aggregate of a kind=document node (1:1 by node_id). It owns the

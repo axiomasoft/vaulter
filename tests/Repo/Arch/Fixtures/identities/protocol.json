@@ -830,49 +830,49 @@
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
@@ -1773,8 +1773,8 @@
             "manual": true,
             "owner": "drive",
             "source": {
-                "file": "packages/core/src/Changes/ChangeCursor.php",
-                "symbol": "Vaulter\\Changes\\ChangeCursor::encode"
+                "file": "packages/drive/src/Changes/ChangeCursor.php",
+                "symbol": "Vaulter\\Drive\\Changes\\ChangeCursor::encode"
             }
         },
         {
@@ -1948,26 +1948,6 @@
             }
         },
         {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Concerns\\HasDrives::bootHasDrives#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Concerns/HasDrives.php",
-                "symbol": "Vaulter\\Concerns\\HasDrives::bootHasDrives"
-            }
-        },
-        {
-            "call": "morphMany",
-            "calls": 1,
-            "id": "morph:Vaulter\\Concerns\\HasDrives::drives#morphMany",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Concerns/HasDrives.php",
-                "symbol": "Vaulter\\Concerns\\HasDrives::drives"
-            }
-        },
-        {
             "call": "morphTo",
             "calls": 1,
             "id": "morph:Vaulter\\Documents\\Models\\Comments\\NodeComment::author#morphTo",
@@ -2000,11 +1980,121 @@
         {
             "call": "getMorphClass",
             "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Concerns\\HasDrives::bootHasDrives#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Concerns/HasDrives.php",
+                "symbol": "Vaulter\\Drive\\Concerns\\HasDrives::bootHasDrives"
+            }
+        },
+        {
+            "call": "morphMany",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Concerns\\HasDrives::drives#morphMany",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Concerns/HasDrives.php",
+                "symbol": "Vaulter\\Drive\\Concerns\\HasDrives::drives"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
             "id": "morph:Vaulter\\Drive\\DriveProvisioner::provision#getMorphClass",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/src/DriveProvisioner.php",
                 "symbol": "Vaulter\\Drive\\DriveProvisioner::provision"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Activity/ListDriveActivityController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Activity/ListNodeActivityController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType"
+            }
+        },
+        {
+            "call": "morphTo",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Models\\Drive::owner#morphTo",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Drive.php",
+                "symbol": "Vaulter\\Drive\\Models\\Drive::owner"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Queries/Activity/VisibleActivityQuery.php",
+                "symbol": "Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::base"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Queries/Activity/VisibleActivityQuery.php",
+                "symbol": "Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::execute"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Queries/Activity/VisibleActivityQuery.php",
+                "symbol": "Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::project"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 2,
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Queries/Activity/VisibleActivityQuery.php",
+                "symbol": "Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::visible"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Repositories/Activity/ActivityReadRepository.php",
+                "symbol": "Vaulter\\Drive\\Repositories\\Activity\\ActivityReadRepository::forTarget"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Repositories\\DriveReadRepository::forOwner#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Repositories/DriveReadRepository.php",
+                "symbol": "Vaulter\\Drive\\Repositories\\DriveReadRepository::forOwner"
             }
         },
         {
@@ -2045,96 +2135,6 @@
             "source": {
                 "file": "packages/drive/src/Testing/Drive/DriveTestHelpers.php",
                 "symbol": "Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Http/Controllers/Activity/ListDriveActivityController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Http/Controllers/Activity/ListNodeActivityController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType"
-            }
-        },
-        {
-            "call": "morphTo",
-            "calls": 1,
-            "id": "morph:Vaulter\\Models\\Drive\\Drive::owner#morphTo",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Drive/Drive.php",
-                "symbol": "Vaulter\\Models\\Drive\\Drive::owner"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
-                "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::base"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
-                "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::execute"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
-                "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::project"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 2,
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
-                "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::visible"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Repositories/Activity/ActivityReadRepository.php",
-                "symbol": "Vaulter\\Repositories\\Activity\\ActivityReadRepository::forTarget"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Repositories\\Drive\\DriveReadRepository::forOwner#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Repositories/Drive/DriveReadRepository.php",
-                "symbol": "Vaulter\\Repositories\\Drive\\DriveReadRepository::forOwner"
             }
         },
         {
@@ -2232,7 +2232,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\CannotDeleteHeadRevisionException",
+            "exception": "Vaulter\\Drive\\Exceptions\\CannotDeleteHeadRevisionException",
             "id": "problem:cannot_delete_head_revision",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2304,7 +2304,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Files\\ContentUnavailableException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Files\\ContentUnavailableException",
             "id": "problem:content_unavailable",
             "owner": "drive",
             "receipt": "never",
@@ -2328,7 +2328,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Changes\\CursorExpiredException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Changes\\CursorExpiredException",
             "id": "problem:cursor_expired",
             "owner": "drive",
             "receipt": "never",
@@ -2412,7 +2412,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\DriveArchivedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\DriveArchivedException",
             "id": "problem:drive_archived",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2424,7 +2424,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\StorageNotFoundException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\StorageNotFoundException",
             "id": "problem:drive_not_found",
             "owner": "drive",
             "receipt": "never",
@@ -2520,7 +2520,7 @@
             "status": 500
         },
         {
-            "exception": "Vaulter\\Exceptions\\Changes\\InvalidCursorException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Changes\\InvalidCursorException",
             "id": "problem:invalid_cursor",
             "owner": "drive",
             "receipt": "never",
@@ -2532,7 +2532,7 @@
             "status": 400
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\InvalidDestinationException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidDestinationException",
             "id": "problem:invalid_destination",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2556,7 +2556,7 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\InvalidDriveStateException",
+            "exception": "Vaulter\\Drive\\Exceptions\\InvalidDriveStateException",
             "id": "problem:invalid_drive_state",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2568,7 +2568,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\InvalidNodeNameException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidNodeNameException",
             "id": "problem:invalid_node_name",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2580,7 +2580,7 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\InvalidPropertiesException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidPropertiesException",
             "id": "problem:invalid_properties",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2652,7 +2652,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NodeNameConflictException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNameConflictException",
             "id": "problem:node_name_conflict",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2664,7 +2664,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NodeNotFoundException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotFoundException",
             "id": "problem:node_not_found",
             "owner": "drive",
             "receipt": "never",
@@ -2676,7 +2676,7 @@
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NodeNotTrashedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotTrashedException",
             "id": "problem:node_not_trashed",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2700,7 +2700,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\StaleNodeException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\StaleNodeException",
             "id": "problem:node_sequence_mismatch",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2712,7 +2712,7 @@
             "status": 412
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NodeTrashedByAncestorException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeTrashedByAncestorException",
             "id": "problem:node_trashed_by_ancestor",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2736,7 +2736,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NotAFileException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NotAFileException",
             "id": "problem:not_a_file",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2796,7 +2796,7 @@
             "status": 428
         },
         {
-            "exception": "Vaulter\\Exceptions\\Profiles\\ProfileRestrictionException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Profiles\\ProfileRestrictionException",
             "id": "problem:profile_restriction",
             "owner": "drive",
             "receipt": "never",
@@ -2808,7 +2808,7 @@
             "status": 403
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\QuotaExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\QuotaExceededException",
             "id": "problem:quota_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2844,7 +2844,7 @@
             "status": 500
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\RestoreDestinationChangedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\RestoreDestinationChangedException",
             "id": "problem:restore_destination_changed",
             "owner": "drive",
             "receipt": "never",
@@ -2856,7 +2856,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\RestoreDestinationRequiredException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\RestoreDestinationRequiredException",
             "id": "problem:restore_destination_required",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2880,7 +2880,7 @@
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\RevisionPinnedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\RevisionPinnedException",
             "id": "problem:revision_pinned",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2964,7 +2964,7 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\TreeTraversalIncompleteException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\TreeTraversalIncompleteException",
             "id": "problem:tree_traversal_incomplete",
             "owner": "drive",
             "receipt": "cacheable",
@@ -3000,7 +3000,7 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Profiles\\UnknownProfileException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Profiles\\UnknownProfileException",
             "id": "problem:unknown_profile",
             "owner": "drive",
             "receipt": "cacheable",
@@ -3024,7 +3024,7 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\UnsupportedNodeKindException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\UnsupportedNodeKindException",
             "id": "problem:unsupported_node_kind",
             "owner": "drive",
             "receipt": "cacheable",
@@ -3177,6 +3177,17 @@
             }
         },
         {
+            "attribute": "verb",
+            "cast": "Vaulter\\Events\\EventTypeCast",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Activity\\Activity.verb",
+            "model": "Vaulter\\Drive\\Models\\Activity\\Activity",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Activity/Activity.php",
+                "symbol": "Vaulter\\Drive\\Models\\Activity\\Activity::casts"
+            }
+        },
+        {
             "attribute": "created_at",
             "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
             "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.created_at",
@@ -3309,6 +3320,39 @@
             }
         },
         {
+            "attribute": "status",
+            "cast": "Vaulter\\Drive\\Enums\\DriveStatus",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Drive.status",
+            "model": "Vaulter\\Drive\\Models\\Drive",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Drive.php",
+                "symbol": "Vaulter\\Drive\\Models\\Drive::casts"
+            }
+        },
+        {
+            "attribute": "quarantined_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\FileRevision.quarantined_at",
+            "model": "Vaulter\\Drive\\Models\\FileRevision",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/FileRevision.php",
+                "symbol": "Vaulter\\Drive\\Models\\FileRevision::casts"
+            }
+        },
+        {
+            "attribute": "kind",
+            "cast": "Vaulter\\Drive\\Enums\\NodeKind",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Node.kind",
+            "model": "Vaulter\\Drive\\Models\\Node",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Node.php",
+                "symbol": "Vaulter\\Drive\\Models\\Node::casts"
+            }
+        },
+        {
             "attribute": "audience",
             "cast": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
             "id": "serialized:cast:Vaulter\\Drive\\Models\\Sharing\\NodeShare.audience",
@@ -3372,50 +3416,6 @@
             "source": {
                 "file": "packages/media/src/Models/Cas/Blob.php",
                 "symbol": "Vaulter\\Media\\Models\\Cas\\Blob::casts"
-            }
-        },
-        {
-            "attribute": "verb",
-            "cast": "Vaulter\\Events\\EventTypeCast",
-            "id": "serialized:cast:Vaulter\\Models\\Activity\\Activity.verb",
-            "model": "Vaulter\\Models\\Activity\\Activity",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Activity/Activity.php",
-                "symbol": "Vaulter\\Models\\Activity\\Activity::casts"
-            }
-        },
-        {
-            "attribute": "status",
-            "cast": "Vaulter\\Enums\\Drive\\DriveStatus",
-            "id": "serialized:cast:Vaulter\\Models\\Drive\\Drive.status",
-            "model": "Vaulter\\Models\\Drive\\Drive",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Drive/Drive.php",
-                "symbol": "Vaulter\\Models\\Drive\\Drive::casts"
-            }
-        },
-        {
-            "attribute": "quarantined_at",
-            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Drive\\FileRevision.quarantined_at",
-            "model": "Vaulter\\Models\\Drive\\FileRevision",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Drive/FileRevision.php",
-                "symbol": "Vaulter\\Models\\Drive\\FileRevision::casts"
-            }
-        },
-        {
-            "attribute": "kind",
-            "cast": "Vaulter\\Enums\\Drive\\NodeKind",
-            "id": "serialized:cast:Vaulter\\Models\\Drive\\Node.kind",
-            "model": "Vaulter\\Models\\Drive\\Node",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Drive/Node.php",
-                "symbol": "Vaulter\\Models\\Drive\\Node::casts"
             }
         },
         {
@@ -3627,7 +3627,7 @@
         {
             "config_key": "vaulter.models.activity",
             "fqcns": [
-                "Vaulter\\Models\\Activity\\Activity"
+                "Vaulter\\Drive\\Models\\Activity\\Activity"
             ],
             "id": "serialized:config:vaulter.models.activity",
             "owner": "drive",
@@ -3639,7 +3639,7 @@
         {
             "config_key": "vaulter.models.drive",
             "fqcns": [
-                "Vaulter\\Models\\Drive\\Drive"
+                "Vaulter\\Drive\\Models\\Drive"
             ],
             "id": "serialized:config:vaulter.models.drive",
             "owner": "drive",
@@ -3651,7 +3651,7 @@
         {
             "config_key": "vaulter.models.file",
             "fqcns": [
-                "Vaulter\\Models\\Drive\\File"
+                "Vaulter\\Drive\\Models\\File"
             ],
             "id": "serialized:config:vaulter.models.file",
             "owner": "drive",
@@ -3663,7 +3663,7 @@
         {
             "config_key": "vaulter.models.file_revision",
             "fqcns": [
-                "Vaulter\\Models\\Drive\\FileRevision"
+                "Vaulter\\Drive\\Models\\FileRevision"
             ],
             "id": "serialized:config:vaulter.models.file_revision",
             "owner": "drive",
@@ -3675,7 +3675,7 @@
         {
             "config_key": "vaulter.models.file_revision_blob",
             "fqcns": [
-                "Vaulter\\Models\\Drive\\FileRevisionBlob"
+                "Vaulter\\Drive\\Models\\FileRevisionBlob"
             ],
             "id": "serialized:config:vaulter.models.file_revision_blob",
             "owner": "drive",
@@ -3699,7 +3699,7 @@
         {
             "config_key": "vaulter.models.node",
             "fqcns": [
-                "Vaulter\\Models\\Drive\\Node"
+                "Vaulter\\Drive\\Models\\Node"
             ],
             "id": "serialized:config:vaulter.models.node",
             "owner": "drive",
@@ -3819,7 +3819,7 @@
         {
             "config_key": "vaulter.profiles.default",
             "fqcns": [
-                "Vaulter\\Profiles\\DefaultProfile"
+                "Vaulter\\Drive\\Profiles\\DefaultProfile"
             ],
             "id": "serialized:config:vaulter.profiles.default",
             "owner": "drive",

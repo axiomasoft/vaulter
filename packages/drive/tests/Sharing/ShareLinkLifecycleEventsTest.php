@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Operations\ActivityOperations;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\ShareOperations;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Operations\ActivityOperations;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\ValueObjects\Access\Actor;
 

@@ -21,8 +21,8 @@ use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
 use Vaulter\Drive\Actions\Trash\TrashNodeAction;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**

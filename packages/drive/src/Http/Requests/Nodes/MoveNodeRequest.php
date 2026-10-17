@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Http\Requests\Nodes;
 
 use Illuminate\Validation\Rule;
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Drive\OnNameConflict;
+use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /** POST nodes/{node}/move: the destination folder (the drive root when null) and what a name clash does. */

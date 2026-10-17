@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\DriveProvisioner;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Jobs\PruneFileRevisionsJob;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Profiles\DrivePolicyBuilder;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Profiles\RevisionRetentionPolicy;
+use Vaulter\Drive\Quota\QuotaCalculator;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Profiles\DrivePolicyBuilder;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Profiles\RevisionRetentionPolicy;
-use Vaulter\Quota\QuotaCalculator;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /**

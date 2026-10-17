@@ -10,10 +10,10 @@ use Vaulter\Configuration\IdsConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Testing\Support\Scale;
 
 #[Internal]

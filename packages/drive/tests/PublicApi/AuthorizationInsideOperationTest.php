@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Operations\DriveContext;
 use Vaulter\ValueObjects\Access\Actor;
 
 // R3 of the operation pipeline (P3.10, ADR-0028): a write authorizes exactly once, inside the

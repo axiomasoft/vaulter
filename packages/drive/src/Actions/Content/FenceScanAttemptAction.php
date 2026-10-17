@@ -8,9 +8,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Content\ScanWorkTransitions;
+use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
-use Vaulter\Models\Drive\FileRevision;
 
 /**
  * Re-checks a leased attempt against the authoritative revision chain before scanner bytes are opened.

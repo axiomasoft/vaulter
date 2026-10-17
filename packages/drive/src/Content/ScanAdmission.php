@@ -11,9 +11,9 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
 use Vaulter\Drive\Actions\Content\ReuseScanEvidenceAction;
 use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
 
 #[Internal]
 final readonly class ScanAdmission

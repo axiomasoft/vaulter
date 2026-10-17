@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Actions\Uploads;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Operations\DriveContext;
 
 #[Internal]
 final readonly class AbortUploadAction

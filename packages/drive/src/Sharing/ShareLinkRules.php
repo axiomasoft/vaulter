@@ -12,9 +12,9 @@ use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 use Vaulter\Drive\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Drive\Exceptions\Sharing\ShareRoleNotAllowedException;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Sharing\NodeShare;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 
 /**
  * What a share link may be: which roles it can carry for which audience,

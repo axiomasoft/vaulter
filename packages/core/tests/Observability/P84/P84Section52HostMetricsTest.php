@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Load\Http\Middleware\RecordRequestPeakMemory;

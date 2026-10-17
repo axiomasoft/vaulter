@@ -14,8 +14,8 @@ use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Operations\AccessOperations;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 

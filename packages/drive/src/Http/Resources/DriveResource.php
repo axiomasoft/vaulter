@@ -7,9 +7,9 @@ namespace Vaulter\Drive\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\DriveSnapshot;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
-use Vaulter\Data\Snapshots\QuotaSnapshot;
+use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
+use Vaulter\Drive\Data\Snapshots\QuotaSnapshot;
 
 /**
  * A drive as the versioned API shows it: who owns it, its profile and lifecycle status,

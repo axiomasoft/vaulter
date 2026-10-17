@@ -11,7 +11,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Drive\Actions\Drives\RecountDriveQuotaAction;
-use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;

@@ -29,13 +29,13 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\DriveArchivedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Drive\DriveArchivedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
-use Vaulter\Support\TreeGuard;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 

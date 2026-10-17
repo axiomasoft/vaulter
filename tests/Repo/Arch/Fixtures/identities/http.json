@@ -731,8 +731,8 @@
             "uri": "api/vaulter/v1/nodes/{node}/inheritance/restrict"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController",
-            "controller": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController",
             "default_registered": true,
             "id": "route:vaulter.v1.activity.drive",
             "methods": [
@@ -755,14 +755,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Activity/ListDriveActivityController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController"
+                "file": "packages/drive/src/Http/Controllers/Activity/ListDriveActivityController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController"
             },
             "uri": "api/vaulter/v1/drives/{drive}/activity"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController",
-            "controller": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController",
             "default_registered": true,
             "id": "route:vaulter.v1.activity.node",
             "methods": [
@@ -785,14 +785,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Activity/ListNodeActivityController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController"
+                "file": "packages/drive/src/Http/Controllers/Activity/ListNodeActivityController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/activity"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController",
-            "controller": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ListChangesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ListChangesController",
             "default_registered": true,
             "id": "route:vaulter.v1.changes.index",
             "methods": [
@@ -815,14 +815,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Changes/ListChangesController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController"
+                "file": "packages/drive/src/Http/Controllers/Changes/ListChangesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ListChangesController"
             },
             "uri": "api/vaulter/v1/drives/{drive}/changes"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController",
-            "controller": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ShowChangesStartController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ShowChangesStartController",
             "default_registered": true,
             "id": "route:vaulter.v1.changes.start",
             "methods": [
@@ -845,8 +845,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Changes/ShowChangesStartController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController"
+                "file": "packages/drive/src/Http/Controllers/Changes/ShowChangesStartController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ShowChangesStartController"
             },
             "uri": "api/vaulter/v1/drives/{drive}/changes/start"
         },

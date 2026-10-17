@@ -3,34 +3,34 @@
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/database/factories/FileRevisionFactory.php",
+            "file": "packages/drive/database/factories/FileRevisionFactory.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Database\\Factories\\FileRevisionFactory::in()",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "symbol": "Vaulter\\Drive\\Database\\Factories\\FileRevisionFactory::in()",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/database/factories/NodeFactory.php",
+            "file": "packages/drive/database/factories/NodeFactory.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Database\\Factories\\NodeFactory::in()",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "symbol": "Vaulter\\Drive\\Database\\Factories\\NodeFactory::in()",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/database/factories/NodeFactory.php",
+            "file": "packages/drive/database/factories/NodeFactory.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Database\\Factories\\NodeFactory::in()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Database\\Factories\\NodeFactory::in()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -41,7 +41,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope::forDrive()",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -80,100 +80,100 @@
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Drive/DownloadGuard.php",
+            "file": "packages/drive/src/Contracts/DownloadGuard.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Drive\\DownloadGuard::check()",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
+            "symbol": "Vaulter\\Drive\\Contracts\\DownloadGuard::check()",
+            "target": "Vaulter\\Drive\\Models\\FileRevision",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Drive/DownloadGuard.php",
+            "file": "packages/drive/src/Contracts/DownloadGuard.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Drive\\DownloadGuard::check()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Contracts\\DownloadGuard::check()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "internal-type",
             "count": 1,
-            "file": "packages/core/src/Contracts/Drive/DownloadGuard.php",
+            "file": "packages/drive/src/Contracts/DownloadGuard.php",
             "kind": "param",
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Drive\\DownloadGuard::check()",
+            "symbol": "Vaulter\\Drive\\Contracts\\DownloadGuard::check()",
             "target": "Vaulter\\Drive\\Sharing\\ShareContext",
             "view": "signature"
         },
         {
             "category": "internal-type",
             "count": 1,
-            "file": "packages/core/src/Contracts/Drive/DriveHandle.php",
+            "file": "packages/drive/src/Contracts/DriveHandle.php",
             "kind": "return",
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Drive\\DriveHandle::changes()",
-            "target": "Vaulter\\Operations\\ChangeOperations",
+            "symbol": "Vaulter\\Drive\\Contracts\\DriveHandle::changes()",
+            "target": "Vaulter\\Drive\\Operations\\ChangeOperations",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 2,
-            "file": "packages/core/src/Contracts/Drive/NodeContentLifecycle.php",
+            "file": "packages/drive/src/Contracts/NodeContentLifecycle.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Drive\\NodeContentLifecycle::copy()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Contracts\\NodeContentLifecycle::copy()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Drive/NodeContentLifecycle.php",
+            "file": "packages/drive/src/Contracts/NodeContentLifecycle.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Drive\\NodeContentLifecycle::purge()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Contracts\\NodeContentLifecycle::purge()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "internal-type",
             "count": 1,
-            "file": "packages/core/src/Contracts/Drive/NodeOperations.php",
+            "file": "packages/drive/src/Contracts/NodeOperations.php",
             "kind": "return",
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Drive\\NodeOperations::abilities()",
+            "symbol": "Vaulter\\Drive\\Contracts\\NodeOperations::abilities()",
             "target": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Handlers/NodePresenter.php",
+            "file": "packages/drive/src/Contracts/Handlers/NodePresenter.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Handlers\\NodePresenter::present()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Contracts\\Handlers\\NodePresenter::present()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Contracts/Presentation/KindPresenter.php",
+            "file": "packages/drive/src/Contracts/Presentation/KindPresenter.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Presentation\\KindPresenter::present()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Contracts\\Presentation\\KindPresenter::present()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -239,7 +239,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Access\\NodeGrantRevoked::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -272,7 +272,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Access\\NodeInheritanceChanged::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -327,7 +327,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Events\\DomainEvent::nodeScope()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -338,7 +338,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Events\\DomainEvent::nodeSubject()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -349,7 +349,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Events\\DomainEvent::nodeUpsert()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -465,78 +465,78 @@
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Exceptions/Nodes/InvalidDestinationException.php",
+            "file": "packages/drive/src/Exceptions/Nodes/InvalidDestinationException.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Exceptions\\Nodes\\InvalidDestinationException::notAFolder()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidDestinationException::notAFolder()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Exceptions/Nodes/InvalidDestinationException.php",
+            "file": "packages/drive/src/Exceptions/Nodes/InvalidDestinationException.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Exceptions\\Nodes\\InvalidDestinationException::otherDrive()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidDestinationException::otherDrive()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Exceptions/Nodes/InvalidDestinationException.php",
+            "file": "packages/drive/src/Exceptions/Nodes/InvalidDestinationException.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Exceptions\\Nodes\\InvalidDestinationException::rootIsImmutable()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidDestinationException::rootIsImmutable()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Exceptions/Nodes/InvalidDestinationException.php",
+            "file": "packages/drive/src/Exceptions/Nodes/InvalidDestinationException.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Exceptions\\Nodes\\InvalidDestinationException::trashed()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidDestinationException::trashed()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Exceptions/Nodes/NodeNotTrashedException.php",
+            "file": "packages/drive/src/Exceptions/Nodes/NodeNotTrashedException.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Exceptions\\Nodes\\NodeNotTrashedException::forNode()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotTrashedException::forNode()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Exceptions/Nodes/NodeTrashedByAncestorException.php",
+            "file": "packages/drive/src/Exceptions/Nodes/NodeTrashedByAncestorException.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Exceptions\\Nodes\\NodeTrashedByAncestorException::forNode()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeTrashedByAncestorException::forNode()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Exceptions/Nodes/RestoreDestinationRequiredException.php",
+            "file": "packages/drive/src/Exceptions/Nodes/RestoreDestinationRequiredException.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Exceptions\\Nodes\\RestoreDestinationRequiredException::forNode()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Exceptions\\Nodes\\RestoreDestinationRequiredException::forNode()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -553,56 +553,56 @@
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Operations/DriveContext.php",
+            "file": "packages/drive/src/Operations/DriveContext.php",
             "kind": "property",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Operations\\DriveContext::$drive",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "symbol": "Vaulter\\Drive\\Operations\\DriveContext::$drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Operations/DriveContext.php",
+            "file": "packages/drive/src/Operations/DriveContext.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Operations\\DriveContext::for()",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "symbol": "Vaulter\\Drive\\Operations\\DriveContext::for()",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Operations/DriveContext.php",
+            "file": "packages/drive/src/Operations/DriveContext.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Operations\\DriveContext::system()",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "symbol": "Vaulter\\Drive\\Operations\\DriveContext::system()",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Operations/NodeLocator.php",
+            "file": "packages/drive/src/Operations/NodeLocator.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Operations\\NodeLocator::find()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Operations\\NodeLocator::find()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Operations/NodeLocator.php",
+            "file": "packages/drive/src/Operations/NodeLocator.php",
             "kind": "return",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Operations\\NodeLocator::find()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "symbol": "Vaulter\\Drive\\Operations\\NodeLocator::find()",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -635,7 +635,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::assertPermissionDriverContract()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -646,7 +646,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::$child",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -657,7 +657,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::$drive",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -668,7 +668,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::$parent",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -679,7 +679,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Testing\\InteractsWithVaulter::assertNodeNotVisibleTo()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -690,7 +690,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Testing\\InteractsWithVaulter::assertNodeVisibleTo()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -723,7 +723,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Database\\Factories\\DocumentFactory::in()",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -734,7 +734,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Database\\Factories\\DocumentFactory::in()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -756,7 +756,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Contracts\\CollaborationDriver::issueSession()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -767,7 +767,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Contracts\\ExportFilenameResolver::resolve()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -778,7 +778,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Data\\Collaboration\\PersistCollaborationStateInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -811,7 +811,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Data\\Documents\\CreateDocumentInput::$parent",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -822,7 +822,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Data\\Documents\\CreateDocumentInput::$storage",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -833,7 +833,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Data\\Documents\\UpdateDocumentContentInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -844,7 +844,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Data\\Export\\ExportDocumentInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -866,7 +866,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Data\\Revisions\\CreateNamedRevisionInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -877,7 +877,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Data\\Revisions\\RestoreDocumentRevisionInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -899,7 +899,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Data\\Revisions\\UpdateRevisionRetentionInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -987,7 +987,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentContentUpdated::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1031,7 +1031,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentCreated::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1075,7 +1075,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRestored::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1130,7 +1130,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRevisionCreated::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1163,7 +1163,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Export\\DefaultExportFilenameResolver::resolve()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1174,7 +1174,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Presentation\\DocumentPresenter::present()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1218,7 +1218,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Files\\IngestFileInput::$into",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1240,7 +1240,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Files\\IngestFileInput::$storage",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -1251,7 +1251,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Files\\IngestFileInput::$targetNode",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1262,7 +1262,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Files\\IngestReceipt::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1273,7 +1273,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Files\\IngestReceipt::$revision",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
+            "target": "Vaulter\\Drive\\Models\\FileRevision",
             "view": "signature"
         },
         {
@@ -1284,7 +1284,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Files\\RestoreFileRevisionInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1295,7 +1295,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Files\\RestoreFileRevisionInput::$revision",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
+            "target": "Vaulter\\Drive\\Models\\FileRevision",
             "view": "signature"
         },
         {
@@ -1306,7 +1306,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Nodes\\CopyNodeInput::$into",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1317,7 +1317,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Nodes\\CopyNodeInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1328,7 +1328,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Nodes\\CreateFolderInput::$parent",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1339,7 +1339,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Nodes\\CreateFolderInput::$storage",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -1350,7 +1350,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Nodes\\MoveNodeInput::$into",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1361,7 +1361,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Nodes\\MoveNodeInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1372,7 +1372,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Nodes\\RenameNodeInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1383,7 +1383,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Nodes\\SetNodePropertiesInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1394,7 +1394,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Trash\\PurgeNodeInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1405,7 +1405,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Trash\\RestoreNodeInput::$destination",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1416,7 +1416,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Trash\\RestoreNodeInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1427,7 +1427,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Trash\\TrashNodeInput::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1438,7 +1438,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Uploads\\InitiateUploadInput::$targetNode",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1449,7 +1449,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Uploads\\InitiateUploadInput::$targetParent",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1460,7 +1460,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Data\\Uploads\\InitiateUploadInput::__construct()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1471,7 +1471,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\DriveHandle::changes()",
-            "target": "Vaulter\\Operations\\ChangeOperations",
+            "target": "Vaulter\\Drive\\Operations\\ChangeOperations",
             "view": "signature"
         },
         {
@@ -1482,7 +1482,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Drives\\DriveArchived::$drive",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -1504,7 +1504,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Drives\\DriveCreated::$root",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1515,7 +1515,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Drives\\DriveCreated::$storage",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -1537,7 +1537,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Drives\\DriveUnarchived::$drive",
-            "target": "Vaulter\\Models\\Drive\\Drive",
+            "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
@@ -1559,7 +1559,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileRevisionAdded::$file",
-            "target": "Vaulter\\Models\\Drive\\File",
+            "target": "Vaulter\\Drive\\Models\\File",
             "view": "signature"
         },
         {
@@ -1570,7 +1570,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileRevisionAdded::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1581,7 +1581,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileRevisionAdded::$version",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
+            "target": "Vaulter\\Drive\\Models\\FileRevision",
             "view": "signature"
         },
         {
@@ -1614,7 +1614,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileRevisionDeleted::$file",
-            "target": "Vaulter\\Models\\Drive\\File",
+            "target": "Vaulter\\Drive\\Models\\File",
             "view": "signature"
         },
         {
@@ -1625,7 +1625,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileRevisionDeleted::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1647,7 +1647,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileUploaded::$file",
-            "target": "Vaulter\\Models\\Drive\\File",
+            "target": "Vaulter\\Drive\\Models\\File",
             "view": "signature"
         },
         {
@@ -1658,7 +1658,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileUploaded::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1669,7 +1669,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileUploaded::$version",
-            "target": "Vaulter\\Models\\Drive\\FileRevision",
+            "target": "Vaulter\\Drive\\Models\\FileRevision",
             "view": "signature"
         },
         {
@@ -1702,7 +1702,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\FolderCreated::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1735,7 +1735,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeCopied::$copy",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1746,7 +1746,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeCopied::$source",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1779,7 +1779,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeMoved::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1812,7 +1812,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeRenamed::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1845,7 +1845,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeRestored::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1878,7 +1878,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeTrashed::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -1911,7 +1911,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeUpdated::$node",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
@@ -2010,7 +2010,7 @@
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Operations\\UploadOperations::complete()",
-            "target": "Vaulter\\Models\\Drive\\Node",
+            "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {

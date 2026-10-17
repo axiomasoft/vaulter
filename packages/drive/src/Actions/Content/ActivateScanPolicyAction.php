@@ -10,11 +10,11 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Models\Content\ScanPolicyState;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Media\Enums\Cas\ScanMode;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Support\Identity;
 
 /**

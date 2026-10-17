@@ -7,9 +7,9 @@ namespace Vaulter\Drive\Sharing;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Content\DownloadGuards;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 
 /** @internal Legacy availability seam; versioned evidence enforcement replaces this guard. */
 #[Internal]

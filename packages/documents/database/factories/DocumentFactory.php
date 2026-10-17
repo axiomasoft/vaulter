@@ -7,12 +7,12 @@ namespace Vaulter\Documents\Database\Factories;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Vaulter\Attributes\Api;
-use Vaulter\Database\Factories\VaulterFactory;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Database\Factories\VaulterFactory;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 
 /**
  * A document created through DocumentOperations::create(), so its type, codec,

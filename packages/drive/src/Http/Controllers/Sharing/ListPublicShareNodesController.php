@@ -10,11 +10,11 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Resources\Sharing\SharedNodeResource;
 use Vaulter\Http\Support\SharedNodeResolver;
-use Vaulter\Models\Drive\Node;
 
 /** The children of a shared folder; an item link exposes one node and lists nothing. */
 #[Internal]

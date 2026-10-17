@@ -8,10 +8,10 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
 use Vaulter\Attributes\Api;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Drive\Access\PermissionDriverManager;
-use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 
 /**
  * @method static DriveHandle             drive(Model $ownerOrDrive, ?string $profile = null)

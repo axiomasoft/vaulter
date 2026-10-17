@@ -15,14 +15,14 @@ use Vaulter\Drive\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Drive\Data\Sharing\MintedShareLink;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Events\Sharing\NodeShareCreated;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Drive\Sharing\ShareLinkRules;
 use Vaulter\Drive\Sharing\ShareTokenMinter;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /**
  * Mint a bearer share-link on a node — the SEPARATE public sharing

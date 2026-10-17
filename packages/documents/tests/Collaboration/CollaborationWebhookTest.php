@@ -11,7 +11,7 @@ use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Серверные вызовы хаба Hocuspocus: authenticate / load / store. Пускают только с

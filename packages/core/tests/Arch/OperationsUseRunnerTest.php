@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Drive\Operations\AccessOperations;
+use Vaulter\Drive\Operations\ActivityOperations;
+use Vaulter\Drive\Operations\ChangeOperations;
 use Vaulter\Drive\Operations\FileOperations;
 use Vaulter\Drive\Operations\FolderOperations;
 use Vaulter\Drive\Operations\NodeOperations;
@@ -35,6 +37,8 @@ const OPERATIONS_READS = [
     UploadOperations::class => ['status', 'patch', 'putPart'],
     AccessOperations::class => ['grants', 'explain', 'paginate'],
     ShareOperations::class => ['list', 'paginate'],
+    ActivityOperations::class => ['forDrive', 'forNode', 'filtered'],
+    ChangeOperations::class => ['startCursor', 'list'],
     DocumentOperations::class => ['content', 'revisions', 'revisionPage', 'export', 'collaborationSession'],
     CommentOperations::class => ['list'],
 ];

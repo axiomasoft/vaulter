@@ -58,8 +58,8 @@ it('keeps migrated HTTP and Filament boundaries on Operations including aliases 
         'drive/src/Http/Controllers/Access/RevokeGrantController.php',
         'drive/src/Http/Controllers/Sharing/CreateShareController.php',
         'drive/src/Http/Controllers/Sharing/DownloadPublicShareController.php',
-        'core/src/Http/Controllers/Activity/ListDriveActivityController.php',
-        'core/src/Http/Controllers/Changes/ListChangesController.php',
+        'drive/src/Http/Controllers/Activity/ListDriveActivityController.php',
+        'drive/src/Http/Controllers/Changes/ListChangesController.php',
         'filament/src/Resources/NodeResource.php',
         'filament/src/Resources/NodeGrantResource.php',
         'filament/src/Resources/NodeShareResource.php',
@@ -75,12 +75,12 @@ it('keeps migrated HTTP and Filament boundaries on Operations including aliases 
 it('detects a repository alias and grouped Action import while ignoring commentary', function (): void {
     expect(forbiddenBoundaryDependencies(<<<'PHP_CODE'
 <?php
-use Vaulter\Repositories\Drive\NodeReadRepository as ReadNodes;
+use Vaulter\Drive\Repositories\NodeReadRepository as ReadNodes;
 use Vaulter\Drive\Actions\Nodes\{RenameNodeAction as Rename};
 app(ReadNodes::class);
 Rename::execute();
 // Vaulter\Repositories\Drive\AnotherRepository is only a comment.
-PHP_CODE))->toContain('Vaulter\Repositories\Drive\NodeReadRepository', 'Vaulter\Drive\Actions\Nodes\RenameNodeAction')
+PHP_CODE))->toContain('Vaulter\Drive\Repositories\NodeReadRepository', 'Vaulter\Drive\Actions\Nodes\RenameNodeAction')
         ->not->toContain('Vaulter\Repositories\Drive\AnotherRepository');
 });
 
@@ -88,8 +88,8 @@ it('detects both fully qualified class calls and a literal container dependency'
     expect(forbiddenBoundaryDependencies(<<<'PHP_CODE'
 <?php
 \Vaulter\Drive\Actions\Nodes\RenameNodeAction::execute();
-app('Vaulter\\Repositories\\Drive\\NodeReadRepository');
-PHP_CODE))->toContain('Vaulter\Drive\Actions\Nodes\RenameNodeAction', 'Vaulter\Repositories\Drive\NodeReadRepository');
+app('Vaulter\\Drive\\Repositories\\NodeReadRepository');
+PHP_CODE))->toContain('Vaulter\Drive\Actions\Nodes\RenameNodeAction', 'Vaulter\Drive\Repositories\NodeReadRepository');
 });
 
 /**

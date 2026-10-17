@@ -9,7 +9,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Models\Content\ScanBackfillRun;
 use Vaulter\Drive\Models\Content\ScanPolicyState;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Drive\Models\Drive;
 
 /** @internal Persisted per-drive scan activation state and its backfill run; activation itself is ActivateScanPolicyAction. */
 #[Internal]

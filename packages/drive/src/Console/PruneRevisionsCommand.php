@@ -14,8 +14,8 @@ use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
 use Vaulter\Drive\Jobs\PruneFileRevisionsJob;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
 

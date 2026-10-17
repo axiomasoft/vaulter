@@ -13,10 +13,10 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Uploads\StagedUpload;
-use Vaulter\Models\Drive\Drive;
 
 #[Internal]
 final readonly class UploadCleanupReconciler

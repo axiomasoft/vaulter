@@ -159,7 +159,7 @@
         },
         {
             "arguments": [],
-            "class": "Vaulter\\Console\\PruneChangesCommand",
+            "class": "Vaulter\\Drive\\Console\\PruneChangesCommand",
             "description": "Delete drive change-journal entries past the retention window.",
             "exit_codes": [
                 "INVALID",
@@ -190,8 +190,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/PruneChangesCommand.php",
-                "symbol": "Vaulter\\Console\\PruneChangesCommand"
+                "file": "packages/drive/src/Console/PruneChangesCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\PruneChangesCommand"
             }
         },
         {
@@ -204,7 +204,7 @@
                     "required": true
                 }
             ],
-            "class": "Vaulter\\Console\\ResetChangesCommand",
+            "class": "Vaulter\\Drive\\Console\\ResetChangesCommand",
             "description": "Expire every change-journal cursor of a drive, forcing its clients to resynchronize.",
             "exit_codes": [
                 "FAILURE",
@@ -216,8 +216,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/ResetChangesCommand.php",
-                "symbol": "Vaulter\\Console\\ResetChangesCommand"
+                "file": "packages/drive/src/Console/ResetChangesCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\ResetChangesCommand"
             }
         },
         {
@@ -679,7 +679,7 @@
                     "required": true
                 }
             ],
-            "class": "Vaulter\\Console\\MakeFileHandlerCommand",
+            "class": "Vaulter\\Drive\\Console\\MakeFileHandlerCommand",
             "description": "Scaffold a Vaulter file handler with a contract test",
             "exit_codes": [
                 "FAILURE",
@@ -701,8 +701,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/MakeFileHandlerCommand.php",
-                "symbol": "Vaulter\\Console\\MakeFileHandlerCommand"
+                "file": "packages/drive/src/Console/MakeFileHandlerCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\MakeFileHandlerCommand"
             }
         },
         {
@@ -751,7 +751,7 @@
                     "required": true
                 }
             ],
-            "class": "Vaulter\\Console\\MakeProfileCommand",
+            "class": "Vaulter\\Drive\\Console\\MakeProfileCommand",
             "description": "Scaffold a Vaulter profile provider (zero-migration config envelope)",
             "exit_codes": [
                 "FAILURE",
@@ -791,8 +791,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/MakeProfileCommand.php",
-                "symbol": "Vaulter\\Console\\MakeProfileCommand"
+                "file": "packages/drive/src/Console/MakeProfileCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\MakeProfileCommand"
             }
         },
         {

@@ -7,9 +7,9 @@ namespace Vaulter\Http\Support;
 use Illuminate\Http\Request;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
-use Vaulter\Exceptions\Nodes\StaleNodeException;
 
 /**
  * Conditional requests of the versioned API (RFC 9110).

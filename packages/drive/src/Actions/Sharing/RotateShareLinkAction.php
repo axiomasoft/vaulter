@@ -9,13 +9,13 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Sharing\MintedShareLink;
 use Vaulter\Drive\Data\Sharing\RotateShareLinkInput;
 use Vaulter\Drive\Events\Sharing\NodeShareRotated;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Sharing\NodeShare;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Drive\Sharing\ShareTokenMinter;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /**
  * Replace the token of a live share link (P4-I22): the old token stops

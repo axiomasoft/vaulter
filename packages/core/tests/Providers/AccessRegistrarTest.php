@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Policies\NodePolicy;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Providers\AccessRegistrar;
 
 it('registers the configured permission driver and node policy', function (): void {

@@ -15,9 +15,9 @@ use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Events\Sharing\NodeShareCreated;
 use Vaulter\Drive\Events\Sharing\NodeShareRevoked;
 use Vaulter\Drive\Models\Sharing\NodeShare;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Support\ShareToken;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Operations\DriveContext;
 
 /**
  * The mint/revoke Actions (§2.7 / M2c): the raw token is returned ONCE and only its

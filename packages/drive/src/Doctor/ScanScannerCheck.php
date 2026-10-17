@@ -10,11 +10,11 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Kernel;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanMode;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
 
 /** A scan policy that is on needs a scanner that resolves and answers to the identity the policy names. */
 #[Internal]

@@ -7,9 +7,9 @@ namespace Vaulter\Http\Resources\Changes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Changes\ChangePage;
-use Vaulter\Data\Changes\NodeChange;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
+use Vaulter\Drive\Data\Changes\ChangePage;
+use Vaulter\Drive\Data\Changes\NodeChange;
 
 /**
  * A page of the change journal. Unlike listings it always returns a cursor: the one to

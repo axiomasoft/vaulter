@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Drive\Node;
 
 /*
  * The node table is fed by the authorized handle's listings (PanelNodes), never by an

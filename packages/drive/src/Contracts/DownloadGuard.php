@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Drive\Contracts;
+
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Sharing\ShareContext;
+
+/**
+ * May veto every delivery of file content (slot `drive`, Guard, any number): the download, the public-share
+ * download and the direct-signed URL all call every active guard before a byte or a capability leaves.
+ * A guard denies by throwing; any exception, not only {@see ContentUnavailableException}, denies (fail-closed).
+ */
+#[Spi(SpiKind::Implement)]
+interface DownloadGuard
+{
+    /** @throws ContentUnavailableException to deny; the caller's own context decides the lane */
+    public function check(DriveContext|ShareContext $context, Node $node, FileRevision $revision): void;
+}

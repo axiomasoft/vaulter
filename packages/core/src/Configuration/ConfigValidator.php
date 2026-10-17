@@ -14,15 +14,15 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Access\PermissionDriverCatalog;
 use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Events\Outbox\OutboxSchedule;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotencySchedule;
 use Vaulter\Kernel;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Webhooks\WebhooksSchedule;
 
 #[Api]

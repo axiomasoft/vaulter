@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Exceptions\Quota;
 
 use Vaulter\Attributes\Api;
-use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
+use Vaulter\Drive\Exceptions\QuotaExceededException as CoreQuotaExceededException;
 
 /** The Drive boundary preserves the existing upload/copy exception type. */
 #[Api]

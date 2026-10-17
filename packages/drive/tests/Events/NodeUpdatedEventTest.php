@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Models\Activity\Activity;
 use Vaulter\Testing\Support\CanonicalJson;
 
 /**

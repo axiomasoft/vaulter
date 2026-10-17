@@ -16,9 +16,9 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Models\Drive\Node;
 
 /**
  * The hub's side of the protocol for tests: room tokens shaped exactly like

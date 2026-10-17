@@ -9,12 +9,12 @@ use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\Fixtures\TestUser;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.

@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Export;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * The default {@see ExportFilenameResolver}: the node's basename plus the exporter's

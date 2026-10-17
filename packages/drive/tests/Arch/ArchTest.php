@@ -30,7 +30,8 @@ arch('the package never depends on the host application (E5.1)')
  *
  * `Console/MakePermissionDriverCommand.php` is a deliberate, allow-listed exception: it is a scaffolding command
  * (`vaulter:make:permission-driver`) that EMITS the string `App\Vaulter\PermissionDrivers` as the target namespace for code it
- * generates INTO the host application — the package itself never imports or executes anything under `App\*`.
+ * generates INTO the host application — the package itself never imports or executes anything under `App\*`. The same holds
+ * for `Console/MakeProfileCommand.php` (`App\Vaulter\Panels`) and `Console/MakeFileHandlerCommand.php`.
  */
 test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
     $src = __DIR__.'/../../src';
@@ -38,6 +39,8 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
 
     $allowlist = [
         'Console/MakePermissionDriverCommand.php',
+        'Console/MakeProfileCommand.php',
+        'Console/MakeFileHandlerCommand.php',
     ];
 
     /** @var Iterator<SplFileInfo> $files */
@@ -149,6 +152,8 @@ arch('domain exceptions implement the HTTP problem contract')
     ->ignoring([
         // The host-role driver is missing or unknown: a configuration failure that stops boot, no endpoint answers with it.
         'Vaulter\Drive\Exceptions\Access\MissingPermissionDriverException',
+        // A broken profile stops boot before any endpoint can respond (P2.5 configuration failure).
+        'Vaulter\Drive\Exceptions\Profiles\InvalidProfileException',
     ]);
 
 arch('production source never imports testing helpers (D35)')

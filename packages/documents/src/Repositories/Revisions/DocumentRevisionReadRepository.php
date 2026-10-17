@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Read-side lookups over the immutable checkpoints in v_document_revisions: the head

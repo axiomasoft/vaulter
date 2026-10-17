@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Http\Controllers\Trash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Support\HttpOperationContextFactory;

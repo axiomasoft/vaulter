@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\RateLimiter;
-use Vaulter\Contracts\Handlers\FileHandlerRegistry;
-use Vaulter\Contracts\Handlers\NodePresenter;
+use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry;
+use Vaulter\Drive\Contracts\Handlers\NodePresenter;
 use Vaulter\Providers\DriveSliceRegistrar;
 use Vaulter\VaulterManager;
 
