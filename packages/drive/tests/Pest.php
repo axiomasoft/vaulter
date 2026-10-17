@@ -10,7 +10,7 @@ use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Testing\Support\TestGroups;
 
-uses(TestCase::class, RefreshDatabase::class)->in('Access', 'Sharing', 'Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi', 'WriteGuard', 'Doctor', 'Testing');
+uses(TestCase::class, RefreshDatabase::class)->in('Access', 'Sharing', 'Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi', 'WriteGuard', 'Doctor', 'Testing', 'Content');
 
 uses(TestCase::class)->in('Providers', 'Http', 'Console', 'Modules');
 

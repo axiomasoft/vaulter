@@ -1018,6 +1018,137 @@
             "id": "serialized:config:vaulter.sharing.token_generator",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.created_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.created_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.available_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.available_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.created_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.created_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.last_published_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.last_published_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.lease_expires_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.lease_expires_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.activated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.activated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanRequest.requested_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanRequest.requested_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_backfill_run",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_evidence",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_obligation",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_policy_state",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_request",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         }
     ],
     "items": [
@@ -3046,6 +3177,138 @@
             }
         },
         {
+            "attribute": "created_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.created_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanBackfillRun.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun::casts"
+            }
+        },
+        {
+            "attribute": "updated_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.updated_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanBackfillRun.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun::casts"
+            }
+        },
+        {
+            "attribute": "observed_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanEvidenceRecord.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord::casts"
+            }
+        },
+        {
+            "attribute": "revoked_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanEvidenceRecord.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord::casts"
+            }
+        },
+        {
+            "attribute": "available_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.available_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "created_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.created_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "last_published_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.last_published_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "lease_expires_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.lease_expires_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "updated_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.updated_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "activated_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.activated_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanPolicyState.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState::casts"
+            }
+        },
+        {
+            "attribute": "updated_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.updated_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanPolicyState.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState::casts"
+            }
+        },
+        {
+            "attribute": "requested_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanRequest.requested_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanRequest",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanRequest.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanRequest::casts"
+            }
+        },
+        {
             "attribute": "audience",
             "cast": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
             "id": "serialized:cast:Vaulter\\Drive\\Models\\Sharing\\NodeShare.audience",
@@ -3123,138 +3386,6 @@
             }
         },
         {
-            "attribute": "created_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.created_at",
-            "model": "Vaulter\\Models\\Content\\ScanBackfillRun",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanBackfillRun.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanBackfillRun::casts"
-            }
-        },
-        {
-            "attribute": "updated_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.updated_at",
-            "model": "Vaulter\\Models\\Content\\ScanBackfillRun",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanBackfillRun.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanBackfillRun::casts"
-            }
-        },
-        {
-            "attribute": "observed_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.observed_at",
-            "model": "Vaulter\\Models\\Content\\ScanEvidenceRecord",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanEvidenceRecord.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanEvidenceRecord::casts"
-            }
-        },
-        {
-            "attribute": "revoked_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.revoked_at",
-            "model": "Vaulter\\Models\\Content\\ScanEvidenceRecord",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanEvidenceRecord.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanEvidenceRecord::casts"
-            }
-        },
-        {
-            "attribute": "available_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.available_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "created_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.created_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "last_published_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.last_published_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "lease_expires_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.lease_expires_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "updated_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.updated_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "activated_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.activated_at",
-            "model": "Vaulter\\Models\\Content\\ScanPolicyState",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanPolicyState.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanPolicyState::casts"
-            }
-        },
-        {
-            "attribute": "updated_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.updated_at",
-            "model": "Vaulter\\Models\\Content\\ScanPolicyState",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanPolicyState.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanPolicyState::casts"
-            }
-        },
-        {
-            "attribute": "requested_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanRequest.requested_at",
-            "model": "Vaulter\\Models\\Content\\ScanRequest",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanRequest.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanRequest::casts"
-            }
-        },
-        {
             "attribute": "status",
             "cast": "Vaulter\\Enums\\Drive\\DriveStatus",
             "id": "serialized:cast:Vaulter\\Models\\Drive\\Drive.status",
@@ -3267,7 +3398,7 @@
         },
         {
             "attribute": "quarantined_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
             "id": "serialized:cast:Vaulter\\Models\\Drive\\FileRevision.quarantined_at",
             "model": "Vaulter\\Models\\Drive\\FileRevision",
             "owner": "drive",
@@ -3604,7 +3735,7 @@
         {
             "config_key": "vaulter.models.scan_backfill_run",
             "fqcns": [
-                "Vaulter\\Models\\Content\\ScanBackfillRun"
+                "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun"
             ],
             "id": "serialized:config:vaulter.models.scan_backfill_run",
             "owner": "drive",
@@ -3616,7 +3747,7 @@
         {
             "config_key": "vaulter.models.scan_evidence",
             "fqcns": [
-                "Vaulter\\Models\\Content\\ScanEvidenceRecord"
+                "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord"
             ],
             "id": "serialized:config:vaulter.models.scan_evidence",
             "owner": "drive",
@@ -3628,7 +3759,7 @@
         {
             "config_key": "vaulter.models.scan_obligation",
             "fqcns": [
-                "Vaulter\\Models\\Content\\ScanObligation"
+                "Vaulter\\Drive\\Models\\Content\\ScanObligation"
             ],
             "id": "serialized:config:vaulter.models.scan_obligation",
             "owner": "drive",
@@ -3640,7 +3771,7 @@
         {
             "config_key": "vaulter.models.scan_policy_state",
             "fqcns": [
-                "Vaulter\\Models\\Content\\ScanPolicyState"
+                "Vaulter\\Drive\\Models\\Content\\ScanPolicyState"
             ],
             "id": "serialized:config:vaulter.models.scan_policy_state",
             "owner": "drive",
@@ -3652,7 +3783,7 @@
         {
             "config_key": "vaulter.models.scan_request",
             "fqcns": [
-                "Vaulter\\Models\\Content\\ScanRequest"
+                "Vaulter\\Drive\\Models\\Content\\ScanRequest"
             ],
             "id": "serialized:config:vaulter.models.scan_request",
             "owner": "drive",

@@ -1,24 +1,18 @@
 {
     "scope": [
         "Vaulter\\Cas\\",
-        "Vaulter\\Content\\",
         "Vaulter\\Webhooks\\",
-        "Vaulter\\Actions\\Content\\",
         "Vaulter\\Actions\\Webhooks\\",
         "Vaulter\\Contracts\\Cas\\",
-        "Vaulter\\Contracts\\Content\\",
         "Vaulter\\Contracts\\Webhooks\\",
         "Vaulter\\Models\\Cas\\",
-        "Vaulter\\Models\\Content\\",
         "Vaulter\\Models\\Webhooks\\",
         "Vaulter\\Repositories\\Cas\\",
-        "Vaulter\\Repositories\\Content\\",
         "Vaulter\\Repositories\\Webhooks\\",
         "Vaulter\\Jobs\\Webhooks\\",
         "Vaulter\\Http\\Controllers\\Webhooks\\",
         "Vaulter\\Data\\Webhooks\\",
         "Vaulter\\Enums\\Cas\\",
-        "Vaulter\\Exceptions\\Content\\",
         "Vaulter\\Exceptions\\Webhooks\\",
         "Vaulter\\ValueObjects\\Cas\\",
         "Vaulter\\ValueObjects\\Webhooks\\",
@@ -29,66 +23,6 @@
         "Vaulter\\Console\\RetryWebhooksCommand"
     ],
     "rules": [
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Content\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map Content + D28 (scan_* and scan state are drive): scan state, lease/retry/admission, quarantine, delivery -> drive"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Content\\ScanPolicySpec",
-            "owner": "drive",
-            "why": "architecture#ownership-map Content + D28 (scan_* and scan state are drive): scan policy (predicate, rollout, admission sequence) belongs to scan admission -> drive (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Content\\ContentAvailabilityGuard",
-            "owner": "drive",
-            "why": "architecture#ownership-map Content + D28 (scan_* and scan state are drive): ContentAvailabilityGuard is drive (quarantine/availability of revisions)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Content\\ContentDelivery",
-            "owner": "drive",
-            "why": "architecture#ownership-map Content: delivery/URL signing orchestration -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Actions\\Content\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map Actions/Content + D28 (scan_* and scan state are drive): scan work lease/retry/settle actions -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Models\\Content\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map Models/Content + D28 (scan_* and scan state are drive): all scan_* tables have drive/revision/obligation FK -> drive (Eloquent, D27 internal)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Repositories\\Content\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map Repositories/Content + D28 (scan_* and scan state are drive): scan state repositories -> drive"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Contracts\\Content\\ScanPolicyResolver",
-            "owner": "drive",
-            "why": "architecture#ownership-map Contracts/Content + D28 (scan_* and scan state are drive): resolves the scan policy of a drive/revision -> drive; implementable by hosts"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Contracts\\Content\\ScanWorkSettings",
-            "owner": "drive",
-            "why": "architecture#ownership-map Contracts/Content + D28 (scan_* and scan state are drive): lease/attempt settings of scan work -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Exceptions\\Content\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Exceptions by domain owner: quarantine exception a host catches on content access -> drive"
-        },
         {
             "match": "prefix",
             "value": "Vaulter\\Webhooks\\",

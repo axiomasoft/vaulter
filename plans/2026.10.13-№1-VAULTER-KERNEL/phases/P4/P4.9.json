@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.9",
   "title": "Drive B: контент и сканирование (Content, scan-модели, DownloadGuard) из core в vaulter-drive",
-  "status": "todo",
+  "status": "done",
   "summary": "`move-types --owner=drive --rule-file=core-content-media-webhooks` (33: Actions\\Content, ContentAvailabilityGuard, ContentDelivery, DownloadGuards, NodeContentLifecycleRegistry, Scan*, Contracts\\Content, Models\\Content, Repositories\\Content, Exceptions\\Content), тесты `packages/core/tests/Content` → drive.",
   "why": "D28: все scan_* и карантин — drive; media держит только чистый ContentScanner SPI (перенесён в P4.6). Риск: ScanBackfillReconciler/ScanWork live-логика — переносится как есть (persistence: не вырезать).",
   "scope": {
@@ -220,6 +220,48 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T00:30:21Z",
+    "finished_at": "2026-10-17T00:57:48Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "33 типа Content/scan → drive; Fast-набор зелёный",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T00:57:48Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T00:57:48Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T00:57:48Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T00:57:48Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T00:57:48Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T00:57:48Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T00:57:48Z"
 }

@@ -52,7 +52,7 @@ arch('no documents controller or resource asks the AccessResolver itself')
 
 arch('documents controllers hand out bytes only through the ContentResponder')
     ->expect(['Vaulter\Documents\Http'])
-    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Content\ContentDelivery']);
+    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Drive\Content\ContentDelivery']);
 
 arch('the legacy unversioned controllers and the removed middleware stay removed')
     ->expect([

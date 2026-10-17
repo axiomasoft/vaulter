@@ -8,7 +8,7 @@ use Illuminate\Contracts\Config\Repository;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Contracts\Content\ScanWorkSettings;
+use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;

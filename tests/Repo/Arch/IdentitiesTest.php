@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
+const ID_ACCEPTED_DECISIONS = ['D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array

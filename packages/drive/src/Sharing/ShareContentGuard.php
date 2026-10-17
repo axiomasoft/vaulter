@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Sharing;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Content\DownloadGuards;
+use Vaulter\Drive\Content\DownloadGuards;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;

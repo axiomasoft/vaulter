@@ -1975,7 +1975,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Content\\ScanBackfillRun",
+            "default": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun",
             "id": "config:vaulter.models.scan_backfill_run",
             "owner": "drive",
             "registered_defaults": true,
@@ -1986,7 +1986,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Content\\ScanEvidenceRecord",
+            "default": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord",
             "id": "config:vaulter.models.scan_evidence",
             "owner": "drive",
             "registered_defaults": true,
@@ -1997,7 +1997,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Content\\ScanObligation",
+            "default": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
             "id": "config:vaulter.models.scan_obligation",
             "owner": "drive",
             "registered_defaults": true,
@@ -2008,7 +2008,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Content\\ScanPolicyState",
+            "default": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState",
             "id": "config:vaulter.models.scan_policy_state",
             "owner": "drive",
             "registered_defaults": true,
@@ -2019,7 +2019,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Content\\ScanRequest",
+            "default": "Vaulter\\Drive\\Models\\Content\\ScanRequest",
             "id": "config:vaulter.models.scan_request",
             "owner": "drive",
             "registered_defaults": true,

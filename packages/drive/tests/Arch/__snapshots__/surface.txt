@@ -82,7 +82,7 @@ Vaulter\Drive\Access\ValueObjects\Subject api since 1.0 final readonly class
   public static function ofModel(Illuminate\Database\Eloquent\Model $model): self
   public function signature(): string
 
-Vaulter\Drive\Configuration\DriveConfig api since 1.0 final readonly class implements Vaulter\Contracts\Content\ScanWorkSettings
+Vaulter\Drive\Configuration\DriveConfig api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Content\ScanWorkSettings
   public function allowedMimeTypes(): array
   public function blockedExtensions(): array
   public function chunkSize(): int
@@ -102,6 +102,18 @@ Vaulter\Drive\Configuration\DriveConfig api since 1.0 final readonly class imple
   public function sessionTtlHours(): int
   public function trashRetentionDays(): int
   public function validateScanWork(bool $requireBroker = false): void
+
+Vaulter\Drive\Content\ScanPolicySpec api since 1.0 final readonly class
+  public Vaulter\Media\Enums\Cas\ScanMode $mode
+  public string $policyVersion
+  public string $predicateKey
+  public ?string $rolloutKey
+  public string $scannerKey
+  public string $scannerVersion
+  public function __construct(string $predicateKey, Vaulter\Media\Enums\Cas\ScanMode $mode, string $scannerKey, string $scannerVersion, string $policyVersion, ?string $rolloutKey = null)
+  public function configFingerprint(): string
+  public function requiresScan(int $admissionSequence, ?int $boundarySequence): bool
+  public function specKey(): string
 
 Vaulter\Drive\Contracts\Access\AccessOperations api since 1.0 interface
   public function explain(Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Enums\Access\Ability $ability, ?Illuminate\Contracts\Auth\Access\Authorizable $subject = null): Vaulter\Drive\Access\ValueObjects\AccessExplanation
@@ -635,6 +647,11 @@ Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException api since 1.0 
 
 Vaulter\Drive\Exceptions\Access\UnknownRoleException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function for(string $key, ?int $version = null): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Drive\Exceptions\Content\ContentQuarantinedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
   public function httpStatus(): int
   public function problemCode(): string
 

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Vaulter\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Content\ScanPolicySpec;
-use Vaulter\Content\ScanSnapshot;
-use Vaulter\Contracts\Content\ScanPolicyResolver as Resolver;
+use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
+use Vaulter\Drive\Contracts\Content\ScanPolicyResolver as Resolver;
+use Vaulter\Drive\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Models\Drive\Drive;
@@ -17,7 +16,6 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]

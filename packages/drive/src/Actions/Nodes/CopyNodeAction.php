@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Nodes;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
+use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeCopied;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;

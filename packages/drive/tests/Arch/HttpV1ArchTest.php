@@ -66,7 +66,7 @@ arch('no drive controller or resource asks the AccessResolver itself')
 
 arch('drive controllers hand out bytes only through the ContentResponder')
     ->expect(['Vaulter\Drive\Http'])
-    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Content\ContentDelivery']);
+    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Drive\Content\ContentDelivery']);
 
 it('streams nothing and mints no storage URL in the drive HTTP layer', function (): void {
     $offenders = [];

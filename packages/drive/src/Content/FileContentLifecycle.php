@@ -6,7 +6,6 @@ namespace Vaulter\Drive\Content;
 
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Data\Drive\CopyResult;
 use Vaulter\Enums\Drive\NodeKind;

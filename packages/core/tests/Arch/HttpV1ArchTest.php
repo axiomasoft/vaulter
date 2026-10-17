@@ -49,7 +49,7 @@ arch('no v1 controller or resource asks the AccessResolver itself')
 
 arch('bytes leave only through the ContentResponder')
     ->expect([...V1_CONTROLLER_NAMESPACES, 'Vaulter\Http\Resources'])
-    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Content\ContentDelivery']);
+    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Drive\Content\ContentDelivery']);
 
 it('mints no temporary or signed storage URL and streams no download in the HTTP layer outside the ContentResponder', function (): void {
     $offenders = [];

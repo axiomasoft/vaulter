@@ -36,7 +36,6 @@ return [
         'Webhooks/WebhookRetryDispatcherTest.php',
         'Webhooks/WebhookAutoDisableTest.php',
         'Feature/PruneWebhooksTest.php',
-        'Content/ScanEvidenceBoundaryTest.php',
         'Doctor/CoreDoctorChecksTest.php',
         'Console/InstallCommandTest.php',
         'Unit/DatabaseSchemaReuseTest.php',

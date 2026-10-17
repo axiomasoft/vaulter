@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Configuration\ScanConfig;
-use Vaulter\Content\ScanPolicySpec;
+use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Media\Enums\Cas\ScanMode;

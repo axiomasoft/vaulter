@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\DriveContext;

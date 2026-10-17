@@ -4,22 +4,23 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Actions\Content\ActivateScanPolicyAction;
-use Vaulter\Actions\Content\ClaimScanWorkAction;
-use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ContentAvailabilityGuard;
-use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
+use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Trash\RestoreNodeAction;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
 use Vaulter\Drive\Providers\BindingsRegistrar;
+use Vaulter\Drive\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
@@ -32,7 +33,6 @@ use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
-use Vaulter\Repositories\Content\ScanPolicyStateRepository;
 
 it('SEC-POLICY rejects enabled unactivated drives without allocating admission', function (): void {
     Storage::fake('local');
@@ -128,7 +128,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
         $policy = new ProfilePolicy(app(VaulterConfig::class), app('config'), $registry, app(ScanConfig::class), app(Kernel::class));
         $resolver = new ScanPolicyResolver($policy, $registry, app(ScanPolicyStateRepository::class), app(ScanSnapshot::class), app(ActivateScanPolicyAction::class));
         app()->instance(ScanPolicyResolver::class, $resolver);
-        app()->instance(Vaulter\Contracts\Content\ScanPolicyResolver::class, $resolver);
+        app()->instance(Vaulter\Drive\Contracts\Content\ScanPolicyResolver::class, $resolver);
     };
     $bind(ScanMode::Off);
     $drive = UploadTestHelpers::storage();

@@ -3082,6 +3082,137 @@
             "id": "serialized:config:vaulter.sharing.token_generator",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.created_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.created_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.available_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.available_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.created_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.created_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.last_published_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.last_published_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.lease_expires_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.lease_expires_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.activated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.activated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanRequest.requested_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanRequest.requested_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_backfill_run",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_evidence",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_obligation",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_policy_state",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter.models.scan_request",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

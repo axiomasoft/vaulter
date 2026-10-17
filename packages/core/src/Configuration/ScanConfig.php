@@ -7,7 +7,7 @@ namespace Vaulter\Configuration;
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Content\ScanPolicySpec;
+use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Enums\Cas\ScanMode;
 

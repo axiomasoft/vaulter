@@ -30,6 +30,7 @@ return [
         'Drive/DrivePurgeTest.php',
         'PublicApi/LifecycleBoundaryTest.php',
         'PublicApi/NodeSequenceContractTest.php',
+        'Content/ScanEvidenceBoundaryTest.php',
     ],
     // Every forked race of the Concurrency folder (CompleteUploadRetryTest does not fork: it stays in the parallel lane).
     'serial' => [

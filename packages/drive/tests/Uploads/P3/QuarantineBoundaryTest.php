@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Actions\Content\ClaimScanWorkAction;
-use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Models\Content\ScanObligation;
+use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Sharing\ShareResolver;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
@@ -15,9 +17,7 @@ use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Content\ScanObligationRepository;
 
 beforeEach(function (): void {
     Storage::fake('local');

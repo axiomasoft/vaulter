@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicyResolver as DriveScanPolicyResolver;
+use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Jobs\PruneFileRevisionsJob;

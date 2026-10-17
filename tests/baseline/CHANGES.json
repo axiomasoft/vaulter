@@ -6461,6 +6461,158 @@
       "new": "P\\Tests\\Arch\\ArchTest::__pest_evaluable_documents_depends_on_drive_but_never_directly_on_media__D6_",
       "reason": "documents sits on drive in the package graph (D6): the live check now forbids only a direct media dependency (P4.8)",
       "decision": "D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\EgressInventoryTest::__pest_evaluable_it_SEC_R17_inventory_keeps_descriptors_metadata_only_and_installed_delivery_mediated_without_a_conditional_304_branch",
+      "new": "P\\Tests\\Content\\EgressInventoryTest::__pest_evaluable_it_SEC_R17_inventory_keeps_descriptors_metadata_only_and_installed_delivery_mediated_without_a_conditional_304_branch",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/EgressInventoryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_allows_copy_of_folders_and_of_kinds_whose_lifecycle_is_not_purge_only",
+      "new": "P\\Tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_allows_copy_of_folders_and_of_kinds_whose_lifecycle_is_not_purge_only",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_lets_a_full_lifecycle_replace_the_purge_only_fallback_for_copy",
+      "new": "P\\Tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_lets_a_full_lifecycle_replace_the_purge_only_fallback_for_copy",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_refuses_a_second_registration_of_a_kind_with_duplicate__registration_and_keeps_the_first",
+      "new": "P\\Tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_refuses_a_second_registration_of_a_kind_with_duplicate__registration_and_keeps_the_first",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_refuses_copy_of_a_kind_resolved_to_a_purge_only_lifecycle__primary_or_fallback\"dataset \"document fallback\"\"",
+      "new": "P\\Tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_refuses_copy_of_a_kind_resolved_to_a_purge_only_lifecycle__primary_or_fallback\"dataset \"document fallback\"\"",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_refuses_copy_of_a_kind_resolved_to_a_purge_only_lifecycle__primary_or_fallback\"dataset \"shortcut primary\"\"",
+      "new": "P\\Tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_refuses_copy_of_a_kind_resolved_to_a_purge_only_lifecycle__primary_or_fallback\"dataset \"shortcut primary\"\"",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_refuses_copy_of_an_unregistered_kind",
+      "new": "P\\Tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_refuses_copy_of_an_unregistered_kind",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_resolves_the_registered_lifecycle_of_a_kind",
+      "new": "P\\Tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_resolves_the_registered_lifecycle_of_a_kind",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_uses_the_fallback_only_while_the_kind_has_no_primary_registration",
+      "new": "P\\Tests\\Content\\NodeContentLifecycleRegistryTest::__pest_evaluable_it_uses_the_fallback_only_while_the_kind_has_no_primary_registration",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R06_reuses_only_exact_same_drive_clean_evidence_and_revocation_immediately_removes_compatibility",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R06_reuses_only_exact_same_drive_clean_evidence_and_revocation_immediately_removes_compatibility",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R07_validates_structured_verdicts_before_persistence",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R07_validates_structured_verdicts_before_persistence",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R08_optional_failed_rescan_retains_exact_clean_proof_and_a_new_scanner_epoch_refuses_old_evidence",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R08_optional_failed_rescan_retains_exact_clean_proof_and_a_new_scanner_epoch_refuses_old_evidence",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R11_rejects_altered_identity_and_keeps_sticky_infection_through_later_clean_rescan_and_config_off",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R11_rejects_altered_identity_and_keeps_sticky_infection_through_later_clean_rescan_and_config_off",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R12_deterministic_identity_failure_settles_the_current_fenced_snapshot_without_retry_or_blob_mutation",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R12_deterministic_identity_failure_settles_the_current_fenced_snapshot_without_retry_or_blob_mutation",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R20_scan_validator_reads_actual_immutable_input_and_settles_only_the_exact_live_attempt_without_changing_head_or_sequence",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_SEC_R20_scan_validator_reads_actual_immutable_input_and_settles_only_the_exact_live_attempt_without_changing_head_or_sequence",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_persists_work_and_request_atomically_and_preserves_explicit_rescan_request_dedup_across_generations",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_persists_work_and_request_atomically_and_preserves_explicit_rescan_request_dedup_across_generations",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_records_retry_evidence__recovers_lost_leases_and_terminates_exhausted_attempts",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_records_retry_evidence__recovers_lost_leases_and_terminates_exhausted_attempts",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_settles_unsupported_manifests_without_opening_bytes_and_rejects_fabricated_passed_scope_attributes",
+      "new": "P\\Tests\\Content\\ScanEvidenceBoundaryTest::__pest_evaluable_it_settles_unsupported_manifests_without_opening_bytes_and_rejects_fabricated_passed_scope_attributes",
+      "new_suite": "drive",
+      "reason": "the test file moved to packages/drive/tests/Content/ScanEvidenceBoundaryTest.php (P4 ownership move)",
+      "decision": "D40"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Content_never_uses_the_Testing_namespaces",
+      "new": "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Content_never_uses_the_Testing_namespaces",
+      "new_suite": "drive",
+      "reason": "the live check follows the moved namespace: its name carries the new owner FQCN (P4.9 ownership move)",
+      "decision": "D40"
     }
   ],
   "additions": {
@@ -6688,7 +6840,7 @@
       ]
     },
     "core": {
-      "count": 464,
+      "count": 458,
       "names": [
         "P\\Packages\\core\\tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_gives_the_host_subclass_configured_in_vaulter_models_the_same_alias",
         "P\\Packages\\core\\tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_is_not_renamed_by_a_host_morph_map_and_is_not_refused_by_enforceMorphMap",
@@ -6738,12 +6890,6 @@
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_names_every_table_by_the_configured_prefix_and_the_canonical_entity__ignoring_table__names",
         "P\\Packages\\core\\tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_schedules_the_outbox__webhook_and_journal_tasks_with_overlap_and_single_server_guards",
         "P\\Packages\\core\\tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_skips_the_webhook_tasks_when_webhooks_are_off_but_keeps_the_outbox_relay_and_the_journal_prune",
-        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_contributes_the_drive_content_availability_check_as_the_built_in_download_guard",
-        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_denies_the_delivery_when_a_guard_throws__and_a_guard_after_the_denial_never_runs",
-        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_lets_a_problem_a_guard_throws_reach_the_caller_unchanged",
-        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_runs_every_active_guard_in_the_order_of_the_slot__the_fixtures_ahead_of_the_built_in_availability_guard",
-        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_sends_every_delivery_path_of_the_core_through_the_guards__not_through_the_availability_check",
-        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_treats_any_other_exception_of_a_guard_as_a_denial__never_a_pass__fail_closed_",
         "P\\Packages\\core\\tests\\Doctor\\CoreDoctorChecksTest::__pest_evaluable_it_compares_the_settle_window_with_the_transaction_limits_of_the_database",
         "P\\Packages\\core\\tests\\Doctor\\CoreDoctorChecksTest::__pest_evaluable_it_does_not_count_a_delivery_that_is_not_due_yet_as_lag",
         "P\\Packages\\core\\tests\\Doctor\\CoreDoctorChecksTest::__pest_evaluable_it_measures_the_outbox_lag_per_consumer",
@@ -7252,7 +7398,7 @@
       ]
     },
     "drive": {
-      "count": 54,
+      "count": 57,
       "names": [
         "P\\Tests\\Arch\\RevisionBlobLinksBoundaryTest::__pest_evaluable_it_detaches_the_revision_links_on_every_path_that_deletes_revisions",
         "P\\Tests\\Arch\\RevisionBlobLinksBoundaryTest::__pest_evaluable_it_lets_only_RevisionBlobLinks_use_the_edge_repository",
@@ -7261,18 +7407,21 @@
         "P\\Tests\\Arch\\RevisionBlobLinksBoundaryTest::__pest_evaluable_it_recognises_an_edge_write_in_each_of_its_shapes\"('$revision->blobs()->attach($blob);')\"",
         "P\\Tests\\Arch\\RevisionBlobLinksBoundaryTest::__pest_evaluable_it_recognises_an_edge_write_in_each_of_its_shapes\"('FileRevisionBlob::query()->wh…e([]);')\"",
         "P\\Tests\\Arch\\RevisionBlobLinksBoundaryTest::__pest_evaluable_it_writes_no_revision_edge_outside_the_repository",
-        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Access_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_DriveModule_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Idempotency_never_uses_the_Testing_namespaces",
-        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Rules_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Schema_never_uses_the_Testing_namespaces",
-        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Sharing_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Support_never_uses_the_Testing_namespaces",
         "P\\Tests\\Concurrency\\RevisionBlobsRollbackTest::__pest_evaluable_it_releases_the_drive_pins_and_only_them_before_the_revision_edge_table_is_dropped__D23__P7_",
         "P\\Tests\\Concurrency\\RevisionBlobsRollbackTest::__pest_evaluable_it_rolls_back_an_empty_edge_table_without_a_pin_to_release",
         "P\\Tests\\Concurrency\\RevisionPinPurgeRaceTest::__pest_evaluable_it_keeps_the_bytes_of_an_ingest_that_races_the_purge_of_a_file_with_the_same_content",
         "P\\Tests\\Concurrency\\RootTransactionSnapshotTest::__pest_evaluable_it_sees_a_sibling_name_committed_by_a_peer_between_the_first_read_and_the_tree_lock",
         "P\\Tests\\Configuration\\ModuleRegistrationOrderTest::__pest_evaluable_it_retains_module_defaults_and_applies_host_settings_when_modules_register_before_core",
+        "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_contributes_the_drive_content_availability_check_as_the_built_in_download_guard",
+        "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_denies_the_delivery_when_a_guard_throws__and_a_guard_after_the_denial_never_runs",
+        "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_lets_a_problem_a_guard_throws_reach_the_caller_unchanged",
+        "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_runs_every_active_guard_in_the_order_of_the_slot__the_fixtures_ahead_of_the_built_in_availability_guard",
+        "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_sends_every_delivery_path_of_the_core_through_the_guards__not_through_the_availability_check",
+        "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_treats_any_other_exception_of_a_guard_as_a_denial__never_a_pass__fail_closed_",
         "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_contributes_the_disk_and_dedup_scope_checks_as_the_drive_and_keeps_them_with_the_drive_module__D33_",
         "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_lists_the_media_default_disk_and_each_distinct_profile_disk_once",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_detaches_one_edge_with_its_pin__and_all_edges_of_the_given_revisions_only",
