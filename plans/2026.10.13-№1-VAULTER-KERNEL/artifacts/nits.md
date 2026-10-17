@@ -74,3 +74,10 @@ P4.19 | scripts/release/consumer-check.sh core | реальный прогон �
 P4.19 | consumer-check.sh, ConsumerCheckTest | ~2–3 с на запуск скрипта из-за process spawn
 P4.19 | monorepo-split.yml | владельцу создать репозиторий axioma-studio/vaulter-webhooks (prerequisite)
 P4.19 | docs/, README | заметка про webhooks split-target и job consumer-isolation — в P4.20
+P4.20 | docs/.vitepress/config.ts:119 | the ADR sidebar ends at 0014; ADR-0016..0030 are reachable through docs/adr/index.md only
+P4.20 | testbench.yaml | the stand has no webhooks provider, so `vendor/bin/testbench vaulter:{commands,errors,config,events}:reference` drops the webhooks rows; the pages were regenerated with a bootstrap that adds VaulterWebhooksServiceProvider — add it to the stand or a make target
+P4.20 | docs/ru/guides/errors.md:32, docs/guides/errors.md:110 | wording about the "legacy document path" PermissionResolver hook is older drift (no such contract exists)
+P4.20 | docs/ (concepts, guides, extending) | "storage"/"panel" vocabulary (Storage Panels, `$storage`) persists beside drive/profile in many pages; one terminology pass
+P4.20 | docs/guides/errors.md:47-75 | the exception table has several `validation_failed` rows with different classes and no RU counterpart of the table
+P4.20 | docs/reference/php-api.md (Contracts) | per-contract prose still says "core" for drive-owned contracts in places (e.g. "Implement when …"); re-read after the P4.16 core clean-up
+P4.20 | docs/reference/config.md:5-25 (+ru) | the guidance grep `vaulter\.(access|sharing|webhooks)\.` still matches the Gate ability string `vaulter.webhooks.manage` (a value, not a config key)

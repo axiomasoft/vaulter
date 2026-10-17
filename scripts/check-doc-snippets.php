@@ -202,6 +202,13 @@ function registeredCommands(string $root): array
         foreach (explode("\n", (string) shell_exec($cmd)) as $line) {
             $names[] = strtok($line, ' ') ?: '';
         }
+        // The list above holds the commands of the modules active in the monorepo stand. An opt-in module (webhooks)
+        // registers its commands only when switched on, so its declared signatures count as registered too.
+        foreach (glob($root.'/packages/*/src/Console/*.php') ?: [] as $file) {
+            if (preg_match("/\\\$signature\\s*=\\s*'(vaulter:[a-z][a-z0-9:_-]*)/", (string) file_get_contents($file), $found) === 1) {
+                $names[] = $found[1];
+            }
+        }
     }
 
     return $names;

@@ -4444,6 +4444,13 @@
             "id": "command:vaulter:install",
             "kind": "cli",
             "reason": "P4.16: the permission driver is the drive's concept, so the installer no longer asks for it: the --driver option and the VAULTER_PERMISSION_DRIVER hint are gone (the drive's config and doctor own the driver choice)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D23",
+            "id": "command:vaulter:blobs:reconcile",
+            "kind": "cli",
+            "reason": "P4.20: the description says the ref_count is rebuilt from the pins (v_blob_references), not from edge counts; name, signature and behaviour are unchanged"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

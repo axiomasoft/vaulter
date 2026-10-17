@@ -48,7 +48,7 @@ final class ReconcileBlobsCommand extends Command
         {--orphan-grace= : Override the orphan grace window in hours (floored at 1h)}
         {--prune : DELETE the orphans found (PostgreSQL/MySQL only; refused on sqlite). Default: report only}';
 
-    protected $description = 'Rebuild blob ref_count from edge counts and report dangling rows; optionally disk-walk for orphan objects (H.3)';
+    protected $description = 'Rebuild blob ref_count from the pins and report dangling rows; optionally disk-walk for orphan objects (H.3)';
 
     public function handle(BlobReconciler $reconciler): int
     {
