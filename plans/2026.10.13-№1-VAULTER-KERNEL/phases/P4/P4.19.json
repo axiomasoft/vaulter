@@ -225,7 +225,7 @@
     "effort": "medium"
   },
   "review": {
-    "mode": "requested",
+    "mode": "none",
     "reviewer": {
       "class": "frontier",
       "model": "gpt-6.1-sol",
@@ -242,5 +242,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "updated_at": "2026-10-17T05:02:59Z"
 }

@@ -214,9 +214,9 @@
     "reviewer": {
       "class": "frontier",
       "model": "gpt-6.1-sol",
-      "note": "RC4: покрывает P4.13–P4.17 (git diff -M). Фокус: uninstall --force/--purge трогает только свои данные и pins, граница Filament I9, остатки доменного в core.",
+      "note": "RC4: покрывает P4.13–P4.17 (git diff -M). Фокус: uninstall --force/--purge (destructive) трогает только свои данные и pins, граница Filament I9, остатки доменного в core. Единственный оставшийся чекпоинт P4.",
       "provider": "codex",
-      "effort": "high"
+      "effort": "xhigh"
     }
   },
   "authority": {
@@ -227,5 +227,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "updated_at": "2026-10-17T05:03:01Z"
 }
