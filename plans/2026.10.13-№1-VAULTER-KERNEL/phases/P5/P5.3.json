@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.3",
   "title": "Documents: публичный state-контракт CollaborativeState (D27), pending marker и document_state_pending",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "`Vaulter\\Documents\\State\\CollaborativeState` (#[Api], реализация Internal) с DTO `LockedDocumentState`, `PendingMarker`, `CheckpointPublication`, `CheckpointOutcome`: `lock()` (T→N→D), `markPending()`, `publishCheckpoint()` (CAS generation/state_version, снятие marker только при PT ≤ H), `pendingDocuments()`; вне транзакции — LogicException. SPI `Vaulter\\Documents\\State\\PendingStateDrainer` (#[Spi(Implement)], capability OptionalSingle в DocumentsModule). Колонки `v_documents.pending_generation`, `pending_through_seq` + CHECK (create-DDL DocumentsSchema, D21). Guards drain-or-409 `document_state_pending` (409, retryable with_backoff, receipt never) в REST PUT content, restore, export, GET content, purge документа (C8, C9). DocumentStateWriter остаётся Internal.",
   "why": "D26, D27, p5-design#invariants C5, C8, C9: documents владеет generation и marker; collaboration пишет только через публичный контракт; без marker REST тихо читает или перезаписывает устаревшую проекцию. Hard risks: снятие marker без покрытия (потеря saved-правок при restore/replace), deadlock при нарушении порядка T→N→D, ожидание drain внутри транзакции (locks на время хаба), stale JSON как актуальный.",
   "scope": {
@@ -166,6 +166,12 @@
       "note": "CHANGES.json/CHANGES.md и текущие *.list/*.count; original/* неизменны"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/eb0a31ec8c9b8e9df704075f9735ffeeb37710eefe4ccb10edf57d1f20ee96e7",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Все методы CollaborativeState требуют открытой транзакции VaulterDatabase (иначе LogicException); lock() — единственная точка взятия T→N→D для collaboration.",
     "Marker: оба поля NULL или оба NOT NULL (CHECK); markPending ставит max(PT, seq) только при generation == collab_epoch; publishCheckpoint снимает marker только при той же generation и coveredThrough ≥ PT.",
@@ -244,6 +250,13 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T09:07:47Z"
+  "result": {
+    "started_at": "2026-10-17T10:32:20Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "opus",
+      "session": "run-35b13a7f5cee7cb847752590"
+    }
+  },
+  "updated_at": "2026-10-17T11:02:30Z"
 }
