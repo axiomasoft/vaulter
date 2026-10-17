@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;

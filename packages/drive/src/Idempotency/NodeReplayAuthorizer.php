@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Idempotency;
 
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Idempotency\ReplayAuthorizer;

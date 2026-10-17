@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapSchema;
@@ -11,6 +10,7 @@ use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanV2Type;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Models\Drive\Node;
 
 /**

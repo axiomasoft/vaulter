@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 
 it('opens the write scope only for document operations and bounded fixtures', function (): void {

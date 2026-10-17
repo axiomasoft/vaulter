@@ -6,7 +6,7 @@ use Illuminate\Routing\Route;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Access\AccessResolver;
+use Vaulter\Drive\Access\AccessResolver;
 
 /**
  * The shape of the drive v1 HTTP layer (P6-invariants#Bypass): single-action controllers
@@ -15,6 +15,8 @@ use Vaulter\Access\AccessResolver;
  * through the core ContentResponder.
  */
 const DRIVE_V1_CONTROLLER_NAMESPACES = [
+    'Vaulter\Drive\Http\Controllers\Access',
+    'Vaulter\Drive\Http\Controllers\Sharing',
     'Vaulter\Drive\Http\Controllers\Drives',
     'Vaulter\Drive\Http\Controllers\Nodes',
     'Vaulter\Drive\Http\Controllers\Search',

@@ -3,21 +3,21 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Events\Access\NodeGrantCreated;
+use Vaulter\Drive\Events\Access\NodeGrantRevoked;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
+use Vaulter\Drive\Events\Sharing\NodeShareCreated;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
-use Vaulter\Events\Access\NodeGrantCreated;
-use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxWriter;
-use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Events\SinkResult;
 use Vaulter\Events\SinkWriter;
 use Vaulter\Testing\Fixtures\TestUser;

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Support\LoadTier;

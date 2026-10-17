@@ -6,11 +6,11 @@ namespace Vaulter\Tests\Modules\Fixtures\AcmeModule;
 
 use RuntimeException;
 use Vaulter\Contracts\Drive\DownloadGuard;
+use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Sharing\ShareContext;
 
 /** Vetoes a delivery by throwing: allow | deny | explode (an exception that is not a problem). */
 final class AcmeDownloadGuard implements DownloadGuard

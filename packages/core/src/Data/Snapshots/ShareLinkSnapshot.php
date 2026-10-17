@@ -7,8 +7,8 @@ namespace Vaulter\Data\Snapshots;
 use DateTimeImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
 
 /** Read-only view of a share link. The token is never part of it. */
 #[Api]

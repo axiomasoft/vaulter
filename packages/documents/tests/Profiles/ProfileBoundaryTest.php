@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Tests\Comment\CommentsTestCase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Facades\Vaulter;

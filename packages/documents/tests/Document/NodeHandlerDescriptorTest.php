@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Http\Resources\Drive\NodeResource;

@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Testing\Events\EventConformance;
 

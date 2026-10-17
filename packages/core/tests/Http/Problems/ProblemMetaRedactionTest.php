@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
+use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Http\Problems\ProblemRenderer;
 use Vaulter\Testing\Support\ProblemProbeRoutes;

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Testing\Drive;
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\Panels\FakeProject;
 use Vaulter\Testing\Fixtures\TestUser;

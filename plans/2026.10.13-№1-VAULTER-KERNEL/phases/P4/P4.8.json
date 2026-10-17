@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.8",
   "title": "Drive A: Access и Sharing из core в vaulter-drive",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`move-types --owner=drive --rule-file=core-access-sharing` (102 типа: AccessResolver, драйверы прав, роли, OperationGuard, ExactListing, Actions/Contracts/Data/Enums/Events/Exceptions/Http/Models/Operations/Policies/Repositories/Rules Access+Sharing, Share*), тесты `packages/core/tests/{Access,Sharing,Spatie}` и access/sharing HTTP-тесты → drive.",
   "why": "D10: модель доступа и шаринг — понятия drive. Риск: драйвер Spatie (I4 explicit-adapter) и NodePolicy/Gate-регистрация (AccessRegistrar ещё в core до P4.11) — FQCN переписываются инструментом, allowlist I4 перегенерируется.",
   "scope": {
@@ -223,6 +223,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-16T19:12:53Z",
+    "finished_at": "2026-10-17T00:26:06Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "102 типа Access/Sharing/Spatie → drive; Fast-набор зелёный после восстановления azguard-pin",
+    "deviations": [
+      "ArchTest ядра — храповик из 42 файлов (обнуляется в P4.16); arch-тест documents переформулирован под граф D6; azgard ArchTest допускает Vaulter\\Drive; HTTP-тесты перенесены вручную (инструмент принимает только каталоги)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T00:26:06Z"
 }

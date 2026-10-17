@@ -690,7 +690,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\Drivers\\DatabasePermissionDriver",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver",
             "view": "target"
         },
         {
@@ -701,7 +701,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\Drivers\\GatePermissionDriver",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver",
             "view": "target"
         },
         {
@@ -712,7 +712,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\Drivers\\SpatiePermissionDriver",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver",
             "view": "target"
         },
         {
@@ -723,7 +723,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Models\\Access\\NodeGrant",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
             "view": "target"
         },
         {
@@ -855,7 +855,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Models\\Sharing\\NodeShare",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
             "view": "target"
         },
         {
@@ -899,7 +899,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Support\\RandomShareTokenGenerator",
+            "target": "Vaulter\\Drive\\Support\\RandomShareTokenGenerator",
             "view": "target"
         },
         {
@@ -932,7 +932,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\Drivers\\DatabasePermissionDriver",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver",
             "view": "target"
         },
         {
@@ -943,7 +943,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\Drivers\\GatePermissionDriver",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver",
             "view": "target"
         },
         {
@@ -954,7 +954,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\Drivers\\SpatiePermissionDriver",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver",
             "view": "target"
         },
         {
@@ -965,7 +965,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Models\\Access\\NodeGrant",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
             "view": "target"
         },
         {
@@ -1097,7 +1097,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Models\\Sharing\\NodeShare",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
             "view": "target"
         },
         {
@@ -1141,7 +1141,7 @@
             "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Support\\RandomShareTokenGenerator",
+            "target": "Vaulter\\Drive\\Support\\RandomShareTokenGenerator",
             "view": "target"
         },
         {
@@ -1658,7 +1658,7 @@
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\PermissionDriverCatalog",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
             "view": "target"
         },
         {
@@ -1669,7 +1669,7 @@
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Contracts\\Access\\NonProductionPermissionDriver",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver",
             "view": "target"
         },
         {
@@ -1680,7 +1680,7 @@
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Contracts\\Access\\PermissionDriver",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
             "view": "target"
         },
         {
@@ -1735,7 +1735,7 @@
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
-            "target": "Vaulter\\Access\\PermissionDriverCatalog",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
             "view": "target"
         },
         {
@@ -1757,7 +1757,7 @@
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
-            "target": "Vaulter\\Contracts\\Access\\NonProductionPermissionDriver",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver",
             "view": "target"
         },
         {
@@ -1768,7 +1768,7 @@
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
-            "target": "Vaulter\\Contracts\\Access\\PermissionDriver",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
             "view": "target"
         },
         {
@@ -1834,7 +1834,7 @@
             "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Models\\Access\\NodeGrant",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
             "view": "target"
         },
         {
@@ -1977,7 +1977,7 @@
             "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Models\\Sharing\\NodeShare",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
             "view": "target"
         },
         {
@@ -2153,7 +2153,7 @@
             "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Configuration\\VaulterConfig::model",
-            "target": "Vaulter\\Models\\Access\\NodeGrant",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
             "view": "target"
         },
         {
@@ -2285,7 +2285,7 @@
             "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Configuration\\VaulterConfig::model",
-            "target": "Vaulter\\Models\\Sharing\\NodeShare",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
             "view": "target"
         },
         {
@@ -2472,7 +2472,7 @@
             "reason": "установщик ядра перечисляет ключи драйверов прав через PermissionDriverCatalog (владелец drive): P4 переносит каталог и выбор драйвера в drive",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\PermissionDriverCatalog",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
             "view": "target"
         },
         {
@@ -2483,7 +2483,7 @@
             "reason": "установщик ядра перечисляет ключи драйверов прав через PermissionDriverCatalog (владелец drive): P4 переносит каталог и выбор драйвера в drive",
             "removed_in": "P4",
             "symbol": "Vaulter\\Console\\InstallCommand::permissionDrivers",
-            "target": "Vaulter\\Access\\PermissionDriverCatalog",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
             "view": "target"
         },
         {
@@ -3891,7 +3891,7 @@
             "reason": "каталог problem-кодов ядра перечисляет коды доменных исключений: коды регистрируются владельцем через контракт ядра (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
             "view": "target"
         },
         {
@@ -3913,7 +3913,7 @@
             "reason": "каталог problem-кодов ядра перечисляет коды доменных исключений: коды регистрируются владельцем через контракт ядра (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes",
-            "target": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
             "view": "target"
         },
         {
@@ -7972,7 +7972,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\AccessResolver",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
             "view": "target"
         },
         {
@@ -7994,7 +7994,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -8016,7 +8016,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
             "view": "target"
         },
         {
@@ -8071,7 +8071,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationHub::__construct",
-            "target": "Vaulter\\Access\\AccessResolver",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
             "view": "target"
         },
         {
@@ -8093,7 +8093,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationHub::ability",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -8115,7 +8115,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationHub::assertCanView",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -8126,7 +8126,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationHub::assertCanView",
-            "target": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
             "view": "target"
         },
         {
@@ -8137,7 +8137,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationHub::open",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -8159,7 +8159,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationHub::open",
-            "target": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
             "view": "target"
         },
         {
@@ -8203,7 +8203,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationHub::store",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -8214,7 +8214,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationHub::store",
-            "target": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
             "view": "target"
         },
         {
@@ -8280,7 +8280,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -8313,7 +8313,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationSessionService::issue",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -8445,7 +8445,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -8467,7 +8467,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Collaboration\\HubRoom::__construct",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -15837,7 +15837,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Access\\AccessResolver",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
             "view": "target"
         },
         {
@@ -15870,7 +15870,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -15903,7 +15903,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Providers\\CollaborationRegistrar::authorizeNodeRoom",
-            "target": "Vaulter\\Access\\AccessResolver",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
             "view": "target"
         },
         {
@@ -15925,7 +15925,7 @@
             "reason": "collaboration импортирует тип drive напрямую, а drive — лишь транзитивное требование: P4 объявляет явный require drive в composer collaboration (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Providers\\CollaborationRegistrar::authorizeNodeRoom",
-            "target": "Vaulter\\Enums\\Access\\Ability",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
             "view": "target"
         },
         {
@@ -18919,6 +18919,3053 @@
             "symbol": "<file>",
             "target": "Vaulter\\Media\\Content\\ImmutableContentIdentity",
             "view": "current"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Support\\RandomShareTokenGenerator",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/config/vaulter.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Support\\RandomShareTokenGenerator",
+            "count": 1,
+            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\CreateGrantController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\ListGrantsController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestoreInheritanceController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestrictInheritanceController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\RevokeGrantController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\CreateShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListSharesController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RevokeShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RotateShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ShowPublicShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\CreateGrantController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\ListGrantsController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestoreInheritanceController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestrictInheritanceController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Access\\RevokeGrantController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\CreateShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListSharesController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RevokeShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RotateShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ShowPublicShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/routes/drive.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController",
+            "count": 1,
+            "reason": "маршруты drive лежат в ядре и ссылаются на контроллеры drive, перенесённые в P4.8; файл сливается с маршрутами drive (P4.11)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/AccessConfig.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/AccessConfig.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\UnknownRoleException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/AccessConfig.php",
+            "symbol": "Vaulter\\Configuration\\AccessConfig::gateDefaults",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 6,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/AccessConfig.php",
+            "symbol": "Vaulter\\Configuration\\AccessConfig::roleKey",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/AccessConfig.php",
+            "symbol": "Vaulter\\Configuration\\AccessConfig::roleKey",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\UnknownRoleException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/AccessConfig.php",
+            "symbol": "Vaulter\\Configuration\\AccessConfig::spatieDefaults",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 6,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
+            "count": 1,
+            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver",
+            "count": 1,
+            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 1,
+            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
+            "count": 1,
+            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver",
+            "count": 2,
+            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 2,
+            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/SharingConfig.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Sharing\\ShareTokenGenerator",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/SharingConfig.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Support\\RandomShareTokenGenerator",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/SharingConfig.php",
+            "symbol": "Vaulter\\Configuration\\SharingConfig::tokenGenerator",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Sharing\\ShareTokenGenerator",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/SharingConfig.php",
+            "symbol": "Vaulter\\Configuration\\SharingConfig::tokenGenerator",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Support\\RandomShareTokenGenerator",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/VaulterConfig.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
+            "count": 1,
+            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/VaulterConfig.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "count": 1,
+            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/VaulterConfig.php",
+            "symbol": "Vaulter\\Configuration\\VaulterConfig::model",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
+            "count": 1,
+            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Configuration/VaulterConfig.php",
+            "symbol": "Vaulter\\Configuration\\VaulterConfig::model",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "count": 1,
+            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Console/InstallCommand.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
+            "count": 1,
+            "reason": "установщик ядра перечисляет ключи драйверов прав через PermissionDriverCatalog (владелец drive): P4 переносит каталог и выбор драйвера в drive",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Console/InstallCommand.php",
+            "symbol": "Vaulter\\Console\\InstallCommand::permissionDrivers",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
+            "count": 1,
+            "reason": "установщик ядра перечисляет ключи драйверов прав через PermissionDriverCatalog (владелец drive): P4 переносит каталог и выбор драйвера в drive",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentAvailabilityGuard.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentAvailabilityGuard.php",
+            "symbol": "Vaulter\\Content\\ContentAvailabilityGuard::assertAvailableForShare",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentAvailabilityGuard.php",
+            "symbol": "Vaulter\\Content\\ContentAvailabilityGuard::check",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentDelivery.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentDelivery.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentDelivery.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentDelivery.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareResolver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentDelivery.php",
+            "symbol": "Vaulter\\Content\\ContentDelivery::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentDelivery.php",
+            "symbol": "Vaulter\\Content\\ContentDelivery::authorize",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentDelivery.php",
+            "symbol": "Vaulter\\Content\\ContentDelivery::streamForShare",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/ContentDelivery.php",
+            "symbol": "Vaulter\\Content\\ContentDelivery::streamForShare",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareResolver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/DownloadGuards.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Content/DownloadGuards.php",
+            "symbol": "Vaulter\\Content\\DownloadGuards::check",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Contracts/Drive/DownloadGuard.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Contracts/Drive/DownloadGuard.php",
+            "symbol": "Vaulter\\Contracts\\Drive\\DownloadGuard::check",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Contracts/Drive/DriveHandle.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\AccessOperations",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Contracts/Drive/DriveHandle.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Sharing\\ShareOperations",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Contracts/Drive/DriveHandle.php",
+            "symbol": "Vaulter\\Contracts\\Drive\\DriveHandle::access",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\AccessOperations",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Contracts/Drive/DriveHandle.php",
+            "symbol": "Vaulter\\Contracts\\Drive\\DriveHandle::shares",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Sharing\\ShareOperations",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Contracts/Drive/NodeOperations.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Contracts/Drive/NodeOperations.php",
+            "symbol": "Vaulter\\Contracts\\Drive\\NodeOperations::abilities",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/GrantSnapshot.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/GrantSnapshot.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/GrantSnapshot.php",
+            "symbol": "Vaulter\\Data\\Snapshots\\GrantSnapshot::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/GrantSnapshot.php",
+            "symbol": "Vaulter\\Data\\Snapshots\\GrantSnapshot::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/Mapping/AccessSnapshotMapper.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/Mapping/AccessSnapshotMapper.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/Mapping/AccessSnapshotMapper.php",
+            "symbol": "Vaulter\\Data\\Snapshots\\Mapping\\AccessSnapshotMapper::grant",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/Mapping/AccessSnapshotMapper.php",
+            "symbol": "Vaulter\\Data\\Snapshots\\Mapping\\AccessSnapshotMapper::share",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/ShareLinkSnapshot.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/ShareLinkSnapshot.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/ShareLinkSnapshot.php",
+            "symbol": "Vaulter\\Data\\Snapshots\\ShareLinkSnapshot::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Data/Snapshots/ShareLinkSnapshot.php",
+            "symbol": "Vaulter\\Data\\Snapshots\\ShareLinkSnapshot::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Doctor/Checks/AccessDriverCheck.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Doctor/Checks/AccessDriverCheck.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Doctor/Checks/AccessDriverCheck.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Doctor/Checks/AccessDriverCheck.php",
+            "symbol": "Vaulter\\Doctor\\Checks\\AccessDriverCheck::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Doctor/Checks/AccessDriverCheck.php",
+            "symbol": "Vaulter\\Doctor\\Checks\\AccessDriverCheck::run",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Doctor/Checks/AccessDriverCheck.php",
+            "symbol": "Vaulter\\Doctor\\Checks\\AccessDriverCheck::run",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Facades/Vaulter.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\SharePasswordRequiredException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareRedeemer",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareResolution",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareResolver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareSession",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareRedeemer",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareResolver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::context",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::deny",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::deny",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\SharePasswordRequiredException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::deny",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareResolution",
+            "count": 3,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::handle",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::handle",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareResolution",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::handle",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareSession",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Middleware/ResolveShareToken.php",
+            "symbol": "Vaulter\\Http\\Middleware\\ResolveShareToken::session",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareSession",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
+            "count": 1,
+            "reason": "каталог problem-кодов ядра перечисляет коды доменных исключений: коды регистрируются владельцем через контракт ядра (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
+            "count": 1,
+            "reason": "каталог problem-кодов ядра перечисляет коды доменных исключений: коды регистрируются владельцем через контракт ядра (цель: drive)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\UnknownRoleException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FileSizeLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\TreeDepthLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareLinkTtlExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\SharePasswordRequiredException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareRoleNotAllowedException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Access\\UnknownRoleException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FileSizeLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\TreeDepthLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareLinkTtlExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\SharePasswordRequiredException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+            "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareRoleNotAllowedException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Data\\Access\\GrantInput",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Rules\\Access\\RegisteredSubjectType",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Access\\CreateGrantRequest::rules",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Access\\CreateGrantRequest::rules",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Access\\CreateGrantRequest::rules",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Rules\\Access\\RegisteredSubjectType",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Access\\CreateGrantRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Access\\CreateGrantRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Data\\Access\\GrantInput",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/CreateGrantRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Access\\CreateGrantRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/RestrictInheritanceRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\InheritanceRestriction",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/RestrictInheritanceRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Access\\RestrictInheritanceRequest::mode",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\InheritanceRestriction",
+            "count": 3,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Access/RestrictInheritanceRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Access\\RestrictInheritanceRequest::rules",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\InheritanceRestriction",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Data\\Sharing\\ShareLinkInput",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\StoreShareLinkRequest::rules",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\StoreShareLinkRequest::rules",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\StoreShareLinkRequest::rules",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\StoreShareLinkRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\StoreShareLinkRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Data\\Sharing\\ShareLinkInput",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\StoreShareLinkRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\StoreShareLinkRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/UpdateShareLinkRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Data\\Sharing\\ShareLinkUpdate",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/UpdateShareLinkRequest.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/UpdateShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\UpdateShareLinkRequest::rules",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/UpdateShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\UpdateShareLinkRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Data\\Sharing\\ShareLinkUpdate",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Requests/Sharing/UpdateShareLinkRequest.php",
+            "symbol": "Vaulter\\Http\\Requests\\Sharing\\UpdateShareLinkRequest::toData",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Resources/Changes/ChangePageResource.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Resources/Changes/ChangeResource.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Resources/Changes/ChangeResource.php",
+            "symbol": "Vaulter\\Http\\Resources\\Changes\\ChangeResource::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+            "symbol": "Vaulter\\Http\\Resources\\Drive\\NodeResource::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\NodeAbilities",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/ContentResponder.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/ContentResponder.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/ContentResponder.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/ContentResponder.php",
+            "symbol": "Vaulter\\Http\\Support\\ContentResponder::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/ContentResponder.php",
+            "symbol": "Vaulter\\Http\\Support\\ContentResponder::redirect",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/ContentResponder.php",
+            "symbol": "Vaulter\\Http\\Support\\ContentResponder::share",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/HttpOperationContextFactory.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/HttpOperationContextFactory.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/HttpOperationContextFactory.php",
+            "symbol": "Vaulter\\Http\\Support\\HttpOperationContextFactory::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/HttpOperationContextFactory.php",
+            "symbol": "Vaulter\\Http\\Support\\HttpOperationContextFactory::seesAnyNode",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "Vaulter\\Http\\Support\\SharedNodeResolver::children",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "Vaulter\\Http\\Support\\SharedNodeResolver::drive",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "Vaulter\\Http\\Support\\SharedNodeResolver::drive",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "Vaulter\\Http\\Support\\SharedNodeResolver::head",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "Vaulter\\Http\\Support\\SharedNodeResolver::head",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "Vaulter\\Http\\Support\\SharedNodeResolver::node",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "Vaulter\\Http\\Support\\SharedNodeResolver::node",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Http/Support/SharedNodeResolver.php",
+            "symbol": "Vaulter\\Http\\Support\\SharedNodeResolver::node",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Sharing\\ShareContext",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Operations/ActivityOperations.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Operations/ActivityOperations.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Operations/ActivityOperations.php",
+            "symbol": "Vaulter\\Operations\\ActivityOperations::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Operations/ActivityOperations.php",
+            "symbol": "Vaulter\\Operations\\ActivityOperations::filtered",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Operations/ChangeOperations.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Operations/ChangeOperations.php",
+            "symbol": "Vaulter\\Operations\\ChangeOperations::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/DrivePolicyEnforcer.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FileSizeLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/DrivePolicyEnforcer.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/DrivePolicyEnforcer.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\TreeDepthLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/DrivePolicyEnforcer.php",
+            "symbol": "Vaulter\\Profiles\\DrivePolicyEnforcer::assertChildCount",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/DrivePolicyEnforcer.php",
+            "symbol": "Vaulter\\Profiles\\DrivePolicyEnforcer::assertChildren",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/DrivePolicyEnforcer.php",
+            "symbol": "Vaulter\\Profiles\\DrivePolicyEnforcer::assertDepth",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\TreeDepthLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/DrivePolicyEnforcer.php",
+            "symbol": "Vaulter\\Profiles\\DrivePolicyEnforcer::assertFileSize",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Exceptions\\Policy\\FileSizeLimitExceededException",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/ProfilePolicy.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/ProfilePolicy.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/ProfilePolicy.php",
+            "symbol": "Vaulter\\Profiles\\ProfilePolicy::allows",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 4,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Profiles/ProfilePolicy.php",
+            "symbol": "Vaulter\\Profiles\\ProfilePolicy::validate",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverCatalog",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/AccessRegistrar.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/AccessRegistrar.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/AccessRegistrar.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/AccessRegistrar.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Policies\\NodePolicy",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/AccessRegistrar.php",
+            "symbol": "Vaulter\\Providers\\AccessRegistrar::registerPolicies",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Policies\\NodePolicy",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/AccessRegistrar.php",
+            "symbol": "Vaulter\\Providers\\AccessRegistrar::register",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/AccessRegistrar.php",
+            "symbol": "Vaulter\\Providers\\AccessRegistrar::register",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 4,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/AccessRegistrar.php",
+            "symbol": "Vaulter\\Providers\\AccessRegistrar::register",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/DriveSliceRegistrar.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Sharing\\ShareTokenGenerator",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Providers/DriveSliceRegistrar.php",
+            "symbol": "Vaulter\\Providers\\DriveSliceRegistrar::register",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Sharing\\ShareTokenGenerator",
+            "count": 3,
+            "reason": "код домена drive ещё в ядре и ссылается на тип media, перенесённый в P4.6; файл переезжает в drive (P4.8–P4.10), после чего ссылка drive→media допустима",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
+            "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
+            "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::execute",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\GrantAuthoritativeDriver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Repositories\\Access\\GrantReadRepository",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "Vaulter\\Repositories\\Drive\\NodeReadRepository::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "Vaulter\\Repositories\\Drive\\NodeReadRepository::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "Vaulter\\Repositories\\Drive\\NodeReadRepository::__construct",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Repositories\\Access\\GrantReadRepository",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "Vaulter\\Repositories\\Drive\\NodeReadRepository::candidateNodeIds",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "Vaulter\\Repositories\\Drive\\NodeReadRepository::candidateNodeIds",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\GrantAuthoritativeDriver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "Vaulter\\Repositories\\Drive\\NodeReadRepository::candidateNodeIds",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+            "symbol": "Vaulter\\Repositories\\Drive\\NodeReadRepository::grantFilteringApplies",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\GrantAuthoritativeDriver",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Support/DriveLifecycle.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Support/DriveLifecycle.php",
+            "symbol": "Vaulter\\Support\\DriveLifecycle::assertWritable",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\OperationGuard",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::assertPermissionDriverContract",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::assertPermissionDriverContract",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 6,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::assertSameDecisionsAsReference",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::assertSameDecisionsAsReference",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::assertSameDecisionsAsReference",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 2,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::decisions",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\AccessResolver",
+            "count": 3,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::decisions",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 2,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::decisions",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\PermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::decisions",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Ability",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Data\\Access\\GrantInput",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\InheritanceRestriction",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::build",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\Roles\\RoleRegistry",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::build",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::build",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Data\\Access\\GrantInput",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::build",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::build",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\InheritanceRestriction",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Decision",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonEnumeratingPermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Effect",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "Vaulter\\Testing\\NullPermissionDriver::canCreateIn",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "Vaulter\\Testing\\NullPermissionDriver::override",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "Vaulter\\Testing\\NullPermissionDriver::override",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Enums\\Access\\Effect",
+            "count": 2,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "Vaulter\\Testing\\NullPermissionDriver::resolve",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\AccessScope",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "Vaulter\\Testing\\NullPermissionDriver::resolve",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Decision",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "Vaulter\\Testing\\NullPermissionDriver::resolve",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\ValueObjects\\Subject",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "Vaulter\\Testing\\NullPermissionDriver",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonEnumeratingPermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/Testing/NullPermissionDriver.php",
+            "symbol": "Vaulter\\Testing\\NullPermissionDriver",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Contracts\\Access\\NonProductionPermissionDriver",
+            "count": 1,
+            "reason": "пакет размечает типы атрибутом поверхности ядра (D27, P3.17) и импортирует его напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer пакета (architecture#packages)",
+            "removed_in": "P4",
+            "category": "needs-explicit-require"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/VaulterManager.php",
+            "symbol": "<file>",
+            "kind": "use",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 1,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
+        },
+        {
+            "view": "current",
+            "file": "packages/core/src/VaulterManager.php",
+            "symbol": "Vaulter\\VaulterManager::permissions",
+            "kind": "name",
+            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "count": 2,
+            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
+            "removed_in": "P4",
+            "category": "reverse-edge"
         }
     ],
     "invariant": "I2",

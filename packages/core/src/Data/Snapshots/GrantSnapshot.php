@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Data\Snapshots;
 
 use DateTimeImmutable;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Enums\Access\GrantScope;
 
 /** Read-only view of a per-node grant. */
 #[Api]

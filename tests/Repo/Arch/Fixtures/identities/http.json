@@ -567,6 +567,97 @@
             "id": "route:vaulter.v1.documents.store",
             "kind": "http",
             "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.access.inheritance.restore",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.access.inheritance.restrict",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.destroy",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.index",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.store",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.download",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.nodes",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.show",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.destroy",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.index",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.rotate",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.store",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.update",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
         }
     ],
     "flags": {
@@ -580,8 +671,8 @@
     },
     "items": [
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestoreInheritanceController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestoreInheritanceController",
             "default_registered": true,
             "id": "route:vaulter.v1.access.inheritance.restore",
             "methods": [
@@ -604,14 +695,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/RestoreInheritanceController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController"
+                "file": "packages/drive/src/Http/Controllers/Access/RestoreInheritanceController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestoreInheritanceController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/inheritance/restore"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestrictInheritanceController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestrictInheritanceController",
             "default_registered": true,
             "id": "route:vaulter.v1.access.inheritance.restrict",
             "methods": [
@@ -634,8 +725,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/RestrictInheritanceController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController"
+                "file": "packages/drive/src/Http/Controllers/Access/RestrictInheritanceController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestrictInheritanceController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/inheritance/restrict"
         },
@@ -1670,8 +1761,8 @@
             "uri": "api/vaulter/v1/drives/{drive}/folders"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\RevokeGrantController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\RevokeGrantController",
             "default_registered": true,
             "id": "route:vaulter.v1.grants.destroy",
             "methods": [
@@ -1694,14 +1785,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/RevokeGrantController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController"
+                "file": "packages/drive/src/Http/Controllers/Access/RevokeGrantController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\RevokeGrantController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/grants/{grant}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\ListGrantsController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\ListGrantsController",
             "default_registered": true,
             "id": "route:vaulter.v1.grants.index",
             "methods": [
@@ -1724,14 +1815,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/ListGrantsController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController"
+                "file": "packages/drive/src/Http/Controllers/Access/ListGrantsController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\ListGrantsController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/grants"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\CreateGrantController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\CreateGrantController",
             "default_registered": true,
             "id": "route:vaulter.v1.grants.store",
             "methods": [
@@ -1754,8 +1845,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/CreateGrantController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController"
+                "file": "packages/drive/src/Http/Controllers/Access/CreateGrantController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\CreateGrantController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/grants"
         },
@@ -2181,8 +2272,8 @@
             "uri": "api/vaulter/v1/nodes/{node}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.public-shares.download",
             "methods": [
@@ -2206,14 +2297,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/DownloadPublicShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/DownloadPublicShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\DownloadPublicShareController"
             },
             "uri": "api/vaulter/v1/shares/{token}/download"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
             "default_registered": true,
             "id": "route:vaulter.v1.public-shares.nodes",
             "methods": [
@@ -2237,14 +2328,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/ListPublicShareNodesController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/ListPublicShareNodesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListPublicShareNodesController"
             },
             "uri": "api/vaulter/v1/shares/{token}/nodes"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ShowPublicShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ShowPublicShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.public-shares.show",
             "methods": [
@@ -2268,8 +2359,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/ShowPublicShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/ShowPublicShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ShowPublicShareController"
             },
             "uri": "api/vaulter/v1/shares/{token}"
         },
@@ -2304,8 +2395,8 @@
             "uri": "api/vaulter/v1/shared"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RevokeShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RevokeShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.destroy",
             "methods": [
@@ -2328,14 +2419,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/RevokeShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/RevokeShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RevokeShareController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares/{share}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListSharesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListSharesController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.index",
             "methods": [
@@ -2358,14 +2449,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/ListSharesController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/ListSharesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListSharesController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RotateShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RotateShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.rotate",
             "methods": [
@@ -2388,14 +2479,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/RotateShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/RotateShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RotateShareController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares/{share}/rotate"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\CreateShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\CreateShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.store",
             "methods": [
@@ -2418,14 +2509,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/CreateShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/CreateShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\CreateShareController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.update",
             "methods": [
@@ -2448,8 +2539,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/UpdateShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/UpdateShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares/{share}"
         },

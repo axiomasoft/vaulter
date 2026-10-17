@@ -9,7 +9,7 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 
 /**

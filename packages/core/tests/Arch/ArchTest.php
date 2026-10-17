@@ -40,7 +40,6 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
     $allowlist = [
         'Console/MakeProfileCommand.php',
         'Console/MakeFileHandlerCommand.php',
-        'Console/MakePermissionDriverCommand.php',
     ];
 
     /** @var Iterator<SplFileInfo> $files */
@@ -101,7 +100,7 @@ arch('internal namespaces are not consumed outside the Vaulter package tree (E3.
  * pluggable. (If someone made AccessResolver a contract, this fails.)
  */
 arch('the AccessResolver is a concrete, non-swappable class')
-    ->expect('Vaulter\Access\AccessResolver')
+    ->expect('Vaulter\Drive\Access\AccessResolver')
     ->not->toBeInterface();
 
 /**
@@ -110,7 +109,7 @@ arch('the AccessResolver is a concrete, non-swappable class')
  * A leak of Node into the contract breaks the swappable-driver boundary.
  */
 arch('the PermissionDriver contract never references the Node model')
-    ->expect('Vaulter\Contracts\Access\PermissionDriver')
+    ->expect('Vaulter\Drive\Contracts\Access\PermissionDriver')
     ->not->toUse(Node::class);
 
 /**
@@ -418,22 +417,22 @@ test('split classes resolve under their canonical domain namespace', function ()
     $expected = [
         'Vaulter\Models\Drive\Node',
         'Vaulter\Media\Models\Cas\Blob',
-        'Vaulter\Models\Access\NodeGrant',
-        'Vaulter\Models\Sharing\NodeShare',
+        'Vaulter\Drive\Models\Access\NodeGrant',
+        'Vaulter\Drive\Models\Sharing\NodeShare',
         'Vaulter\Drive\Models\Uploads\UploadSession',
         'Vaulter\Models\Activity\Activity',
         'Vaulter\Documents\Models\Revisions\DocumentRevision',
         'Vaulter\Enums\Drive\NodeKind',
-        'Vaulter\Enums\Access\Ability',
-        'Vaulter\Events\Sharing\NodeShareCreated',
+        'Vaulter\Drive\Enums\Access\Ability',
+        'Vaulter\Drive\Events\Sharing\NodeShareCreated',
         'Vaulter\Drive\Exceptions\Nodes\NodeCycleException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Profiles\UnknownProfileException',
         'Vaulter\Repositories\Drive\NodeReadRepository',
         'Vaulter\Media\Contracts\Cas\BlobStore',
-        'Vaulter\Contracts\Access\PermissionDriver',
+        'Vaulter\Drive\Contracts\Access\PermissionDriver',
         'Vaulter\Documents\Content\TipTap\TipTapContent',
-        'Vaulter\Access\ValueObjects\NodeAbilities',
+        'Vaulter\Drive\Access\ValueObjects\NodeAbilities',
     ];
 
     $missing = array_values(array_filter(
@@ -557,8 +556,62 @@ function coreReferencesTo(string $root): array
     return $offenders;
 }
 
-test('core source never references the extracted vaulter-drive package (P2 #5 / D1)', function (): void {
-    expect(coreReferencesTo('Drive'))->toBe([]);
+/**
+ * P4 ownership move (D10, D40): the access model and sharing now live in vaulter-drive while the rest of the drive domain
+ * still sits in core until P4.10–P4.12. These core files name `Vaulter\Drive\` types in the meantime; the list is a ratchet:
+ * it must shrink as the files move, it is empty from P4.16 (I1 blocks), and a file that stops referencing drive has to leave it.
+ */
+test('core source references the extracted vaulter-drive package only from the files that move to it (P2 #5 / D1, P4.8)', function (): void {
+    $src = (string) realpath(__DIR__.'/../../src');
+    $transitional = [
+        'Configuration/AccessConfig.php',
+        'Configuration/ConfigValidator.php',
+        'Configuration/SharingConfig.php',
+        'Configuration/VaulterConfig.php',
+        'Console/InstallCommand.php',
+        'Content/ContentAvailabilityGuard.php',
+        'Content/ContentDelivery.php',
+        'Content/DownloadGuards.php',
+        'Contracts/Drive/DownloadGuard.php',
+        'Contracts/Drive/DriveHandle.php',
+        'Contracts/Drive/NodeOperations.php',
+        'Data/Snapshots/GrantSnapshot.php',
+        'Data/Snapshots/Mapping/AccessSnapshotMapper.php',
+        'Data/Snapshots/ShareLinkSnapshot.php',
+        'Doctor/Checks/AccessDriverCheck.php',
+        'Facades/Vaulter.php',
+        'Http/Middleware/ResolveShareToken.php',
+        'Http/Problems/CoreProblemCodes.php',
+        'Http/Problems/DriveSliceProblemCodes.php',
+        'Http/Requests/Access/CreateGrantRequest.php',
+        'Http/Requests/Access/RestrictInheritanceRequest.php',
+        'Http/Requests/Sharing/StoreShareLinkRequest.php',
+        'Http/Requests/Sharing/UpdateShareLinkRequest.php',
+        'Http/Resources/Changes/ChangePageResource.php',
+        'Http/Resources/Changes/ChangeResource.php',
+        'Http/Resources/Drive/NodeResource.php',
+        'Http/Support/ContentResponder.php',
+        'Http/Support/HttpOperationContextFactory.php',
+        'Http/Support/SharedNodeResolver.php',
+        'Operations/ActivityOperations.php',
+        'Operations/ChangeOperations.php',
+        'Profiles/DrivePolicyEnforcer.php',
+        'Profiles/ProfilePolicy.php',
+        'Providers/AccessRegistrar.php',
+        'Providers/DriveSliceRegistrar.php',
+        'Queries/Activity/VisibleActivityQuery.php',
+        'Repositories/Drive/NodeReadRepository.php',
+        'Support/DriveLifecycle.php',
+        'Testing/Contracts/PermissionDriverContractTests.php',
+        'Testing/Contracts/PermissionFixture.php',
+        'Testing/NullPermissionDriver.php',
+        'VaulterManager.php',
+    ];
+    $found = array_map(static fn (string $path): string => substr((string) realpath($path), strlen($src) + 1), coreReferencesTo('Drive'));
+    sort($found);
+    sort($transitional);
+
+    expect($found)->toBe($transitional);
 });
 
 /**
@@ -698,7 +751,6 @@ arch('domain exceptions implement the HTTP problem contract')
         'Vaulter\Exceptions\VaulterException',
         // P2.5 configuration failures stop boot before any endpoint can respond.
         'Vaulter\Exceptions\Configuration\InvalidConfigurationException',
-        'Vaulter\Exceptions\Access\MissingPermissionDriverException',
         'Vaulter\Exceptions\Profiles\InvalidProfileException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Support\MissingPackageException',

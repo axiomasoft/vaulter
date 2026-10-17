@@ -6,7 +6,6 @@ namespace Vaulter\Documents\Operations;
 
 use Closure;
 use Illuminate\Pagination\CursorPaginator;
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveExtension;
@@ -48,7 +47,8 @@ use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Queries\MappedCursorPaginator;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Access\MissingActorException;

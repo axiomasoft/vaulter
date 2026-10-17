@@ -10,6 +10,10 @@ return [
     'database' => [
         'Concurrency',
         'Changes/DriveChangesEndToEndTest.php',
+        'Access/AccessAwareListingTest.php',
+        'Access/EvaluateManyEquivalenceTest.php',
+        'Access/WideNodeListingTest.php',
+        'Sharing/ShareSecurityBoundaryTest.php',
         'Uploads/UploadSchemaTest.php',
         'Uploads/UploadSessionLockDriverTest.php',
         'Uploads/UploadSessionCriticalSectionTest.php',
@@ -29,6 +33,7 @@ return [
     ],
     // Every forked race of the Concurrency folder (CompleteUploadRetryTest does not fork: it stays in the parallel lane).
     'serial' => [
+        'Sharing/ShareSecurityBoundaryTest.php',
         'Concurrency/CompleteUploadRaceTest.php',
         'Concurrency/DedicatedConnectionTest.php',
         'Concurrency/DriveArchiveRaceTest.php',

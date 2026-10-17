@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Activity\Activity;

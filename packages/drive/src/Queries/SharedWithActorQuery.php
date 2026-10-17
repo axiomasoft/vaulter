@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Queries;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\ExactListing;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\NodePage;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\ExactListing;
 use Vaulter\ValueObjects\Access\Actor;
 
 /** @internal The current global shared listing; each page evaluates exact View. */

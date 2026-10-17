@@ -8,6 +8,7 @@ use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Sharing\ShareResolver;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
@@ -17,7 +18,6 @@ use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
-use Vaulter\Sharing\ShareResolver;
 
 beforeEach(function (): void {
     Storage::fake('local');

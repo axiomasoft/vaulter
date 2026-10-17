@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Activity\RecordActivityCommand;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;

@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
 
-use Vaulter\Attributes\Internal;
-use Vaulter\Exceptions\Access\UnknownRoleException;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 #[Api]

@@ -7,15 +7,15 @@ namespace Vaulter\Http\Support;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Exceptions\Sharing\ShareNotFoundException;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
+use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Http\Resources\Sharing\SharedNodeResource;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\FileRevisionReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Sharing\ShareContext;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\ShareTenantContext;
 

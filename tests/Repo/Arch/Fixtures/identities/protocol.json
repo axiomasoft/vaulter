@@ -913,6 +913,111 @@
             "id": "problem:blob_unavailable",
             "kind": "protocol",
             "reason": "P4.7: a pin is refused because the blob's bytes are gone (deleting/deleted, or tombstoned without its object) — 409, never retried or cached; the owner holding the bytes commits them again"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:file_size_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:folder_children_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:permission_denied",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_link_ttl_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_not_found",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_password_required",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_role_not_allowed",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:tree_depth_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:unknown_role",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.access.permission_drivers.database",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.access.permission_drivers.gate",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.access.permission_drivers.spatie",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.models.grant",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.models.node_share",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.sharing.token_generator",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         }
     ],
     "items": [
@@ -1704,26 +1809,6 @@
         {
             "call": "getMorphClass",
             "calls": 1,
-            "id": "morph:Vaulter\\Access\\ExactListing::page#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Access/ExactListing.php",
-                "symbol": "Vaulter\\Access\\ExactListing::page"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Access\\ValueObjects\\Subject::ofModel#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Access/ValueObjects/Subject.php",
-                "symbol": "Vaulter\\Access\\ValueObjects\\Subject::ofModel"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
             "id": "morph:Vaulter\\Azgard\\Testing\\FakeAzgardGuard::entityKey#getMorphClass",
             "owner": "azgard",
             "source": {
@@ -1764,11 +1849,41 @@
         {
             "call": "getMorphClass",
             "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Access\\ExactListing::page#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Access/ExactListing.php",
+                "symbol": "Vaulter\\Drive\\Access\\ExactListing::page"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Access\\ValueObjects\\Subject::ofModel#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Access/ValueObjects/Subject.php",
+                "symbol": "Vaulter\\Drive\\Access\\ValueObjects\\Subject::ofModel"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
             "id": "morph:Vaulter\\Drive\\DriveProvisioner::provision#getMorphClass",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/src/DriveProvisioner.php",
                 "symbol": "Vaulter\\Drive\\DriveProvisioner::provision"
+            }
+        },
+        {
+            "call": "requiresMorphMap",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Rules\\Access\\RegisteredSubjectType::resolvesToModel#requiresMorphMap",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Rules/Access/RegisteredSubjectType.php",
+                "symbol": "Vaulter\\Drive\\Rules\\Access\\RegisteredSubjectType::resolvesToModel"
             }
         },
         {
@@ -1889,16 +2004,6 @@
             "source": {
                 "file": "packages/core/src/Repositories/Drive/DriveReadRepository.php",
                 "symbol": "Vaulter\\Repositories\\Drive\\DriveReadRepository::forOwner"
-            }
-        },
-        {
-            "call": "requiresMorphMap",
-            "calls": 1,
-            "id": "morph:Vaulter\\Rules\\Access\\RegisteredSubjectType::resolvesToModel#requiresMorphMap",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Rules/Access/RegisteredSubjectType.php",
-                "symbol": "Vaulter\\Rules\\Access\\RegisteredSubjectType::resolvesToModel"
             }
         },
         {
@@ -2224,7 +2329,7 @@
             "status": 500
         },
         {
-            "exception": "Vaulter\\Exceptions\\Policy\\FileSizeLimitExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Policy\\FileSizeLimitExceededException",
             "id": "problem:file_size_limit_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2236,7 +2341,7 @@
             "status": 413
         },
         {
-            "exception": "Vaulter\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
             "id": "problem:folder_children_limit_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2536,7 +2641,7 @@
             "status": 413
         },
         {
-            "exception": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
             "id": "problem:permission_denied",
             "owner": "core",
             "receipt": "never",
@@ -2668,7 +2773,7 @@
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Sharing\\ShareLinkTtlExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareLinkTtlExceededException",
             "id": "problem:share_link_ttl_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2680,7 +2785,7 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Sharing\\ShareNotFoundException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
             "id": "problem:share_not_found",
             "owner": "drive",
             "receipt": "never",
@@ -2692,7 +2797,7 @@
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Sharing\\SharePasswordRequiredException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Sharing\\SharePasswordRequiredException",
             "id": "problem:share_password_required",
             "owner": "drive",
             "receipt": "never",
@@ -2704,7 +2809,7 @@
             "status": 401
         },
         {
-            "exception": "Vaulter\\Exceptions\\Sharing\\ShareRoleNotAllowedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareRoleNotAllowedException",
             "id": "problem:share_role_not_allowed",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2716,7 +2821,7 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Policy\\TreeDepthLimitExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Policy\\TreeDepthLimitExceededException",
             "id": "problem:tree_depth_limit_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2776,7 +2881,7 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Access\\UnknownRoleException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Access\\UnknownRoleException",
             "id": "problem:unknown_role",
             "owner": "drive",
             "receipt": "cacheable",
@@ -2930,6 +3035,39 @@
             }
         },
         {
+            "attribute": "scope",
+            "cast": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Access\\NodeGrant.scope",
+            "model": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Access/NodeGrant.php",
+                "symbol": "Vaulter\\Drive\\Models\\Access\\NodeGrant::casts"
+            }
+        },
+        {
+            "attribute": "audience",
+            "cast": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Sharing\\NodeShare.audience",
+            "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Sharing/NodeShare.php",
+                "symbol": "Vaulter\\Drive\\Models\\Sharing\\NodeShare::casts"
+            }
+        },
+        {
+            "attribute": "scope",
+            "cast": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Sharing\\NodeShare.scope",
+            "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Sharing/NodeShare.php",
+                "symbol": "Vaulter\\Drive\\Models\\Sharing\\NodeShare::casts"
+            }
+        },
+        {
             "attribute": "protocol",
             "cast": "Vaulter\\Drive\\Enums\\Uploads\\UploadProtocol",
             "id": "serialized:cast:Vaulter\\Drive\\Models\\Uploads\\UploadSession.protocol",
@@ -2971,17 +3109,6 @@
             "source": {
                 "file": "packages/media/src/Models/Cas/Blob.php",
                 "symbol": "Vaulter\\Media\\Models\\Cas\\Blob::casts"
-            }
-        },
-        {
-            "attribute": "scope",
-            "cast": "Vaulter\\Enums\\Access\\GrantScope",
-            "id": "serialized:cast:Vaulter\\Models\\Access\\NodeGrant.scope",
-            "model": "Vaulter\\Models\\Access\\NodeGrant",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Access/NodeGrant.php",
-                "symbol": "Vaulter\\Models\\Access\\NodeGrant::casts"
             }
         },
         {
@@ -3161,28 +3288,6 @@
             }
         },
         {
-            "attribute": "audience",
-            "cast": "Vaulter\\Enums\\Sharing\\ShareAudience",
-            "id": "serialized:cast:Vaulter\\Models\\Sharing\\NodeShare.audience",
-            "model": "Vaulter\\Models\\Sharing\\NodeShare",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Sharing/NodeShare.php",
-                "symbol": "Vaulter\\Models\\Sharing\\NodeShare::casts"
-            }
-        },
-        {
-            "attribute": "scope",
-            "cast": "Vaulter\\Enums\\Access\\GrantScope",
-            "id": "serialized:cast:Vaulter\\Models\\Sharing\\NodeShare.scope",
-            "model": "Vaulter\\Models\\Sharing\\NodeShare",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Sharing/NodeShare.php",
-                "symbol": "Vaulter\\Models\\Sharing\\NodeShare::casts"
-            }
-        },
-        {
             "config_key": "vaulter-documents.exporters",
             "fqcns": [
                 "Vaulter\\Documents\\Export\\HtmlExporter",
@@ -3307,7 +3412,7 @@
         {
             "config_key": "vaulter.access.permission_drivers.database",
             "fqcns": [
-                "Vaulter\\Access\\Drivers\\DatabasePermissionDriver"
+                "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver"
             ],
             "id": "serialized:config:vaulter.access.permission_drivers.database",
             "owner": "drive",
@@ -3319,7 +3424,7 @@
         {
             "config_key": "vaulter.access.permission_drivers.gate",
             "fqcns": [
-                "Vaulter\\Access\\Drivers\\GatePermissionDriver"
+                "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver"
             ],
             "id": "serialized:config:vaulter.access.permission_drivers.gate",
             "owner": "drive",
@@ -3343,7 +3448,7 @@
         {
             "config_key": "vaulter.access.permission_drivers.spatie",
             "fqcns": [
-                "Vaulter\\Access\\Drivers\\SpatiePermissionDriver"
+                "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver"
             ],
             "id": "serialized:config:vaulter.access.permission_drivers.spatie",
             "owner": "drive",
@@ -3451,7 +3556,7 @@
         {
             "config_key": "vaulter.models.grant",
             "fqcns": [
-                "Vaulter\\Models\\Access\\NodeGrant"
+                "Vaulter\\Drive\\Models\\Access\\NodeGrant"
             ],
             "id": "serialized:config:vaulter.models.grant",
             "owner": "drive",
@@ -3475,7 +3580,7 @@
         {
             "config_key": "vaulter.models.node_share",
             "fqcns": [
-                "Vaulter\\Models\\Sharing\\NodeShare"
+                "Vaulter\\Drive\\Models\\Sharing\\NodeShare"
             ],
             "id": "serialized:config:vaulter.models.node_share",
             "owner": "drive",
@@ -3595,7 +3700,7 @@
         {
             "config_key": "vaulter.sharing.token_generator",
             "fqcns": [
-                "Vaulter\\Support\\RandomShareTokenGenerator"
+                "Vaulter\\Drive\\Support\\RandomShareTokenGenerator"
             ],
             "id": "serialized:config:vaulter.sharing.token_generator",
             "owner": "drive",

@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Uploads\Inspection;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
-use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
+use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\UploadPolicy;
 

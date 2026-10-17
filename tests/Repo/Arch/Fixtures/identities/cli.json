@@ -56,6 +56,13 @@
             "id": "command:vaulter:webhooks:prune",
             "kind": "cli",
             "reason": "P3.15: prunes the terminal webhook deliveries only; the outbox has vaulter:outbox:prune"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "command:vaulter:make:permission-driver",
+            "kind": "cli",
+            "reason": "P4.8: the command class moved with the access model to vaulter-drive (Vaulter\\Drive\\Console); the command name and signature are unchanged"
         }
     ],
     "items": [
@@ -708,7 +715,7 @@
                     "required": true
                 }
             ],
-            "class": "Vaulter\\Console\\MakePermissionDriverCommand",
+            "class": "Vaulter\\Drive\\Console\\MakePermissionDriverCommand",
             "description": "Scaffold a Vaulter permission driver with a contract test",
             "exit_codes": [
                 "FAILURE",
@@ -730,8 +737,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/MakePermissionDriverCommand.php",
-                "symbol": "Vaulter\\Console\\MakePermissionDriverCommand"
+                "file": "packages/drive/src/Console/MakePermissionDriverCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\MakePermissionDriverCommand"
             }
         },
         {

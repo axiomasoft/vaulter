@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;

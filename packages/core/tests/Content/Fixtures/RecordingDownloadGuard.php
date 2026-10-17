@@ -6,10 +6,10 @@ namespace Vaulter\Tests\Content\Fixtures;
 
 use Throwable;
 use Vaulter\Contracts\Drive\DownloadGuard;
+use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Sharing\ShareContext;
 
 /** Records every check; the second guard throws what a test sets. */
 abstract class RecordingDownloadGuard implements DownloadGuard

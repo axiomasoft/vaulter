@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Nodes\RenameNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;

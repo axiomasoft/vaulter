@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Drive\DownloadGuard;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\Handlers\NodePresenter;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\DriveHandleFactory as DriveFactory;

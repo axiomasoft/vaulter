@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Collaboration;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Models\Documents\Document;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 
 /**

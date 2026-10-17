@@ -6,12 +6,12 @@ namespace Vaulter\Http\Requests\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
-use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**

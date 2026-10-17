@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\PermissionDriverCatalog;
-use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Configuration\AzgardConfig;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Providers\BindingsRegistrar;
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 use Vaulter\Azgard\Tests\Stubs\HostGuard;
-use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\PermissionDriverCatalog;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Modules\MissingExtensionException;

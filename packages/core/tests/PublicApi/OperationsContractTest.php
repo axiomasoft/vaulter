@@ -7,32 +7,32 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\CursorPaginator;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Access\ValueObjects\AccessExplanation;
-use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Page;
-use Vaulter\Data\Sharing\MintedShareLink;
-use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Data\Snapshots\GrantSnapshot;
 use Vaulter\Data\Snapshots\MintedShareLink as SnapshotMintedShareLink;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Data\Snapshots\ShareLinkSnapshot;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\InheritanceRestriction;
+use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
+use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\Sharing\MintedShareLink;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\InheritanceRestriction;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Operations\DriveContext;
 
 function p32Type(?ReflectionType $type): string
@@ -174,7 +174,7 @@ it('matches all seven Operations signatures against the literal normative PHP AP
             // PLAN2.D40 removes the shared pinned/position update in favour of personal stars;
             // a replaced literal method is dropped here and comes back from the amendments.
             $methods = [...array_values(array_filter($methods, static fn (array $method): bool => !in_array($name.'::'.$method[1], $removed, true))), ...$amended];
-            $ref = new ReflectionClass('Vaulter\\Contracts\\'.$domain.'\\'.$name);
+            $ref = new ReflectionClass((in_array($domain, ['Access', 'Sharing'], true) ? 'Vaulter\\Drive\\Contracts\\' : 'Vaulter\\Contracts\\').$domain.'\\'.$name);
             expect($ref->isInterface())->toBeTrue()->and($ref->getMethods())->toHaveCount(count($methods));
             foreach ($methods as $method) {
                 p32AssertSignature($ref->getMethod($method[1]), $method[2], $method[3], snapshots: true);

@@ -20,7 +20,7 @@ use Vaulter\Configuration\SharingConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\OffScanPolicyResolver;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
-use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;

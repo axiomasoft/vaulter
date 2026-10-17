@@ -8,10 +8,8 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Access\AccessOperations;
 use Vaulter\Contracts\Activity\ActivityOperations;
 use Vaulter\Contracts\Drive\DriveExtension;
 use Vaulter\Contracts\Drive\DriveHandle as Contract;
@@ -19,17 +17,19 @@ use Vaulter\Contracts\Drive\FileOperations;
 use Vaulter\Contracts\Drive\FolderOperations;
 use Vaulter\Contracts\Drive\NodeOperations;
 use Vaulter\Contracts\Drive\TrashOperations;
-use Vaulter\Contracts\Sharing\ShareOperations;
 use Vaulter\Data\Snapshots\DriveSnapshot;
 use Vaulter\Data\Snapshots\Mapping\DriveSnapshotMapper;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Data\Snapshots\QuotaSnapshot;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
 use Vaulter\Drive\Actions\Drives\UnarchiveDriveAction;
+use Vaulter\Drive\Contracts\Access\AccessOperations;
+use Vaulter\Drive\Contracts\Sharing\ShareOperations;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Operations\UploadOperations;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -198,12 +198,12 @@ final readonly class DriveHandle implements Contract
 
     public function access(): AccessOperations
     {
-        return $this->operations(\Vaulter\Operations\AccessOperations::class);
+        return $this->operations(Operations\AccessOperations::class);
     }
 
     public function shares(): ShareOperations
     {
-        return $this->operations(\Vaulter\Operations\ShareOperations::class);
+        return $this->operations(Operations\ShareOperations::class);
     }
 
     public function activity(): ActivityOperations

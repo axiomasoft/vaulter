@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
@@ -18,6 +17,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;

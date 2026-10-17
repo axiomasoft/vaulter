@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Trash;
 
 use InvalidArgumentException;
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Internal;
 use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Events\Nodes\NodePurged;

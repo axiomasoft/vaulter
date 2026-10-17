@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard\Tests\Access\Contract;
 
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Tests\Access\AccessTestHelpers;
 use Vaulter\Azgard\Tests\Stubs\HostGuard;
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\GrantScope;
 
 /**
  * The PermissionDriver contract test (master plan §12 / H.2): ANY driver that only

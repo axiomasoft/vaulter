@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Illuminate\Pagination\CursorPaginator;
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Activity\ActivityOperations as Contract;
@@ -14,7 +13,8 @@ use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Data\Snapshots\Mapping\ActivitySnapshotMapper;
 use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Activity\Activity;

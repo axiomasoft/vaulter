@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\CopyResult;
 use Vaulter\Data\Drive\CreateFolderOptions;
@@ -16,6 +15,7 @@ use Vaulter\Data\Drive\SearchOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Drive\OnNameConflict;

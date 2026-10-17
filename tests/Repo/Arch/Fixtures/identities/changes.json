@@ -2837,6 +2837,251 @@
             "id": "publish:vaulter-media-translations",
             "kind": "config",
             "reason": "P4.7: vaulter-media ships the translations of its problem code blob_unavailable (resources/lang, spatie hasTranslations)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "command:vaulter:make:permission-driver",
+            "kind": "cli",
+            "reason": "P4.8: the command class moved with the access model to vaulter-drive (Vaulter\\Drive\\Console); the command name and signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.access.permission_drivers.database",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.access.permission_drivers.gate",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.access.permission_drivers.spatie",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.models.grant",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.models.node_share",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.sharing.token_generator",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.access.inheritance.restore",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.access.inheritance.restrict",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.destroy",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.index",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.store",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.download",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.nodes",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.show",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.destroy",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.index",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.rotate",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.store",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.update",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:file_size_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:folder_children_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:permission_denied",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_link_ttl_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_not_found",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_password_required",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_role_not_allowed",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:tree_depth_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:unknown_role",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.access.permission_drivers.database",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.access.permission_drivers.gate",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.access.permission_drivers.spatie",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.models.grant",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.models.node_share",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter.sharing.token_generator",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

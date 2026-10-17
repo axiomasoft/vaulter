@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Drive\DriveArchivedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;

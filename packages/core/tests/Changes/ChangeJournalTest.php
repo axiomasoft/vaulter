@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Str;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Changes\ChangeJournal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Enums\DocumentEventType;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Changes\ChangeReason;

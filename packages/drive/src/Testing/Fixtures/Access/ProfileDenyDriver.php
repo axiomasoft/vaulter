@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Testing\Fixtures\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Enums\Access\Effect;
 
 /** An administrative block on every drive of its profile. */
 #[Internal]

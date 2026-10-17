@@ -260,6 +260,48 @@
             "id": "publish:vaulter-media-translations",
             "kind": "config",
             "reason": "P4.7: vaulter-media ships the translations of its problem code blob_unavailable (resources/lang, spatie hasTranslations)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.access.permission_drivers.database",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.access.permission_drivers.gate",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.access.permission_drivers.spatie",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.models.grant",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.models.node_share",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter.sharing.token_generator",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
         }
     ],
     "items": [
@@ -1385,7 +1427,7 @@
             }
         },
         {
-            "default": "Vaulter\\Access\\Drivers\\DatabasePermissionDriver",
+            "default": "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver",
             "id": "config:vaulter.access.permission_drivers.database",
             "owner": "drive",
             "registered_defaults": true,
@@ -1396,7 +1438,7 @@
             }
         },
         {
-            "default": "Vaulter\\Access\\Drivers\\GatePermissionDriver",
+            "default": "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver",
             "id": "config:vaulter.access.permission_drivers.gate",
             "owner": "drive",
             "registered_defaults": true,
@@ -1418,7 +1460,7 @@
             }
         },
         {
-            "default": "Vaulter\\Access\\Drivers\\SpatiePermissionDriver",
+            "default": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver",
             "id": "config:vaulter.access.permission_drivers.spatie",
             "owner": "drive",
             "registered_defaults": true,
@@ -1889,7 +1931,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Access\\NodeGrant",
+            "default": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
             "id": "config:vaulter.models.grant",
             "owner": "drive",
             "registered_defaults": true,
@@ -1911,7 +1953,7 @@
             }
         },
         {
-            "default": "Vaulter\\Models\\Sharing\\NodeShare",
+            "default": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
             "id": "config:vaulter.models.node_share",
             "owner": "drive",
             "registered_defaults": true,
@@ -2484,7 +2526,7 @@
             }
         },
         {
-            "default": "Vaulter\\Support\\RandomShareTokenGenerator",
+            "default": "Vaulter\\Drive\\Support\\RandomShareTokenGenerator",
             "id": "config:vaulter.sharing.token_generator",
             "owner": "drive",
             "registered_defaults": true,

@@ -201,12 +201,6 @@
         },
         {
             "match": "prefix",
-            "value": "morph:Vaulter\\Access\\",
-            "owner": "drive",
-            "why": "the node access model"
-        },
-        {
-            "match": "prefix",
             "value": "morph:Vaulter\\Azgard\\",
             "owner": "azgard",
             "why": "azgard adapter"
@@ -252,12 +246,6 @@
             "value": "morph:Vaulter\\Repositories\\",
             "owner": "drive",
             "why": "activity and drive repositories"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Rules\\Access\\",
-            "owner": "drive",
-            "why": "Rules/Access -> drive"
         },
         {
             "match": "prefix",

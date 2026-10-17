@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Pagination\Cursor;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Activity\Activity;

@@ -27,10 +27,18 @@ arch('the package never depends on the host application (E5.1)')
  * reach into the HOST application's namespace. File scan (not
  * `expect(...)->not->toUse('App')`) because `App\*` is never an autoloadable class in
  * the package's own dev/test environment (red-before proven on core's ArchTest.php).
+ *
+ * `Console/MakePermissionDriverCommand.php` is a deliberate, allow-listed exception: it is a scaffolding command
+ * (`vaulter:make:permission-driver`) that EMITS the string `App\Vaulter\PermissionDrivers` as the target namespace for code it
+ * generates INTO the host application — the package itself never imports or executes anything under `App\*`.
  */
 test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
     $src = __DIR__.'/../../src';
     $offenders = [];
+
+    $allowlist = [
+        'Console/MakePermissionDriverCommand.php',
+    ];
 
     /** @var Iterator<SplFileInfo> $files */
     $files = new RegexIterator(
@@ -39,6 +47,10 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
     );
 
     foreach ($files as $file) {
+        if (in_array(substr($file->getPathname(), strlen($src) + 1), $allowlist, true)) {
+            continue;
+        }
+
         $contents = file_get_contents($file->getPathname());
 
         if ($contents === false) {
@@ -133,7 +145,11 @@ arch('DB facade is routed through VaulterDatabase (AD25)')
 arch('domain exceptions implement the HTTP problem contract')
     ->expect('Vaulter\Drive\Exceptions')
     ->classes()
-    ->toImplement('Vaulter\Exceptions\Contracts\ProblemException');
+    ->toImplement('Vaulter\Exceptions\Contracts\ProblemException')
+    ->ignoring([
+        // The host-role driver is missing or unknown: a configuration failure that stops boot, no endpoint answers with it.
+        'Vaulter\Drive\Exceptions\Access\MissingPermissionDriverException',
+    ]);
 
 arch('production source never imports testing helpers (D35)')
     ->expect('Vaulter\Drive')

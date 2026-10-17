@@ -31,7 +31,7 @@ Vaulter\Azgard\Configuration\AzgardConfig
   permissions(): array
 
 Vaulter\Azgard\AzgardPermissionDriver
-  canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): bool
-  override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Enums\Access\Effect
-  resolve(\Vaulter\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Access\ValueObjects\Decision
+  canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): bool
+  override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Drive\Enums\Access\Effect
+  resolve(\Vaulter\Drive\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Drive\Access\ValueObjects\Decision
   subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array

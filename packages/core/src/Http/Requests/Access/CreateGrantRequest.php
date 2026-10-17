@@ -6,13 +6,13 @@ namespace Vaulter\Http\Requests\Access;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Attributes\Internal;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Rules\Access\RegisteredSubjectType;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Rules\Access\RegisteredSubjectType;
 
 /**
  * Grant a role on a node to a subject: `{subject: {type, id}, role, scope?, expires_at?}`.

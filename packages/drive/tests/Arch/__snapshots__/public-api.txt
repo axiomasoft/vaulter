@@ -1,3 +1,33 @@
+Vaulter\Drive\Contracts\Access\AccessOperations
+  explain(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Drive\Access\ValueObjects\AccessExplanation
+  grant(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Access\GrantInput $grant): \Vaulter\Data\Snapshots\GrantSnapshot
+  grants(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  restoreInheritance(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Data\Snapshots\NodeSnapshot
+  restrictInheritance(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Enums\Access\InheritanceRestriction $mode = Vaulter\Drive\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Data\Snapshots\NodeSnapshot
+  revoke(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\GrantSnapshot|int|string $grant): void
+
+Vaulter\Drive\Contracts\Access\EnumeratesRoleSubjects
+
+
+Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver
+  isGrantAuthoritative(): bool
+
+Vaulter\Drive\Contracts\Access\PermissionDriver
+  canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): bool
+  override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Drive\Enums\Access\Effect
+  resolve(\Vaulter\Drive\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Drive\Access\ValueObjects\Decision
+  subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
+
+Vaulter\Drive\Contracts\Sharing\ShareOperations
+  create(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Snapshots\MintedShareLink
+  list(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  revoke(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
+  rotate(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): \Vaulter\Data\Snapshots\MintedShareLink
+  update(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share, \Vaulter\Drive\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Data\Snapshots\ShareLinkSnapshot
+
+Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator
+  generate(): string
+
 Vaulter\Drive\Contracts\Uploads\UploadInspector
   inspect(\Vaulter\Drive\Data\Files\UploadFacts $facts, \Vaulter\Profiles\UploadPolicy $policy, \Vaulter\Operations\DriveContext $context): void
   key(): string
@@ -29,6 +59,57 @@ Vaulter\Drive\Configuration\DriveConfig
   sessionTtlHours(): int
   trashRetentionDays(): int
   validateScanWork(bool $requireBroker = false): void
+
+Vaulter\Drive\Events\Access\NodeGrantCreated
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Access\NodeGrant $grant
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Access\NodeGrantRevoked
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Access\ValueObjects\Subject $subject
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly int $revoked
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Access\NodeInheritanceChanged
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly bool $inherits
+  readonly string $correlationId
+  readonly string $eventId
 
 Vaulter\Drive\Events\Drives\DriveArchived
   activityContext(): array
@@ -292,6 +373,71 @@ Vaulter\Drive\Events\Nodes\NodeUpdated
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Sharing\NodeShareCreated
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Sharing\NodeShareRevoked
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Sharing\NodeShareRotated
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Sharing\NodeShareUpdated
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly array $changed
   readonly string $correlationId
   readonly string $eventId
 

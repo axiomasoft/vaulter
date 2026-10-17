@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Testing\Sharing;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Models\Sharing\NodeShare;
+use Vaulter\Drive\Support\ShareToken;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Support\ShareToken;
 
 /**
  * Builders for the M2c bearer-share tests (§2.7): write a share row directly with a

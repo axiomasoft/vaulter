@@ -5,7 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Http\Problems;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Exceptions\Access\UnknownRoleException;
+use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
+use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
+use Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException;
+use Vaulter\Drive\Exceptions\Policy\TreeDepthLimitExceededException;
+use Vaulter\Drive\Exceptions\Sharing\ShareLinkTtlExceededException;
+use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
+use Vaulter\Drive\Exceptions\Sharing\SharePasswordRequiredException;
+use Vaulter\Drive\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Exceptions\Changes\CursorExpiredException;
 use Vaulter\Exceptions\Changes\InvalidCursorException;
 use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
@@ -29,15 +36,8 @@ use Vaulter\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException;
 use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
-use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
-use Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException;
-use Vaulter\Exceptions\Policy\TreeDepthLimitExceededException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
-use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
-use Vaulter\Exceptions\Sharing\ShareNotFoundException;
-use Vaulter\Exceptions\Sharing\SharePasswordRequiredException;
-use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 
 /**
  * The problem codes of the drive concepts still located in core (D39): nodes, revisions, quotas, access and

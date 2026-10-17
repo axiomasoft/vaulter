@@ -8,6 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Drive\DownloadGuard;
+use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Media\Enums\Cas\BlobStatus;
@@ -17,7 +18,6 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
-use Vaulter\Sharing\ShareContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**

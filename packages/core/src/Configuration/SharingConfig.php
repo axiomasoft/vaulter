@@ -7,9 +7,9 @@ namespace Vaulter\Configuration;
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Drive\Support\RandomShareTokenGenerator;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Support\RandomShareTokenGenerator;
 
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration

@@ -8,8 +8,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\SharingConfig;
-use Vaulter\Data\Sharing\ShareLinkUpdate;
-use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**

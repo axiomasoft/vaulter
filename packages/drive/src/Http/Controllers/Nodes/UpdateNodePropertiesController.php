@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Nodes\UpdateNodePropertiesRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 

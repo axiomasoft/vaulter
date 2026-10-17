@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\NodeSnapshot;
@@ -14,10 +13,11 @@ use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;

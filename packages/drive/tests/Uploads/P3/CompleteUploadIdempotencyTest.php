@@ -3,13 +3,15 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Content\UploadCleanupReconciler;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -19,8 +21,6 @@ use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\DriveContext;

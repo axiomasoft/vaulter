@@ -79,7 +79,7 @@ it('sends every delivery path of the core through the guards, not through the av
     expect(substr_count($source('Content/ContentDelivery.php'), '$this->guards->check('))->toBe(3)
         ->and($source('Content/ContentDelivery.php'))->not->toContain('->assertAvailable');
 
-    foreach (['Sharing/ShareContentGuard.php', 'Sharing/ShareResolver.php'] as $file) {
+    foreach (['../../drive/src/Sharing/ShareContentGuard.php', '../../drive/src/Sharing/ShareResolver.php'] as $file) {
         expect($source($file))->toContain('DownloadGuards')->and($source($file))->not->toContain('ContentAvailabilityGuard');
     }
 });

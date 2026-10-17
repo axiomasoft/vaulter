@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
-use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

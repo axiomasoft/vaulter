@@ -7,11 +7,11 @@ arch('strict types')
     ->expect('Vaulter\Documents')
     ->toUseStrictTypes();
 
-// T6 — documents requires ONLY core in production; it never depends on drive or
-// media (both are optional siblings over the same kernel, not peers of documents).
-arch('documents never depends on drive or media (T6 — documents requires only core)')
+// D6 / P4.8 — documents sits on drive in the package graph (core <- media <- drive <- documents): the access model it
+// authorizes with (AccessResolver, OperationGuard, Ability) is drive's since the P4.8 move. It still never reaches media.
+arch('documents depends on drive but never directly on media (D6)')
     ->expect('Vaulter\Documents')
-    ->not->toUse(['Vaulter\Drive', 'Vaulter\Media']);
+    ->not->toUse(['Vaulter\Media']);
 
 // E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`);
 // see the file-scan test below (and core's ArchTest.php) for why this namespace-graph

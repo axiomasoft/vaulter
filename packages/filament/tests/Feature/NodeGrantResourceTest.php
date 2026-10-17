@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Repositories\Access\GrantReadRepository;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Repositories\Access\GrantReadRepository;
 
 it('resolves the configured grant model (swappable)', function (): void {
     expect(NodeGrantResource::getModel())->toBe(NodeGrant::class);

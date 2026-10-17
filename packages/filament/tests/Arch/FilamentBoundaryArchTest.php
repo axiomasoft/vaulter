@@ -16,7 +16,7 @@ arch('the panel never uses core Actions, Repositories or the AccessResolver')
         'Vaulter\Repositories',
         'Vaulter\Drive\Repositories',
         'Vaulter\Documents\Repositories',
-        'Vaulter\Access\AccessResolver',
+        'Vaulter\Drive\Access\AccessResolver',
         'Vaulter\Drive\Queries',
     ]);
 

@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use AzGuard\AzGuardManager;
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
 use Vaulter\Azgard\Tests\Stubs\HostGuard;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**

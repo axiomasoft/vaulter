@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Uploads;
 
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NotAFileException;

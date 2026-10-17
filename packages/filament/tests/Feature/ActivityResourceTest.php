@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Filament\Resources\ActivityResource;

@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Http\Controllers\Trash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 

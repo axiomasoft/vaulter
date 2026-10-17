@@ -8,10 +8,10 @@ use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Files\AddFileRevisionRequest;
 use Vaulter\Drive\Http\Resources\FileRevisionResource;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 

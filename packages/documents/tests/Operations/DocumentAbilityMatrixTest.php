@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
@@ -12,9 +11,10 @@ use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;

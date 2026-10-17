@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Attributes\Label;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Support\EnumCaseAttributeResolver;
 
 /*

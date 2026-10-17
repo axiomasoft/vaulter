@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Testing\NullPermissionDriver;
 

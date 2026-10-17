@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Operations\AccessOperations;
+use Vaulter\Drive\Operations\ShareOperations;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Enums\Events\DriveEventType;
-use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\ShareOperations;
 use Vaulter\Testing\Events\EventConformance;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\TestCase;

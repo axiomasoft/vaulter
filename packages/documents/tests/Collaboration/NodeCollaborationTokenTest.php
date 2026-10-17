@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Models\Drive\Node;

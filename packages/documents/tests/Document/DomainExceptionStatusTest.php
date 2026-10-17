@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
@@ -12,6 +11,9 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
@@ -19,8 +21,6 @@ use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;

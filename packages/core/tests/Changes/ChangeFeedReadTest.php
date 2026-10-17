@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Changes\ChangeCursor;
-use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Changes\ChangePage;
 use Vaulter\Data\Changes\NodeChange;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Changes\ChangeOperation;

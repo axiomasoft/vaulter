@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Testing;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Attributes\Internal;
-use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
-use Vaulter\Contracts\Access\NonProductionPermissionDriver;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Contracts\Access\NonEnumeratingPermissionDriver;
+use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
+use Vaulter\Drive\Enums\Access\Effect;
 
 /**
  * The fail-loud OPEN host-role driver. It grants every

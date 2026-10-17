@@ -6,11 +6,11 @@ namespace Vaulter\Contracts\Drive;
 
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
+use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
-use Vaulter\Sharing\ShareContext;
 
 /**
  * May veto every delivery of file content (slot `drive`, Guard, any number): the download, the public-share

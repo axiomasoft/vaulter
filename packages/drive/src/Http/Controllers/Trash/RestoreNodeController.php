@@ -7,9 +7,9 @@ namespace Vaulter\Drive\Http\Controllers\Trash;
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
 use Vaulter\Data\Drive\RestoreOptions;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Trash\RestoreNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\HttpResourceResolver;
 

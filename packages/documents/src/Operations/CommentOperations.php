@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Operations;
 
 use Closure;
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveExtension;
@@ -22,7 +21,8 @@ use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Queries\DocumentQuery;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleId;

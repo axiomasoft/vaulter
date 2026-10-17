@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Operations\DriveContext;

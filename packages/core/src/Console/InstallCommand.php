@@ -11,8 +11,8 @@ use Illuminate\Support\ServiceProvider;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
 
-use Vaulter\Access\PermissionDriverCatalog;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\PermissionDriverCatalog;
 
 /**
  * Publishes the config of every installed Vaulter package and prints the host

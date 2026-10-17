@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;

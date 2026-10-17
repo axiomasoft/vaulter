@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\Role;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Permission;
-use Vaulter\Exceptions\Access\UnknownRoleException;
+use Vaulter\Drive\Access\Roles\Role;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Permission;
+use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
 
 /**
  * The bit layout, the ability → bit map and the v1 role table (PLAN2.D45, D53). These

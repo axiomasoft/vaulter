@@ -6,11 +6,11 @@ namespace Vaulter\Drive\Queries;
 
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
-use Vaulter\Access\ExactListing;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\NodePage;
+use Vaulter\Drive\Access\ExactListing;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\NodeUserState;

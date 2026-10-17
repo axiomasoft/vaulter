@@ -8,13 +8,13 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Broadcast;
-use Vaulter\Access\AccessResolver;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Collaboration\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleBindings;
 

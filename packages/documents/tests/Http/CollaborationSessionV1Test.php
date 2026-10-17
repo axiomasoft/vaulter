@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /** The session a client joins a document's room with: its mode follows the caller's rights and its token is never stored. */

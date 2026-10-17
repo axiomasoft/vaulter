@@ -6,7 +6,6 @@ namespace Vaulter\Documents\Tests\Collaboration;
 
 use Firebase\JWT\JWT;
 use Illuminate\Testing\TestResponse;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -16,6 +15,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Models\Drive\Node;

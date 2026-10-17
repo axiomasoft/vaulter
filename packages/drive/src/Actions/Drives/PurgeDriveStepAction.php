@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\RevisionBlobLinks;

@@ -9,14 +9,15 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DownloadsConfig;
 use Vaulter\Content\ContentDelivery;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Drive\FileStream;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -27,7 +28,6 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Repositories\Drive\FileRevisionReadRepository;
-use Vaulter\Sharing\ShareContext;
 use Vaulter\Support\LoadTier;
 
 /**

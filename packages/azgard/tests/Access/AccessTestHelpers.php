@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Azgard\Tests\Access;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 

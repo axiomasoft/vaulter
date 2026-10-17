@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\SharingConfig;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Sharing\ShareAudience;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Models\Sharing\NodeShare;
+use Vaulter\Drive\Repositories\Sharing\NodeShareReadRepository;
+use Vaulter\Drive\Support\ShareToken;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Repositories\Sharing\NodeShareReadRepository;
-use Vaulter\Support\ShareToken;
 
 beforeEach(fn () => config()->set('vaulter.features.share_links', true));
 

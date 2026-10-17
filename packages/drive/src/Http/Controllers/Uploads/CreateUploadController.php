@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Http\Controllers\Uploads;
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Enums\Access\Ability;
 
 /**
  * POST drives/{drive}/uploads: open a resumable session in the protocol the client asks

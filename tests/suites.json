@@ -168,16 +168,13 @@
             "serial"
           ],
           "files": [
-            "packages/core/tests/Access/InheritanceChangedEventTest.php",
             "packages/core/tests/Doctor/CoreDoctorChecksTest.php",
             "packages/core/tests/Feature/PruneWebhooksTest.php",
             "packages/core/tests/Http/WebhookEndpointsV1Test.php",
             "packages/core/tests/Observability/P85/P85Section53CoreMetricsTest.php",
             "packages/core/tests/Outbox/OutboxRelayTest.php",
             "packages/core/tests/Outbox/OutboxWriteTest.php",
-            "packages/core/tests/Outbox/WebhookFanoutConsumerTest.php",
-            "packages/core/tests/Sharing/ShareLinkLifecycleEventsTest.php",
-            "packages/core/tests/Sharing/ShareLinkLifecycleTest.php"
+            "packages/core/tests/Outbox/WebhookFanoutConsumerTest.php"
           ]
         },
         {
@@ -196,24 +193,6 @@
           ],
           "files": [
             "packages/core/tests/Observability/Tracing/WebhookPipelineTracingTest.php"
-          ]
-        },
-        {
-          "key": "ExercisesWideNodeListing+RefreshDatabase+TestCase",
-          "fingerprint": "9c8b0d322a50",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/Access/WideNodeListingTest.php"
           ]
         },
         {
@@ -331,24 +310,6 @@
           ]
         },
         {
-          "key": "RefreshDatabase+SpatieTestCase",
-          "fingerprint": "b08c15c0f71a",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/Spatie/SpatieDriverTest.php"
-          ]
-        },
-        {
           "key": "RefreshDatabase+TablePrefixTestCase",
           "fingerprint": "4885e0f72862",
           "lifecycle": "refresh",
@@ -381,20 +342,6 @@
             "serial"
           ],
           "files": [
-            "packages/core/tests/Access/AccessAwareListingTest.php",
-            "packages/core/tests/Access/AccessModelV1Test.php",
-            "packages/core/tests/Access/AccessResolverTest.php",
-            "packages/core/tests/Access/DatabaseDriverTest.php",
-            "packages/core/tests/Access/EvaluateManyEquivalenceTest.php",
-            "packages/core/tests/Access/GateDriverTest.php",
-            "packages/core/tests/Access/GrantFailLoudTest.php",
-            "packages/core/tests/Access/GrantRevokeTest.php",
-            "packages/core/tests/Access/NodePolicyTest.php",
-            "packages/core/tests/Access/PermissionDriverBoundaryTest.php",
-            "packages/core/tests/Access/PermissionDriverContractTest.php",
-            "packages/core/tests/Access/SharedWithMeTest.php",
-            "packages/core/tests/Access/StorageShowAuthorizationTest.php",
-            "packages/core/tests/Access/TenantDelegationContractTest.php",
             "packages/core/tests/Activity/ActivityVisibilityTest.php",
             "packages/core/tests/Activity/RecordActivityTest.php",
             "packages/core/tests/Activity/StableMorphAliasTest.php",
@@ -431,16 +378,12 @@
             "packages/core/tests/Http/ChangesV1Test.php",
             "packages/core/tests/Http/ContentResponderTest.php",
             "packages/core/tests/Http/CrossTenantV1Test.php",
-            "packages/core/tests/Http/GrantsV1Test.php",
             "packages/core/tests/Http/HttpKernelV1Test.php",
             "packages/core/tests/Http/InheritanceV1Test.php",
             "packages/core/tests/Http/LegacyRoutesRemovedTest.php",
             "packages/core/tests/Http/NotModifiedAfterAuthorizationTest.php",
             "packages/core/tests/Http/PreconditionsTest.php",
-            "packages/core/tests/Http/PublicShareHeadersV1Test.php",
-            "packages/core/tests/Http/PublicSharesV1Test.php",
             "packages/core/tests/Http/RepresentationTagTest.php",
-            "packages/core/tests/Http/SharesV1Test.php",
             "packages/core/tests/Http/UniformNotFoundV1Test.php",
             "packages/core/tests/Modules/ModuleUninstallCommandTest.php",
             "packages/core/tests/Naming/NamePolicyTest.php",
@@ -490,11 +433,6 @@
             "packages/core/tests/Schema/PanelConnectionTest.php",
             "packages/core/tests/Schema/SchemaSnapshotTest.php",
             "packages/core/tests/Schema/SiblingUniqueTest.php",
-            "packages/core/tests/Sharing/CreateShareLinkTest.php",
-            "packages/core/tests/Sharing/PublicShareDownloadHeadersTest.php",
-            "packages/core/tests/Sharing/ShareResolverTest.php",
-            "packages/core/tests/Sharing/ShareScopeTest.php",
-            "packages/core/tests/Sharing/ShareSecurityBoundaryTest.php",
             "packages/core/tests/Support/CollaborationDefaultsGuardTest.php",
             "packages/core/tests/Support/ContractsDocFqcnGuardTest.php",
             "packages/core/tests/Support/DocsDriftGuardTest.php",
@@ -529,7 +467,6 @@
           "files": [
             "packages/core/tests/Console/InstallCommandTest.php",
             "packages/core/tests/Console/MakeFileHandlerCommandTest.php",
-            "packages/core/tests/Console/MakePermissionDriverCommandTest.php",
             "packages/core/tests/Profiles/MakeProfileCommandTest.php"
           ]
         },
@@ -885,13 +822,34 @@
             "serial"
           ],
           "files": [
+            "packages/drive/tests/Access/InheritanceChangedEventTest.php",
             "packages/drive/tests/Drive/R07CommandActivityContractsTest.php",
             "packages/drive/tests/Events/DriveEventsRecordedTest.php",
             "packages/drive/tests/Events/FileRevisionDeletedEventTest.php",
             "packages/drive/tests/Events/NodeUpdatedEventTest.php",
             "packages/drive/tests/Feature/MutationContractsTest.php",
             "packages/drive/tests/Feature/OutboxEventIdentityTest.php",
-            "packages/drive/tests/Feature/R07ActionControllerContractsTest.php"
+            "packages/drive/tests/Feature/R07ActionControllerContractsTest.php",
+            "packages/drive/tests/Sharing/ShareLinkLifecycleEventsTest.php",
+            "packages/drive/tests/Sharing/ShareLinkLifecycleTest.php"
+          ]
+        },
+        {
+          "key": "ExercisesWideNodeListing+RefreshDatabase+TestCase",
+          "fingerprint": "9c8b0d322a50",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/Access/WideNodeListingTest.php"
           ]
         },
         {
@@ -913,6 +871,24 @@
           ]
         },
         {
+          "key": "RefreshDatabase+SpatieTestCase",
+          "fingerprint": "b08c15c0f71a",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/Spatie/SpatieDriverTest.php"
+          ]
+        },
+        {
           "key": "RefreshDatabase+TestCase",
           "fingerprint": "555a082c1a50",
           "lifecycle": "refresh",
@@ -927,6 +903,20 @@
             "serial"
           ],
           "files": [
+            "packages/drive/tests/Access/AccessAwareListingTest.php",
+            "packages/drive/tests/Access/AccessModelV1Test.php",
+            "packages/drive/tests/Access/AccessResolverTest.php",
+            "packages/drive/tests/Access/DatabaseDriverTest.php",
+            "packages/drive/tests/Access/EvaluateManyEquivalenceTest.php",
+            "packages/drive/tests/Access/GateDriverTest.php",
+            "packages/drive/tests/Access/GrantFailLoudTest.php",
+            "packages/drive/tests/Access/GrantRevokeTest.php",
+            "packages/drive/tests/Access/NodePolicyTest.php",
+            "packages/drive/tests/Access/PermissionDriverBoundaryTest.php",
+            "packages/drive/tests/Access/PermissionDriverContractTest.php",
+            "packages/drive/tests/Access/SharedWithMeTest.php",
+            "packages/drive/tests/Access/StorageShowAuthorizationTest.php",
+            "packages/drive/tests/Access/TenantDelegationContractTest.php",
             "packages/drive/tests/Doctor/DiskDoctorChecksTest.php",
             "packages/drive/tests/Doctor/DriveDoctorChecksTest.php",
             "packages/drive/tests/Doctor/ScanDoctorChecksTest.php",
@@ -978,13 +968,17 @@
             "packages/drive/tests/Http/DirectSignedDownloadTest.php",
             "packages/drive/tests/Http/DrivesV1Test.php",
             "packages/drive/tests/Http/FilesV1Test.php",
+            "packages/drive/tests/Http/GrantsV1Test.php",
             "packages/drive/tests/Http/IdempotencyKeyHttpTest.php",
             "packages/drive/tests/Http/IfMatchRequiredTest.php",
             "packages/drive/tests/Http/NodeEtagRepresentationTest.php",
             "packages/drive/tests/Http/NodesV1Test.php",
             "packages/drive/tests/Http/NotModifiedV1Test.php",
             "packages/drive/tests/Http/PreviewerCannotDownloadTest.php",
+            "packages/drive/tests/Http/PublicShareHeadersV1Test.php",
+            "packages/drive/tests/Http/PublicSharesV1Test.php",
             "packages/drive/tests/Http/QuarantinedDownloadTest.php",
+            "packages/drive/tests/Http/SharesV1Test.php",
             "packages/drive/tests/Http/StaleIfMatchTest.php",
             "packages/drive/tests/Http/StarPropertiesV1Test.php",
             "packages/drive/tests/Http/TrashV1Test.php",
@@ -1001,6 +995,11 @@
             "packages/drive/tests/PublicApi/OperationMatrixTest.php",
             "packages/drive/tests/Recipes/DriveRecipeTest.php",
             "packages/drive/tests/Recipes/ReadmeRecipeTest.php",
+            "packages/drive/tests/Sharing/CreateShareLinkTest.php",
+            "packages/drive/tests/Sharing/PublicShareDownloadHeadersTest.php",
+            "packages/drive/tests/Sharing/ShareResolverTest.php",
+            "packages/drive/tests/Sharing/ShareScopeTest.php",
+            "packages/drive/tests/Sharing/ShareSecurityBoundaryTest.php",
             "packages/drive/tests/Tenancy/HttpTenantResolutionTest.php",
             "packages/drive/tests/Tenancy/PrivateScannerTenantBoundaryTest.php",
             "packages/drive/tests/Testing/ScanLifecycleContractTest.php",
@@ -1031,6 +1030,24 @@
             "packages/drive/tests/Uploads/UploadSessionCriticalSectionTest.php",
             "packages/drive/tests/Uploads/UploadSessionLockDriverTest.php",
             "packages/drive/tests/WriteGuard/DriveWriteGuardTest.php"
+          ]
+        },
+        {
+          "key": "RefreshDatabase+TestCase#skeleton",
+          "fingerprint": "555a082c1a50",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": true,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/Access/MakePermissionDriverCommandTest.php"
           ]
         },
         {

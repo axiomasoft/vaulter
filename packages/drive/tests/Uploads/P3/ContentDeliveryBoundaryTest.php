@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Content\ContentDelivery;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;

@@ -7,8 +7,8 @@ namespace Vaulter\Data\Snapshots\Mapping;
 use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\GrantSnapshot;
 use Vaulter\Data\Snapshots\ShareLinkSnapshot;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Sharing\NodeShare;
 
 /** @internal Grants and share links to their snapshots. */
 #[Internal]

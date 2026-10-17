@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Drive\Operations\AccessOperations;
 use Vaulter\Drive\Operations\FileOperations;
 use Vaulter\Drive\Operations\FolderOperations;
 use Vaulter\Drive\Operations\NodeOperations;
+use Vaulter\Drive\Operations\ShareOperations;
 use Vaulter\Drive\Operations\TrashOperations;
 use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Http\Controllers\Webhooks\DeactivateWebhookEndpointController;
@@ -15,8 +17,6 @@ use Vaulter\Http\Controllers\Webhooks\RedeliverWebhookController;
 use Vaulter\Http\Controllers\Webhooks\RegisterWebhookEndpointController;
 use Vaulter\Http\Controllers\Webhooks\RotateWebhookSecretController;
 use Vaulter\Http\Controllers\Webhooks\UpdateWebhookEndpointController;
-use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\ShareOperations;
 
 /**
  * R1 of the operation pipeline (ADR-0028): every public mutating method of an `*Operations` class runs

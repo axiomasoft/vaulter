@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Operations;
 
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Drive\FolderOperations as Contract;
 use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;

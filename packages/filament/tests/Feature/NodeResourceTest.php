@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;

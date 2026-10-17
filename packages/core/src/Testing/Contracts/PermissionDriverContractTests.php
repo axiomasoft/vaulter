@@ -8,12 +8,12 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use PHPUnit\Framework\Assert;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Attributes\Api;
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\ProfileRegistry;
 

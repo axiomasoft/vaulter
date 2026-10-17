@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /** An export is a download: an attachment that is never cached, sniffed or run in the API origin. */

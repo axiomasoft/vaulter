@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\AssertionFailedError;
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Testing\Fixtures\Access\RoleStubDriver;
 use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Testing\Contracts\FileHandlerContractTests;
 use Vaulter\Testing\Contracts\PermissionDriverContractTests;
 use Vaulter\Testing\Contracts\PermissionFixture;
-use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
 use Vaulter\Tests\Fixtures\Testing\BrokenFileHandler;
 
 /**

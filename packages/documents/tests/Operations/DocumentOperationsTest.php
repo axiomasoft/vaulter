@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
@@ -27,6 +26,7 @@ use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\ValueObjects\DocumentExport;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;

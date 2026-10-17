@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Fixtures\TestUser;
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
@@ -13,6 +12,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Models\Activity\Activity;

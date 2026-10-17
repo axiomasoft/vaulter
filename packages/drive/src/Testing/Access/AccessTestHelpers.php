@@ -11,14 +11,14 @@ use Vaulter\Data\Snapshots\MintedShareLink;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

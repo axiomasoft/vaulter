@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Changes\ChangeCursor;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Changes\NodeChange;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Changes\CursorExpiredException;

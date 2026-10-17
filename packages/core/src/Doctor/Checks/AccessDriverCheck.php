@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Throwable;
-use Vaulter\Access\PermissionDriverCatalog;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\AccessConfig;
-use Vaulter\Contracts\Access\NonProductionPermissionDriver;
-use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Access\PermissionDriverCatalog;
+use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
 
 #[Internal]
 final readonly class AccessDriverCheck implements DoctorCheck

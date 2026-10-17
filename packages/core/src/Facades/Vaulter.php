@@ -7,10 +7,10 @@ namespace Vaulter\Facades;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
-use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry;
+use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Profiles\ProfileRegistry;
 
 /**

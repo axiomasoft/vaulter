@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Comments\AddCommentAction;
 use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
 use Vaulter\Documents\Actions\Comments\ResolveCommentAction;
@@ -22,6 +21,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;

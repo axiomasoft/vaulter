@@ -14,22 +14,22 @@
         {
             "category": "explicit-adapter",
             "count": 1,
-            "file": "packages/core/src/Access/Drivers/SpatiePermissionDriver.php",
+            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
             "kind": "probe",
             "reason": "узкий Spatie-адаптер допустим по D20 при явном выборе; недоступный выбранный driver диагностируется fail-closed",
             "removed_in": "never",
-            "symbol": "Vaulter\\Access\\Drivers\\SpatiePermissionDriver::forgetCachedPermissions",
+            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::forgetCachedPermissions",
             "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
             "view": "current"
         },
         {
             "category": "explicit-adapter",
             "count": 1,
-            "file": "packages/core/src/Access/Drivers/SpatiePermissionDriver.php",
+            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
             "kind": "probe",
             "reason": "узкий Spatie-адаптер допустим по D20 при явном выборе; недоступный выбранный driver диагностируется fail-closed",
             "removed_in": "never",
-            "symbol": "Vaulter\\Access\\Drivers\\SpatiePermissionDriver::isAvailable",
+            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::isAvailable",
             "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
             "view": "current"
         },

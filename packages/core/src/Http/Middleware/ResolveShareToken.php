@@ -9,14 +9,14 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
+use Vaulter\Drive\Exceptions\Sharing\SharePasswordRequiredException;
+use Vaulter\Drive\Sharing\ShareContext;
+use Vaulter\Drive\Sharing\ShareRedeemer;
+use Vaulter\Drive\Sharing\ShareResolution;
+use Vaulter\Drive\Sharing\ShareResolver;
+use Vaulter\Drive\Sharing\ShareSession;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Sharing\ShareNotFoundException;
-use Vaulter\Exceptions\Sharing\SharePasswordRequiredException;
-use Vaulter\Sharing\ShareContext;
-use Vaulter\Sharing\ShareRedeemer;
-use Vaulter\Sharing\ShareResolution;
-use Vaulter\Sharing\ShareResolver;
-use Vaulter\Sharing\ShareSession;
 
 /**
  * Resolves the {token} route parameter of a PUBLIC share endpoint into a

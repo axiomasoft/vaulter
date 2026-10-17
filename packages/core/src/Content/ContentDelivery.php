@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Content;
 
 use DateTimeImmutable;
-use Vaulter\Access\OperationGuard;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DownloadsConfig;
 use Vaulter\Data\Drive\FileStream;
 use Vaulter\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Sharing\ShareContext;
+use Vaulter\Drive\Sharing\ShareResolver;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -23,8 +25,6 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
-use Vaulter\Sharing\ShareContext;
-use Vaulter\Sharing\ShareResolver;
 
 /** Every new byte or capability request enters fresh authorization and availability. */
 #[Internal]

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileCreateGate;
-use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Testing\Fixtures\TestUser;
 

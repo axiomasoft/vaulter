@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Tests\Fixtures;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Repositories\Access\GrantStoreRepository;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Support\PanelNodes;
-use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Access\GrantStoreRepository;
 
 /**
  * Builders for the Filament resource tests: a fresh storage + a folder under its

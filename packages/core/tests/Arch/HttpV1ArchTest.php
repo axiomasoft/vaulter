@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Access\AccessResolver;
+use Vaulter\Drive\Access\AccessResolver;
 
 /**
  * The shape of the v1 HTTP layer (P6-invariants#Bypass): single-action controllers over
@@ -13,8 +13,6 @@ use Vaulter\Access\AccessResolver;
  * point for bytes and signed URLs.
  */
 const V1_CONTROLLER_NAMESPACES = [
-    'Vaulter\Http\Controllers\Access',
-    'Vaulter\Http\Controllers\Sharing',
     'Vaulter\Http\Controllers\Activity',
     'Vaulter\Http\Controllers\Changes',
     'Vaulter\Http\Controllers\Webhooks',
@@ -29,7 +27,7 @@ arch('v1 controllers are final single-action classes')
 it('gives v1 controllers no public method besides the constructor and __invoke', function (): void {
     $root = dirname(__DIR__, 2).'/src/Http/Controllers';
     $offenders = [];
-    foreach ((new Finder)->files()->in([$root.'/Access', $root.'/Sharing', $root.'/Activity', $root.'/Changes', $root.'/Webhooks'])->name('*.php') as $file) {
+    foreach ((new Finder)->files()->in([$root.'/Activity', $root.'/Changes', $root.'/Webhooks'])->name('*.php') as $file) {
         $class = 'Vaulter\\Http\\Controllers\\'.str_replace(['/', '.php'], ['\\', ''], substr($file->getPathname(), strlen($root) + 1));
         foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             if (!in_array($method->getName(), ['__construct', '__invoke'], true)) {
@@ -42,7 +40,7 @@ it('gives v1 controllers no public method besides the constructor and __invoke',
 });
 
 arch('drive-scoped v1 controllers go through the operations, never Actions or Repositories')
-    ->expect(array_slice(V1_CONTROLLER_NAMESPACES, 0, 4))
+    ->expect(array_slice(V1_CONTROLLER_NAMESPACES, 0, 2))
     ->not->toUse(['Vaulter\Actions', 'Vaulter\Drive\Actions', 'Vaulter\Repositories', 'Vaulter\Drive\Repositories']);
 
 arch('no v1 controller or resource asks the AccessResolver itself')

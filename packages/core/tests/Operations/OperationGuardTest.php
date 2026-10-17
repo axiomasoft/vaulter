@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\TestCase;

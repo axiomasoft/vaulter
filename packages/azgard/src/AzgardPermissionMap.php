@@ -6,7 +6,7 @@ namespace Vaulter\Azgard;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Configuration\AzgardConfig;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Ability;
 
 /**
  * Typed accessors over vaulter-azgard — the AzGuard host-role lane's

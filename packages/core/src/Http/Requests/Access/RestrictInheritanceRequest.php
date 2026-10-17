@@ -6,7 +6,7 @@ namespace Vaulter\Http\Requests\Access;
 
 use Illuminate\Validation\Rule;
 use Vaulter\Attributes\Internal;
-use Vaulter\Enums\Access\InheritanceRestriction;
+use Vaulter\Drive\Enums\Access\InheritanceRestriction;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
