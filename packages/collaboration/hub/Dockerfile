@@ -21,10 +21,14 @@ FROM node:${NODE_VERSION} AS runtime
 WORKDIR /app
 
 # Secure default: the published image runs as production, so the hub demands an explicit
-# Origin allowlist (CSWSH) and backend URL rather than booting open (see config.js).
+# Origin allowlist (CSWSH) and backend URL rather than booting open (see config.js). The
+# management listener (/livez, /readyz, /metrics) binds loopback: the HEALTHCHECK below runs inside
+# the container; set VAULTER_COLLAB_MANAGEMENT_HOST=0.0.0.0 only for probes from outside it (a
+# Kubernetes kubelet, a Prometheus scrape) and never route a public ingress to that port.
 ENV NODE_ENV=production \
     VAULTER_COLLAB_PORT=1234 \
-    VAULTER_COLLAB_HEALTH_PORT=1235
+    VAULTER_COLLAB_MANAGEMENT_HOST=127.0.0.1 \
+    VAULTER_COLLAB_MANAGEMENT_PORT=1235
 
 COPY --chown=node:node --from=deps /app/node_modules ./node_modules
 COPY --chown=node:node package.json ./
@@ -33,11 +37,17 @@ COPY --chown=node:node src ./src
 # Run as the unprivileged built-in `node` user (never root).
 USER node
 
-EXPOSE 1234 1235
+EXPOSE 1234
 
-# Liveness for compose/orchestrator — hits the SEPARATE health port (never the WS port).
+# SIGTERM drains the hub (src/shutdown.js): writes stop, the pending ledger flushes for up to
+# VAULTER_COLLAB_SHUTDOWN_FLUSH_MS (30 s), then destroy() for up to VAULTER_COLLAB_SHUTDOWN_DESTROY_MS
+# (5 s) — give `docker stop -t` / terminationGracePeriodSeconds more than their sum.
+STOPSIGNAL SIGTERM
+
+# Liveness for compose/orchestrator: /livez of the management listener (never the WS port). It
+# depends on nothing but the event loop; readiness is /readyz.
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
-  CMD node -e "fetch('http://localhost:'+(process.env.VAULTER_COLLAB_HEALTH_PORT||1235)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "const h=process.env.VAULTER_COLLAB_MANAGEMENT_HOST;const host=!h||h==='0.0.0.0'||h==='::'?'127.0.0.1':h;fetch('http://'+host+':'+(process.env.VAULTER_COLLAB_MANAGEMENT_PORT||1235)+'/livez').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 LABEL org.opencontainers.image.title="Vaulter Hocuspocus hub" \
       org.opencontainers.image.description="Reusable, env-configured Hocuspocus collaboration server for Vaulter (Yjs realtime document editing)." \

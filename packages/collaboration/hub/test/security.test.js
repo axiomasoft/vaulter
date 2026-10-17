@@ -92,9 +92,24 @@ test('validateConfig: a port outside 1..65535 is rejected', () => {
   assert.ok(validateConfig(dev({ VAULTER_COLLAB_PORT: '70000' })).some((p) => p.includes('VAULTER_COLLAB_PORT')))
 })
 
-test('validateConfig: the WS port and the health port must differ', () => {
-  const problems = validateConfig(dev({ VAULTER_COLLAB_PORT: '1234', VAULTER_COLLAB_HEALTH_PORT: '1234' }))
-  assert.ok(problems.some((p) => p.includes('must differ')))
+test('validateConfig: the WS port and the management port must differ', () => {
+  const problems = validateConfig(dev({ VAULTER_COLLAB_PORT: '1234', VAULTER_COLLAB_MANAGEMENT_PORT: '1234' }))
+  assert.ok(problems.some((p) => p.includes('VAULTER_COLLAB_MANAGEMENT_PORT') && p.includes('must differ')))
+})
+
+test('the management listener binds loopback by default; an empty or invalid address or port is fatal', () => {
+  assert.equal(dev().managementHost, '127.0.0.1')
+  assert.equal(prod().managementHost, '127.0.0.1')
+  assert.equal(dev().managementPort, 1235)
+  assert.equal(dev({ VAULTER_COLLAB_MANAGEMENT_HOST: '0.0.0.0' }).managementHost, '0.0.0.0')
+  assert.ok(validateConfig(dev({ VAULTER_COLLAB_MANAGEMENT_HOST: ' ' })).some((p) => p.includes('VAULTER_COLLAB_MANAGEMENT_HOST')))
+  assert.ok(validateConfig(dev({ VAULTER_COLLAB_MANAGEMENT_PORT: '70000' })).some((p) => p.includes('VAULTER_COLLAB_MANAGEMENT_PORT')))
+  assert.ok(validateConfig(dev({ VAULTER_COLLAB_READY_BACKEND_TTL_MS: '1500', VAULTER_COLLAB_COMPACTION_INTERVAL_MS: '2000' })).some((p) => p.includes('VAULTER_COLLAB_READY_BACKEND_TTL_MS')))
+})
+
+test('the retired health port is not configuration any more', () => {
+  assert.equal('healthPort' in dev(), false)
+  assert.deepEqual(validateConfig(dev({ VAULTER_COLLAB_HEALTH_PORT: '1234' })), [], 'an old variable is ignored, not validated')
 })
 
 test('validateConfig: a negative throttle window is rejected', () => {
@@ -105,7 +120,7 @@ test('validateConfig: a negative throttle window is rejected', () => {
 test('validateConfig: a well-formed dev config with custom numerics stays valid', () => {
   const problems = validateConfig(dev({
     VAULTER_COLLAB_PORT: '2000',
-    VAULTER_COLLAB_HEALTH_PORT: '2001',
+    VAULTER_COLLAB_MANAGEMENT_PORT: '2001',
     VAULTER_COLLAB_THROTTLE: '30',
     VAULTER_COLLAB_THROTTLE_SECONDS: '120',
   }))

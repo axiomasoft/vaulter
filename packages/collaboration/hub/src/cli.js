@@ -162,7 +162,8 @@ export async function main(argv, { out = (text) => process.stdout.write(`${text}
     const { boot } = await import('./index.js')
     await boot()
 
-    // The hub runs until a signal stops it (Hocuspocus' own handler exits the process).
+    // The hub runs until a signal stops it: the shutdown coordinator (src/shutdown.js) drains it and
+    // exits the process.
     return null
   }
 

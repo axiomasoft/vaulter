@@ -81,10 +81,10 @@ test('no signature is sent when no webhook secret is configured (the backend the
 
 test('authenticate maps the backend answer and defaults to read-only', async () => {
   const cases = [
-    [{ allowed: true, mode: 'rw', userId: '7', epoch: 3 }, { allowed: true, mode: 'rw', userId: '7', epoch: 3, conflict: null }],
-    [{ allowed: true, mode: 'ro', userId: '7', epoch: 3 }, { allowed: true, mode: 'ro', userId: '7', epoch: 3, conflict: null }],
-    [{ allowed: true }, { allowed: true, mode: 'ro', userId: null, epoch: null, conflict: null }],
-    [{ allowed: false }, { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: null }],
+    [{ allowed: true, mode: 'rw', userId: '7', epoch: 3 }, { allowed: true, mode: 'rw', userId: '7', epoch: 3, conflict: null, status: 200 }],
+    [{ allowed: true, mode: 'ro', userId: '7', epoch: 3 }, { allowed: true, mode: 'ro', userId: '7', epoch: 3, conflict: null, status: 200 }],
+    [{ allowed: true }, { allowed: true, mode: 'ro', userId: null, epoch: null, conflict: null, status: 200 }],
+    [{ allowed: false }, { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: null, status: 200 }],
   ]
 
   for (const [answer, expected] of cases) {
@@ -100,7 +100,7 @@ test('authenticate refuses on any non-2xx and names an epoch or protocol conflic
 
   assert.deepEqual(
     await authenticate({ token: 't', room: 'r' }, { config: cfg, fetchImpl: unauthenticated.fetchImpl }),
-    { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: null },
+    { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: null, status: 401 },
   )
   assert.equal((await authenticate({ token: 't', room: 'r' }, { config: cfg, fetchImpl: epoch.fetchImpl })).conflict, 'collaboration_epoch_mismatch')
   assert.equal((await authenticate({ token: 't', room: 'r' }, { config: cfg, fetchImpl: protocol.fetchImpl })).conflict, 'collaboration_protocol_mismatch')

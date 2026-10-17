@@ -7,7 +7,10 @@ packages/collaboration/hub/test/envelope.test.js
 packages/collaboration/hub/test/epoch-fence.test.js
 packages/collaboration/hub/test/hocuspocus-v4.test.js
 packages/collaboration/hub/test/ledger.test.js
+packages/collaboration/hub/test/limits.test.js
 packages/collaboration/hub/test/load-seed.test.js
+packages/collaboration/hub/test/management.test.js
+packages/collaboration/hub/test/metrics.test.js
 packages/collaboration/hub/test/modes.test.js
 packages/collaboration/hub/test/on-connect.test.js
 packages/collaboration/hub/test/origins.test.js
@@ -16,6 +19,7 @@ packages/collaboration/hub/test/redis-extension-wiring.test.js
 packages/collaboration/hub/test/retry.test.js
 packages/collaboration/hub/test/schema-parity.test.js
 packages/collaboration/hub/test/security.test.js
+packages/collaboration/hub/test/shutdown.test.js
 packages/collaboration/hub/test/v1-paths.test.js
 packages/collaboration/hub/test/webhook.test.js
 packages/collaboration/hub/test/websocket-hardening.test.js

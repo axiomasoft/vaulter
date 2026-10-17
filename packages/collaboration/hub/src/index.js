@@ -1,11 +1,28 @@
 import 'dotenv/config'
 import { Server } from '@hocuspocus/server'
 import { Throttle } from '@hocuspocus/extension-throttle'
-import { createServer } from 'node:http'
 import * as backendModule from './backend.js'
 import { config, isOriginAllowed, validateConfig } from './config.js'
+import { createLimits, isWriteMessage, LIMIT } from './limits.js'
+import { createBackendStatus, createManagement, createReadiness, instrumentBackend } from './management.js'
+import { createHubMetrics, roomStats } from './metrics.js'
 import { CLIENT_PROTOCOL, createPersistence, epochChanged } from './persistence.js'
-import { closeConnection, closeRoom, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, TOKEN_EXPIRED } from './rooms.js'
+import {
+  closeConnection,
+  closeEveryRoom,
+  closeRoom,
+  DOCUMENT_GONE,
+  DOCUMENT_TOO_LARGE,
+  DRAINING,
+  EPOCH_CHANGED,
+  FORBIDDEN,
+  RATE_LIMITED,
+  TOKEN_EXPIRED,
+  TOO_MANY_CONNECTIONS,
+  TOO_MANY_ROOMS,
+  UPDATE_TOO_LARGE,
+} from './rooms.js'
+import { createShutdown } from './shutdown.js'
 import { createWorker } from './worker.js'
 
 // Vaulter collaboration hub — the external, env-configured Hocuspocus process.
@@ -31,21 +48,26 @@ import { createWorker } from './worker.js'
 //      with a new Y.Doc.
 //   6. The compaction worker (src/worker.js) leases the generations due for a checkpoint — open
 //      room or not, drain requests first — merges each log and publishes the checkpoint.
+//   7. The management listener (src/management.js: /livez, /readyz, /metrics) runs on a port of its
+//      own, on loopback by default; the shutdown coordinator (src/shutdown.js) is the one handler of
+//      SIGTERM/SIGINT — the Server runs with stopOnSignals: false — and drains the hub with
+//      deadlines.
 //
 // Started by `vaulter-collaboration-hub serve` (src/cli.js) or `node src/index.js`.
 //
 // Hardening: Origin allowlist, Throttle (per-IP), maxPayload, perMessageDeflate off, token expiry
-// enforced before every message, optional Redis (multi-instance) + Logger, fail-fast config
-// validation, graceful shutdown (stopOnSignals=true).
+// enforced before every message, the limits of src/limits.js checked before anything is decoded,
+// optional Redis (multi-instance) + Logger, fail-fast config validation, a bounded drain on shutdown.
 
-export { CLIENT_PROTOCOL, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, TOKEN_EXPIRED }
+export { CLIENT_PROTOCOL, DOCUMENT_GONE, DRAINING, EPOCH_CHANGED, FORBIDDEN, TOKEN_EXPIRED }
 
 /**
  * Build the extension chain. Throttle is registered FIRST (the docs require it before any other
  * extension) so handshake-flood protection runs ahead of everything. Redis and Logger are opt-in
- * and lazily imported so the default (single-instance) path stays light.
+ * and lazily imported so the default (single-instance) path stays light. The Redis clients are
+ * pushed into `redisClients`: /readyz requires them ready.
  */
-async function buildExtensions() {
+async function buildExtensions({ redisClients = [] } = {}) {
   const extensions = [
     new Throttle({
       throttle: config.throttle,
@@ -61,7 +83,12 @@ async function buildExtensions() {
     const { Redis } = await import('@hocuspocus/extension-redis')
     extensions.push(new Redis({
       identifier: config.instanceName,
-      createClient: () => new IORedis(config.redisUrl),
+      createClient: () => {
+        const client = new IORedis(config.redisUrl)
+        redisClients.push(client)
+
+        return client
+      },
     }))
   }
 
@@ -120,12 +147,12 @@ function readClientProtocol(requestParameters) {
 }
 
 /**
- * The `exp` (unix seconds) claim of a JWT, read WITHOUT verifying its signature — the hub never
- * holds the signing secret, and the backend verifies the token on every call. This is local
- * bookkeeping so the hub knows when to stop accepting messages; it grants nothing on its own.
- * Malformed/missing → null.
+ * The claims of a JWT, read WITHOUT verifying its signature — the hub never holds the signing
+ * secret, and the backend verifies the token on every call. Local bookkeeping only (when to stop
+ * accepting messages, which tenant a room counts for once the backend accepted the token); it grants
+ * nothing on its own. Malformed → null.
  */
-function decodeTokenExpiry(token) {
+function decodeTokenClaims(token) {
   if (typeof token !== 'string') {
     return null
   }
@@ -139,10 +166,37 @@ function decodeTokenExpiry(token) {
   try {
     const payload = JSON.parse(Buffer.from(segments[1], 'base64url').toString('utf8'))
 
-    return typeof payload.exp === 'number' ? payload.exp : null
+    return payload !== null && typeof payload === 'object' ? payload : null
   } catch {
     return null
   }
+}
+
+/** The `exp` (unix seconds) claim of a JWT, unverified (see decodeTokenClaims); missing → null. */
+function decodeTokenExpiry(token) {
+  const exp = decodeTokenClaims(token)?.exp
+
+  return typeof exp === 'number' ? exp : null
+}
+
+/** The refusal of a connection while the hub drains: the client connects to another hub. */
+function drainingRefusal() {
+  return Object.assign(new Error(DRAINING.reason), { reason: DRAINING.reason })
+}
+
+/** The close code and reason of a limit (src/limits.js). */
+const LIMIT_CLOSE = Object.freeze({
+  [LIMIT.UPDATE_BYTES]: UPDATE_TOO_LARGE,
+  [LIMIT.DOCUMENT_BYTES]: DOCUMENT_TOO_LARGE,
+  [LIMIT.UPDATES_PER_SECOND]: RATE_LIMITED,
+  [LIMIT.CONNECTIONS_PER_ROOM]: TOO_MANY_CONNECTIONS,
+  [LIMIT.ROOMS_PER_TENANT]: TOO_MANY_ROOMS,
+})
+
+function limitRefusal(limit) {
+  const { reason } = LIMIT_CLOSE[limit] ?? RATE_LIMITED
+
+  return Object.assign(new Error(reason), { reason })
 }
 
 /**
@@ -181,17 +235,43 @@ function tokenExpired() {
  * The hub's Hocuspocus hooks. `backend` is the protocol 2 client (src/backend.js) and is
  * injectable, like the rest of the persistence options (backendOptions, conf, clock, sleep, random,
  * redisOrigins, serverToken), so the hooks run in tests against a mock backend; `log` receives
- * token-free messages only.
+ * token-free messages only. `draining()` is the shutdown coordinator's state (no connection gets in
+ * while it is true); `limits` (src/limits.js) is shared with the persistence.
  */
-export function createHooks({ backend = backendModule, log = console, persistence = null, ...options } = {}) {
-  const store = persistence ?? createPersistence({ backend, log, ...options })
+export function createHooks({ backend = backendModule, log = console, persistence = null, draining = () => false, limits = null, ...options } = {}) {
+  const limit = limits ?? persistence?.limits ?? createLimits(options.conf ?? config)
+  const store = persistence ?? createPersistence({ backend, log, limits: limit, ...options })
+
+  /**
+   * The upgrade gate, ahead of authentication: nothing gets in while the hub drains; then the Origin
+   * allowlist (CSWSH) and the room's connection limit.
+   */
+  async function admit(payload) {
+    if (draining()) {
+      throw drainingRefusal()
+    }
+
+    await onConnect(payload)
+
+    const crossed = limit.admission(payload?.documentName)
+
+    if (crossed !== null) {
+      limit.count(crossed)
+      throw limitRefusal(crossed)
+    }
+  }
 
   /**
    * The connect gate. allowed:false (or a 409 for a past epoch) refuses the socket; a read-only
    * mode — or a client without protocol 2 — makes Hocuspocus drop the connection's updates
-   * (server-side), and the hub refuses its envelopes.
+   * (server-side), and the hub refuses its envelopes. A new room of a tenant at its room limit is
+   * refused.
    */
   async function onAuthenticate({ token, documentName, connection, connectionConfig, requestParameters }) {
+    if (draining()) {
+      throw drainingRefusal()
+    }
+
     if (!token) {
       throw new Error('Missing collaboration token')
     }
@@ -218,6 +298,16 @@ export function createHooks({ backend = backendModule, log = console, persistenc
       throw new Error('Collaboration connection rejected by the Vaulter backend')
     }
 
+    // The backend accepted the token, so its tenant claim is the room's tenant.
+    const claimed = decodeTokenClaims(token)?.tenant
+    const tenant = typeof claimed === 'string' ? claimed : null
+    const crossed = limit.admission(documentName, tenant)
+
+    if (crossed !== null) {
+      limit.count(crossed)
+      throw limitRefusal(crossed)
+    }
+
     const protocol = readClientProtocol(requestParameters)
     const readOnly = result.mode !== 'rw' || protocol !== CLIENT_PROTOCOL
 
@@ -230,22 +320,45 @@ export function createHooks({ backend = backendModule, log = console, persistenc
     }
     armExpiryTimer(connection, exp)
 
-    return { token, room: documentName, mode: result.mode, readOnly, protocol, userId: result.userId, exp }
+    return { token, room: documentName, mode: result.mode, readOnly, protocol, userId: result.userId, exp, tenant }
   }
 
-  /** The live connection is known here: close it when its token expires, and register it. */
+  /**
+   * The live connection is known here: one that came in while the hub started draining is closed
+   * 4503, one past a room or tenant limit (connections that got in concurrently) 4429; any other is
+   * registered and closed when its token expires.
+   */
   async function connected(payload) {
-    armExpiryTimer(payload?.connection, payload?.context?.exp ?? null)
+    const connection = payload?.connection
+    const documentName = payload?.documentName ?? connection?.document?.name
+
+    if (draining()) {
+      closeConnection(connection, DRAINING)
+
+      return
+    }
+
+    const crossed = limit.register(documentName, payload?.socketId ?? connection, payload?.context?.tenant ?? null)
+
+    if (crossed !== null) {
+      closeConnection(connection, LIMIT_CLOSE[crossed] ?? RATE_LIMITED)
+
+      return
+    }
+
+    armExpiryTimer(connection, payload?.context?.exp ?? null)
     await store.connected(payload)
   }
 
   /**
    * Refuse every message once the connection's token has expired: rights are only re-checked on
-   * the backend calls, so an expired token must not keep editing. While writes are stopped, a
-   * writer's sync writes are dropped (src/persistence.js).
+   * the backend calls, so an expired token must not keep editing. Then the limits, from the raw
+   * message before Hocuspocus decodes it: a message above its size closes the connection 4413, a
+   * writer's sync write past the room's rate 4429. While its room takes no writes (writes stopped,
+   * draining, the room at its size limit) a writer's sync writes are dropped (src/persistence.js).
    */
   async function beforeHandleMessage(payload) {
-    const { context, connection } = payload ?? {}
+    const { context, connection, update } = payload ?? {}
 
     if (typeof context?.exp === 'number' && context.exp * 1000 <= Date.now()) {
       // A bare throw would reach the client as "Reset Connection"; close with 4001 first.
@@ -256,18 +369,42 @@ export function createHooks({ backend = backendModule, log = console, persistenc
       throw new Error(TOKEN_EXPIRED.reason)
     }
 
+    const tooLarge = limit.messageLimit(update)
+
+    if (tooLarge !== null) {
+      limit.count(tooLarge)
+      closeConnection(connection, LIMIT_CLOSE[tooLarge])
+
+      throw new Error(LIMIT_CLOSE[tooLarge].reason)
+    }
+
+    const documentName = payload?.documentName ?? connection?.document?.name
+
+    if (connection && connection.readOnly !== true && isWriteMessage(update) && !limit.admitWrite(documentName, 'sync')) {
+      closeConnection(connection, RATE_LIMITED)
+
+      throw new Error(RATE_LIMITED.reason)
+    }
+
     await store.beforeHandleMessage(payload)
   }
 
+  async function onDisconnect(payload) {
+    limit.unregister(payload?.documentName ?? payload?.connection?.document?.name, payload?.socketId ?? payload?.connection)
+    await store.onDisconnect(payload)
+  }
+
   return {
+    onConnect: admit,
     onAuthenticate,
     connected,
     beforeHandleMessage,
     onLoadDocument: store.onLoadDocument,
     onStateless: store.onStateless,
-    onDisconnect: store.onDisconnect,
+    onDisconnect,
     afterUnloadDocument: store.afterUnloadDocument,
     persistence: store,
+    limits: limit,
     isFenced: store.isFenced,
   }
 }
@@ -292,12 +429,15 @@ export function websocketOptions() {
  * Build the Hocuspocus `Server` with the hardened configuration. name/timeout/debounce/maxDebounce/
  * quiet are production-tuned via env. In v4 the WebSocket frame limits are wired via the
  * `websocketOptions` config key (forwarded to the crossws transport). `Server` owns the HTTP server
- * + upgrade handling. The persistence is attached to the server's Hocuspocus instance; its ledger
- * cycle starts with boot().
+ * + upgrade handling. stopOnSignals is off: the shutdown coordinator (src/shutdown.js) is the one
+ * handler of SIGTERM/SIGINT — Hocuspocus' own would await a destroy() that can hang. The
+ * persistence is attached to the server's Hocuspocus instance; its ledger cycle starts with boot().
+ * `backend`, `draining` and `redisClients` are boot()'s (the instrumented client, the coordinator's
+ * state, the Redis clients /readyz watches).
  */
-async function buildServer({ hooks = null } = {}) {
-  const extensions = await buildExtensions()
-  const serverHooks = hooks ?? createHooks({ redisOrigins: redisExtensionsOf(extensions) })
+async function buildServer({ hooks = null, backend = backendModule, draining = () => false, redisClients = [] } = {}) {
+  const extensions = await buildExtensions({ redisClients })
+  const serverHooks = hooks ?? createHooks({ backend, draining, redisOrigins: redisExtensionsOf(extensions) })
   const server = new Server({
     name: config.instanceName,
     port: config.port,
@@ -305,9 +445,10 @@ async function buildServer({ hooks = null } = {}) {
     debounce: config.debounce,
     maxDebounce: config.maxDebounce,
     quiet: config.quiet,
+    stopOnSignals: false,
     websocketOptions: websocketOptions(),
     extensions,
-    onConnect,
+    onConnect: serverHooks.onConnect ?? onConnect,
     onAuthenticate: serverHooks.onAuthenticate,
     connected: serverHooks.connected,
     beforeHandleMessage: serverHooks.beforeHandleMessage,
@@ -319,63 +460,19 @@ async function buildServer({ hooks = null } = {}) {
 
   serverHooks.persistence.attach(server.hocuspocus)
   server.vaulterPersistence = serverHooks.persistence
+  server.vaulterLimits = serverHooks.limits
 
   return server
 }
 
+const LOOPBACK = Object.freeze(['127.0.0.1', '::1', 'localhost'])
+
 /**
- * A tiny HTTP health endpoint for the compose/orchestrator healthcheck, on a SEPARATE port so it
- * never interferes with the WebSocket upgrade handling on the main port.
+ * Start the hub: the WebSocket server with its hooks, the compaction worker, the management
+ * listener and the shutdown coordinator, which takes SIGTERM/SIGINT from `processRef` and ends the
+ * process through `exit`. Every backend answer feeds the readiness (src/management.js).
  */
-function activeRoomStats(server) {
-  const documents = server?.hocuspocus?.documents
-
-  if (!documents || typeof documents.size !== 'number') {
-    return { rooms: 0, connections: 0 }
-  }
-
-  let connections = 0
-
-  for (const document of documents.values()) {
-    const count = document?.connections?.size
-    connections += typeof count === 'number' ? count : 0
-  }
-
-  return { rooms: documents.size, connections }
-}
-
-function startHealthEndpoint(server) {
-  const health = createServer((req, res) => {
-    if (req.url === '/stats') {
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify(activeRoomStats(server)))
-      return
-    }
-
-    if (req.url === '/health' || req.url === '/healthz' || req.url === '/') {
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ status: 'ok', service: 'vaulter-hocuspocus', name: config.instanceName }))
-      return
-    }
-    res.writeHead(404, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ status: 'not_found' }))
-  })
-
-  health.listen(config.healthPort, () => {
-    // eslint-disable-next-line no-console
-    console.log(`Vaulter collab health endpoint on http://0.0.0.0:${config.healthPort}/health`)
-  })
-
-  // Hocuspocus handles its own graceful shutdown on SIGINT/SIGTERM (stopOnSignals=true);
-  // close the companion health server alongside so the process can exit cleanly.
-  for (const signal of ['SIGINT', 'SIGTERM']) {
-    process.once(signal, () => health.close())
-  }
-
-  return health
-}
-
-async function boot() {
+async function boot({ processRef = process, exit = (code) => process.exit(code) } = {}) {
   const problems = validateConfig()
   if (problems.length > 0) {
     // eslint-disable-next-line no-console
@@ -387,23 +484,72 @@ async function boot() {
     // eslint-disable-next-line no-console
     console.warn('Vaulter collab hub: Origin allowlist is OPEN (dev / "*") — set VAULTER_COLLAB_ALLOWED_ORIGINS in production.')
   }
+  if (!LOOPBACK.includes(config.managementHost)) {
+    // eslint-disable-next-line no-console
+    console.warn(`Vaulter collab hub: the management listener binds ${config.managementHost}; it is unauthenticated — never route a public ingress to it.`)
+  }
 
-  const server = await buildServer()
-  server.vaulterPersistence.start()
-  startHealthEndpoint(server)
+  const metrics = createHubMetrics()
+  let coordinator = null
+  let persistence = null
+  const draining = () => coordinator?.draining() === true
+  const status = createBackendStatus({
+    ttlMs: config.readyBackendTtlMs,
+    onProtocol: (mismatch) => (mismatch ? persistence?.reportProtocolMismatch() : persistence?.protocolCompatible()),
+  })
+  const backend = instrumentBackend(backendModule, { status, onAppend: (seconds) => metrics.appendLatency.observe(seconds) })
+  const redisClients = []
+  const server = await buildServer({ backend, draining, redisClients })
+  persistence = server.vaulterPersistence
+
+  const worker = createWorker({
+    backend,
+    events: {
+      protocolMismatch: () => persistence.reportProtocolMismatch(),
+      compacted: ({ seconds }) => metrics.compactionSeconds.observe(seconds),
+    },
+  })
+  const readiness = createReadiness({
+    websocket: () => server.httpServer?.listening === true,
+    backend: status,
+    redis: config.redisUrl ? () => redisClients.length > 0 && redisClients.every((client) => client.status === 'ready') : null,
+    draining,
+  })
+  const rooms = () => roomStats(server.hocuspocus)
+  metrics.bind({ rooms, persistence, worker, limits: server.vaulterLimits, readiness, draining })
+  const management = createManagement({
+    host: config.managementHost,
+    port: config.managementPort,
+    readiness,
+    metrics: () => metrics.render(),
+    stats: rooms,
+  })
+
+  coordinator = createShutdown({
+    persistence,
+    closeConnections: () => closeEveryRoom(server.hocuspocus, DRAINING),
+    destroy: () => server.destroy(),
+    stopWorker: () => worker.stop(),
+    closeManagement: () => management.close(),
+    onUnflushed: (count) => metrics.shutdownUnflushed.set(count),
+    conf: config,
+    exit,
+  })
+  // Before anything listens: a signal during the start drains as well.
+  coordinator.install(processRef)
+
+  await management.start()
+  // eslint-disable-next-line no-console
+  console.log(`Vaulter collab hub management on http://${config.managementHost}:${config.managementPort} (/livez, /readyz, /metrics)`)
+  persistence.start()
   await server.listen()
   // eslint-disable-next-line no-console
   console.log(`Vaulter Hocuspocus hub "${config.instanceName}" listening on ws://0.0.0.0:${config.port} (${config.mode})`)
-
-  const worker = createWorker({ events: { protocolMismatch: () => server.vaulterPersistence.reportProtocolMismatch() } })
   worker.start()
-  server.vaulterWorker = worker
 
-  for (const signal of ['SIGINT', 'SIGTERM']) {
-    process.once(signal, () => {
-      worker.stop()
-    })
-  }
+  server.vaulterWorker = worker
+  server.vaulterManagement = management
+  server.vaulterShutdown = coordinator
 
   return server
 }
@@ -418,4 +564,4 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   })
 }
 
-export { boot, buildServer, buildExtensions, onConnect, decodeTokenExpiry, armExpiryTimer, closeRoom, activeRoomStats, readClientProtocol }
+export { boot, buildServer, buildExtensions, onConnect, decodeTokenClaims, decodeTokenExpiry, armExpiryTimer, closeRoom, readClientProtocol }

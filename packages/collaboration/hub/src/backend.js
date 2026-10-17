@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import { config as defaultConfig } from './config.js'
+import { requestLimit } from './limits.js'
 import { parseRetryAfter } from './retry.js'
 
 // The hub's client of the Laravel backend, protocol 2 (D26):
@@ -24,6 +25,10 @@ import { parseRetryAfter } from './retry.js'
 // append makes ONE attempt and reports what happened; repeating it is the job of src/retry.js,
 // driven by the pending ledger. Tokens never appear in errors or logs. fetch and config are
 // injectable for tests.
+//
+// A body above MAX_REQUEST_BYTES (a checkpoint: the base64 state of MAX_DOCUMENT_BYTES on top) is
+// never sent: the call is answered here with the 413 collaboration_update_too_large the backend's
+// size gate would give.
 
 export const PROTOCOL_HEADER = 'X-Vaulter-Collab-Protocol'
 export const PROTOCOL_VERSION = '2'
@@ -33,6 +38,7 @@ export const EPOCH_MISMATCH = 'collaboration_epoch_mismatch'
 export const PROTOCOL_MISMATCH = 'collaboration_protocol_mismatch'
 export const SEED_CONFLICT = 'collaboration_seed_conflict'
 export const CHECKPOINT_CONFLICT = 'collaboration_checkpoint_conflict'
+export const UPDATE_TOO_LARGE = 'collaboration_update_too_large'
 
 /**
  * A non-2xx answer the hub does not retry. `status` and the problem `code` only — the request
@@ -79,6 +85,15 @@ function headersFor({ token, signed }) {
 
 async function post(endpoint, payload, token, { config = defaultConfig, fetchImpl = globalThis.fetch, timeoutMs } = {}) {
   const rawBody = JSON.stringify({ ...payload, nonce: crypto.randomUUID() })
+  const maxBytes = requestLimit(endpoint, config)
+
+  if (Buffer.byteLength(rawBody) > maxBytes) {
+    return new Response(JSON.stringify({ code: UPDATE_TOO_LARGE, max_bytes: maxBytes }), {
+      status: 413,
+      headers: { 'Content-Type': 'application/problem+json' },
+    })
+  }
+
   const controller = new AbortController()
   const limit = timeoutMs ?? config.webhookTimeoutMs
   const timer = limit ? setTimeout(() => controller.abort(), limit) : null
@@ -114,10 +129,10 @@ function header(response, name) {
 }
 
 /**
- * onAuthenticate: { allowed, mode, userId, epoch, conflict }. Anything but a clear allowed answer
- * refuses the connection, and anything but a clear 'rw' is read-only. `conflict` names the problem
- * of a 409: the room's epoch is over (the client asks for a new session) or the backend does not
- * speak protocol 2.
+ * onAuthenticate: { allowed, mode, userId, epoch, conflict, status }. Anything but a clear allowed
+ * answer refuses the connection, and anything but a clear 'rw' is read-only. `conflict` names the
+ * problem of a 409: the room's epoch is over (the client asks for a new session) or the backend does
+ * not speak protocol 2. `status` is the HTTP status (the readiness reads it).
  */
 export async function authenticate({ token, room }, options = {}) {
   const response = await post('authenticate', { room }, token, options)
@@ -125,7 +140,7 @@ export async function authenticate({ token, room }, options = {}) {
   if (!response.ok) {
     const code = response.status === 409 ? await problemCode(response) : null
 
-    return { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: code }
+    return { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: code, status: response.status }
   }
 
   const payload = await response.json().catch(() => ({}))
@@ -136,6 +151,7 @@ export async function authenticate({ token, room }, options = {}) {
     userId: payload?.userId ?? null,
     epoch: Number.isInteger(payload?.epoch) ? payload.epoch : null,
     conflict: null,
+    status: response.status,
   }
 }
 

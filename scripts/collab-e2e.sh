@@ -13,7 +13,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 port="${VAULTER_E2E_PORT:-8787}"
 hub_port="${VAULTER_E2E_HUB_PORT:-18234}"
-health_port="$((hub_port + 1))"
+management_port="$((hub_port + 1))"
 log_dir="$root/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.5"
 log="${VAULTER_E2E_LOG:-$log_dir/collab-e2e.log}"
 work="$(mktemp -d "${TMPDIR:-/tmp}/vaulter-collab-e2e.XXXXXX")"
@@ -90,14 +90,14 @@ echo "== hub :$hub_port" | tee -a "$log"
     VAULTER_LARAVEL_WEBHOOK_URL="http://127.0.0.1:${port}/api/vaulter/v1" \
     VAULTER_COLLAB_WEBHOOK_SECRET="$webhook_secret" \
     VAULTER_COLLAB_PORT="$hub_port" \
-    VAULTER_COLLAB_HEALTH_PORT="$health_port" \
+    VAULTER_COLLAB_MANAGEMENT_PORT="$management_port" \
     VAULTER_COLLAB_DEBOUNCE_MS=200 \
     VAULTER_COLLAB_MAX_DEBOUNCE_MS=1000 \
     VAULTER_COLLAB_THROTTLE=1000 \
     exec node src/index.js
 ) >>"$log" 2>&1 &
 pids+=("$!")
-wait_for "http://127.0.0.1:${health_port}/health" "hub"
+wait_for "http://127.0.0.1:${management_port}/livez" "hub"
 
 echo "== restore-epoch e2e" | tee -a "$log"
 status=0

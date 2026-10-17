@@ -4,9 +4,12 @@ import { TiptapTransformer } from '@hocuspocus/transformer'
 import * as backendModule from './backend.js'
 import { config as defaultConfig } from './config.js'
 import { createLedger } from './ledger.js'
+import { createLimits, envelopeIdOf, isWriteMessage, LIMIT } from './limits.js'
 import { retryPolicy } from './retry.js'
 import { closeConnection, closeRoom, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, TOKEN_EXPIRED } from './rooms.js'
 import { extensionsFor, FIELD, lostAttributes } from './schema.js'
+
+export { isWriteMessage }
 
 // The hub's persistence, protocol 2 (D26). The room is never stored as a whole: every Yjs update
 // that must reach the backend is appended once, as one log record, by the pending ledger
@@ -40,8 +43,15 @@ import { extensionsFor, FIELD, lostAttributes } from './schema.js'
 //     does not answer (an exhausted retry series) writes stop in every room and new envelopes are
 //     nacked retry:true: the client keeps them queued. serverWrite() returns after the append.
 //
-// The hub tells each connection {"t":"status","mode","writes":"open|stopped"} when it connects and
-// whenever the writes switch.
+// Writes also stop for good once the shutdown coordinator drains the hub (stopWrites, src/shutdown.js),
+// and in one room once its Yjs state reached MAX_DOCUMENT_BYTES (src/limits.js): the room's state is
+// estimated from the updates it took and measured (Y.encodeStateAsUpdate) only when the estimate
+// says a write would cross the limit; past it, its writers are read-only and an envelope is nacked
+// `document_too_large` unless the room already holds its update (a sync message brought it first).
+//
+// The hub tells each connection {"t":"status","mode","writes":"open"} — or {…,"writes":"stopped",
+// "reason"} with reason draining | pending_budget | backend_unavailable | protocol_mismatch |
+// document_too_large — when it connects and whenever that switches.
 
 /** The client ↔ hub protocol this hub speaks; a client without it is read-only. */
 export const CLIENT_PROTOCOL = 2
@@ -53,7 +63,22 @@ export const NACK = Object.freeze({
   FORBIDDEN: 'forbidden',
   WRITES_STOPPED: 'writes_stopped',
   UPDATE_MISMATCH: 'collaboration_update_mismatch',
+  UPDATE_TOO_LARGE: 'collaboration_update_too_large',
+  DOCUMENT_TOO_LARGE: 'document_too_large',
+  RATE_LIMITED: 'rate_limited',
 })
+
+/** Why writes are stopped (the `reason` of a stopped status). */
+export const STOP_REASON = Object.freeze({
+  DRAINING: 'draining',
+  PENDING_BUDGET: 'pending_budget',
+  BACKEND_UNAVAILABLE: 'backend_unavailable',
+  PROTOCOL_MISMATCH: 'protocol_mismatch',
+  DOCUMENT_TOO_LARGE: 'document_too_large',
+})
+
+/** A room's state is measured again only after it grew by this much since the last measure. */
+const MEASURE_STEP_BYTES = 64 * 1024
 
 /** How many times a seed is rebuilt after a seed conflict before the load gives up. */
 const SEED_ATTEMPTS = 3
@@ -175,55 +200,26 @@ export function buildSeed(loaded) {
   return update
 }
 
-function readVarUint(bytes, cursor) {
-  let value = 0
-  let multiplier = 1
-
-  for (;;) {
-    if (cursor.position >= bytes.length || multiplier > 2 ** 49) {
-      return null
-    }
-
-    const byte = bytes[cursor.position++]
-    value += (byte & 0x7f) * multiplier
-
-    if (byte < 0x80) {
-      return value
-    }
-
-    multiplier *= 0x80
-  }
-}
-
-/** Hocuspocus message types that carry a Yjs sync message (Sync, SyncReply). */
-const SYNC_MESSAGES = Object.freeze([0, 4])
-
 /**
- * Whether a raw Hocuspocus message writes to the document: a sync step 2 or a y-protocols update
- * (`varString documentName · varUint type · varUint syncType …`). Step 1 and everything else read.
+ * Whether a document already holds every struct an update inserts (its state vector covers the
+ * update's): applying it then only repeats it or deletes, and adds no content. False for an update
+ * Yjs cannot read.
  */
-export function isWriteMessage(bytes) {
-  if (!(bytes instanceof Uint8Array)) {
+export function holdsUpdate(document, update) {
+  try {
+    const incoming = Y.decodeStateVector(Y.encodeStateVectorFromUpdate(update))
+    const current = Y.decodeStateVector(Y.encodeStateVector(document))
+
+    for (const [client, clock] of incoming) {
+      if ((current.get(client) ?? 0) < clock) {
+        return false
+      }
+    }
+
+    return true
+  } catch {
     return false
   }
-
-  const cursor = { position: 0 }
-  const nameLength = readVarUint(bytes, cursor)
-
-  if (nameLength === null) {
-    return false
-  }
-
-  cursor.position += nameLength
-  const type = readVarUint(bytes, cursor)
-
-  if (!SYNC_MESSAGES.includes(type)) {
-    return false
-  }
-
-  const step = readVarUint(bytes, cursor)
-
-  return step === 1 || step === 2
 }
 
 /** The refusal of a room whose generation is over; the client reopens the document. */
@@ -242,7 +238,8 @@ export function isWriter(context) {
  * time (clock, sleep, random) is injectable for the ledger. `redisOrigins` are the Redis extension
  * instances of the server (their transactions are never appended here). `serverToken(documentName)`
  * may name the token server changes are appended with; by default a connected writer's current
- * token is used.
+ * token is used. `limits` (src/limits.js) is shared with the hooks; one is made from `conf` when
+ * none is given.
  */
 export function createPersistence({
   backend = backendModule,
@@ -255,10 +252,15 @@ export function createPersistence({
   redisOrigins = [],
   serverToken = null,
   uuid = () => crypto.randomUUID(),
+  limits = null,
 } = {}) {
   const mode = conf.mode === 'durable' ? 'durable' : 'buffered'
   const policy = retryPolicy(conf)
-  /** documentName → { generation, document } of a loaded room. */
+  const limit = limits ?? createLimits(conf, { clock })
+  /**
+   * documentName → the loaded room: { generation, document, exact (its measured state bytes, null
+   * before the first measure), growth (bytes of the updates since), full (at MAX_DOCUMENT_BYTES) }.
+   */
   const rooms = new Map()
   /** Rooms whose generation ended or whose document is gone: nothing of theirs is appended any more. */
   const fenced = new Set()
@@ -268,10 +270,16 @@ export function createPersistence({
    */
   const writers = new Map()
   const contexts = new WeakMap()
+  /** connection → the room it joined. */
+  const roomOf = new WeakMap()
   /** Writers set read-only while writes are stopped; given back their writes when they reopen. */
   const muted = new Set()
   let instance = null
   let writesStopped = false
+  /** Why writes are stopped in every room (a STOP_REASON), null while open. */
+  let stopReason = null
+  /** A stop nothing reopens: the shutdown coordinator's (stopWrites). */
+  let forcedStop = null
   let protocolMismatch = false
   /** The records captured while serverWrite() runs its change. */
   let capturing = null
@@ -296,6 +304,9 @@ export function createPersistence({
     log,
     events: {
       acked: (entry, ack) => {
+        // A commit proves the backend speaks protocol 2 again.
+        protocolCompatible()
+
         for (const connection of entry.connections) {
           send(connection, { t: 'ack', id: entry.clientId, seq: ack.seq, g: ack.generation ?? entry.generation })
         }
@@ -367,18 +378,42 @@ export function createPersistence({
     }
 
     protocolMismatch = true
+    evaluateWrites()
   }
 
-  function allConnections() {
-    const found = new Set()
+  /** A 2xx of the backend: it speaks protocol 2 (again). */
+  function protocolCompatible() {
+    if (!protocolMismatch) {
+      return
+    }
 
-    for (const document of instance?.documents?.values?.() ?? []) {
-      for (const connection of typeof document?.getConnections === 'function' ? document.getConnections() : []) {
+    protocolMismatch = false
+    log.info?.('Vaulter collab hub: the backend speaks collaboration protocol 2 again')
+    evaluateWrites()
+  }
+
+  function documentConnections(documentName) {
+    const document = instance?.documents?.get?.(documentName)
+
+    return typeof document?.getConnections === 'function' ? document.getConnections() : []
+  }
+
+  /** The connections of one room (documentName) or of every room. */
+  function allConnections(documentName) {
+    const found = new Set()
+    const names = documentName === undefined ? [...(instance?.documents?.keys?.() ?? [])] : [documentName]
+
+    for (const name of names) {
+      for (const connection of documentConnections(name)) {
         found.add(connection)
       }
     }
 
-    for (const room of writers.values()) {
+    for (const [name, room] of writers) {
+      if (documentName !== undefined && name !== documentName) {
+        continue
+      }
+
       for (const { connection } of room.values()) {
         found.add(connection)
       }
@@ -387,20 +422,37 @@ export function createPersistence({
     return [...found]
   }
 
-  function statusMessage() {
-    return { t: 'status', mode, writes: writesStopped ? 'stopped' : 'open' }
+  function nameOf(connection) {
+    return roomOf.get(connection) ?? connection?.document?.name
   }
 
-  /** While writes are stopped a writer is read-only: Hocuspocus drops its sync writes. */
+  /** Why a room takes no writes now (null: it takes them). */
+  function stopReasonFor(documentName) {
+    if (writesStopped) {
+      return stopReason
+    }
+
+    return rooms.get(documentName)?.full === true ? STOP_REASON.DOCUMENT_TOO_LARGE : null
+  }
+
+  function statusMessage(documentName) {
+    const reason = stopReasonFor(documentName)
+
+    return reason === null ? { t: 'status', mode, writes: 'open' } : { t: 'status', mode, writes: 'stopped', reason }
+  }
+
+  /** While a room takes no writes, a writer is read-only: Hocuspocus drops its sync writes. */
   function gate(connection) {
     if (!connection || !isWriter(contextOf(connection))) {
       return
     }
 
-    if (writesStopped && connection.readOnly !== true) {
+    const stopped = stopReasonFor(nameOf(connection)) !== null
+
+    if (stopped && connection.readOnly !== true) {
       connection.readOnly = true
       muted.add(connection)
-    } else if (!writesStopped && muted.has(connection)) {
+    } else if (!stopped && muted.has(connection)) {
       connection.readOnly = false
       muted.delete(connection)
     }
@@ -417,24 +469,88 @@ export function createPersistence({
     return Number.isFinite(perRoom) && ledger.documents().some((documentName) => ledger.pendingBytes(documentName) > perRoom)
   }
 
-  function evaluateWrites() {
-    const stop = mode === 'durable' ? (!ledger.available() || protocolMismatch) : overBudget()
+  /** Why writes must stop in every room now (null: they may be open). */
+  function globalStopReason() {
+    if (forcedStop !== null) {
+      return forcedStop
+    }
 
-    if (stop === writesStopped) {
+    if (mode === 'durable') {
+      if (protocolMismatch) {
+        return STOP_REASON.PROTOCOL_MISMATCH
+      }
+
+      return ledger.available() ? null : STOP_REASON.BACKEND_UNAVAILABLE
+    }
+
+    return overBudget() ? STOP_REASON.PENDING_BUDGET : null
+  }
+
+  function evaluateWrites() {
+    const reason = globalStopReason()
+    const stop = reason !== null
+
+    if (stop === writesStopped && reason === stopReason) {
       return
     }
 
     writesStopped = stop
+    stopReason = reason
 
     if (stop) {
-      log.warn?.(`Vaulter collab hub: writes stopped in every room (${mode === 'durable' ? 'the backend does not answer' : 'the pending budget is used up'})`)
+      log.warn?.(`Vaulter collab hub: writes stopped in every room (${reason})`)
     } else {
       log.info?.('Vaulter collab hub: writes open again')
     }
 
     for (const connection of allConnections()) {
       gate(connection)
-      send(connection, statusMessage())
+      send(connection, statusMessage(nameOf(connection)))
+    }
+  }
+
+  /**
+   * Stop the writes in every room for good (the shutdown coordinator drains the hub): writers become
+   * read-only, new envelopes are nacked `writes_stopped` retry:true and server writes are refused;
+   * the pending ledger keeps flushing.
+   */
+  function stopWrites(reason = STOP_REASON.DRAINING) {
+    forcedStop = reason
+    evaluateWrites()
+  }
+
+  /**
+   * Whether `incoming` more bytes would take a room past MAX_DOCUMENT_BYTES. The estimate (the last
+   * measure plus what came since) answers when it says no; otherwise the state is measured — at
+   * most once per MEASURE_STEP_BYTES of growth — and the measure answers.
+   */
+  function exceeds(room, incoming) {
+    const max = limit.settings.maxDocumentBytes
+
+    if ((room.exact ?? 0) + room.growth + incoming <= max) {
+      return false
+    }
+
+    if (room.exact === null || room.growth >= MEASURE_STEP_BYTES) {
+      room.exact = Y.encodeStateAsUpdate(room.document).length
+      room.growth = 0
+    }
+
+    return room.exact + room.growth + incoming > max
+  }
+
+  /** A room reached MAX_DOCUMENT_BYTES: its writers stop, and its connections are told why. */
+  function markFull(documentName, room) {
+    if (room.full) {
+      return
+    }
+
+    room.full = true
+    log.warn?.(`Vaulter collab hub: ${documentName} reached the document size limit (${limit.settings.maxDocumentBytes} bytes); it takes no further content`)
+
+    for (const connection of allConnections(documentName)) {
+      gate(connection)
+      send(connection, statusMessage(documentName))
     }
   }
 
@@ -566,25 +682,52 @@ export function createPersistence({
   /** onLoadDocument: replay the room's log (or seed it), then follow its server changes. */
   async function onLoadDocument({ documentName, document, context, instance: hocuspocus }) {
     bind(hocuspocus)
-    const loaded = await seed(documentName, document, context, await loadLog(context, documentName))
-    const generation = loaded.generation
+    // The bytes the room takes while it loads: the first estimate of its state.
+    let loadedBytes = 0
+    const countLoaded = (update) => { loadedBytes += update.length }
+    let generation
 
-    // Server changes of this room the backend has not committed yet (the room was unloaded while
-    // they were pending): the room holds them again.
-    for (const entry of ledger.entries(documentName)) {
-      if (entry.generation === generation) {
-        Y.applyUpdate(document, Buffer.from(entry.payload, 'base64'), LOAD_ORIGIN)
+    document.on('update', countLoaded)
+
+    try {
+      const loaded = await seed(documentName, document, context, await loadLog(context, documentName))
+      generation = loaded.generation
+
+      // Server changes of this room the backend has not committed yet (the room was unloaded while
+      // they were pending): the room holds them again.
+      for (const entry of ledger.entries(documentName)) {
+        if (entry.generation === generation) {
+          Y.applyUpdate(document, Buffer.from(entry.payload, 'base64'), LOAD_ORIGIN)
+        }
       }
+    } finally {
+      document.off('update', countLoaded)
     }
 
-    rooms.set(documentName, { generation, document })
-    document.on('update', (update, origin) => capture(documentName, update, origin))
+    const room = { generation, document, exact: null, growth: loadedBytes, full: false }
+    rooms.set(documentName, room)
+
+    if (exceeds(room, 0)) {
+      markFull(documentName, room)
+    }
+
+    document.on('update', (update, origin) => {
+      room.growth += update.length
+      capture(documentName, update, origin)
+    })
   }
 
   /** A client's envelope: check it, apply it, append it; the ack follows the commit. */
   function handleEnvelope(connection, documentName, document, message) {
     const id = typeof message.id === 'string' && UUID.test(message.id) ? message.id.toLowerCase() : null
     const reply = (code, retry) => send(connection, { t: 'nack', id: typeof message.id === 'string' ? message.id : null, code, retry })
+
+    // The size first, from the base64 length alone: nothing larger is scanned or decoded.
+    if (typeof message.b === 'string' && limit.updateTooLarge(message.b)) {
+      limit.count(LIMIT.UPDATE_BYTES)
+
+      return reply(NACK.UPDATE_TOO_LARGE, false)
+    }
 
     if (id === null || !Number.isInteger(message.g) || typeof message.h !== 'string' || !HEX64.test(message.h)
       || typeof message.b !== 'string' || !BASE64.test(message.b)) {
@@ -624,10 +767,23 @@ export function createPersistence({
       return reply(NACK.WRITES_STOPPED, true)
     }
 
+    if (!limit.admitWrite(documentName, 'envelope')) {
+      return reply(NACK.RATE_LIMITED, true)
+    }
+
     const bytes = Buffer.from(message.b, 'base64')
 
     if (bytes.length === 0 || sha256Hex(bytes) !== sha256) {
       return reply(NACK.UPDATE_MISMATCH, false)
+    }
+
+    // At the size limit only an update the room already holds (its sync message came first) or one
+    // that only deletes is taken: nothing that adds content.
+    if ((room.full || exceeds(room, bytes.length)) && !holdsUpdate(room.document, bytes)) {
+      limit.count(LIMIT.DOCUMENT_BYTES)
+      markFull(documentName, room)
+
+      return reply(NACK.DOCUMENT_TOO_LARGE, false)
     }
 
     try {
@@ -655,6 +811,15 @@ export function createPersistence({
   /** onStateless: envelopes are JSON objects with t:"u"; any other stateless message is not ours. */
   async function onStateless({ connection, documentName, document, payload, instance: hocuspocus }) {
     bind(hocuspocus)
+
+    // Longer than any envelope may be: refused before it is parsed.
+    if (limit.envelopeTooLarge(payload)) {
+      limit.count(LIMIT.UPDATE_BYTES)
+      send(connection, { t: 'nack', id: envelopeIdOf(payload), code: NACK.UPDATE_TOO_LARGE, retry: false })
+
+      return
+    }
+
     let message
 
     try {
@@ -679,6 +844,10 @@ export function createPersistence({
     contexts.set(connection, context)
     const room = documentName ?? connection.document?.name
 
+    if (room !== undefined) {
+      roomOf.set(connection, room)
+    }
+
     if (isWriter(context)) {
       if (!writers.has(room)) {
         writers.set(room, new Map())
@@ -688,12 +857,28 @@ export function createPersistence({
     }
 
     gate(connection)
-    send(connection, statusMessage())
+    send(connection, statusMessage(room))
   }
 
-  /** While writes are stopped, a writer's sync step 2 / update is not applied (it is dropped as read-only). */
-  async function beforeHandleMessage({ connection, update }) {
-    if (writesStopped && connection && isWriteMessage(update)) {
+  /**
+   * A writer's sync step 2 / update is not applied (it is dropped as read-only) while its room takes
+   * no writes — writes stopped, or the room at its size limit, which a message larger than what is
+   * left reaches (its length is the measure: nothing is decoded).
+   */
+  async function beforeHandleMessage({ connection, update, documentName }) {
+    if (!connection || !isWriteMessage(update)) {
+      return
+    }
+
+    const name = documentName ?? nameOf(connection)
+    const room = rooms.get(name)
+
+    if (room && !room.full && !writesStopped && connection.readOnly !== true && isWriter(contextOf(connection)) && exceeds(room, update.length)) {
+      limit.count(LIMIT.DOCUMENT_BYTES)
+      markFull(name, room)
+    }
+
+    if (stopReasonFor(name) !== null) {
       gate(connection)
     }
   }
@@ -714,6 +899,16 @@ export function createPersistence({
     rooms.delete(documentName)
     fenced.delete(documentName)
     writers.delete(documentName)
+    limit.forgetRoom(documentName)
+  }
+
+  /** Open connections whose authority ended: their token expired (the expiry timer closes them). */
+  function revokedStillConnected(now = clock()) {
+    return allConnections().filter((connection) => {
+      const exp = contextOf(connection)?.exp
+
+      return typeof exp === 'number' && exp * 1000 <= now
+    }).length
   }
 
   /**
@@ -726,8 +921,10 @@ export function createPersistence({
     if (!instance) {
       throw new Error('The collaboration persistence is not attached to a Hocuspocus instance')
     }
-    if (writesStopped) {
-      throw Object.assign(new Error('Collaboration writes are stopped; the server change was not applied'), { code: NACK.WRITES_STOPPED })
+    if (stopReasonFor(documentName) !== null) {
+      const code = writesStopped ? NACK.WRITES_STOPPED : NACK.DOCUMENT_TOO_LARGE
+
+      throw Object.assign(new Error(`Collaboration writes are stopped (${stopReasonFor(documentName)}); the server change was not applied`), { code })
     }
 
     const connection = await instance.openDirectConnection(documentName, context)
@@ -776,19 +973,26 @@ export function createPersistence({
     afterUnloadDocument,
     serverWrite,
     reportProtocolMismatch,
+    protocolCompatible,
+    stopWrites,
+    revokedStillConnected,
     attach: bind,
     start: () => ledger.start(),
     stop: () => ledger.stop(),
     ledger,
+    limits: limit,
     mode,
     isFenced: (documentName) => fenced.has(documentName),
+    isFull: (documentName) => rooms.get(documentName)?.full === true,
     writesStopped: () => writesStopped,
-    /** What the management listener reports (P5.9): mode, writes, protocol and the ledger. */
+    /** What the management listener reports: mode, writes (and why stopped), protocol, rooms and the ledger. */
     state: () => ({
       mode,
       writes: writesStopped ? 'stopped' : 'open',
+      reason: stopReason,
       protocolMismatch,
       rooms: rooms.size,
+      fullRooms: [...rooms.values()].filter((room) => room.full).length,
       ledger: ledger.stats(),
       oldestPendingMs: ledger.oldestAgeMs(),
     }),

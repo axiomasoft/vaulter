@@ -5,7 +5,6 @@
 //
 // Connectivity:
 //   VAULTER_COLLAB_PORT          — WebSocket port the hub listens on (default 1234).
-//   VAULTER_COLLAB_HEALTH_PORT   — HTTP health endpoint port (default 1235).
 //   VAULTER_BACKEND_URL          — Laravel app base URL (e.g. http://app). REQUIRED in prod.
 //   VAULTER_API_PREFIX           — API route prefix (default api/vaulter).
 //   VAULTER_API_URL              — versioned API base the hub calls (…/api/vaulter/v1); must end with /v1.
@@ -44,6 +43,28 @@
 //                                             a drain request waits at most this long plus one merge).
 //   VAULTER_COLLAB_COMPACTION_BATCH         — generations one lease call may hand out (1..100, default 10).
 //
+// Management (src/management.js) — /livez, /readyz, /metrics, /stats on a listener of its own:
+//   VAULTER_COLLAB_MANAGEMENT_HOST          — address it binds (default 127.0.0.1: never routed by a public ingress;
+//                                             0.0.0.0 for container probes from outside the container).
+//   VAULTER_COLLAB_MANAGEMENT_PORT          — its port (default 1235; must differ from the WebSocket port).
+//   VAULTER_COLLAB_READY_BACKEND_TTL_MS     — /readyz counts the backend as reachable while its last 2xx answer is
+//                                             at most this old (default 30000; the compaction worker's lease call
+//                                             is the heartbeat, so it must exceed the compaction interval).
+//
+// Shutdown (src/shutdown.js) — SIGTERM/SIGINT drain the hub:
+//   VAULTER_COLLAB_SHUTDOWN_FLUSH_MS        — how long the pending ledger may flush (default 30000).
+//   VAULTER_COLLAB_SHUTDOWN_DESTROY_MS      — how long Hocuspocus' destroy() may take after that (default 5000). The
+//                                             orchestrator's grace period must exceed their sum.
+//
+// Limits (src/limits.js) — checked before anything is decoded:
+//   VAULTER_COLLAB_MAX_UPDATE_BYTES         — one Yjs update (default 1 MiB, as the backend's limits.update_bytes).
+//   VAULTER_COLLAB_MAX_DOCUMENT_BYTES       — the Yjs state of one room (default 16 MiB, as max_state_bytes).
+//   VAULTER_COLLAB_MAX_REQUEST_BYTES        — one backend request body (default 2 MiB, as limits.request_bytes; a
+//                                             checkpoint may carry the base64 state on top).
+//   VAULTER_COLLAB_MAX_ROOMS_PER_TENANT     — rooms of one tenant open on this hub (default 1000).
+//   VAULTER_COLLAB_MAX_CONNECTIONS_PER_ROOM — connections of one room on this hub (default 100).
+//   VAULTER_COLLAB_MAX_UPDATES_PER_SECOND_PER_ROOM — writes one room takes per second (default 200).
+//
 // Scaling / ops:
 //   VAULTER_COLLAB_REDIS_URL      — when set, enables the Redis extension (multi-instance sync).
 //   VAULTER_COLLAB_INSTANCE_NAME  — unique name per instance for log correlation.
@@ -53,6 +74,8 @@
 //
 // The room JWT is minted by Laravel and forwarded by the client; the hub does NOT need
 // the JWT signing secret — it only relays the token to the webhook (which verifies it).
+
+import { appendRequestBytes, envelopeLength } from './limits.js'
 
 function str(name, fallback = undefined, env = process.env) {
   const value = env[name]
@@ -145,7 +168,6 @@ export function buildConfig(env = process.env) {
 
   return {
     port: int('VAULTER_COLLAB_PORT', 1234, env),
-    healthPort: int('VAULTER_COLLAB_HEALTH_PORT', 1235, env),
     webhookBase: resolveWebhookBase(env),
     backendUrlSet: ['VAULTER_BACKEND_URL', 'VAULTER_API_URL', 'VAULTER_LARAVEL_WEBHOOK_URL']
       .some((name) => typeof str(name, undefined, env) === 'string'),
@@ -179,6 +201,23 @@ export function buildConfig(env = process.env) {
     // Compaction
     compactionIntervalMs: int('VAULTER_COLLAB_COMPACTION_INTERVAL_MS', 2000, env),
     compactionBatch: int('VAULTER_COLLAB_COMPACTION_BATCH', 10, env),
+
+    // Management
+    managementHost: str('VAULTER_COLLAB_MANAGEMENT_HOST', '127.0.0.1', env).trim(),
+    managementPort: int('VAULTER_COLLAB_MANAGEMENT_PORT', 1235, env),
+    readyBackendTtlMs: int('VAULTER_COLLAB_READY_BACKEND_TTL_MS', 30000, env),
+
+    // Shutdown
+    shutdownFlushMs: int('VAULTER_COLLAB_SHUTDOWN_FLUSH_MS', 30000, env),
+    shutdownDestroyMs: int('VAULTER_COLLAB_SHUTDOWN_DESTROY_MS', 5000, env),
+
+    // Limits
+    maxUpdateBytes: int('VAULTER_COLLAB_MAX_UPDATE_BYTES', 1024 * 1024, env),
+    maxDocumentBytes: int('VAULTER_COLLAB_MAX_DOCUMENT_BYTES', 16 * 1024 * 1024, env),
+    maxRequestBytes: int('VAULTER_COLLAB_MAX_REQUEST_BYTES', 2 * 1024 * 1024, env),
+    maxRoomsPerTenant: int('VAULTER_COLLAB_MAX_ROOMS_PER_TENANT', 1000, env),
+    maxConnectionsPerRoom: int('VAULTER_COLLAB_MAX_CONNECTIONS_PER_ROOM', 100, env),
+    maxUpdatesPerSecondPerRoom: int('VAULTER_COLLAB_MAX_UPDATES_PER_SECOND_PER_ROOM', 200, env),
 
     // Scaling / ops
     redisUrl: str('VAULTER_COLLAB_REDIS_URL', undefined, env),
@@ -219,7 +258,16 @@ export function isOriginAllowed(origin, conf = config) {
 // keys the one-shot `compact --pending` uses too (it opens no WebSocket).
 const NUMERIC = Object.freeze([
   { key: 'port', env: 'VAULTER_COLLAB_PORT', min: 1, max: 65535 },
-  { key: 'healthPort', env: 'VAULTER_COLLAB_HEALTH_PORT', min: 1, max: 65535 },
+  { key: 'managementPort', env: 'VAULTER_COLLAB_MANAGEMENT_PORT', min: 1, max: 65535 },
+  { key: 'readyBackendTtlMs', env: 'VAULTER_COLLAB_READY_BACKEND_TTL_MS', min: 1000 },
+  { key: 'shutdownFlushMs', env: 'VAULTER_COLLAB_SHUTDOWN_FLUSH_MS', min: 0 },
+  { key: 'shutdownDestroyMs', env: 'VAULTER_COLLAB_SHUTDOWN_DESTROY_MS', min: 0 },
+  { key: 'maxUpdateBytes', env: 'VAULTER_COLLAB_MAX_UPDATE_BYTES', min: 1 },
+  { key: 'maxDocumentBytes', env: 'VAULTER_COLLAB_MAX_DOCUMENT_BYTES', min: 1 },
+  { key: 'maxRequestBytes', env: 'VAULTER_COLLAB_MAX_REQUEST_BYTES', min: 1, backend: true },
+  { key: 'maxRoomsPerTenant', env: 'VAULTER_COLLAB_MAX_ROOMS_PER_TENANT', min: 1 },
+  { key: 'maxConnectionsPerRoom', env: 'VAULTER_COLLAB_MAX_CONNECTIONS_PER_ROOM', min: 1 },
+  { key: 'maxUpdatesPerSecondPerRoom', env: 'VAULTER_COLLAB_MAX_UPDATES_PER_SECOND_PER_ROOM', min: 1 },
   { key: 'maxPayloadBytes', env: 'VAULTER_COLLAB_MAX_PAYLOAD_BYTES', min: 1 },
   { key: 'throttle', env: 'VAULTER_COLLAB_THROTTLE', min: 1 },
   { key: 'throttleSeconds', env: 'VAULTER_COLLAB_THROTTLE_SECONDS', min: 1 },
@@ -272,6 +320,9 @@ function backendProblems(conf) {
   if (Number.isInteger(conf.retryAttemptTimeoutMs) && Number.isInteger(conf.retryDeadlineMs) && conf.retryAttemptTimeoutMs > conf.retryDeadlineMs) {
     problems.push('VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS must be <= VAULTER_COLLAB_RETRY_DEADLINE_MS.')
   }
+  if (Number.isInteger(conf.maxUpdateBytes) && Number.isInteger(conf.maxRequestBytes) && appendRequestBytes(conf.maxUpdateBytes) > conf.maxRequestBytes) {
+    problems.push(`VAULTER_COLLAB_MAX_REQUEST_BYTES must hold the append of an update of VAULTER_COLLAB_MAX_UPDATE_BYTES (at least ${appendRequestBytes(conf.maxUpdateBytes)}).`)
+  }
 
   return problems
 }
@@ -289,8 +340,21 @@ export function validateConfig(conf = config) {
   }
 
   problems.push(...numericProblems(conf, NUMERIC))
-  if (Number.isInteger(conf.port) && conf.port === conf.healthPort) {
-    problems.push('VAULTER_COLLAB_PORT and VAULTER_COLLAB_HEALTH_PORT must differ.')
+  if (Number.isInteger(conf.port) && conf.port === conf.managementPort) {
+    problems.push('VAULTER_COLLAB_PORT and VAULTER_COLLAB_MANAGEMENT_PORT must differ.')
+  }
+  if (typeof conf.managementHost !== 'string' || conf.managementHost === '') {
+    problems.push('VAULTER_COLLAB_MANAGEMENT_HOST must name an address (default 127.0.0.1).')
+  }
+  if (Number.isInteger(conf.readyBackendTtlMs) && Number.isInteger(conf.compactionIntervalMs) && conf.readyBackendTtlMs <= conf.compactionIntervalMs) {
+    problems.push('VAULTER_COLLAB_READY_BACKEND_TTL_MS must exceed VAULTER_COLLAB_COMPACTION_INTERVAL_MS (the lease call is the readiness heartbeat).')
+  }
+  if (Number.isInteger(conf.maxUpdateBytes) && Number.isInteger(conf.maxDocumentBytes) && conf.maxDocumentBytes < conf.maxUpdateBytes) {
+    problems.push('VAULTER_COLLAB_MAX_DOCUMENT_BYTES must be >= VAULTER_COLLAB_MAX_UPDATE_BYTES.')
+  }
+  // The frame must carry the largest envelope, or an update within its limit is cut by the transport.
+  if (Number.isInteger(conf.maxUpdateBytes) && Number.isInteger(conf.maxPayloadBytes) && conf.maxPayloadBytes < envelopeLength(conf.maxUpdateBytes) + 1024) {
+    problems.push(`VAULTER_COLLAB_MAX_PAYLOAD_BYTES must hold an envelope of VAULTER_COLLAB_MAX_UPDATE_BYTES (at least ${envelopeLength(conf.maxUpdateBytes) + 1024}).`)
   }
   if (!PERSISTENCE_MODES.includes(conf.mode)) {
     problems.push(`VAULTER_COLLAB_MODE must be one of ${PERSISTENCE_MODES.join(', ')}.`)

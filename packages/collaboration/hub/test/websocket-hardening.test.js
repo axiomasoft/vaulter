@@ -96,6 +96,21 @@ test('F-P4.5-02: buildServer wires the hardened websocketOptions (maxPayload + p
   }
 })
 
+test('P5.9: buildServer leaves the signals to the shutdown coordinator and wires the draining/limit gates', async () => {
+  const server = await buildServer({ draining: () => true })
+  try {
+    assert.equal(server.configuration.stopOnSignals, false,
+      'Hocuspocus\' own SIGTERM handler awaits a destroy() that can hang; src/shutdown.js is the one handler')
+    const gate = server.configuration.onConnect ?? server.hocuspocus.configuration.onConnect
+    assert.notEqual(gate, onConnect, 'the upgrade gate is the hooks\' (draining, connections per room), not the bare Origin check')
+    await assert.rejects(gate({ documentName: 'vaulter.documents.1.42.0', requestHeaders: {} }), /draining/)
+    assert.equal(typeof server.vaulterLimits?.messageLimit, 'function', 'the limits are shared with the persistence')
+    assert.equal(server.vaulterLimits, server.vaulterPersistence.limits)
+  } finally {
+    await server.destroy()
+  }
+})
+
 test('F-P4.5-02: the Throttle flood guard leads the extension chain with the configured per-IP limits', async () => {
   // Handshake-flood / reconnect-loop protection (Addendum A.3). Throttle MUST run before any
   // other extension, configured from the same env-driven limits.
