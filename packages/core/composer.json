@@ -49,7 +49,7 @@
         "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions.",
         "axioma-studio/vaulter-media": "Content-addressed file/blob layer (CAS): the concrete ContentStore/StorageDriver/BlobStore engine behind the Contracts\\Cas seam. Required for Drive file upload/download/versioning.",
         "axioma-studio/vaulter-drive": "File/folder tree behaviour + resumable uploads: StorageManager, the DriveHandle factory, PurgeTrash/SweepUploads. Required for Vaulter::for()/forStorage() and the Drive REST surface.",
-        "axioma-studio/vaulter-documents": "Document-node behaviour: the format-handler registry, TipTap/export engines and real-time collaboration (Hocuspocus JWT minting needs firebase/php-jwt ^6.0). Required for Vaulter::registerHandler()/registerExporter() and the document REST surface.",
+        "axioma-studio/vaulter-documents": "Document-node behaviour: the format-handler registry, TipTap/export engines and real-time collaboration (Hocuspocus JWT minting needs firebase/php-jwt ^7.0). Required for Vaulter::registerHandler()/registerExporter() and the document REST surface.",
         "orchestra/testbench": "Testing kit (Vaulter\\Testing\\*): the base of every suite and of FreshApplication; the kit is loaded by tests only.",
         "opis/json-schema": "Testing kit: the OpenAPI contract check (VAULTER_OPENAPI_VALIDATE=1).",
         "symfony/yaml": "Testing kit: reads openapi/vaulter-v1.yaml for the contract check."

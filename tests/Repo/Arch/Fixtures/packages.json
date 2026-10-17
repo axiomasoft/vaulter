@@ -12,6 +12,7 @@
                 "Vaulter\\Azgard\\": "src/"
             },
             "target_require": [
+                "core",
                 "drive"
             ]
         },
@@ -21,7 +22,9 @@
                 "Vaulter\\Collaboration\\": null
             },
             "target_require": [
-                "documents"
+                "core",
+                "documents",
+                "drive"
             ]
         },
         "core": {
@@ -47,6 +50,7 @@
                 "Vaulter\\Documents\\Database\\Factories\\": "database/factories/"
             },
             "target_require": [
+                "core",
                 "drive"
             ]
         },
@@ -79,6 +83,7 @@
                 "Vaulter\\Filament\\": "src/"
             },
             "target_require": [
+                "core",
                 "drive"
             ]
         },

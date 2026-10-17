@@ -11391,7 +11391,7 @@
   "additions": {
     "repo": {
       "introduced": "P1.3",
-      "count": 220,
+      "count": 221,
       "names": [
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__I3_and_I4_block__I1_and_I2_report_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
@@ -11450,6 +11450,7 @@
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__schema_extractor__→_it_folds_the_custom___prefix_into_v___and_notes_a_column_the_original_snapshot_does_not_have",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__schema_extractor__→_it_records_what_follows_the_id_strategy_as_variants_and_nothing_else",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__schema_extractor__→_it_treats_a_difference_that_follows_the_table_prefix_as_drift__exit_1_",
+        "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_D32__an_I2_entry_naming_a_package_P5_extracts_as_target__owner_may_outlive_the_blocking_phase__nothing_else_may",
         "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_allows_never_only_for_the_permanent_I4_categories_and_a_non_empty_list_only_in_report_mode",
         "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_anchors_a_reference_to_the_enclosing_method__the_class_or_the_file",
         "P\\Tests\\Repo\\Arch\\InventoryHarnessTest::__pest_evaluable_it_bounds_removed__in_by_the_phase_an_invariant_blocks_from_and_requires_an_I4_category",

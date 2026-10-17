@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.14",
   "title": "Явные Composer require всех пакетов и остаток D32 documents→collaboration в i2",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Каждый пакет объявляет в `require` все пакеты, чьи типы импортирует (documents, webhooks, azgard, filament → core явно; documents → media при прямых импортах); `packages.json` current/target_require сверены; i2 needs-explicit-require = 0; 27 записей documents→collaboration получают removed_in P5 и поздний допуск target_owner=collaboration в `Allowlist.php` (D32).",
   "why": "architecture#packages: не полагаться на транзитивный require; I14 ломается без явных зависимостей. D32 требует исправить i2-фикстуру до блокировки I2 (P4.16).",
   "scope": {
@@ -194,6 +194,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T05:03:29Z",
+    "finished_at": "2026-10-17T05:11:22Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "I2 needs-explicit-require=0, D32-допуск target_owner=collaboration",
+    "deviations": [
+      "target-граф collaboration расширен до [core, documents, drive]; require в composer уже были — правки только в packages.json; php-jwt suggest ^7.0"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T05:11:22Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T05:11:22Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T05:11:22Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T05:11:22Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T05:11:22Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T05:11:22Z"
 }

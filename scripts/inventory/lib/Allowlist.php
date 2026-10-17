@@ -10,7 +10,7 @@ namespace Vaulter\Inventory;
  * `block` keeps only the entries that may outlive the blocking phase.
  *
  * @phpstan-type Violation array{invariant: string, view: string, file: string, symbol: string, kind: string, target: string, target_owner?: string, count?: int}
- * @phpstan-type Entry array{view: string, file: string, symbol: string, kind: string, target: string, count: int, reason: string, removed_in: string, category?: string}
+ * @phpstan-type Entry array{view: string, file: string, symbol: string, kind: string, target: string, count: int, reason: string, removed_in: string, category?: string, target_owner?: string}
  * @phpstan-type Comparison array{new: list<array{key: string, count: int}>, stale: list<array{key: string, expected: int, found: int}>}
  */
 final class Allowlist
@@ -36,6 +36,12 @@ final class Allowlist
     /** Allowed to outlive the blocking phase: jwt-optional is removed when P5 makes collaboration a require. */
     public const LATE_CATEGORIES = ['jwt-optional'];
 
+    /**
+     * D32: the owners of a package that P5 extracts. An I2 entry naming one of them as `target_owner` may outlive the
+     * blocking phase (removed_in P5): documents refers to collaboration types until the package exists.
+     */
+    public const LATE_TARGET_OWNERS = ['collaboration'];
+
     /** @var array<string, array{count: int, entry: Entry}> */
     private array $entries = [];
 
@@ -54,11 +60,22 @@ final class Allowlist
             // A blocking list keeps only what may outlive the blocking phase: permanent entries and late categories.
             foreach ($this->entries as $key => $item) {
                 $entry = $item['entry'];
-                if ($entry['removed_in'] !== 'never' && !in_array($entry['category'] ?? null, self::LATE_CATEGORIES, true)) {
-                    throw new InventoryError("{$invariant} allowlist: mode \"block\" admits only \"never\" and ".implode(', ', self::LATE_CATEGORIES).' entries, found '.$key);
+                if ($entry['removed_in'] !== 'never' && !self::isLate($invariant, $entry)) {
+                    throw new InventoryError("{$invariant} allowlist: mode \"block\" admits only \"never\", ".implode(', ', self::LATE_CATEGORIES).' and (I2) target_owner '.implode(', ', self::LATE_TARGET_OWNERS).' entries, found '.$key);
                 }
             }
         }
+    }
+
+    /**
+     * May the entry outlive the blocking phase: a late category, or (I2, D32) a reference to a package P5 extracts.
+     *
+     * @param array<string, mixed> $entry
+     */
+    private static function isLate(string $invariant, array $entry): bool
+    {
+        return in_array($entry['category'] ?? null, self::LATE_CATEGORIES, true)
+            || ($invariant === 'I2' && in_array($entry['target_owner'] ?? null, self::LATE_TARGET_OWNERS, true));
     }
 
     public static function load(Repo $repo, string $relative): self
@@ -194,7 +211,7 @@ final class Allowlist
             throw new InventoryError("{$where} (".self::key($raw).'): I4 needs a "category" of '.implode(', ', self::I4_CATEGORIES));
         }
         $blocksFrom = self::BLOCKS_FROM[$this->invariant] ?? null;
-        if ($blocksFrom !== null && $removedIn !== 'never' && $removedIn > $blocksFrom && !in_array($category, self::LATE_CATEGORIES, true)) {
+        if ($blocksFrom !== null && $removedIn !== 'never' && $removedIn > $blocksFrom && !self::isLate($this->invariant, $raw)) {
             throw new InventoryError("{$where} (".self::key($raw)."): \"removed_in\" {$removedIn} is later than {$this->invariant} blocks ({$blocksFrom})");
         }
         $count = $raw['count'] ?? 1;
@@ -214,6 +231,13 @@ final class Allowlist
         ];
         if (is_string($category) && $category !== '') {
             $entry['category'] = $category;
+        }
+        $targetOwner = $raw['target_owner'] ?? null;
+        if ($targetOwner !== null) {
+            if (!is_string($targetOwner) || $targetOwner === '') {
+                throw new InventoryError("{$where} (".self::key($raw).'): "target_owner" must be a non-empty string');
+            }
+            $entry['target_owner'] = $targetOwner;
         }
 
         return $entry;

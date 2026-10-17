@@ -590,6 +590,17 @@ it('bounds removed_in by the phase an invariant blocks from and requires an I4 c
         ->and(inv_list([inv_entry(['removed_in' => 'P5', 'category' => 'jwt-optional'])], invariant: 'I4')->entries())->toHaveCount(1);
 });
 
+it('D32: an I2 entry naming a package P5 extracts as target_owner may outlive the blocking phase, nothing else may', function (): void {
+    $late = ['removed_in' => 'P5', 'category' => 'reverse-edge', 'target_owner' => 'collaboration'];
+
+    expect(inv_list([inv_entry($late)], invariant: 'I2')->entries()[0]['target_owner'])->toBe('collaboration')
+        ->and(inv_list([inv_entry($late)], 'block', 'I2')->mode)->toBe('block')
+        ->and(fn () => inv_list([inv_entry([...$late, 'target_owner' => 'drive'])], invariant: 'I2'))->toThrow(InventoryError::class, 'later than I2 blocks (P4)')
+        ->and(fn () => inv_list([inv_entry([...$late, 'removed_in' => 'P4', 'target_owner' => 'drive'])], 'block', 'I2'))->toThrow(InventoryError::class, 'admits only')
+        ->and(fn () => inv_list([inv_entry($late)], invariant: 'I1'))->toThrow(InventoryError::class, 'later than I1 blocks (P4)')
+        ->and(fn () => inv_list([inv_entry([...$late, 'removed_in' => 'P3', 'target_owner' => ''])], invariant: 'I2'))->toThrow(InventoryError::class, 'target_owner');
+});
+
 // --- Rules ----------------------------------------------------------------------------------------------------
 
 /** @return array<string, mixed> */
