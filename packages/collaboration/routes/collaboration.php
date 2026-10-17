@@ -6,10 +6,13 @@ use Illuminate\Support\Facades\Route;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\CreateCollaborationSessionController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubAppendController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubAuthenticateController;
+use Vaulter\Collaboration\Http\Controllers\Collaboration\HubCheckpointController;
+use Vaulter\Collaboration\Http\Controllers\Collaboration\HubCompactionLeaseController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubLoadController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubStoreController;
 use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
+use Vaulter\Collaboration\Http\Middleware\VerifyHubSignature;
 use Vaulter\Configuration\RoutesConfig;
 
 /*
@@ -51,4 +54,18 @@ Route::prefix($routes->versionedPrefix())
     ->middleware([...$routes->hubMiddleware(), 'throttle:vaulter-public', LimitHubAppend::class, ResolveCollaborationCall::class])
     ->group(static function (): void {
         Route::post('collaboration/hub/append', HubAppendController::class)->name('collaboration.hub.append');
+    });
+
+// Protocol 2 compaction: the hub's worker calls for itself, not for a room connection, so the body signature alone
+// authenticates them (no room token); the size gate runs first here too.
+Route::prefix($routes->versionedPrefix())
+    ->name('vaulter.v1.')
+    ->middleware([...$routes->hubMiddleware(), 'throttle:vaulter-public'])
+    ->group(static function (): void {
+        Route::post('collaboration/hub/compaction/lease', HubCompactionLeaseController::class)
+            ->middleware([LimitHubAppend::class, VerifyHubSignature::class])
+            ->name('collaboration.hub.compaction.lease');
+        Route::post('collaboration/hub/checkpoint', HubCheckpointController::class)
+            ->middleware([LimitHubAppend::class.':'.LimitHubAppend::CHECKPOINT, VerifyHubSignature::class])
+            ->name('collaboration.hub.checkpoint');
     });

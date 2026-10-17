@@ -131,6 +131,43 @@ it('moves the epoch for restore and for a JSON replace of Yjs state, never for c
         ->and($restore->checkpoint?->restored_from_revision_id)->toEqual($source->id);
 });
 
+it('keeps the collaborative state a generation closes over in a revision before replacing it', function (StateWriteCause $cause): void {
+    $node = writerDocument();
+    $source = DocumentTestHelpers::head($node);
+    // Collaboration wrote a state the interval did not checkpoint: no revision holds it.
+    writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, schemaVersion: 1, content: DocumentTestHelpers::content('saved edits'), yjsState: "room\0state"));
+
+    $closing = writeState($node, new DocumentStateChange(
+        cause: $cause,
+        schemaVersion: 1,
+        content: DocumentTestHelpers::content('replacement'),
+        yjsState: null,
+        forceCheckpoint: $cause === StateWriteCause::Restore,
+        restoredFrom: $cause === StateWriteCause::Restore ? $source : null,
+    ));
+
+    $kept = DocumentTestHelpers::revisions($node)->firstWhere('yjs_state', "room\0state");
+    expect($closing->epochChanged)->toBeTrue()
+        ->and($kept)->not->toBeNull()
+        ->and($kept?->content)->toEqual(DocumentTestHelpers::content('saved edits')->toArray())
+        ->and($kept?->state_version)->toBe(2)
+        ->and($kept?->is_autosave)->toBeTrue()
+        ->and($closing->document->content)->toEqual(DocumentTestHelpers::content('replacement')->toArray());
+})->with(['restore' => [StateWriteCause::Restore], 'JSON replace' => [StateWriteCause::Update]]);
+
+it('adds no revision when the state a generation closes over is already one, or holds no Yjs state', function (bool $collaborative): void {
+    $node = writerDocument();
+    $source = DocumentTestHelpers::head($node);
+    if ($collaborative) {
+        writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, schemaVersion: 1, content: DocumentTestHelpers::content('saved'), yjsState: 'checkpointed', forceCheckpoint: true));
+    }
+    $before = DocumentTestHelpers::document($node)->revision_count;
+
+    writeState($node, new DocumentStateChange(cause: StateWriteCause::Restore, schemaVersion: 1, content: DocumentTestHelpers::content('v1'), yjsState: null, forceCheckpoint: true, restoredFrom: $source));
+
+    expect(DocumentTestHelpers::document($node)->revision_count)->toBe($before + 1);
+})->with(['checkpointed Yjs state' => [true], 'no Yjs state' => [false]]);
+
 it('prunes after a checkpoint with the head and pinned checkpoints kept', function (): void {
     config()->set('vaulter-documents.revisions.limit', 1);
     $node = writerDocument();

@@ -14,6 +14,9 @@ return [
         'Collaboration/HubProtocolTest.php',
         // The update log, receipts and heads (P5.4): binary payloads, composite keys and the FOR UPDATE head lock.
         'Persistence',
+        // Compaction, drain, closing and prune of generations (P5.5): the same tables, timestamps of leases and retirement.
+        'Restore',
+        'Console/PruneGenerationsTest.php',
     ],
     // Forked children on their own connections, or process-global state a parallel worker would trample.
     'serial' => [

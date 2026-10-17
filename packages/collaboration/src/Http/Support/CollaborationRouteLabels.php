@@ -17,6 +17,8 @@ final class CollaborationRouteLabels implements RouteLabelSource
             'vaulter.v1.documents.collaboration.session' => 'collab_issue',
             'vaulter.v1.collaboration.hub.store' => 'collab_persist',
             'vaulter.v1.collaboration.hub.append' => 'collab_append',
+            'vaulter.v1.collaboration.hub.compaction.lease' => 'collab_lease',
+            'vaulter.v1.collaboration.hub.checkpoint' => 'collab_checkpoint',
         ];
     }
 
@@ -26,6 +28,8 @@ final class CollaborationRouteLabels implements RouteLabelSource
             ['methods' => ['POST'], 'pattern' => 'v1/documents/{id}/collaboration/session', 'operation' => 'collab_issue'],
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/store', 'operation' => 'collab_persist'],
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/append', 'operation' => 'collab_append'],
+            ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/compaction/lease', 'operation' => 'collab_lease'],
+            ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/checkpoint', 'operation' => 'collab_checkpoint'],
         ];
     }
 
@@ -35,6 +39,8 @@ final class CollaborationRouteLabels implements RouteLabelSource
             'vaulter.v1.collaboration.hub.authenticate' => 'collab.authenticate',
             'vaulter.v1.collaboration.hub.store' => 'collab.store',
             'vaulter.v1.collaboration.hub.append' => 'collab.append',
+            'vaulter.v1.collaboration.hub.compaction.lease' => 'collab.lease',
+            'vaulter.v1.collaboration.hub.checkpoint' => 'collab.checkpoint',
         ];
     }
 }

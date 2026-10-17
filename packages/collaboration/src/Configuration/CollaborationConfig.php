@@ -16,12 +16,16 @@ use Vaulter\Support\Identity;
 
 /**
  * The typed reader of the `vaulter-collaboration` configuration root: the transport, the hub (URL, secrets,
- * token lifetime) and the largest Yjs state a store may write. The room channel prefix is the documents package's
+ * token lifetime), the largest Yjs state a store may write, the protocol 2 limits, the compaction triggers and lease,
+ * the drain deadline and the retention of closed generations. The room channel prefix is the documents package's
  * ({@see DocumentsConfig::channelPrefix()}): the comment events of a document broadcast on the same channels.
  */
 #[Api]
 final readonly class CollaborationConfig
 {
+    /** The hub's total retry deadline for one call (seconds), network time included: no retry arrives later. */
+    public const int RETRY_HORIZON_SECONDS = 10;
+
     #[Internal]
     public function __construct(private Repository $config, private DocumentsConfig $documents) {}
 
@@ -119,6 +123,59 @@ final readonly class CollaborationConfig
         return is_numeric($value) && (int) $value > 0 ? (int) $value : 2097152;
     }
 
+    /** The largest checkpoint request body: a base64 state of max_state_bytes and request_bytes for the projection and the rest. */
+    public function checkpointRequestBytes(): int
+    {
+        return 4 * intdiv($this->maxStateBytes() + 2, 3) + $this->requestBytes();
+    }
+
+    /** The uncheckpointed updates of a document generation that make it due for compaction. */
+    public function compactionTriggerUpdates(): int
+    {
+        return $this->positive('vaulter-collaboration.compaction.trigger_updates', 500);
+    }
+
+    /** The bytes of uncheckpointed updates that make a document generation due for compaction. */
+    public function compactionTriggerBytes(): int
+    {
+        return $this->positive('vaulter-collaboration.compaction.trigger_bytes', 1048576);
+    }
+
+    /** The age in seconds of the oldest uncheckpointed update that makes a document generation due for compaction. */
+    public function compactionTriggerAge(): int
+    {
+        return $this->positive('vaulter-collaboration.compaction.trigger_age', 600);
+    }
+
+    /** How many seconds a compaction lease keeps a document from other hubs. */
+    public function compactionLeaseTtl(): int
+    {
+        return $this->positive('vaulter-collaboration.compaction.lease_ttl', 60);
+    }
+
+    /** How many seconds a restore, REST replace, content read or export waits for the hub to drain a pending document. */
+    public function restoreDeadline(): int
+    {
+        return $this->positive('vaulter-collaboration.drain.restore_deadline', 10);
+    }
+
+    /** Days the rows of a closed generation stay once no token or retry of it can arrive any more. */
+    public function retiredGenerationDays(): int
+    {
+        $value = $this->config->get(key: 'vaulter-collaboration.retention.retired_generation_days', default: 7);
+
+        return is_numeric($value) ? max((int) $value, 0) : 7;
+    }
+
+    /**
+     * How long after it closed a generation's rows may go (C11): the lifetime of the last token issued for it, the
+     * hub's retry horizon, then the retention window. Until then a late retry still finds its receipt.
+     */
+    public function retiredGenerationGraceSeconds(): int
+    {
+        return $this->hubTokenTtl() + self::RETRY_HORIZON_SECONDS + $this->retiredGenerationDays() * 86400;
+    }
+
     public function hubWebhookSecret(): ?string
     {
         $value = $this->config->get('vaulter-collaboration.hub.webhook_secret');
@@ -205,5 +262,13 @@ final readonly class CollaborationConfig
             throw new InvalidConfigurationException($message);
         }
         Log::warning($message);
+    }
+
+    /** A positive integer setting; anything else reads as the default. */
+    private function positive(string $key, int $default): int
+    {
+        $value = $this->config->get(key: $key, default: $default);
+
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : $default;
     }
 }

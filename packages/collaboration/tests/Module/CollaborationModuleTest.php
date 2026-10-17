@@ -6,16 +6,22 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
 use Vaulter\Collaboration\CollaborationModule;
+use Vaulter\Collaboration\CollaborationSchedule;
+use Vaulter\Collaboration\Console\PruneGenerationsCommand;
+use Vaulter\Collaboration\Drain\HubDrainer;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Schema\CollaborationSchema;
 use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\State\PendingStateDrainer;
+use Vaulter\Events\EventSink;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Kernel;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleState;
+use Vaulter\Modules\SlotContribution;
 use Vaulter\Testing\Concerns\FreshApplication;
 
 /**
@@ -50,7 +56,24 @@ it('declares an opt-in manifest that needs the documents module', function (): v
         ->and(CollaborationModule::ownedSchema())->toBe(CollaborationSchema::class)
         ->and(array_map(realpath(...), $builder->schemaPaths()))->toBe([realpath(__DIR__.'/../../database/migrations')])
         ->and(array_map(realpath(...), $builder->routeFiles()))->toBe([realpath(__DIR__.'/../../routes/collaboration.php')])
-        ->and(array_map(static fn ($provider): string => $provider->contract.'=>'.$provider->implementation, $builder->capabilityProviders()))->toBe([CollaborationDriver::class.'=>'.HocuspocusCollaborationDriver::class]);
+        ->and(array_map(static fn ($provider): string => $provider->contract.'=>'.$provider->implementation, $builder->capabilityProviders()))->toBe([
+            CollaborationDriver::class.'=>'.HocuspocusCollaborationDriver::class,
+            PendingStateDrainer::class.'=>'.HubDrainer::class,
+        ])
+        ->and($builder->commandClasses())->toBe([PruneGenerationsCommand::class])
+        ->and($builder->schedules())->toBe([CollaborationSchedule::class]);
+});
+
+it('drains pending documents through the hub and closes the generations a restore leaves once it is switched on', function (): void {
+    $app = FreshApplication::boot(['vaulter.modules.collaboration' => true]);
+    $kernel = $app->make(Kernel::class);
+    $sinks = array_map(static fn (SlotContribution $contribution): string => $contribution->id, $kernel->extensions()->contributions(EventSink::class));
+
+    expect($kernel->capabilities()->require(PendingStateDrainer::class))->toBeInstanceOf(HubDrainer::class)
+        ->and($sinks)->toContain('collaboration.generations')
+        ->and($app->make(ConsoleKernel::class)->all())->toHaveKey('vaulter:collaboration:prune')
+        ->and(FreshApplication::$queries)->toBe(0);
+    expect(FreshApplication::boot()->make(Kernel::class)->capabilities()->has(PendingStateDrainer::class))->toBeFalse();
 });
 
 it('stays off by default: no routes, no driver, no operations, and the host still serves its own requests', function (): void {
@@ -82,6 +105,8 @@ it('mounts the session and the hub routes behind the module middleware once it i
             'vaulter.v1.collaboration.hub.load',
             'vaulter.v1.collaboration.hub.store',
             'vaulter.v1.collaboration.hub.append',
+            'vaulter.v1.collaboration.hub.compaction.lease',
+            'vaulter.v1.collaboration.hub.checkpoint',
         ])
         ->and($kernel->capabilities()->require(CollaborationDriver::class))->toBeInstanceOf(HocuspocusCollaborationDriver::class)
         ->and($app['config']->get('vaulter-collaboration.driver'))->toBe('hocuspocus')
@@ -102,7 +127,7 @@ it('keeps the problem codes of the collaboration concept out of the catalogue wh
     $off = FreshApplication::boot()->make(ProblemCatalog::class);
     $on = FreshApplication::boot(['vaulter.modules.collaboration' => true])->make(ProblemCatalog::class);
 
-    foreach (['collaboration_epoch_mismatch', 'collaboration_seed_conflict', 'collaboration_unavailable'] as $code) {
+    foreach (['collaboration_epoch_mismatch', 'collaboration_seed_conflict', 'collaboration_unavailable', 'collaboration_checkpoint_conflict'] as $code) {
         expect($off->has($code))->toBeFalse($code)
             ->and($on->has($code))->toBeTrue($code)
             ->and($on->module($code))->toBe('collaboration')

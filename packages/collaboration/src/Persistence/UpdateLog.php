@@ -104,47 +104,59 @@ final readonly class UpdateLog
                 throw NodeNotFoundException::forId($nodeId);
             }
             $this->fence($locked, $generation);
-            // The row lock() holds, read again under that lock: a plain read would answer from the transaction's
-            // snapshot on MySQL (see below).
-            $document = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->first();
-            if (!$document instanceof Document) {
-                throw new LogicException('[Vaulter] A locked document has no aggregate row.');
-            }
 
-            $head = $this->lockHead($locked, create: false);
-            // The transaction began with a plain read (the node, in lock()): on MySQL (REPEATABLE READ) a plain read here
-            // would answer from that older snapshot and miss an append committed since, while the head FOR UPDATE sees
-            // it. A locking read sees the committed rows, as every read after the lock does on PostgreSQL
-            // (the same split as NodeReadRepository::siblingQuery).
-            $tail = $this->table('collaboration_updates')
-                ->where('document_id', Identity::key($locked->documentId))
-                ->where('generation', $generation)
-                ->where('seq', '>', $head['checkpoint_seq'])
-                ->where('seq', '<=', $head['head_seq'])
-                ->orderBy('seq')
-                ->lockForUpdate()
-                ->get(['seq', 'update_id', 'payload'])
-                ->map(fn (object $row): array => [
-                    'seq' => self::int($row->seq),
-                    'update_id' => Identity::stringify($row->update_id),
-                    'payload' => $this->stored($row->payload),
-                ])
-                ->all();
-            $tail = array_values($tail);
-
-            return new LogSnapshot(
-                documentId: $locked->documentId,
-                generation: $generation,
-                stateVersion: $document->state_version,
-                type: $document->type,
-                schemaVersion: $document->schema_version,
-                content: $document->content,
-                checkpoint: $document->yjs_state,
-                checkpointSeq: $head['checkpoint_seq'],
-                headSeq: $head['head_seq'],
-                tail: $tail,
-            );
+            return $this->read($locked);
         });
+    }
+
+    /**
+     * The checkpoint and the committed tail (C, H] of the locked document's current generation, read in the caller's
+     * transaction, which took `$locked` with CollaborativeState::lock() (the compaction lease reads it so).
+     *
+     * @throws CollaborationEpochMismatchException the generation was retired
+     */
+    public function read(LockedDocumentState $locked): LogSnapshot
+    {
+        // The row lock() holds, read again under that lock: a plain read would answer from the transaction's
+        // snapshot on MySQL (see below).
+        $document = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->first();
+        if (!$document instanceof Document) {
+            throw new LogicException('[Vaulter] A locked document has no aggregate row.');
+        }
+
+        $head = $this->lockHead($locked, create: false);
+        // The transaction began with a plain read (the node, in lock()): on MySQL (REPEATABLE READ) a plain read here
+        // would answer from that older snapshot and miss an append committed since, while the head FOR UPDATE sees
+        // it. A locking read sees the committed rows, as every read after the lock does on PostgreSQL
+        // (the same split as NodeReadRepository::siblingQuery).
+        $tail = $this->table('collaboration_updates')
+            ->where('document_id', Identity::key($locked->documentId))
+            ->where('generation', $locked->generation)
+            ->where('seq', '>', $head['checkpoint_seq'])
+            ->where('seq', '<=', $head['head_seq'])
+            ->orderBy('seq')
+            ->lockForUpdate()
+            ->get(['seq', 'update_id', 'payload'])
+            ->map(fn (object $row): array => [
+                'seq' => self::int($row->seq),
+                'update_id' => Identity::stringify($row->update_id),
+                'payload' => $this->stored($row->payload),
+            ])
+            ->all();
+        $tail = array_values($tail);
+
+        return new LogSnapshot(
+            documentId: $locked->documentId,
+            generation: $locked->generation,
+            stateVersion: $document->state_version,
+            type: $document->type,
+            schemaVersion: $document->schema_version,
+            content: $document->content,
+            checkpoint: $document->yjs_state,
+            checkpointSeq: $head['checkpoint_seq'],
+            headSeq: $head['head_seq'],
+            tail: $tail,
+        );
     }
 
     /** The receipt of `$updateId` in the generation, if it was committed. */

@@ -1260,6 +1260,13 @@
             "id": "problem:collaboration_update_too_large",
             "kind": "protocol",
             "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_checkpoint_conflict",
+            "kind": "protocol",
+            "reason": "P5.5: 409, retryable after_refetch, receipt never — a checkpoint publication that lost its CAS (lease, coverage or checkpoint version); nothing changes, the hub takes a new lease"
         }
     ],
     "items": [
@@ -2351,6 +2358,18 @@
             "source": {
                 "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
+            },
+            "status": 409
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationCheckpointConflictException",
+            "id": "problem:collaboration_checkpoint_conflict",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "after_refetch",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
         },

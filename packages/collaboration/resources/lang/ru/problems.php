@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 return [
+    'collaboration_checkpoint_conflict' => [
+        'title' => 'Конфликт контрольной точки совместной работы',
+        'detail' => 'Журнал документа изменился с момента выдачи аренды компактации.',
+    ],
     'collaboration_epoch_mismatch' => [
         'title' => 'Эпоха совместной работы устарела',
         'detail' => 'Сессия совместной работы устарела.',

@@ -28,4 +28,26 @@ return [
         'update_bytes' => 1048576,
         'request_bytes' => 2097152,
     ],
+    // The hub's compaction worker leases a document with uncheckpointed edits once its log holds this many updates,
+    // this many bytes of them, or its oldest one is this many seconds old; a drain request always qualifies. A lease
+    // lasts lease_ttl seconds.
+    'compaction' => [
+        'trigger_updates' => 500,
+        'trigger_bytes' => 1048576,
+        'trigger_age' => 600,
+        'lease_ttl' => 60,
+    ],
+    'drain' => [
+        // How long a restore, REST replace, content read or export of a document with uncheckpointed edits waits for
+        // the hub to compact them (seconds); after it the request answers 409 document_state_pending.
+        'restore_deadline' => 10,
+    ],
+    'retention' => [
+        // Days the log and receipts of a closed generation stay after its last token and retry could still arrive.
+        'retired_generation_days' => 7,
+    ],
+    // Same value grammar and vaulter.schedule.enabled switch as the core schedule keys.
+    'schedule' => [
+        'collaboration_prune' => 'dailyAt:03:40',
+    ],
 ];

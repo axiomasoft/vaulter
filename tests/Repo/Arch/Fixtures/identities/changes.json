@@ -5138,6 +5138,83 @@
             "id": "env:VAULTER_COLLAB_MODE",
             "kind": "config",
             "reason": "P5.4: VAULTER_COLLAB_MODE feeds vaulter-collaboration.mode"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.compaction.lease",
+            "kind": "http",
+            "reason": "P5.5: protocol 2 compaction lease (C12) for the hub's worker: body signature, no room token; leases generations with a pending marker that reached a trigger or a drain request, with their checkpoint and tail"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.checkpoint",
+            "kind": "http",
+            "reason": "P5.5: protocol 2 checkpoint publication (C6, C7): CAS on the lease token, CS/CV and H <= HS under the document and head locks; deletes the covered updates of the generation"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_checkpoint_conflict",
+            "kind": "protocol",
+            "reason": "P5.5: 409, retryable after_refetch, receipt never — a checkpoint publication that lost its CAS (lease, coverage or checkpoint version); nothing changes, the hub takes a new lease"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "command:vaulter:collaboration:prune",
+            "kind": "cli",
+            "reason": "P5.5: prune of retired generations (C11) after hub.token_ttl + retry horizon + retention.retired_generation_days; retires generations a document left while the module was off; never the current one"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.lease_ttl",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_age",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_bytes",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_updates",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.drain.restore_deadline",
+            "kind": "config",
+            "reason": "P5.5: how long a restore, REST replace, content read or export waits for the hub to drain a pending document (C8, 10 s)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.retention.retired_generation_days",
+            "kind": "config",
+            "reason": "P5.5: retention window of a retired generation's log and receipts after token_ttl + retry horizon (C11)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.schedule.collaboration_prune",
+            "kind": "config",
+            "reason": "P5.5: the schedule of vaulter:collaboration:prune (ModuleSchedule of the collaboration module)"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

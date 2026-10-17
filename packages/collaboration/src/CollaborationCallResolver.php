@@ -86,6 +86,15 @@ final readonly class CollaborationCallResolver
     }
 
     /**
+     * Whether a call the hub makes for itself — its compaction worker, not a room connection, so without a room JWT —
+     * carries a valid body signature (the same check, timestamp tolerance and replay cache as a room call's).
+     */
+    public function verifyHub(?string $presentedTimestamp, ?string $presentedSignature, string $rawBody): bool
+    {
+        return $this->verifySignature($presentedTimestamp, $presentedSignature, $rawBody);
+    }
+
+    /**
      * Verify the body's HMAC-SHA256 signature: the timestamp must be a well-formed
      * integer within ±tolerance of now, the signature must not have been seen before
      * within that same window (replay), and it must equal the timing-safe HMAC of

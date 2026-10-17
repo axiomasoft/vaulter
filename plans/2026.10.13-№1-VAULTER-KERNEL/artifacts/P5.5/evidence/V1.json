@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T153211Z-ca681c:P5.5:checks.1:V1",
+  "check_id": "V1",
+  "subject": "PLAN3.P5.5",
+  "candidate": {
+    "head": "86edf4632eb9c9f6d1b37325086df49538fa9210",
+    "dirty_digest": "8c5e7b5b4fabd411596bbf14de7cbb3c2c262deb1b9690fe54d7571ed77088b5"
+  },
+  "started_at": "2026-10-17T16:46:16Z",
+  "procedure": {
+    "cmd": "scripts/t sqlite -p collaboration tests/Persistence tests/Restore tests/Console/PruneGenerationsTest.php",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T16:46:25Z"
+}

@@ -1108,6 +1108,55 @@
             "id": "env:VAULTER_COLLAB_MODE",
             "kind": "config",
             "reason": "P5.4: VAULTER_COLLAB_MODE feeds vaulter-collaboration.mode"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.lease_ttl",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_age",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_bytes",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_updates",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.drain.restore_deadline",
+            "kind": "config",
+            "reason": "P5.5: how long a restore, REST replace, content read or export waits for the hub to drain a pending document (C8, 10 s)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.retention.retired_generation_days",
+            "kind": "config",
+            "reason": "P5.5: retention window of a retired generation's log and receipts after token_ttl + retry horizon (C11)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.schedule.collaboration_prune",
+            "kind": "config",
+            "reason": "P5.5: the schedule of vaulter:collaboration:prune (ModuleSchedule of the collaboration module)"
         }
     ],
     "items": [
@@ -1284,6 +1333,61 @@
             }
         },
         {
+            "default": 60,
+            "id": "config:vaulter-collaboration.compaction.lease_ttl",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 600,
+            "id": "config:vaulter-collaboration.compaction.trigger_age",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 1048576,
+            "id": "config:vaulter-collaboration.compaction.trigger_bytes",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 500,
+            "id": "config:vaulter-collaboration.compaction.trigger_updates",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 10,
+            "id": "config:vaulter-collaboration.drain.restore_deadline",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "default": {
                 "default": "hocuspocus",
                 "env": "VAULTER_COLLAB_DRIVER"
@@ -1403,6 +1507,28 @@
             },
             "env": "VAULTER_COLLAB_MODE",
             "id": "config:vaulter-collaboration.mode",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 7,
+            "id": "config:vaulter-collaboration.retention.retired_generation_days",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "dailyAt:03:40",
+            "id": "config:vaulter-collaboration.schedule.collaboration_prune",
             "owner": "collaboration",
             "registered_defaults": true,
             "root": "vaulter-collaboration",

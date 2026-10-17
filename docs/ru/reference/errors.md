@@ -47,6 +47,7 @@ outline: deep
 | [`actor_required`](#actor_required) | 401 | core | `never` | `never` | `Vaulter\Exceptions\Access\MissingActorException` |
 | [`blob_unavailable`](#blob_unavailable) | 409 | media | `never` | `never` | `Vaulter\Media\Exceptions\Cas\BlobUnavailableException` |
 | [`cannot_delete_head_revision`](#cannot_delete_head_revision) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException` |
+| [`collaboration_checkpoint_conflict`](#collaboration_checkpoint_conflict) | 409 | collaboration | `after_refetch` | `never` | `Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException` |
 | [`collaboration_epoch_mismatch`](#collaboration_epoch_mismatch) | 409 | collaboration | `after_refetch` | `cacheable` | `Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException` |
 | [`collaboration_protocol_mismatch`](#collaboration_protocol_mismatch) | 409 | collaboration | `never` | `never` | `Vaulter\Collaboration\Exceptions\CollaborationProtocolMismatchException` |
 | [`collaboration_seed_conflict`](#collaboration_seed_conflict) | 409 | collaboration | `after_refetch` | `cacheable` | `Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException` |
@@ -144,6 +145,12 @@ outline: deep
 **409** · drive · retryable `never` · receipt `cacheable`
 
 **Нельзя удалить текущую ревизию** — Текущую ревизию удалить нельзя.
+
+### `collaboration_checkpoint_conflict`
+
+**409** · collaboration · retryable `after_refetch` · receipt `never`
+
+**Конфликт контрольной точки совместной работы** — Журнал документа изменился с момента выдачи аренды компактации.
 
 ### `collaboration_epoch_mismatch`
 

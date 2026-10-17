@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 return [
+    'collaboration_checkpoint_conflict' => [
+        'title' => 'Collaboration checkpoint conflict',
+        'detail' => 'The document log changed since the compaction lease was granted.',
+    ],
     'collaboration_epoch_mismatch' => [
         'title' => 'Collaboration epoch mismatch',
         'detail' => 'The collaboration session is out of date.',

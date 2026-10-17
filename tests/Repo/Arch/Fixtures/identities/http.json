@@ -756,6 +756,20 @@
             "id": "route:vaulter.v1.collaboration.hub.append",
             "kind": "http",
             "reason": "P5.4: protocol 2 append (X-Vaulter-Collab-Protocol: 2, committed receipt ack) on the hub stack behind the size gate and the call signature"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.compaction.lease",
+            "kind": "http",
+            "reason": "P5.5: protocol 2 compaction lease (C12) for the hub's worker: body signature, no room token; leases generations with a pending marker that reached a trigger or a drain request, with their checkpoint and tail"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.checkpoint",
+            "kind": "http",
+            "reason": "P5.5: protocol 2 checkpoint publication (C6, C7): CAS on the lease token, CS/CV and H <= HS under the document and head locks; deletes the covered updates of the generation"
         }
     ],
     "flags": {
@@ -1014,6 +1028,74 @@
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubAuthenticateController"
             },
             "uri": "api/vaulter/v1/collaboration/hub/authenticate"
+        },
+        {
+            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubCheckpointController",
+            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubCheckpointController",
+            "default_registered": false,
+            "id": "route:vaulter.v1.collaboration.hub.checkpoint",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "vaulter.module:collaboration",
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend:checkpoint",
+                "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
+            ],
+            "name": "vaulter.v1.collaboration.hub.checkpoint",
+            "openapi": {
+                "operation_id": "collaboration.hub.checkpoint",
+                "path": "/collaboration/hub/checkpoint"
+            },
+            "owner": "collaboration",
+            "requires": [
+                "vaulter.modules.collaboration"
+            ],
+            "source": {
+                "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubCheckpointController.php",
+                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubCheckpointController"
+            },
+            "uri": "api/vaulter/v1/collaboration/hub/checkpoint"
+        },
+        {
+            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubCompactionLeaseController",
+            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubCompactionLeaseController",
+            "default_registered": false,
+            "id": "route:vaulter.v1.collaboration.hub.compaction.lease",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "vaulter.module:collaboration",
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend",
+                "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
+            ],
+            "name": "vaulter.v1.collaboration.hub.compaction.lease",
+            "openapi": {
+                "operation_id": "collaboration.hub.compaction.lease",
+                "path": "/collaboration/hub/compaction/lease"
+            },
+            "owner": "collaboration",
+            "requires": [
+                "vaulter.modules.collaboration"
+            ],
+            "source": {
+                "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubCompactionLeaseController.php",
+                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubCompactionLeaseController"
+            },
+            "uri": "api/vaulter/v1/collaboration/hub/compaction/lease"
         },
         {
             "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubLoadController",

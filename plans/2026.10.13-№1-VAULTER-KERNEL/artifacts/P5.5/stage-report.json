@@ -1,0 +1,243 @@
+{
+  "changed_paths": [
+    "docs/reference/config.md",
+    "docs/reference/errors.md",
+    "docs/ru/reference/config.md",
+    "docs/ru/reference/errors.md",
+    "openapi/vaulter-v1.yaml",
+    "packages/collaboration/config/vaulter-collaboration.php",
+    "packages/collaboration/resources/lang/en/problems.php",
+    "packages/collaboration/resources/lang/ru/problems.php",
+    "packages/collaboration/routes/collaboration.php",
+    "packages/collaboration/src/CollaborationCallResolver.php",
+    "packages/collaboration/src/CollaborationModule.php",
+    "packages/collaboration/src/CollaborationProblemCodes.php",
+    "packages/collaboration/src/CollaborationSchedule.php",
+    "packages/collaboration/src/Configuration/CollaborationConfig.php",
+    "packages/collaboration/src/Console/PruneGenerationsCommand.php",
+    "packages/collaboration/src/Drain/BackoffDrainWaiter.php",
+    "packages/collaboration/src/Drain/DrainWaiter.php",
+    "packages/collaboration/src/Drain/HubDrainer.php",
+    "packages/collaboration/src/Exceptions/CollaborationCheckpointConflictException.php",
+    "packages/collaboration/src/Http/Controllers/Collaboration/HubCheckpointController.php",
+    "packages/collaboration/src/Http/Controllers/Collaboration/HubCompactionLeaseController.php",
+    "packages/collaboration/src/Http/Middleware/LimitHubAppend.php",
+    "packages/collaboration/src/Http/Middleware/VerifyHubSignature.php",
+    "packages/collaboration/src/Http/Support/CollaborationRouteLabels.php",
+    "packages/collaboration/src/Persistence/Checkpoint.php",
+    "packages/collaboration/src/Persistence/CheckpointRequest.php",
+    "packages/collaboration/src/Persistence/CheckpointResult.php",
+    "packages/collaboration/src/Persistence/CompactionLease.php",
+    "packages/collaboration/src/Persistence/CompactionLeases.php",
+    "packages/collaboration/src/Persistence/GenerationCloser.php",
+    "packages/collaboration/src/Persistence/Head.php",
+    "packages/collaboration/src/Persistence/LogTables.php",
+    "packages/collaboration/src/Persistence/RetiredGenerations.php",
+    "packages/collaboration/src/Persistence/UpdateLog.php",
+    "packages/collaboration/src/Providers/CollaborationRegistrar.php",
+    "packages/collaboration/tests/Arch/__snapshots__/surface.txt",
+    "packages/collaboration/tests/Concurrency/CompactionRaceTest.php",
+    "packages/collaboration/tests/Console/PruneGenerationsTest.php",
+    "packages/collaboration/tests/Module/CollaborationModuleTest.php",
+    "packages/collaboration/tests/Persistence/CompactionCasTest.php",
+    "packages/collaboration/tests/Persistence/CompactionLeaseTest.php",
+    "packages/collaboration/tests/Persistence/ReceiptRetentionTest.php",
+    "packages/collaboration/tests/Pest.php",
+    "packages/collaboration/tests/Restore/RestoreFenceTest.php",
+    "packages/collaboration/tests/Restore/RestorePendingTest.php",
+    "packages/collaboration/tests/Support/Compaction.php",
+    "packages/collaboration/tests/Support/FakeHub.php",
+    "packages/collaboration/tests/groups.php",
+    "packages/documents/src/Content/DocumentStateWriter.php",
+    "packages/documents/tests/Document/DocumentStateWriterTest.php",
+    "packages/vue/src/api/schema.d.ts",
+    "tests/Repo/Arch/Fixtures/identities/changes.json",
+    "tests/Repo/Arch/Fixtures/identities/cli.json",
+    "tests/Repo/Arch/Fixtures/identities/config.json",
+    "tests/Repo/Arch/Fixtures/identities/http.json",
+    "tests/Repo/Arch/Fixtures/identities/owners/cli.json",
+    "tests/Repo/Arch/Fixtures/identities/protocol.json",
+    "tests/Repo/Arch/Fixtures/target-map.json",
+    "tests/Repo/Arch/IdentitiesTest.php",
+    "tests/baseline/CHANGES.json",
+    "tests/baseline/CHANGES.md",
+    "tests/baseline/collaboration.count",
+    "tests/baseline/collaboration.list",
+    "tests/baseline/documents.count",
+    "tests/baseline/documents.list",
+    "tests/suites.json",
+    "tests/zones.json"
+  ],
+  "checks_run": [
+    {
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "exit": 0,
+      "id": "V7"
+    },
+    {
+      "cmd": "scripts/t baseline --compare",
+      "exit": 1,
+      "id": "V8"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "docs/reference/errors.md",
+        "docs/ru/reference/errors.md",
+        "docs/reference/config.md",
+        "docs/ru/reference/config.md",
+        "packages/collaboration/resources/lang/en/problems.php",
+        "packages/collaboration/resources/lang/ru/problems.php",
+        "packages/vue/src/api/schema.d.ts"
+      ],
+      "impact": "the commit takes these 7 paths with the piece",
+      "kind": "deviation",
+      "next": "widen later collaboration items' write sets with docs/reference/*, docs/ru/reference/*, packages/collaboration/resources/** and packages/vue/src/api/schema.d.ts",
+      "outcome": "accepted",
+      "severity": "low",
+      "text": "Changed outside scope.write_set: docs/reference/errors.md and docs/ru/reference/errors.md (generated problem block: collaboration_checkpoint_conflict, required by core ErrorsReferenceTest), docs/reference/config.md and docs/ru/reference/config.md (generated config block regenerated with `vendor/bin/testbench vaulter:config:reference`; it also adds the P5.4 keys mode/limits.* that were already missing, so core ConfigReferenceCommandTest was red before this item), packages/collaboration/resources/lang/{en,ru}/problems.php (title/detail of the new code), packages/vue/src/api/schema.d.ts (types of the two new OpenAPI paths and schemas)"
+    },
+    {
+      "class": "environment",
+      "evidence": [
+        "packages/vue/src/api/schema.d.ts",
+        "openapi/vaulter-v1.yaml"
+      ],
+      "impact": "small risk that `npm --prefix packages/vue run api:check` finds a JSDoc formatting difference",
+      "kind": "deviation",
+      "next": "conductor: run `npm --prefix packages/vue run api:check`; if it is red, `npm --prefix packages/vue run api:generate` and take the result",
+      "outcome": "follow_up",
+      "severity": "low",
+      "text": "packages/vue/src/api/schema.d.ts was written by hand in the exact shape openapi-typescript produced for the P5.4 paths: the sandbox denies reading node_modules and the npm registry, so `npm run api:generate` and `api:check` could not run. To remove one uncertain rendering I dropped `default: 1` from the lease `max` property in the OpenAPI and put it in the description instead."
+    },
+    {
+      "class": "environment",
+      "evidence": [
+        "V8"
+      ],
+      "impact": "the vue suite's baseline compare was not confirmed by the executor",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "low",
+      "text": "V8 `scripts/t baseline --compare` exits 1 in the executor sandbox only: vitest discovery (`npx vitest list`) is refused by the network proxy (registry.npmjs.org 403), as in P5.4. `scripts/t baseline --compare -p core,media,drive,webhooks,documents,collaboration,azgard,filament,repo,hub` exits 0."
+    },
+    {
+      "class": "test_env",
+      "evidence": [
+        "tests/suites.json",
+        "tests/baseline/CHANGES.json"
+      ],
+      "impact": "LockingReadsTest now runs in the collaboration RefreshDatabase partition; the documents and collaboration baseline compares are green",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "low",
+      "text": "Fixed on the spot (D43): tests/suites.json did not list P5.4's packages/collaboration/tests/Persistence/LockingReadsTest.php, so scripts/t never ran it and tests/Repo/TestRunnerTest ('the inventory covers every test file') was red. Added, together with the new test files. tests/baseline/CHANGES.json had two P5.1 replacement names for CollaborationRegistrarTest with a trailing '.' that discovery no longer produces; refreshing collaboration.list made the documents compare fail, so I corrected both names and regenerated CHANGES.md."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/collaboration/src/Http/Controllers/Collaboration/HubCompactionLeaseController.php:56",
+        "openapi/vaulter-v1.yaml"
+      ],
+      "impact": "P5.8 (hub worker) must implement against these shapes: covered_from = checkpoint_seq, covered_through ≤ head_seq, expected_checkpoint_version = checkpoint_version, the lease token, both calls signed with the webhook secret, header X-Vaulter-Collab-Protocol: 2",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "medium",
+      "text": "Protocol detail chosen (D44, detail level): the lease answer is a top-level JSON array, as the protocol section writes it, and each entry carries more than the listed fields: checkpoint_version (the hub must repeat it as expected_checkpoint_version), type, schema_version, checkpoint (base64|null), content (JSON seed when there is no checkpoint) and tail [{seq, update_id, payload}], read under the same locks as the lease. The worker has no room token, so it cannot use `load`. The response stops granting further leases once the entries carry max_state_bytes of state. `document` is the node id (string). Route name: vaulter.v1.collaboration.hub.compaction.lease. Problem: collaboration_checkpoint_conflict = 409, retryable after_refetch, receipt never; context.reason is lease | coverage | checkpoint_version."
+    },
+    {
+      "class": "other",
+      "evidence": [
+        "packages/documents/src/Content/DocumentStateWriter.php:75",
+        "packages/documents/tests/Document/DocumentStateWriterTest.php"
+      ],
+      "impact": "one extra autosave revision before such restores and replaces; revision limits/prune apply as usual; documents tests stay green",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "medium",
+      "text": "Documents behaviour added for C8 ('revision snapshot, then close G'): DocumentStateWriter::write, before a write that moves collab_epoch (restore, or a JSON replace of a document with Yjs state), captures the working state as an autosave revision when it has Yjs state and no checkpoint holds it yet. A restore after a drain therefore keeps every saved receipt in a revision. Applies to v1-store-written states too."
+    },
+    {
+      "impact": "a compromised hub can rewrite the content of pending documents within the CAS rules",
+      "kind": "note",
+      "next": "reviewer to confirm this matches D26 intent; a later hardening could bind publications to the drained marker/receipts",
+      "text": "Security boundary: compaction/lease and checkpoint are authenticated by the hub's body HMAC only (no room JWT), as protocol#Общее prescribes for the hub's own calls. Whoever holds vaulter-collaboration.hub.webhook_secret can therefore lease and publish a checkpoint (any binary state + projection) for documents with a pending marker or a drain request. PHP cannot verify a Yjs merge. Before this item the hub could write only with a user's room token."
+    },
+    {
+      "impact": "a document used by v1 and v2 hubs at once could stay document_state_pending",
+      "kind": "pending",
+      "next": "P5.7 removes the v1 store; nothing to do before",
+      "text": "Liveness until P5.7: the protocol 1 store (PersistCollaborationStateAction) still writes state_version outside the log. If it writes while a protocol 2 log exists for the generation, CV != SV and every publication of that generation loses with checkpoint_version, so the marker stays until the generation closes."
+    },
+    {
+      "impact": "cost grows with the number of document generations ever collaborated; a purge of many pending trashed documents can wait N×10 s",
+      "kind": "pending",
+      "next": "consider an index (e.g. on drain_requested_at / retired_at) when the worker lands (P5.8) or under PLAN4 load; no schema change made here",
+      "text": "Performance: every lease call scans the open head rows (retired_at IS NULL, then drain_requested_at / head_seq > checkpoint_seq) without a supporting index, and computes byte/age triggers per pending candidate with one aggregate over its tail. PendingPurgeDrain (P5.3) drains trashed pending documents one after another, each up to 10 s."
+    },
+    {
+      "impact": "keeps P5.6 consistent with the drain/lease contract",
+      "kind": "note",
+      "next": "P5.6 executor",
+      "text": "For P5.6 (managed drain): reuse CompactionLeases::requestDrain(PendingMarker) for each document of CollaborativeState::pendingDocuments() and the DrainWaiter binding (HubDrainer::drain does nothing inside a transaction). The draining flag must block append only, not compaction/lease or checkpoint, or the drain can never finish. drain.restore_deadline is also what content read/export/REST replace wait (PendingStateGuard::settled); a separate managed-drain deadline key would be P5.6's. Tests that need a hub use tests/Support/FakeHub::install() (online/offline) and Sleep::fake(syncWithCarbon: true)."
+    },
+    {
+      "impact": "the Docs: link of the new exception 404s until the documentation pass",
+      "kind": "note",
+      "next": "artifacts/nits.md: P5.5 | packages/collaboration/src/Exceptions/CollaborationCheckpointConflictException.php:36 | add ## collaboration-checkpoint-conflict (and collaboration-update-*) to docs/guides/errors.md",
+      "text": "Docs anchor gap (nit, D43 docs pass): CollaborationCheckpointConflictException links Docs: #collaboration-checkpoint-conflict, but docs/guides/errors.md has no such heading (same for P5.4's collaboration-update-* anchors). DocsDriftGuardTest does not scan packages/collaboration/src, so no guard is red."
+    },
+    {
+      "impact": "true races of C5–C7 are checked only by sqlite interleavings in PLAN3",
+      "kind": "pending",
+      "next": "PLAN4: scripts/t pgsql -p collaboration --group=serial tests/Concurrency/CompactionRaceTest.php",
+      "text": "packages/collaboration/tests/Concurrency/CompactionRaceTest.php (append ∥ publish, publish ∥ publish of the same lease on separate PostgreSQL backends) is written and classified serial+database+engine:server; on sqlite it is skipped before the schema is built. Not run (D41, PLAN4)."
+    },
+    {
+      "impact": "none expected",
+      "kind": "note",
+      "next": "conductor runs V1–V8",
+      "text": "Not run by the executor as exact acceptance lines: V1–V6 (the conductor runs them). Equivalent or wider runs were green: the V1 test dirs plus Module/Http/Arch; documents tests/State + Http + Document + Events + Operations + Types; repo ZonesMapTest + TestGroupsTest (+ IdentitiesTest, TestRunnerTest); pint/phpstan per package. V3/V4 not run: no migration, schema class or snapshot fixture changed."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "docs/reference/config.md",
+        "docs/reference/errors.md",
+        "docs/ru/reference/config.md",
+        "docs/ru/reference/errors.md",
+        "packages/collaboration/resources/lang/en/problems.php",
+        "packages/collaboration/resources/lang/ru/problems.php",
+        "packages/documents/tests/Document/DocumentStateWriterTest.php",
+        "packages/vue/src/api/schema.d.ts"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: docs/reference/config.md, docs/reference/errors.md, docs/ru/reference/config.md, docs/ru/reference/errors.md, packages/collaboration/resources/lang/en/problems.php, packages/collaboration/resources/lang/ru/problems.php, packages/documents/tests/Document/DocumentStateWriterTest.php, packages/vue/src/api/schema.d.ts"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "packages/collaboration/src/Persistence/Checkpoint.php (CAS order, fence, deletes ≤ H only, drain flag clearing)",
+      "packages/collaboration/src/Persistence/CompactionLeases.php (eligibility under L3+L4, lease expiry, candidate scan)",
+      "packages/documents/src/Content/DocumentStateWriter.php (capture before a generation-closing write)",
+      "packages/collaboration/src/Persistence/GenerationCloser.php and RetiredGenerations.php (never the current G, grace cutoff)",
+      "packages/collaboration/src/Http/Middleware/VerifyHubSignature.php + routes (HMAC-only worker endpoints)"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "security_touched",
+      "shared_module_changed",
+      "scope_expanded"
+    ],
+    "recommended": true,
+    "suggested_model_class": "frontier"
+  },
+  "status": "done_with_deviations",
+  "summary": "Compaction, checkpoint, drain, closing and prune of collaboration generations (D26 rev.3, C6–C8, C11, C12). New in collaboration: Persistence\\CompactionLeases (grant: only the document's current open generation with a pending marker that reached compaction.trigger_updates 500 / trigger_bytes 1 MiB / trigger_age 600 s, or with drain_requested_at, drain requests first; a held lease is skipped until lease_ttl 60 s ends; the lease and the checkpoint+tail read happen in one transaction under CollaborativeState::lock() (L1–L3) and then the head FOR UPDATE (L4); requestDrain sets drain_requested_at in its own short transaction). Persistence\\Checkpoint::publish: generation fence (409 collaboration_epoch_mismatch for a moved or retired G), lease token held and not expired, CS == C, CV == expected == the document's state_version, C ≤ H ≤ HS, otherwise 409 collaboration_checkpoint_conflict and nothing changes; on success CollaborativeState::publishCheckpoint, delete updates (doc, G, seq ≤ H) only, head := (H, new SV), lease spent, drain flag cleared only when the marker was cleared. Drain\\HubDrainer implements PendingStateDrainer (does nothing inside a transaction; drain_requested_at, then Drain\\DrainWaiter polls the marker outside any transaction with backoff up to drain.restore_deadline 10 s; the default BackoffDrainWaiter is bound in the registrar and a test binds a fake hub). Persistence\\GenerationCloser (EventSink collaboration.generations) sets retired_at on heads of generations below the new epoch in the transaction of DocumentRestored / DocumentContentUpdated. Persistence\\RetiredGenerations + vaulter:collaboration:prune (C11: retired_at < now − (hub.token_ttl + 10 s + retention.retired_generation_days 7); first retires heads of generations a document left while the module was off; re-checks under L3+L4 and never touches the current G; --dry-run) + CollaborationSchedule (schedule.collaboration_prune dailyAt:03:40). HTTP: POST v1/collaboration/hub/compaction/lease (vaulter.v1.collaboration.hub.compaction.lease) and POST v1/collaboration/hub/checkpoint (…hub.checkpoint), protocol 2 header required, authenticated by the body HMAC only (new VerifyHubSignature, CollaborationCallResolver::verifyHub), size-gated by LimitHubAppend (checkpoint variant: 4/3·max_state_bytes + request_bytes); route labels; problem code + lang en/ru; OpenAPI paths and schemas; manifest provides PendingStateDrainer and registers the command, the schedule and the sink. UpdateLog::snapshot was split into lock + public read(LockedDocumentState) for reuse by the lease (same statements). Documents: DocumentStateWriter, before a write that moves the epoch, captures a working state that has Yjs state and no checkpoint as an autosave revision (the C8 'revision snapshot': saved receipts are never left out of the history). Tests: CompactionCasTest (4, 5, 20 + CAS variants + HTTP), CompactionLeaseTest (19: triggers, drain priority, max, held/expired leases, retired/left G, no append right, auth/validation/413), ReceiptRetentionTest (6), RestorePendingTest (18, fake hub over HTTP; offline → 409 after a 10 s fake sleep), RestoreFenceTest (13), PruneGenerationsTest, CompactionRaceTest (serial+database, pgsql only, written, not run), CollaborationModuleTest updated, DocumentStateWriterTest +2. Also regenerated: surface snapshot, identities inventory + ledger (11 records, D26) + owners/cli rule, IdentitiesTest counts, baseline lists/ledger, tests/suites.json, zones.json database list, groups.php, Pest.php (Restore uses DatabaseMigrations). Other runs: scripts/t sqlite -p collaboration tests/Persistence tests/Restore tests/Console tests/Module tests/Http tests/Arch tests/Concurrency/CompactionRaceTest.php exit 0, and earlier the remaining collaboration dirs (Collaboration, Operations, Providers, Configuration, Document, Doctor, Feature) exit 0; scripts/t sqlite -p documents tests/State tests/Http tests/Document tests/Events tests/Operations tests/Types exit 0; scripts/t sqlite -p repo ZonesMapTest + TestGroupsTest + Arch/IdentitiesTest + TestRunnerTest exit 0; core ErrorsReferenceTest + ConfigReferenceCommandTest + DocsDriftGuardTest exit 0; pint --test and phpstan for collaboration and documents exit 0 (run per package, not as the V5 compound line); scripts/t baseline --compare -p core,media,drive,webhooks,documents,collaboration,azgard,filament,repo,hub exit 0."
+}

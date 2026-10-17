@@ -1589,7 +1589,10 @@
           "files": [
             "packages/collaboration/tests/Concurrency/AppendRaceTest.php",
             "packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php",
-            "packages/collaboration/tests/Concurrency/CollaborationLivenessRaceTest.php"
+            "packages/collaboration/tests/Concurrency/CollaborationLivenessRaceTest.php",
+            "packages/collaboration/tests/Concurrency/CompactionRaceTest.php",
+            "packages/collaboration/tests/Restore/RestoreFenceTest.php",
+            "packages/collaboration/tests/Restore/RestorePendingTest.php"
           ]
         },
         {
@@ -1613,6 +1616,7 @@
             "packages/collaboration/tests/Collaboration/NodeCollaborationTokenTest.php",
             "packages/collaboration/tests/Collaboration/PersistCollaborationStateTest.php",
             "packages/collaboration/tests/Collaboration/TipTapSchemaFixtureTest.php",
+            "packages/collaboration/tests/Console/PruneGenerationsTest.php",
             "packages/collaboration/tests/Doctor/CollaborationCheckTest.php",
             "packages/collaboration/tests/Document/CollaborationSessionTest.php",
             "packages/collaboration/tests/Http/CollaborationRouteLabelsTest.php",
@@ -1623,7 +1627,11 @@
             "packages/collaboration/tests/Operations/CollaborationOperationsTest.php",
             "packages/collaboration/tests/Persistence/AppendIdempotencyTest.php",
             "packages/collaboration/tests/Persistence/AppendValidationTest.php",
-            "packages/collaboration/tests/Persistence/GenerationFenceTest.php"
+            "packages/collaboration/tests/Persistence/CompactionCasTest.php",
+            "packages/collaboration/tests/Persistence/CompactionLeaseTest.php",
+            "packages/collaboration/tests/Persistence/GenerationFenceTest.php",
+            "packages/collaboration/tests/Persistence/LockingReadsTest.php",
+            "packages/collaboration/tests/Persistence/ReceiptRetentionTest.php"
           ]
         },
         {

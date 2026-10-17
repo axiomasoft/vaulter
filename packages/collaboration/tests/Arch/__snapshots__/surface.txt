@@ -2,9 +2,15 @@
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
 Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final readonly class
+  public const int RETRY_HORIZON_SECONDS = 10
   public function assertDistinctHubSecrets(): void
   public function assertSecrets(Illuminate\Contracts\Foundation\Application $app): void
   public function channelPrefix(): string
+  public function checkpointRequestBytes(): int
+  public function compactionLeaseTtl(): int
+  public function compactionTriggerAge(): int
+  public function compactionTriggerBytes(): int
+  public function compactionTriggerUpdates(): int
   public function driver(): string
   public function hubJwtSecret(): ?string
   public function hubTimestampTolerance(): int
@@ -15,6 +21,9 @@ Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final read
   public function mode(): string
   public function parseRoom(string $room): ?Vaulter\Collaboration\Data\RoomRef
   public function requestBytes(): int
+  public function restoreDeadline(): int
+  public function retiredGenerationDays(): int
+  public function retiredGenerationGraceSeconds(): int
   public function room(mixed $driveId, mixed $nodeId, int $epoch): string
   public function updateBytes(): int
 
@@ -38,6 +47,15 @@ Vaulter\Collaboration\Data\RoomRef api since 1.0 final readonly class
 
 Vaulter\Collaboration\Enums\CollaborationDriverType api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
   case Hocuspocus = 'hocuspocus'
+
+Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public const string COVERAGE = 'coverage'
+  public const string LEASE = 'lease'
+  public const string VERSION = 'checkpoint_version'
+  public readonly string $reason
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
 
 Vaulter\Collaboration\Exceptions\CollaborationConfigException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
   public static function missingSecret(): self

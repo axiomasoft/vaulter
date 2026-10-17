@@ -11,10 +11,14 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Broadcast;
 use Vaulter\Attributes\Internal;
+use Vaulter\Collaboration\CollaborationSchedule;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
+use Vaulter\Collaboration\Drain\BackoffDrainWaiter;
+use Vaulter\Collaboration\Drain\DrainWaiter;
 use Vaulter\Collaboration\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
+use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Drive\Access\AccessResolver;
@@ -35,6 +39,7 @@ final class CollaborationRegistrar implements ModuleBindings
             $config->assertDistinctHubSecrets();
             $config->hubTokenTtl();
             $config->mode();
+            (new ScheduleConfig($app->make('config')))->frequencies('vaulter-collaboration', CollaborationSchedule::KEYS);
         });
         $app->tag('vaulter.config_validator.collaboration', ConfigValidCheck::TAG);
 
@@ -46,6 +51,9 @@ final class CollaborationRegistrar implements ModuleBindings
         // default DefaultHostUserResolver; a host (or a test) may swap it. Purely
         // collaboration machinery — core neither defines nor binds it (finding).
         $app->bind(HostUserResolver::class, DefaultHostUserResolver::class);
+
+        // How a drain waits for the hub's checkpoint; a test binds a fake hub here.
+        $app->bind(DrainWaiter::class, BackoffDrainWaiter::class);
     }
 
     public function boot(Application $app): void

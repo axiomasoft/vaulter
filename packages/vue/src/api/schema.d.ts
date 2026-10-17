@@ -1107,6 +1107,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/collaboration/hub/compaction/lease": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hub: lease document generations due for compaction (protocol 2)
+         * @description The hub's compaction worker, not a room connection: the body signature authenticates the call, no room token. Requires X-Vaulter-Collab-Protocol: 2. Up to max generations with uncheckpointed edits or a drain request, drain requests first; each entry carries what the hub merges (the checkpoint and the tail (checkpoint_seq, head_seq]) and the values its checkpoint publication repeats. A lease gives no right to append.
+         */
+        post: operations["collaboration.hub.compaction.lease"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collaboration/hub/checkpoint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hub: publish a checkpoint merged under a compaction lease (protocol 2)
+         * @description The hub's compaction worker: the body signature authenticates the call, no room token. Requires X-Vaulter-Collab-Protocol: 2. One compare-and-set: the lease holds the generation, covered_from is the last checkpoint's sequence, expected_checkpoint_version its version and the document's state version, covered_through is in the log. Otherwise 409 collaboration_checkpoint_conflict (a closed generation: 409 collaboration_epoch_mismatch), and nothing changes. On success the updates through covered_through are deleted (their receipts stay) and the pending marker is cleared when the checkpoint covers it. The body is checked by its Content-Length and the state by its base64 length before decoding (413 collaboration_update_too_large).
+         */
+        post: operations["collaboration.hub.checkpoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1124,6 +1164,7 @@ export interface components {
              * @example actor_required
              * @example blob_unavailable
              * @example cannot_delete_head_revision
+             * @example collaboration_checkpoint_conflict
              * @example collaboration_epoch_mismatch
              * @example collaboration_protocol_mismatch
              * @example collaboration_seed_conflict
@@ -1553,6 +1594,35 @@ export interface components {
             seq: number;
             sha256: string;
             persisted: true;
+        };
+        /** @description A compaction lease on one document generation and what the hub merges under it, read with the lease under the document and head locks: the checkpoint (null before the first one, then content is the JSON to seed from) and the tail (checkpoint_seq, head_seq]. */
+        HubCompactionLease: {
+            /** @description The node id of the document. */
+            document: string;
+            generation: number;
+            lease_token: string;
+            /** Format: date-time */
+            lease_expires_at: string;
+            checkpoint_seq: number;
+            head_seq: number;
+            /** @description The state version the publication must expect (expected_checkpoint_version). */
+            checkpoint_version: number;
+            type: string;
+            schema_version: number;
+            /** @description Base64 Yjs checkpoint, null before the first one. */
+            checkpoint: string | null;
+            content: Record<string, never> | null;
+            tail: {
+                seq: number;
+                update_id: string;
+                /** @description Base64 Yjs update. */
+                payload: string;
+            }[];
+        };
+        /** @description A published checkpoint. marker_cleared is false when edits committed after the lease read the log keep the document pending; their updates stay in the log. */
+        HubCheckpointPublished: {
+            checkpoint_version: number;
+            marker_cleared: boolean;
         };
         /** @description Protocol 2 load: the checkpoint and the committed tail (checkpoint_seq, head_seq] to replay on it. Before the first checkpoint, content is the JSON projection to seed the room from. */
         HubLoadedV2: {
@@ -5141,6 +5211,104 @@ export interface operations {
             };
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
+            404: components["responses"]["Problem404"];
+            409: components["responses"]["Problem409"];
+            413: components["responses"]["Problem413"];
+            422: components["responses"]["Problem422"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+        };
+    };
+    "collaboration.hub.compaction.lease": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
+                "X-Vaulter-Collab-Protocol"?: components["parameters"]["XVaulterCollabProtocol"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The id of the hub instance; the lease owner. */
+                    hub_id: string;
+                    /** @description The most leases to hand out, 1..100; 1 when absent. */
+                    max?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubCompactionLease"][];
+                };
+            };
+            401: components["responses"]["Problem401"];
+            409: components["responses"]["Problem409"];
+            413: components["responses"]["Problem413"];
+            422: components["responses"]["Problem422"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+        };
+    };
+    "collaboration.hub.checkpoint": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
+                "X-Vaulter-Collab-Protocol"?: components["parameters"]["XVaulterCollabProtocol"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The node id of the document, as the lease named it. */
+                    document: string;
+                    generation: number;
+                    lease_token: string;
+                    /** @description The checkpoint_seq the lease reported (C). */
+                    covered_from: number;
+                    /** @description The last log sequence the checkpoint holds (H), at most the head_seq the lease reported. */
+                    covered_through: number;
+                    expected_checkpoint_version: number;
+                    /** @description Base64 Yjs state of the merged checkpoint. */
+                    state: string;
+                    /** @description The JSON projection of the state. */
+                    content: Record<string, never>;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubCheckpointPublished"];
+                };
+            };
+            401: components["responses"]["Problem401"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
             413: components["responses"]["Problem413"];

@@ -71,6 +71,19 @@ final readonly class DocumentStateWriter
         $epochChanged = $change->cause === StateWriteCause::Restore
             || ($change->cause === StateWriteCause::Update && $locked->yjs_state !== null);
 
+        // Closing a generation over collaborative state no checkpoint holds yet would leave its saved edits in no
+        // revision (C8): the state is captured first, then replaced.
+        if ($epochChanged && $locked->yjs_state !== null && $locked->hasUncheckpointedChanges()) {
+            $this->capture(
+                document: $locked,
+                label: null,
+                keepForever: false,
+                autosave: true,
+                restoredFrom: null,
+                actorId: $change->actorId,
+            );
+        }
+
         $attributes = [
             'state_version' => Int64Counter::increment($locked->state_version),
             'collab_epoch' => $epochChanged ? Int64Counter::increment($locked->collab_epoch) : $locked->collab_epoch,

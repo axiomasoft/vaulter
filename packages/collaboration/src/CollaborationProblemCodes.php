@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationProtocolMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
@@ -32,6 +33,8 @@ final class CollaborationProblemCodes implements ProblemCodeSource
     public function codes(): array
     {
         return [
+            // A lost checkpoint CAS: the hub takes a new lease and merges again (C6).
+            'collaboration_checkpoint_conflict' => new ProblemSpec(409, CollaborationCheckpointConflictException::class, Retryable::AfterRefetch),
             'collaboration_epoch_mismatch' => new ProblemSpec(409, CollaborationEpochMismatchException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
             // Protocol 2 (D26): a deployment mismatch and a refused update are answered the same however often they are sent.
             'collaboration_protocol_mismatch' => new ProblemSpec(409, CollaborationProtocolMismatchException::class),
