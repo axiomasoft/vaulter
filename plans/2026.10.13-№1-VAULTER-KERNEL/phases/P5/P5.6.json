@@ -1,0 +1,236 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.6",
+  "title": "Managed disable: vaulter:collaboration:drain, draining-флаг, raw config=false fail-closed и RemovalGuard в vaulter:module:uninstall",
+  "status": "todo",
+  "summary": "Команда `vaulter:collaboration:drain {--deadline=30} {--release}` (C10): флаг `vaulter:collaboration:draining` в cache store `drain.cache_store` → append 503 `collaboration_draining` (retryable); drain_requested_at всем документам с marker; ожидание marker == NULL до deadline; exit 0 при 0 marker, 1 со списком document_id; `--release` снимает флаг. Core: `Vaulter\\Modules\\GuardsRemoval` (static `removalGuard(): class-string<RemovalGuard>`) и `RemovalGuard::blockers(string $module): array<string,int>` (Internal, по образцу HoldsReferences/ModuleReferences); `ModuleUninstallCommand` перечитывает blockers в dry-run и в транзакции purge и отказывает exit 1. `CollaborationModule` реализует guard (документы с marker). Doctor `collaboration.hub`: cache driver array/null — error. Raw `vaulter.modules.collaboration=false` при pending — documents 409 без запросов collaboration.",
+  "why": "D26 ревизия 3 п.4 и architecture#module-system: uninstall отказывает при pending collaboration (P4.17 оставил N/A), сырое config=false — только fail-closed. Hard risks (destructive): `vaulter:module:uninstall collaboration --force --purge` удаляет непокрытый хвост updates — потеря saved-правок; drain, сообщающий успех при оставшемся marker; append, проскочивший после установки флага; process-local флаг (array cache) не останавливает другие процессы.",
+  "scope": {
+    "include": [
+      "DrainCommand, DrainState, append-проверка флага, doctor cache store",
+      "Core GuardsRemoval/RemovalGuard + ModuleUninstallCommand; collaboration guard",
+      "Тесты: packages/collaboration/tests/Disable/{ManagedDrainTest,RawDisableTest,UninstallGuardTest}.php; packages/core/tests/Modules/ModuleUninstallTest.php (фикстура модуля с RemovalGuard)",
+      "Ledger: команда/опции/конфиг-ключи/problem added D26"
+    ],
+    "exclude": [
+      "Удаление пакета из Composer и реальный хаб (сценарий 12 — фейковым хабом DrainWaiter)",
+      "Отложено в PLAN4: `scripts/t pgsql -p collaboration --group=database tests/Disable`, `scripts/t pgsql -p core packages/core/tests/Modules/ModuleUninstallTest.php`, stand-проверка drain с реальным хабом"
+    ]
+  },
+  "depends_on": [
+    "P5.5"
+  ],
+  "related": [],
+  "decisions": [
+    "D26",
+    "D22",
+    "D36",
+    "D41",
+    "D42"
+  ],
+  "skills": [
+    "php:production-readiness-checklist"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "invariants",
+      "why": "модель инвариантов C1–C12, порядок lock, пары операций, bypass",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "tests-map",
+      "why": "сценарии I17 этого пункта: линия и файл",
+      "required": true
+    },
+    {
+      "ref": "knowledge/collaboration",
+      "section": "durability",
+      "why": "ревизия 3 п.4: managed disable/uninstall/purge",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture",
+      "section": "module-system",
+      "why": "uninstall: отказ при pending collaboration; disable не вызывает uninstall",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Console/ModuleUninstallCommand.php",
+      "why": "dry-run, перечитывание ссылок в транзакции, exit-коды",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Modules/HoldsReferences.php",
+      "why": "образец static-интерфейса манифеста",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Modules/ModuleReferences.php",
+      "why": "образец контракта, читаемого uninstall",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "review-map",
+      "why": "запуск ревью-чекпоинта (D42)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "review-map-p5",
+      "why": "чекпоинты P5: что покрывает, база диапазона, фокус",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Modules/GuardsRemoval.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Modules/RemovalGuard.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Console/ModuleUninstallCommand.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Modules/ModuleUninstallTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Modules/Fixtures/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/config/vaulter-collaboration.php",
+      "change": "any",
+      "note": "создаётся P5.1"
+    },
+    {
+      "path": "packages/collaboration/tests/Disable/ManagedDrainTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/tests/Disable/RawDisableTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/tests/Disable/UninstallGuardTest.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md и текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "RemovalGuard читается из класса манифеста статически (работает для неактивного модуля); blockers перечитываются в транзакции purge и перед каждым rollback — как ModuleReferences.",
+    "Drain ждёт marker == NULL не раньше `drain.max_append_tx` (default 5 с) после установки флага; результат — по фактическому `pendingDocuments()`, не по ответам хаба.",
+    "RawDisableTest: при `vaulter.modules.collaboration=false` 0 запросов к `v_collaboration_*` и 0 резолвов сервисов collaboration (query/resolution spy, как ActivationMatrixTest)."
+  ],
+  "guidance": "ManagedDrainTest (12): 2 документа с marker, фейковый хаб публикует checkpoint → exit 0, marker NULL, `GET content` = проекция со всеми saved; фейковый хаб не отвечает → exit 1 и оба document_id в выводе; append во время draining → 503. UninstallGuardTest: marker у одного документа → `vaulter:module:uninstall collaboration --force --purge` exit 1, таблицы и строки на месте; после drain → exit 0. ModuleUninstallTest: фикстура `GuardedModule` с blockers ≠ 0 → exit 1, = 0 → прежнее поведение.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p collaboration tests/Disable",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p core packages/core/tests/Modules/ModuleUninstallTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/collaboration && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "vaulter:collaboration:drain",
+    "RemovalGuard в uninstall",
+    "fail-closed raw disable"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "gpt-6.1-sol",
+      "note": "RC-P5-1: покрывает P5.1–P5.6 (git diff -M c6e69314..<sha P5.6>). Фокус: p5-design#invariants C1–C12 — порядок lock T→N→D→heads, receipt⇔commit, идемпотентность append и 422 на другой payload, CAS checkpoint и удаление только ≤H, marker снимается только при PT ≤ H, restore/REST replace drain-or-409 без закрытия generation и без удержания locks на ожидании, prune только retired generation, drain/uninstall --purge (destructive) не теряют saved receipts, collaboration не пишет v_documents. P5.1–P5.2 (перенос) — только нерениамные хунки и границы I2/I4.",
+      "provider": "codex",
+      "effort": "xhigh"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:06:28Z"
+}

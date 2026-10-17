@@ -1,0 +1,202 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.9",
+  "title": "Хаб: management listener (livez/readyz/metrics), shutdown coordinator с дедлайном, лимиты, проверка версии протокола",
+  "status": "todo",
+  "summary": "`src/management.js` (`MANAGEMENT_HOST` default 127.0.0.1 : `MANAGEMENT_PORT`; `/livez` без БД/backend/Redis; `/readyz` — WS слушает, кэшированный статус backend, Redis при обязательном Redis, протокол 2 совместим, не draining; `/metrics` Prometheus text без новых зависимостей), `src/shutdown.js` (`stopOnSignals: false`; SIGTERM/SIGINT → draining → readyz 503 → отказ upgrade/admission → writes stopped → flush ledger ≤ `SHUTDOWN_FLUSH_MS` 30 000 → закрыть 4503 → destroy в race с `SHUTDOWN_DESTROY_MS` 5 000 → лог error с unflushed и exit 1 либо exit 0), `src/limits.js` (MAX_UPDATE_BYTES, MAX_DOCUMENT_BYTES, MAX_REQUEST_BYTES, MAX_ROOMS_PER_TENANT, MAX_CONNECTIONS_PER_ROOM, MAX_UPDATES_PER_SECOND_PER_ROOM), `src/metrics.js`; `/health` на 0.0.0.0 удалён; несовместимый протокол backend → readyz false.",
+  "why": "collaboration#hub-ops и D26: readiness не останавливает established WS — нужен write-quiescence; Hocuspocus 4.3.0 destroy висит после failed store (P5.2); liveness не зависит от БД. Hard risks: SIGTERM без дедлайна (под не завершается, rollout стоит); записи, принятые после границы drain (10); нечестный unflushed count; management-порт наружу; лимит после аллокации (17).",
+  "scope": {
+    "include": [
+      "src/{management,shutdown,limits,metrics}.js; правки src/index.js, src/config.js; удаление startHealthEndpoint",
+      "Node-тесты: test/{management,shutdown,limits,metrics}.test.js; правка websocket-hardening/security тестов под новые лимиты",
+      "Dockerfile HEALTHCHECK → /livez на management-порту; packages/collaboration/hub/docker-compose.yml порты"
+    ],
+    "exclude": [
+      "Реальный SIGTERM под нагрузкой с двумя хабами (stand 10, P5.13 — пишется)",
+      "Отложено в PLAN4: `scripts/collab-stand.sh` (sigterm-drain.stand.js), `docker build packages/collaboration/hub`"
+    ]
+  },
+  "depends_on": [
+    "P5.8"
+  ],
+  "related": [],
+  "decisions": [
+    "D26",
+    "D41",
+    "D42"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "hub-runtime",
+      "why": "факты Hocuspocus 4.3.0, ledger, режимы, компактация, shutdown, management, лимиты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "tests-map",
+      "why": "сценарии I17 этого пункта: линия и файл",
+      "required": true
+    },
+    {
+      "ref": "knowledge/collaboration",
+      "section": "hub-ops",
+      "why": "health, drain, лимиты, метрики (нормативно)",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/src/index.js",
+      "why": "boot, startHealthEndpoint, buildServer (строки ~520–628)",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/src/ledger.js",
+      "why": "flush и счётчики pending (после P5.7)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "review-map",
+      "why": "запуск ревью-чекпоинта (D42)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "review-map-p5",
+      "why": "чекпоинты P5: что покрывает, база диапазона, фокус",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/collaboration/hub/src/management.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/shutdown.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/limits.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/metrics.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/hub/Dockerfile",
+      "change": "any",
+      "note": "создаётся P5.2 (git mv)"
+    },
+    {
+      "path": "packages/collaboration/hub/docker-compose.yml",
+      "change": "any",
+      "note": "создаётся P5.2 (git mv)"
+    },
+    {
+      "path": "packages/collaboration/hub/test/management.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/shutdown.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/limits.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/metrics.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/**",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "hub.list"
+    }
+  ],
+  "rules": [
+    "Один обработчик сигналов — shutdown coordinator; `stopOnSignals: false` в конфигурации Server.",
+    "После выставления draining ни одна запись (envelope, update, sync step 2) не принимается; readyz 503 возвращается до закрытия соединений.",
+    "destroy() всегда в race с таймаутом; итоговый лог содержит число нефлашнутых записей и document_id.",
+    "Management listener по умолчанию слушает 127.0.0.1; /livez не обращается к backend, БД и Redis.",
+    "Лимиты размера проверяются до декодирования/аллокации."
+  ],
+  "guidance": "shutdown.test.js: координатор с инъекцией clock и фейковых server/ledger: (a) сигнал → readyz 503 сразу, onConnect отказывает, beforeHandleMessage отвергает запись; (b) ledger флашится до дедлайна → exit 0; (c) ledger не флашится → по дедлайну лог error `{unflushed: n, documents: [...]}`, exit 1; (d) destroy не резолвится → завершение по SHUTDOWN_DESTROY_MS. Тест не шлёт реальный сигнал процессу Node test runner (вызывает обработчик напрямую).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "(cd packages/collaboration/hub && npm run check && node --test test/management.test.js test/shutdown.test.js test/limits.test.js test/metrics.test.js)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "(cd packages/collaboration/hub && npm test)",
+      "expect": "exit 0: весь unit-набор хаба (test/*.test.js), без e2e/stand",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "grep -q 'stopOnSignals: false' packages/collaboration/hub/src/index.js && ! grep -rn 'healthPort' packages/collaboration/hub/src",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "livez/readyz/metrics",
+    "shutdown coordinator",
+    "лимиты хаба"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "gpt-6.1-sol",
+      "note": "RC-P5-2: покрывает P5.7–P5.9 (git diff -M <sha P5.6>..<sha P5.9>). Фокус: ack только после backend commit, неизменный update_id при retry, retry-классы и общий дедлайн, ledger независим от onStoreDocument/debounce/destroy, Redis-origin не дублируется, server/direct-изменения не теряются, бюджет buffered → stop writes, отказ durable; компактация по lease и CAS, covered диапазон = прочитанному; shutdown: readyz 503 сразу, admission/mutation закрыты, destroy в race с таймаутом, честный unflushed; liveness без БД; лимиты до аллокации. Сверка с закреплёнными фактами Hocuspocus 4.3.0 (test/hocuspocus-v4.test.js).",
+      "provider": "codex",
+      "effort": "xhigh"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:06:30Z"
+}

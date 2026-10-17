@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P5",
   "title": "Пакет коллаборации и сохранность правок",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Выделить vaulter-collaboration (PHP-пакет, хаб @vaulter/collaboration-hub, @vaulter/vue-collaboration) и закрыть риски сохранности: журнал Yjs-обновлений с receipts и компактацией, CAS/generation-fencing, режимы buffered/durable, ревокация в живой сессии, full-jitter retry, livez/readyz/drain, лимиты и метрики. documents работает без пакета.",
-  "context": "Фаза E. Размер: L. Нормативный документ — knowledge/collaboration (все секции). Хаб — Hocuspocus 4.3; перед изменениями пункт проверяет поведение v4 (удержание документа при сбое store, flush в destroy) тестом, а не по документации. Протокол хаба ↔ backend получает версию 2; хаб и backend отказываются работать с несовместимой версией. ADR-0031 (пакет коллаборации и модель сохранности). Тесты I17: PHP/Node-наборы в обычных линиях, сценарии с несколькими хабами/SIGKILL — группа `stand` (docker: PG + Redis + 2 хаба) пишутся в P5, но не запускаются в PLAN3 (D41, PLAN4).\nD26 pending marker+side heads/receipts, protocol application ack/retry UUID и safe disable/drain/restore обязательны. P5 минимально меняет drive effective-permissions invalidation/inherited scope и documents-owned public state contract/columns, не collaboration alter foreign tables. Все 17 сценариев knowledge/collaboration#tests написаны к концу фазы; PHP/Node-сценарии исполняются на sqlite в Fast-квалификации, сценарии 2, 3, 10 (stand) и серверные движки — PLAN4.",
+  "context": "Фаза E. Размер: L. Нормативный документ — knowledge/collaboration (все секции). Хаб — Hocuspocus 4.3; перед изменениями пункт проверяет поведение v4 (удержание документа при сбое store, flush в destroy) тестом, а не по документации. Протокол хаба ↔ backend получает версию 2; хаб и backend отказываются работать с несовместимой версией. ADR-0031 (пакет коллаборации и модель сохранности). Тесты I17: PHP/Node-наборы в обычных линиях, сценарии с несколькими хабами/SIGKILL — группа `stand` (docker: PG + Redis + 2 хаба) пишутся в P5, но не запускаются в PLAN3 (D41, PLAN4).\nD26 pending marker+side heads/receipts, protocol application ack/retry UUID и safe disable/drain/restore обязательны. P5 минимально меняет drive effective-permissions invalidation/inherited scope и documents-owned public state contract/columns, не collaboration alter foreign tables. Все 20 сценариев knowledge/collaboration#tests написаны к концу фазы; PHP/Node-сценарии исполняются на sqlite в Fast-квалификации, сценарии 2, 3, 10 (stand) и серверные движки — PLAN4.",
   "contract": {
     "consumes": [
       "knowledge/collaboration",
@@ -69,8 +69,8 @@
   ],
   "validation": [
     {
-      "id": "V1",
-      "procedure": "knowledge/collaboration#tests 1–17 написаны (2, 3, 10 — stand, не запускаются, PLAN4); остальные зелёные на sqlite; documents-набор зелёный без пакета коллаборации; квалификационный пункт P5 (Fast) зелёный",
+      "id": "V100",
+      "procedure": "knowledge/collaboration#tests 1–20 написаны (карта p5-design#tests-map, тест I17ScenarioMapTest); 2, 3, 10 — stand и serial pgsql-гонки не исполняются (PLAN4, D41); исполняемые PHP/Node/vitest-сценарии зелёные на sqlite/unit; documents-наборы зелёные без пакета коллаборации; i2/i4 без остатка D32. Детализация: P5.1 (D32, I6), P5.2 (поведение Hocuspocus 4.3.0), P5.3–P5.6 (модель C1–C12, RC-P5-1), P5.7–P5.9 (хаб, RC-P5-2), P5.10–P5.11 (ревокация, RC-P5-3), P5.12 (vue-collaboration), P5.13 (stand + карта I17), P5.16 (сводная Fast-квалификация).",
       "expect": "все исполняемые зелёные",
       "kind": "acceptance"
     }
@@ -81,8 +81,98 @@
     "ADR-0031",
     "Документация P5"
   ],
-  "items": [],
-  "batches": [],
+  "items": [
+    "P5.1",
+    "P5.2",
+    "P5.3",
+    "P5.4",
+    "P5.5",
+    "P5.6",
+    "P5.7",
+    "P5.8",
+    "P5.9",
+    "P5.10",
+    "P5.11",
+    "P5.12",
+    "P5.13",
+    "P5.14",
+    "P5.15",
+    "P5.16"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P5.1",
+        "P5.2"
+      ],
+      "mode": "recommended",
+      "note": "Выделение: PHP-пакет collaboration (D32 опустошён) и перенос хаба с закреплением поведения Hocuspocus 4.3.0. Ревью — в составе RC-P5-1 (только нерениамные хунки)."
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P5.3",
+        "P5.4"
+      ],
+      "mode": "recommended",
+      "note": "Documents state-контракт и pending marker → журнал/receipts/append. Ревью — в составе RC-P5-1."
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P5.5",
+        "P5.6"
+      ],
+      "mode": "recommended",
+      "note": "Компактация CAS/lease, restore drain-or-409, prune; managed disable и RemovalGuard (destructive). Ревью RC-P5-1 на P5.6 (xhigh), покрывает P5.1–P5.6."
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P5.7",
+        "P5.8",
+        "P5.9"
+      ],
+      "mode": "recommended",
+      "note": "Хаб: протокол 2 и ledger, compaction worker, shutdown/management/лимиты. Ревью RC-P5-2 на P5.9 (xhigh), покрывает P5.7–P5.9."
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P5.10",
+        "P5.11"
+      ],
+      "mode": "recommended",
+      "note": "Ревокация: backend (событие drive, D46, JWT, control consumer) и хаб (control, recheck, update+sync). Ревью RC-P5-3 на P5.11 (high), покрывает P5.10–P5.11."
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P5.12",
+        "P5.13"
+      ],
+      "mode": "recommended",
+      "note": "Клиент @vaulter/vue-collaboration; stand-сценарии 2/3/10 (пишутся) и карта I17. Без ревью."
+    },
+    {
+      "id": "B7",
+      "items": [
+        "P5.14",
+        "P5.15"
+      ],
+      "mode": "recommended",
+      "note": "CI/split/релиз-манифест; ADR-0031 и docs-проход. Без ревью."
+    },
+    {
+      "id": "B8",
+      "items": [
+        "P5.16"
+      ],
+      "mode": "recommended",
+      "note": "Fast-квалификация P5."
+    }
+  ],
   "sections": [
     {
       "id": "design-inputs",

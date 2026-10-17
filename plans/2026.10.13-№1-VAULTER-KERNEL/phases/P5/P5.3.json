@@ -1,0 +1,249 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.3",
+  "title": "Documents: публичный state-контракт CollaborativeState (D27), pending marker и document_state_pending",
+  "status": "todo",
+  "summary": "`Vaulter\\Documents\\State\\CollaborativeState` (#[Api], реализация Internal) с DTO `LockedDocumentState`, `PendingMarker`, `CheckpointPublication`, `CheckpointOutcome`: `lock()` (T→N→D), `markPending()`, `publishCheckpoint()` (CAS generation/state_version, снятие marker только при PT ≤ H), `pendingDocuments()`; вне транзакции — LogicException. SPI `Vaulter\\Documents\\State\\PendingStateDrainer` (#[Spi(Implement)], capability OptionalSingle в DocumentsModule). Колонки `v_documents.pending_generation`, `pending_through_seq` + CHECK (create-DDL DocumentsSchema, D21). Guards drain-or-409 `document_state_pending` (409, retryable with_backoff, receipt never) в REST PUT content, restore, export, GET content, purge документа (C8, C9). DocumentStateWriter остаётся Internal.",
+  "why": "D26, D27, p5-design#invariants C5, C8, C9: documents владеет generation и marker; collaboration пишет только через публичный контракт; без marker REST тихо читает или перезаписывает устаревшую проекцию. Hard risks: снятие marker без покрытия (потеря saved-правок при restore/replace), deadlock при нарушении порядка T→N→D, ожидание drain внутри транзакции (locks на время хаба), stale JSON как актуальный.",
+  "scope": {
+    "include": [
+      "packages/documents/src/State/** (контракт, DTO, SPI, реализация)",
+      "DocumentsSchema: колонки marker + CHECK; expected-снапшоты sqlite (pgsql/mysql выводом без движков)",
+      "Guards в UpdateDocumentContentAction, RestoreDocumentRevisionAction, экспорт, чтение content, DocumentContentLifecycle::purge",
+      "Problem `document_state_pending` в DocumentsProblemCodes, openapi/vaulter-v1.yaml, packages/vue/src/api/schema.d.ts (`api:generate`)",
+      "Тесты: packages/documents/tests/State/CollaborativeStateTest.php, packages/documents/tests/State/PendingStateGuardTest.php (фейковый drainer: успех, deadline, отсутствие), packages/documents/tests/Concurrency/PendingMarkerRaceTest.php (serial+database, пишется)",
+      "documents tests/Arch снапшоты публичной поверхности; ledger: колонки/constraint/problem added D26, контракт D27"
+    ],
+    "exclude": [
+      "Потребители контракта в collaboration (P5.4–P5.6)",
+      "Отложено в PLAN4: `scripts/t pgsql -p documents --group=database`, `scripts/t pgsql -p documents --group=serial tests/Concurrency/PendingMarkerRaceTest.php`, `scripts/schema-snapshot.sh --driver=pgsql|mysql --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected`"
+    ]
+  },
+  "depends_on": [
+    "P5.2"
+  ],
+  "related": [],
+  "decisions": [
+    "D26",
+    "D27",
+    "D21",
+    "D41"
+  ],
+  "skills": [
+    "php:production-readiness-checklist",
+    "php:database"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "invariants",
+      "why": "модель инвариантов C1–C12, порядок lock, пары операций, bypass",
+      "required": true
+    },
+    {
+      "ref": "knowledge/collaboration",
+      "section": "durability",
+      "why": "D26 нормативно: marker (generation, pending_through_seq), restore/REST replace при pending (ревизия 3 п.2–3)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture",
+      "section": "errors",
+      "why": "retryable и receipt-политика problem codes",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Content/DocumentStateWriter.php",
+      "why": "write/checkpoint, проверки epoch и state_version (строки 37–200)",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php",
+      "why": "REST PUT: TreeGuard lock T→N→D (строки ~58–110)",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Actions/Revisions/RestoreDocumentRevisionAction.php",
+      "why": "restore: смена collab_epoch (строки ~52–115)",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Schema/DocumentsSchema.php",
+      "why": "v_documents и v_document_revisions (строки ~130–210)",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Content/DocumentContentLifecycle.php",
+      "why": "copy/purge документа",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
+      "why": "вклад problem codes",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/documents/src/State/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/State/CollaborativeStateTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/State/PendingStateGuardTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/Concurrency/PendingMarkerRaceTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/groups.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/expected/**",
+      "change": "modify"
+    },
+    {
+      "path": "openapi/vaulter-v1.yaml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/vue/src/api/schema.d.ts",
+      "change": "modify",
+      "note": "npm --prefix packages/vue run api:generate"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md и текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Все методы CollaborativeState требуют открытой транзакции VaulterDatabase (иначе LogicException); lock() — единственная точка взятия T→N→D для collaboration.",
+    "Marker: оба поля NULL или оба NOT NULL (CHECK); markPending ставит max(PT, seq) только при generation == collab_epoch; publishCheckpoint снимает marker только при той же generation и coveredThrough ≥ PT.",
+    "Drain вызывается вне транзакции с deadline; после drain — повторный lock и проверка marker; marker не снят → 409 `document_state_pending`, collab_epoch не меняется.",
+    "При неактивном или отсутствующем drainer guards отвечают 409 без запросов к таблицам collaboration.",
+    "Публичная поверхность: CollaborativeState и DTO — #[Api]; PendingStateDrainer — #[Spi(Implement)]; DocumentStateWriter — #[Internal] без изменения метки."
+  ],
+  "guidance": "PendingMarkerRaceTest (pgsql, serial, ForkRace из кита): процесс A — markPending(seq=H+1) после чтения H процессом B; процесс B — publishCheckpoint(coveredThrough=H). Ожидание в любом порядке commit: marker остаётся (PT = H+1). Тест пишется и классифицируется, в PLAN3 не исполняется. На sqlite те же утверждения — детерминированным чередованием вызовов в CollaborativeStateTest.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p documents tests/State tests/Document/DocumentStateWriterTest.php tests/Document/DocumentStateVersionTest.php tests/Http/DocumentContentV1Test.php tests/Http/DocumentRevisionsV1Test.php tests/Http/ExportV1Test.php tests/Arch",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/schema-snapshot.sh --driver=sqlite --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "git diff --quiet 2a657840 -- packages/core/tests/Fixtures/Schema/original",
+      "expect": "exit 0: original P1.10 неизменен",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "(cd packages/documents && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "grep -q 'document_state_pending' openapi/vaulter-v1.yaml && npm --prefix packages/vue run api:check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ZonesMapTest.php tests/Repo/TestGroupsTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "CollaborativeState + DTO",
+    "PendingStateDrainer SPI",
+    "pending marker",
+    "document_state_pending"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:07:47Z"
+}
