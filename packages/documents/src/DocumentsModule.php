@@ -28,6 +28,8 @@ use Vaulter\Documents\Profiles\AllowedDocumentTypesProfileOption;
 use Vaulter\Documents\Profiles\CommentsProfileOption;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Schema\DocumentsSchema;
+use Vaulter\Documents\State\PendingPurgeDrain;
+use Vaulter\Documents\State\PendingStateDrainer;
 use Vaulter\Documents\Support\DocumentHeads;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -44,6 +46,7 @@ use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
+use Vaulter\Operations\OperationMiddleware;
 
 /**
  * The documents module (D22): document types, revisions, comments and export, their routes and commands. The
@@ -96,6 +99,8 @@ final class DocumentsModule implements OwnsSchema, VaulterModule
             // Documents are presented and copied/purged by the documents module, not by the file machinery.
             ->slot(KindPresenter::class, DocumentPresenter::class, 'documents.presenter', key: NodeKind::Document->value)
             ->slot(NodeContentLifecycle::class, DocumentContentLifecycle::class, 'documents.lifecycle', key: NodeKind::Document->value)
+            // A trash purge drains pending documents before its transaction; the lifecycle re-checks the marker under lock.
+            ->slot(OperationMiddleware::class, PendingPurgeDrain::class, 'documents.pending-purge-drain')
             ->slot(ProfileOption::class, CommentsProfileOption::class, 'documents.profile.comments', key: CommentsProfileOption::NAME)
             ->slot(ProfileOption::class, AllowedDocumentTypesProfileOption::class, 'documents.profile.allowed-document-types', key: AllowedDocumentTypesProfileOption::NAME)
             // The slots the module defines (D8) and its built-in contributions; a host adds its own through config class-strings.
@@ -109,6 +114,9 @@ final class DocumentsModule implements OwnsSchema, VaulterModule
             // collaboration module (a package of its own, D1) provides it, and without it documents are edited one at a time.
             ->defineCapability(ExportFilenameResolver::class, Cardinality::RequiredSingle)
             ->provides(ExportFilenameResolver::class, DefaultExportFilenameResolver::class)
-            ->defineCapability(CollaborationDriver::class, Cardinality::OptionalSingle);
+            ->defineCapability(CollaborationDriver::class, Cardinality::OptionalSingle)
+            // Brings a pending document's working state up to the collaboration log (D26): without a provider such a
+            // document answers 409 document_state_pending instead of serving or replacing stale content.
+            ->defineCapability(PendingStateDrainer::class, Cardinality::OptionalSingle);
     }
 }

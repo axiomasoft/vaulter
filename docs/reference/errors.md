@@ -59,6 +59,7 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 | [`document_content_degraded`](#document_content_degraded) | 409 | documents | `never` | `cacheable` | `Vaulter\Documents\Exceptions\DocumentContentDegradedException` |
 | [`document_revision_not_found`](#document_revision_not_found) | 404 | documents | `never` | `never` | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
 | [`document_state_mismatch`](#document_state_mismatch) | 412 | documents | `after_refetch` | `cacheable` | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
+| [`document_state_pending`](#document_state_pending) | 409 | documents | `with_backoff` | `never` | `Vaulter\Documents\Exceptions\DocumentStatePendingException` |
 | [`document_state_too_large`](#document_state_too_large) | 413 | documents | `never` | `cacheable` | `Vaulter\Documents\Exceptions\DocumentStateTooLargeException` |
 | [`document_type_unavailable`](#document_type_unavailable) | 409 | documents | `never` | `cacheable` | `Vaulter\Documents\Exceptions\DocumentTypeUnavailableException` |
 | [`drive_archived`](#drive_archived) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\DriveArchivedException` |
@@ -212,6 +213,12 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 **412** · documents · retryable `after_refetch` · receipt `cacheable`
 
 **Document content changed** — The content changed since you read it; reload it and retry.
+
+### `document_state_pending`
+
+**409** · documents · retryable `with_backoff` · receipt `never`
+
+**Document content pending** — Saved collaboration edits are not in the content yet; retry later.
 
 ### `document_state_too_large`
 

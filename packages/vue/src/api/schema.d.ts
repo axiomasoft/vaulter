@@ -1113,6 +1113,7 @@ export interface components {
              * @example document_content_degraded
              * @example document_revision_not_found
              * @example document_state_mismatch
+             * @example document_state_pending
              * @example document_state_too_large
              * @example document_type_unavailable
              * @example drive_archived

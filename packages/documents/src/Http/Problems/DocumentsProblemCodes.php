@@ -8,6 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
+use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\DocumentStateTooLargeException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
@@ -40,6 +41,8 @@ final class DocumentsProblemCodes implements ProblemCodeSource
             'document_content_degraded' => new ProblemSpec(409, DocumentContentDegradedException::class, receipt: ReceiptPolicy::Cacheable),
             'document_revision_not_found' => new ProblemSpec(404, DocumentRevisionNotFoundException::class),
             'document_state_mismatch' => new ProblemSpec(412, StaleDocumentStateException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
+            // Not cached as a receipt: the same request succeeds once the transport drained the log.
+            'document_state_pending' => new ProblemSpec(409, DocumentStatePendingException::class, Retryable::WithBackoff),
             'document_state_too_large' => new ProblemSpec(413, DocumentStateTooLargeException::class, receipt: ReceiptPolicy::Cacheable),
             'document_type_unavailable' => new ProblemSpec(409, DocumentTypeUnavailableException::class, receipt: ReceiptPolicy::Cacheable),
             'invalid_document_content' => new ProblemSpec(422, InvalidDocumentContentException::class, receipt: ReceiptPolicy::Cacheable),

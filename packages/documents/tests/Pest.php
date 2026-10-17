@@ -8,6 +8,7 @@ use Vaulter\Documents\Tests\Comment\CommentsTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
 use Vaulter\Documents\Tests\Export\ExportTestCase;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
+use Vaulter\Documents\Tests\State\StateTestCase;
 use Vaulter\Documents\Tests\TestCase;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
@@ -52,6 +53,9 @@ uses(TypesTestCase::class, RefreshDatabase::class)->in('Types');
 // Generated scaffolds run their contract suites on the same booted types and exporters.
 uses(ExportTestCase::class, RefreshDatabase::class)->in('Console');
 
+// The collaborative-state contract and the drain-or-409 guards (D26, D27) check "inside a transaction" themselves:
+// these files migrate per test instead of wrapping each in a transaction.
+uses(StateTestCase::class, DatabaseMigrations::class)->in('State');
 // The v1 HTTP surface: documents, revisions, comments and export.
 uses(DocumentTestCase::class, RefreshDatabase::class)->in('Http');
 

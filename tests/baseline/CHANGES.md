@@ -1533,6 +1533,19 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `documents` `P\Tests\Providers\InvalidDefaultDocumentTypeTest::__pest_evaluable_it_refuses_to_boot_collaboration_with_one_value_as_both_the_JWT_and_the_webhook_secret__R9_` → [`collaboration`] replacement `P\Tests\Configuration\CollaborationSecretsTest::__pest_evaluable_it_refuses_one_value_for_the_JWT_secret_and_the_webhook_secret_at_boot_in_every_environment` — moved to the collaboration package with the realtime implementation (P5.1) (D1)
 - `core` `P\Packages\core\tests\Support\CollaborationDefaultsGuardTest::__pest_evaluable_it_the_documents_configuration_accessor_falls_back_to_hocuspocus_when_the_config_key_is_entirely_absent__F_P3_6_01` → replacement `P\Packages\core\tests\Support\CollaborationDefaultsGuardTest::__pest_evaluable_it_the_collaboration_configuration_accessor_falls_back_to_hocuspocus_when_the_config_key_is_entirely_absent__F_P3_6_01` — the collaboration configuration is a package of its own: the guard reads vaulter-collaboration (P5.1) (D1)
 - `core` `P\Packages\core\tests\Support\CollaborationDefaultsGuardTest::__pest_evaluable_it_the_vaulter_documents_config_default_transport_is_hocuspocus__unchanged_by_P3_1_—_the_ADR_docs_were_the_drift___F_P3_6_01` → replacement `P\Packages\core\tests\Support\CollaborationDefaultsGuardTest::__pest_evaluable_it_the_vaulter_collaboration_config_default_transport_is_hocuspocus__unchanged_by_P3_1_—_the_ADR_docs_were_the_drift___F_P3_6_01` — the collaboration configuration is a package of its own: the guard reads vaulter-collaboration (P5.1) (D1)
+- `hub` `hocuspocus-server/test/collab-expiry.test.js` → [`hub`] `packages/collaboration/hub/test/collab-expiry.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/config.test.js` → [`hub`] `packages/collaboration/hub/test/config.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/e2e/restore-epoch.e2e.js` → [`hub`] `packages/collaboration/hub/test/e2e/restore-epoch.e2e.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/epoch-fence.test.js` → [`hub`] `packages/collaboration/hub/test/epoch-fence.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/load-seed.test.js` → [`hub`] `packages/collaboration/hub/test/load-seed.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/on-connect.test.js` → [`hub`] `packages/collaboration/hub/test/on-connect.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/readonly.test.js` → [`hub`] `packages/collaboration/hub/test/readonly.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/redis-extension-wiring.test.js` → [`hub`] `packages/collaboration/hub/test/redis-extension-wiring.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/schema-parity.test.js` → [`hub`] `packages/collaboration/hub/test/schema-parity.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/security.test.js` → [`hub`] `packages/collaboration/hub/test/security.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/v1-paths.test.js` → [`hub`] `packages/collaboration/hub/test/v1-paths.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/webhook.test.js` → [`hub`] `packages/collaboration/hub/test/webhook.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
+- `hub` `hocuspocus-server/test/websocket-hardening.test.js` → [`hub`] `packages/collaboration/hub/test/websocket-hardening.test.js` — the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged) (D1)
 
 ## Additions (current − original)
 
@@ -1540,7 +1553,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `core`: 523
 - `media`: 90
 - `drive`: 111
-- `documents`: 21
+- `documents`: 57
 - `azgard`: 9
 - `filament`: 27
 - `webhooks`: 77

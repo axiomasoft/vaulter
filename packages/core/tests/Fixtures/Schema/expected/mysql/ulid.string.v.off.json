@@ -1254,6 +1254,26 @@
                     "generation": ""
                 },
                 {
+                    "name": "pending_generation",
+                    "type": "bigint",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "pending_through_seq",
+                    "type": "bigint",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
                     "name": "content",
                     "type": "json",
                     "nullable": "YES",
@@ -1426,6 +1446,19 @@
                         }
                     ]
                 },
+                "v_documents_pending_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "pending_generation",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
                 "v_documents_tenant_id_index": {
                     "unique": false,
                     "type": "BTREE",
@@ -1496,9 +1529,24 @@
                     "type": "check",
                     "clause": "(`checkpoint_state_version` >= 0)",
                     "enforced": "YES"
+                },
+                "v_documents_chk_4": {
+                    "type": "check",
+                    "clause": "((`pending_generation` is null) or (`pending_generation` >= 0))",
+                    "enforced": "YES"
+                },
+                "v_documents_chk_5": {
+                    "type": "check",
+                    "clause": "((`pending_through_seq` is null) or (`pending_through_seq` >= 1))",
+                    "enforced": "YES"
+                },
+                "v_documents_pending_marker_check": {
+                    "type": "check",
+                    "clause": "(((`pending_generation` is null) and (`pending_through_seq` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null)))",
+                    "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `v_documents` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `schema_version` int NOT NULL,\n  `current_revision_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `revision_count` int NOT NULL DEFAULT '0',\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `checkpoint_state_version` bigint NOT NULL DEFAULT '0',\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  `yjs_state` longblob,\n  `yjs_state_size` int DEFAULT NULL,\n  `last_checkpoint_at` timestamp NULL DEFAULT NULL,\n  `created_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_documents_node_uniq` (`node_id`),\n  KEY `v_documents_type_idx` (`type`),\n  KEY `v_documents_tenant_id_index` (`tenant_id`),\n  KEY `v_documents_node_id_index` (`node_id`),\n  KEY `v_documents_current_revision_id_index` (`current_revision_id`),\n  KEY `v_documents_head_fk` (`current_revision_id`,`id`),\n  CONSTRAINT `v_documents_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `v_document_revisions` (`id`, `document_id`) ON DELETE RESTRICT,\n  CONSTRAINT `v_documents_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_documents_chk_1` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `v_documents_chk_2` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `v_documents_chk_3` CHECK ((`checkpoint_state_version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_documents` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `schema_version` int NOT NULL,\n  `current_revision_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `revision_count` int NOT NULL DEFAULT '0',\n  `collab_epoch` bigint NOT NULL DEFAULT '0',\n  `state_version` bigint NOT NULL DEFAULT '0',\n  `checkpoint_state_version` bigint NOT NULL DEFAULT '0',\n  `pending_generation` bigint DEFAULT NULL,\n  `pending_through_seq` bigint DEFAULT NULL,\n  `content` json DEFAULT NULL,\n  `content_hash` char(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `content_size` int DEFAULT NULL,\n  `yjs_state` longblob,\n  `yjs_state_size` int DEFAULT NULL,\n  `last_checkpoint_at` timestamp NULL DEFAULT NULL,\n  `created_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_documents_node_uniq` (`node_id`),\n  KEY `v_documents_type_idx` (`type`),\n  KEY `v_documents_pending_idx` (`pending_generation`),\n  KEY `v_documents_tenant_id_index` (`tenant_id`),\n  KEY `v_documents_node_id_index` (`node_id`),\n  KEY `v_documents_current_revision_id_index` (`current_revision_id`),\n  KEY `v_documents_head_fk` (`current_revision_id`,`id`),\n  CONSTRAINT `v_documents_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `v_document_revisions` (`id`, `document_id`) ON DELETE RESTRICT,\n  CONSTRAINT `v_documents_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_documents_chk_1` CHECK ((`collab_epoch` >= 0)),\n  CONSTRAINT `v_documents_chk_2` CHECK ((`state_version` >= 0)),\n  CONSTRAINT `v_documents_chk_3` CHECK ((`checkpoint_state_version` >= 0)),\n  CONSTRAINT `v_documents_chk_4` CHECK (((`pending_generation` is null) or (`pending_generation` >= 0))),\n  CONSTRAINT `v_documents_chk_5` CHECK (((`pending_through_seq` is null) or (`pending_through_seq` >= 1))),\n  CONSTRAINT `v_documents_pending_marker_check` CHECK ((((`pending_generation` is null) and (`pending_through_seq` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_drive_change_heads": {
             "columns": [

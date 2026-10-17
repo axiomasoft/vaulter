@@ -124,6 +124,21 @@ final readonly class DocumentStateWriter
         );
     }
 
+    /**
+     * Set the pending-state marker (D26) — the generation and the last committed collaboration sequence the working
+     * state does not cover yet — or clear it with two nulls. The validators and the working state stay as they are.
+     */
+    public function mark(Document $locked, ?int $generation, ?int $throughSeq): void
+    {
+        $this->assertTransaction();
+
+        if (($generation === null) !== ($throughSeq === null) || ($generation ?? 0) < 0 || ($throughSeq ?? 1) < 1) {
+            throw new InvalidArgumentException('[Vaulter] A pending marker is a generation of at least 0 with a sequence of at least 1, or none at all.');
+        }
+
+        $this->documents->update($locked, ['pending_generation' => $generation, 'pending_through_seq' => $throughSeq]);
+    }
+
     private function capture(
         Document $document,
         ?string $label,

@@ -786,6 +786,24 @@
                     "collation": null
                 },
                 {
+                    "name": "pending_generation",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "pending_through_seq",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "content",
                     "type": "jsonb",
                     "not_null": false,
@@ -880,11 +898,19 @@
                 "v_documents_current_revision_id_index": "CREATE INDEX v_documents_current_revision_id_index ON public.v_documents USING btree (current_revision_id)",
                 "v_documents_node_id_index": "CREATE INDEX v_documents_node_id_index ON public.v_documents USING btree (node_id)",
                 "v_documents_node_uniq": "CREATE UNIQUE INDEX v_documents_node_uniq ON public.v_documents USING btree (node_id)",
+                "v_documents_pending_idx": "CREATE INDEX v_documents_pending_idx ON public.v_documents USING btree (pending_generation)",
                 "v_documents_pkey": "CREATE UNIQUE INDEX v_documents_pkey ON public.v_documents USING btree (id)",
                 "v_documents_tenant_id_index": "CREATE INDEX v_documents_tenant_id_index ON public.v_documents USING btree (tenant_id)",
                 "v_documents_type_idx": "CREATE INDEX v_documents_type_idx ON public.v_documents USING btree (type)"
             },
             "constraints": {
+                "v_documents_check": {
+                    "type": "c",
+                    "definition": "CHECK ((((pending_generation IS NULL) AND (pending_through_seq IS NULL)) OR ((pending_generation IS NOT NULL) AND (pending_through_seq IS NOT NULL))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "v_documents_checkpoint_state_version_check": {
                     "type": "c",
                     "definition": "CHECK ((checkpoint_state_version >= 0))",
@@ -916,6 +942,20 @@
                 "v_documents_node_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (node_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_documents_pending_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK (((pending_generation IS NULL) OR (pending_generation >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_documents_pending_through_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK (((pending_through_seq IS NULL) OR (pending_through_seq >= 1)))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true

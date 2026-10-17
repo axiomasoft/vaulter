@@ -17,6 +17,9 @@ use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 #[Internal]
 final class DocumentsSchema implements ModuleSchema
 {
+    /** The pending-state marker is set as a whole or not at all. */
+    private const string PENDING_MARKER_PAIR = '(pending_generation IS NULL AND pending_through_seq IS NULL) OR (pending_generation IS NOT NULL AND pending_through_seq IS NOT NULL)';
+
     public function __construct(private readonly SchemaHelpers $helpers) {}
 
     /** @return list<string> the entity keys of the tables this schema owns, in dependency order */
@@ -156,6 +159,7 @@ final class DocumentsSchema implements ModuleSchema
         $this->helpers->counterColumn(table: $table, column: 'collab_epoch');
         $this->helpers->counterColumn(table: $table, column: 'state_version');
         $this->helpers->counterColumn(table: $table, column: 'checkpoint_state_version');
+        $this->definePendingMarker(table: $table);
 
         // The canonical JSON projection of the working state. jsonb on Postgres,
         // json on MySQL, text on SQLite.
@@ -175,11 +179,29 @@ final class DocumentsSchema implements ModuleSchema
         $table->unique('node_id', $name.'_node_uniq');
         // Lets doctor list documents of types no installed package registers.
         $table->index('type', $name.'_type_idx');
+        // The documents whose working state lags behind the collaboration log (CollaborativeState::pendingDocuments()).
+        $table->index('pending_generation', $name.'_pending_idx');
 
         $table->foreign('node_id')
             ->references('id')
             ->on($this->helpers->table('nodes'))
             ->cascadeOnDelete();
+    }
+
+    /**
+     * The pending-state marker (D26): (pending_generation, pending_through_seq) — the collaboration generation and the
+     * last committed log sequence the working state does not cover yet. Both NULL means the checkpoint covers every
+     * saved edit; one without the other is refused by a CHECK. SQLite and PostgreSQL take the pair CHECK on the column,
+     * MySQL refuses a column CHECK naming another column, so afterCreate() adds it there as a named constraint.
+     */
+    private function definePendingMarker(Blueprint $table): void
+    {
+        $sqlite = $this->helpers->dbConnection()->getDriverName() === 'sqlite';
+        $type = static fn (string $column): string => $sqlite ? "typeof({$column}) = 'integer' AND " : '';
+        $pair = $this->helpers->dbConnection()->getDriverName() === 'mysql' ? '' : ' CHECK('.self::PENDING_MARKER_PAIR.')';
+
+        $table->rawColumn('pending_generation', 'BIGINT CHECK(pending_generation IS NULL OR ('.$type('pending_generation').'pending_generation >= 0))')->nullable();
+        $table->rawColumn('pending_through_seq', 'BIGINT CHECK(pending_through_seq IS NULL OR ('.$type('pending_through_seq').'pending_through_seq >= 1))'.$pair)->nullable();
     }
 
     /**
@@ -248,6 +270,12 @@ final class DocumentsSchema implements ModuleSchema
 
     private function afterCreate(string $entity): void
     {
+        if ($entity === 'documents' && $this->helpers->dbConnection()->getDriverName() === 'mysql') {
+            $name = $this->helpers->table('documents');
+            $grammar = $this->helpers->dbConnection()->getQueryGrammar();
+            $this->helpers->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' ADD CONSTRAINT '.$grammar->wrap($name.'_pending_marker_check').' CHECK('.self::PENDING_MARKER_PAIR.')');
+        }
+
         if ($entity === 'document_revisions') {
             $this->addDocumentContentGinIndex(table: $this->helpers->table('document_revisions'));
             $this->helpers->addHeadForeignKey(aggregate: 'documents', revisions: 'document_revisions', owner: 'document_id');

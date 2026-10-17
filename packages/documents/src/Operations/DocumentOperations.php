@@ -28,6 +28,7 @@ use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
+use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
@@ -36,6 +37,7 @@ use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Queries\MappedCursorPaginator;
+use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Drive\Access\OperationGuard;
@@ -73,6 +75,10 @@ use Vaulter\Operations\OperationSpec;
  * purged; editing, checkpointing, restoring and exporting answer 409
  * document_type_unavailable until the type is registered again. Content that reads only partly under its type
  * (DocumentSnapshot::$editable = false) is not overwritten: 409 document_content_degraded.
+ *
+ * A document with saved collaboration edits its working state does not hold yet (the pending-state
+ * marker, D26) is first drained through the collaboration transport; while the marker stays, its
+ * working state is neither read, exported nor replaced or restored: 409 document_state_pending.
  */
 #[Api]
 final readonly class DocumentOperations implements DriveExtension
@@ -96,6 +102,7 @@ final readonly class DocumentOperations implements DriveExtension
         private DocumentSnapshotMapper $mapper,
         private NodeSnapshotMapper $nodes,
         private OperationRunner $runner,
+        private PendingStateGuard $pending,
     ) {}
 
     /**
@@ -129,16 +136,25 @@ final readonly class DocumentOperations implements DriveExtension
         });
     }
 
-    /** The working state, or the content of one checkpoint when $revision is given. */
+    /**
+     * The working state, or the content of one checkpoint when $revision is given.
+     *
+     * @throws DocumentStatePendingException when the working state is pending and could not be drained
+     */
     public function content(NodeSnapshot|string|int $document, DocumentRevisionSnapshot|string|int|null $revision = null): DocumentSnapshot
     {
-        // Inline content has no scan evidence, but it leaves through the same egress
-        // gate as file bytes so profile and tenant rules apply to it too.
-        $node = $this->document($document, Ability::View, OperationKind::ContentEgress);
-        $aggregate = $this->query->document($node);
-        $selected = $revision === null ? null : $this->query->revision($node, $aggregate, $revision);
+        return $this->pending->settled(function () use ($document, $revision): DocumentSnapshot {
+            // Inline content has no scan evidence, but it leaves through the same egress
+            // gate as file bytes so profile and tenant rules apply to it too.
+            $node = $this->document($document, Ability::View, OperationKind::ContentEgress);
+            $aggregate = $this->query->document($node);
+            if ($revision === null) {
+                $this->pending->assertSettled($aggregate);
+            }
+            $selected = $revision === null ? null : $this->query->revision($node, $aggregate, $revision);
 
-        return $this->mapper->document($aggregate, $aggregate->currentRevision, $selected);
+            return $this->mapper->document($aggregate, $aggregate->currentRevision, $selected);
+        });
     }
 
     /**
@@ -149,10 +165,11 @@ final readonly class DocumentOperations implements DriveExtension
      *
      * @throws DocumentTypeUnavailableException when the document's type is not installed
      * @throws DocumentContentDegradedException when the stored content reads only partly under its type
+     * @throws DocumentStatePendingException    when the working state is pending and could not be drained
      */
     public function update(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion = null): DocumentSnapshot
     {
-        return $this->write('update', fn (): DocumentSnapshot => $this->writeContent($document, $content, null, $expectedStateVersion));
+        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update', fn (): DocumentSnapshot => $this->writeContent($document, $content, null, $expectedStateVersion)));
     }
 
     /**
@@ -163,7 +180,7 @@ final readonly class DocumentOperations implements DriveExtension
     #[Internal]
     public function updateContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState = null, ?int $expectedStateVersion = null): DocumentSnapshot
     {
-        return $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $yjsState, $expectedStateVersion));
+        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $yjsState, $expectedStateVersion)));
     }
 
     /** @param array<string, mixed> $content */
@@ -232,10 +249,12 @@ final readonly class DocumentOperations implements DriveExtension
      * Copy a checkpoint forward into the working state. The checkpoint itself is never
      * changed; the restore is recorded as a new head checkpoint and open collaboration
      * rooms move to a new epoch.
+     *
+     * @throws DocumentStatePendingException when the working state is pending and could not be drained
      */
     public function restore(NodeSnapshot|string|int $document, DocumentRevisionSnapshot|string|int $revision, ?int $expectedStateVersion = null): DocumentSnapshot
     {
-        return $this->write('restore', function () use ($document, $revision, $expectedStateVersion): DocumentSnapshot {
+        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('restore', function () use ($document, $revision, $expectedStateVersion): DocumentSnapshot {
             $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
             $this->installedType($node);
             $this->restore->execute($this->context, new RestoreDocumentRevisionInput(
@@ -245,7 +264,7 @@ final readonly class DocumentOperations implements DriveExtension
             ));
 
             return $this->current($node);
-        });
+        }));
     }
 
     /** Pin a checkpoint out of pruning, or release the pin. */
@@ -270,14 +289,17 @@ final readonly class DocumentOperations implements DriveExtension
      *
      * @throws DocumentTypeUnavailableException when the document's type is not installed
      * @throws UnknownExportFormatException     when the type has no exporter for $format (422, with the allowed formats)
+     * @throws DocumentStatePendingException    when the working state is pending and could not be drained
      */
     public function export(NodeSnapshot|string|int $document, string $format, DocumentRevisionSnapshot|string|int|null $revision = null): DocumentExport
     {
-        $node = $this->document($document, Ability::Download, OperationKind::ContentEgress);
-        $this->installedType($node);
-        $selected = $revision === null ? null : $this->query->revision($node, $this->query->document($node), $revision);
+        return $this->pending->settled(function () use ($document, $format, $revision): DocumentExport {
+            $node = $this->document($document, Ability::Download, OperationKind::ContentEgress);
+            $this->installedType($node);
+            $selected = $revision === null ? null : $this->query->revision($node, $this->query->document($node), $revision);
 
-        return $this->export->execute($this->context, new ExportDocumentInput(node: $node, format: $format, revision: $selected));
+            return $this->export->execute($this->context, new ExportDocumentInput(node: $node, format: $format, revision: $selected));
+        });
     }
 
     /**

@@ -23,6 +23,8 @@ use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Documents\State\CollaborativeState;
+use Vaulter\Documents\State\DatabaseCollaborativeState;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Node;
@@ -55,6 +57,8 @@ final class BindingsRegistrar implements ModuleBindings
         $app->bind(DocumentOperations::class);
         $app->bind(CommentOperations::class);
         $app->alias(DocumentsManager::class, 'vaulter.documents');
+        // The state contract of the realtime transport (D27): stateless, every call works in the caller's transaction.
+        $app->singleton(CollaborativeState::class, DatabaseCollaborativeState::class);
 
         // The export filename seam is a capability of DocumentsModule (the node's basename plus the exporter's
         // extension): ExportDocumentAction is final, so a host wanting a different scheme rebinds the contract

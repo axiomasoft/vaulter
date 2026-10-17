@@ -1399,6 +1399,69 @@
             "id": "table:v_webhook_endpoints",
             "kind": "schema",
             "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_documents.pending_generation",
+            "kind": "schema",
+            "reason": "P5.3: the pending-state marker of the working state (generation, pending_through_seq), written only through the documents state contract CollaborativeState (D27); both NULL = the checkpoint covers every committed collaboration edit"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_documents.pending_through_seq",
+            "kind": "schema",
+            "reason": "P5.3: the pending-state marker of the working state (generation, pending_through_seq), written only through the documents state contract CollaborativeState (D27); both NULL = the checkpoint covers every committed collaboration edit"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the marker pair CHECK (both NULL or both NOT NULL) on pending_through_seq"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_chk_4",
+            "kind": "schema",
+            "reason": "P5.3: mysql name of the CHECK pending_generation IS NULL OR pending_generation >= 0"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_chk_5",
+            "kind": "schema",
+            "reason": "P5.3: mysql name of the CHECK pending_through_seq IS NULL OR pending_through_seq >= 1"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_generation_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the CHECK pending_generation IS NULL OR pending_generation >= 0"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_marker_check",
+            "kind": "schema",
+            "reason": "P5.3: mysql named marker pair CHECK (both NULL or both NOT NULL), added after create because MySQL refuses a column CHECK naming another column"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_through_seq_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the CHECK pending_through_seq IS NULL OR pending_through_seq >= 1"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_documents.v_documents_pending_idx",
+            "kind": "schema",
+            "reason": "P5.3: the documents carrying a pending marker (CollaborativeState::pendingDocuments(), drain and compaction lease)"
         }
     ],
     "engines": [
@@ -4278,6 +4341,58 @@
                     }
                 }
             }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_documents.pending_generation",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_documents.pending_through_seq",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
         },
         {
             "engines": {
@@ -19062,6 +19177,21 @@
         {
             "engines": {
                 "pgsql": {
+                    "definition": "CHECK ((((pending_generation IS NULL) AND (pending_through_seq IS NULL)) OR ((pending_generation IS NOT NULL) AND (pending_through_seq IS NOT NULL))))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_check",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "pgsql": {
                     "definition": "CHECK ((checkpoint_state_version >= 0))",
                     "kind": "check"
                 }
@@ -19121,6 +19251,36 @@
         },
         {
             "engines": {
+                "mysql": {
+                    "definition": "((`pending_generation` is null) or (`pending_generation` >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_chk_4",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "((`pending_through_seq` is null) or (`pending_through_seq` >= 1))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_chk_5",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
                 "pgsql": {
                     "definition": "CHECK ((collab_epoch >= 0))",
                     "kind": "check"
@@ -19142,6 +19302,51 @@
                 }
             },
             "id": "constraint:v_documents.v_documents_node_uniq",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK (((pending_generation IS NULL) OR (pending_generation >= 0)))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_pending_generation_check",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(((`pending_generation` is null) and (`pending_through_seq` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null)))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_pending_marker_check",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK (((pending_through_seq IS NULL) OR (pending_through_seq >= 1)))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_pending_through_seq_check",
             "owner": "documents",
             "source": {
                 "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
@@ -22981,6 +23186,36 @@
                 }
             },
             "id": "index:v_documents.v_documents_node_uniq",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "pending_generation"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(pending_generation)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "pending_generation"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_documents.v_documents_pending_idx",
             "owner": "documents",
             "source": {
                 "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
@@ -29646,6 +29881,8 @@
                 "collab_epoch",
                 "state_version",
                 "checkpoint_state_version",
+                "pending_generation",
+                "pending_through_seq",
                 "content",
                 "content_hash",
                 "content_size",
@@ -29660,6 +29897,1028 @@
             "id": "table:v_documents",
             "logical": "documents",
             "migration": "0001_01_01_000302_create_v_documents_table.php",
+            "original_diff": {
+                "mysql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "pgsql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "sqlite": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        }
+                    }
+                }
+            },
             "owner": "documents",
             "source": {
                 "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",

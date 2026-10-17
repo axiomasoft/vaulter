@@ -336,6 +336,7 @@
         "packages/documents/tests/Document/PurgeTrashCascadeTest.php",
         "packages/documents/tests/Document/DocumentSchemaWritableTest.php",
         "packages/documents/tests/Document/DocumentCopyLifecycleTest.php",
+        "packages/documents/tests/State/CollaborativeStateTest.php",
         "packages/documents/tests/Types/UnknownDocumentTypeFallbackTest.php",
         "packages/collaboration/tests/Concurrency",
         "packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php",

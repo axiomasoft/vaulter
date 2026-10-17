@@ -4114,6 +4114,7 @@ components:
           - document_content_degraded
           - document_revision_not_found
           - document_state_mismatch
+          - document_state_pending
           - document_state_too_large
           - document_type_unavailable
           - drive_archived

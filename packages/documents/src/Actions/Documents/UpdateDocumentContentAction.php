@@ -16,9 +16,11 @@ use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
+use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Support\DriveLifecycle;
@@ -35,7 +37,8 @@ use Vaulter\Events\EventRecorder;
  * must be editable (ContentDecoder::editable()), checked on the locked row.
  *
  * One outer transaction under T → N → D locks; a single after-commit event when the
- * write changed something.
+ * write changed something. A document with a pending-state marker is refused (409
+ * document_state_pending): the caller drains it outside the transaction (PendingStateGuard).
  */
 #[Internal]
 final readonly class UpdateDocumentContentAction
@@ -49,11 +52,13 @@ final readonly class UpdateDocumentContentAction
         private ContentDecoder $decoder,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private PendingStateGuard $pending,
     ) {}
 
     /**
      * @throws DocumentTypeUnavailableException
      * @throws DocumentContentDegradedException
+     * @throws DocumentStatePendingException    the document carries a pending-state marker
      */
     public function execute(DriveContext $context, UpdateDocumentContentInput $data): DocumentStateResult
     {
@@ -87,6 +92,8 @@ final readonly class UpdateDocumentContentAction
             $node = $this->tree->sync($node, $current);
             $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
             $document->setRelation('node', $node);
+            // Saved collaboration edits the working state does not hold yet would be overwritten (C8).
+            $this->pending->assertSettled($document);
             // A restore may have committed between the caller's check and this lock.
             $type = $this->decoder->editableType($document);
 

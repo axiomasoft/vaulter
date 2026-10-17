@@ -19,6 +19,10 @@ return [
         'title' => 'Document content changed',
         'detail' => 'The content changed since you read it; reload it and retry.',
     ],
+    'document_state_pending' => [
+        'title' => 'Document content pending',
+        'detail' => 'Saved collaboration edits are not in the content yet; retry later.',
+    ],
     'document_state_too_large' => [
         'title' => 'Document state too large',
         'detail' => 'The collaborative state exceeds the allowed size.',

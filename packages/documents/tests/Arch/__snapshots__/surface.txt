@@ -358,6 +358,12 @@ Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException api since 1.0 fin
   public function httpStatus(): int
   public function problemCode(): string
 
+Vaulter\Documents\Exceptions\DocumentStatePendingException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly Vaulter\Documents\State\PendingMarker $marker
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
 Vaulter\Documents\Exceptions\DocumentStateTooLargeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly int $maxBytes
   public readonly int $sizeBytes
@@ -483,6 +489,49 @@ Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly cla
 Vaulter\Documents\Presentation\DocumentPresenter api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Presentation\KindPresenter
   public function kind(): Vaulter\Drive\Enums\NodeKind
   public function present(Vaulter\Drive\Data\Snapshots\NodeSnapshot|Vaulter\Drive\Models\Node $node): Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Documents\State\CheckpointOutcome api since 1.0 final readonly class
+  public bool $changed
+  public int $generation
+  public ?Vaulter\Documents\State\PendingMarker $pending
+  public bool $published
+  public int $stateVersion
+
+Vaulter\Documents\State\CheckpointPublication api since 1.0 final readonly class
+  public ?Vaulter\ValueObjects\Access\ActorRef $actor
+  public array $content
+  public int $coveredThrough
+  public int $expectedStateVersion
+  public int $generation
+  public string $yjsState
+  public function __construct(int $generation, int $expectedStateVersion, int $coveredThrough, string $yjsState, array $content, ?Vaulter\ValueObjects\Access\ActorRef $actor = null)
+
+Vaulter\Documents\State\CollaborativeState api since 1.0 interface
+  public function lock(int|string $nodeId): Vaulter\Documents\State\LockedDocumentState
+  public function markPending(Vaulter\Documents\State\LockedDocumentState $state, int $generation, int $throughSeq): Vaulter\Documents\State\PendingMarker
+  public function pendingDocuments(int $limit = 100, int|null|string $after = null): array
+  public function publishCheckpoint(Vaulter\Documents\State\LockedDocumentState $state, Vaulter\Documents\State\CheckpointPublication $publication): Vaulter\Documents\State\CheckpointOutcome
+
+Vaulter\Documents\State\LockedDocumentState api since 1.0 final readonly class
+  public string $documentId
+  public string $driveId
+  public int $generation
+  public string $nodeId
+  public ?Vaulter\Documents\State\PendingMarker $pending
+  public int $schemaVersion
+  public int $stateVersion
+  public bool $trashed
+  public string $type
+
+Vaulter\Documents\State\PendingMarker api since 1.0 final readonly class
+  public string $documentId
+  public int $generation
+  public string $nodeId
+  public int $throughSeq
+  public function coveredBy(int $generation, int $coveredThrough): bool
+
+Vaulter\Documents\State\PendingStateDrainer spi:implement since 1.0 interface
+  public function drain(Vaulter\Documents\State\PendingMarker $marker): void
 
 Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests api since 1.0 trait
   public function assertDocumentTypeContract(Vaulter\Documents\Contracts\DocumentType $type): void

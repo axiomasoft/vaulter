@@ -1250,7 +1250,27 @@
             "packages/documents/tests/Concurrency/DocumentMutationLivenessRaceTest.php",
             "packages/documents/tests/Concurrency/DocumentRenameStaleTest.php",
             "packages/documents/tests/Concurrency/DocumentStateRaceTest.php",
-            "packages/documents/tests/Concurrency/NodeSequenceDocumentIndependenceTest.php"
+            "packages/documents/tests/Concurrency/NodeSequenceDocumentIndependenceTest.php",
+            "packages/documents/tests/Concurrency/PendingMarkerRaceTest.php"
+          ]
+        },
+        {
+          "key": "DatabaseMigrations+StateTestCase",
+          "fingerprint": "218c1de8d453",
+          "lifecycle": "migrations",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/documents/tests/State/CollaborativeStateTest.php",
+            "packages/documents/tests/State/PendingStateGuardTest.php"
           ]
         },
         {
