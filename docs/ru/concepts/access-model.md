@@ -210,7 +210,7 @@ $access->restoreInheritance($node);                                   // пря�
 ## Fail-loud: null-драйвер
 
 Драйвер по умолчанию — `database` (полностью автономная полоса без зависимостей от
-хоста). Для локального старта есть **открытый** драйвер `Vaulter\Testing\NullPermissionDriver`,
+хоста). Для локального старта есть **открытый** драйвер `Vaulter\Drive\Testing\NullPermissionDriver`,
 дающий любому актору полный доступ через абсолютный override `Allow`.
 
 `PermissionDriverManager` отвергает null-драйвер **в продакшене**:

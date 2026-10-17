@@ -24,16 +24,16 @@ Codes are a stable public contract (AD29).
 | Code | HTTP | Exception |
 |:--|:--|:--|
 | `permission_denied` | 403 | `Vaulter\Drive\Exceptions\Access\PermissionDeniedException` |
-| `node_name_conflict` | 409 | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
+| `node_name_conflict` | 409 | `Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException` |
 | `node_move_cycle` | 409 | `Vaulter\Drive\Exceptions\Nodes\NodeCycleException` |
 | `cross_drive_operation` | 409 | `Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException` |
-| `invalid_destination` | 409 | `Vaulter\Exceptions\Nodes\InvalidDestinationException` |
-| `node_not_trashed` | 409 | `Vaulter\Exceptions\Nodes\NodeNotTrashedException` |
-| `node_trashed_by_ancestor` | 409 | `Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException` |
-| `restore_destination_required` | 409 | `Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException` |
-| `tree_traversal_incomplete` | 409 | `Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException` |
-| `drive_archived` | 409 | `Vaulter\Exceptions\Drive\DriveArchivedException` |
-| `invalid_drive_state` | 409 | `Vaulter\Exceptions\Drive\InvalidDriveStateException` |
+| `invalid_destination` | 409 | `Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException` |
+| `node_not_trashed` | 409 | `Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException` |
+| `node_trashed_by_ancestor` | 409 | `Vaulter\Drive\Exceptions\Nodes\NodeTrashedByAncestorException` |
+| `restore_destination_required` | 409 | `Vaulter\Drive\Exceptions\Nodes\RestoreDestinationRequiredException` |
+| `tree_traversal_incomplete` | 409 | `Vaulter\Drive\Exceptions\Nodes\TreeTraversalIncompleteException` |
+| `drive_archived` | 409 | `Vaulter\Drive\Exceptions\DriveArchivedException` |
+| `invalid_drive_state` | 409 | `Vaulter\Drive\Exceptions\InvalidDriveStateException` |
 | `quota_exceeded` | 413 | `Vaulter\Drive\Exceptions\Quota\QuotaExceededException` |
 | `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\Uploads\UploadConflictException` |
 | `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException` |
@@ -58,24 +58,25 @@ Codes are a stable public contract (AD29).
 | `document_state_too_large` | 413 | `Vaulter\Documents\Exceptions\DocumentStateTooLargeException` |
 | `unknown_export_format` | 422 | `Vaulter\Documents\Exceptions\UnknownExportFormatException` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` |
-| `invalid_node_name` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
-| `invalid_properties` | 422 | `Vaulter\Exceptions\Nodes\InvalidPropertiesException` |
+| `invalid_node_name` | 422 | `Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException` |
+| `invalid_properties` | 422 | `Vaulter\Drive\Exceptions\Nodes\InvalidPropertiesException` |
 | `folder_children_limit_exceeded` | 409 | `Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException` |
 | `tree_depth_limit_exceeded` | 409 | `Vaulter\Drive\Exceptions\Policy\TreeDepthLimitExceededException` |
 | `file_size_limit_exceeded` | 413 | `Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException` |
-| `cannot_delete_head_revision` | 409 | `Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException` |
-| `revision_pinned` | 409 | `Vaulter\Exceptions\Drive\RevisionPinnedException` |
-| `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
-| `webhook_delivery_not_redeliverable` | 409 | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException` |
-| `invalid_webhook_signature` | 400 | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
-| `invalid_cursor` | 400 | `Vaulter\Exceptions\Changes\InvalidCursorException` |
-| `cursor_expired` | 410 | `Vaulter\Exceptions\Changes\CursorExpiredException` |
+| `cannot_delete_head_revision` | 409 | `Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException` |
+| `revision_pinned` | 409 | `Vaulter\Drive\Exceptions\RevisionPinnedException` |
+| `blob_unavailable` | 409 | `Vaulter\Media\Exceptions\Cas\BlobUnavailableException` |
+| `validation_failed` | 422 | `Vaulter\Webhooks\Exceptions\BlockedOutboundUrlException` |
+| `webhook_delivery_not_redeliverable` | 409 | `Vaulter\Webhooks\Exceptions\WebhookDeliveryNotRedeliverableException` |
+| `invalid_webhook_signature` | 400 | `Vaulter\Webhooks\Exceptions\InvalidWebhookSignatureException` |
+| `invalid_cursor` | 400 | `Vaulter\Drive\Exceptions\Changes\InvalidCursorException` |
+| `cursor_expired` | 410 | `Vaulter\Drive\Exceptions\Changes\CursorExpiredException` |
 | `validation_failed` | 422 | `Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException` |
-| `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
+| `unknown_profile` | 422 | `Vaulter\Drive\Exceptions\Profiles\UnknownProfileException` |
 | `concurrent_update` | 409 | `Vaulter\Exceptions\Database\ConcurrentUpdateException` |
 | `write_outside_operation` | 500 | `Vaulter\Exceptions\Database\WriteOutsideOperationException` |
-| `node_not_found` | 404 | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
-| `drive_not_found` | 404 | `Vaulter\Exceptions\Nodes\StorageNotFoundException` |
+| `node_not_found` | 404 | `Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException` |
+| `drive_not_found` | 404 | `Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException` |
 
 The response also preserves `errors.name` for name conflicts and invalid names, `errors.url` for blocked
 outbound URLs and `errors.subject_type` for unenumerable grant subjects. Content errors
@@ -170,6 +171,13 @@ would delete them; the document is read-only until the extension is enabled agai
 `RegistryFrozenException` (`registry_frozen`) — something registered a document type after the
 application booted. Register types from a service provider (config, a container tag, or
 `register()` before the application has booted).
+
+## blob-unavailable
+
+`BlobUnavailableException` (409 `blob_unavailable`) — the stored bytes of a file are no longer available, or an
+owner tried to pin a blob that is deleting or deleted (`BlobPins::pin()`, [Storage & blobs](/concepts/storage-and-blobs#pinning-and-reading)).
+Nothing was written. Upload the content again: committing the bytes resurrects a tombstoned blob while they still
+exist, and the returned blob can be pinned.
 
 ## module-graph-invalid
 
@@ -321,8 +329,8 @@ from it.
 ## missing-host-role-driver
 
 `MissingPermissionDriverException` — either the open `null` host-role driver was selected in
-production (forbidden — it grants every actor full access), or `config('vaulter.access.permission_driver')`
-names a driver key not in the `access.permission_drivers` map. Set a real driver
+production (forbidden — it grants every actor full access), or `config('vaulter-drive.access.permission_driver')`
+names a driver key not in the `vaulter-drive.access.permission_drivers` map. Set a real driver
 (`database`/`gate`/`spatie`/`azgard`) or bind your own `PermissionDriver`.
 
 ## missing-package
@@ -394,7 +402,7 @@ document via the document-node create endpoint first, or target a document node.
 ## quota-exceeded
 
 `QuotaExceededException` — the upload would exceed the storage's `quota_bytes`. Raise
-`v_storages.quota_bytes`, free space, or set `quota_bytes` to `null` for unlimited.
+`v_drives.quota_bytes`, free space, or set `quota_bytes` to `null` for unlimited.
 
 ## unenumerable-grant-subject
 
@@ -444,7 +452,7 @@ the session is no longer open, start a new upload.
 ## webhook-response-too-large
 
 `WebhookResponseTooLargeException` — the webhook receiver's response body exceeds
-`vaulter.webhooks.delivery.max_response_bytes`. Have the receiver return a small (or
+`vaulter-webhooks.delivery.max_response_bytes`. Have the receiver return a small (or
 empty) body, or raise the limit.
 
 ## webhook-ssrf
@@ -479,15 +487,15 @@ secrets during a rotation) and check the receiver's clock. See
 
 ## invalid-change-cursor
 
-`Vaulter\Exceptions\Changes\InvalidCursorException` (`invalid_cursor`, 400) — a
+`Vaulter\Drive\Exceptions\Changes\InvalidCursorException` (`invalid_cursor`, 400) — a
 [change cursor](/concepts/events) that this application did not sign, that was altered, or that
 belongs to another drive or tenant. Cursors are opaque: store them as they are. Start again from
 `startCursor()` after a full listing.
 
 ## cursor-expired
 
-`Vaulter\Exceptions\Changes\CursorExpiredException` (`cursor_expired`, 410) — entries after the
-cursor were deleted by `vaulter:changes:prune` (older than `changes.retention_days`), or the drive's
+`Vaulter\Drive\Exceptions\Changes\CursorExpiredException` (`cursor_expired`, 410) — entries after the
+cursor were deleted by `vaulter:changes:prune` (older than `vaulter-drive.changes.retention_days`), or the drive's
 journal was reset with `vaulter:changes:reset`. Resynchronize: take a new `startCursor()`, list the
 drive again and replace the local copy. See [Change journal → Expired cursors](/concepts/events#expired-cursors).
 

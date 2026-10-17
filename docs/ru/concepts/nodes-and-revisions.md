@@ -10,7 +10,7 @@ outline: deep
 команда, пользователь, …) получает **контейнер-хранилище**, а каждое хранилище
 держит единое дерево смежности из **узлов** — папок, файлов и документов в одной
 таблице `v_nodes`. Ко всему этому вы обращаетесь через один эргономичный хэндл:
-`Vaulter::for($entity)`, который возвращает [`DriveHandle`](/ru/reference/php-api).
+`Vaulter::drive($entity)`, который возвращает [`DriveHandle`](/ru/reference/php-api).
 
 ::: tip Один хэндл, одно хранилище
 `DriveHandle` привязан ровно к одной паре `(Drive, profile)`. Откройте его один
@@ -21,41 +21,40 @@ outline: deep
 
 ## Хранилища
 
-**Хранилище** — это владеемый полиморфный контейнер-диск (`v_storages`). Оно
+**Хранилище** — это владеемый полиморфный контейнер-диск (`v_drives`). Оно
 монтируется на сущность хоста через morph `owner_type` / `owner_id`, ограничено
 рамками [панели](/ru/concepts/drives-and-profiles) и несёт узел корневой папки плюс учёт
 использованного/квоты, который показывает UI.
 
 ### Открытие Drive
 
-`Vaulter::for()` — основная точка входа для интеграции. Она **находит-или-создаёт**
+`Vaulter::drive()` — основная точка входа для интеграции. Она **находит-или-создаёт**
 строку хранилища для сущности (идемпотентно — второй вызов вернёт то же самое
 хранилище), автоматически провижинит корневую папку и отдаёт `DriveHandle`:
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 $project = Project::find(1);
 
 // Панель по умолчанию.
-$drive = Vaulter::for($project);
+$drive = Vaulter::drive($project);
 
 // Именованная панель (см. Storage Panels).
-$drive = Vaulter::for($project, panel: 'attachments');
+$drive = Vaulter::drive($project, profile: 'attachments');
 ```
 
 Тройка владельца `(owner_type, owner_id, panel)` — это ключ идемпотентности,
 защищённый частичным UNIQUE-индексом: конкурентные первые обращения сходятся на
 одной строке.
 
-::: details Уже есть модель Drive? Используйте `forStorage()`
-Когда строка хранилища уже разрешена (например, `Drive` привязан через
-route-model-binding), пропустите поиск по владельцу с помощью
-`Vaulter::forStorage($storage)`. Это тот шов, который использует HTTP-слой; панель
-хэндла отражает собственную `panel` хранилища.
+::: details Уже есть модель Drive? Передайте её в `drive()`
+Когда строка хранилища уже разрешена (например, из `findDriveById()` или списка), пропустите поиск по
+владельцу с помощью `Vaulter::drive($storage)`. Профиль хэндла отражает собственный `profile` хранилища;
+другой аргумент `$profile` — это `InvalidArgumentException`.
 
 ```php
-$drive = Vaulter::forStorage($storage);
+$drive = Vaulter::drive($storage);
 ```
 :::
 
@@ -66,9 +65,9 @@ $drive = Vaulter::forStorage($storage);
 назначение для методов записи ниже. Если назначение не указано, используется корень.
 
 ```php
-$root = $drive->root();          // Vaulter\Models\Drive\Node
-$storage = $drive->model();    // Vaulter\Models\Drive\Drive
-$profile = $drive->profile();  // Vaulter\Profiles\Profile
+$root = $drive->root();          // Vaulter\Drive\Models\Node
+$storage = $drive->model();    // Vaulter\Drive\Models\Drive
+$profile = $drive->profile();  // Vaulter\Drive\Profiles\Profile
 $profileId = $profile->getId(); // string
 ```
 
@@ -88,7 +87,7 @@ $storage->quota_bytes;  // ?int — null означает без огранич�
 
 ::: info `used_bytes` ведёт сам Drive
 `used_bytes` продвигается/освобождается Action-ами загрузки и жёсткого удаления
-(purge отцепляет рёбра версия↔блоб и освобождает квоту). У хэндла нет публичного
+(purge удаляет связи ревизия↔блоб, снимает их пины и освобождает квоту). У хэндла нет публичного
 метода «установить квоту» — задайте `quota_bytes` прямо на модели хранилища или
 через default в [Storage Panel](/ru/concepts/drives-and-profiles).
 :::
@@ -338,7 +337,7 @@ $drive->restore($node);
 
 ### `forceDelete()`
 
-Навсегда удалить узел и его поддерево — это отцепляет рёбра версия↔блоб (байты
+Навсегда удалить узел и его поддерево — это удаляет связи ревизия↔блоб и снимает их пины (байты
 становятся кандидатами на сборку мусора) и освобождает квоту. Возвращает `void`.
 
 ```php
@@ -383,7 +382,7 @@ $children = $drive->list($folder);          // содержимое папки
 
 ## Жизненный цикл диска
 
-У диска есть `status` — `Vaulter\Enums\Drive\DriveStatus`: `active`, `archived` или `deleting`
+У диска есть `status` — `Vaulter\Drive\Enums\DriveStatus`: `active`, `archived` или `deleting`
 (закрытый enum: клиент обязан считать неизвестное значение недоступным). Меняет его handle:
 
 ```php
@@ -412,7 +411,7 @@ $snapshot = $drive->delete();      // active|archived → deleting, затем �
 ### Удаление вместе с владельцем — `HasDrives`
 
 ```php
-use Vaulter\Concerns\HasDrives;
+use Vaulter\Drive\Concerns\HasDrives;
 
 class Project extends Model
 {
@@ -423,7 +422,7 @@ $project->drive();          // DriveHandle (как Vaulter::drive($project))
 $project->drives;           // диски, смонтированные на нём (morphMany)
 ```
 
-При `vaulter.drives.delete_with_owner = true` (по умолчанию `false`) удаление владельца удаляет его
+При `vaulter-drive.drives.delete_with_owner = true` (по умолчанию `false`) удаление владельца удаляет его
 диски от system-актора `owner-deleted`. Модель с `SoftDeletes` реагирует на `forceDeleted`, а не на
 `deleted`, поэтому мягко удалённый владелец сохраняет диски.
 

@@ -59,7 +59,8 @@ dependency is never enabled silently.
 **5. Slices that still live in core (D39).** Until the packages are split, the manifest of the package
 that owns a concept declares its core-located slices (drive declares the access, sharing, activity and
 changes routes and services that sit in core); the core provider offers exactly two manifests: `core`
-and the logical `webhooks`.
+and the logical `webhooks`. This was a transitional arrangement: the slices have since moved to their packages
+and `vaulter-webhooks` exists ([ADR-0030](/adr/0030-package-ownership-and-schema)); core offers only `core`.
 
 ## Consequences
 

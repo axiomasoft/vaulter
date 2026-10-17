@@ -34,10 +34,10 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 final class MyEditorHandler implements FileHandler
 {
@@ -83,8 +83,7 @@ final class MyEditorHandler implements FileHandler
 }
 ```
 
-Прямая реализация интерфейса — всегда достаточна. `Vaulter\Handlers\Handlers\
-AbstractFileHandler` — ОПЦИОНАЛЬНАЯ DX-база, которая дефолтит `extensions()` в `[]` для
+Прямая реализация интерфейса — всегда достаточна. `Vaulter\Drive\Handlers\AbstractFileHandler` — ОПЦИОНАЛЬНАЯ DX-база, которая дефолтит `extensions()` в `[]` для
 mime-only обработчика — экономит один метод, не больше. Встроенные обработчики её не
 наследуют — они остаются `final` (H.5).
 

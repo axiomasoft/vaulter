@@ -16,7 +16,7 @@ php artisan vaulter:make:profile project_drive --host="App\Models\Project"
 Провайдер — класс, наследующий `ProfileProvider`; поскольку это класс, а не замыкание, он переживает
 `config:cache`.
 
-<!-- snippet: signature Vaulter\Profiles\ProfileProvider -->
+<!-- snippet: signature Vaulter\Drive\Profiles\ProfileProvider -->
 
 ```php
 abstract class ProfileProvider
@@ -27,5 +27,5 @@ abstract class ProfileProvider
 }
 ```
 
-Зарегистрируйте провайдер в `vaulter.profiles.providers`. Профилю не нужна миграция: это конверт
+Зарегистрируйте провайдер в `vaulter-drive.profiles.providers`. Профилю не нужна миграция: это конверт
 конфигурации. См. [Диски и профили](/ru/concepts/drives-and-profiles).

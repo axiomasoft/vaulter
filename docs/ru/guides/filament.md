@@ -7,15 +7,14 @@ outline: deep
 # Админ-плагин для Filament
 
 `axioma-studio/vaulter-filament` — это опциональный плагин для **Filament 5**, который добавляет
-управление Vaulter в существующую панель Filament. Он регистрирует два семейства ресурсов:
+управление Vaulter в существующую панель Filament. Он требует `axioma-studio/vaulter-drive` (а через него core и
+media) и регистрирует одно семейство ресурсов — домен **Drive / права**: `Drive`, `Node`, `NodeGrant`, `NodeShare`,
+`Activity`.
 
-- домен **Drive / права** — `Drive`, `Node`, `NodeGrant`, `NodeShare`, `Activity`;
-- **легаси-поверхность вокруг документов** — `Document`, `Folder`, `Share`.
-
-Ресурсы узлов и дисков читают и пишут через авторизованный [`DriveHandle`](/ru/reference/php-api) —
-`Vaulter::drive($drive)->actingAs(PanelActor::current())` — и его snapshot-DTO; ресурсы грантов, публичных ссылок
-и активности используют те же ядровые операции с актором панели. Панель не вызывает ядровые
-Actions и Repositories и сама не вычисляет гранты, поэтому не может обойти ACL.
+Каждый ресурс читает и пишет через авторизованный [`DriveHandle`](/ru/reference/php-api) —
+`Vaulter::drive($drive)->actingAs(PanelActor::current())` — и его snapshot-DTO. Строка таблицы — это снимок,
+который вернул drive, а не Eloquent-запись: панель не запрашивает ни одной модели Vaulter, не вызывает Actions и
+Repositories и сама не вычисляет гранты, поэтому не может обойти ACL.
 
 ::: tip Смежное чтение
 Drive-UI для конечных пользователей живёт в [пакете Vue](/ru/guides/vue). Модель авторизации, которой
@@ -73,8 +72,7 @@ $plugin = VaulterPlugin::current($panel); // возвращает VaulterPlugin
 ```
 
 `register()` вызывает `$panel->resources([...])` только для тех ресурсов, у которых включён
-конфиг-переключатель (см. [Конфигурация](#конфигурация)); сначала регистрируется домен Drive / права,
-затем легаси-поверхность документов.
+конфиг-переключатель (см. [Конфигурация](#конфигурация)).
 
 ## Конфигурация
 
@@ -89,7 +87,7 @@ return [
 
     // Переключатели ресурсов, которые регистрирует плагин. Каждый по умолчанию true.
     'resources' => [
-        // Домен Drive / права (ядро M1–M4).
+        // Домен Drive / права.
         'drive'    => true,
         'node'     => true,
         'grant'    => true,
@@ -103,22 +101,17 @@ return [
 `config('vaulter-filament.resources.{key}', true)` — пропущенное или небулево значение трактуется как
 `true`.
 
-::: tip Панель только для Drive
-Если ваше хост-приложение не использует легаси-таблицы документов, задайте `document`, `folder` и
-`legacy_share` в `false`, чтобы показать только ресурсы Drive / права.
-:::
-
 ## Как работает авторизация
 
 Каждый ресурс домена Drive / права определяет действующего администратора через
-`Vaulter\Filament\Support\PanelActor` и работает через handle, который ядро выдаёт этому администратору.
-Handle решает, что для него существует и что ему можно, поэтому изменение правил доступа в ядре доходит до
+`Vaulter\Filament\Support\PanelActor` и работает через handle, который drive выдаёт этому администратору.
+Handle решает, что для него существует и что ему можно, поэтому изменение правил доступа drive доходит до
 панели без правок панели:
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Filament\Support\PanelActor;
 
 $handle = Vaulter::drive($drive)->actingAs(PanelActor::current());
@@ -148,12 +141,12 @@ HTTP API. Drive появляется в панели, если админист�
 ресурс **не может создавать и редактировать** строку (`canCreate()` возвращает `false`); он лишь
 перечисляет и инспектирует.
 
-- **Модель**: определяется через `app(\Vaulter\Configuration\VaulterConfig::class)->model('drive')` (по умолчанию `Vaulter\Models\Drive\Drive`).
-- **Таблица**: имя, владелец (`owner_type #owner_id`), диск, использованные байты, квота (`∞`, когда
+- **Строки**: снимки drive из `Vaulter::drives($actor)` — drive попадает в список, когда админ видит его корень.
+- **Таблица**: имя, владелец (`owner_type #owner_id`), бейдж профиля, использованные байты, квота (`∞`, когда
   безлимит), статус, дата создания. Сортировка по умолчанию — `created_at desc`.
-- **Infolist** (страница просмотра): секции Drive / Owner / Usage, с человекочитаемым форматом байтов.
-- **Страницы**: `index` (список) и `view` (`/{record}`). Классы: `ListDrives` и `ViewDrive` в
-  `Vaulter\Filament\Resources\DriveResource\Pages`.
+- **Детали**: строчное действие `view` открывает модальное окно только на чтение (Drive / Owner / Usage): у снимка
+  нет страницы модели.
+- **Страницы**: только `index` (`ListDrives` в `Vaulter\Filament\Resources\DriveResource\Pages`).
 
 #### NodeResource
 
@@ -176,9 +169,8 @@ HTTP API. Drive появляется в панели, если админист�
 PanelDrives::handle($driveId)->nodes()->rename(node: $id, name: $name);
 ```
 
-- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node')` (`Vaulter\Models\Drive\Node`).
 - **Строки**: custom records Filament, собранные из листингов handle (`children()` по каждому диску и
-  `trash()->list()`), не более первых 2000 узлов. За таблицей нет Eloquent-запроса.
+  `trash()->list()`), не более первых 2000 узлов. За таблицей нет Eloquent-запроса. Строки дают только drive, чей корень админ видит.
 - **Таблица**: иконка типа (`folder` → folder, `file` → document, `document` → document-text,
   `shortcut` → arrow-top-right), имя (корневые строки показывают `(root)`), бейдж типа, хранилище,
   родитель, размер, дата помещения в корзину, дата создания.
@@ -214,7 +206,8 @@ $handle->access()->grant($nodeId, new GrantInput(
 ));
 ```
 
-- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Drive\Models\Access\NodeGrant`).
+- **Строки**: для каждого живого узла, который админ может видеть и которым может управлять, — гранты из операций
+  `access()` хэндла (узел, который хэндл отклоняет, строк не даёт), с тем же ограничением, что у таблицы узлов.
 - **Таблица**: узел, субъект (`type #id`), бейдж роли, область, срок истечения (`Never`, когда null),
   дата создания. Фильтр: роль.
 - **Поля формы**: узел, тип субъекта (зарегистрированный morph-алиас, например `user` / `role` /
@@ -253,10 +246,11 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 ));
 
 // Показывается ровно один раз — потом из строки уже не восстановить:
-//   app(\Vaulter\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
+//   app(\Vaulter\Drive\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
 ```
 
-- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Drive\Models\Sharing\NodeShare`).
+- **Строки**: публичные ссылки, которые операции `shares()` хэндла перечисляют по каждому узлу, которым админ
+  может управлять.
 - **Таблица**: узел, бейдж `token_prefix…`, роль, область, вычисляемый бейдж статуса
   (`Live` / `Revoked` / `Expired` / `Exhausted`), счётчик использований
   (`n / max`, когда есть лимит), срок истечения, дата создания. Фильтр: тернарный `Revoked`.
@@ -270,33 +264,20 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 по построению append-only, поэтому ресурс не создаётся, не редактируется и не удаляется
 (`canCreate`/`canEdit`/`canDelete` — все возвращают `false`).
 
-- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('activity')` (`Vaulter\Models\Activity\Activity`).
-- **Таблица**: бейдж глагола, актор (`type #id`), цель (`type #id`), хранилище, когда. Фильтр: глагол
+- **Строки**: записи `activity()->forDrive(...)` каждого перечисленного drive — какие записи и поля увидит админ,
+  решает собственная проекция drive — не более первых 2000.
+- **Таблица**: бейдж глагола, актор (`type #id`), цель (`type #id`), drive, когда. Фильтр: глагол
   (`SelectFilter` по каталогу событий).
-- **Infolist** (страница просмотра): секции Event / Actor / Target / Request (секция Request включает
-  `KeyValueEntry` для `context` плюс ip / user-agent / request-id).
-- **Страницы**: `index` (список) и `view` (`/{record}`). Классы: `ListActivities` и `ViewActivity` в
-  `Vaulter\Filament\Resources\ActivityResource\Pages`.
+- **Детали**: модальное окно только на чтение с секциями Event / Actor / Target / Request (секция Request
+  включает `context` плюс ip / user-agent / request-id).
+- **Страницы**: только `index` (`ListActivities` в `Vaulter\Filament\Resources\ActivityResource\Pages`).
 
-### Легаси-поверхность вокруг документов
+## Модели не запрашиваются
 
-Она остаётся для хостов, всё ещё сидящих на таблицах вокруг документов. Каждый ресурс определяет свою
-модель через хелпер `VaulterConfig::model(string)`, так что подменённая модель по-прежнему остаётся под контролем.
-
-| Ресурс | Модель по умолчанию | Чем управляет |
-|----------|---------------|-----------------|
-| `DocumentResource` | `Vaulter\Models\Documents\Document` | искомые/сортируемые документы (заголовок, тип, workspace), фильтр корзины, форму редактирования и действия delete / restore / force-delete |
-| `FolderResource` | `Vaulter\Models\Documents\DocumentFolder` | дерево папок workspace (список, создание, редактирование, удаление) |
-| `ShareResource` | `Vaulter\Models\Documents\DocumentShare` | токенизированные публичные ссылки на документы — список и **отзыв** (только на чтение; ссылки создаются через API) |
-
-Выключите их через конфиг-ключи `document`, `folder` и `legacy_share`.
-
-## Подменяемость моделей
-
-Каждый ресурс определяет свою модель через хелпер `Vaulter\Configuration\VaulterConfig::model(string)`
-(`storageModel()`, `nodeModel()`, `grantModel()`, `nodeShareModel()`, `activityModel()`, …). Если ваше
-хост-приложение подменяет модель Vaulter на подкласс, Filament-ресурсы продолжают управлять ею без
-каких-либо изменений.
+Панель перечисляет снимки, поэтому не важно, подменил ли ваш хост модель Vaulter на подкласс
+(`vaulter-drive.models.*`): хэндл drive сам резолвит подменённую модель, и панель продолжает ею управлять без
+изменений. Единственная настройка — переключатели `drive`, `node`, `grant`, `share` и `activity` в
+`config/vaulter-filament.php`.
 
 ## Почему отдельный пакет
 

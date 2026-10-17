@@ -20,7 +20,7 @@ production:
 ```
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
-Fix: set config(vaulter.access.permission_driver) to a real driver (database|gate|spatie|azgard)
+Fix: set config(vaulter-drive.access.permission_driver) to a real driver (database|gate|spatie|azgard)
 or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 ```
 
@@ -48,7 +48,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 - **`database`** — the standalone default. Authorizes purely from `v_node_grants` rows, zero
   host dependency. Use it if you only need per-node grants.
 - **`gate` / `spatie` / `azgard`** — bridge your existing role system; fill the matching
-  `vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*` config block.
+  `vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*` config block.
 - A **custom** driver — see the [recipe](/guides/recipes#permission-driver).
 
 ::: warning Config cache hides the env you forgot
@@ -180,7 +180,7 @@ shipped paths, but if you plan very deep/wide trees, Postgres is the smoother ro
 ## Migration order & prefix issues {#migrations}
 
 **Symptom.** `php artisan migrate` fails on a foreign-key reference to `v_nodes` /
-`v_storages` / `v_blobs`, or tables land without the `v_` prefix, or a second package's tables
+`v_drives` / `v_blobs`, or tables land without the `v_` prefix, or a second package's tables
 collide with Vaulter's.
 
 **Why & fix.**
@@ -262,7 +262,7 @@ still referenced.
   to ≥ your worst-case multipart-commit latency, so an in-flight upload can resurrect a tombstoned
   blob first. See the [blob GC recipe](/guides/recipes#blob-gc).
 - **Drift.** If `ref_count` looks wrong, it's a cache — run `php artisan vaulter:blobs:reconcile`
-  to rebuild it from the edge table (the source of truth).
+  to rebuild it from the pins in `v_blob_references` (the source of truth).
 
 ## Panel validation errors at boot {#panel-validation}
 
@@ -271,7 +271,7 @@ still referenced.
 **Why & fix.** Check that the requested profile is registered:
 
 - **`UnknownProfileException::forName`** — `Vaulter::drive($entity, profile: 'x')` (or a route) named a
-  panel that isn't registered. Register its provider FQCN in `config('vaulter.profiles.providers')`, or use
+  panel that isn't registered. Register its provider FQCN in `config('vaulter-drive.profiles.providers')`, or use
   the `default` panel.
 
 ## Empty "Last updated" in the docs {#last-updated}

@@ -1,65 +1,63 @@
 ---
-title: Facade & Manager
-description: The Vaulter facade and VaulterManager — the public entry point for host-app integration.
+title: Facade
+description: The Vaulter facade (Vaulter\Drive\Vaulter) — the public entry point of the drive for host-app integration.
 outline: deep
 ---
 
-# Facade &amp; Manager
+# Facade
 
-`Vaulter\Facades\Vaulter` is the package's public entry point. It is a thin Laravel
-facade over `Vaulter\VaulterManager`, which is registered as a container singleton
-(aliased `'vaulter'`) by `VaulterServiceProvider`. Every method below is a real
-method on `VaulterManager`.
+`Vaulter\Drive\Facades\Vaulter` is the drive's public entry point. It is a thin Laravel
+facade over `Vaulter\Drive\Vaulter`, registered as a container singleton (aliased `'vaulter'`) by
+`vaulter-drive`, which also declares the `Vaulter` class alias for hosts. The facade needs `axioma-studio/vaulter-drive`;
+without it `Vaulter::drive()` throws a `MissingPackageException` naming the package. Every method below is a real
+method of `Vaulter\Drive\Vaulter`.
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
-$drive = Vaulter::for($project);          // open a Drive handle
-$panel = Vaulter::profiles()->get('project_drive'); // resolve a storage panel
+$drive = Vaulter::drive($project);                       // open a Drive handle
+$profile = Vaulter::profiles()->get('project_drive');    // resolve a drive profile
 ```
 
 ::: info Resolve it however you like
-The facade, `app(VaulterManager::class)`, and the `'vaulter'` container alias all
-return the same singleton. Inject `VaulterManager` in a constructor if you prefer DI
-over the facade.
+The facade, `app(\Vaulter\Drive\Vaulter::class)` and the `'vaulter'` container alias all
+return the same singleton. Inject `Vaulter\Drive\Vaulter` in a constructor if you prefer DI
+over the facade. The old `Vaulter\VaulterManager` and `Vaulter\Facades\Vaulter` no longer exist.
 :::
 
 ## Method summary
 
 | Method | Returns | Purpose |
 |---|---|---|
-| `for(Model $entity, ?string $panel = null)` | `DriveHandle` | Open a Drive handle bound to a host entity's storage in a panel |
-| `forStorage(Drive $storage)` | `DriveHandle` | Open a Drive handle bound to an already-resolved storage row |
+| `drive(Model $ownerOrDrive, ?string $profile = null)` | `DriveHandle` | Get-or-create the drive of a host entity in a profile (or open an already-resolved `Drive` row) |
+| `findDrive(Model $owner, ?string $profile = null)` | `?DriveHandle` | The owner's existing drive, or `null`; never creates one |
+| `findDriveById(string\|int $id)` | `?DriveHandle` | The drive with this key in the current tenant, or `null` |
+| `drives(Authorizable $actor, ?ListOptions $options = null)` | `Page<DriveSnapshot>` | The drives the actor may open (those whose root they can view) |
 | `profiles()` | `ProfileRegistry` | Named drive profiles (`get`, `register`, `registerProvider`) |
-| `handlers()` | `FileHandlerRegistry` | The document-handler registry |
+| `handlers()` | `FileHandlerRegistry` | The file-handler registry |
+| `permissions()` | `PermissionDriverManager` | The permission driver in use |
 
-The facade annotates all public manager methods. Use `profiles()` and `handlers()` for registrations.
+Tenancy is a kernel concern: use `Vaulter\Tenancy\Tenancy::without(...)` (core) to run code outside the tenant scope.
 
 ## Drive entry points
 
-### `for(Model $entity, ?string $panel = null): DriveHandle`
+### `drive(Model $ownerOrDrive, ?string $profile = null): DriveHandle`
 
-The primary integration entry point. Get-or-creates the `v_storages` row for the
-host entity within a panel (idempotent — the root folder is auto-provisioned) and
-returns an ergonomic `DriveHandle` whose methods delegate to the Drive Actions and
-repositories. The panel defaults to `'default'`.
-
-```php
-$drive = Vaulter::for($project);                 // default panel
-$drive = Vaulter::for($project, 'project_drive'); // a named panel
-```
-
-### `forStorage(Drive $storage): DriveHandle`
-
-Open a Drive handle bound to an already-resolved `Drive` row. This is the seam the
-HTTP layer uses: a route-model-bound `Drive` (resolved through the swappable
-`config('vaulter.models.drive')`) maps straight to a `DriveHandle` without
-re-deriving the owner. The handle's panel mirrors `$storage->profile`, so its Actions
-run inside the right panel scope.
+The primary integration entry point. Get-or-creates the `v_drives` row for the host entity within a
+profile (idempotent — the root folder is auto-provisioned) and returns an ergonomic `DriveHandle` whose
+methods delegate to the drive Operations. The profile defaults to the configured default profile. Passing an
+existing `Drive` model returns the handle of that row (a different `$profile` is an `InvalidArgumentException`).
 
 ```php
-$drive = Vaulter::forStorage($storage);
+$drive = Vaulter::drive($project);                  // default profile
+$drive = Vaulter::drive($project, 'project_drive'); // a named profile
 ```
+
+### `findDrive()`, `findDriveById()`, `drives()`
+
+`findDrive()` and `findDriveById()` return a handle for a drive that already exists and `null` otherwise. `drives()` lists
+the drives an actor may open as snapshots in key order with an opaque cursor; the visibility decision is made before
+the page is cut.
 
 See [`DriveHandle`](/concepts/nodes-and-revisions) for the handle's full method surface. Every operation of the handle
 returns immutable snapshots and `Page<T>` lists (`$drive->snapshot()`, `$drive->quota()`,
@@ -85,7 +83,7 @@ Document types are not on this facade: they live in `vaulter-documents`, as
 
 The format-extensibility seam. Adding a new format is one class + one call —
 `handlers()->register()` accepts an FQCN or an instance and delegates to the
-container-bound `Vaulter\Handlers\FileHandlerRegistry` (core-owned since P0.4/D10 —
+container-bound `Vaulter\Drive\Handlers\FileHandlerRegistry` (drive-owned —
 the single source of truth for mime → extension → capability → priority resolution,
 always resolvable even without `vaulter-documents` installed). No migration, no core change,
 no package required.
@@ -94,7 +92,7 @@ no package required.
 Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 ```
 
-You can also list handler FQCNs in `config('vaulter.handlers')` or bind them to the
+You can also list handler FQCNs in `config('vaulter-drive.handlers')` or bind them to the
 tagged container binding `'vaulter.file_handlers'`. See
 [Recipes → Custom handler](/guides/recipes).
 
@@ -107,7 +105,9 @@ tagged container binding `'vaulter.file_handlers'`. See
 
 ## Contracts
 
-Vaulter's variance seams live under the `Vaulter\Contracts\*` namespace. Each is a
+Vaulter's variance seams live in the `Contracts` namespace of the package that owns the concept
+(`Vaulter\Contracts\*` for the kernel, `Vaulter\Media\Contracts\*`, `Vaulter\Drive\Contracts\*`,
+`Vaulter\Documents\Contracts\*`). Each is a
 SemVer-frozen public interface you can implement to swap a behaviour — authorization,
 storage, collaboration transport, document formats, sharing tokens, id strategy, or
 upload protocols. This page lists every contract by domain with its exact method
@@ -115,7 +115,7 @@ signatures and the binding point you swap it through.
 
 | Domain | Contract | Swap via |
 |---|---|---|
-| Access | `PermissionDriver` | `config('vaulter.access.permission_driver')` + `access.permission_drivers` map |
+| Access | `PermissionDriver` | `config('vaulter-drive.access.permission_driver')` + `vaulter-drive.access.permission_drivers` map |
 | Access | `AzgardGuard` (azgard) | config key `vaulter-azgard.guard` (default: the bridge's adapter) |
 | Access | `AzgardBackedUser` (azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
 | Access | `GrantAuthoritativeDriver` | opt-in capability a `PermissionDriver` implements |
@@ -125,15 +125,15 @@ signatures and the binding point you swap it through.
 | Cas | `ListableStorageDriver` | opt-in capability a `StorageDriver` implements |
 | Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | returned by `ContentStore::stage()` |
-| Cas | `StorageAdapter` | `config('vaulter.storage_adapter')` (legacy) |
+| Cas | `BlobPins` | the media contract the owner of a blob link (the drive) pins and unpins through |
 | Collaboration | `CollaborationDriver` | container binding (node path) |
 | Collaboration | `HostUserResolver` | container binding |
 | Handlers | `DocumentContent` | returned by a `FileHandler`'s content parser |
-| Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
+| Handlers | `FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` |
 | Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` |
 | Handlers | `FileHandlerRegistry` | `Vaulter::handlers()` / `Vaulter::handlers()->register()` |
 | Handlers | `NodePresenter` | container binding (core) |
-| Sharing | `ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` / `config('vaulter.sharing.token_generator')` |
+| Sharing | `ShareTokenGenerator` | `config('vaulter-drive.sharing.token_generator')` / `config('vaulter-drive.sharing.token_generator')` |
 | Uploads | `UploadProtocolHandler` | bundled (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
 
@@ -148,7 +148,7 @@ The pluggable, per-panel **role lane** the Vaulter-owned (non-swappable)
 role system into Vaulter without leaking Vaulter's domain: it never receives a `Node`
 and never deals in magic-string actions — only an `Authorizable` actor and an
 `AccessScope` (panel + workspace coordinates + node owner). Swap it via
-`config('vaulter.access.permission_driver')` against the `access.permission_drivers` map; the
+`config('vaulter-drive.access.permission_driver')` against the `vaulter-drive.access.permission_drivers` map; the
 default is the standalone `DatabasePermissionDriver`.
 
 ```php
@@ -209,7 +209,7 @@ The contract ships in `axioma-studio/vaulter-azgard`, alongside the real
 `AzgardGuardAdapter` and `Vaulter\Azgard\Testing\FakeAzgardGuard` test double.
 Its provider registers the driver and adapter automatically; select a custom guard with `vaulter-azgard.guard`.
 
-**Use when** `config('vaulter.access.permission_driver') = 'azgard'`: install with
+**Use when** `config('vaulter-drive.access.permission_driver') = 'azgard'`: install with
 `composer require axioma-studio/vaulter-azgard`, add
 `Vaulter\Azgard\Contracts\AzgardBackedUser` to your user model, register morph aliases for
 the user and workspace models and declare the workspace aliases as assignment scope types
@@ -227,7 +227,7 @@ to drift out of sync.
 interface AzgardBackedUser extends AzGuardSubject {}
 ```
 
-**Implement when** `config('vaulter.access.permission_driver') = 'azgard'` — the host
+**Implement when** `config('vaulter-drive.access.permission_driver') = 'azgard'` — the host
 `User` model satisfies it with no extra method bodies through the
 `AzGuard\Concerns\HasAzGuard` trait, and is a subject model of the AzGuard panel.
 
@@ -399,23 +399,34 @@ interface ListableStorageDriver
 **Implement when** your `StorageDriver` should participate in orphan reconciliation.
 The bundled Flysystem storage driver implements it out of the box.
 
-#### `Vaulter\Contracts\Cas\StorageAdapter` (legacy)
+#### `Vaulter\Media\Contracts\Cas\BlobPins`
 
-Pluggable storage for **legacy** binary attachments. Vaulter itself stores JSON
-content; binary files in the legacy document path are delegated here. Swap via
-`config('vaulter.storage_adapter')`.
+The liveness truth of a blob. An owner that keeps bytes alive — the drive, with its revision links — pins a
+blob under an opaque `owner_type` (`<module>.<what>`) and a `reference_key` derived from its own row, **in the same
+transaction that writes that row**, and unpins it in the transaction that deletes the row. Garbage collection and
+the `ref_count` reconcile read only the pins in `v_blob_references`; `ref_count` is a cache. Every method runs
+inside the caller's transaction (a call outside one throws a `LogicException`).
 
 ```php
-interface StorageAdapter
+interface BlobPins
 {
-    /** @param string|resource $contents */
-    public function store(string $filename, mixed $contents): string;
+    public function pin(Blob $blob, string $ownerType, string $referenceKey): void;
 
-    public function delete(string $url): void;
+    public function unpin(Blob|int|string $blob, string $ownerType, string $referenceKey): void;
 
-    public function url(string $path): string;
+    /** Only for the owner's own purge or rollback; returns the number of pins removed. */
+    public function releaseOwner(string $ownerType, ?Closure $keys = null): int;
+
+    /** @return array<string, int> */
+    public function countByOwner(): array;
 }
 ```
+
+`pin()` throws `BlobUnavailableException` (`blob_unavailable`) when the blob's bytes are gone: commit them again with
+`BlobStore::commitStaged()` and pin the returned blob. A blob that is deleting or deleted is never pinned. Pins stay
+when the owner module is switched off or removed; only the owner's purge releases them.
+
+**Implement when** you add a module that keeps blobs alive.
 
 ::: tip Which CAS contract do I implement?
 For a custom byte backend (S3 / local), implement `StorageDriver` and bind it — the
@@ -467,13 +478,13 @@ See [Collaboration → Drivers](/guides/collaboration).
 
 ### Handlers
 
-#### `Vaulter\Contracts\Handlers\FileHandler`
+#### `Vaulter\Drive\Contracts\Handlers\FileHandler`
 
 A pluggable document-processing handler — the format-extensibility headline. A
 handler claims a set of mime types (exact or wildcards like `"image/*"`) and/or
 extensions, declares its capabilities and front-end mount descriptor per file, and the
-`Vaulter\Handlers\FileHandlerRegistry` resolves the best one for a `FileDescriptor`. Register via
-`config('vaulter.handlers')` (FQCN list), the tagged binding `'vaulter.file_handlers'`, or
+`Vaulter\Drive\Handlers\FileHandlerRegistry` resolves the best one for a `FileDescriptor`. Register via
+`config('vaulter-drive.handlers')` (FQCN list), the tagged binding `'vaulter.file_handlers'`, or
 `Vaulter::handlers()->register()`.
 
 ```php
@@ -510,7 +521,7 @@ interface FileHandler
 See [Recipes → Custom handler](/guides/recipes) and [Writing a Handler/Engine](/extending/viewers)
 for a full worked example.
 
-`Vaulter\Handlers\AbstractFileHandler` is an optional DX base a third-party
+`Vaulter\Drive\Handlers\AbstractFileHandler` is an optional DX base a third-party
 handler MAY extend — it only defaults `extensions()` to `[]`; every other method stays
 handler-specific. Implementing `FileHandler` directly is always enough; the base class
 saves nothing beyond that one line. The built-in handlers do not extend it — they stay
@@ -561,12 +572,12 @@ interface DocumentContent
 **Implement when** your `FileHandler` needs a content shape other than TipTap or
 the bundled opaque snapshot.
 
-#### `Vaulter\Contracts\Handlers\FileHandlerRegistry`
+#### `Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry`
 
 The format-extensibility registry seam behind `Vaulter::handlers()->register()` /
 `Vaulter::handlers()`. Both the contract and the concrete engine
-(`Vaulter\Handlers\FileHandlerRegistry`, the SSOT resolver — final, H.5) are
-core-owned: this binding always resolves, even without vaulter-documents installed
+(`Vaulter\Drive\Handlers\FileHandlerRegistry`, the SSOT resolver — final, H.5) are
+drive-owned: this binding always resolves, even without vaulter-documents installed
 (a drive-only host still gets preview/download resolution). Packages like
 vaulter-documents only ADD handlers (TipTap, Univer, …) to this same registry.
 
@@ -583,12 +594,12 @@ interface FileHandlerRegistry
 }
 ```
 
-#### `Vaulter\Contracts\Handlers\NodePresenter`
+#### `Vaulter\Drive\Contracts\Handlers\NodePresenter`
 
 Resolves the format-handler descriptor for a node — the `(id + capabilities + ui)`
 bundle the `GET .../handler` endpoint returns, so the Vue client routes the node to
 the right editor/preview/download surface. Both the contract and the concrete
-`Vaulter\Handlers\NodePresenter` are core-owned (D10): `app(NodePresenter::class)`
+`Vaulter\Drive\Handlers\NodePresenter` are drive-owned: `app(NodePresenter::class)`
 always resolves, even without vaulter-documents installed — a drive-only host still gets a
 preview/download descriptor. Packages like vaulter-documents only ADD handlers to the
 registry the resolver consults.
@@ -607,7 +618,7 @@ interface NodePresenter
 #### `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator`
 
 Generates the opaque token for a public share link. A token must be unique and fit the
-token column (≤ 64 chars). Configure the generator at `config('vaulter.sharing.token_generator')`.
+token column (≤ 64 chars). Configure the generator at `config('vaulter-drive.sharing.token_generator')`.
 
 ```php
 interface ShareTokenGenerator
@@ -695,7 +706,7 @@ See [Auth → Multi-tenancy](/concepts/tenancy) for morph alignment.
 
 ### See also
 
-- [Facade & Manager](/reference/php-api) — the methods that accept and return these
+- [Facade](/reference/php-api) — the methods that accept and return these
 - [Configuration reference](/reference/config) — the binding keys
 - [Events reference](/reference/events) — what's dispatched across these seams
 
@@ -723,9 +734,9 @@ interface NodeOperations
 }
 ```
 
-`Vaulter\Contracts\Drive\NodeSnapshotContributor` is the `drive` slot (Contributor) the documents module
+`Vaulter\Drive\Contracts\NodeSnapshotContributor` is the `drive` slot (Contributor) the documents module
 fills with `documents.heads` to supply `NodeSnapshot::$document`; without an active contributor a document node
-has no head in its snapshot. `Vaulter\Contracts\Drive\DriveExtension` marks the operations a module adds to a
+has no head in its snapshot. `Vaulter\Drive\Contracts\DriveExtension` marks the operations a module adds to a
 drive handle, declared in the `drive` slot under the operations' FQCN and resolved by `DriveHandle::extension()`.
 
 ## The supported surface

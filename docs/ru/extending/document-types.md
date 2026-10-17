@@ -189,7 +189,7 @@ it('keeps the document type contract', function (): void {
 ```
 
 `id` (ключ обработчика файла) у документов `null`. Ядро ничего не знает о типах документов:
-`vaulter-documents` помечает тегом `Vaulter\Contracts\Presentation\KindPresenter` для вида
+`vaulter-documents` помечает тегом `Vaulter\Drive\Contracts\Presentation\KindPresenter` для вида
 `document`, и `NodePresenter` ядра передаёт ему представление.
 
 ## Профили

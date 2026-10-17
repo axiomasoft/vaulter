@@ -275,7 +275,7 @@ application key. It is bound to the storage, listing kind, parent or search term
 ordering. An invalid signature or mismatched query returns 422 `validation_failed`
 with `errors.cursor`; restart that listing without a cursor.
 
-`vaulter.listing.scan_budget` defaults to 1000 candidates per request. A page can be
+`vaulter-drive.listing.scan_budget` defaults to 1000 candidates per request. A page can be
 short or empty while `next_cursor` remains non-null. Follow that cursor until null
 to reach later visible nodes. Changing `per_page` does not change the cursor's scope.
 
@@ -309,7 +309,7 @@ over this endpoint.
 ## Fail-loud: the null driver
 
 The default driver is `database` — a fully standalone lane with zero host dependency.
-For local boot-up there is also an **open** driver, `Vaulter\Testing\NullPermissionDriver`,
+For local boot-up there is also an **open** driver, `Vaulter\Drive\Testing\NullPermissionDriver`,
 which grants every actor full access via an absolute `Allow` override.
 
 The `PermissionDriverManager` rejects the null driver **in production**:
@@ -326,7 +326,7 @@ is explicit:
 
 > The open null host-role driver is forbidden in production. Why: it grants every actor
 > full access; running it in prod would expose every node. Fix: set
-> `config('vaulter.access.permission_driver')` to a real driver (`database`/`gate`/`spatie`/
+> `config('vaulter-drive.access.permission_driver')` to a real driver (`database`/`gate`/`spatie`/
 > `azgard`) or bind your own `PermissionDriver`.
 
 ::: danger Never ship the null driver

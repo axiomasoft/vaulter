@@ -6,10 +6,10 @@ outline: deep
 
 # Drive Profiles
 
-A `Vaulter\Profiles\Profile` names a drive policy for a host entity. Profiles share
-one schema. Register providers with `vaulter.profiles.providers`; the default provider
-is `vaulter.profiles.default`. The persisted discriminator is `profile_key`.
-`Vaulter::for($owner, 'project')` opens the drive for that owner and profile.
+A `Vaulter\Drive\Profiles\Profile` names a drive policy for a host entity. Profiles share
+one schema. Register providers with `vaulter-drive.profiles.providers`; the default provider
+is `vaulter-drive.profiles.default`. The persisted discriminator is `profile_key`.
+`Vaulter::drive($owner, 'project')` opens the drive for that owner and profile.
 
 ## Configure a provider
 
@@ -17,8 +17,8 @@ is `vaulter.profiles.default`. The persisted discriminator is `profile_key`.
 namespace App\Vaulter\Profiles;
 
 use App\Models\Project;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileProvider;
 
 final class ProjectProfile extends ProfileProvider
 {
@@ -38,7 +38,7 @@ Register the FQCN in `config/vaulter.php`:
 
 Profiles are hydrated during application boot. The default profile is registered
 first; duplicate profile IDs fail boot validation. Unknown IDs throw
-`Vaulter\Exceptions\Profiles\UnknownProfileException`.
+`Vaulter\Drive\Exceptions\Profiles\UnknownProfileException`.
 
 ## Registry
 

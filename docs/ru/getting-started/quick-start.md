@@ -47,9 +47,9 @@ Laravel-приложению **не нужна никакая настройка
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-open -->
 
 ```php
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 
 // $project — любая Eloquent-модель; $user — вошедший пользователь, от имени которого работает диск.
 $drive = Vaulter::drive($project)->actingAs($user);
@@ -72,8 +72,8 @@ $page = $drive->nodes()->children($reports);   // Vaulter\Data\Page из NodeSna
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-methods -->
 
 ```php
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\UploadSource;
 
 $drive->nodes()->rename($node, 'Q3 report.pdf');
 $drive->nodes()->move($node, $reports);
@@ -98,7 +98,7 @@ Drive REST-маршруты уже смонтированы под `api/vaulter`
 
 ```php
 // routes/web.php (или ответ Inertia/контроллера)
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 Route::get('/projects/{project}/drive', function (App\Models\Project $project) {
     return inertia('Drive', [

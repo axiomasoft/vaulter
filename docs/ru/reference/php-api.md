@@ -1,65 +1,64 @@
 ---
-title: Фасад и Manager
-description: Фасад Vaulter и VaulterManager — публичная точка входа для интеграции с хост-приложением.
+title: Фасад
+description: Фасад Vaulter (Vaulter\Drive\Vaulter) — публичная точка входа drive для интеграции с хост-приложением.
 outline: deep
 ---
 
-# Фасад и Manager
+# Фасад
 
-`Vaulter\Facades\Vaulter` — публичная точка входа пакета. Это тонкий фасад Laravel
-поверх `Vaulter\VaulterManager`, который регистрируется как синглтон контейнера
-(алиас `'vaulter'`) в `VaulterServiceProvider`. Каждый метод ниже — это реальный
-метод на `VaulterManager`.
+`Vaulter\Drive\Facades\Vaulter` — публичная точка входа drive. Это тонкий фасад Laravel
+поверх `Vaulter\Drive\Vaulter`, который `vaulter-drive` регистрирует как синглтон контейнера (алиас `'vaulter'`)
+и заодно объявляет для хоста алиас класса `Vaulter`. Фасаду нужен `axioma-studio/vaulter-drive`; без него
+`Vaulter::drive()` бросает `MissingPackageException` с именем пакета. Каждый метод ниже — реальный метод
+`Vaulter\Drive\Vaulter`.
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
-$drive = Vaulter::for($project);          // открыть Drive-хэндл
-$panel = Vaulter::profiles()->get('project_drive'); // резолв Storage Panel
+$drive = Vaulter::drive($project);                       // открыть Drive-хэндл
+$profile = Vaulter::profiles()->get('project_drive');    // резолв профиля drive
 ```
 
 ::: info Резолвьте как удобно
-Фасад, `app(VaulterManager::class)` и алиас контейнера `'vaulter'` возвращают один и
-тот же синглтон. Внедрите `VaulterManager` в конструктор, если предпочитаете DI
-фасаду.
+Фасад, `app(\Vaulter\Drive\Vaulter::class)` и алиас контейнера `'vaulter'` возвращают один и
+тот же синглтон. Внедрите `Vaulter\Drive\Vaulter` в конструктор, если предпочитаете DI фасаду.
+Прежних `Vaulter\VaulterManager` и `Vaulter\Facades\Vaulter` больше нет.
 :::
 
 ## Сводка методов
 
 | Метод | Возвращает | Назначение |
 |---|---|---|
-| `for(Model $entity, ?string $panel = null)` | `DriveHandle` | Открыть Drive-хэндл, привязанный к хранилищу сущности хоста в панели |
-| `forStorage(Drive $storage)` | `DriveHandle` | Открыть Drive-хэндл, привязанный к уже разрешённой строке-хранилищу |
+| `drive(Model $ownerOrDrive, ?string $profile = null)` | `DriveHandle` | Найти-или-создать drive сущности хоста в профиле (или открыть уже разрешённую строку `Drive`) |
+| `findDrive(Model $owner, ?string $profile = null)` | `?DriveHandle` | Существующий drive владельца или `null`; ничего не создаёт |
+| `findDriveById(string\|int $id)` | `?DriveHandle` | Drive с этим ключом в текущем тенанте или `null` |
+| `drives(Authorizable $actor, ?ListOptions $options = null)` | `Page<DriveSnapshot>` | Drive, которые актор может открыть (те, чей корень ему виден) |
 | `profiles()` | `ProfileRegistry` | Именованные профили Drive (`get`, `register`, `registerProvider`) |
-| `handlers()` | `FileHandlerRegistry` | Реестр document handler'ов |
+| `handlers()` | `FileHandlerRegistry` | Реестр файловых обработчиков |
+| `permissions()` | `PermissionDriverManager` | Используемый драйвер прав |
 
-Фасад аннотирует все публичные методы менеджера. Для регистрации используйте `profiles()` и `handlers()`.
+Тенантность — забота ядра: код вне скоупа тенанта выполняйте через `Vaulter\Tenancy\Tenancy::without(...)` (core).
 
 ## Точки входа в Drive
 
-### `for(Model $entity, ?string $panel = null): DriveHandle`
+### `drive(Model $ownerOrDrive, ?string $profile = null): DriveHandle`
 
-Основная точка входа для интеграции. Находит-или-создаёт строку `v_storages` для
-сущности хоста в рамках панели (идемпотентно — корневая папка подготавливается
-автоматически) и возвращает эргономичный `DriveHandle`, методы которого делегируют
-Drive-Action'ам и репозиториям. По умолчанию панель — `'default'`.
-
-```php
-$drive = Vaulter::for($project);                 // панель по умолчанию
-$drive = Vaulter::for($project, 'project_drive'); // именованная панель
-```
-
-### `forStorage(Drive $storage): DriveHandle`
-
-Открыть Drive-хэндл, привязанный к уже разрешённой строке `Drive`. Это шов, который
-использует HTTP-слой: `Drive`, связанный через route-model binding (разрешённый
-через сменяемый `config('vaulter.models.drive')`), напрямую отображается в
-`DriveHandle` без повторного вывода владельца. Панель хэндла отражает
-`$storage->profile`, поэтому его Action'ы выполняются в правильном scope панели.
+Основная точка входа для интеграции. Находит-или-создаёт строку `v_drives` для сущности хоста в рамках
+профиля (идемпотентно — корневая папка подготавливается автоматически) и возвращает эргономичный
+`DriveHandle`, методы которого делегируют Operations drive. По умолчанию берётся профиль по умолчанию из
+конфига. Если передать готовую модель `Drive`, вернётся хэндл этой строки (другой `$profile` — это
+`InvalidArgumentException`).
 
 ```php
-$drive = Vaulter::forStorage($storage);
+$drive = Vaulter::drive($project);                  // профиль по умолчанию
+$drive = Vaulter::drive($project, 'project_drive'); // именованный профиль
 ```
+
+### `findDrive()`, `findDriveById()`, `drives()`
+
+`findDrive()` и `findDriveById()` возвращают хэндл уже существующего drive, иначе `null`. `drives()` перечисляет
+drive, которые актор может открыть, как снимки в порядке ключа с непрозрачным курсором; решение о видимости
+принимается до нарезки страницы.
 
 Полную поверхность методов хэндла см. в [`DriveHandle`](/ru/concepts/nodes-and-revisions).
 
@@ -82,7 +81,7 @@ $drive = Vaulter::forStorage($storage);
 
 Шов расширяемости по форматам. Добавить новый формат — это один класс + один вызов:
 `handlers()->register()` принимает FQCN или инстанс и делегирует привязанному к
-контейнеру `Vaulter\Handlers\FileHandlerRegistry` (принадлежит core с P0.4/D10 —
+контейнеру `Vaulter\Drive\Handlers\FileHandlerRegistry` (принадлежит drive —
 единый источник истины для резолва mime → расширение → возможность → приоритет,
 резолвится даже без установленного `vaulter-documents`). Ни миграций, ни правок
 ядра, ни обязательного пакета.
@@ -91,7 +90,7 @@ $drive = Vaulter::forStorage($storage);
 Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 ```
 
-Также можно перечислить FQCN handler'ов в `config('vaulter.handlers')` или привязать
+Также можно перечислить FQCN handler'ов в `config('vaulter-drive.handlers')` или привязать
 их к тегированной привязке контейнера `'vaulter.file_handlers'`. См.
 [Recipes → Custom handler](/ru/guides/recipes).
 
@@ -119,7 +118,9 @@ $driver = Vaulter::driver('hocuspocus'); // явный драйвер
 
 ## Контракты
 
-Швы вариативности Vaulter живут в пространстве имён `Vaulter\Contracts\*`. Каждый из
+Швы вариативности Vaulter живут в пространстве имён `Contracts` пакета, которому принадлежит понятие
+(`Vaulter\Contracts\*` — ядро, `Vaulter\Media\Contracts\*`, `Vaulter\Drive\Contracts\*`,
+`Vaulter\Documents\Contracts\*`). Каждый из
 них — публичный, замороженный по SemVer интерфейс, который вы можете реализовать, чтобы
 подменить поведение: авторизацию, хранилище, транспорт совместного редактирования,
 форматы документов, токены публичных ссылок, стратегию идентификаторов или протоколы
@@ -128,46 +129,25 @@ $driver = Vaulter::driver('hocuspocus'); // явный драйвер
 
 | Домен | Контракт | Подмена через |
 |---|---|---|
-| Access | `PermissionResolver` | `config('vaulter.permission_resolver')` / `Vaulter::resolvePermissionsWith()` |
-| Access | `PermissionDriver` | `config('vaulter.access.permission_driver')` + карта `access.permission_drivers` |
+| Access | `PermissionDriver` | `config('vaulter-drive.access.permission_driver')` + карта `vaulter-drive.access.permission_drivers` |
 | Access | `AzgardGuard` (azgard) | привязка из `vaulter-azgard` |
 | Cas | `BlobStore` | `config('vaulter-media.blob_store')` |
 | Cas | `ContentStore` | `config('vaulter-media.content_store')` |
 | Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | возвращается из `ContentStore::stage()` |
-| Cas | `StorageAdapter` | `config('vaulter.storage_adapter')` (легаси) |
+| Cas | `BlobPins` | контракт media, через который владелец связи с блобом (drive) ставит и снимает пины |
 | Collaboration | `CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` (легаси-путь документов) |
 | Collaboration | `CollaborationDriver` | привязка в контейнере (путь узлов) |
 | Collaboration | `HostUserResolver` | привязка в контейнере |
-| Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
+| Handlers | `FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` |
 | Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` |
-| Sharing | `ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` / `config('vaulter.sharing.token_generator')` |
+| Sharing | `ShareTokenGenerator` | `config('vaulter-drive.sharing.token_generator')` / `config('vaulter-drive.sharing.token_generator')` |
 | Uploads | `UploadProtocolHandler` | в комплекте (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
 
 ---
 
 ### Access
-
-#### `Vaulter\Contracts\Access\PermissionResolver` {#access-permission-resolver}
-
-Хук, реализуемый хостом, для **легаси-пути документов DocVault**. Привяжите его через
-`config('vaulter.permission_resolver')` (FQCN) или
-`Vaulter::resolvePermissionsWith()`. Drive ACL вместо этого использует `PermissionDriver` —
-данный резолвер относится к более старой, документо-центричной полосе.
-
-```php
-interface PermissionResolver
-{
-    /** @param string $action view|edit|comment|manage|delete */
-    public function can(Authenticatable $user, string $action, Document $document): bool;
-
-    public function canCreate(Authenticatable $user, string $workspaceType, int|string $workspaceId): bool;
-}
-```
-
-**Реализуйте, когда** хотите, чтобы легаси-поверхность `v_documents` делегировала решения
-системе ролей вашего приложения. См. [Рецепты → Свой резолвер](/ru/guides/recipes).
 
 #### `Vaulter\Drive\Contracts\Access\PermissionDriver`
 
@@ -176,7 +156,7 @@ interface PermissionResolver
 идентичности и ролей в Vaulter, не протекая доменом Vaulter: она никогда не получает `Node`
 и никогда не оперирует действиями-магическими-строками — только актором `Authorizable` и
 `AccessScope` (координаты панели + workspace + владелец узла). Подмените её через
-`config('vaulter.access.permission_driver')` по карте `access.permission_drivers`; по умолчанию — автономный
+`config('vaulter-drive.access.permission_driver')` по карте `vaulter-drive.access.permission_drivers`; по умолчанию — автономный
 `DatabasePermissionDriver`.
 
 ```php
@@ -236,7 +216,7 @@ interface AzgardGuard
 `AzgardGuardAdapter` и тестовым `Vaulter\Azgard\Testing\FakeAzgardGuard`.
 Provider регистрирует драйвер и адаптер автоматически.
 
-**Используйте, когда** `config('vaulter.access.permission_driver') = 'azgard'`:
+**Используйте, когда** `config('vaulter-drive.access.permission_driver') = 'azgard'`:
 установите `composer require axioma-studio/vaulter-azgard`, добавьте
 `Vaulter\Azgard\Contracts\AzgardBackedUser` на модель пользователя, зарегистрируйте
 morph-алиасы моделей пользователя и workspace и объявите алиасы workspace типами assignment
@@ -356,23 +336,34 @@ interface StorageDriver
 проявляется как возврат `put()` значения `false`, а не как исключение. На локальном диске
 условие деградирует до best-effort проверки через `exists()`.
 
-#### `Vaulter\Contracts\Cas\StorageAdapter` (легаси)
+#### `Vaulter\Media\Contracts\Cas\BlobPins`
 
-Подключаемое хранилище для **легаси**-бинарных вложений. Сам Vaulter хранит JSON-контент;
-бинарные файлы в легаси-пути документов делегируются сюда. Подмена через
-`config('vaulter.storage_adapter')`.
+Истина о живости блоба. Владелец, который держит байты живыми (drive со своими связями ревизий), ставит пин на
+блоб под непрозрачным `owner_type` (`<module>.<what>`) и `reference_key`, выведенным из его собственной строки,
+**в той же транзакции, что записывает эту строку**, и снимает пин в транзакции, удаляющей строку. Сборка мусора
+и сверка `ref_count` читают только пины в `v_blob_references`; `ref_count` — кэш. Каждый метод выполняется в
+транзакции вызывающего (вызов вне транзакции бросает `LogicException`).
 
 ```php
-interface StorageAdapter
+interface BlobPins
 {
-    /** @param string|resource $contents */
-    public function store(string $filename, mixed $contents): string;
+    public function pin(Blob $blob, string $ownerType, string $referenceKey): void;
 
-    public function delete(string $url): void;
+    public function unpin(Blob|int|string $blob, string $ownerType, string $referenceKey): void;
 
-    public function url(string $path): string;
+    /** Только для собственного purge или отката владельца; возвращает число снятых пинов. */
+    public function releaseOwner(string $ownerType, ?Closure $keys = null): int;
+
+    /** @return array<string, int> */
+    public function countByOwner(): array;
 }
 ```
+
+`pin()` бросает `BlobUnavailableException` (`blob_unavailable`), когда байтов блоба уже нет: закоммитьте их заново
+через `BlobStore::commitStaged()` и пините возвращённый блоб. Блоб в состоянии deleting или deleted не пинится
+никогда. Пины остаются, когда модуль-владелец выключен или удалён; снимает их только purge владельца.
+
+**Реализуйте, когда** добавляете модуль, который держит блобы живыми.
 
 ::: tip Какой CAS-контракт мне реализовывать?
 Для собственного байтового бэкенда (S3 / локальный) реализуйте `StorageDriver` и привяжите
@@ -446,13 +437,13 @@ interface HostUserResolver
 
 ### Handlers
 
-#### `Vaulter\Contracts\Handlers\FileHandler`
+#### `Vaulter\Drive\Contracts\Handlers\FileHandler`
 
 Подключаемый обработчик обработки документов — заголовочная фича расширяемости по форматам.
 Обработчик заявляет набор mime-типов (точных или вайлдкардов вроде `"image/*"`) и/или
 расширений, декларирует свои возможности и фронтенд-дескриптор монтирования на каждый файл,
-а `Vaulter\Handlers\FileHandlerRegistry` резолвит лучший из них для `FileDescriptor`. Регистрируйте через
-`config('vaulter.handlers')` (список FQCN), тегированную привязку `'vaulter.file_handlers'` или
+а `Vaulter\Drive\Handlers\FileHandlerRegistry` резолвит лучший из них для `FileDescriptor`. Регистрируйте через
+`config('vaulter-drive.handlers')` (список FQCN), тегированную привязку `'vaulter.file_handlers'` или
 `Vaulter::handlers()->register()`.
 
 ```php
@@ -512,9 +503,9 @@ interface DocumentExporter
 
 См. [Рецепты → Свой экспорт](/ru/guides/recipes).
 
-#### `Vaulter\Contracts\Handlers\FileHandlerRegistry`
+#### `Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry`
 
-Общий реестр core принимает обработчики из конфига, контейнерного тега
+Общий реестр drive принимает обработчики из конфига, контейнерного тега
 `vaulter.file_handlers` и регистрации через `Vaulter::handlers()->register()`.
 
 ```php
@@ -530,7 +521,7 @@ interface FileHandlerRegistry
 }
 ```
 
-#### `Vaulter\Contracts\Handlers\NodePresenter`
+#### `Vaulter\Drive\Contracts\Handlers\NodePresenter`
 
 Возвращает представление узла, содержащее `id`, `capabilities` и `ui`.
 `ui` сериализует `ViewerDescriptor` с полями `key` и `props`.
@@ -547,7 +538,7 @@ interface NodePresenter
 #### `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator`
 
 Генерирует непрозрачный токен для публичной ссылки (share). Токен должен быть уникальным и
-помещаться в колонку токена (≤ 64 символов). Генератор задаётся в `config('vaulter.sharing.token_generator')`.
+помещаться в колонку токена (≤ 64 символов). Генератор задаётся в `config('vaulter-drive.sharing.token_generator')`.
 
 ```php
 interface ShareTokenGenerator
@@ -563,7 +554,7 @@ interface ShareTokenGenerator
 
 ### Uploads
 
-#### `Vaulter\Contracts\Uploads\UploadProtocolHandler`
+#### `Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler`
 
 Стратегия на каждый протокол, стоящая за сессией резюмируемой загрузки. В комплекте
 поставляются две реализации — `TusUploadHandler` (tus.io CORE: Creation + HEAD + PATCH,
@@ -635,7 +626,7 @@ ULID стоит по умолчанию, чтобы морф-ключи совп
 
 ### Смотрите также
 
-- [Фасад и менеджер](/ru/reference/php-api) — методы, которые принимают и возвращают всё это
+- [Фасад](/ru/reference/php-api) — методы, которые принимают и возвращают всё это
 - [Справочник по конфигурации](/ru/reference/config) — ключи привязок
 - [Справочник по событиям](/ru/reference/events) — что диспатчится через эти швы
 

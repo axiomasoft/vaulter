@@ -48,9 +48,9 @@ that user's access. Everything below is a real method on it:
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-open -->
 
 ```php
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 
 // $project is any Eloquent model; $user is the signed-in user who acts on the drive.
 $drive = Vaulter::drive($project)->actingAs($user);
@@ -73,8 +73,8 @@ That is a fully working drive. A handful of the other `DriveHandle` methods:
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-methods -->
 
 ```php
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\UploadSource;
 
 $drive->nodes()->rename($node, 'Q3 report.pdf');
 $drive->nodes()->move($node, $reports);
@@ -100,7 +100,7 @@ entity:
 
 ```php
 // routes/web.php (or an Inertia/controller response)
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 Route::get('/projects/{project}/drive', function (App\Models\Project $project) {
     return inertia('Drive', [

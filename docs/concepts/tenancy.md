@@ -37,7 +37,7 @@ hard-coding one.
 
 ### A note on the `tenant_id` column
 
-The Drive tables (`v_storages`, `v_nodes`, `v_blobs`, `v_files`, …) **always** carry
+The Drive tables (`v_drives`, `v_nodes`, `v_blobs`, `v_files`, …) **always** carry
 a nullable `tenant_id` column, regardless of `tenancy.enabled`. This is intentional:
 the blob dedup-UNIQUE index keys on `tenant_id` under `vaulter-media.dedup.scope = tenant`, so the
 column must exist for the index to be defined. When tenancy is off, the index simply
@@ -52,7 +52,7 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 ```
 
 The model property is declared on every Drive model
-(`Vaulter\Models\Drive\Drive`, `Node`, `File`, `FileRevision`,
+(`Vaulter\Drive\Models\Drive`, `Node`, `File`, `FileRevision`,
 `Vaulter\Media\Models\Cas\Blob`, `Vaulter\Drive\Models\Access\NodeGrant`,
 `Vaulter\Drive\Models\Sharing\NodeShare`, …) as `int|string|null $tenant_id`.
 
@@ -72,7 +72,7 @@ value comes from:
 your tenant-aware Storage model
         │  sets tenant_id on create (a `creating` observer, a global scope, …)
         ▼
-   v_storages.tenant_id
+   v_drives.tenant_id
         │  IngestFileAction reads $storage->tenant_id
         ▼
    BlobStore::commit(tenantId: …)
@@ -111,8 +111,8 @@ $blob = $this->blobs->commit(
 );
 ```
 
-The same pattern holds elsewhere: `Vaulter\Activity\ActivityRecorder` and
-`Vaulter\Uploads\UploadSessionManager` both copy `tenant_id` off the owning
+The same pattern holds elsewhere: `Vaulter\Drive\Activity\ActivityRecorder` and
+`Vaulter\Drive\Uploads\UploadSessionManager` both copy `tenant_id` off the owning
 storage/node, never from a global Vaulter setting.
 
 ## Swapping in a tenant-aware model
@@ -137,7 +137,7 @@ A minimal tenant-aware storage that *stamps and scopes* by the current tenant:
 namespace App\Models\Vaulter;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Models\Drive\Drive as BaseStorage;
+use Vaulter\Drive\Models\Drive as BaseStorage;
 
 class TenantStorage extends BaseStorage
 {
@@ -168,6 +168,13 @@ scope is applied — only that the model applies one.
 Because the models are swappable and the `tenant_id` column already exists, you add
 tenant isolation **without a Vaulter migration or core change** — the layer-mirror
 of [the swappable-models design](/guides/configuration#models).
+
+## Running outside the tenant boundary
+
+Maintenance code that has to see every tenant — the blob GC and reconcile commands of `vaulter-media`, the drive
+jobs — runs inside `Vaulter\Tenancy\Tenancy::without(fn () => …)`, the kernel's tenancy entry point (it needs no
+drive). The bypass is fiber-local, nests, and the previous state is restored when the callback returns or throws.
+Use it in your own host commands the same way; the facade `Vaulter` has no tenancy method.
 
 ## Interplay with the dedup scope
 

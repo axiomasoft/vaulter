@@ -125,7 +125,7 @@ editLink: false
 
 Байты и подписанные URL выходят только через один компонент, который на каждый запрос
 заново проверяет доступ, арендатора, профиль и состояние проверки и фиксирует точную
-ревизию. Режим задаёт `vaulter.downloads.delivery_mode`:
+ревизию. Режим задаёт `vaulter-drive.downloads.delivery_mode`:
 
 - **`strict`** (по умолчанию) — приложение отдаёт байты потоком с
   `Content-Disposition: attachment; filename="…"; filename*=UTF-8''…` (RFC 6266; управляющие
@@ -134,7 +134,7 @@ editLink: false
   `Accept-Ranges: none` и `Content-Length`. Заявленный тип сохраняется только для списка
   безопасных inline-типов, иначе `application/octet-stream`.
 - **`direct_signed`** (по выбору) — после тех же проверок `302` на URL, подписанный вашим
-  `DirectContentUrlSigner` для этой ревизии, действующий `vaulter.downloads.direct_ttl_seconds`
+  `DirectContentUrlSigner` для этой ревизии, действующий `vaulter-drive.downloads.direct_ttl_seconds`
   (1–300), с `Cache-Control: private, no-store` и `Referrer-Policy: no-referrer`.
 
 Ревизия не чистая (ожидает обязательной проверки, заражена) → `423 content_unavailable` до
@@ -631,7 +631,7 @@ DocumentRevision.
 
 ## Доступ: гранты и наследование
 
-Роли, выданные на узел (`vaulter.features.grants`). Каждый маршрут требует `manage` на
+Роли, выданные на узел (`vaulter-drive.features.grants`). Каждый маршрут требует `manage` на
 узле. См. [Гранты](/ru/guides/grants).
 
 #### `GET v1/nodes/{node}/grants` — `grants.index`
@@ -686,7 +686,7 @@ DocumentRevision.
 
 ## Ссылки (shares)
 
-Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка даёт ровно способности
+Bearer-ссылки на узел (`vaulter-drive.features.share_links`). Ссылка даёт ровно способности
 своей роли на своём наборе узлов; на публичных маршрутах гранты пользователей не
 участвуют. См. [Публичные ссылки](/ru/guides/sharing).
 
@@ -707,7 +707,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 | `audience` | `anyone` (по умолчанию), `authenticated`, `tenant`; для `writer` — только `authenticated` или `tenant` |
 | `scope` | `item` (по умолчанию) или `subtree` |
 | `password` | необязательно, 1–255 символов |
-| `expires_at` | необязательно, в будущем, в пределах `vaulter.sharing` и профиля (`422 share_link_ttl_exceeded`) |
+| `expires_at` | необязательно, в будущем, в пределах `vaulter-drive.sharing` и профиля (`422 share_link_ttl_exceeded`) |
 | `max_uses` | необязательно, ≥ 1 успешного визита |
 
 **Ответ:** `201` — ссылка плюс `token` и `url`, **один раз**:
@@ -787,7 +787,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 ## Активность
 
 Что произошло в drive или на узле, сначала новое, с фильтром для читателя
-(`vaulter.features.activity`).
+(`vaulter-drive.features.activity`).
 
 #### `GET v1/drives/{drive}/activity` — `activity.drive`
 
@@ -819,7 +819,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 
 ## Журнал изменений
 
-Следить за drive инкрементально вместо повторного обхода (`vaulter.features.changes`;
+Следить за drive инкрементально вместо повторного обхода (`vaulter-drive.features.changes`;
 выключен → `403 profile_restriction`). См. [Изменения](/ru/concepts/events).
 
 #### `GET v1/drives/{drive}/changes/start` — `changes.start`
@@ -828,7 +828,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 
 #### `GET v1/drives/{drive}/changes?cursor=&limit=` — `changes.index`
 
-`cursor` обязателен; `limit` — 1–`vaulter.changes.max_page_size`, по умолчанию 100.
+`cursor` обязателен; `limit` — 1–`vaulter-drive.changes.max_page_size`, по умолчанию 100.
 **Ответ:**
 
 ```json
@@ -859,7 +859,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 
 Глобальная админ-поверхность подписчиков вебхуков, подключается при
 `vaulter.modules.webhooks`. Каждый маршрут, включая чтение, проходит
-`WebhookEndpointPolicy` (`vaulter.webhooks.manage_ability`) до поиска по id. См.
+`WebhookEndpointPolicy` (`vaulter-webhooks.manage_ability`) до поиска по id. См.
 [Вебхуки](/ru/guides/webhooks).
 
 | Метод и путь | Имя | Ответ |

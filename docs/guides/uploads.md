@@ -45,8 +45,8 @@ drive profile's `RevisionRetentionPolicy` decides what pruning removes:
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Profiles\DrivePolicyBuilder;
-use Vaulter\Profiles\RevisionRetentionPolicy;
+use Vaulter\Drive\Profiles\DrivePolicyBuilder;
+use Vaulter\Drive\Profiles\RevisionRetentionPolicy;
 
 $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->revisionRetention(new RevisionRetentionPolicy(
     maxNoncurrentRevisions: 100, // newest non-current revisions kept per file; null = no count limit
@@ -95,7 +95,7 @@ promotion, the bytes form an orphan collected by `vaulter:blobs:reconcile --orph
 
 ## Transports
 
-`UploadProtocol` (`Vaulter\Enums\Uploads\UploadProtocol`) selects the transport per session:
+`UploadProtocol` (`Vaulter\Drive\Enums\Uploads\UploadProtocol`) selects the transport per session:
 
 | Protocol      | Value           | Works on | How |
 | ------------- | --------------- | -------- | --- |
@@ -437,9 +437,9 @@ use Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests;
 it('keeps the scan lifecycle', function (): void {
     (new ScanLifecycleContractTests)->assertScanLifecycleContract(
         static function (): void {
-            config()->set('vaulter.scan.mode', 'all_content');
-            config()->set('vaulter.scan.scanner_key', 'acme');
-            config()->set('vaulter.scan.scanner_version', '1');
+            config()->set('vaulter-drive.scan.mode', 'all_content');
+            config()->set('vaulter-drive.scan.scanner_key', 'acme');
+            config()->set('vaulter-drive.scan.scanner_version', '1');
             config()->set('queue.default', 'redis');
         },
         $user,

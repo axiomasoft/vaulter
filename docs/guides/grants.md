@@ -33,7 +33,7 @@ cut a subtree off from grants above, use an [inheritance boundary](/concepts/acc
 | `granted_by` | id? | the actor who created the grant |
 | `tenant_id` | id? | present when tenancy is enabled |
 
-The model is swappable — point `config('vaulter.models.grant')` at a subclass (for
+The model is swappable — point `config('vaulter-drive.models.grant')` at a subclass (for
 example to add tenant scoping). `inherited` / `inherited_from_node_id` are reserved for
 an optional materialised read-model and stay `false`/`null`: the source of truth is the
 direct rows plus the tree.

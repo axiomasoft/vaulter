@@ -69,7 +69,7 @@ The active driver is a single config key (and env var):
 VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 ```
 
-The key → FQCN map is `access.permission_drivers`. Register your own driver by adding an FQCN
+The key → FQCN map is `vaulter-drive.access.permission_drivers`. Register your own driver by adding an FQCN
 that implements `PermissionDriver` (config-cache safe — FQCNs only, no closures):
 
 <!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
@@ -78,7 +78,7 @@ that implements `PermissionDriver` (config-cache safe — FQCNs only, no closure
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
 use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
-use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 
 // config/vaulter.php
 'access' => ['permission_drivers' => [
@@ -268,7 +268,7 @@ composer require axioma-studio/vaulter-azgard
 ```
 
 Its Laravel-discovered provider offers the `azgard` module, which registers `azgard` in
-`vaulter.access.permission_drivers`, preserving an explicit host override. Then select
+`vaulter-drive.access.permission_drivers`, preserving an explicit host override. Then select
 `VAULTER_PERMISSION_DRIVER=azgard`. Without the installed bridge, the key is unknown
 and throws `MissingPermissionDriverException`.
 
@@ -494,12 +494,12 @@ grants through AzGuard's change pipeline.
 php artisan vaulter:make:permission-driver Workspace
 ```
 
-Writes a pass-through driver in `app/Vaulter/PermissionDrivers/Workspace.php` and a Pest test in `tests/Unit/Vaulter/` that runs `PermissionDriverContractTests`. It prints the line to `vaulter.access.permission_drivers`
+Writes a pass-through driver in `app/Vaulter/PermissionDrivers/Workspace.php` and a Pest test in `tests/Unit/Vaulter/` that runs `PermissionDriverContractTests`. It prints the line to `vaulter-drive.access.permission_drivers`
 and never edits your config. An existing file is kept unless you pass `--force`.
 
 ## Testing your extension
 
-`Vaulter\Testing\Contracts\PermissionDriverContractTests` proves a driver the same way the
+`Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests` proves a driver the same way the
 built-in ones are proved. The shared fixture (`PermissionFixture`) is built through
 Operations: a writer subtree grant for an actor on a parent folder, and a child below it with
 inheritance restricted and no grant of its own.
@@ -507,7 +507,7 @@ inheritance restricted and no grant of its own.
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Testing\Contracts\PermissionDriverContractTests;
+use Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests;
 
 it('decides like the reference driver', function (): void {
     (new PermissionDriverContractTests)->assertSameDecisionsAsReference(new AcmeRoleDriver);

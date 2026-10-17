@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: The layered architecture of Vaulter, its domain structure, the contracts a host plugs into, and the 13 ADRs that decide it.
+description: The layered architecture of Vaulter, its domain structure, the contracts a host plugs into, and the ADRs that decide it.
 outline: deep
 ---
 
@@ -56,7 +56,7 @@ A typical write — say `POST v1/drives/{drive}/files` — flows top to bottom:
 4. Subscribers (`RecordsActivity`, `RecordsOutbox`) react to the event to write the activity
    feed and stage the transactional outbox — Vaulter never couples the Action to them.
 
-The ergonomic entry point `Vaulter::for($entity)` returns a
+The ergonomic entry point `Vaulter::drive($owner)` returns a
 [`DriveHandle`](#the-drive-handle) (`Vaulter\Drive\DriveHandle`, shipped by
 `axioma-studio/vaulter-drive`) that wraps exactly this pipeline for programmatic use.
 
@@ -64,24 +64,26 @@ The ergonomic entry point `Vaulter::for($entity)` returns a
 
 ### HTTP edge — Controllers, FormRequests, Resources
 
-The thin edge. Routes live in `packages/core/routes/api.php`, mounted under
-`config('vaulter.routes.prefix')` (default `api/vaulter`). Controllers authorize, hand a DTO to
+The thin edge. Each package keeps the routes of its own concept (`packages/drive/routes/drive.php`,
+`packages/documents/routes/documents.php`, `packages/webhooks/routes/webhooks.php`), mounted by its module under
+`config('vaulter.routes.prefix')` (default `api/vaulter`) and carrying the `vaulter.module:<id>` middleware. Controllers authorize, hand a DTO to
 an Action, and serialize the result through a Resource that embeds a computed `abilities`
 object so the Vue client renders only allowed actions.
 
-`{storage}` and `{node}` route parameters bind to the **swappable** models
-(`config('vaulter.models.drive|node')`) via `Route::bind` registered in the service
-provider — so a host can point the config at a subclass and binding keeps working.
+`{drive}` and `{node}` route parameters are resolved by the tenant-scoped `HttpResourceResolver` against the
+**swappable** models (`config('vaulter-drive.models.drive|node')`) — so a host can point the config at a subclass and
+resolution keeps working.
 
-### Actions — `Vaulter\Drive\Actions\*` / `Vaulter\Documents\Actions\*` / `Vaulter\Actions\*`
+### Actions — `Vaulter\Drive\Actions\*` / `Vaulter\Documents\Actions\*` / `Vaulter\Webhooks\Actions\*`
 
 One use case each, `final readonly`. An Action opens the transaction, enforces business rules,
 calls repositories/CAS, and dispatches a domain event **after commit**. The Drive write set
 (`Vaulter\Drive\Actions\*`, requires `axioma-studio/vaulter-drive`):
 `CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, `RenameNodeAction`,
 `CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `PurgeNodeAction`. Document-node
-Actions live under `Vaulter\Documents\Actions\*` (requires `axioma-studio/vaulter-documents`);
-core itself only keeps `Vaulter\Actions\{Access,Sharing,Webhooks}\*`.
+Actions live under `Vaulter\Documents\Actions\*` (requires `axioma-studio/vaulter-documents`); the webhook
+endpoint Actions live in `Vaulter\Webhooks\Actions\*` (`axioma-studio/vaulter-webhooks`). The kernel has none: it
+only runs operations.
 
 ::: info Authorization placement
 Actions perform **no** access checks. Authorization is enforced once, at the HTTP boundary
@@ -94,90 +96,88 @@ pure delegation surface. This keeps the access decision in exactly one place.
 Reads (`NodeReadRepository`, `GrantReadRepository`, `DriveReadRepository`, …) build queries;
 stores (`NodeStoreRepository`, `DriveStoreRepository`, …) perform writes and never open
 transactions or dispatch events — the Action owns that. The tree-descent reads use
-`staudenmeir/laravel-adjacency-list` recursive relations scoped by `storage_id`.
+`staudenmeir/laravel-adjacency-list` recursive relations scoped by `drive_id`.
 
 ### Models — swappable, resolved through `Config`
 
-Vaulter never references a concrete model class directly in domain code; it resolves through
-`Vaulter\Configuration\VaulterConfig` against `config('vaulter.models.*')`. A host subclasses a model to add
+Vaulter never references a concrete model class directly in domain code; each package resolves its models through
+its own typed config reader (`Vaulter\Drive\Configuration\DriveConfig`, `Vaulter\Media\Configuration\MediaConfig`,
+`Vaulter\Webhooks\Configuration\WebhooksConfig`) against `config('vaulter-drive.models.*')`,
+`config('vaulter-media.models.*')`, `config('vaulter-webhooks.models.*')`. A host subclasses a model to add
 ULID behaviour, tenant scoping, or audit. Models are the one part of the package that is **not**
 `final` (they must be extendable); everything else is.
 
 ### Value objects, DTOs, enums
 
-`Vaulter\Data\*` are the `final readonly` DTOs Actions consume. `Vaulter\ValueObjects\*` hold
+`Vaulter\Drive\Data\*` are the `final readonly` DTOs Actions consume. `Vaulter\Drive\ValueObjects\*` hold
 domain values (`FileDescriptor`, `ContentCapabilities`, the ACL
 `Subject`/`Decision`/`GrantSet`/`AccessScope`) — kind-neutral only; core does not know the shape of
-any handler's content (`TipTapContent` and friends live in `vaulter-documents`, VLT-CANON P0.3).
-`Vaulter\Enums\*` are the sealed vocabularies (`Ability`, `NodeKind`, `BlobStatus`, …).
+any handler's content (`TipTapContent` and friends live in `vaulter-documents`).
+`Vaulter\Drive\Enums\*` and the other packages' `Enums\*` are the sealed vocabularies (`Ability`, `NodeKind`, `BlobStatus`, …).
 
 ## Domain structure
 
-Since the P2 #5 package extraction split the monolith, `axioma-studio/vaulter-core`
-(namespace `Vaulter\`) holds only the cross-cutting seams — authorization, CAS
-value-objects/contracts, sharing, panels, webhooks, activity — under `packages/core/src`;
-Drive and Documents each ship as their own package:
+Ownership follows the Composer graph (`core <- media <- drive <- documents`; `webhooks`, `azgard` and `filament` build
+on `drive`) and is recorded in [ADR-0030](/adr/0030-package-ownership-and-schema). **`axioma-studio/vaulter-core`**
+(namespace `Vaulter\`) is the kernel only: it contains no domain table, model or service of a module.
 
 | Directory (core) | Responsibility |
 |---|---|
-| `Access/` | `AccessResolver` (the effective-permission engine), `PermissionDriverManager`, `HostUserResolver`. |
-| `Drivers/Permission/` | The shipped `PermissionDriver` lanes: `database`, `gate`, `spatie`; `azgard` lives in `vaulter-azgard`. |
-| `Cas/` | `BlobLock` — the last CAS class left in core; the store engine itself moved to `vaulter-media`. |
-| `Profiles/` | `Profile`, `ProfileProvider`, `ProfileRegistry`. |
-| `Schema/` | `VaulterSchema`, `SchemaHelpers` (the generic column, key and connection helpers), `KernelSchema` (the DDL of the kernel's own tables), `ModuleSchema` and `ModuleSchemas` (the schema classes of the offered modules). Every other module keeps the DDL of its tables in its own `Schema/<Module>Schema` class. |
-| `Engines/` | The format-extensibility registry ENGINE (VLT-CANON P0.4, superseding H.5/T5): `FileHandlerRegistry`, `NodePresenter`, `FileDescriptorFactory`, and the baseline `Handlers/{PreviewHandler,DownloadOnlyHandler}` — always bound, so a drive-only host resolves preview/download with no other package installed. |
-| `Schema/` | The id-strategy classes (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, the host-key columns. |
-| `Sharing/` | The bearer-link channel: `ShareResolver`, `ShareContext`, `ShareResult`. |
-| `Webhooks/` | The reliability layer: `WebhookFanoutConsumer`, `WebhookSigner` (the outbox itself lives in `Events/Outbox/`: `OutboxWriter`, `OutboxRelay`). |
-| `Activity/` | The append-only activity feed (`ActivityRecorder`, `RecordsActivity`). |
-| `Actions/` · `Data/` · `Events/` | Access, Sharing and Webhooks only — Drive and Documents actions/events now live in their own packages (see below). |
-| `ValueObjects/Handlers/` | The kind-neutral handler-seam value objects both Drive and Documents depend on: `FileDescriptor`, `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`. |
-| `Contracts/` | Every host-facing seam, including `Contracts/Drive/*` and `Contracts/Handlers/*` (the interfaces the split packages implement). |
-| `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — the shared/read-side pieces; Drive and Documents ship their own write-side models too. |
-| `Testing/` | Ship-with-package doubles: `NullPermissionDriver`; `FakeAzgardGuard` lives in `vaulter-azgard`. |
+| `Modules/` · `Kernel.php` | The module system: manifests, compilation and seal, capabilities, slots, activation ([Modules](/concepts/modules)). |
+| `Operations/` | `OperationRunner`, `OperationContext` (actor, tenant, idempotency key) and the middleware pipeline every write runs through ([Operations](/concepts/operations)). |
+| `Events/` | `DomainEvent`, `EventCatalog` (the event types the modules contribute), the transactional outbox and its relay (`Events/Outbox/`) ([The outbox](/concepts/events-outbox)). |
+| `Idempotency/` | The `Idempotency-Key` store and middleware ([Idempotency](/concepts/idempotency)). |
+| `Http/` | The HTTP framework: middleware stacks, problem rendering (`Problems/`), the route-label slot contract. No module routes. |
+| `Configuration/` · `Doctor/` · `Console/` | The kernel config reader and validator, the doctor framework, and the kernel commands (`vaulter:install`, `vaulter:modules`, `vaulter:module:uninstall`, `vaulter:doctor`, `vaulter:relay`, the reference generators). |
+| `Schema/` | Generic helpers only: the id strategies (`AutoIncrementIds`, `UlidIds`, `Uuid7Ids`), host key columns, `SchemaHelpers`, the DDL of the kernel's four tables and `ModuleSchemas`, which walks the schema classes of the compiled modules. |
+| `Tenancy/` · `Observability/` · `Support/` | The tenant resolver contract, telemetry context and recorders, identity and request helpers. |
+| `Testing/` | The public `Vaulter\Testing` kit every package's `TestCase` builds on. |
 
-| Package | Namespace | Adds |
+| Package | Namespace | Owns |
 |---|---|---|
-| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveHandle`, `DriveProvisioner`, the Drive Actions (`CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, …) and their Events. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the document type registry (`Types\*`: rich text, markdown, spreadsheet) and the document presenter (a core `KindPresenter`), node export, the node-collaboration session service, the content shapes (`Content\OpaqueContent`, `Content\TipTap\{TipTapContent,TipTapCodec,TipTapSchema,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
-| `axioma-studio/vaulter-media` | `Vaulter\Media\` | The CAS engine: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
-| `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin. |
+| `axioma-studio/vaulter-media` | `Vaulter\Media\` | `v_blobs` and `v_blob_references` (the pins), the CAS contracts and engine (`Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`, `Contracts\Cas\BlobPins`), `vaulter:blobs:gc` and `vaulter:blobs:reconcile`. |
+| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | The entry point `Vaulter\Drive\Vaulter` (facade `Vaulter\Drive\Facades\Vaulter`, alias `Vaulter`), `DriveHandle`, the Actions and Events, access (`AccessResolver`, the permission drivers), sharing, activity, change journal, quotas, uploads, scan state, profiles, file handlers and the drive tables, routes, commands and doctor checks. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the document type registry (`Types\*`), the document presenter, export, the node-collaboration session service, the content shapes (`Content\OpaqueContent`, `Content\TipTap\*`). |
+| `axioma-studio/vaulter-webhooks` | `Vaulter\Webhooks\` | Outbound webhooks: endpoints, `WebhookFanoutConsumer` (the `webhooks.fanout` outbox consumer), `WebhookSigner`, the URL guard, retries, the admin HTTP and `vaulter:webhooks:*` commands. Opt-in. |
+| `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin, built on the drive's authorized Operations. |
 | `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | The AzGuard permission driver, guard contract, permission map, real adapter and test fake. |
 | `@vaulter/vue` | — | The Drive UI + composables (npm). `src/api` imports no Vue, editor or realtime packages and nothing from `src/` outside `src/api` (arch test `packages/vue/tests/arch/api-no-vue.test.ts`). |
 
-All are siblings that build on `vaulter-core`; Drive and document-editing features require
-installing the matching package (see [Installation](/getting-started/installation)).
+The metapackage `axioma-studio/vaulter` installs core, media, drive and documents; webhooks, azgard and filament are
+installed separately (see [Installation](/getting-started/installation)). Each package ships its own migrations
+(not published), its own config file (`vaulter`, `vaulter-media`, `vaulter-drive`, `vaulter-documents`,
+`vaulter-webhooks`, `vaulter-azgard`, `vaulter-filament`) and its own test kit.
 
 ## The Drive handle
 
-`Vaulter::for($entity, panel: '…')` is the primary integration entry point. It is a thin
-facade over `VaulterManager`, returning a `DriveHandle` from `axioma-studio/vaulter-drive`
-(the package must be installed for this handle to be usable):
+`Vaulter::drive($owner, profile: '…')` is the primary integration entry point. `Vaulter` is the facade of
+`Vaulter\Drive\Vaulter` (the drive package declares the `Vaulter` alias), returning a `DriveHandle` — the package
+must be installed for this handle to be usable:
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 
-// Get-or-create the storage mounted on $project in the 'default' panel,
+// Get-or-create the drive mounted on $project in the 'default' profile,
 // returning an ergonomic DriveHandle.
-$drive = Vaulter::for($project);
+$drive = Vaulter::drive($project)->actingAs($user);
 
-$folder = $drive->createFolder('Contracts');
-$node   = $drive->upload($request->file('doc'), into: $folder);
-$drive->rename($node, 'signed.pdf');
-$children = $drive->list($folder); // Collection<Node>
+$folder = $drive->folders()->create('Contracts');
+$node   = $drive->files()->upload(
+    UploadSource::fromUploadedFile($request->file('doc')),
+    new UploadOptions(parent: $folder),
+);
 ```
 
-`VaulterManager::for()` get-or-creates the `v_storages` row through `DriveProvisioner` (the
-polymorphic `(owner_type, owner_id, panel)` triple is the idempotency key, guarded by a partial
-unique index), auto-provisions a `kind=folder` root node, and returns a `DriveHandle` whose
-methods each delegate to one Action or the read repository. The handle adds no business logic —
-only a pre-resolved storage and upload-source normalisation (a PSR stream, `SplFileInfo` /
-`UploadedFile`, an open resource, or a raw string all normalise to a seekable stream).
+`Vaulter::drive()` get-or-creates the `v_drives` row through `DriveProvisioner` (the polymorphic
+`(owner_type, owner_id, profile)` triple is the idempotency key, guarded by a unique index), auto-provisions a
+`kind=folder` root node, and returns a `DriveHandle` whose methods each delegate to one Operation. The handle adds no
+business logic — only a pre-resolved drive and upload-source normalisation.
 
-::: details VaulterManager
-`for()`, `forStorage()`, `profiles()`,
-`handlers()`.
-[Facade and manager](/reference/php-api).
+::: details Vaulter
+`drive()`, `findDrive()`, `findDriveById()`, `drives()`, `profiles()`, `handlers()`, `permissions()`.
+[Facade](/reference/php-api).
 :::
 
 ## Storage Panels — the embeddability axis
@@ -190,8 +190,8 @@ isolation/configuration axis, separate from the *storage type* (the policy prese
 A panel is built fluently and registered by FQCN only (config-cache-safe — no closures):
 
 ```php
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileProvider;
 
 final class ProjectDriveProfile extends ProfileProvider
 {
@@ -205,7 +205,7 @@ final class ProjectDriveProfile extends ProfileProvider
 }
 ```
 
-Register the provider in `config('vaulter.profiles.providers')`. `ProfileRegistry` hydrates profiles
+Register the provider in `config('vaulter-drive.profiles.providers')`. `ProfileRegistry` hydrates profiles
 during application boot. Scaffold a provider with `php artisan vaulter:make:profile <name>`.
 Profiles share one schema; own tables, model maps, pipelines and resource hooks are removed.
 See [Drive profiles](/concepts/drives-and-profiles).
@@ -213,25 +213,29 @@ See [Drive profiles](/concepts/drives-and-profiles).
 ## Data model
 
 Everything lives in the prefixed `v_*` schema (`config('vaulter.database.table_prefix')`, default `v_`),
-with one id strategy per install (`config('vaulter.ids.strategy')`, default `ulid`).
+with one id strategy per install (`config('vaulter.ids.strategy')`, default `ulid`). Each table belongs to exactly one
+package, which creates it from its own `database/migrations` ([ADR-0030](/adr/0030-package-ownership-and-schema)).
 
-| Table | Holds |
-|---|---|
-| `v_storages` | One storage per `(owner_type, owner_id, panel)`; carries the disk + root node id. |
-| `v_nodes` | The **unified tree** — every folder, file, document, shortcut as one row with `parent_id` + a `kind` discriminator ([ADR-0005](/adr/0005-unified-node-tree)). |
-| `v_files` / `v_file_versions` / `v_file_version_blobs` | The binary side tables: a file's head + its version chain + the edges to blobs. |
-| `v_blobs` | The CAS: one row per `(scope, sha256)` with a `BlobStatus` lifecycle ([ADR-0006](/adr/0006-content-addressed-blobs-gc)). |
-| `v_node_grants` | The per-node ACL with inheritance + deny-veto. |
-| `v_node_shares` | Bearer share links — hash-only token storage ([ADR-0013](/adr/0013-two-sharing-channels)). |
-| `v_documents` | Documents: the document aggregate of a `kind=document` node — working state, head and validators. |
-| `v_document_revisions` | Documents: immutable checkpoints of a document (history). |
-| `v_upload_sessions` / `v_upload_parts` | Resumable upload sessions. |
-| `v_activity` | The append-only activity feed. |
-| `v_outbox` / `v_outbox_consumers` / `v_outbox_deliveries` | The transactional outbox of every event and the delivery state of its consumers ([The outbox](/concepts/events-outbox)). |
-| `v_webhook_endpoints` / `v_webhook_deliveries` | The webhook endpoints and their deliveries. |
+| Table | Package | Holds |
+|---|---|---|
+| `v_outbox` / `v_outbox_consumers` / `v_outbox_deliveries` | core | The transactional outbox of every event and the delivery state of its consumers ([The outbox](/concepts/events-outbox)). |
+| `v_idempotency_keys` | core | Receipts of `Idempotency-Key` writes ([Idempotency](/concepts/idempotency)). |
+| `v_blobs` | media | The CAS: one row per `(scope, sha256)` with a `BlobStatus` lifecycle ([ADR-0006](/adr/0006-content-addressed-blobs-gc)). |
+| `v_blob_references` | media | The **pins**: who keeps a blob alive, as `(blob, owner_type, reference_key)`. Garbage collection reads only this table. |
+| `v_drives` | drive | One drive per `(owner_type, owner_id, profile)`; carries the root node id. |
+| `v_nodes` | drive | The **unified tree** — every folder, file, document, shortcut as one row with `parent_id` + a `kind` discriminator ([ADR-0005](/adr/0005-unified-node-tree)). |
+| `v_files` / `v_file_revisions` / `v_file_revision_blobs` | drive | The binary side tables: a file's head + its revision chain + the links to blobs (each link also pins its blob). |
+| `v_scan_*` | drive | Content-scan policy, obligations, requests, evidence and backfill runs. |
+| `v_node_grants` / `v_node_user_states` | drive | The per-node ACL with inheritance + deny-veto, and per-user node state. |
+| `v_node_shares` | drive | Bearer share links — hash-only token storage ([ADR-0013](/adr/0013-two-sharing-channels)). |
+| `v_upload_sessions` / `v_upload_parts` | drive | Resumable upload sessions. |
+| `v_activity` | drive | The append-only activity feed. |
+| `v_drive_change_heads` / `v_drive_changes` | drive | The per-drive change journal. |
+| `v_documents` / `v_document_revisions` / `v_node_comments` | documents | The document aggregate of a `kind=document` node (working state, head, validators), its immutable checkpoints and its comments. |
+| `v_webhook_endpoints` / `v_webhook_deliveries` | webhooks | The webhook endpoints and their deliveries. |
 
 The tree is an **adjacency list**: move/rename is a single `UPDATE` of `parent_id` / `name`
-(no path rewriting). Descent uses recursive CTEs scoped by `storage_id`; recursive descendant
+(no path rewriting). Descent uses recursive CTEs scoped by `drive_id`; recursive descendant
 *aggregation* (`whereHas` / `withCount('descendants')`) is **banned from request paths** (fatal
 on MariaDB) and enforced by an arch test — see [Troubleshooting](/guides/troubleshooting#mariadb-cte).
 
@@ -239,12 +243,12 @@ on MariaDB) and enforced by an arch test — see [Troubleshooting](/guides/troub
 
 Two lanes, evaluated by the Vaulter-owned `AccessResolver` ([ADR-0007](/adr/0007-pluggable-authorization)):
 
-- **`PermissionDriver`** — the host's pluggable, per-panel role lane. It never sees a `Node` and
+- **`PermissionDriver`** — the host's pluggable, per-profile role lane. It never sees a `Node` and
   never deals in magic-string actions; it answers `resolve(Subject, Authorizable, AccessScope)`,
   `override(...)` (super-admin / `Gate::before`), `subjectsFor(Authorizable)` (actor → users +
   roles + teams) and `canCreateInWorkspace(...)`. Shipped lanes: `database` (default,
   standalone), `gate`, `spatie`, `azgard`, and the non-prod `null`. Swap via
-  `config('vaulter.access.permission_driver')`.
+  `config('vaulter-drive.access.permission_driver')`.
 - **`AccessResolver`** — Vaulter-owned, `final`, **not** swappable. It runs the canonical
   algorithm over `v_node_grants` combined with the driver.
 
@@ -284,8 +288,9 @@ The binary plane is a content-addressed store, not `spatie/laravel-medialibrary`
   hash).
 - **`StorageDriver`** (`FlysystemStorageDriver`) — the byte plane over a Flysystem disk, with a
   conditional `put` (`If-None-Match: *` on S3) and `temporaryUrl`.
-- **`BlobStore`** — the race-free lifecycle orchestrator. Liveness is the *existence of an edge*
-  in `v_file_version_blobs`; `ref_count` is a rebuildable cache. GC is two-phase and lock-first
+- **`BlobStore`** — the race-free lifecycle orchestrator. Liveness is the *existence of a pin* in
+  `v_blob_references` (media's own table, written through the `BlobPins` contract by the package that keeps the bytes
+  alive — the drive pins in the same transaction as its revision link); `ref_count` is a rebuildable cache. GC is two-phase and lock-first
   (`PENDING → COMMITTED → TOMBSTONED → DELETED`) with resurrection of a tombstoned blob that a
   concurrent upload re-references.
 
@@ -309,17 +314,16 @@ Every seam a host plugs into, and where it is documented:
 
 | Contract | Bind via | Documented in |
 |---|---|---|
-| `Contracts\Access\PermissionDriver` | `config('vaulter.access.permission_driver')` | [Recipes — custom permission driver](/guides/recipes#permission-driver) |
-| `Contracts\Access\PermissionResolver` (legacy) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
+| `Vaulter\Drive\Contracts\Access\PermissionDriver` | `config('vaulter-drive.access.permission_driver')` | [Recipes — custom permission driver](/guides/recipes#permission-driver) |
 | `Vaulter\Azgard\Contracts\AzgardGuard` | config key `vaulter-azgard.guard` (default: the bridge's adapter) | [Troubleshooting — Azgard morphs](/guides/troubleshooting#azgard-morphs) |
-| `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Recipes — swap to S3](/guides/recipes#s3-disk) |
-| `Contracts\Collaboration\CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport) |
-| `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guides/recipes#format-handler) |
-| `Documents\Contracts\DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` | [ADR-0004](/adr/0004-content-format) |
-| `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
-| `Contracts\Uploads\UploadProtocolHandler` | container tag | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
-| `Contracts\IdStrategy` | `config('vaulter.ids.strategies')` | [ADR-0011](/adr/0011-id-strategy) |
-| `config('vaulter.models.*')` | config | [ADR-0003](/adr/0003-embeddability-data-model) |
+| `Vaulter\Media\Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Recipes — swap to S3](/guides/recipes#s3-disk) |
+| `Vaulter\Documents\Contracts\CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport) |
+| `Vaulter\Drive\Contracts\Handlers\FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guides/recipes#format-handler) |
+| `Vaulter\Documents\Contracts\DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` | [ADR-0004](/adr/0004-content-format) |
+| `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator` | `config('vaulter-drive.sharing.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
+| `Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler` | container tag | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
+| `Vaulter\Contracts\IdStrategy` | `config('vaulter.ids.strategies')` | [ADR-0011](/adr/0011-id-strategy) |
+| `config('vaulter-drive.models.*')`, `config('vaulter-media.models.*')`, `config('vaulter-webhooks.models.*')` | config | [ADR-0003](/adr/0003-embeddability-data-model) |
 | Domain `Events` | event subscriber | hook audit/notifications without Vaulter depending on them |
 
 ## The decision record
@@ -341,9 +345,13 @@ The reasoning behind every choice above lives in the [ADRs](/adr/). The full set
 | [0011](/adr/0011-id-strategy) | `bigint | ulid | uuid7` behind an `IdStrategy` seam (ULID default). | accepted |
 | [0012](/adr/0012-dedup-scope) | Per-tenant dedup by default + scope-qualified storage keys. | accepted |
 | [0013](/adr/0013-two-sharing-channels) | Identity ACL and bearer links evaluated as separate passes. | accepted |
+| [0027](/adr/0027-kernel-boundaries-and-modules) | What the kernel is; the module system (manifest, activation, capabilities, slots). | accepted |
+| [0028](/adr/0028-extension-slots-and-operation-pipeline) | Extension slots and the operation pipeline. | accepted |
+| [0029](/adr/0029-idempotency) | `Idempotency-Key` receipts written in the transaction of the mutation. | accepted |
+| [0030](/adr/0030-package-ownership-and-schema) | One owner per table, model and config root; pins; per-package migrations and test kits. | accepted |
 
-Two supersession chains to keep in mind: **0003 → 0009 / 0011** (embeddability mechanics) and
-**0002 → 0007** (authorization delegation).
+Supersession chains to keep in mind: **0003 → 0009 / 0011** (embeddability mechanics), **0002 → 0007** (authorization
+delegation) and **0019 → 0027 → 0030** (who owns what).
 
 ## Next
 

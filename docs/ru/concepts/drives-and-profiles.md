@@ -6,10 +6,10 @@ outline: deep
 
 # Профили Drive
 
-`Vaulter\Profiles\Profile` задаёт именованную политику Drive для сущности хоста.
-Все профили используют общую схему. Провайдеры задаются в `vaulter.profiles.providers`, профиль по умолчанию — в
-`vaulter.profiles.default`. Сохранённый дискриминатор — `profile_key`.
-`Vaulter::for($owner, 'project')` открывает Drive владельца в указанном профиле.
+`Vaulter\Drive\Profiles\Profile` задаёт именованную политику Drive для сущности хоста.
+Все профили используют общую схему. Провайдеры задаются в `vaulter-drive.profiles.providers`, профиль по умолчанию — в
+`vaulter-drive.profiles.default`. Сохранённый дискриминатор — `profile_key`.
+`Vaulter::drive($owner, 'project')` открывает Drive владельца в указанном профиле.
 
 ## Провайдер профиля
 
@@ -17,8 +17,8 @@ outline: deep
 namespace App\Vaulter\Profiles;
 
 use App\Models\Project;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileProvider;
 
 final class ProjectProfile extends ProfileProvider
 {
@@ -38,7 +38,7 @@ final class ProjectProfile extends ProfileProvider
 
 Профили разрешаются при загрузке приложения. Профиль по умолчанию регистрируется
 первым; дублирующиеся ID профилей отвергаются при boot. Неизвестный ID вызывает
-`Vaulter\Exceptions\Profiles\UnknownProfileException`.
+`Vaulter\Drive\Exceptions\Profiles\UnknownProfileException`.
 
 ## Реестр
 

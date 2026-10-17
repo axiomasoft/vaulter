@@ -16,7 +16,7 @@ php artisan vaulter:make:profile project_drive --host="App\Models\Project"
 A provider is a class that extends `ProfileProvider`; because it is a class and not a closure it
 survives `config:cache`.
 
-<!-- snippet: signature Vaulter\Profiles\ProfileProvider -->
+<!-- snippet: signature Vaulter\Drive\Profiles\ProfileProvider -->
 
 ```php
 abstract class ProfileProvider
@@ -27,5 +27,5 @@ abstract class ProfileProvider
 }
 ```
 
-Register the provider in `vaulter.profiles.providers`. A profile needs no migration: it is a
+Register the provider in `vaulter-drive.profiles.providers`. A profile needs no migration: it is a
 configuration envelope. See [Drives and profiles](/concepts/drives-and-profiles).

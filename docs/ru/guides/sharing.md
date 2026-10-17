@@ -23,10 +23,7 @@ outline: deep
 | **generation** | целое | Растёт при каждой ротации; завершает все визиты, открытые прежним токеном. |
 
 ::: info Два разных канала
-Эта страница описывает ссылки на **узлы** (`v_node_shares`, канал Drive). Легаси-ссылки на
-**документы** (`GET /shares/{token}` без версии, `Vaulter\Models\Documents\DocumentShare`) —
-отдельная, более старая поверхность, выдающая строковый уровень на `Document`. Новый код должен
-использовать ссылки на узлы.
+Эта страница описывает ссылки на **узлы** (`v_node_shares`, канал Drive). Они оцениваются отдельным проходом от грантов по идентичности и никогда не объединяются с ними ([ADR-0013](/adr/0013-two-sharing-channels)).
 :::
 
 ## Роли и аудитории
@@ -96,7 +93,7 @@ drive — точное сравнение ключей арендаторов, �
 | `audience`   | строка   | `anyone`       | `anyone`, `authenticated` или `tenant`. |
 | `scope`      | строка   | `item`         | `item` (только узел) или `subtree` (узел + потомки). |
 | `password`   | строка   | `null`         | 1–255 символов; хешируется до записи в БД (`Hash::make`) — в открытом виде не хранится. |
-| `expires_at` | ISO-8601 | сейчас + 72 ч  | Должно быть `after:now`, в пределах `vaulter.sharing.max_ttl_hours` **и** `maxShareLinkTtlDays` профиля drive. |
+| `expires_at` | ISO-8601 | сейчас + 72 ч  | Должно быть `after:now`, в пределах `vaulter-drive.sharing.max_ttl_hours` **и** `maxShareLinkTtlDays` профиля drive. |
 | `max_uses`   | int      | `null` (∞)     | Число успешных визитов; `min:1`. |
 
 ::: code-group
@@ -165,7 +162,7 @@ async function mint() {
 :::
 
 Ответ на создание несёт сырой `token` и полный `url` (собранный из
-`config('vaulter.sharing.url_base')` + токен). **Все остальные ответы их опускают** — токен не
+`config('vaulter-drive.sharing.url_base')` + токен). **Все остальные ответы их опускают** — токен не
 восстановить из сохранённой строки, поэтому сохраните его сейчас. Ответ не сохраняется кэшем
 (`Cache-Control: no-store`).
 
@@ -336,8 +333,8 @@ Middleware читает пароль **сначала** из заголовка 
 ## Срок жизни и политика drive
 
 Ссылка всегда истекает. Без `expires_at` Action ставит «сейчас плюс
-`vaulter.sharing.default_ttl_hours`»; явное значение не может превышать
-`vaulter.sharing.max_ttl_hours`. Сверх того профиль drive может ограничить все ссылки своих
+`vaulter-drive.sharing.default_ttl_hours`»; явное значение не может превышать
+`vaulter-drive.sharing.max_ttl_hours`. Сверх того профиль drive может ограничить все ссылки своих
 drive:
 
 <!-- snippet: host -->
@@ -374,7 +371,7 @@ $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTt
 скачивания ([Выдача файлов](/ru/reference/rest-api#выдача-файлов)): каждый запрос заново
 разрешает ссылку (поколение токена, отзыв, срок, аудиторию, политику) и заново проверяет
 состояние проверки точной ревизии до первого байта. Скачивания по ссылкам **всегда идут потоком**
-через приложение, даже при `vaulter.downloads.delivery_mode` = `direct_signed`, поэтому
+через приложение, даже при `vaulter-drive.downloads.delivery_mode` = `direct_signed`, поэтому
 отозванная или заменённая ссылка перестаёт отдавать байты со следующего запроса. Уже начатое
 скачивание не прерывается. Заголовки: `Content-Disposition: attachment` с RFC 6266 `filename*`,
 `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox`, `Accept-Ranges: none` и
@@ -423,7 +420,7 @@ $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTt
 ],
 ```
 
-Заменяемая модель `NodeShare` задаётся через `config('vaulter.models.node_share')`. Генератор токенов по умолчанию выпускает 43
+Заменяемая модель `NodeShare` задаётся через `config('vaulter-drive.models.node_share')`. Генератор токенов по умолчанию выпускает 43
 символа `base64url(random_bytes(32))`; замените его, привязав свой `ShareTokenGenerator`, — см.
 [Свой генератор share-токенов](/ru/guides/recipes).
 

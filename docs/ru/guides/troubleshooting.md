@@ -20,7 +20,7 @@ outline: deep
 ```
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
-Fix: set config(vaulter.access.permission_driver) to a real driver (database|gate|spatie|azgard)
+Fix: set config(vaulter-drive.access.permission_driver) to a real driver (database|gate|spatie|azgard)
 or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 ```
 
@@ -48,7 +48,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 - **`database`** — автономный дефолт. Авторизует чисто из строк `v_node_grants`, без зависимости
   от хоста. Берите его, если нужны только гранты на узлы.
 - **`gate` / `spatie` / `azgard`** — мост к вашей существующей системе ролей; заполните
-  соответствующий блок конфига `vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*`.
+  соответствующий блок конфига `vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*`.
 - **Свой** драйвер — см. [рецепт](/ru/guides/recipes#permission-driver).
 
 ::: warning Кэш конфига прячет env, который вы забыли
@@ -186,7 +186,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 ## Порядок миграций и проблемы с префиксом {#migrations}
 
 **Симптом.** `php artisan migrate` падает на внешнем ключе, ссылающемся на `v_nodes` /
-`v_storages` / `v_blobs`, либо таблицы приземляются без префикса `v_`, либо таблицы второго пакета
+`v_drives` / `v_blobs`, либо таблицы приземляются без префикса `v_`, либо таблицы второго пакета
 сталкиваются с таблицами Vaulter.
 
 **Почему и решение.**
@@ -272,7 +272,7 @@ Doctor — read-only, сам он ничего не чинит. См. [`vaulter:
   загрузка в полёте успела воскресить блоб с меткой tombstone. См.
   [рецепт GC блобов](/ru/guides/recipes#blob-gc).
 - **Дрейф.** Если `ref_count` выглядит неправильным — это кэш; запустите
-  `php artisan vaulter:blobs:reconcile`, чтобы перестроить его из edge-таблицы (источника истины).
+  `php artisan vaulter:blobs:reconcile`, чтобы перестроить его из пинов в `v_blob_references` (источника истины).
 
 ## Ошибки валидации панелей при загрузке {#panel-validation}
 
@@ -282,7 +282,7 @@ Doctor — read-only, сам он ничего не чинит. См. [`vaulter:
 
 - **`UnknownProfileException::forName`** — `Vaulter::drive($entity, profile: 'x')` (или маршрут) назвал
   панель, которая не зарегистрирована. Зарегистрируйте FQCN её провайдера в
-  `config('vaulter.profiles.providers')` или используйте панель `default`.
+  `config('vaulter-drive.profiles.providers')` или используйте панель `default`.
 
 ## Пустое «Last updated» в документации {#last-updated}
 

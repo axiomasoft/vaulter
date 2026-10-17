@@ -43,7 +43,7 @@ outline: deep
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-trash -->
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 $drive = Vaulter::drive($project)->actingAs($user);
 
@@ -69,7 +69,7 @@ $drive->trash()->restore($node);        // обратно в живые — ди
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-restore-destination -->
 
 ```php
-use Vaulter\Data\Drive\RestoreOptions;
+use Vaulter\Drive\Data\RestoreOptions;
 
 $drive->trash()->restore($node, new RestoreOptions(destination: $folder));
 ```
@@ -86,7 +86,7 @@ $drive->trash()->restore($node, new RestoreOptions(destination: $folder));
 $drive->trash()->purge($node);          // безвозвратно — диспатчит NodePurged
 ```
 
-Безвозвратное удаление отвязывает каждое ребро версия↔блоб в поддереве (байты
+Безвозвратное удаление удаляет каждую связь ревизия↔блоб в поддереве и снимает её пин (байты
 становятся кандидатами на [GC](/ru/guides/recipes)) и освобождает квоту хранилища.
 
 ::: danger Необратимо
@@ -170,7 +170,7 @@ protected function schedule(Schedule $schedule): void
 :::
 
 ::: warning Чистка освобождает байты, GC их возвращает
-`vaulter:trash:purge` отвязывает рёбра версия↔блоб, но сами CAS-объекты
+`vaulter:trash:purge` удаляет связи ревизия↔блоб и их пины, но сами CAS-объекты
 возвращает отдельный проход **blob GC**. Планируйте оба — см.
 [Blob GC](/ru/guides/recipes).
 :::
@@ -242,7 +242,7 @@ const page = await client.nodes.search(driveId, 'roadmap')
 ::: tip Масштабирование поиска
 Поиск по умолчанию использует скан `LIKE` — этого достаточно для типичных storage. Для больших
 объёмов данных подключите настоящий поисковый индекс (например, Laravel Scout / Meilisearch),
-указав в `config('vaulter.models.node')` модель с поддержкой поиска и переопределив
+указав в `config('vaulter-drive.models.node')` модель с поддержкой поиска и переопределив
 read-репозиторий.
 :::
 

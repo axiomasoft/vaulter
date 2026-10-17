@@ -34,10 +34,10 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 final class MyEditorHandler implements FileHandler
 {
@@ -83,8 +83,7 @@ final class MyEditorHandler implements FileHandler
 }
 ```
 
-Implementing the interface directly is always enough. `Vaulter\Handlers\Handlers\
-AbstractFileHandler` is an *optional* DX base that defaults `extensions()` to `[]` for a
+Implementing the interface directly is always enough. `Vaulter\Drive\Handlers\AbstractFileHandler` is an *optional* DX base that defaults `extensions()` to `[]` for a
 mime-only handler — it saves one method, nothing more. The built-in handlers do not extend it;
 they stay `final` (H.5).
 

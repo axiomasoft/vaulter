@@ -9,7 +9,7 @@ outline: deep
 The **Drive** is Vaulter's core domain: every host entity (a project, a team, a
 user, …) gets a **storage container**, and every storage holds a single
 adjacency tree of **nodes** — folders, files and documents in the same `v_nodes`
-table. You reach all of it through one ergonomic handle: `Vaulter::for($entity)`,
+table. You reach all of it through one ergonomic handle: `Vaulter::drive($entity)`,
 which returns a [`DriveHandle`](/reference/php-api).
 
 ::: tip One handle, one storage
@@ -21,39 +21,39 @@ access checks (authorization is enforced at the [REST boundary](/reference/rest-
 
 ## Storages
 
-A **storage** is an ownable, polymorphic disk container (`v_storages`). It is
+A **storage** is an ownable, polymorphic disk container (`v_drives`). It is
 mounted on a host entity through the `owner_type` / `owner_id` morph, scoped to a
 [panel](/concepts/drives-and-profiles), and carries a root folder node plus the
 used/quota accounting the UI shows.
 
 ### Opening a Drive
 
-`Vaulter::for()` is the primary integration entry point. It **get-or-creates** the
+`Vaulter::drive()` is the primary integration entry point. It **get-or-creates** the
 storage row for the entity (idempotent — a second call returns the same storage),
 auto-provisions the root folder, and hands back a `DriveHandle`:
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 $project = Project::find(1);
 
 // Default panel.
-$drive = Vaulter::for($project);
+$drive = Vaulter::drive($project);
 
 // A named panel (see Storage Panels).
-$drive = Vaulter::for($project, panel: 'attachments');
+$drive = Vaulter::drive($project, profile: 'attachments');
 ```
 
 The owner triple `(owner_type, owner_id, panel)` is the idempotency key, guarded by
 a partial UNIQUE index — concurrent first-touches converge on one row.
 
-::: details Already have a Drive model? Use `forStorage()`
-When the storage row is already resolved (e.g. a route-model-bound `Drive`), skip
-the owner lookup with `Vaulter::forStorage($storage)`. This is the seam the HTTP
-layer uses; the handle's panel mirrors the storage's own `panel`.
+::: details Already have a Drive model? Pass it to `drive()`
+When the storage row is already resolved (e.g. from `findDriveById()` or a listing), skip
+the owner lookup with `Vaulter::drive($storage)`. The handle's profile mirrors the storage's own
+`profile`; a different `$profile` argument is an `InvalidArgumentException`.
 
 ```php
-$drive = Vaulter::forStorage($storage);
+$drive = Vaulter::drive($storage);
 ```
 :::
 
@@ -84,9 +84,9 @@ them. A custom Action that changes the tree should follow the same order
 (`VaulterDatabase::lockTree()` / `lockTreeShared()`, then node rows).
 
 ```php
-$root = $drive->root();          // Vaulter\Models\Drive\Node
-$storage = $drive->model();    // Vaulter\Models\Drive\Drive
-$profile = $drive->profile();  // Vaulter\Profiles\Profile
+$root = $drive->root();          // Vaulter\Drive\Models\Node
+$storage = $drive->model();    // Vaulter\Drive\Models\Drive
+$profile = $drive->profile();  // Vaulter\Drive\Profiles\Profile
 $profileId = $profile->getId(); // string
 ```
 
@@ -105,7 +105,7 @@ $storage->quota_bytes;  // ?int — null means unlimited
 
 ::: info `used_bytes` is maintained by the Drive
 `used_bytes` is advanced/released by the upload and force-delete Actions (a purge
-detaches the version↔blob edges and releases the quota). There is no public
+removes the revision↔blob links, releases their pins and the quota). There is no public
 "set quota" method on the handle — set `quota_bytes` on the storage model directly,
 or via a [Storage Panel](/concepts/drives-and-profiles) default.
 :::
@@ -361,8 +361,8 @@ $drive->restore($node);
 
 ### `forceDelete()`
 
-Permanently delete a **trashed** node and its subtree — this detaches the version↔blob
-edges (the bytes become GC-eligible) and releases the quota. Returns `void`. A live node
+Permanently delete a **trashed** node and its subtree — this removes the revision↔blob
+links and releases their pins (the bytes become GC-eligible) and releases the quota. Returns `void`. A live node
 raises `NodeNotTrashedException`: trash it first. The root is never deleted.
 
 ```php
@@ -405,7 +405,7 @@ search and the trash view, use the [REST endpoints](/reference/rest-api#drive)
 
 ## Drive lifecycle
 
-A drive has a `status` — `Vaulter\Enums\Drive\DriveStatus`: `active`, `archived` or `deleting`
+A drive has a `status` — `Vaulter\Drive\Enums\DriveStatus`: `active`, `archived` or `deleting`
 (a closed enum: a client must treat an unknown value as unavailable). The handle moves it:
 
 ```php
@@ -435,7 +435,7 @@ carries ids only; the row is gone).
 ### Deleting with the owner — `HasDrives`
 
 ```php
-use Vaulter\Concerns\HasDrives;
+use Vaulter\Drive\Concerns\HasDrives;
 
 class Project extends Model
 {
@@ -446,7 +446,7 @@ $project->drive();          // DriveHandle (as Vaulter::drive($project))
 $project->drives;           // the drives mounted on it (morphMany)
 ```
 
-With `vaulter.drives.delete_with_owner = true` (default `false`) deleting the owner deletes its
+With `vaulter-drive.drives.delete_with_owner = true` (default `false`) deleting the owner deletes its
 drives as the system actor `owner-deleted`. A model with `SoftDeletes` reacts to `forceDeleted`,
 not to `deleted`, so a soft-deleted owner keeps its drives.
 

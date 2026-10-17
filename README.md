@@ -23,9 +23,9 @@ npm install @vaulter/vue
 <!-- recipe: packages/drive/tests/Recipes/ReadmeRecipeTest.php#readme-quick-example -->
 
 ```php
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 
 // $project is any Eloquent model; $user is the signed-in user.
 $drive = Vaulter::drive($project)->actingAs($user);
@@ -38,15 +38,19 @@ $file = $drive->files()->upload(UploadSource::fromString('hello', 'hello.txt'), 
 
 | Package | Purpose |
 | --- | --- |
-| `axioma-studio/vaulter-core` | contracts, guards, shared kernel |
-| `axioma-studio/vaulter-drive` | folders, files, uploads (tus/S3) |
+| `axioma-studio/vaulter-core` | the kernel: modules, operations, events and outbox, idempotency, errors |
+| `axioma-studio/vaulter-media` | content-addressed storage and the blob pins |
+| `axioma-studio/vaulter-drive` | folders, files, uploads (tus/S3), access, sharing, activity; the `Vaulter` entry point |
 | `axioma-studio/vaulter-documents` | editor, versions, comments, collaboration (opt-in) |
-| `axioma-studio/vaulter-media` | content-addressed storage |
+| `axioma-studio/vaulter-webhooks` | outbound webhooks (opt-in module) |
 | `axioma-studio/vaulter-azgard` | AzGuard permission resolver |
-| `@vaulter/vue` | TypeScript / Vue 3 client and components |
 | `axioma-studio/vaulter-filament` | Filament admin (optional, Laravel 13) |
+| `axioma-studio/vaulter` | metapackage: core, media, drive and documents |
+| `@vaulter/vue` | TypeScript / Vue 3 client and components |
 
-The optional collaboration hub lives in `hocuspocus-server/`.
+Each package owns its tables, models and config file (`vaulter-<package>`); webhooks, azgard and filament are
+installed separately. See [ADR-0030](docs/adr/0030-package-ownership-and-schema.md). The optional collaboration hub
+lives in `hocuspocus-server/`.
 
 ## Documentation
 
@@ -61,11 +65,13 @@ The optional collaboration hub lives in `hocuspocus-server/`.
 ```
 vaulter/
 ├── packages/
-│   ├── core/                  # axioma-studio/vaulter-core — the shared kernel (Vaulter\)
-│   ├── drive/                 # axioma-studio/vaulter-drive — folders/files, uploads, storage manager
+│   ├── core/                  # axioma-studio/vaulter-core — the kernel (Vaulter\)
+│   ├── media/                 # axioma-studio/vaulter-media — content-addressed (CAS) file/blob layer (Vaulter\Media\)
+│   ├── drive/                 # axioma-studio/vaulter-drive — folders/files, uploads, access, sharing (Vaulter\Drive\)
 │   ├── documents/             # axioma-studio/vaulter-documents — TipTap/Yjs editing, versions, comments
-│   ├── media/                 # axioma-studio/vaulter-media — content-addressed (CAS) file/blob layer
-│   ├── azgard/                # axioma-studio/vaulter-azgard — AzGuard PermissionResolver adapter
+│   ├── webhooks/              # axioma-studio/vaulter-webhooks — outbound webhooks (Vaulter\Webhooks\)
+│   ├── azgard/                # axioma-studio/vaulter-azgard — AzGuard permission driver
+│   ├── vaulter/               # axioma-studio/vaulter — metapackage
 │   ├── vue/                   # @vaulter/vue — TypeScript Vue 3 client, composables & components
 │   └── filament/              # axioma-studio/vaulter-filament — Filament 5 admin (Vaulter\Filament\)
 ├── hocuspocus-server/    # optional Node Hocuspocus collaboration hub (+ Docker)

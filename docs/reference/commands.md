@@ -14,6 +14,8 @@ themselves — see [Scheduling](#scheduling).
 | Command | Purpose |
 |---|---|
 | `vaulter:install` | Publish the config of every installed package, print the host settings to apply, optionally migrate |
+| `vaulter:modules` | List the installed modules, their activation, schema and contributions |
+| `vaulter:module:uninstall` | Plan (dry run) or perform the removal of a module's schema |
 | `vaulter:doctor` | Read-only diagnosis of the host's Vaulter setup; `--production` raises part of the warnings to errors |
 | `vaulter:uploads:sweep` | Abort and clean up stale resumable-upload sessions |
 | `vaulter:scan:reconcile` | Recover scan intents, backfill discovery and committed-upload cleanup (bounded) |
@@ -22,7 +24,7 @@ themselves — see [Scheduling](#scheduling).
 | `vaulter:drives:recount` | Report (or correct) drive size and node-count drift |
 | `vaulter:make:profile` | Scaffold a storage-panel provider class |
 | `vaulter:blobs:gc` | Two-phase, race-safe blob garbage collection |
-| `vaulter:blobs:reconcile` | Rebuild blob `ref_count` and report dangling rows |
+| `vaulter:blobs:reconcile` | Rebuild blob `ref_count` from the pins and report dangling rows |
 | `vaulter:trash:purge` | Permanently delete trashed nodes past retention |
 | `vaulter:revisions:prune` | Delete non-current file revisions past the profile retention policy |
 | `vaulter:relay` | Relay the outbox to its consumers: register, reconcile, deliver, hold |
@@ -33,7 +35,7 @@ themselves — see [Scheduling](#scheduling).
 | `vaulter:webhooks:redeliver` | Send finished webhook deliveries again with the same `webhook-id` |
 | `vaulter:events:reference` | Regenerate (or `--check`) the event catalogue table in the reference docs |
 | `vaulter:errors:reference` | Regenerate (or `--check`) the problem-code reference in the docs |
-| `vaulter:changes:prune` | Delete drive change-journal entries past `changes.retention_days` |
+| `vaulter:changes:prune` | Delete drive change-journal entries past `vaulter-drive.changes.retention_days` |
 | `vaulter:changes:reset` | Expire every change cursor of a drive, forcing its clients to resynchronize |
 
 ---
@@ -42,7 +44,7 @@ themselves — see [Scheduling](#scheduling).
 
 Publishes the config file of every installed Vaulter package (`vaulter-config`,
 `vaulter-media-config`, `vaulter-drive-config`, `vaulter-documents-config`,
-`vaulter-filament-config`, `vaulter-azgard-config`), prints the host settings it will **not**
+`vaulter-webhooks-config`, `vaulter-filament-config`, `vaulter-azgard-config`), prints the host settings it will **not**
 edit, and runs the migrations when asked. Safe to run again: an already published file is
 skipped (`--force` overwrites it) and nothing in `config/*.php` or `.env` is ever rewritten.
 
@@ -53,16 +55,16 @@ php artisan vaulter:install
 | Option | Meaning |
 |---|---|
 | `--middleware=` | Auth middleware for the authenticated route stack (default `auth:sanctum`) |
-| `--driver=` | `database` (default), `gate`, `spatie` or a key of `access.permission_drivers` |
 | `--migrate` | Run `php artisan migrate` without asking |
 | `--force` | Overwrite config files that are already published |
 
-Interactively the command asks for the middleware and the driver, whether to migrate (default
-no) and whether to star the repo; without a terminal it uses the options or the defaults and
-does not migrate unless `--migrate` is given. It prints the lines to apply
-(`VAULTER_PERMISSION_DRIVER=…` and the `routes.middleware.authenticated` entry) and ends with the
+Interactively the command asks for the middleware, whether to migrate (default no) and whether
+to star the repo; without a terminal it uses the options or the defaults and does not migrate
+unless `--migrate` is given. It prints the line to apply (the `routes.middleware.authenticated`
+entry) and ends with the
 [`vaulter:doctor`](#vaulter-doctor) report. The install is not a gate: it exits `0` whatever the
-doctor finds.
+doctor finds. The permission driver is the drive's concept: choose it with
+`vaulter-drive.access.permission_driver` (env `VAULTER_PERMISSION_DRIVER`); `vaulter:doctor` checks it.
 
 ## `vaulter:modules`
 
@@ -83,12 +85,28 @@ printed and no module is active. It is registered whatever the graph. See
 php artisan vaulter:module:uninstall <module> [--force] [--purge]
 ```
 
-A dry run by default: plans the removal of the module's schema — its migrations and tables,
-the installed modules that require it, the foreign keys other owners hold on its tables — and
-prints why it would be refused. Exit `1` when anything refuses. Until the uninstall of the owner
-migrations lands (P4), `--force` (roll the owner's migrations back) and `--purge` (delete its
-rows and its own media pins) refuse with "the uninstall of the owner migrations is not available yet (P4)". Disabling
-a module never uninstalls it.
+A dry run by default: plans the removal of the module's schema — its migrations and tables, the rows
+they hold, the installed modules that require it, the foreign keys other owners hold on its tables, and the
+media pins it keeps (or that are kept on its data) — and prints why it would be refused. Disabling a module
+never uninstalls it.
+
+| Option | Meaning |
+|---|---|
+| `--force` | Roll back the migrations of the module's own schema paths, newest first. Refused while its tables hold rows or it keeps pins, while an installed module requires it, while another owner holds a foreign key on its tables, and for `core` |
+| `--purge` | With `--force`: first delete the module's rows and release its **own** media pins, then roll back. Without `--force` it is a usage error |
+
+| Exit | Meaning |
+|---|---|
+| `0` | Planned (dry run, nothing refuses) or done |
+| `1` | Refused or failed; nothing changed |
+| `2` | Usage: an unknown module, `--purge` without `--force` |
+| `3` | Applied partially: on a driver whose DDL commits (MySQL) the purge or some rollbacks are done and a later one failed — repeat `--force` |
+
+The command never drops, deletes or releases anything of another owner. No lock keeps writers out, so disable the
+module and stop its traffic first; what the dry run read is read again inside the purge transaction (SQLite and
+PostgreSQL run the purge and the rollbacks as one transaction) and before each rollback, and a row or pin that has
+appeared stops the removal. Media bytes of a purged module stay in storage until the next garbage collection. See
+[Modules](/concepts/modules#uninstalling-a-module).
 
 ## `vaulter:doctor`
 
@@ -134,9 +152,8 @@ The JSON document is described by `packages/core/resources/schemas/doctor-v1.sch
 | `core.schema.key_types` | Key columns match `ids.strategy` / `ids.host_keys` (PostgreSQL, MySQL, MariaDB) | error → error |
 | `core.schema.integrity` | One root per drive; node kind ⇄ file/document row; head revision belongs to its aggregate (sampled) | warning → warning |
 | `core.config.valid` | Every installed package's boot validation, listed together | error → error |
-| `core.config.deprecated_keys` | Deprecated config keys that are still set | warning → warning |
-| `core.routes.auth` | `routes.middleware.authenticated` has an auth middleware whose guard exists | error → error |
-| `core.access.driver` | The permission driver is real and resolves; a test-only driver is refused in production | error → error |
+| `core.routes.auth` | `routes.middleware.authenticated` has an auth middleware whose guard exists. Contributed by `vaulter-drive` | error → error |
+| `core.access.driver` | The permission driver (`vaulter-drive.access.permission_driver`) is real and resolves; a test-only driver is refused in production. Contributed by `vaulter-drive` | error → error |
 | `core.tenancy` | With tenancy on, the resolver class resolves (its value needs a request) | error → error |
 | `core.queue` | The default queue is not `sync`/`null` | warning → warning |
 | `core.scheduler` | `vaulter.schedule.enabled` or `vaulter:*` tasks on the scheduler | warning → warning |
@@ -145,8 +162,9 @@ The JSON document is described by `packages/core/resources/schemas/doctor-v1.sch
 | `core.outbox.leases` | No outbox delivery holds a relay lease expired for more than 5 minutes | warning → error |
 | `core.outbox.consumer_gaps` | No detached consumer has an unacknowledged gap (error); paused consumers are reported (warning) | error → error |
 | `core.outbox.settle_window` | `outbox.settle_window_seconds` outlasts the database's transaction limits | warning → warning |
-| `core.webhooks.deliveries` | Endpoints auto-disabled for failing and deliveries that used up their retries, counted (`vaulter:webhooks:redeliver`) | warning → warning |
+| `core.webhooks.deliveries` | Endpoints auto-disabled for failing and deliveries that used up their retries, counted (`vaulter:webhooks:redeliver`). Contributed by `vaulter-webhooks` | warning → warning |
 | `media.disk.probe` | Write, read and delete a test object on every disk (only with `--probe-storage` or `--production`) | error → error |
+| `media.blobs.pins` | Pins per owner type; pins of an owner module that is switched off or not installed keep their blobs from garbage collection until that owner purges them | warning → warning |
 | `media.dedup.scope` | Tenant-wide deduplication across profiles on different disks | warning → warning |
 | `drive.uploads.tmp` | The temp directory is writable and larger than `max_file_size` | error → error |
 | `drive.intl` | `ext-intl` is loaded (NFC names) | warning → warning |
@@ -176,9 +194,9 @@ existing ones to avoid double runs). A host still has to run `schedule:run` ever
 |---|---|---|
 | `vaulter.schedule.outbox_relay` | `vaulter:relay` | `everyMinute` |
 | `vaulter.schedule.outbox_prune` | `vaulter:outbox:prune` | `hourly` |
-| `vaulter.schedule.webhooks_retry` | `vaulter:webhooks:retry` (needs `vaulter.modules.webhooks`) | `everyMinute` |
-| `vaulter.schedule.webhooks_prune` | `vaulter:webhooks:prune` (needs `vaulter.modules.webhooks`) | `dailyAt:03:10` |
-| `vaulter.schedule.changes_prune` | `vaulter:changes:prune` (needs `features.changes`) | `dailyAt:03:20` |
+| `vaulter-webhooks.schedule.webhooks_retry` | `vaulter:webhooks:retry` (needs `vaulter.modules.webhooks`) | `everyMinute` |
+| `vaulter-webhooks.schedule.webhooks_prune` | `vaulter:webhooks:prune` (needs `vaulter.modules.webhooks`) | `dailyAt:03:10` |
+| `vaulter-drive.schedule.changes_prune` | `vaulter:changes:prune` (needs `vaulter-drive.features.changes`) | `dailyAt:03:20` |
 | `vaulter-drive.schedule.uploads_sweep` | `vaulter:uploads:sweep` | `hourlyAt:15` |
 | `vaulter-drive.schedule.trash_purge` | `vaulter:trash:purge` | `dailyAt:03:30` |
 | `vaulter-drive.schedule.drives_purge` | `vaulter:drives:purge` | `hourlyAt:25` |
@@ -200,7 +218,7 @@ See [Guide → Installation](/getting-started/installation).
 Scaffold a consumer-owned `ProfileProvider` class in `app/Vaulter/Profiles` from a
 stub. It does **not** touch the published config and does **not** generate migrations —
 a panel is a zero-migration config-envelope over the shared `v_*` schema by default.
-Registering the provider FQCN in `config('vaulter.profiles.providers')` is a deliberate next step
+Registering the provider FQCN in `config('vaulter-drive.profiles.providers')` is a deliberate next step
 the command prints.
 
 ```
@@ -246,9 +264,9 @@ See [Recipes → Blob GC](/guides/recipes).
 
 ## `vaulter:blobs:reconcile`
 
-Rebuild blob `ref_count` from the edge counts in `v_file_version_blobs` and report
-dangling rows. The edge — not `ref_count` — is the liveness truth; this command
-repairs the reconciled cache.
+Rebuild blob `ref_count` from the pins in `v_blob_references` (media's own table) and report
+dangling rows. The pins — not `ref_count` — are the liveness truth; this command
+repairs the reconciled cache. It reads no table of another package.
 
 ```
 vaulter:blobs:reconcile
@@ -262,7 +280,7 @@ php artisan vaulter:blobs:reconcile
 
 Permanently purge trashed nodes past their retention window. Finds the trash **roots**
 whose `trashed_at` is older than `now() - retention_days` and force-deletes each
-subtree, so the version↔blob edges detach (the bytes become GC-eligible) and the quota
+subtree, so the revision↔blob links go and their pins are released (the bytes become GC-eligible) and the quota
 is released. Only roots (`trash_root_id = id`) are eligible: purging a root removes its whole subtree,
 including descendants trashed earlier on their own, so nothing is purged twice.
 
@@ -310,7 +328,7 @@ vaulter:drives:recount
 Apply each drive profile's `RevisionRetentionPolicy` (PLAN2.D48): delete the non-current revisions
 of every file — trashed files included — past `maxNoncurrentRevisions` or older than
 `maxNoncurrentAgeDays`, never the head, a pinned revision or one superseded less than
-`minNoncurrentAgeDays` ago. Each deletion detaches the blob edges (the bytes become GC-eligible)
+`minNoncurrentAgeDays` ago. Each deletion unpins the blob (the bytes become GC-eligible)
 and releases the quota. A drive that fails is logged and the others still run.
 
 ```
@@ -400,7 +418,7 @@ vaulter:outbox:prune
 ## `vaulter:webhooks:retry`
 
 Re-dispatch webhook deliveries whose backoff window has elapsed, and pending
-deliveries whose first job was lost (still unclaimed `webhooks.retry_claim_seconds`
+deliveries whose first job was lost (still unclaimed `vaulter-webhooks.retry_claim_seconds`
 after they became due). Gated by `vaulter.modules.webhooks`.
 
 ```
@@ -449,7 +467,7 @@ Delete TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention
 window). A `pending`/`failed` delivery is never touched, however old. The outbox has its
 own retention, `vaulter:outbox:prune`. Gated by
 `vaulter.modules.webhooks` (the command exists only while the webhooks module is active). The window comes from
-`config('vaulter.webhooks.retention_days')` (default 30) unless `--days` overrides it.
+`config('vaulter-webhooks.retention_days')` (default 30) unless `--days` overrides it.
 Pruned rows cannot be restored or replayed.
 
 ```
@@ -473,7 +491,7 @@ Send finished deliveries again: one by id, or every delivery of a status (defaul
 filtered by endpoint and age. Each goes through `RedeliverWebhookAction`: the same row returns to
 `pending` with `attempts = 0`, so the receiver gets the **same `webhook-id`**; a delivery whose
 endpoint is inactive, or that is still `pending`/`failed`, is reported and skipped. Only rows still
-inside `webhooks.retention_days` exist to redeliver. Exit code is non-zero when nothing could be
+inside `vaulter-webhooks.retention_days` exist to redeliver. Exit code is non-zero when nothing could be
 sent. Gated by `vaulter.modules.webhooks`. See [Webhooks → Redelivery](/guides/webhooks#redelivery).
 
 ```
@@ -497,7 +515,7 @@ Delete [change-journal](/concepts/events) entries older than the retention windo
 in batches of 1000. Each batch holds the drive's journal head `FOR UPDATE` and raises
 `pruned_through` in the same transaction as its `DELETE`, so a client whose cursor is behind the
 pruned entries gets `410 cursor_expired` instead of a silent gap; mutations of the drive wait for
-at most one batch. The window comes from `config('vaulter.changes.retention_days')` (default 30)
+at most one batch. The window comes from `config('vaulter-drive.changes.retention_days')` (default 30)
 unless `--days` overrides it. Schedule it daily.
 
 ```
@@ -518,7 +536,7 @@ php artisan vaulter:changes:prune --days=7 --drive=42
 Start a new epoch of one drive's change journal: every cursor issued for the drive expires
 (`410 cursor_expired`) and its clients resynchronize with a full listing. Use it after restoring
 the database from a backup, or when the journal no longer matches the drive (for example after
-`features.changes` was switched off for a while).
+`vaulter-drive.features.changes` was switched off for a while).
 
 ```bash
 php artisan vaulter:changes:reset 42
@@ -548,9 +566,9 @@ Schedule::command('vaulter:changes:prune')->daily();
 
 ## See also
 
-- [Configuration reference](/reference/config) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `vaulter.modules.webhooks`
+- [Configuration reference](/reference/config) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `vaulter-webhooks.*`, `vaulter.modules.webhooks`
 - [Events reference](/reference/events) — what the relay fans out
-- [Facade & Manager](/reference/php-api) — the runtime API
+- [Facade](/reference/php-api) — the runtime API
 
 ## All commands (generated)
 
@@ -558,7 +576,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 | Command | Description | Synopsis |
 |---|---|---|
 | `vaulter:blobs:gc` | Garbage-collect unreferenced Vaulter blobs (two-phase, race-safe — H.3) | `[--grace [GRACE]] [--pending]` |
-| `vaulter:blobs:reconcile` | Rebuild blob ref_count from edge counts and report dangling rows; optionally disk-walk for orphan objects (H.3) | `[--orphans] [--disk [DISK]] [--orphan-grace [ORPHAN-GRACE]] [--prune]` |
+| `vaulter:blobs:reconcile` | Rebuild blob ref_count from the pins and report dangling rows; optionally disk-walk for orphan objects (H.3) | `[--orphans] [--disk [DISK]] [--orphan-grace [ORPHAN-GRACE]] [--prune]` |
 | `vaulter:changes:prune` | Delete drive change-journal entries past the retention window. | `[--days [DAYS]] [--drive [DRIVE]]` |
 | `vaulter:changes:reset` | Expire every change-journal cursor of a drive, forcing its clients to resynchronize. | `<drive>` |
 | `vaulter:commands:reference` | Generate the command table in the reference docs. | `[--check] [--path [PATH]]` |
@@ -569,7 +587,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:errors:reference` | Generate the problem-code reference in the docs. | `[--check] [--path [PATH]]` |
 | `vaulter:events:reference` | Generate the event catalogue table in the reference docs. | `[--check] [--path [PATH]]` |
 | `vaulter:idempotency:prune` | Delete expired idempotency receipts. | `[--limit [LIMIT]]` |
-| `vaulter:install` | Publish Vaulter config, show the host settings to apply, optionally migrate and run the doctor | `[--middleware [MIDDLEWARE]] [--driver [DRIVER]] [--migrate] [--force]` |
+| `vaulter:install` | Publish Vaulter config, show the host settings to apply, optionally migrate and run the doctor | `[--middleware [MIDDLEWARE]] [--migrate] [--force]` |
 | `vaulter:make:document-type` | Scaffold a Vaulter document type | `[--force] [--] <name>` |
 | `vaulter:make:exporter` | Scaffold a Vaulter document exporter | `[--force] [--] <name>` |
 | `vaulter:make:file-handler` | Scaffold a Vaulter file handler with a contract test | `[--force] [--] <name>` |

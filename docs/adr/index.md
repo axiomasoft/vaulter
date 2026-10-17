@@ -30,3 +30,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0027 — Kernel boundaries and the module system](/adr/0027-kernel-boundaries-and-modules) — _accepted; supersedes ADR-0019_
 - [ADR-0028 — Extension slots and the operation pipeline](/adr/0028-extension-slots-and-operation-pipeline) — _accepted; builds on ADR-0027_
 - [ADR-0029 — Idempotency](/adr/0029-idempotency) — _accepted; builds on ADR-0028_
+- [ADR-0030 — Package ownership of schema, models and configuration](/adr/0030-package-ownership-and-schema) — _accepted; builds on ADR-0027_

@@ -5,16 +5,17 @@ v1 panel authorization (resources and assignment scopes) into Vaulter's
 composite ACL — so a host running AzGuard authorizes Vaulter documents/folders with its
 existing roles and permissions.
 
-Vaulter core carries **no** dependency on AzGuard. This package owns the
+Neither the Vaulter kernel nor the drive carries a dependency on AzGuard. This package owns the
 `Vaulter\Azgard\AzgardPermissionDriver`, the narrow
-`Vaulter\Azgard\Contracts\AzgardGuard` seam and its real adapter. The core
-`AccessResolver` reaches the bridge through the shared `PermissionDriver` contract;
-core remains installable with this package absent.
+`Vaulter\Azgard\Contracts\AzgardGuard` seam and its real adapter. The drive's
+`AccessResolver` reaches the bridge through the `Vaulter\Drive\Contracts\Access\PermissionDriver` contract; the bridge
+requires `axioma-studio/vaulter-drive` (and, through it, core and media), and the drive stays installable with this
+package absent.
 
 ## How it works
 
 ```
-Vaulter AccessResolver ─▶ AzgardPermissionDriver ─▶ AzgardGuard (seam)
+Drive AccessResolver ─▶ AzgardPermissionDriver ─▶ AzgardGuard (seam)
                                                           │
                                     AzgardGuardAdapter ◀──┘  (this package)
                                                           │
@@ -47,7 +48,7 @@ Vaulter AccessResolver ─▶ AzgardPermissionDriver ─▶ AzgardGuard (seam)
 composer require axioma-studio/vaulter-azgard
 ```
 
-Select the driver (`vaulter.access.permission_driver`):
+Select the driver (`vaulter-drive.access.permission_driver`):
 
 ```dotenv
 VAULTER_PERMISSION_DRIVER=azgard
