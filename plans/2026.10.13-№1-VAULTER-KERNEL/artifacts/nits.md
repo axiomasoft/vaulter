@@ -67,3 +67,6 @@ P4.17 | core/ModuleUninstallCommand | MySQL: DDL коммитится, purge+rol
 P4.18 | core/tests/Modules ModuleUninstallTest, CleanInstallMatrixTest | общий хелпер подмены container/facade root вместо двух копий …In()
 P4.18 | core/tests/Modules/Fixtures/Apps/AppSet.php | docblock providers: string вместо class-string (azgard/filament статически неизвестны)
 P4.18 | CleanInstallMatrixTest | на pgsql/mysql wipe _test БД внутри DatabaseMigrations — проверить в PLAN4 (не запускалось)
+RC4 | core/ModuleUninstallCommand | TOCTOU сужен, не закрыт; для строгости на pgsql — LOCK TABLE внутри транзакции (PLAN4)
+RC4 | core/KeyColumnTypesTest | ожидание 39 колонок не проверялось на pgsql/mysql (на sqlite пропуск)
+RC4 | exit-код 3 (PARTIAL) | не в Cli::EXIT_CONSTANTS/ledger exit_codes — только запись в changes.json

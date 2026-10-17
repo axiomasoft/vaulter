@@ -13,6 +13,7 @@ return [
         'Events/WebhookAutoDisableCommitTest.php',
         'Feature/PruneWebhooksTest.php',
         'Outbox/WebhookFanoutConsumerTest.php',
+        'Schema/WebhooksKeyColumnsTest.php',
         'Webhooks/ConcurrentDeliveryTest.php',
         'Webhooks/OutboxTransactionTest.php',
         'Webhooks/SigningSecretEncryptionTest.php',

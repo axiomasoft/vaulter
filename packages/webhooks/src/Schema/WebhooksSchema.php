@@ -30,7 +30,11 @@ final class WebhooksSchema implements ModuleSchema
     /** @return list<KeyColumnExpectation> the key columns of the module's tables and the kind each must have: `HK` host key, `REF` entity id, `STRING` of a length */
     public function keyColumns(): array
     {
-        return [];
+        return [
+            new KeyColumnExpectation('webhook_endpoints', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('webhook_endpoints', 'drive_id', 'REF'),
+            new KeyColumnExpectation('webhook_deliveries', 'endpoint_id', 'REF'),
+        ];
     }
 
     public function create(string $entity): void
