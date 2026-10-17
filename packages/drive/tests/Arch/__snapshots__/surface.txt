@@ -1388,6 +1388,15 @@ Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException api since 1.0 fi
   public function problemCode(): string
   public function problemDetails(): array
 
+Vaulter\Drive\Facades\Vaulter api since 1.0 final class extends Illuminate\Support\Facades\Facade
+  @method static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
+  @method static DriveHandle|null findDrive(Model $owner, ?string $profile = null)
+  @method static FileHandlerRegistry handlers()
+  @method static PermissionDriverManager permissions()
+  @method static ProfileRegistry profiles()
+  protected static function getFacadeAccessor(): string
+  public static function withoutTenancy(Closure $callback): mixed
+
 Vaulter\Drive\Handlers\AbstractFileHandler spi:implement since 1.0 abstract class implements Vaulter\Drive\Contracts\Handlers\FileHandler
   public function extensions(): array
 
@@ -1612,6 +1621,13 @@ Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor api since 1.0 final readonl
   public array $props
   public function __construct(string $key, array $props = [])
   public function toArray(): array
+
+Vaulter\Drive\Vaulter api since 1.0 final readonly class
+  public function drive(Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): Vaulter\Drive\Contracts\DriveHandle
+  public function findDrive(Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?Vaulter\Drive\Contracts\DriveHandle
+  public function handlers(): Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
+  public function permissions(): Vaulter\Drive\Access\PermissionDriverManager
+  public function profiles(): Vaulter\Drive\Profiles\ProfileRegistry
 
 Vaulter\Drive\VaulterDriveServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
   public function configurePackage(Spatie\LaravelPackageTools\Package $package): void

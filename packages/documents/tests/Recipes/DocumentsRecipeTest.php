@@ -8,8 +8,8 @@ use Vaulter\Drive\Data\CreateFolderOptions;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 // The fragments below are copied into the guides byte for byte; the guides' own `use` lines are
 // the imports of this file.

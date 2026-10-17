@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.12",
   "title": "Точка входа Vaulter\\Drive\\Vaulter, фасад и алиас Vaulter в drive (D10)",
-  "status": "todo",
+  "status": "done",
   "summary": "`Vaulter\\VaulterManager` заменяется `Vaulter\\Drive\\Vaulter` (final, #[Api]: drive(), findDrive(), profiles(), handlers(), permissions()), `Vaulter\\Facades\\Vaulter` — `Vaulter\\Drive\\Facades\\Vaulter` (+withoutTenancy делегирует core Tenancy::without); Laravel-алиас `Vaulter` объявляет drive composer; старые FQCN удаляются без class_alias; тесты/доки/Filament/load/e2e переведены.",
   "why": "architecture#entry-point, D10. Риск: `VaulterManager::drive()` capability-резолв DriveHandleFactory (P3.5) — переносится как есть; документация публичного API (FacadeMethodDocblockTest) и surface-манифесты меняются.",
   "scope": {
@@ -272,6 +272,48 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T02:30:16Z",
+    "finished_at": "2026-10-17T03:27:03Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "Vaulter + Facades\\Vaulter + алиас → drive; withoutTenancy через Tenancy::without; Fast-набор зелёный",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T03:27:03Z"
 }

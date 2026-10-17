@@ -27,11 +27,11 @@ use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 // D30 (variant A): COPY needs View and Copy on EVERY active descendant, not only on the root.
 

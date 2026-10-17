@@ -13,12 +13,12 @@ use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

@@ -21,7 +21,7 @@ use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 #[Internal]
 final class PurgeTrashCommand extends Command
@@ -42,7 +42,7 @@ final class PurgeTrashCommand extends Command
 
     public function handle(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics): int
     {
-        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($nodes, $store, $purge, $metrics));
+        return Tenancy::without(fn (): int => $this->runMaintenance($nodes, $store, $purge, $metrics));
     }
 
     private function runMaintenance(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics): int

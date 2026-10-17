@@ -17,7 +17,7 @@ use Vaulter\Drive\Jobs\PruneFileRevisionsJob;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Apply the revision retention policy of each drive's profile, drive by
@@ -40,7 +40,7 @@ final class PruneRevisionsCommand extends Command
         $totals = ['candidates' => 0, 'deleted' => 0, 'skipped' => 0, 'freed_bytes' => 0];
         $failed = false;
 
-        $ids = app(VaulterManager::class)->withoutTenancy(fn (): array => $config->model('drive')::query()
+        $ids = Tenancy::without(fn (): array => $config->model('drive')::query()
             ->when($only !== [], static fn ($query) => $query->whereKey($only))
             ->orderBy('id')->pluck('id')->all());
         foreach ($ids as $id) {

@@ -17,10 +17,10 @@ use Vaulter\Attributes\Api;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Events\EventTypeContract;
-use Vaulter\Facades\Vaulter;
 
 /**
  * Test helpers for an application that embeds Vaulter. Everything goes through the

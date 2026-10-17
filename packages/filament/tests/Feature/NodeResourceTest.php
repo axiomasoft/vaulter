@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 

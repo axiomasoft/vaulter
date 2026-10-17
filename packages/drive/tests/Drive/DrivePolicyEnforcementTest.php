@@ -20,6 +20,7 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException;
 use Vaulter\Drive\Exceptions\Policy\TreeDepthLimitExceededException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Naming\PermissiveNamePolicy;
 use Vaulter\Drive\Operations\DriveContext;
@@ -27,7 +28,6 @@ use Vaulter\Drive\Profiles\DrivePolicyBuilder;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 /** P4-I25 and P4-I17: the drive policy and name policy hold on every write path. */
 function policyDrive(?callable $configure = null): DriveHandle

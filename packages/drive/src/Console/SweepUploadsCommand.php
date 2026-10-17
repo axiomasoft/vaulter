@@ -15,7 +15,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Sweep stale resumable-upload sessions. It scans the OPEN
@@ -45,7 +45,7 @@ final class SweepUploadsCommand extends Command
         MetricsRecorder $metrics,
         TraceRecorder $tracer,
     ): int {
-        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($sessions, $manager, $metrics, $tracer));
+        return Tenancy::without(fn (): int => $this->runMaintenance($sessions, $manager, $metrics, $tracer));
     }
 
     private function runMaintenance(

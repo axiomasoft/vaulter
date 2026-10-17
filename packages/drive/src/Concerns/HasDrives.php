@@ -13,7 +13,8 @@ use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Models\Drive;
-use Vaulter\VaulterManager;
+use Vaulter\Drive\Vaulter;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Mounts drives on a host model. With vaulter-drive.drives.delete_with_owner
@@ -35,7 +36,7 @@ trait HasDrives
                 return;
             }
             // The owner is gone, so its drives are deleted outside any tenant scope.
-            self::vaulter(VaulterManager::class)->withoutTenancy(static function () use ($owner, $config): void {
+            Tenancy::without(static function () use ($owner, $config): void {
                 $factory = self::vaulter(DriveHandleFactory::class);
                 $drives = $config->model('drive')::query()->where('owner_type', $owner->getMorphClass())
                     ->where('owner_id', $owner->getKey())->where('status', '!=', DriveStatus::Deleting->value)->get();
@@ -48,7 +49,7 @@ trait HasDrives
 
     public function drive(?string $profile = null): DriveHandle
     {
-        return self::vaulter(VaulterManager::class)->drive($this, $profile);
+        return self::vaulter(Vaulter::class)->drive($this, $profile);
     }
 
     /** @return MorphMany<Drive, $this> */

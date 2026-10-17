@@ -11,12 +11,12 @@ use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Events\Nodes\NodePurged;
 use Vaulter\Drive\Exceptions\Nodes\TreeTraversalIncompleteException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Profiles\DrivePolicyBuilder;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 beforeEach(fn () => Storage::fake('local'));
 

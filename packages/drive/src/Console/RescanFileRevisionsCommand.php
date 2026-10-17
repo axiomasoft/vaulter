@@ -28,8 +28,8 @@ use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Tenancy\Tenancy;
 use Vaulter\Tenancy\TenancyBoundary;
-use Vaulter\VaulterManager;
 
 #[Internal]
 final class RescanFileRevisionsCommand extends Command
@@ -109,7 +109,7 @@ final class RescanFileRevisionsCommand extends Command
             if ($scope['all'] && !$this->withinMaintenanceScope) {
                 $this->withinMaintenanceScope = true;
                 try {
-                    $result = app(VaulterManager::class)->withoutTenancy(fn (): int => $this->handle($database, $policies, $activate, $requestWork, $evidence, $snapshots, $publisher));
+                    $result = Tenancy::without(fn (): int => $this->handle($database, $policies, $activate, $requestWork, $evidence, $snapshots, $publisher));
 
                     return $result;
                 } finally {

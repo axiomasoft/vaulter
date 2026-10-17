@@ -495,7 +495,7 @@ arch('core (and all Vaulter code) never depends on the extracted vaulter-media p
 
 /**
  * Scans packages/core/src for a `Vaulter\<root>\` reference OUTSIDE comments/docblocks
- * (the ActivityRecorder/OutboxWriter/VaulterManager docblocks legitimately name
+ * (the ActivityRecorder/OutboxWriter docblocks legitimately name
  * extracted-package classes in prose explaining the seam split). This is a file scan
  * (NOT `expect('Vaulter')->not->toUse(...)`) so it enforces core⊥<package> WITHOUT an
  * ->ignoring exclusion: each satellite is a require-dev sibling autoloaded into the
@@ -562,7 +562,6 @@ test('core source references the extracted vaulter-drive package only from the f
         'Configuration/VaulterConfig.php',
         'Console/InstallCommand.php',
         'Events/DomainEvent.php',
-        'Facades/Vaulter.php',
         'Http/Problems/CoreProblemCodes.php',
         'Http/Resources/PageResponse.php',
         'Http/Support/DownloadHeaders.php',
@@ -571,7 +570,6 @@ test('core source references the extracted vaulter-drive package only from the f
         'Tenancy/TenancyBoundary.php',
         'Testing/Events/EventConformance.php',
         'Testing/InteractsWithVaulter.php',
-        'VaulterManager.php',
         'Webhooks/WebhookEndpointWrites.php',
     ];
     $found = array_map(static fn (string $path): string => substr((string) realpath($path), strlen($src) + 1), coreReferencesTo('Drive'));

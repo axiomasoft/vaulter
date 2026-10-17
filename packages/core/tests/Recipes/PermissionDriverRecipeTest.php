@@ -7,8 +7,8 @@ use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
 use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\NullPermissionDriver;
-use Vaulter\Facades\Vaulter;
 
 // The fragments below are copied into the guides byte for byte.
 it('selects the permission driver by its config key (permission drivers guide)', function (): void {

@@ -629,3 +629,17 @@ Vaulter\Drive\Events\Uploads\UploadInitiated
 
 Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests
   assertScanLifecycleContract(callable $configureHost, \Illuminate\Contracts\Auth\Authenticatable $actor): void
+
+FACADE Vaulter\Drive\Facades\Vaulter
+  static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
+  static DriveHandle|null findDrive(Model $owner, ?string $profile = null)
+  static FileHandlerRegistry handlers()
+  static PermissionDriverManager permissions()
+  static ProfileRegistry profiles()
+
+Vaulter\Drive\Vaulter
+  drive(\Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): \Vaulter\Drive\Contracts\DriveHandle
+  findDrive(\Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?\Vaulter\Drive\Contracts\DriveHandle
+  handlers(): \Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
+  permissions(): \Vaulter\Drive\Access\PermissionDriverManager
+  profiles(): \Vaulter\Drive\Profiles\ProfileRegistry

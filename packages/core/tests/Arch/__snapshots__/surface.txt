@@ -410,15 +410,6 @@ Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException api since 1.0 final cla
 Vaulter\Exceptions\VaulterException api since 1.0 class extends RuntimeException
   protected static function docs(string $anchor): string
 
-Vaulter\Facades\Vaulter api since 1.0 final class extends Illuminate\Support\Facades\Facade
-  @method static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
-  @method static DriveHandle|null findDrive(Model $owner, ?string $profile = null)
-  @method static FileHandlerRegistry handlers()
-  @method static PermissionDriverManager permissions()
-  @method static ProfileRegistry profiles()
-  @method static mixed withoutTenancy(Closure $callback)
-  protected static function getFacadeAccessor(): string
-
 Vaulter\Http\Controllers\Controller api since 1.0 abstract class uses Illuminate\Foundation\Auth\Access\AuthorizesRequests
   protected function actorId(Illuminate\Http\Request $request): int|null|string
   protected function scalarId(Illuminate\Http\Request $request, string $key): int|string
@@ -798,14 +789,6 @@ Vaulter\ValueObjects\Operations\TenantRef api since 1.0 final readonly class
   public function isNone(): bool
   public static function none(): self
   public static function of(mixed $key): self
-
-Vaulter\VaulterManager api since 1.0 final readonly class
-  public function drive(Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): Vaulter\Drive\Contracts\DriveHandle
-  public function findDrive(Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?Vaulter\Drive\Contracts\DriveHandle
-  public function handlers(): Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
-  public function permissions(): Vaulter\Drive\Access\PermissionDriverManager
-  public function profiles(): Vaulter\Drive\Profiles\ProfileRegistry
-  public function withoutTenancy(Closure $callback): mixed
 
 Vaulter\VaulterServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
   public function configurePackage(Spatie\LaravelPackageTools\Package $package): void

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 /**
  * The node-set bounding (§2.7 / M2c hardening): a subtree share reaches the shared

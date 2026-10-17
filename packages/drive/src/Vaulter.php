@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Vaulter;
+namespace Vaulter\Drive;
 
-use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
@@ -17,11 +16,11 @@ use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
+use Vaulter\Kernel;
 use Vaulter\Modules\MissingExtensionException;
-use Vaulter\Tenancy\Tenancy;
 
 #[Api]
-final readonly class VaulterManager
+final readonly class Vaulter
 {
     #[Internal]
     public function __construct(private Container $container) {}
@@ -65,15 +64,6 @@ final readonly class VaulterManager
     public function permissions(): PermissionDriverManager
     {
         return $this->container->make(PermissionDriverManager::class);
-    }
-
-    /** @template T
-     * @param  Closure(): T $callback
-     * @return T
-     */
-    public function withoutTenancy(Closure $callback): mixed
-    {
-        return Tenancy::without($callback);
     }
 
     private function driveFactory(): DriveHandleFactory

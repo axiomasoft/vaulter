@@ -16,6 +16,7 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Vaulter;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
@@ -24,7 +25,6 @@ use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;
-use Vaulter\VaulterManager;
 
 /**
  * The one way a controller of the versioned API reaches the operations: the drive
@@ -35,7 +35,7 @@ use Vaulter\VaulterManager;
 final readonly class HttpOperationContextFactory
 {
     public function __construct(
-        private VaulterManager $vaulter,
+        private Vaulter $vaulter,
         private HttpResourceResolver $resolver,
         private AccessResolver $access,
     ) {}

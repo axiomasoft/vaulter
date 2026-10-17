@@ -29,6 +29,7 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
@@ -36,7 +37,6 @@ use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
-use Vaulter\Facades\Vaulter;
 
 /** Injects a failure after real CAS edge detach, so transaction rollback is observable. */
 final readonly class LifecycleBoundaryFailingFile implements NodeContentLifecycle

@@ -17,10 +17,10 @@ use Vaulter\Drive\Events\Nodes\NodePurged;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Testing\Fixtures\TestUser;
 

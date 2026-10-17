@@ -9,11 +9,11 @@ use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Drives\DriveCreated;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Support\CanonicalJson;
 

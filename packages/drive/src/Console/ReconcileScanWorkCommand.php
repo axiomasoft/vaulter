@@ -15,7 +15,7 @@ use Vaulter\Drive\Content\UploadCleanupReconciler;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 #[Internal]
 final class ReconcileScanWorkCommand extends Command
@@ -38,7 +38,7 @@ final class ReconcileScanWorkCommand extends Command
             if ($scope['all'] && !$this->withinMaintenanceScope) {
                 $this->withinMaintenanceScope = true;
                 try {
-                    $result = app(VaulterManager::class)->withoutTenancy(fn (): int => $this->handle($work, $backfill, $cleanup, $config));
+                    $result = Tenancy::without(fn (): int => $this->handle($work, $backfill, $cleanup, $config));
 
                     return $result;
                 } finally {

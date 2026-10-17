@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 /*
  * Один владелец, две панели — два РАЗНЫХ storage (§2.1). Панель регистрируется в

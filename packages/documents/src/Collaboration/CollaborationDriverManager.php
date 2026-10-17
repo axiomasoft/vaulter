@@ -15,7 +15,7 @@ use Vaulter\Kernel;
 /**
  * Resolves the active node-collaboration transport: the configuration key ('vaulter-documents.collaboration.driver')
  * is validated against the CollaborationDriverType, and the transport is the capability the documents module provides
- * (Hocuspocus until collaboration becomes a module of its own, P5). Distinct from VaulterManager::driver(), which resolves the
+ * (Hocuspocus until collaboration becomes a module of its own, P5). Distinct from Vaulter::driver(), which resolves the
  * LEGACY Document-bound collaboration driver — this is the node-tree lane.
  */
 #[Internal]

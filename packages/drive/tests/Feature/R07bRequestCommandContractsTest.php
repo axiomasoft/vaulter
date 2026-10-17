@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Http\Requests\Files\UploadFileRequest;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Models\Node;
@@ -16,7 +17,6 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Testing\Fixtures\TestUser;
 

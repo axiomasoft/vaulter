@@ -15,12 +15,12 @@ use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
 use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Testing\Fixtures\TestUser;
 

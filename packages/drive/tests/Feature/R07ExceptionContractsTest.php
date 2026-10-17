@@ -10,8 +10,8 @@ use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Problems\ProblemRenderer;
 use Vaulter\Testing\Fixtures\TestUser;
 

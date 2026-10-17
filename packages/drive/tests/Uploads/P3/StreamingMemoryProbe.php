@@ -8,9 +8,9 @@ use GuzzleHttp\Psr7\Stream;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\TextUI\Configuration\Builder;
 use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Schema\ModuleSchemas;
 
 /** Deterministic nonseekable source; never materializes the whole payload. */

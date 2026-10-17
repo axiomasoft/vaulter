@@ -7,11 +7,11 @@ use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Drive\Exceptions\Profiles\UnknownProfileException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 /**
  * Vaulter::drive($entity) get-or-creates the storage idempotently and provisions a

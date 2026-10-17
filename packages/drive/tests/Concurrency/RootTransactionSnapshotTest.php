@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Support\NodeName;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 // P3.10: the operation's root transaction opens before the attempt reads anything, so on MySQL
 // (REPEATABLE READ) a read made before the tree lock must not freeze the sibling check taken after it.

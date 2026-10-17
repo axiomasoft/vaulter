@@ -10,10 +10,10 @@ use Vaulter\Database\WriteScope;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Testing\Fixtures\Panels\FakeProject;
 use Vaulter\Testing\Fixtures\TestUser;
 

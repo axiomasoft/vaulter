@@ -27,12 +27,12 @@ use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Tenancy\ShareTenantContext;
+use Vaulter\Drive\Vaulter;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
 
 /**
  * The drive slices, declared by DriveModule: profiles, scan policy,
@@ -72,8 +72,8 @@ final class DriveSliceRegistrar implements ModuleBindings
             ),
         );
 
-        $app->singleton(VaulterManager::class);
-        $app->alias(VaulterManager::class, 'vaulter');
+        $app->singleton(Vaulter::class);
+        $app->alias(Vaulter::class, 'vaulter');
 
         $app->bind(ShareTokenGenerator::class, static function (Application $app): ShareTokenGenerator {
             $generator = $app->make($app->make(SharingConfig::class)->tokenGenerator());

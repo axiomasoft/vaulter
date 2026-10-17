@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Contracts\Handlers\FileHandler;
 use Vaulter\Drive\Enums\Handlers\Capability;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Handlers\FileHandlerRegistry;
 use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
-use Vaulter\Facades\Vaulter;
 
 /*
  * VLT-CANON P0.5 (L4/L5): capabilities are an OPEN axis set — a handler that declares

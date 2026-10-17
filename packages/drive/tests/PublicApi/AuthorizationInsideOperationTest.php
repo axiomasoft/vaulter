@@ -11,9 +11,9 @@ use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\ValueObjects\Access\Actor;
 
 // R3 of the operation pipeline (P3.10, ADR-0028): a write authorizes exactly once, inside the

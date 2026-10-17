@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Tests\Concurrency\RaceFixtures;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 /*

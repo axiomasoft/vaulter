@@ -24,7 +24,7 @@ use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * One resumable step of purging a drive that is being deleted: open uploads
@@ -42,7 +42,6 @@ final readonly class PurgeDriveStepAction
     public function __construct(
         private VaulterConfig $config,
         private VaulterDatabase $database,
-        private VaulterManager $manager,
         private PurgeNodeAction $purge,
         private UploadSessionManager $uploads,
         private DriveConfig $driveConfig,
@@ -56,7 +55,7 @@ final readonly class PurgeDriveStepAction
     /** @return bool true when the drive is gone (or was never being deleted), false while children remain */
     public function execute(int|string $driveId): bool
     {
-        return $this->manager->withoutTenancy(function () use ($driveId): bool {
+        return Tenancy::without(function () use ($driveId): bool {
             $drive = $this->config->model('drive')::query()->whereKey($driveId)->first();
             if (!$drive instanceof Drive || $drive->status !== DriveStatus::Deleting) {
                 return true;

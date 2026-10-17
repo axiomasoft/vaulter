@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\RateLimiter;
 use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Drive\Contracts\Handlers\NodePresenter;
 use Vaulter\Drive\Providers\DriveSliceRegistrar;
-use Vaulter\VaulterManager;
+use Vaulter\Drive\Vaulter;
 
 // The drive slices located in core (D39) are wired by DriveSliceRegistrar, which DriveModule declares.
 
 it('registers the manager and file presentation seams', function (): void {
     (new DriveSliceRegistrar)->register($this->app);
 
-    expect(app(VaulterManager::class))->toBe(app('vaulter'))
+    expect(app(Vaulter::class))->toBe(app('vaulter'))
         ->and(app(FileHandlerRegistry::class))->toBeInstanceOf(FileHandlerRegistry::class)
         ->and(app(NodePresenter::class))->toBeInstanceOf(NodePresenter::class);
 });

@@ -20,8 +20,8 @@ use Vaulter\Drive\Queries\SharedWithActorQuery;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileDenyDriver;
+use Vaulter\Drive\Vaulter;
 use Vaulter\ValueObjects\Access\Actor;
-use Vaulter\VaulterManager;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -111,7 +111,7 @@ it('uses at most five Vaulter queries for 50 visible nodes and gives each one it
     // pinned by AbilitiesManyTest), not from a lookup per node.
     $request = Request::create('/');
     $request->setUserResolver(fn () => $this->actor);
-    $handle = app(VaulterManager::class)->drive($this->storage)->actingAs($this->actor);
+    $handle = app(Vaulter::class)->drive($this->storage)->actingAs($this->actor);
     $resources = NodeResource::many($snapshots, $handle->nodes()->abilitiesMany($snapshots));
     expect($resources)->toHaveCount(50);
     foreach ($resources as $resource) {

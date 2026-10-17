@@ -19,7 +19,9 @@ it('keeps the committed surface manifest of core equal to the attributes of its 
     $manifest = Surface::manifests(Surface::read($repo))['core'];
 
     expect($repo->read(Surface::snapshotPath('core')))->toBe($manifest)
-        ->and($manifest)->toContain('Vaulter\Facades\Vaulter api since 1.0')
+        ->and($manifest)->toContain('Vaulter\Kernel api since 1.0')
+        ->and($manifest)->not->toContain('\Facades\Vaulter api')
+        ->and($manifest)->not->toContain('\VaulterManager api')
         ->and($manifest)->toContain('Vaulter\Attributes\Api api since 1.0');
 });
 

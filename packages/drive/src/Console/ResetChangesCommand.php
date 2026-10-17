@@ -11,7 +11,7 @@ use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Start a new epoch of a drive's change journal: every cursor issued for
@@ -28,7 +28,7 @@ final class ResetChangesCommand extends Command
 
     protected $description = 'Expire every change-journal cursor of a drive, forcing its clients to resynchronize.';
 
-    public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, VaulterConfig $config, VaulterManager $manager): int
+    public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, VaulterConfig $config): int
     {
         $argument = $this->argument('drive');
         $label = is_scalar($argument) ? (string) $argument : '';
@@ -36,7 +36,7 @@ final class ResetChangesCommand extends Command
         // A server engine rejects a non-numeric id for an integer key (SQLSTATE 22P02) instead of finding nothing.
         $wellFormed = (new $model)->getKeyType() !== 'int' || ctype_digit($label);
         $drive = $wellFormed
-            ? $manager->withoutTenancy(static fn () => $model::query()->whereKey($argument)->first())
+            ? Tenancy::without(static fn () => $model::query()->whereKey($argument)->first())
             : null;
         $driveId = Identity::key($drive?->getKey());
         if ($drive === null || $driveId === null) {

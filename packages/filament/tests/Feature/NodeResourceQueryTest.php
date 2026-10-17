@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;

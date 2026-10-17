@@ -3739,18 +3739,20 @@
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Providers\\HttpRegistrarTest::__pest_evaluable_it_preserves_host_rate_limiters_when_booted_again",
       "replacement": [
-        "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_preserves_host_rate_limiters_when_booted_again"
+        "P\\Tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_preserves_host_rate_limiters_when_booted_again"
       ],
-      "reason": "P3.3: the public-share and upload limiters are drive slices located in core, booted by DriveSliceRegistrar (DriveModule)",
+      "new_suite": "drive",
+      "reason": "P3.3: the public-share and upload limiters are drive slices located in core, booted by DriveSliceRegistrar (DriveModule) — then moved to drive with DriveSliceRegistrar (P4.12)",
       "decision": "D39"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_registers_the_manager_and_file_presentation_seams",
       "replacement": [
-        "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_registers_the_manager_and_file_presentation_seams"
+        "P\\Tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_registers_the_manager_and_file_presentation_seams"
       ],
-      "reason": "P3.3: the Vaulter manager and the file handler/presentation seams are drive slices located in core, registered by DriveSliceRegistrar (DriveModule)",
+      "new_suite": "drive",
+      "reason": "P3.3: the Vaulter manager and the file handler/presentation seams are drive slices located in core, registered by DriveSliceRegistrar (DriveModule) — then moved to drive with DriveSliceRegistrar (P4.12)",
       "decision": "D39"
     },
     {
@@ -9709,6 +9711,39 @@
       "new": "P\\Tests\\Drive\\HasDrivesTest::__pest_evaluable_it_deletes_the_drives_of_a_deleted_owner_with_vaulter_drive_drives_delete__with__owner",
       "reason": "P4.11: the title names the config key under its new root vaulter-drive",
       "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Facades_never_uses_the_Testing_namespaces",
+      "new": "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Facades_never_uses_the_Testing_namespaces",
+      "new_suite": "drive",
+      "reason": "the facade moved to drive: the live check follows the namespace (P4.12)",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_VaulterManager_never_uses_the_Testing_namespaces",
+      "new": "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Vaulter_never_uses_the_Testing_namespaces",
+      "new_suite": "drive",
+      "reason": "the entry point moved to drive as Vaulter\\Drive\\Vaulter: the live check follows the class (P4.12)",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Support\\FacadeMethodDocblockTest::__pest_evaluable_it_lists_every_public_VaulterManager_method_in_the_facade__method_docblock__F_P2_1_01",
+      "new": "P\\Tests\\Providers\\FacadeMethodDocblockTest::__pest_evaluable_it_lists_every_public_Vaulter_method_in_the_facade__method_docblock__F_P2_1_01",
+      "new_suite": "drive",
+      "reason": "the guard moved with the facade to drive; withoutTenancy left the entry point (5 methods) and is a real static method of the facade (P4.12)",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Feature\\ServiceProviderTest::__pest_evaluable_it_binds_the_manager_as_a_singleton",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Feature\\ServiceProviderTest::__pest_evaluable_it_binds_the_Vaulter_entry_point_as_a_singleton"
+      ],
+      "reason": "renamed: the manager is the Vaulter\\Drive\\Vaulter entry point (P4.12)",
+      "decision": "D10"
     }
   ],
   "additions": {
@@ -9939,7 +9974,7 @@
       ]
     },
     "core": {
-      "count": 475,
+      "count": 473,
       "names": [
         "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_extracted_vaulter_drive_package_only_from_the_files_that_move_to_it__P2__5___D1__P4_8_",
         "P\\Packages\\core\\tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_core_activity_Operations_depend_on_the_drive_package_only_through_the_moved_access_types",
@@ -10032,6 +10067,7 @@
         "P\\Packages\\core\\tests\\Feature\\PruneWebhooksTest::__pest_evaluable_it_14__leaves_the_outbox_to_vaulter_outbox_prune",
         "P\\Packages\\core\\tests\\Feature\\PruneWebhooksTest::__pest_evaluable_it_7__at___days_0_prunes_only_terminal_deliveries_and_leaves_every_in_flight__pending_failed__one_intact",
         "P\\Packages\\core\\tests\\Feature\\PruneWebhooksTest::__pest_evaluable_it_8____dry_run_reports_the_would_prune_count_and_deletes_nothing",
+        "P\\Packages\\core\\tests\\Feature\\ServiceProviderTest::__pest_evaluable_it_binds_the_Vaulter_entry_point_as_a_singleton",
         "P\\Packages\\core\\tests\\Feature\\VaulterManagerExporterHandlerSeamTest::__pest_evaluable_it_drive___fails_loud_with_an_install_hint_when_no_active_module_provides_the_drive_factory__F_P3_5_01",
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('bigint')\"",
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('string')\"",
@@ -10376,8 +10412,6 @@
         "P\\Packages\\core\\tests\\Outbox\\WebhookFanoutConsumerTest::__pest_evaluable_it_sends_the_same_occurrence_id_on_the_original_delivery_and_a_retry",
         "P\\Packages\\core\\tests\\Outbox\\WebhookFanoutConsumerTest::__pest_evaluable_it_skips_endpoints_not_subscribed_to_the_type_and_inactive_ones",
         "P\\Packages\\core\\tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_registers_the_kernel_config__database_and_observability_seams",
-        "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_preserves_host_rate_limiters_when_booted_again",
-        "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_registers_the_manager_and_file_presentation_seams",
         "P\\Packages\\core\\tests\\PublicApi\\OptionsTest::__pest_evaluable_it_rejects_AddRevision_outside_upload_at_constructor_and_fluent_boundaries\"('Vaulter\\Drive\\Data\\CopyOptions')\"",
         "P\\Packages\\core\\tests\\PublicApi\\OptionsTest::__pest_evaluable_it_rejects_AddRevision_outside_upload_at_constructor_and_fluent_boundaries\"('Vaulter\\Drive\\Data\\CreateFolderOptions')\"",
         "P\\Packages\\core\\tests\\PublicApi\\OptionsTest::__pest_evaluable_it_rejects_AddRevision_outside_upload_at_constructor_and_fluent_boundaries\"('Vaulter\\Drive\\Data\\MoveOptions')\"",
@@ -10403,7 +10437,6 @@
         "P\\Packages\\core\\tests\\Support\\DomainExceptionStatusTest::__pest_evaluable_it_renders_the_documented_domain_code_and_HTTP_status\"dataset \"broken extension\"\"",
         "P\\Packages\\core\\tests\\Support\\DomainExceptionStatusTest::__pest_evaluable_it_renders_the_documented_domain_code_and_HTTP_status\"dataset \"invalid module graph\"\"",
         "P\\Packages\\core\\tests\\Support\\DomainExceptionStatusTest::__pest_evaluable_it_renders_the_documented_domain_code_and_HTTP_status\"dataset \"module not ready\"\"",
-        "P\\Packages\\core\\tests\\Tenancy\\TenancyWithoutTest::__pest_evaluable_it_is_what_VaulterManager__withoutTenancy_delegates_to",
         "P\\Packages\\core\\tests\\Tenancy\\TenancyWithoutTest::__pest_evaluable_it_nests_and_restores_the_previous_state_when_the_callback_throws",
         "P\\Packages\\core\\tests\\Tenancy\\TenancyWithoutTest::__pest_evaluable_it_runs_the_callback_inside_the_tenancy_bypass_and_returns_its_value",
         "P\\Packages\\core\\tests\\Unit\\IdentityFitsKeyTest::__pest_evaluable_it_lets_only_a_key_the_column_can_hold_reach_a_query",
@@ -10514,7 +10547,7 @@
       ]
     },
     "drive": {
-      "count": 78,
+      "count": 83,
       "names": [
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_gives_the_host_subclass_configured_in_vaulter_drive_models_the_same_alias",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_is_not_renamed_by_a_host_morph_map_and_is_not_refused_by_enforceMorphMap",
@@ -10565,7 +10598,6 @@
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_releases_every_revision_pin_of_a_purged_file_and_lets_the_collector_take_the_blobs",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_removes_the_edges_and_pins_of_a_deleted_revision_only",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_writes_the_edge_and_its_pin_together_on_upload__keyed_by_the_edge_without_the_blob",
-        "P\\Tests\\Feature\\HandlerBaselineTest::__pest_evaluable_it_resolves_the_preview_baseline_even_when_a_stale_published_config_empties_vaulter_drive_handlers__P0_4_D10",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_declares_the_drive_codes_located_in_core_under_the_drive_module__D39_",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_says_whether_a_drive_refusal_may_be_retried",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_answers_another_body_under_a_used_key_with_idempotency__key__reused",
@@ -10589,6 +10621,12 @@
         "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_serves_the_upload_protocols_by_key__the_one_shot_direct_upload_through_the_tus_handler",
         "P\\Tests\\Profiles\\ConfigCacheSafetyTest::__pest_evaluable_it_конфиг_vaulter_drive_сериализуем__config_cache_не_сломается_",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_preserves_singleton_service_lifetimes_in_a_fresh_container",
+        "P\\Tests\\Providers\\VaulterEntryPointTest::__pest_evaluable_it_binds_the_entry_point_as_a_singleton_under_the_vaulter_name",
+        "P\\Tests\\Providers\\VaulterEntryPointTest::__pest_evaluable_it_declares_the_Vaulter_alias_in_the_drive_composer_manifest_only",
+        "P\\Tests\\Providers\\VaulterEntryPointTest::__pest_evaluable_it_has_no_class_left_under_the_old_core_entry_point_names",
+        "P\\Tests\\Providers\\VaulterEntryPointTest::__pest_evaluable_it_keeps_withoutTenancy_out_of_the_drive_entry_point__it_is_the_core_Tenancy__without",
+        "P\\Tests\\Providers\\VaulterEntryPointTest::__pest_evaluable_it_resolves_the_entry_point_through_the_facade_accessor",
+        "P\\Tests\\Providers\\VaulterEntryPointTest::__pest_evaluable_it_runs_the_facade_withoutTenancy_callback_inside_the_core_tenancy_bypass",
         "P\\Tests\\PublicApi\\AuthorizationInsideOperationTest::__pest_evaluable_it_authorizes_a_folder_creation_inside_the_operation_transaction",
         "P\\Tests\\PublicApi\\AuthorizationInsideOperationTest::__pest_evaluable_it_authorizes_a_rename_once__inside_the_operation_transaction",
         "P\\Tests\\PublicApi\\AuthorizationInsideOperationTest::__pest_evaluable_it_authorizes_an_upload_again_inside_the_operation_transaction__after_the_content_is_staged",

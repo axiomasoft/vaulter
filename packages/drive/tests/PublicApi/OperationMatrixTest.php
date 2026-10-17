@@ -25,12 +25,12 @@ use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Facades\Vaulter;
 
 final class OperationMatrixNoCreateDriver extends DatabasePermissionDriver
 {

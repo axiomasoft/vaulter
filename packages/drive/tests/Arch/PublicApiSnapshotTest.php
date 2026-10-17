@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Facades\Vaulter as VaulterFacade;
 use Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests;
+use Vaulter\Drive\Vaulter;
 
 /**
  * VLT-REL P2.2 — executable freeze of vaulter-drive's public composer surface for the `0.1.0`
@@ -264,6 +266,10 @@ test('vaulter-drive public API surface matches the frozen golden (VLT-REL P2.2)'
 
     // The host-facing scan lifecycle suite.
     $blocks[] = vaulterSnapshotInterface(ScanLifecycleContractTests::class);
+
+    // D10: the typed entry point and its facade (the `Vaulter` alias) are drive's.
+    $blocks[] = vaulterSnapshotFacade(VaulterFacade::class);
+    $blocks[] = vaulterSnapshotInterface(Vaulter::class);
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');
 });

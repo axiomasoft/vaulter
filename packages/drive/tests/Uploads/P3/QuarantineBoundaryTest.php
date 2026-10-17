@@ -9,13 +9,13 @@ use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Sharing\ShareResolver;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 

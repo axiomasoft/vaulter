@@ -67,10 +67,7 @@
         "laravel": {
             "providers": [
                 "Vaulter\\VaulterServiceProvider"
-            ],
-            "aliases": {
-                "Vaulter": "Vaulter\\Facades\\Vaulter"
-            }
+            ]
         },
         "branch-alias": {
             "dev-main": "0.1.x-dev"

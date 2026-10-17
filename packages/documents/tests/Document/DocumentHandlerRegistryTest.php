@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Contracts\Handlers\FileHandler;
 use Vaulter\Drive\Enums\Handlers\Capability;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Drive\Handlers\FileHandlerRegistry;
 use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
-use Vaulter\Facades\Vaulter;
 
 /**
  * The format-extensibility registry (§4.5 / §7 / H.5): mime → extension → capability

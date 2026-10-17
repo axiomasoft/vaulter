@@ -13,9 +13,9 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Vaulter;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Testing\Concerns\FreshApplication;
-use Vaulter\VaulterManager;
 
 /*
  * The exporter registry takes a class name (resolved through the container) or a
@@ -52,7 +52,7 @@ it('the exporter registry still accepts a ready instance', function (): void {
  * always resolves.
  */
 it('drive() fails loud with an install hint when no active module provides the drive factory, F-P3.5-01', function (): void {
-    $manager = new VaulterManager(FreshApplication::boot(['vaulter.modules' => ['drive' => false]]));
+    $manager = new Vaulter(FreshApplication::boot(['vaulter.modules' => ['drive' => false]]));
 
     expect(fn () => $manager->drive(new Node, 'default'))
         ->toThrow(MissingPackageException::class, 'axioma-studio/vaulter-drive');
@@ -70,7 +70,7 @@ it('drive() fails loud with an install hint when no active module provides the d
 it('handlers() resolves the core-owned registry even when vaulter-documents is absent, P0.4/D10', function (): void {
     expect(app()->bound(FileHandlerRegistry::class))->toBeTrue();
 
-    $registry = app(VaulterManager::class)->handlers();
+    $registry = app(Vaulter::class)->handlers();
 
     expect($registry)->toBeInstanceOf(FileHandlerRegistry::class);
 
@@ -80,7 +80,7 @@ it('handlers() resolves the core-owned registry even when vaulter-documents is a
 });
 
 it('registerHandler() registers a custom handler with NO package installed, P0.4/D10', function (): void {
-    $manager = app(VaulterManager::class);
+    $manager = app(Vaulter::class);
 
     $manager->handlers()->register(SeamTestCadHandler::class);
 

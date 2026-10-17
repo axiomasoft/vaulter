@@ -4408,8 +4408,19 @@
             "reason": "тестовый трейт ядра создаёт доменные объекты: тестовые хелперы доменов переезжают к владельцам (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Facades\\Vaulter",
+            "target": "Vaulter\\Drive\\Facades\\Vaulter",
             "view": "target"
+        },
+        {
+            "category": "reverse-edge",
+            "count": 1,
+            "file": "packages/core/src/Testing/InteractsWithVaulter.php",
+            "kind": "use",
+            "reason": "код ядра (тестовый трейт) ссылается на фасад drive, перенесённый в P4.12; трейт переезжает к владельцу",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Drive\\Facades\\Vaulter",
+            "view": "current"
         },
         {
             "category": "reverse-edge",
@@ -4474,8 +4485,19 @@
             "reason": "тестовый трейт ядра создаёт доменные объекты: тестовые хелперы доменов переезжают к владельцам (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Testing\\InteractsWithVaulter::vaulterActingAs",
-            "target": "Vaulter\\Facades\\Vaulter",
+            "target": "Vaulter\\Drive\\Facades\\Vaulter",
             "view": "target"
+        },
+        {
+            "category": "reverse-edge",
+            "count": 1,
+            "file": "packages/core/src/Testing/InteractsWithVaulter.php",
+            "kind": "name",
+            "reason": "код ядра (тестовый трейт) ссылается на фасад drive, перенесённый в P4.12; трейт переезжает к владельцу",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Testing\\InteractsWithVaulter::vaulterActingAs",
+            "target": "Vaulter\\Drive\\Facades\\Vaulter",
+            "view": "current"
         },
         {
             "category": "reverse-edge",
@@ -4485,8 +4507,19 @@
             "reason": "тестовый трейт ядра создаёт доменные объекты: тестовые хелперы доменов переезжают к владельцам (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Testing\\InteractsWithVaulter::vaulterEvents",
-            "target": "Vaulter\\Facades\\Vaulter",
+            "target": "Vaulter\\Drive\\Facades\\Vaulter",
             "view": "target"
+        },
+        {
+            "category": "reverse-edge",
+            "count": 1,
+            "file": "packages/core/src/Testing/InteractsWithVaulter.php",
+            "kind": "name",
+            "reason": "код ядра (тестовый трейт) ссылается на фасад drive, перенесённый в P4.12; трейт переезжает к владельцу",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Testing\\InteractsWithVaulter::vaulterEvents",
+            "target": "Vaulter\\Drive\\Facades\\Vaulter",
+            "view": "current"
         },
         {
             "category": "reverse-edge",
@@ -4518,8 +4551,19 @@
             "reason": "тестовый трейт ядра создаёт доменные объекты: тестовые хелперы доменов переезжают к владельцам (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Testing\\InteractsWithVaulter::vaulterNodeVisibleTo",
-            "target": "Vaulter\\Facades\\Vaulter",
+            "target": "Vaulter\\Drive\\Facades\\Vaulter",
             "view": "target"
+        },
+        {
+            "category": "reverse-edge",
+            "count": 2,
+            "file": "packages/core/src/Testing/InteractsWithVaulter.php",
+            "kind": "name",
+            "reason": "код ядра (тестовый трейт) ссылается на фасад drive, перенесённый в P4.12; трейт переезжает к владельцу",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Testing\\InteractsWithVaulter::vaulterNodeVisibleTo",
+            "target": "Vaulter\\Drive\\Facades\\Vaulter",
+            "view": "current"
         },
         {
             "category": "reverse-edge",
@@ -17537,17 +17581,6 @@
         {
             "category": "reverse-edge",
             "count": 1,
-            "file": "packages/core/src/Facades/Vaulter.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
             "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
             "kind": "use",
             "reason": "каталог problem-кодов ядра перечисляет коды доменных исключений: коды регистрируются владельцем через контракт ядра (цель: drive)",
@@ -17565,28 +17598,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes",
             "target": "Vaulter\\Drive\\Exceptions\\Access\\PermissionDeniedException",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 2,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "name",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\VaulterManager::permissions",
-            "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
             "view": "current"
         },
         {
@@ -18076,39 +18087,6 @@
         {
             "category": "reverse-edge",
             "count": 1,
-            "file": "packages/core/src/Facades/Vaulter.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Contracts\\DriveHandle",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/Facades/Vaulter.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Contracts\\Handlers\\FileHandlerRegistry",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/Facades/Vaulter.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Profiles\\ProfileRegistry",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
             "file": "packages/core/src/Http/Resources/PageResponse.php",
             "kind": "use",
             "reason": "страничный ответ ядра ссылается на доменный тип drive: нужен контракт курсора страницы (цель: drive)",
@@ -18489,127 +18467,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Testing\\InteractsWithVaulter::vaulterNodeVisibleTo",
             "target": "Vaulter\\Drive\\Models\\Node",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Contracts\\DriveHandle",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Contracts\\DriveHandleFactory",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Contracts\\Handlers\\FileHandlerRegistry",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Models\\Drive",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "use",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Profiles\\ProfileRegistry",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "name",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\VaulterManager::drive",
-            "target": "Vaulter\\Drive\\Contracts\\DriveHandle",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "name",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\VaulterManager::drive",
-            "target": "Vaulter\\Drive\\Models\\Drive",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 3,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "name",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\VaulterManager::driveFactory",
-            "target": "Vaulter\\Drive\\Contracts\\DriveHandleFactory",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "name",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\VaulterManager::findDrive",
-            "target": "Vaulter\\Drive\\Contracts\\DriveHandle",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 2,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "name",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\VaulterManager::handlers",
-            "target": "Vaulter\\Drive\\Contracts\\Handlers\\FileHandlerRegistry",
-            "view": "current"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 2,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "name",
-            "reason": "код домена drive ещё в ядре и ссылается на тип drive, перенесённый в P4.8; файл переезжает в drive (P4.10–P4.12)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\VaulterManager::profiles",
-            "target": "Vaulter\\Drive\\Profiles\\ProfileRegistry",
             "view": "current"
         },
         {

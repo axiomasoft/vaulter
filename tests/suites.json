@@ -355,7 +355,6 @@
             "packages/core/tests/Operations/ProfilePermissionDriverTest.php",
             "packages/core/tests/Providers/AccessRegistrarTest.php",
             "packages/core/tests/Providers/BindingsRegistrarTest.php",
-            "packages/core/tests/Providers/DriveSliceRegistrarTest.php",
             "packages/core/tests/Providers/EventsRegistrarTest.php",
             "packages/core/tests/Recipes/PermissionDriverRecipeTest.php",
             "packages/core/tests/Schema/BlobDedupIndexTest.php",
@@ -370,7 +369,6 @@
             "packages/core/tests/Support/DomainExceptionStatusTest.php",
             "packages/core/tests/Support/DriveNameRulesConfigSeamTest.php",
             "packages/core/tests/Support/EnumCaseAttributeResolverInstanceCacheTest.php",
-            "packages/core/tests/Support/FacadeMethodDocblockTest.php",
             "packages/core/tests/Support/ReleaseReadinessGuardTest.php",
             "packages/core/tests/Support/SnapshotResourceTimestampTest.php",
             "packages/core/tests/Support/TenantFootgunGuardTest.php",
@@ -1126,7 +1124,10 @@
             "packages/drive/tests/Http/DriveProblemCodesTest.php",
             "packages/drive/tests/Modules/DriveSlotsTest.php",
             "packages/drive/tests/Providers/BindingsRegistrarTest.php",
-            "packages/drive/tests/Providers/HttpRegistrarTest.php"
+            "packages/drive/tests/Providers/DriveSliceRegistrarTest.php",
+            "packages/drive/tests/Providers/FacadeMethodDocblockTest.php",
+            "packages/drive/tests/Providers/HttpRegistrarTest.php",
+            "packages/drive/tests/Providers/VaulterEntryPointTest.php"
           ]
         },
         {

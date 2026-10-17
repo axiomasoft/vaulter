@@ -25,7 +25,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Profiles\RevisionRetentionPolicy;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Apply the drive profile's RevisionRetentionPolicy to every file of one drive,
@@ -68,7 +68,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
     /** @return array{candidates: int, deleted: int, skipped: int, freed_bytes: int} */
     public function run(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, VaulterConfig $config): array
     {
-        return app(VaulterManager::class)->withoutTenancy(function () use ($delete, $profiles, $database, $tables, $config): array {
+        return Tenancy::without(function () use ($delete, $profiles, $database, $tables, $config): array {
             $report = ['candidates' => 0, 'deleted' => 0, 'skipped' => 0, 'freed_bytes' => 0];
             $drive = $config->model('drive')::query()->whereKey($this->driveId)->first();
             if (!$drive instanceof Drive) {

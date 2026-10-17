@@ -15,7 +15,7 @@ use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Start or resume the purge of the drives that are being deleted. The
@@ -30,7 +30,7 @@ final class PurgeDrivesCommand extends Command
 
     protected $description = 'Purge drives with status deleting: nodes, revisions and blob references, then the drive row.';
 
-    public function handle(VaulterConfig $config, VaulterManager $manager, PurgeDriveStepAction $step): int
+    public function handle(VaulterConfig $config, PurgeDriveStepAction $step): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $sync = (bool) $this->option('sync');
@@ -38,7 +38,7 @@ final class PurgeDrivesCommand extends Command
         $failed = false;
         $done = 0;
 
-        $drives = $manager->withoutTenancy(fn (): array => $config->model('drive')::query()
+        $drives = Tenancy::without(fn (): array => $config->model('drive')::query()
             ->where('status', DriveStatus::Deleting->value)
             ->when($only !== [], static fn ($query) => $query->whereKey($only))
             ->orderBy('id')->pluck('id')->all());
@@ -48,7 +48,7 @@ final class PurgeDrivesCommand extends Command
                 continue;
             }
             if ($dryRun) {
-                $nodes = $manager->withoutTenancy(fn (): int => $config->model('node')::query()->where('drive_id', $key)->count());
+                $nodes = Tenancy::without(fn (): int => $config->model('node')::query()->where('drive_id', $key)->count());
                 $this->line(sprintf('Drive %s: %d node%s would be purged.', Identity::stringify($key), $nodes, $nodes === 1 ? '' : 's'));
 
                 continue;

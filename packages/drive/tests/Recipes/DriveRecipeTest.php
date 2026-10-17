@@ -10,8 +10,8 @@ use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 
 // The fragments below are copied into the guides byte for byte; the guides' own `use` lines are
 // the imports of this file.

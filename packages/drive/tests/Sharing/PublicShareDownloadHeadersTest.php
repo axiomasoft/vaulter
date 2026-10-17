@@ -6,9 +6,9 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Testing\Fixtures\TestUser;
 

@@ -8,11 +8,11 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

@@ -46,9 +46,7 @@
         "Vaulter\\Console\\PruneChangesCommand",
         "Vaulter\\Console\\ResetChangesCommand",
         "Vaulter\\Console\\MakeFileHandlerCommand",
-        "Vaulter\\Console\\MakeProfileCommand",
-        "Vaulter\\VaulterManager",
-        "Vaulter\\Facades\\"
+        "Vaulter\\Console\\MakeProfileCommand"
     ],
     "rules": [
         {
@@ -68,26 +66,6 @@
             "phase": "stay",
             "note": "thrown by the core Int64Counter (node sequence, state version, epoch)",
             "why": "architecture#kernel: Идентичность — the generic BIGINT counter contract (Int64Counter) stays in core and throws it"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\VaulterManager",
-            "owner": "drive",
-            "action": "replace",
-            "phase": "P4",
-            "target": "Vaulter\\Drive\\Vaulter",
-            "note": "replaced by Vaulter\\Drive\\Vaulter (#[Api], final); withoutTenancy moves to core Tenancy::without",
-            "why": "architecture#entry-point: VaulterManager moves to drive as the typed Vaulter\\Drive\\Vaulter (D10)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Facades\\Vaulter",
-            "owner": "drive",
-            "action": "replace",
-            "phase": "P4",
-            "target": "Vaulter\\Drive\\Facades\\Vaulter",
-            "note": "replaced by Vaulter\\Drive\\Facades\\Vaulter; the Laravel alias Vaulter is declared by drive",
-            "why": "architecture#entry-point: the facade moves to drive; the old FQCN is deleted without class_alias (D21)"
         }
     ]
 }

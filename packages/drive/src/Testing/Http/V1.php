@@ -18,8 +18,8 @@ use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Vaulter;
 use Vaulter\Testing\Fixtures\TestUser;
-use Vaulter\VaulterManager;
 
 /** Fixtures of the REST v1 suite: a drive under real grants and its URLs. */
 #[Internal]
@@ -79,7 +79,7 @@ final class V1
             if (!$user instanceof Authorizable) {
                 throw new \RuntimeException('ifMatch() needs an authenticated user');
             }
-            $drive = app(VaulterManager::class)->drive(app(HttpResourceResolver::class)->driveOfNode((string) $nodeId))->actingAs($user);
+            $drive = app(Vaulter::class)->drive(app(HttpResourceResolver::class)->driveOfNode((string) $nodeId))->actingAs($user);
 
             return ['If-Match' => self::tagFor($drive, (string) $nodeId)];
         } catch (Throwable) {

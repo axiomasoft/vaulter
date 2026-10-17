@@ -8381,6 +8381,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Facades/Vaulter.php",
+            "fqcn": "Vaulter\\Drive\\Facades\\Vaulter",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Facades\\Vaulter"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Handlers/AbstractFileHandler.php",
             "fqcn": "Vaulter\\Drive\\Handlers\\AbstractFileHandler",
             "kind": "abstract-class",
@@ -11713,6 +11727,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Vaulter.php",
+            "fqcn": "Vaulter\\Drive\\Vaulter",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Vaulter"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/VaulterDriveServiceProvider.php",
             "fqcn": "Vaulter\\Drive\\VaulterDriveServiceProvider",
             "kind": "final-class",
@@ -12381,20 +12409,6 @@
             "rule": "core-content-media-webhooks:prefix:Vaulter\\Exceptions\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\Exceptions\\WebhookResponseTooLargeException"
-        },
-        {
-            "action": "replace",
-            "eloquent": false,
-            "file": "packages/core/src/Facades/Vaulter.php",
-            "fqcn": "Vaulter\\Facades\\Vaulter",
-            "kind": "final-class",
-            "note": "replaced by Vaulter\\Drive\\Facades\\Vaulter; the Laravel alias Vaulter is declared by drive",
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "rule": "core-drive:fqcn:Vaulter\\Facades\\Vaulter",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Facades\\Vaulter"
         },
         {
             "action": "keep",
@@ -15587,20 +15601,6 @@
             "rule": "core-content-media-webhooks:prefix:Vaulter\\ValueObjects\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\ValueObjects\\PinnedOutboundEndpoint"
-        },
-        {
-            "action": "replace",
-            "eloquent": false,
-            "file": "packages/core/src/VaulterManager.php",
-            "fqcn": "Vaulter\\VaulterManager",
-            "kind": "final-class",
-            "note": "replaced by Vaulter\\Drive\\Vaulter (#[Api], final); withoutTenancy moves to core Tenancy::without",
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "rule": "core-drive:fqcn:Vaulter\\VaulterManager",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Drive\\Vaulter"
         },
         {
             "action": "keep",

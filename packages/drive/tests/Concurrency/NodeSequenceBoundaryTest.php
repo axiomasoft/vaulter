@@ -15,10 +15,10 @@ use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Testing\Concurrency\ForkRace;
 
 beforeEach(function (): void {
