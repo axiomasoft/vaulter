@@ -42,7 +42,8 @@ final class Mover
      */
     public function run(array $options, array $tests, string $decision, bool $apply): array
     {
-        $moves = Plan::select($this->repo, $options);
+        // Test-only runs (`--tests` after the types moved earlier) have nothing to select.
+        $moves = Plan::select($this->repo, $options + ['allow_empty' => $tests !== []]);
         $testMoves = TestMover::plan($this->repo, $tests);
         $testNames = TestMover::namespaces($this->repo, $testMoves);
 

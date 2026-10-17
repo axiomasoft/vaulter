@@ -7,7 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Testing\Support\TestGroups;
-use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
 use Vaulter\Tests\Fixtures\HostKeyMysqlTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
@@ -81,10 +80,8 @@ uses(P83DocumentsTestCase::class, RefreshDatabase::class)->in(
 );
 
 uses(TestCase::class, RefreshDatabase::class)->in(
-    $core.'/Activity',
     $core.'/Feature',
     $core.'/Providers',
-    $core.'/Profiles',
     $core.'/Support',
     $core.'/Testing',
     $core.'/Configuration',
@@ -99,16 +96,7 @@ uses(WebhooksTestCase::class, RefreshDatabase::class)->in(
     $core.'/Webhooks',
 );
 
-// The additive sequence carrier owns only its shadow schema and real FK enforcement.
-$ordinarySchemaTests = array_values(array_filter(glob($core.'/Schema/*Test.php'), static fn (string $path): bool => !in_array(basename($path), ['NodeSequenceSchemaTest.php', 'ScanEvidenceSchemaTest.php'], true)));
-uses(TestCase::class, RefreshDatabase::class)->in(...$ordinarySchemaTests);
-
-// The activity-feature-OFF tests boot the package with 'activity' disabled so the
-// subscriber is never registered; kept in their own top-level folder so the Activity
-// binding above does not also claim them (Pest forbids two test cases for one path).
-uses(ActivityDisabledTestCase::class, RefreshDatabase::class)->in(
-    $core.'/ActivityGate',
-);
+uses(TestCase::class, RefreshDatabase::class)->in(...glob($core.'/Schema/*Test.php'));
 
 // Document + Comment (+ the NodeCommentSchemaTest schema check and the TipTap unit
 // tests) moved to the vaulter-documents package (P2 #5 / ADR-0015, D2); they run under

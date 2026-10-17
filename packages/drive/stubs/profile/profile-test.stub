@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use {{ fqcn }};
-use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 
 it('registers the profile and resolves its frozen policy', function (): void {
     $registry = new ProfileRegistry;

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace {{ namespace }};
 
-use Vaulter\Handlers\AbstractFileHandler;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Handlers\AbstractFileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /** Register this class in config('vaulter.handlers'). */
 final class {{ class }} extends AbstractFileHandler

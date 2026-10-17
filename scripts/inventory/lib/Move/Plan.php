@@ -11,7 +11,7 @@ use Vaulter\Inventory\Repo;
  * target-map, the options and the tree; it changes nothing. A conflict is found here, before anything is written.
  *
  * @phpstan-type Move array{old: string, new: string, file_from: string, file_to: string, done: bool}
- * @phpstan-type Options array{owner: string, rule_file: ?string, prefixes: list<string>, excluded: list<string>}
+ * @phpstan-type Options array{owner: string, rule_file: ?string, prefixes: list<string>, excluded: list<string>, allow_empty?: bool}
  */
 final class Plan
 {
@@ -55,7 +55,7 @@ final class Plan
                 'done' => false,
             ];
         }
-        if ($moves === []) {
+        if ($moves === [] && !($options['allow_empty'] ?? false)) {
             throw new MoveUsage('the selection is empty: no type with phase=P4, action=move, owner='.$options['owner'].($options['rule_file'] !== null ? ', rule '.$options['rule_file'] : '').' matches');
         }
         ksort($moves, SORT_STRING);

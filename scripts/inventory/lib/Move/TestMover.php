@@ -35,7 +35,7 @@ final class TestMover
     public const ORIGINAL = 'tests/baseline/original/%s.list';
 
     /**
-     * Pairs `old:new` => the moved directories with their files. A directory already moved (old gone, new present) is done.
+     * Pairs `old:new` => the moved directories (or single files) with their files. A directory already moved (old gone, new present) is done.
      *
      * @param  list<string>   $pairs
      * @return list<TestMove>
@@ -51,15 +51,17 @@ final class TestMover
             if ($from === '' || $to === '' || $from === $to) {
                 throw new MoveUsage("--tests [{$pair}]: both directories are needed and must differ");
             }
-            if (!is_dir($repo->path($from))) {
-                if (is_dir($repo->path($to))) {
+            // A single test file of a mixed directory: `old/File.php:new/File.php`.
+            $single = is_file($repo->path($from)) || (!is_dir($repo->path($from)) && str_ends_with($from, '.php'));
+            if (!is_dir($repo->path($from)) && !is_file($repo->path($from))) {
+                if (is_dir($repo->path($to)) || is_file($repo->path($to))) {
                     continue;
                 }
-                throw new MoveUsage("--tests [{$pair}]: neither directory exists");
+                throw new MoveUsage("--tests [{$pair}]: neither path exists");
             }
             $files = [];
-            foreach (self::files($repo, $from) as $file) {
-                $target = $to.substr($file, strlen($from));
+            foreach ($single ? [$from] : self::files($repo, $from) as $file) {
+                $target = $single ? $to : $to.substr($file, strlen($from));
                 if ($repo->exists($target)) {
                     throw new MoveUsage("--tests [{$pair}]: {$target} already exists");
                 }

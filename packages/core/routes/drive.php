@@ -9,6 +9,10 @@ use Vaulter\Drive\Http\Controllers\Access\ListGrantsController;
 use Vaulter\Drive\Http\Controllers\Access\RestoreInheritanceController;
 use Vaulter\Drive\Http\Controllers\Access\RestrictInheritanceController;
 use Vaulter\Drive\Http\Controllers\Access\RevokeGrantController;
+use Vaulter\Drive\Http\Controllers\Activity\ListDriveActivityController;
+use Vaulter\Drive\Http\Controllers\Activity\ListNodeActivityController;
+use Vaulter\Drive\Http\Controllers\Changes\ListChangesController;
+use Vaulter\Drive\Http\Controllers\Changes\ShowChangesStartController;
 use Vaulter\Drive\Http\Controllers\Sharing\CreateShareController;
 use Vaulter\Drive\Http\Controllers\Sharing\DownloadPublicShareController;
 use Vaulter\Drive\Http\Controllers\Sharing\ListPublicShareNodesController;
@@ -17,10 +21,6 @@ use Vaulter\Drive\Http\Controllers\Sharing\RevokeShareController;
 use Vaulter\Drive\Http\Controllers\Sharing\RotateShareController;
 use Vaulter\Drive\Http\Controllers\Sharing\ShowPublicShareController;
 use Vaulter\Drive\Http\Controllers\Sharing\UpdateShareController;
-use Vaulter\Http\Controllers\Activity\ListDriveActivityController;
-use Vaulter\Http\Controllers\Activity\ListNodeActivityController;
-use Vaulter\Http\Controllers\Changes\ListChangesController;
-use Vaulter\Http\Controllers\Changes\ShowChangesStartController;
 use Vaulter\Http\Middleware\ResolveShareToken;
 
 /*

@@ -6,6 +6,7 @@ parameters:
 
     paths:
         - src
+        - database/factories
 
     inferPrivatePropertyTypeFromConstructor: true
     reportUnmatchedIgnoredErrors: false
@@ -16,6 +17,13 @@ parameters:
         # the swappable Node/Storage/Upload models via the generic Eloquent builder).
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
         - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
+
+        # HasDrives is the opt-in trait a HOST puts on its own model (the same way it uses
+        # Laravel's own traits); the package never applies it, so the analysis of
+        # "a trait used zero times" does not apply. Scoped to this one file.
+        -
+            identifier: trait.unused
+            path: src/Concerns/HasDrives.php
 
         # Shipped test kit: the trait is consumed by Pest `uses()` in tests (this package and core), never inside src.
         -

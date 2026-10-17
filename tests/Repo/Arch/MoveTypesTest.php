@@ -222,6 +222,44 @@ it('moves a test directory: namespaces, suites, zones and the baseline ledger fo
         ->and(mt_read($root, 'tests/baseline/CHANGES.json'))->toContain("\n  \"entries\": [\n    {");
 });
 
+it('moves one test file of a mixed directory and runs without a type selection when only tests are given', function (): void {
+    $root = mt_root();
+    [$code, $report] = mt_run($root, ['--owner=drive', '--rule-file=none-of-the-rules', '--apply', '--tests=packages/core/tests/Roles/RoleCheck.php:packages/drive/tests/Roles/RoleCheck.php']);
+
+    expect($code)->toBe(0)
+        ->and($report['moved'])->toBe([])
+        ->and(file_exists($root.'/packages/core/tests/Roles/RoleCheck.php'))->toBeFalse()
+        ->and(file_exists($root.'/packages/core/tests/Roles/Helper.php'))->toBeTrue()
+        ->and(file_exists($root.'/packages/drive/tests/Roles/Helper.php'))->toBeFalse()
+        ->and(mt_read($root, 'packages/drive/tests/Roles/RoleCheck.php'))->toContain('use Acme\\Roles\\Role;')->toContain('use Vaulter\\Tests\\Roles\\Helper;');
+
+    $suites = json_decode(mt_read($root, 'tests/suites.json'), true);
+    expect($suites['suites']['core']['partitions'][0]['files'])->toBe(['packages/core/tests/Other/OtherCheck.php'])
+        ->and($suites['suites']['drive']['partitions'][0]['files'])->toBe(['packages/drive/tests/Roles/RoleCheck.php']);
+
+    $ledger = json_decode(mt_read($root, 'tests/baseline/CHANGES.json'), true);
+    expect($ledger['entries'])->toHaveCount(1)
+        ->and($ledger['entries'][0]['new'])->toBe('P\\Tests\\Roles\\RoleCheck::__pest_evaluable_it_builds_a_role')
+        ->and($ledger['entries'][0]['new_suite'])->toBe('drive');
+
+    [$again, $second] = mt_run($root, ['--owner=drive', '--rule-file=none-of-the-rules', '--apply', '--tests=packages/core/tests/Roles/RoleCheck.php:packages/drive/tests/Roles/RoleCheck.php']);
+    expect($again)->toBe(0)->and($second['tests'])->toBe([])->and($second['ledger'])->toBe([]);
+});
+
+it('still refuses an empty type selection when no tests are given', function (): void {
+    $root = mt_root();
+    [$code, , , $err] = mt_run($root, ['--owner=drive', '--rule-file=none-of-the-rules', '--dry-run']);
+
+    expect($code)->toBe(2)->and($err)->toContain('the selection is empty');
+});
+
+it('refuses a single test file that does not exist and whose target does not exist either', function (): void {
+    $root = mt_root();
+    [$code, , , $err] = mt_run($root, ['--owner=drive', '--rule-file=none-of-the-rules', '--dry-run', '--tests=packages/core/tests/Roles/Missing.php:packages/drive/tests/Roles/Missing.php']);
+
+    expect($code)->toBe(2)->and($err)->toContain('neither path exists');
+});
+
 it('refuses a test directory whose TestCase key has no partition in the new suite', function (): void {
     $root = mt_root();
     $suites = json_decode(mt_read($root, 'tests/suites.json'), true);

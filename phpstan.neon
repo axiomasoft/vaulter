@@ -40,6 +40,15 @@ parameters:
             identifier: larastan.noEnvCallsOutsideOfConfig
             path: packages/core/src/Testing/*
 
+        # Kernel traits whose users live in other packages since the drive model move (P4.10): the models of vaulter-drive
+        # apply them, nothing in the core's own source does. StampsDriveTenant moves to drive with the kernel slice (P4.11).
+        -
+            identifier: trait.unused
+            paths:
+                - packages/core/src/Models/Concerns/StampsDriveTenant.php
+                - packages/core/src/Support/Concerns/HasIcon.php
+                - packages/core/src/Support/Concerns/HasStableMorphAlias.php
+
         # The commit path stages the upload stream INTO the CAS inside the transaction
         # (uploadFile->execute), which may consume + fclose it; the finally re-guards
         # with is_resource() to avoid a double-close. PHPStan proves the stream is a
@@ -48,13 +57,6 @@ parameters:
         -
             identifier: if.alwaysTrue
             path: packages/core/src/Drive/Uploads/Actions/CommitUploadAction.php
-
-        # HasDrives is the opt-in trait a HOST puts on its own model (the same way it uses
-        # Laravel's own traits); the package never applies it, so the analysis of
-        # "a trait used zero times" does not apply. Scoped to this one file.
-        -
-            identifier: trait.unused
-            path: packages/core/src/Concerns/HasDrives.php
 
         # Shipped for host test suites: the trait is consumed by Pest `uses()` in the
         # host's own tests, never inside this package's src.
