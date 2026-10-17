@@ -38,7 +38,7 @@ jobs:
           node-version: '22'
 
       - name: Audit dependencies
-        working-directory: ./hocuspocus-server
+        working-directory: ./packages/collaboration/hub
         run: |
           npm ci --no-audit --no-fund
           npm audit --omit=dev --audit-level=high
@@ -70,7 +70,7 @@ jobs:
       - id: build
         uses: docker/build-push-action@v6
         with:
-          context: ./hocuspocus-server
+          context: ./packages/collaboration/hub
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'workflow_dispatch' }}
           tags: ${{ steps.meta.outputs.tags }}

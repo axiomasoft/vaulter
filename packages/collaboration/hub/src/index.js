@@ -224,7 +224,7 @@ function buildSeed(loaded) {
   if (lost.length > 0) {
     throw new Error(
       `Collaboration seed refused: the hub's TipTap schema would drop ${lost.join(', ')} from the document. `
-      + 'Add the extension that declares them to hocuspocus-server/src/schema.js (see the README).',
+      + 'Add the extension that declares them to packages/collaboration/hub/src/schema.js (see the README).',
     )
   }
 

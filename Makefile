@@ -67,7 +67,7 @@ e2e-laravel: ## e2e: serve the live Laravel host (:8000)
 	vendor/bin/testbench serve --host 127.0.0.1 --port 8000
 
 e2e-hub: ## e2e: run the Hocuspocus collaboration hub (:1234)
-	cd hocuspocus-server && npm install --no-audit --no-fund && \
+	cd packages/collaboration/hub && npm install --no-audit --no-fund && \
 		VAULTER_BACKEND_URL=http://localhost:8000 VAULTER_API_PREFIX=api/vaulter node src/index.js
 
 e2e-smoke: ## e2e: headless 2-client collab smoke (stack must be up)

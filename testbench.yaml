@@ -14,7 +14,7 @@ env:
   - APP_URL="http://localhost:8000"
   # БД задаётся через окружение (DB_CONNECTION/DB_*). По умолчанию — персистентный
   # SQLite-файл (host dev-loop); в docker-стенде compose выставляет pgsql + Postgres.
-  # Коллаборация — Hocuspocus-хаб (hocuspocus-server/), драйвер по умолчанию для стенда.
+  # Коллаборация — Hocuspocus-хаб (packages/collaboration/hub/), драйвер по умолчанию для стенда.
   - VAULTER_COLLAB_DRIVER="hocuspocus"
   - VAULTER_COLLAB_URL="ws://localhost:1234"
   # HS256-секрет для подписи/проверки room-JWT (минтит Laravel, верифицирует вебхук).

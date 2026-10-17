@@ -12,7 +12,7 @@ import { extensionsFor, FIELD, SUPPORTED_TYPES } from '../src/schema.js'
 // marks AND attributes, or a seed loses content / every store fails (toJSON() dumps every
 // attribute an extension declares, nulls included — one the backend does not list is a 422).
 
-const fixture = JSON.parse(readFileSync(new URL('../../packages/collaboration/tests/Fixtures/tiptap-schema.json', import.meta.url), 'utf8'))
+const fixture = JSON.parse(readFileSync(new URL('../../tests/Fixtures/tiptap-schema.json', import.meta.url), 'utf8'))
 
 test('the hub knows exactly the collaborative types the backend pins', () => {
   assert.deepEqual([...SUPPORTED_TYPES].sort(), Object.keys(fixture).sort())

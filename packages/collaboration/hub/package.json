@@ -1,7 +1,7 @@
 {
-  "name": "@vaulter/hocuspocus-server",
+  "name": "@vaulter/collaboration-hub",
   "version": "0.1.0",
-  "description": "Vaulter real-time collaboration server (Hocuspocus + Yjs). Loads, seeds and stores document state through the Laravel backend behind its epoch fence.",
+  "description": "Vaulter collaboration hub: real-time server (Hocuspocus + Yjs). Loads, seeds and stores document state through the Laravel backend behind its epoch fence.",
   "license": "MIT",
   "type": "module",
   "private": true,

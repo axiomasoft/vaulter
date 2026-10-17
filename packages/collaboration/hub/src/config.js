@@ -1,7 +1,7 @@
 // Runtime configuration for the Vaulter collaboration hub, read from the environment
 // (12-factor: env-only, no secrets baked into the image). Names align with the Laravel
 // package config (config/vaulter.php → vaulter.collaboration). Full contract + security
-// notes live in docs/guide/hocuspocus-server.md.
+// notes live in docs/guides/hub.md.
 //
 // Connectivity:
 //   VAULTER_COLLAB_PORT          — WebSocket port the hub listens on (default 1234).

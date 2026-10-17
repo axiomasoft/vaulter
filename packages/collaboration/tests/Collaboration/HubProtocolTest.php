@@ -26,7 +26,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
  * The hub protocol end to end at the HTTP boundary: load → seed → store behind the
  * epoch fence, read-only enforced by the backend, and every call re-checking the live
  * document (trash, drive status, tenant, rights). The hub process itself is covered by
- * hocuspocus-server/test and scripts/collab-e2e.sh.
+ * packages/collaboration/hub/test and scripts/collab-e2e.sh.
  */
 beforeEach(function (): void {
     Hub::configure();
@@ -87,7 +87,7 @@ it('accepts exactly one seed per generation', function (): void {
 });
 
 it('stores and seeds the projection the hub emits for a link, an image and a table', function (): void {
-    // Exactly what hocuspocus-server projects (TiptapTransformer.fromYdoc): the link mark
+    // Exactly what the hub projects (TiptapTransformer.fromYdoc): the link mark
     // carries every attribute @tiptap/extension-link declares, `title: null` included.
     $projection = ['type' => 'doc', 'content' => [
         ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'see', 'marks' => [['type' => 'link', 'attrs' => [

@@ -14,6 +14,6 @@
         {"name": "@vaulter/vue", "path": "packages/vue", "api": "1"}
     ],
     "images": [
-        {"name": "ghcr.io/axiomasoft/vaulter-hocuspocus", "path": "hocuspocus-server"}
+        {"name": "ghcr.io/axiomasoft/vaulter-hocuspocus", "path": "packages/collaboration/hub"}
     ]
 }

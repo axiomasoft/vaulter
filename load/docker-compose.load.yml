@@ -292,7 +292,7 @@ services:
   hocuspocus:
     logging: *bounded-logs
     build:
-      context: ../hocuspocus-server
+      context: ../packages/collaboration/hub
       dockerfile: Dockerfile
     environment:
       NODE_ENV: production

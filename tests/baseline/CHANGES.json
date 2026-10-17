@@ -12844,6 +12844,110 @@
       ],
       "reason": "the collaboration configuration is a package of its own: the guard reads vaulter-collaboration (P5.1)",
       "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/collab-expiry.test.js",
+      "new": "packages/collaboration/hub/test/collab-expiry.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/config.test.js",
+      "new": "packages/collaboration/hub/test/config.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/e2e/restore-epoch.e2e.js",
+      "new": "packages/collaboration/hub/test/e2e/restore-epoch.e2e.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/epoch-fence.test.js",
+      "new": "packages/collaboration/hub/test/epoch-fence.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/load-seed.test.js",
+      "new": "packages/collaboration/hub/test/load-seed.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/on-connect.test.js",
+      "new": "packages/collaboration/hub/test/on-connect.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/readonly.test.js",
+      "new": "packages/collaboration/hub/test/readonly.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/redis-extension-wiring.test.js",
+      "new": "packages/collaboration/hub/test/redis-extension-wiring.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/schema-parity.test.js",
+      "new": "packages/collaboration/hub/test/schema-parity.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/security.test.js",
+      "new": "packages/collaboration/hub/test/security.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/v1-paths.test.js",
+      "new": "packages/collaboration/hub/test/v1-paths.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/webhook.test.js",
+      "new": "packages/collaboration/hub/test/webhook.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
+    },
+    {
+      "suite": "hub",
+      "old": "hocuspocus-server/test/websocket-hardening.test.js",
+      "new": "packages/collaboration/hub/test/websocket-hardening.test.js",
+      "new_suite": "hub",
+      "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
+      "decision": "D1"
     }
   ],
   "additions": {
@@ -14040,6 +14144,25 @@
         "P\\Tests\\Module\\CollaborationModuleTest::__pest_evaluable_it_declares_an_opt_in_manifest_that_needs_the_documents_module",
         "P\\Tests\\Module\\CollaborationModuleTest::__pest_evaluable_it_keeps_the_problem_codes_of_the_collaboration_concept_out_of_the_catalogue_while_the_module_is_off",
         "P\\Tests\\Module\\CollaborationModuleTest::__pest_evaluable_it_mounts_the_session_and_the_hub_routes_behind_the_module_middleware_once_it_is_switched_on"
+      ]
+    },
+    "hub": {
+      "count": 14,
+      "names": [
+        "packages/collaboration/hub/test/collab-expiry.test.js",
+        "packages/collaboration/hub/test/config.test.js",
+        "packages/collaboration/hub/test/e2e/restore-epoch.e2e.js",
+        "packages/collaboration/hub/test/epoch-fence.test.js",
+        "packages/collaboration/hub/test/hocuspocus-v4.test.js",
+        "packages/collaboration/hub/test/load-seed.test.js",
+        "packages/collaboration/hub/test/on-connect.test.js",
+        "packages/collaboration/hub/test/readonly.test.js",
+        "packages/collaboration/hub/test/redis-extension-wiring.test.js",
+        "packages/collaboration/hub/test/schema-parity.test.js",
+        "packages/collaboration/hub/test/security.test.js",
+        "packages/collaboration/hub/test/v1-paths.test.js",
+        "packages/collaboration/hub/test/webhook.test.js",
+        "packages/collaboration/hub/test/websocket-hardening.test.js"
       ]
     }
   }

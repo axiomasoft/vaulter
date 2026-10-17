@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Collaboration protocol e2e against REAL processes: `vendor/bin/testbench serve` (the
 # Laravel host of testbench.yaml on a throwaway SQLite file) and the Hocuspocus hub
-# (`node hocuspocus-server/src/index.js`), then hocuspocus-server/test/e2e/restore-epoch.e2e.js:
+# (`node packages/collaboration/hub/src/index.js`), then packages/collaboration/hub/test/e2e/restore-epoch.e2e.js:
 # restore while a client is editing → the hub closes the room with 4409 → the reopened
 # room shows the restored content and the old edit never comes back; a read-only client
 # changes nothing; a client with an older schema version is read-only.
 #
 # Usage: bash scripts/collab-e2e.sh   (env: VAULTER_E2E_PORT=8787, VAULTER_E2E_HUB_PORT=18234)
-# Needs: composer install at the root, npm ci in hocuspocus-server, PHP 8.4 (scripts/php84).
+# Needs: composer install at the root, npm ci in packages/collaboration/hub, PHP 8.4 (scripts/php84).
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -85,7 +85,7 @@ wait_for "http://127.0.0.1:${port}/e2e/health" "testbench serve"
 
 echo "== hub :$hub_port" | tee -a "$log"
 (
-    cd "$root/hocuspocus-server"
+    cd "$root/packages/collaboration/hub"
     NODE_ENV=test \
     VAULTER_LARAVEL_WEBHOOK_URL="http://127.0.0.1:${port}/api/vaulter/v1" \
     VAULTER_COLLAB_WEBHOOK_SECRET="$webhook_secret" \
@@ -102,7 +102,7 @@ wait_for "http://127.0.0.1:${health_port}/health" "hub"
 echo "== restore-epoch e2e" | tee -a "$log"
 status=0
 (
-    cd "$root/hocuspocus-server"
+    cd "$root/packages/collaboration/hub"
     VAULTER_E2E_BACKEND="http://127.0.0.1:${port}" \
     VAULTER_E2E_HUB="ws://127.0.0.1:${hub_port}" \
     node --test test/e2e/restore-epoch.e2e.js

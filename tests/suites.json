@@ -2000,7 +2000,7 @@
     },
     "hub": {
       "kind": "node",
-      "cwd": "hocuspocus-server",
+      "cwd": "packages/collaboration/hub",
       "command": [
         "npm",
         "test",
@@ -2008,8 +2008,8 @@
       ],
       "default": true,
       "list_glob": [
-        "hocuspocus-server/test/*.test.js",
-        "hocuspocus-server/test/e2e/*.e2e.js"
+        "packages/collaboration/hub/test/*.test.js",
+        "packages/collaboration/hub/test/e2e/*.e2e.js"
       ],
       "partitions": []
     },
@@ -2038,7 +2038,7 @@
         "bash",
         "scripts/collab-e2e.sh"
       ],
-      "note": "Collaboration protocol against real processes: testbench serve + the Hocuspocus hub; needs npm ci in hocuspocus-server"
+      "note": "Collaboration protocol against real processes: testbench serve + the Hocuspocus hub; needs npm ci in packages/collaboration/hub"
     }
   ]
 }

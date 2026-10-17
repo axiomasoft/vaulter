@@ -6,7 +6,7 @@
   "description": "Vaulter monorepo — Vue components, Hocuspocus collaboration server and VitePress documentation.",
   "workspaces": [
     "packages/vue",
-    "hocuspocus-server"
+    "packages/collaboration/hub"
   ],
   "scripts": {
     "docs:dev": "vitepress dev docs",

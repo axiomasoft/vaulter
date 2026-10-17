@@ -162,8 +162,8 @@
         },
         "hub": {
             "suite": "hub",
-            "src": ["hocuspocus-server"],
-            "tests": ["hocuspocus-server/test"],
+            "src": ["packages/collaboration/hub"],
+            "tests": ["packages/collaboration/hub/test"],
             "uses": []
         },
         "vue": {
@@ -234,8 +234,8 @@
         {"path": "packages/filament/tests/TestCase.php", "zones": ["filament"]},
         {"path": "packages/filament/tests/Fixtures", "zones": ["filament"]},
         {"path": "load/tests/LoadTestCase.php", "zones": ["load"]},
-        {"path": "hocuspocus-server/package.json", "zones": ["hub"]},
-        {"path": "hocuspocus-server/package-lock.json", "zones": ["hub"]},
+        {"path": "packages/collaboration/hub/package.json", "zones": ["hub"]},
+        {"path": "packages/collaboration/hub/package-lock.json", "zones": ["hub"]},
         {"path": "packages/vue/package.json", "zones": ["vue"]},
         {"path": "packages/vue/vite.config.ts", "zones": ["vue"]},
         {"path": "packages/vue/tsconfig.json", "zones": ["vue"]},

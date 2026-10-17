@@ -23,7 +23,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 /**
  * The hub's side of the protocol for tests: room tokens shaped exactly like
  * HocuspocusCollaborationDriver mints them, and requests signed the way
- * hocuspocus-server/src/webhook.js signs them. An unsigned or token-less request never
+ * packages/collaboration/hub/src/webhook.js signs them. An unsigned or token-less request never
  * reaches the controller.
  */
 final class HubTestHelpers
