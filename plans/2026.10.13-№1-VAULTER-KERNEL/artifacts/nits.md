@@ -26,3 +26,10 @@ P4.10 | packages/core/tests/Arch/OperationsBoundaryTest.php:13 | the case "core 
 P4.10 | tests/Repo/Arch/Fixtures/target-map/rules/core-drive.json:1 | "scope" prefixes still list the moved namespaces (harmless, the rules are gone)
 P4.10 | packages/vue/src/naming.ts:2 | comment names the old FQCNs Vaulter\Naming\PortableNamePolicy / Vaulter\Support\NodeName
 P4.10 | packages/drive/tests/Console/MakeFileHandlerCommandTest.php | binds under Console (TestCase + WithoutDatabaseSchema, skeleton partition) while in core it ran with RefreshDatabase; it never touched the database
+P4.11 | packages/media/src/MediaModule.php:70 | the ContentScanner capability reads the drive-owned key vaulter-drive.scan.scanner (a string cross-reference, no class dependency; media stays below drive); consider a media-owned scanner key in the P4.14 require pass
+P4.11 | packages/media/composer.json:40 | the temporary autoload-dev Vaulter\Drive\ (../drive) from P4.5 stays: the media TestCase still boots the drive module for the CAS tests; remove with the explicit-require pass (P4.14)
+P4.11 | packages/core/src/Configuration/ConfigValidator.php:75 | validateDrive and the VaulterConfig drive facades (access/scan/sharing/listing/downloads/changes, model, featureEnabled) still sit in core and delegate to DriveConfig; they leave with the core cleanup (P4.16, I1/I2 blocks)
+P4.11 | packages/core/src/Doctor/Checks/RoutesAuthCheck.php:1 | kernel check registered by DriveModule under core.routes.auth (it inspects the drive route stack); revisit ownership in P4.16
+P4.11 | packages/drive/src/Http/Support/HttpOperationContextFactory.php:1 | core/src/Webhooks/WebhookEndpointWrites still imports it from drive (webhooks move to their package in P4.13, which depends on drive)
+P4.11 | packages/core/tests/Fixtures/golden/routes-v1.json:789 | the golden changed only in the FQCN of the ResolveShareToken middleware (moved to Vaulter\Drive\Http\Middleware); route names, paths, methods and order are unchanged
+P4.11 | packages/drive/tests/Feature/HandlerBaselineTest.php:19 | comments still say "config/vaulter.php" for the pre-P0.4 published config (historical text)

@@ -130,7 +130,7 @@ coexists with host tables.
 | `access.permission_drivers.gate` | — | `Vaulter\Drive\Access\Drivers\GatePermissionDriver` | the Laravel Gate driver |
 | `access.permission_drivers.spatie` | — | `Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` | the spatie/laravel-permission driver |
 | `access.permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | registered by the installed `vaulter-azgard` provider |
-| `access.permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | open, **non-production only** |
+| `access.permission_drivers.null` | — | `Vaulter\Drive\Testing\NullPermissionDriver` | open, **non-production only** |
 
 ::: danger Null driver in production
 The `null` driver is open and env-gated. Production config validation rejects a panel
@@ -500,61 +500,13 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.ids.strategies.uuid7` | — | `Uuid7Ids::class` | — |
 | `vaulter.tenancy.enabled` | `VAULTER_TENANT_ENABLED` | `false` | — |
 | `vaulter.tenancy.resolver` | — | `null` | — |
-| `vaulter.profiles.default` | — | `DefaultProfile::class` | — |
-| `vaulter.profiles.providers` | — | `[]` | — |
-| `vaulter.scan.mode` | — | `null` | — |
-| `vaulter.scan.required` | — | `null` | — |
-| `vaulter.scan.scanner` | — | `null` | — |
-| `vaulter.scan.scanner_key` | — | `null` | — |
-| `vaulter.scan.scanner_version` | — | `null` | — |
-| `vaulter.scan.policy_version` | — | `null` | — |
-| `vaulter.scan.rollout_key` | — | `null` | — |
 | `vaulter.modules` | — | `[]` | Module activation overrides (D22): module id => true\|false. Auto modules (media, drive, documents…) are active unless switched off; opt-in modules (webhooks) only when switched on. |
-| `vaulter.features.grants` | — | `true` | — |
-| `vaulter.features.activity` | — | `true` | — |
-| `vaulter.features.changes` | — | `true` | The drive change journal behind DriveHandle::changes() (PLAN2.D50). |
-| `vaulter.features.share_links` | — | `false` | — |
-| `vaulter.features.public_listing` | — | `false` | — |
-| `vaulter.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | HasDrives: delete the drives of an owner when the owner is deleted. |
-| `vaulter.access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `'database'` | — |
-| `vaulter.access.permission_drivers.database` | — | `DatabasePermissionDriver::class` | — |
-| `vaulter.access.permission_drivers.gate` | — | `GatePermissionDriver::class` | — |
-| `vaulter.access.permission_drivers.spatie` | — | `SpatiePermissionDriver::class` | — |
-| `vaulter.access.permission_drivers.null` | — | `NullPermissionDriver::class` | — |
-| `vaulter.access.gate.abilities.previewer` | — | `'vaulter.preview'` | — |
-| `vaulter.access.gate.abilities.reader` | — | `'vaulter.view'` | — |
-| `vaulter.access.gate.abilities.commenter` | — | `'vaulter.comment'` | — |
-| `vaulter.access.gate.abilities.writer` | — | `'vaulter.edit'` | — |
-| `vaulter.access.gate.abilities.organizer` | — | `'vaulter.organize'` | — |
-| `vaulter.access.gate.abilities.owner` | — | `'vaulter.manage'` | — |
-| `vaulter.access.gate.super_ability` | `VAULTER_GATE_SUPER_ABILITY` | `'vaulter.super'` | — |
-| `vaulter.access.gate.create_ability` | `VAULTER_GATE_CREATE_ABILITY` | `'vaulter.create'` | — |
-| `vaulter.access.spatie.permissions.previewer` | — | `'vaulter.preview'` | — |
-| `vaulter.access.spatie.permissions.reader` | — | `'vaulter.view'` | — |
-| `vaulter.access.spatie.permissions.commenter` | — | `'vaulter.comment'` | — |
-| `vaulter.access.spatie.permissions.writer` | — | `'vaulter.edit'` | — |
-| `vaulter.access.spatie.permissions.organizer` | — | `'vaulter.organize'` | — |
-| `vaulter.access.spatie.permissions.owner` | — | `'vaulter.manage'` | — |
-| `vaulter.access.spatie.super_permission` | `VAULTER_SPATIE_SUPER_PERMISSION` | `'vaulter.super'` | — |
-| `vaulter.access.spatie.create_permission` | `VAULTER_SPATIE_CREATE_PERMISSION` | `'vaulter.create'` | — |
-| `vaulter.access.spatie.teams` | `VAULTER_SPATIE_TEAMS` | `false` | — |
-| `vaulter.access.spatie.role_subject_type` | — | `'role'` | — |
-| `vaulter.access.spatie.team_subject_type` | — | `'team'` | — |
 | `vaulter.routes.prefix` | `VAULTER_ROUTE_PREFIX` | `'api/vaulter'` | — |
 | `vaulter.routes.middleware.authenticated` | — | `['api', 'auth:sanctum']` | — |
 | `vaulter.routes.middleware.public` | — | `['api']` | — |
 | `vaulter.routes.middleware.hub` | — | `['api']` | — |
 | `vaulter.routes.rate_limits.public` | `VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE` | `60` | — |
 | `vaulter.routes.rate_limits.uploads` | `VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE` | `120` | — |
-| `vaulter.listing.scan_budget` | — | `1000` | — |
-| `vaulter.sharing.token_generator` | — | `RandomShareTokenGenerator::class` | — |
-| `vaulter.sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `'/share'` | — |
-| `vaulter.sharing.prefix_length` | — | `8` | — |
-| `vaulter.sharing.default_ttl_hours` | `VAULTER_SHARE_DEFAULT_TTL_HOURS` | `72` | — |
-| `vaulter.sharing.max_ttl_hours` | `VAULTER_SHARE_MAX_TTL_HOURS` | `720` | — |
-| `vaulter.downloads.delivery_mode` | — | `'strict'` | — |
-| `vaulter.downloads.direct_ttl_seconds` | — | `60` | — |
-| `vaulter.downloads.inline_mime_types` | — | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain']` | — |
 | `vaulter.webhooks.timeout` | — | `15` | — |
 | `vaulter.webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three days in total). Jitter is the +/- fraction applied to each delay. |
 | `vaulter.webhooks.retry_jitter` | — | `0.1` | — |
@@ -571,8 +523,6 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.webhooks.delivery.allowed_ip_ranges` | — | `[]` | — |
 | `vaulter.webhooks.delivery.connect_timeout` | — | `2` | — |
 | `vaulter.webhooks.delivery.max_response_bytes` | — | `65536` | — |
-| `vaulter.changes.retention_days` | — | `30` | Days a journal entry stays readable; vaulter:changes:prune deletes older ones and a cursor behind them expires (410 cursor_expired). |
-| `vaulter.changes.max_page_size` | — | `1000` | The largest page DriveHandle::changes()->list() returns. |
 | `vaulter.outbox` | — | — | The transactional outbox (D29): every domain event is written to v_outbox in the transaction of its operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once. settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events older than it, so a long transaction committing a smaller seq later is not skipped. |
 | `vaulter.outbox.settle_window_seconds` | — | `300` | — |
 | `vaulter.outbox.retention_seconds` | — | `604800` | — |
@@ -591,26 +541,11 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.schedule.outbox_prune` | — | `'hourly'` | — |
 | `vaulter.schedule.webhooks_retry` | — | `'everyMinute'` | — |
 | `vaulter.schedule.webhooks_prune` | — | `'dailyAt:03:10'` | — |
-| `vaulter.schedule.changes_prune` | — | `'dailyAt:03:20'` | — |
 | `vaulter.schedule.idempotency_prune` | — | `'dailyAt:03:30'` | — |
-| `vaulter.handlers` | — | `[]` | — |
 | `vaulter.observability.enabled` | `VAULTER_OBSERVABILITY_ENABLED` | `false` | — |
 | `vaulter.observability.recorder` | `VAULTER_OBSERVABILITY_RECORDER` | `null` | — |
 | `vaulter.observability.tracing.enabled` | `VAULTER_TRACING_ENABLED` | `false` | — |
 | `vaulter.observability.tracing.recorder` | `VAULTER_TRACING_RECORDER` | `null` | — |
-| `vaulter.models.drive` | — | `Drive::class` | — |
-| `vaulter.models.node` | — | `Node::class` | — |
-| `vaulter.models.file` | — | `File::class` | — |
-| `vaulter.models.scan_obligation` | — | `ScanObligation::class` | — |
-| `vaulter.models.scan_request` | — | `ScanRequest::class` | — |
-| `vaulter.models.scan_evidence` | — | `ScanEvidenceRecord::class` | — |
-| `vaulter.models.scan_policy_state` | — | `ScanPolicyState::class` | — |
-| `vaulter.models.scan_backfill_run` | — | `ScanBackfillRun::class` | — |
-| `vaulter.models.file_revision` | — | `FileRevision::class` | — |
-| `vaulter.models.file_revision_blob` | — | `FileRevisionBlob::class` | — |
-| `vaulter.models.grant` | — | `NodeGrant::class` | — |
-| `vaulter.models.node_share` | — | `NodeShare::class` | — |
-| `vaulter.models.activity` | — | `Activity::class` | — |
 | `vaulter.models.outbox` | — | `OutboxEvent::class` | — |
 | `vaulter.models.webhook_endpoint` | — | `WebhookEndpoint::class` | — |
 | `vaulter.models.webhook_delivery` | — | `WebhookDelivery::class` | — |
@@ -646,6 +581,57 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 
 | Key | Env | Default | Description |
 |---|---|---|---|
+| `vaulter-drive.profiles.default` | — | `DefaultProfile::class` | — |
+| `vaulter-drive.profiles.providers` | — | `[]` | — |
+| `vaulter-drive.scan.mode` | — | `null` | — |
+| `vaulter-drive.scan.required` | — | `null` | — |
+| `vaulter-drive.scan.scanner` | — | `null` | — |
+| `vaulter-drive.scan.scanner_key` | — | `null` | — |
+| `vaulter-drive.scan.scanner_version` | — | `null` | — |
+| `vaulter-drive.scan.policy_version` | — | `null` | — |
+| `vaulter-drive.scan.rollout_key` | — | `null` | — |
+| `vaulter-drive.features.grants` | — | `true` | — |
+| `vaulter-drive.features.activity` | — | `true` | — |
+| `vaulter-drive.features.changes` | — | `true` | The drive change journal behind DriveHandle::changes() (PLAN2.D50). |
+| `vaulter-drive.features.share_links` | — | `false` | — |
+| `vaulter-drive.features.public_listing` | — | `false` | — |
+| `vaulter-drive.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | HasDrives: delete the drives of an owner when the owner is deleted. |
+| `vaulter-drive.access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `'database'` | — |
+| `vaulter-drive.access.permission_drivers.database` | — | `DatabasePermissionDriver::class` | — |
+| `vaulter-drive.access.permission_drivers.gate` | — | `GatePermissionDriver::class` | — |
+| `vaulter-drive.access.permission_drivers.spatie` | — | `SpatiePermissionDriver::class` | — |
+| `vaulter-drive.access.permission_drivers.null` | — | `NullPermissionDriver::class` | — |
+| `vaulter-drive.access.gate.abilities.previewer` | — | `'vaulter.preview'` | — |
+| `vaulter-drive.access.gate.abilities.reader` | — | `'vaulter.view'` | — |
+| `vaulter-drive.access.gate.abilities.commenter` | — | `'vaulter.comment'` | — |
+| `vaulter-drive.access.gate.abilities.writer` | — | `'vaulter.edit'` | — |
+| `vaulter-drive.access.gate.abilities.organizer` | — | `'vaulter.organize'` | — |
+| `vaulter-drive.access.gate.abilities.owner` | — | `'vaulter.manage'` | — |
+| `vaulter-drive.access.gate.super_ability` | `VAULTER_GATE_SUPER_ABILITY` | `'vaulter.super'` | — |
+| `vaulter-drive.access.gate.create_ability` | `VAULTER_GATE_CREATE_ABILITY` | `'vaulter.create'` | — |
+| `vaulter-drive.access.spatie.permissions.previewer` | — | `'vaulter.preview'` | — |
+| `vaulter-drive.access.spatie.permissions.reader` | — | `'vaulter.view'` | — |
+| `vaulter-drive.access.spatie.permissions.commenter` | — | `'vaulter.comment'` | — |
+| `vaulter-drive.access.spatie.permissions.writer` | — | `'vaulter.edit'` | — |
+| `vaulter-drive.access.spatie.permissions.organizer` | — | `'vaulter.organize'` | — |
+| `vaulter-drive.access.spatie.permissions.owner` | — | `'vaulter.manage'` | — |
+| `vaulter-drive.access.spatie.super_permission` | `VAULTER_SPATIE_SUPER_PERMISSION` | `'vaulter.super'` | — |
+| `vaulter-drive.access.spatie.create_permission` | `VAULTER_SPATIE_CREATE_PERMISSION` | `'vaulter.create'` | — |
+| `vaulter-drive.access.spatie.teams` | `VAULTER_SPATIE_TEAMS` | `false` | — |
+| `vaulter-drive.access.spatie.role_subject_type` | — | `'role'` | — |
+| `vaulter-drive.access.spatie.team_subject_type` | — | `'team'` | — |
+| `vaulter-drive.listing.scan_budget` | — | `1000` | — |
+| `vaulter-drive.sharing.token_generator` | — | `RandomShareTokenGenerator::class` | — |
+| `vaulter-drive.sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `'/share'` | — |
+| `vaulter-drive.sharing.prefix_length` | — | `8` | — |
+| `vaulter-drive.sharing.default_ttl_hours` | `VAULTER_SHARE_DEFAULT_TTL_HOURS` | `72` | — |
+| `vaulter-drive.sharing.max_ttl_hours` | `VAULTER_SHARE_MAX_TTL_HOURS` | `720` | — |
+| `vaulter-drive.downloads.delivery_mode` | — | `'strict'` | — |
+| `vaulter-drive.downloads.direct_ttl_seconds` | — | `60` | — |
+| `vaulter-drive.downloads.inline_mime_types` | — | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain']` | — |
+| `vaulter-drive.changes.retention_days` | — | `30` | Days a journal entry stays readable; vaulter:changes:prune deletes older ones and a cursor behind them expires (410 cursor_expired). |
+| `vaulter-drive.changes.max_page_size` | — | `1000` | The largest page DriveHandle::changes()->list() returns. |
+| `vaulter-drive.handlers` | — | `[]` | — |
 | `vaulter-drive.uploads.scan.required` | — | `null` | — |
 | `vaulter-drive.uploads.scan.mode` | — | `null` | — |
 | `vaulter-drive.uploads.scan.scanner` | — | `null` | — |
@@ -671,12 +657,26 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-drive.uploads.resumable.metadata.max_value_length` | — | `512` | — |
 | `vaulter-drive.trash.retention_days` | — | `30` | — |
 | `vaulter-drive.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
+| `vaulter-drive.schedule.changes_prune` | — | `'dailyAt:03:20'` | — |
 | `vaulter-drive.schedule.uploads_sweep` | — | `'hourlyAt:15'` | — |
 | `vaulter-drive.schedule.trash_purge` | — | `'dailyAt:03:30'` | — |
 | `vaulter-drive.schedule.drives_purge` | — | `'hourlyAt:25'` | — |
 | `vaulter-drive.schedule.revisions_prune` | — | `'dailyAt:03:40'` | — |
 | `vaulter-drive.schedule.scan_reconcile` | — | `'everyFiveMinutes'` | — |
 | `vaulter-drive.schedule.drives_recount` | — | `null` | Report-only drift check; off until an operator wants it. |
+| `vaulter-drive.models.drive` | — | `Drive::class` | — |
+| `vaulter-drive.models.node` | — | `Node::class` | — |
+| `vaulter-drive.models.file` | — | `File::class` | — |
+| `vaulter-drive.models.scan_obligation` | — | `ScanObligation::class` | — |
+| `vaulter-drive.models.scan_request` | — | `ScanRequest::class` | — |
+| `vaulter-drive.models.scan_evidence` | — | `ScanEvidenceRecord::class` | — |
+| `vaulter-drive.models.scan_policy_state` | — | `ScanPolicyState::class` | — |
+| `vaulter-drive.models.scan_backfill_run` | — | `ScanBackfillRun::class` | — |
+| `vaulter-drive.models.file_revision` | — | `FileRevision::class` | — |
+| `vaulter-drive.models.file_revision_blob` | — | `FileRevisionBlob::class` | — |
+| `vaulter-drive.models.grant` | — | `NodeGrant::class` | — |
+| `vaulter-drive.models.node_share` | — | `NodeShare::class` | — |
+| `vaulter-drive.models.activity` | — | `Activity::class` | — |
 | `vaulter-drive.models.upload_session` | — | `UploadSession::class` | — |
 | `vaulter-drive.models.upload_part` | — | `UploadPart::class` | — |
 

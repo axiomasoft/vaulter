@@ -16,16 +16,6 @@ parameters:
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
         - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
 
-        # NullPermissionDriver implements the PermissionDriver contract, whose override()
-        # is ?Effect (a real driver returns null when it has no opinion). The OPEN
-        # null-driver always returns Effect::Allow by design (H.2 / D6″), so the
-        # concrete body never hits the null branch — but the declared type must stay
-        # nullable to satisfy the interface. The over-strict return.unusedType is
-        # scoped to this env-gated test-support class only.
-        -
-            identifier: return.unusedType
-            path: packages/core/src/Testing/NullPermissionDriver.php
-
         # The traits of the testing kit are used by test files (Pest `uses()`) and by the test cases of other packages,
         # never by code under packages/core/src: PHPStan cannot see a user and would call them unused (D14).
         -
@@ -41,12 +31,13 @@ parameters:
             path: packages/core/src/Testing/*
 
         # Kernel traits whose users live in other packages since the drive model move (P4.10): the models of vaulter-drive
-        # apply them, nothing in the core's own source does. StampsDriveTenant moves to drive with the kernel slice (P4.11).
+        # apply them, nothing in the core's own source does.
         -
             identifier: trait.unused
             paths:
-                - packages/core/src/Models/Concerns/StampsDriveTenant.php
+                - packages/core/src/Events/Concerns/DescribesEvent.php
                 - packages/core/src/Support/Concerns/HasIcon.php
+                - packages/core/src/Support/Concerns/HasLabel.php
                 - packages/core/src/Support/Concerns/HasStableMorphAlias.php
 
         # The commit path stages the upload stream INTO the CAS inside the transaction

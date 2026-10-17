@@ -9,7 +9,7 @@ use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
-/** Register this class in config('vaulter.handlers'). */
+/** Register this class in config('vaulter-drive.handlers'). */
 final class {{ class }} extends AbstractFileHandler
 {
     public function key(): string

@@ -7,7 +7,7 @@ namespace {{ namespace }};
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileProvider;
 
-/** Register this provider FQCN in config('vaulter.profiles.providers'). */
+/** Register this provider FQCN in config('vaulter-drive.profiles.providers'). */
 final class {{ class }} extends ProfileProvider
 {
     public function profile(Profile $profile): Profile

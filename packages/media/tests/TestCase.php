@@ -44,7 +44,7 @@ abstract class TestCase extends OrchestraTestCase
 
         // The CAS slice is ACL-agnostic: run OPEN under the env-gated null driver so
         // the tests exercise pure blob mechanics without an access-control lane.
-        $app['config']->set('vaulter.access.permission_driver', 'null');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the CAS tests assert integer
         // blob keys.

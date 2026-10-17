@@ -65,9 +65,9 @@ final class MediaModule implements OwnsSchema, VaulterModule
             ->problems(MediaProblemCodes::class)
             ->commands(GcBlobsCommand::class, ReconcileBlobsCommand::class)
             ->schedule(SchedulingRegistrar::class)
-            // The scanner the host names in `vaulter.scan.scanner`; none configured means no scanning.
+            // The scanner the host names in `vaulter-drive.scan.scanner`; none configured means no scanning.
             ->defineCapability(ContentScanner::class, Cardinality::OptionalSingle)
-            ->providesFromConfig(ContentScanner::class, 'vaulter.scan.scanner')
+            ->providesFromConfig(ContentScanner::class, 'vaulter-drive.scan.scanner')
             // The CAS storage engine the host picks in `vaulter-media.storage_driver` (Flysystem by default).
             ->defineCapability(StorageDriver::class, Cardinality::RequiredSingle)
             ->providesFromConfig(StorageDriver::class, 'vaulter-media.storage_driver', FlysystemStorageDriver::class)

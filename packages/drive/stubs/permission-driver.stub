@@ -13,7 +13,7 @@ use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Effect;
 
 /**
- * Register this class in config('vaulter.access.permission_drivers').
+ * Register this class in config('vaulter-drive.access.permission_drivers').
  *
  * It starts as a pass-through: every decision comes from the grants. Add your roles
  * in resolve()/override()/subjectsFor() and keep the contract test green.

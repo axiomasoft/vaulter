@@ -131,16 +131,16 @@ final class Config
     }
 
     /**
-     * Config key => default (bool) of every `vaulter.features.*` flag: the switches that can mount routes.
+     * Config key => default (bool) of every `vaulter-drive.features.*` flag: the switches that can mount routes.
      *
      * @return array<string, bool>
      */
     public static function featureFlags(Repo $repo): array
     {
-        $file = 'packages/core/config/vaulter.php';
+        $file = 'packages/drive/config/vaulter-drive.php';
         $flags = [];
-        foreach (self::leaves(self::returned(AstFiles::parse($repo, $file), $file), 'vaulter', new Standard) as $path => $leaf) {
-            if (str_starts_with($path, 'vaulter.features.') && is_bool($leaf['value'])) {
+        foreach (self::leaves(self::returned(AstFiles::parse($repo, $file), $file), 'vaulter-drive', new Standard) as $path => $leaf) {
+            if (str_starts_with($path, 'vaulter-drive.features.') && is_bool($leaf['value'])) {
                 $flags[$path] = $leaf['value'];
             }
         }

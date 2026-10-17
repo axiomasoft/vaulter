@@ -63,7 +63,7 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 | [`document_type_unavailable`](#document_type_unavailable) | 409 | documents | `never` | `cacheable` | `Vaulter\Documents\Exceptions\DocumentTypeUnavailableException` |
 | [`drive_archived`](#drive_archived) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\DriveArchivedException` |
 | [`drive_not_found`](#drive_not_found) | 404 | drive | `never` | `never` | `Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException` |
-| [`duplicate_registration`](#duplicate_registration) | 500 | core | `never` | `never` | `Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException` |
+| [`duplicate_registration`](#duplicate_registration) | 500 | core | `never` | `never` | `Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException` |
 | [`extension_failed`](#extension_failed) | 500 | core | `never` | `never` | `Vaulter\Exceptions\Support\InvalidExtensionResult` |
 | [`file_size_limit_exceeded`](#file_size_limit_exceeded) | 413 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException` |
 | [`folder_children_limit_exceeded`](#folder_children_limit_exceeded) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException` |

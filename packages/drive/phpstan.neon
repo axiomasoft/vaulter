@@ -25,6 +25,16 @@ parameters:
             identifier: trait.unused
             path: src/Concerns/HasDrives.php
 
+        # NullPermissionDriver implements the PermissionDriver contract, whose override()
+        # is ?Effect (a real driver returns null when it has no opinion). The OPEN
+        # null-driver always returns Effect::Allow by design (H.2 / D6″), so the
+        # concrete body never hits the null branch — but the declared type must stay
+        # nullable to satisfy the interface. The over-strict return.unusedType is
+        # scoped to this env-gated test-support class only.
+        -
+            identifier: return.unusedType
+            path: src/Testing/NullPermissionDriver.php
+
         # Shipped test kit: the trait is consumed by Pest `uses()` in tests (this package and core), never inside src.
         -
             identifier: trait.unused
