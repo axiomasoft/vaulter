@@ -36,9 +36,11 @@
     "require-dev": {
         "opis/json-schema": "^2.4",
         "symfony/yaml": "^8.0",
+        "axioma-studio/vaulter-documents": "self.version",
         "axioma-studio/vaulter-drive": "self.version",
         "axioma-studio/vaulter-media": "self.version",
         "axioma-studio/vaulter-webhooks": "self.version",
+        "firebase/php-jwt": "^7.0",
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
@@ -75,6 +77,13 @@
         }
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "../documents",
+            "options": {
+                "symlink": true
+            }
+        },
         {
             "type": "path",
             "url": "../drive",

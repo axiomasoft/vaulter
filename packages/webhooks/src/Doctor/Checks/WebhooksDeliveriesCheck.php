@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks\Doctor\Checks;
 
+use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
@@ -33,7 +34,7 @@ final readonly class WebhooksDeliveriesCheck implements DoctorCheck
         // with the reason 'endpoint_disabled'; neither says anything about a failing receiver.
         $disabled = $endpoints::query()->whereNotNull('disabled_at')->where('disabled_reason', 'failing')->count();
         $dead = $deliveries::query()->where('status', 'dead')
-            ->where(static fn ($query) => $query->whereNull('last_error')->orWhere('last_error', '!=', 'endpoint_disabled'))->count();
+            ->where(static fn (Builder $query) => $query->whereNull('last_error')->orWhere('last_error', '!=', 'endpoint_disabled'))->count();
 
         if ($disabled === 0 && $dead === 0) {
             return [DoctorFinding::ok(code: 'core.webhooks.deliveries_ok', message: 'No endpoint was disabled for failing and no delivery used up its retries.')];

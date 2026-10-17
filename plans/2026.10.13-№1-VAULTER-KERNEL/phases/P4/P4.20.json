@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.20",
   "title": "ADR-0030 (владение схемой и пакетами) и документация P4",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "ADR-0030: владение таблицами/миграциями/конфигом по пакетам, блоки номеров, pins D23, D40-порядок, отсутствие publish-копий и шимов; docs: архитектура пакетов, установка (метапакет + webhooks отдельно), конфиг-корни vaulter-<pkg>, точка входа drive, тестовый кит, uninstall; README пакетов (webhooks новый); CHANGELOG Unreleased; RU-зеркало; reference-страницы генерацией.",
   "why": "Правило плана: ADR пишется в фазе, реализующей решение; документация — часть поверхности 1.0 (D27).",
   "scope": {
@@ -162,6 +162,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T07:30:21Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    }
+  },
+  "updated_at": "2026-10-17T07:30:21Z"
 }

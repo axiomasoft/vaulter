@@ -70,3 +70,7 @@ P4.18 | CleanInstallMatrixTest | на pgsql/mysql wipe _test БД внутри D
 RC4 | core/ModuleUninstallCommand | TOCTOU сужен, не закрыт; для строгости на pgsql — LOCK TABLE внутри транзакции (PLAN4)
 RC4 | core/KeyColumnTypesTest | ожидание 39 колонок не проверялось на pgsql/mysql (на sqlite пропуск)
 RC4 | exit-код 3 (PARTIAL) | не в Cli::EXIT_CONSTANTS/ledger exit_codes — только запись в changes.json
+P4.19 | scripts/release/consumer-check.sh core | реальный прогон не выполнялся (PLAN4): core-тестам нужны корневые файлы (openapi/) и root-only dev-зависимости (open-telemetry, flysystem-aws-s3-v3), не объявленные в core/composer.json
+P4.19 | consumer-check.sh, ConsumerCheckTest | ~2–3 с на запуск скрипта из-за process spawn
+P4.19 | monorepo-split.yml | владельцу создать репозиторий axioma-studio/vaulter-webhooks (prerequisite)
+P4.19 | docs/, README | заметка про webhooks split-target и job consumer-isolation — в P4.20

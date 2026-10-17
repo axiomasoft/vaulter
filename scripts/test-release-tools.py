@@ -157,7 +157,7 @@ class BuildArtifactsTest(unittest.TestCase):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
         built = sorted(p.name for p in self.out.glob("*.zip"))
         self.assertEqual(built, sorted(f"axioma-studio-{n}-0.3.0.zip" for n in (
-            "vaulter-core", "vaulter-media", "vaulter-drive", "vaulter-documents", "vaulter-filament", "vaulter")))
+            "vaulter-core", "vaulter-media", "vaulter-drive", "vaulter-documents", "vaulter-webhooks", "vaulter-filament", "vaulter")))
 
     def test_azgard_is_skipped_while_its_upstream_is_a_dev_require(self):
         self.assertFalse((self.out / "axioma-studio-vaulter-azgard-0.3.0.zip").exists())
@@ -165,7 +165,7 @@ class BuildArtifactsTest(unittest.TestCase):
         self.assertIn("dev-main", self.result.stdout)
 
     def test_export_ignore_keeps_tests_and_dev_config_out(self):
-        for name in ("vaulter-core", "vaulter-media", "vaulter-drive", "vaulter-documents", "vaulter-filament"):
+        for name in ("vaulter-core", "vaulter-media", "vaulter-drive", "vaulter-documents", "vaulter-webhooks", "vaulter-filament"):
             entries = self.zip_of(name).namelist()
             with self.subTest(package=name):
                 self.assertIn("composer.json", entries)

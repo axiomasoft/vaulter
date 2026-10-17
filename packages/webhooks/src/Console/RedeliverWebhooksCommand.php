@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Throwable;
 use Vaulter\Attributes\Internal;
@@ -81,8 +82,8 @@ final class RedeliverWebhooksCommand extends Command
         $refused = 0;
         $found = 0;
 
-        $query->orderBy($query->getModel()->getKeyName())->chunkById(self::CHUNK, function ($chunk) use ($redeliver, &$sent, &$refused, &$found): void {
-            /** @var iterable<WebhookDelivery> $chunk */
+        $query->orderBy($query->getModel()->getKeyName())->chunkById(self::CHUNK, function (Collection $chunk) use ($redeliver, &$sent, &$refused, &$found): void {
+            /** @var Collection<int, WebhookDelivery> $chunk */
             foreach ($chunk as $delivery) {
                 $found++;
                 try {
