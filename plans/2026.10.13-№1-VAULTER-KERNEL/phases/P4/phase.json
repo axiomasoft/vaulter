@@ -229,6 +229,11 @@
       "note": "Fast-квалификация P4."
     }
   ],
+  "closed": {
+    "at": "2026-10-17T08:39:10Z",
+    "result": "done_with_deviations",
+    "summary": "21 item(s): 3 done, 18 done_with_deviations"
+  },
   "sections": [
     {
       "id": "design-inputs",
