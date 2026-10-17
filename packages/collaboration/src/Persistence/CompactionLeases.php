@@ -44,22 +44,28 @@ final readonly class CompactionLeases
     /**
      * Lease up to `$max` generations to hub `$hubId`: those with a drain request first, then those whose uncheckpointed
      * log reached a trigger (`compaction.trigger_updates`, `trigger_bytes` or `trigger_age`). A generation another lease
-     * holds is skipped. No further lease is granted once the entries carry `max_state_bytes` of state.
+     * holds is skipped. The entries carry at most `max_state_bytes` of state: a generation is measured under the locks
+     * before its tail is read, and the call ends at the first one that would carry it past the budget, neither read nor
+     * leased (a later call hands it out). Only a first entry larger than the whole budget goes out alone, or it would
+     * never be compacted.
      *
      * @return list<CompactionLease>
      */
     public function grant(string $hubId, int $max): array
     {
         $leases = [];
-        $bytes = 0;
+        $room = $this->config->maxStateBytes();
         foreach ($this->candidates() as $candidate) {
-            $lease = $this->lease($candidate, $hubId);
+            $lease = $this->lease($candidate, $hubId, $leases === [] ? null : $room);
+            if ($lease === false) {
+                break;
+            }
             if ($lease === null) {
                 continue;
             }
             $leases[] = $lease;
-            $bytes += $lease->bytes();
-            if (count($leases) >= $max || $bytes >= $this->config->maxStateBytes()) {
+            $room -= $lease->bytes();
+            if (count($leases) >= $max || $room <= 0) {
                 break;
             }
         }
@@ -149,15 +155,18 @@ final readonly class CompactionLeases
             || ($oldest !== null && $oldest->lessThanOrEqualTo($now->copy()->subSeconds($this->config->compactionTriggerAge())));
     }
 
-    /** The lease on `$candidate`, or null when it is not leasable under the locks any more. */
-    private function lease(Head $candidate, string $hubId): ?CompactionLease
+    /**
+     * The lease on `$candidate`; null when it is not leasable under the locks any more, false when its checkpoint and
+     * tail would carry more than `$room` bytes (null: no limit): then nothing was read or leased.
+     */
+    private function lease(Head $candidate, string $hubId, ?int $room): CompactionLease|false|null
     {
         $nodeId = Document::query()->whereKey(Identity::key($candidate->documentId))->value('node_id');
         if (!is_int($nodeId) && !is_string($nodeId)) {
             return null;
         }
 
-        return $this->database->transaction(function () use ($candidate, $nodeId, $hubId): ?CompactionLease {
+        return $this->database->transaction(function () use ($candidate, $nodeId, $hubId, $room): CompactionLease|false|null {
             try {
                 $locked = $this->state->lock($nodeId);
             } catch (NodeNotFoundException|NotADocumentException) {
@@ -175,6 +184,10 @@ final readonly class CompactionLeases
             $pending = $locked->pending !== null && $locked->pending->generation === $locked->generation;
             if (!$pending && $head->drainRequestedAt === null) {
                 return null;
+            }
+            // Measured before the tail is read: a generation over the budget is never loaded into memory here.
+            if ($room !== null && $this->size($locked->documentId, $head) > $room) {
+                return false;
             }
 
             $token = bin2hex(random_bytes(32));
@@ -195,5 +208,24 @@ final readonly class CompactionLeases
                 log: $this->updates->read($locked),
             );
         });
+    }
+
+    /**
+     * The bytes the entry of `$head` would carry, as CompactionLease::bytes() counts them (the checkpoint's binary size,
+     * the tail as stored), read under the document and head locks without loading either.
+     */
+    private function size(string $documentId, Head $head): int
+    {
+        $checkpoint = Document::query()->whereKey(Identity::key($documentId))->lockForUpdate()->value('yjs_state_size');
+        // Locking reads, row by row: on MySQL a plain read would miss the appends committed since this transaction's
+        // first read (UpdateLog::read()), and PostgreSQL locks no rows for an aggregate.
+        $stored = $this->log->rows('collaboration_updates', $documentId, $head->generation)
+            ->where('seq', '>', $head->checkpointSeq)
+            ->where('seq', '<=', $head->headSeq)
+            ->selectRaw('length(payload) as stored')
+            ->lockForUpdate()
+            ->pluck('stored');
+
+        return $stored->reduce(static fn (int $bytes, mixed $size): int => $bytes + (is_numeric($size) ? (int) $size : 0), is_numeric($checkpoint) ? (int) $checkpoint : 0);
     }
 }

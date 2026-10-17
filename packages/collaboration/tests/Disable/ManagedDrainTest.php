@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Sleep;
 use Vaulter\Collaboration\Drain\DrainState;
 use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
@@ -171,6 +173,37 @@ it('never reports success while such a late marker remains: exit 1 with the docu
 
     expect(Compaction::marker($this->second))->toBe([0, 1])
         ->and(Compaction::marker($this->first))->toBe([null, null]);
+});
+
+it('rolls back an append the flag reached inside its transaction: it reads the flag again before the commit, nothing is written', function (): void {
+    Compaction::append($this->first, 'saved');
+    // The drain sets the flag after this append read it and wrote its update, before it commits.
+    DB::listen(static function (QueryExecuted $query): void {
+        if (str_starts_with($query->sql, 'insert') && str_contains($query->sql, 'collaboration_updates') && !Cache::store()->has(DrainState::KEY)) {
+            Cache::store()->forever(DrainState::KEY, Carbon::now()->getTimestampMs());
+        }
+    });
+
+    expect(fn () => Compaction::append($this->first, 'late'))->toThrow(CollaborationDrainingException::class)
+        ->and(Compaction::seqs($this->first))->toBe([1])
+        ->and(Compaction::rows('collaboration_receipts'))->toBe(1)
+        ->and(Compaction::head($this->first)?->headSeq)->toBe(1)
+        ->and(Compaction::marker($this->first))->toBe([0, 1]);
+});
+
+it('exits 1 and asks the hub for nothing when the cache store does not keep the flag: appends are still accepted', function (): void {
+    FakeHub::install();
+    config()->set('cache.stores.drain-dropped', ['driver' => 'null']);
+    config()->set('vaulter-collaboration.drain.cache_store', 'drain-dropped');
+    Compaction::append($this->first, 'a1');
+
+    $this->artisan('vaulter:collaboration:drain')
+        ->expectsOutputToContain('did not keep the draining flag')
+        ->assertExitCode(1);
+
+    expect(FakeHub::$drains)->toBe([])
+        ->and(Compaction::head($this->first)?->drainRequestedAt)->toBeNull()
+        ->and(Compaction::append($this->first, 'a2')->seq)->toBe(2);
 });
 
 it('keeps the moment of the first drain when it is repeated', function (): void {

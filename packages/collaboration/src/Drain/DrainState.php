@@ -20,6 +20,9 @@ use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
  * default store when null), without expiry; its value is the moment it was set (Unix milliseconds). Every PHP process
  * must share that store: in an `array` or `null` store the flag would stop the appends of one process only (the doctor
  * check collaboration.hub reports it). A store that cannot be read refuses the append with its own error.
+ *
+ * An append reads the flag twice: before any lock, and as the last statement of its transaction, so an append that
+ * missed the flag has nothing but its commit left once the flag is set.
  */
 #[Internal]
 final readonly class DrainState
@@ -28,17 +31,22 @@ final readonly class DrainState
 
     public function __construct(private CacheFactory $cache, private CollaborationConfig $config) {}
 
-    /** Set the flag; a flag set already keeps the moment it was first set. Returns that moment. */
-    public function begin(): Carbon
+    /**
+     * Set the flag; a flag set already keeps the moment it was first set. Returns that moment as the store reads it back,
+     * or null when the store did not keep the flag (a failed write, a store that drops it): appends are still accepted
+     * then, and a drain must not go on.
+     */
+    public function begin(): ?Carbon
     {
         $since = $this->since();
         if ($since !== null) {
             return $since;
         }
-        $now = Carbon::now();
-        $this->store()->forever(self::KEY, $now->getTimestampMs());
+        if (!$this->store()->forever(self::KEY, Carbon::now()->getTimestampMs())) {
+            return null;
+        }
 
-        return $now;
+        return $this->since();
     }
 
     /** When the flag was set; null while appends are accepted. */

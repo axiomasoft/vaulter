@@ -22,13 +22,15 @@ use Vaulter\Documents\State\PendingMarker;
  * every append is refused with 503 collaboration_draining — and ask the hub's compaction worker to checkpoint every
  * document that carries a pending marker (drain_requested_at), then wait outside any transaction until no document
  * carries one or `--deadline` seconds passed. The outcome is what CollaborativeState::pendingDocuments() reads at the
- * end, never what the hub answered, and it is read no earlier than `drain.max_append_tx` after the flag was set: an
- * append that read the flag just before it was set has committed its marker by then. A marker that appears meanwhile is
- * drained too.
+ * end, never what the hub answered, and it is read no earlier than `drain.max_append_tx` after the flag was set. An
+ * append reads the flag again as the last statement of its transaction (UpdateLog::append()) and rolls back when it is
+ * set, so one that missed the flag had passed every lock wait and write before the flag was set, and only its commit
+ * is left in that window. A marker that appears meanwhile is drained too.
  *
  * Exit 0: no document is pending, the module can be switched off (`vaulter.modules.collaboration=false`) and removed.
  * Exit 1: documents are still pending (the hub is down, the deadline passed); each is listed, nothing was lost, and the
- * command can be repeated. The flag stays in both cases, until `--release` removes it (exit 0). Exit 2: a bad option.
+ * command can be repeated. The flag stays in both cases, until `--release` removes it (exit 0). Exit 1 as well when the
+ * cache store did not keep the flag: appends are still accepted, nothing was asked of the hub. Exit 2: a bad option.
  */
 #[Internal]
 final class DrainCommand extends Command
@@ -64,6 +66,15 @@ final class DrainCommand extends Command
         }
 
         $since = $state->begin();
+        if ($since === null) {
+            $this->components->error(sprintf(
+                'The cache store %s did not keep the draining flag: appends are still accepted, nothing was drained. Fix the store (vaulter-collaboration.drain.cache_store), then repeat the drain.',
+                $config->drainCacheStore() ?? '(default)',
+            ));
+
+            return self::FAILURE;
+        }
+        // An append that missed the flag reads it again before its commit: within this window only that commit is left.
         $quiet = $since->copy()->addSeconds($config->drainMaxAppendTx());
         $until = Carbon::now()->addSeconds($deadline)->max($quiet);
         $this->components->info(sprintf(

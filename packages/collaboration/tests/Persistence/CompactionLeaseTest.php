@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
 use Vaulter\Collaboration\Persistence\LogTables;
@@ -103,6 +104,42 @@ it('hands out at most max leases', function (): void {
     expect(Compaction::lease(max: 1))->toHaveCount(1)
         ->and(Compaction::lease(max: 1))->toHaveCount(1)
         ->and(Compaction::lease(max: 1))->toBe([]);
+});
+
+it('measures a generation before it reads its tail: the call ends before one that would pass max_state_bytes, a later call hands it out', function (): void {
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
+    // 12 stored bytes each (base64 of 9): both together pass the budget.
+    config()->set('vaulter-collaboration.max_state_bytes', 20);
+    $other = Hub::document();
+    Compaction::append($this->node, str_repeat('a', 9));
+    Compaction::append($other, str_repeat('b', 9));
+    $tailReads = 0;
+    DB::listen(static function (QueryExecuted $query) use (&$tailReads): void {
+        if (preg_match('/^select\b.*\bupdate_id\b.*\bpayload\b.*collaboration_updates\b/i', $query->sql) === 1) {
+            $tailReads++;
+        }
+    });
+
+    $first = Compaction::lease();
+    $skipped = $first[0]->nodeId === (string) $this->node->getKey() ? $other : $this->node;
+
+    expect($first)->toHaveCount(1)
+        ->and($first[0]->bytes())->toBe(12)
+        ->and($tailReads)->toBe(1)
+        ->and(Compaction::head($skipped)?->leaseToken)->toBeNull()
+        ->and(leasedNodes())->toBe([(string) $skipped->getKey()]);
+});
+
+it('hands a first generation larger than the whole budget out alone', function (): void {
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
+    config()->set('vaulter-collaboration.max_state_bytes', 20);
+    $other = Hub::document();
+    Compaction::append($this->node, str_repeat('a', 30));
+    Compaction::append($other, str_repeat('b', 30));
+
+    expect(Compaction::lease())->toHaveCount(1)
+        ->and(Compaction::lease())->toHaveCount(1)
+        ->and(Compaction::lease())->toBe([]);
 });
 
 it('does not hand a held lease to another hub before it expires, then grants a new token', function (): void {

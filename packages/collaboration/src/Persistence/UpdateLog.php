@@ -25,8 +25,8 @@ use Vaulter\Support\Identity;
  * C10: refused while a managed disable drains the log), then takes the documents' lock order through
  * CollaborativeState::lock() (T → N → D), then the head row of the generation FOR UPDATE (L4, created on the first
  * append under the same locks); it fences the generation, answers a known update id from its receipt, and otherwise
- * writes the update, its receipt, the new head and the documents' pending marker in one transaction. The caller builds
- * the ack from the result, after the commit.
+ * writes the update, its receipt, the new head and the documents' pending marker in one transaction, which reads the
+ * flag once more before it commits. The caller builds the ack from the result, after the commit.
  *
  * The log is written only here, and v_documents never: the marker goes through the documents state contract.
  */
@@ -41,14 +41,14 @@ final readonly class UpdateLog
     ) {}
 
     /**
-     * @throws CollaborationDrainingException       a managed disable drains the log; nothing was read or written
+     * @throws CollaborationDrainingException       a managed disable drains the log; nothing was written
      * @throws NodeNotFoundException                the node is gone or in the trash
      * @throws CollaborationEpochMismatchException  the generation is not the document's current one, or it was retired
      * @throws CollaborationUpdateMismatchException the claimed hash is wrong, or the id was committed with another payload
      */
     public function append(int|string $nodeId, UpdateEnvelope $update): AppendResult
     {
-        // Before any lock: a drain counts on every append that missed the flag ending within drain.max_append_tx.
+        // Before any lock, and again before the commit (below): a draining log takes no lock at all.
         $this->draining->assertAccepting();
         $sha256 = $update->sha256();
         if (!hash_equals($sha256, strtolower($update->claimedSha256))) {
@@ -91,6 +91,9 @@ final readonly class UpdateLog
             ]);
             $this->heads($locked->documentId, $update->generation)->update(['head_seq' => $seq, 'updated_at' => $now]);
             $this->state->markPending($locked, $update->generation, $seq);
+            // Read again as the last statement before the commit, after every lock wait and write: a flag set meanwhile
+            // rolls the append back, so what a drain waits drain.max_append_tx for is this commit alone.
+            $this->draining->assertAccepting();
 
             return new AppendResult($locked->documentId, $update->generation, $update->updateId, $seq, $sha256, duplicate: false);
         });
