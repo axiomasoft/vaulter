@@ -1,4 +1,6 @@
 packages/collaboration/hub/test/collab-expiry.test.js
+packages/collaboration/hub/test/compact-cli.test.js
+packages/collaboration/hub/test/compaction.test.js
 packages/collaboration/hub/test/config.test.js
 packages/collaboration/hub/test/e2e/restore-epoch.e2e.js
 packages/collaboration/hub/test/envelope.test.js
@@ -17,3 +19,4 @@ packages/collaboration/hub/test/security.test.js
 packages/collaboration/hub/test/v1-paths.test.js
 packages/collaboration/hub/test/webhook.test.js
 packages/collaboration/hub/test/websocket-hardening.test.js
+packages/collaboration/hub/test/worker.test.js

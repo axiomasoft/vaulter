@@ -6,6 +6,7 @@ import * as backendModule from './backend.js'
 import { config, isOriginAllowed, validateConfig } from './config.js'
 import { CLIENT_PROTOCOL, createPersistence, epochChanged } from './persistence.js'
 import { closeConnection, closeRoom, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, TOKEN_EXPIRED } from './rooms.js'
+import { createWorker } from './worker.js'
 
 // Vaulter collaboration hub — the external, env-configured Hocuspocus process.
 //
@@ -28,6 +29,10 @@ import { closeConnection, closeRoom, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, TO
 //   5. A 409 collaboration_epoch_mismatch means the room's generation is over: the hub closes the
 //      room with 4409 `epoch_changed` and drops its pending records; clients reopen the document
 //      with a new Y.Doc.
+//   6. The compaction worker (src/worker.js) leases the generations due for a checkpoint — open
+//      room or not, drain requests first — merges each log and publishes the checkpoint.
+//
+// Started by `vaulter-collaboration-hub serve` (src/cli.js) or `node src/index.js`.
 //
 // Hardening: Origin allowlist, Throttle (per-IP), maxPayload, perMessageDeflate off, token expiry
 // enforced before every message, optional Redis (multi-instance) + Logger, fail-fast config
@@ -390,6 +395,16 @@ async function boot() {
   // eslint-disable-next-line no-console
   console.log(`Vaulter Hocuspocus hub "${config.instanceName}" listening on ws://0.0.0.0:${config.port} (${config.mode})`)
 
+  const worker = createWorker({ events: { protocolMismatch: () => server.vaulterPersistence.reportProtocolMismatch() } })
+  worker.start()
+  server.vaulterWorker = worker
+
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+      worker.stop()
+    })
+  }
+
   return server
 }
 
@@ -403,4 +418,4 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   })
 }
 
-export { buildServer, buildExtensions, onConnect, decodeTokenExpiry, armExpiryTimer, closeRoom, activeRoomStats, readClientProtocol }
+export { boot, buildServer, buildExtensions, onConnect, decodeTokenExpiry, armExpiryTimer, closeRoom, activeRoomStats, readClientProtocol }

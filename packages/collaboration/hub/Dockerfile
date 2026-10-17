@@ -44,4 +44,9 @@ LABEL org.opencontainers.image.title="Vaulter Hocuspocus hub" \
       org.opencontainers.image.source="https://github.com/axiomasoft/vaulter" \
       org.opencontainers.image.licenses="MIT"
 
-CMD ["node", "src/index.js"]
+# The hub's command line (src/cli.js, package bin vaulter-collaboration-hub). By default the image
+# serves (WebSocket hub + compaction worker); the same image runs the offline recovery one-shot:
+#   docker run --rm --env-file hub.env <image> compact --pending --deadline=120
+# (exit 0: nothing left to compact; 1: the pending documents are listed on stderr).
+ENTRYPOINT ["node", "src/cli.js"]
+CMD ["serve"]

@@ -6,10 +6,13 @@ import { parseRetryAfter } from './retry.js'
 //   - authenticate → POST {base}/collaboration/hub/authenticate  (onAuthenticate)
 //   - load         → POST {base}/collaboration/hub/load          (checkpoint + committed tail)
 //   - append       → POST {base}/collaboration/hub/append        (one update; the ledger repeats it)
+//   - leaseCompaction   → POST {base}/collaboration/hub/compaction/lease (the compaction worker)
+//   - publishCheckpoint → POST {base}/collaboration/hub/checkpoint       (a merged checkpoint, CAS)
 //
 // Every call names the protocol (X-Vaulter-Collab-Protocol: 2; the backend answers anything else
-// with 409 collaboration_protocol_mismatch) and carries two independent proofs, both required by
-// the backend:
+// with 409 collaboration_protocol_mismatch). The calls made for a room connection carry two
+// independent proofs, both required by the backend; the compaction calls are the hub's own and
+// carry the signature alone:
 //   - the room JWT of the connection the call is made for (Authorization: Bearer) — it names the
 //     user, the room (drive, node, epoch) and the mode; the hub never holds its signing secret;
 //   - an HMAC-SHA256 signature of "{timestamp}.{rawBody}" keyed by the webhook secret
@@ -29,6 +32,7 @@ export const PROTOCOL_VERSION = '2'
 export const EPOCH_MISMATCH = 'collaboration_epoch_mismatch'
 export const PROTOCOL_MISMATCH = 'collaboration_protocol_mismatch'
 export const SEED_CONFLICT = 'collaboration_seed_conflict'
+export const CHECKPOINT_CONFLICT = 'collaboration_checkpoint_conflict'
 
 /**
  * A non-2xx answer the hub does not retry. `status` and the problem `code` only — the request
@@ -182,10 +186,77 @@ export async function append({ token, room, generation, updateId, sha256, payloa
     return { ok: true, status: response.status, ack }
   }
 
+  return refusal(response)
+}
+
+/** A non-2xx answer: its status, problem code and, for a 429, the Retry-After wait. */
+async function refusal(response) {
   return {
     ok: false,
     status: response.status,
     code: await problemCode(response),
     retryAfterMs: response.status === 429 ? parseRetryAfter(header(response, 'Retry-After')) : null,
   }
+}
+
+/**
+ * ONE compaction lease call of the hub's worker: POST {hub_id, max}, signed, without a room
+ * token. Resolves:
+ *   - `{ ok: true, status, entries, serverTime }` — the generations leased to this hub, drain
+ *     requests first, each `{document, generation, lease_token, lease_expires_at, checkpoint_seq,
+ *     head_seq, checkpoint_version, type, schema_version, checkpoint, content, tail}`; `serverTime`
+ *     is the answer's Date (ms, null without one), which the worker measures the leases against;
+ *   - `{ ok: false, status, code, retryAfterMs }` for any other answer.
+ * Throws when there is no answer (network error, timeout).
+ */
+export async function leaseCompaction({ hubId, max }, options = {}) {
+  const response = await post('compaction/lease', { hub_id: hubId, max }, null, options)
+
+  if (!response.ok) {
+    return refusal(response)
+  }
+
+  const entries = await response.json().catch(() => null)
+
+  if (!Array.isArray(entries)) {
+    return { ok: false, status: 502, code: 'collaboration_invalid_lease', retryAfterMs: null }
+  }
+
+  const date = Date.parse(header(response, 'Date') ?? '')
+
+  return { ok: true, status: response.status, entries, serverTime: Number.isNaN(date) ? null : date }
+}
+
+/**
+ * ONE checkpoint publication under a compaction lease: POST {document, generation, lease_token,
+ * covered_from, covered_through, expected_checkpoint_version, state, content}, signed, without a
+ * room token. Resolves `{ ok: true, status, checkpointVersion, markerCleared }` after the commit,
+ * `{ ok: false, status, code, retryAfterMs }` otherwise (409 collaboration_checkpoint_conflict: the
+ * lease or the log moved on; the backend changed and deleted nothing). Throws when there is no
+ * answer — src/retry.js reads that as retryable.
+ */
+export async function publishCheckpoint({ document, generation, leaseToken, coveredFrom, coveredThrough, expectedCheckpointVersion, state, content }, options = {}) {
+  const response = await post('checkpoint', {
+    document,
+    generation,
+    lease_token: leaseToken,
+    covered_from: coveredFrom,
+    covered_through: coveredThrough,
+    expected_checkpoint_version: expectedCheckpointVersion,
+    state,
+    content,
+  }, null, options)
+
+  if (!response.ok) {
+    return refusal(response)
+  }
+
+  const result = await response.json().catch(() => null)
+
+  // A 2xx without the published version is not a publication; repeated as for a 5xx.
+  if (!Number.isInteger(result?.checkpoint_version) || typeof result?.marker_cleared !== 'boolean') {
+    return { ok: false, status: 502, code: 'collaboration_invalid_checkpoint', retryAfterMs: null }
+  }
+
+  return { ok: true, status: response.status, checkpointVersion: result.checkpoint_version, markerCleared: result.marker_cleared }
 }

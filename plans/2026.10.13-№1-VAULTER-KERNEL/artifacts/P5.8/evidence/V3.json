@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T182239Z-3f8b06:P5.8:checks.1:V3",
+  "check_id": "V3",
+  "subject": "PLAN3.P5.8",
+  "candidate": {
+    "head": "d37a378420ebdfb4f96d8cdc00ddd5ed32c6d616",
+    "dirty_digest": "3709b36033026b47c1e6c79320c40fd7b137ad0c87ba026c1fa51537c41d7631"
+  },
+  "started_at": "2026-10-17T21:37:24Z",
+  "procedure": {
+    "cmd": "jq -e '.bin[\"vaulter-collaboration-hub\"] == \"src/cli.js\"' packages/collaboration/hub/package.json",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T21:37:24Z"
+}

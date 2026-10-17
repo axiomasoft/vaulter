@@ -39,6 +39,11 @@
 //   VAULTER_COLLAB_RETRY_DEADLINE_MS        — deadline of one series, network time included (default 10000).
 //   VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS — timeout of one attempt (default 2000).
 //
+// Compaction (the worker of `serve` and the one-shot `compact --pending`, src/worker.js):
+//   VAULTER_COLLAB_COMPACTION_INTERVAL_MS   — how often the worker asks the backend for compaction leases (default 2000;
+//                                             a drain request waits at most this long plus one merge).
+//   VAULTER_COLLAB_COMPACTION_BATCH         — generations one lease call may hand out (1..100, default 10).
+//
 // Scaling / ops:
 //   VAULTER_COLLAB_REDIS_URL      — when set, enables the Redis extension (multi-instance sync).
 //   VAULTER_COLLAB_INSTANCE_NAME  — unique name per instance for log correlation.
@@ -171,6 +176,10 @@ export function buildConfig(env = process.env) {
     retryDeadlineMs: int('VAULTER_COLLAB_RETRY_DEADLINE_MS', 10000, env),
     retryAttemptTimeoutMs: int('VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS', 2000, env),
 
+    // Compaction
+    compactionIntervalMs: int('VAULTER_COLLAB_COMPACTION_INTERVAL_MS', 2000, env),
+    compactionBatch: int('VAULTER_COLLAB_COMPACTION_BATCH', 10, env),
+
     // Scaling / ops
     redisUrl: str('VAULTER_COLLAB_REDIS_URL', undefined, env),
     instanceName: str('VAULTER_COLLAB_INSTANCE_NAME', 'vaulter-hocuspocus', env),
@@ -204,45 +213,37 @@ export function isOriginAllowed(origin, conf = config) {
   return conf.allowedOrigins.includes(origin)
 }
 
-/**
- * Validate the config at startup and return a list of fatal problems (empty = ok). In
- * production we REQUIRE an explicit backend URL and a non-empty origin allowlist, so the
- * hub never boots into an open/misrouted state.
- */
-export function validateConfig(conf = config) {
+// Numeric guards: int() yields NaN for a malformed value (e.g. '12a34', '4.5'), so a typo in any
+// of these fails fast at boot with the offending variable named, rather than silently booting a
+// misconfigured hub. Ports are bound to the valid TCP range and must differ. `backend` marks the
+// keys the one-shot `compact --pending` uses too (it opens no WebSocket).
+const NUMERIC = Object.freeze([
+  { key: 'port', env: 'VAULTER_COLLAB_PORT', min: 1, max: 65535 },
+  { key: 'healthPort', env: 'VAULTER_COLLAB_HEALTH_PORT', min: 1, max: 65535 },
+  { key: 'maxPayloadBytes', env: 'VAULTER_COLLAB_MAX_PAYLOAD_BYTES', min: 1 },
+  { key: 'throttle', env: 'VAULTER_COLLAB_THROTTLE', min: 1 },
+  { key: 'throttleSeconds', env: 'VAULTER_COLLAB_THROTTLE_SECONDS', min: 1 },
+  { key: 'banTime', env: 'VAULTER_COLLAB_BAN_TIME', min: 0 },
+  { key: 'webhookTimeoutMs', env: 'VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS', min: 1, backend: true },
+  { key: 'timeout', env: 'VAULTER_COLLAB_TIMEOUT_MS', min: 0 },
+  { key: 'debounce', env: 'VAULTER_COLLAB_DEBOUNCE_MS', min: 0 },
+  { key: 'maxDebounce', env: 'VAULTER_COLLAB_MAX_DEBOUNCE_MS', min: 0 },
+  { key: 'pendingBudgetBytes', env: 'VAULTER_COLLAB_PENDING_BUDGET_BYTES', min: 1 },
+  { key: 'pendingRoomBudgetBytes', env: 'VAULTER_COLLAB_PENDING_ROOM_BUDGET_BYTES', min: 1 },
+  { key: 'flushIntervalMs', env: 'VAULTER_COLLAB_FLUSH_INTERVAL_MS', min: 10 },
+  { key: 'retryBaseMs', env: 'VAULTER_COLLAB_RETRY_BASE_MS', min: 1, backend: true },
+  { key: 'retryCapMs', env: 'VAULTER_COLLAB_RETRY_CAP_MS', min: 1, backend: true },
+  { key: 'retryMaxAttempts', env: 'VAULTER_COLLAB_RETRY_MAX_ATTEMPTS', min: 1, backend: true },
+  { key: 'retryDeadlineMs', env: 'VAULTER_COLLAB_RETRY_DEADLINE_MS', min: 1, backend: true },
+  { key: 'retryAttemptTimeoutMs', env: 'VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS', min: 1, backend: true },
+  { key: 'compactionIntervalMs', env: 'VAULTER_COLLAB_COMPACTION_INTERVAL_MS', min: 10, backend: true },
+  { key: 'compactionBatch', env: 'VAULTER_COLLAB_COMPACTION_BATCH', min: 1, max: 100, backend: true },
+])
+
+function numericProblems(conf, entries) {
   const problems = []
 
-  if (conf.isProduction && !conf.backendUrlSet) {
-    problems.push('VAULTER_API_URL (or VAULTER_BACKEND_URL, VAULTER_LARAVEL_WEBHOOK_URL) is required in production.')
-  }
-  if (conf.isProduction && conf.allowedOrigins.length === 0) {
-    problems.push('VAULTER_COLLAB_ALLOWED_ORIGINS is required in production (CSWSH defence); set explicit origins or "*" for dev only.')
-  }
-
-  // Numeric guards: int() yields NaN for a malformed value (e.g. '12a34', '4.5'), so a typo in
-  // any of these fails fast at boot with the offending variable named, rather than silently
-  // booting a misconfigured hub. Ports are bound to the valid TCP range and must differ.
-  const numeric = [
-    { key: 'port', env: 'VAULTER_COLLAB_PORT', min: 1, max: 65535 },
-    { key: 'healthPort', env: 'VAULTER_COLLAB_HEALTH_PORT', min: 1, max: 65535 },
-    { key: 'maxPayloadBytes', env: 'VAULTER_COLLAB_MAX_PAYLOAD_BYTES', min: 1 },
-    { key: 'throttle', env: 'VAULTER_COLLAB_THROTTLE', min: 1 },
-    { key: 'throttleSeconds', env: 'VAULTER_COLLAB_THROTTLE_SECONDS', min: 1 },
-    { key: 'banTime', env: 'VAULTER_COLLAB_BAN_TIME', min: 0 },
-    { key: 'webhookTimeoutMs', env: 'VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS', min: 1 },
-    { key: 'timeout', env: 'VAULTER_COLLAB_TIMEOUT_MS', min: 0 },
-    { key: 'debounce', env: 'VAULTER_COLLAB_DEBOUNCE_MS', min: 0 },
-    { key: 'maxDebounce', env: 'VAULTER_COLLAB_MAX_DEBOUNCE_MS', min: 0 },
-    { key: 'pendingBudgetBytes', env: 'VAULTER_COLLAB_PENDING_BUDGET_BYTES', min: 1 },
-    { key: 'pendingRoomBudgetBytes', env: 'VAULTER_COLLAB_PENDING_ROOM_BUDGET_BYTES', min: 1 },
-    { key: 'flushIntervalMs', env: 'VAULTER_COLLAB_FLUSH_INTERVAL_MS', min: 10 },
-    { key: 'retryBaseMs', env: 'VAULTER_COLLAB_RETRY_BASE_MS', min: 1 },
-    { key: 'retryCapMs', env: 'VAULTER_COLLAB_RETRY_CAP_MS', min: 1 },
-    { key: 'retryMaxAttempts', env: 'VAULTER_COLLAB_RETRY_MAX_ATTEMPTS', min: 1 },
-    { key: 'retryDeadlineMs', env: 'VAULTER_COLLAB_RETRY_DEADLINE_MS', min: 1 },
-    { key: 'retryAttemptTimeoutMs', env: 'VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS', min: 1 },
-  ]
-  for (const { key, env, min, max } of numeric) {
+  for (const { key, env, min, max } of entries) {
     const value = conf[key]
     if (!Number.isInteger(value)) {
       problems.push(`${env} must be a valid integer.`)
@@ -255,11 +256,15 @@ export function validateConfig(conf = config) {
       problems.push(`${env} must be <= ${max}.`)
     }
   }
-  if (Number.isInteger(conf.port) && conf.port === conf.healthPort) {
-    problems.push('VAULTER_COLLAB_PORT and VAULTER_COLLAB_HEALTH_PORT must differ.')
-  }
-  if (!PERSISTENCE_MODES.includes(conf.mode)) {
-    problems.push(`VAULTER_COLLAB_MODE must be one of ${PERSISTENCE_MODES.join(', ')}.`)
+
+  return problems
+}
+
+function backendProblems(conf) {
+  const problems = []
+
+  if (conf.isProduction && !conf.backendUrlSet) {
+    problems.push('VAULTER_API_URL (or VAULTER_BACKEND_URL, VAULTER_LARAVEL_WEBHOOK_URL) is required in production.')
   }
   if (Number.isInteger(conf.retryBaseMs) && Number.isInteger(conf.retryCapMs) && conf.retryCapMs < conf.retryBaseMs) {
     problems.push('VAULTER_COLLAB_RETRY_CAP_MS must be >= VAULTER_COLLAB_RETRY_BASE_MS.')
@@ -269,6 +274,44 @@ export function validateConfig(conf = config) {
   }
 
   return problems
+}
+
+/**
+ * Validate the config at startup and return a list of fatal problems (empty = ok). In
+ * production we REQUIRE an explicit backend URL and a non-empty origin allowlist, so the
+ * hub never boots into an open/misrouted state.
+ */
+export function validateConfig(conf = config) {
+  const problems = []
+
+  if (conf.isProduction && conf.allowedOrigins.length === 0) {
+    problems.push('VAULTER_COLLAB_ALLOWED_ORIGINS is required in production (CSWSH defence); set explicit origins or "*" for dev only.')
+  }
+
+  problems.push(...numericProblems(conf, NUMERIC))
+  if (Number.isInteger(conf.port) && conf.port === conf.healthPort) {
+    problems.push('VAULTER_COLLAB_PORT and VAULTER_COLLAB_HEALTH_PORT must differ.')
+  }
+  if (!PERSISTENCE_MODES.includes(conf.mode)) {
+    problems.push(`VAULTER_COLLAB_MODE must be one of ${PERSISTENCE_MODES.join(', ')}.`)
+  }
+
+  return [...backendProblems(conf), ...problems]
+}
+
+/**
+ * The fatal problems of the one-shot `compact --pending`: it talks to the backend only, so it
+ * needs the backend URL (production), the webhook secret every compaction call is signed with
+ * and sane retry/compaction numbers — no ports and no Origin allowlist.
+ */
+export function validateCompactConfig(conf = config) {
+  const problems = backendProblems(conf)
+
+  if (typeof conf.webhookSecret !== 'string' || conf.webhookSecret === '') {
+    problems.push('VAULTER_COLLAB_WEBHOOK_SECRET is required: the backend refuses an unsigned compaction call.')
+  }
+
+  return [...problems, ...numericProblems(conf, NUMERIC.filter((entry) => entry.backend === true))]
 }
 
 export const config = buildConfig()
