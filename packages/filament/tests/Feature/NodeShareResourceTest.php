@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Livewire;
+use Livewire\Mechanisms\DataStore;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Enums\Access\GrantScope;
@@ -13,12 +15,16 @@ use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Drive\Support\ShareToken;
 use Vaulter\Filament\Resources\NodeShareResource;
+use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
+use Vaulter\Filament\Support\PanelRecord;
+use Vaulter\Filament\Support\PanelShares;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 
 beforeEach(fn () => config()->set('vaulter-drive.features.share_links', true));
 
-it('resolves the configured node-share model (swappable)', function (): void {
-    expect(NodeShareResource::getModel())->toBe(NodeShare::class);
+it('declares the panel record class, not a drive share model', function (): void {
+    expect(NodeShareResource::getModel())->toBe(PanelRecord::class)
+        ->and(NodeShareResource::getModelLabel())->toBe('node share');
 });
 
 it('is not creatable from a flat form (shares come from the core Action)', function (): void {
@@ -30,6 +36,7 @@ it('creates a share link through the core CreateShareLinkAction', function (): v
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Public');
     DriveBuilder::grant($folder, $owner); // Owner ⇒ may Share
 
@@ -54,6 +61,7 @@ it('preserves the validated share form contract and one-time token notification'
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Exact share');
     DriveBuilder::grant($folder, $owner);
 
@@ -104,6 +112,7 @@ it('applies safe share defaults to omitted and blank optional values', function 
         $this->actingAs($owner);
 
         $storage = DriveBuilder::storage();
+        DriveBuilder::openDrive($storage, $owner);
         $folder = DriveBuilder::folder($storage, 'Default share');
         DriveBuilder::grant($folder, $owner);
 
@@ -148,6 +157,7 @@ it('never persists the raw token — only its hash and prefix', function (): voi
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Secret');
     DriveBuilder::grant($folder, $owner);
 
@@ -175,6 +185,7 @@ it('reveals the token prefix but never the full hash in the prefix column', func
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Prefixed');
     DriveBuilder::grant($folder, $owner);
 
@@ -200,6 +211,7 @@ it('revokes a share link through the core RevokeShareLinkAction', function (): v
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Revocable');
     DriveBuilder::grant($folder, $owner);
 
@@ -216,17 +228,19 @@ it('revokes a share link through the core RevokeShareLinkAction', function (): v
     $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
     expect($share->isRevoked())->toBeFalse();
 
-    NodeShareResource::revokeRecord($share);
+    NodeShareResource::revokeRecord(DriveBuilder::shareRow($share));
 
     expect($share->fresh()->isRevoked())->toBeTrue();
 });
 
 it('does not create a share when the admin may not share the node', function (): void {
-    $stranger = DriveBuilder::user(9);
-    $this->actingAs($stranger);
+    $viewer = DriveBuilder::user(9);
+    $this->actingAs($viewer);
 
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'Locked');
+    // The viewer can open the drive and see the node (read through the root's subtree), but holds no Share on it.
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $viewer, RoleRegistry::READER);
 
     pullSentNotifications();
 
@@ -249,50 +263,71 @@ it('does not create a share when the admin may not share the node', function ():
         ->and($notification['status'])->toBe('warning');
 });
 
+it('answers a node the admin cannot see exactly like a missing node', function (): void {
+    $this->actingAs(DriveBuilder::user(9));
+
+    $folder = DriveBuilder::folder(DriveBuilder::storage(), 'Hidden');
+    // No grant at all: the drive is not listed, so the node is not found.
+
+    pullSentNotifications();
+
+    NodeShareResource::createFromData(['node_id' => $folder->getKey()]);
+    $hidden = pullSentNotifications()[0] ?? null;
+    NodeShareResource::createFromData(['node_id' => 987654]);
+    $missing = pullSentNotifications()[0] ?? null;
+
+    expect(app(NodeShareReadRepository::class)->forNode($folder)->count())->toBe(0)
+        ->and($hidden['body'])->toBe('The selected node no longer exists.')
+        ->and($hidden['body'])->toBe($missing['body']);
+});
+
 it('does not mint or list shares when the feature is disabled', function (): void {
     $owner = DriveBuilder::user();
     $this->actingAs($owner);
     $drive = DriveBuilder::storage();
+    DriveBuilder::openDrive($drive, $owner);
     $node = DriveBuilder::folder($drive);
     DriveBuilder::grant($node, $owner);
     config()->set('vaulter-drive.features.share_links', false);
     NodeShareResource::createFromData(['node_id' => $node->id]);
     expect(NodeShare::query()->count())->toBe(0)
-        ->and(NodeShareResource::getEloquentQuery()->count())->toBe(0);
+        ->and(PanelShares::rows())->toBe([]);
 });
 
 it('rechecks the reader ability inside the actual revoke mutation', function (): void {
     $owner = DriveBuilder::user();
     $this->actingAs($owner);
     $drive = DriveBuilder::storage();
+    DriveBuilder::openDrive($drive, $owner);
     $node = DriveBuilder::folder($drive);
     $grant = DriveBuilder::grant($node, $owner);
     NodeShareResource::createFromData(['node_id' => $node->id]);
     $share = NodeShare::query()->sole();
     $grant->forceFill(['role_key' => RoleRegistry::READER])->save();
-    expect(fn () => NodeShareResource::revokeRecord($share))->toThrow(PermissionDeniedException::class)
+    expect(fn () => NodeShareResource::revokeRecord(DriveBuilder::shareRow($share)))->toThrow(PermissionDeniedException::class)
         ->and($share->fresh()->revoked_at)->toBeNull()
-        ->and(NodeShareResource::getEloquentQuery()->count())->toBe(0);
+        ->and(PanelShares::rows())->toBe([]);
 });
 
 it('rotates a link through the core Action and rechecks Share inside the mutation', function (): void {
     $owner = DriveBuilder::user();
     $this->actingAs($owner);
     $drive = DriveBuilder::storage();
+    DriveBuilder::openDrive($drive, $owner);
     $node = DriveBuilder::folder($drive);
     $grant = DriveBuilder::grant($node, $owner);
     NodeShareResource::createFromData(['node_id' => $node->id]);
     $share = NodeShare::query()->sole();
     $before = $share->token_hash;
 
-    $token = NodeShareResource::rotateRecord($share);
+    $token = NodeShareResource::rotateRecord(DriveBuilder::shareRow($share));
 
     expect(ShareToken::hash($token))->toBe($share->fresh()->token_hash)
         ->and($share->fresh()->token_hash)->not->toBe($before)
         ->and($share->fresh()->token_generation)->toBe(2);
 
     $grant->forceFill(['role_key' => RoleRegistry::READER])->save();
-    expect(fn () => NodeShareResource::rotateRecord($share))->toThrow(PermissionDeniedException::class)
+    expect(fn () => NodeShareResource::rotateRecord(DriveBuilder::shareRow($share)))->toThrow(PermissionDeniedException::class)
         ->and($share->fresh()->token_generation)->toBe(2);
 });
 
@@ -306,6 +341,7 @@ it('shows the refusal instead of failing when the role does not fit the audience
     $owner = DriveBuilder::user();
     $this->actingAs($owner);
     $drive = DriveBuilder::storage();
+    DriveBuilder::openDrive($drive, $owner);
     $node = DriveBuilder::folder($drive);
     DriveBuilder::grant($node, $owner);
     pullSentNotifications();
@@ -321,4 +357,61 @@ it('shows the refusal instead of failing when the role does not fit the audience
         ->and($writer['body'])->toContain('writer')
         ->and($tenant['status'])->toBe('warning')
         ->and($tenant['body'])->toContain('tenant');
+});
+
+it('renders the share table from the share listings, filters revoked links and rotates through the table action', function (): void {
+    app(DataStore::class)->register();
+    $owner = DriveBuilder::user();
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $node = DriveBuilder::folder($storage, 'Shared');
+    DriveBuilder::grant($node, $owner);
+    NodeShareResource::createFromData(['node_id' => $node->id]);
+    NodeShareResource::createFromData(['node_id' => $node->id]);
+    [$live, $revoked] = NodeShare::query()->orderBy('id')->get()->all();
+    NodeShareResource::revokeRecord(DriveBuilder::shareRow($revoked));
+
+    Livewire::test(ListNodeShares::class)
+        ->assertCanSeeTableRecords([(string) $live->getKey(), (string) $revoked->getKey()])
+        ->filterTable('revoked', true)
+        ->assertCanSeeTableRecords([(string) $revoked->getKey()])
+        ->assertCanNotSeeTableRecords([(string) $live->getKey()])
+        ->filterTable('revoked', false)
+        ->assertCanSeeTableRecords([(string) $live->getKey()])
+        ->assertCanNotSeeTableRecords([(string) $revoked->getKey()])
+        ->resetTableFilters()
+        ->assertTableActionHidden('revoke', (string) $revoked->getKey())
+        ->assertTableActionVisible('rotate', (string) $live->getKey());
+
+    $before = $live->token_hash;
+    Livewire::test(ListNodeShares::class)->callTableAction('rotate', (string) $live->getKey());
+
+    expect($live->fresh()->token_hash)->not->toBe($before);
+});
+
+it('shows the status of a share row without ever carrying its token', function (): void {
+    $owner = DriveBuilder::user();
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $node = DriveBuilder::folder($storage, 'Statuses');
+    DriveBuilder::grant($node, $owner);
+    NodeShareResource::createFromData(['node_id' => $node->id]);
+    $share = NodeShare::query()->sole();
+
+    $row = PanelShares::rows()[0];
+
+    expect($row['status'])->toBe(PanelShares::LIVE)
+        ->and($row['token_prefix'])->toBe($share->token_prefix)
+        ->and(array_keys($row))->not->toContain('token', 'token_hash');
+
+    $share->forceFill(['max_uses' => 1, 'use_count' => 1])->save();
+    expect(PanelShares::rows()[0]['status'])->toBe(PanelShares::EXHAUSTED);
+
+    $share->forceFill(['max_uses' => null, 'expires_at' => now()->subMinute()])->save();
+    expect(PanelShares::rows()[0]['status'])->toBe(PanelShares::EXPIRED);
+
+    NodeShareResource::revokeRecord(DriveBuilder::shareRow($share));
+    expect(PanelShares::rows()[0]['status'])->toBe(PanelShares::REVOKED);
 });

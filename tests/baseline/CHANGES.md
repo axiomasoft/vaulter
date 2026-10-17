@@ -1365,14 +1365,22 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `drive` `P\Tests\Providers\HttpRegistrarTest::__pest_evaluable_it_registers_no_event_subscriber__events_are_recorded_by_the_EventRecorder"dataset "both disabled""` → `P\Tests\Providers\HttpRegistrarTest::__pest_evaluable_it_registers_no_event_subscriber__events_are_recorded_by_the_EventRecorder"dataset "activity disabled""` — the drive suite no longer installs the webhooks package: the dataset varies only the activity feature (P4.13) (D6)
 - `drive` `P\Tests\Providers\HttpRegistrarTest::__pest_evaluable_it_registers_no_event_subscriber__events_are_recorded_by_the_EventRecorder"dataset "both enabled""` → `P\Tests\Providers\HttpRegistrarTest::__pest_evaluable_it_registers_no_event_subscriber__events_are_recorded_by_the_EventRecorder"dataset "activity enabled""` — the drive suite no longer installs the webhooks package: the dataset varies only the activity feature (P4.13) (D6)
 - `documents` `P\Tests\Document\DomainExceptionStatusTest::__pest_evaluable_it_renders_each_domain_exception_with_its_stable_code_and_HTTP_status"dataset "blocked outbound URL""` → [`webhooks`] `P\Tests\Http\WebhookExceptionStatusTest::__pest_evaluable_it_renders_each_webhook_exception_with_its_stable_code_and_HTTP_status"dataset "blocked outbound URL""` — the case belongs to the webhooks package, which the documents suite no longer installs (P4.13) (D6)
+- `filament` `P\Tests\Arch\FilamentBoundaryArchTest::__pest_evaluable_the_panel_never_uses_core_Actions__Repositories_or_the_AccessResolver` → `P\Tests\Arch\FilamentBoundaryArchTest::__pest_evaluable_the_panel_never_uses_drive_models__Actions__Repositories__the_AccessResolver_or_an_Eloquent_Builder` — I9: the panel boundary now also forbids drive models and the Eloquent Builder (P4.15) (D10)
+- `filament` `P\Tests\Feature\ActivityResourceTest::__pest_evaluable_it_resolves_the_configured_activity_model__swappable_` → `P\Tests\Feature\ActivityResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_activity_model` — resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15) (D10)
+- `filament` `P\Tests\Feature\DriveResourceTest::__pest_evaluable_it_resolves_the_configured_drive_model__swappable_` → `P\Tests\Feature\DriveResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_model` — resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15) (D10)
+- `filament` `P\Tests\Feature\NodeGrantResourceTest::__pest_evaluable_it_resolves_the_configured_grant_model__swappable_` → `P\Tests\Feature\NodeGrantResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_a_drive_grant_model` — resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15) (D10)
+- `filament` `P\Tests\Feature\NodeResourceTest::__pest_evaluable_it_resolves_the_configured_node_model__swappable_` → `P\Tests\Feature\NodeResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_node_model` — resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15) (D10)
+- `filament` `P\Tests\Feature\NodeShareResourceTest::__pest_evaluable_it_resolves_the_configured_node_share_model__swappable_` → `P\Tests\Feature\NodeShareResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_a_drive_share_model` — resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15) (D10)
+- `filament` `P\Tests\Feature\DriveResourceTest::__pest_evaluable_it_lists_the_provisioned_drives` → `P\Tests\Feature\DriveResourceTest::__pest_evaluable_it_lists_the_provisioned_drives_the_admin_can_open__with_their_accounting` — the drive table reads Vaulter::drives() snapshots instead of the drive model (P4.15) (D10)
+- `filament` `P\Tests\Feature\ResourcePagesTest::__pest_evaluable_it_declares_a_view_page_for_the_read_mostly_resources` → `P\Tests\Feature\ResourcePagesTest::__pest_evaluable_it_declares_no_record_page__every_row_is_a_snapshot_with_no_model_to_open` — drive and activity details open as a table modal over the snapshot row; no model-bound view page (P4.15) (D10)
 
 ## Additions (current − original)
 
-- `repo`: 221 (introduced P1.3)
+- `repo`: 222 (introduced P1.3)
 - `core`: 439
 - `media`: 90
-- `drive`: 85
+- `drive`: 95
 - `documents`: 12
 - `azgard`: 9
-- `filament`: 0
+- `filament`: 27
 - `webhooks`: 75

@@ -46,6 +46,13 @@ beforeEach(function (): void {
             return new SpyDriveHandle($this->inner->forDrive($drive), $this->calls);
         }
 
+        public function findById(int|string $id): ?DriveHandle
+        {
+            $handle = $this->inner->findById($id);
+
+            return $handle === null ? null : new SpyDriveHandle($handle, $this->calls);
+        }
+
         public function findForOwner(Model $owner, string $profile): ?DriveHandle
         {
             $handle = $this->inner->findForOwner($owner, $profile);

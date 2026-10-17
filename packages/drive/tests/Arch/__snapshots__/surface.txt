@@ -1391,7 +1391,9 @@ Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException api since 1.0 fi
 Vaulter\Drive\Facades\Vaulter api since 1.0 final class extends Illuminate\Support\Facades\Facade
   @method static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
   @method static DriveHandle|null findDrive(Model $owner, ?string $profile = null)
+  @method static DriveHandle|null findDriveById(string|int $id)
   @method static FileHandlerRegistry handlers()
+  @method static Page<DriveSnapshot> drives(Authorizable $actor, ?ListOptions $options = null)
   @method static PermissionDriverManager permissions()
   @method static ProfileRegistry profiles()
   protected static function getFacadeAccessor(): string
@@ -1624,7 +1626,9 @@ Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor api since 1.0 final readonl
 
 Vaulter\Drive\Vaulter api since 1.0 final readonly class
   public function drive(Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): Vaulter\Drive\Contracts\DriveHandle
+  public function drives(Illuminate\Contracts\Auth\Access\Authorizable $actor, ?Vaulter\Drive\Data\ListOptions $options = null): Vaulter\Data\Page
   public function findDrive(Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?Vaulter\Drive\Contracts\DriveHandle
+  public function findDriveById(int|string $id): ?Vaulter\Drive\Contracts\DriveHandle
   public function handlers(): Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
   public function permissions(): Vaulter\Drive\Access\PermissionDriverManager
   public function profiles(): Vaulter\Drive\Profiles\ProfileRegistry

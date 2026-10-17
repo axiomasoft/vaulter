@@ -15,90 +15,60 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Configuration\SharingConfig;
+use Vaulter\Drive\Contracts\Sharing\ShareOperations;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Drive\Exceptions\Sharing\ShareRoleNotAllowedException;
-use Vaulter\Drive\Models\Node;
-use Vaulter\Drive\Models\Sharing\NodeShare;
-use Vaulter\Drive\Operations\DriveContext;
-use Vaulter\Drive\Operations\ShareOperations;
-use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
-use Vaulter\Filament\Support\PanelActor;
-use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
-use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\Filament\Support\PanelDrives;
+use Vaulter\Filament\Support\PanelNodes;
+use Vaulter\Filament\Support\PanelRecord;
+use Vaulter\Filament\Support\PanelRecords;
+use Vaulter\Filament\Support\PanelShares;
 
 /**
- * The bearer share-link admin surface: list, create and
- * revoke the public share-links on a node. The raw token is NEVER stored and NEVER
- * displayed here — only the non-secret `token_prefix` plus the live/expired/revoked
- * status. It is shown exactly ONCE, at mint time, via the {@see ShareOperations}
- * result ({@see MintedShareLink}).
+ * The bearer share-link admin surface: list, create and revoke the public share-links on a
+ * node. The raw token is NEVER stored and NEVER displayed here — only the non-secret
+ * `token_prefix` plus the live/expired/revoked status. It is shown exactly ONCE, at mint time,
+ * from the share operations' result.
  *
- * Every mutation flows through a CORE Action:
- *   - create → {@see ShareOperations} (mints + hashes the token; raw shown once);
- *   - revoke → {@see ShareOperations} (stamps revoked_at; idempotent).
- * Both require Ability::Share on the node, gated through the ShareOperations. The model
- * resolves through {@see app(VaulterConfig::class)->model('node_share')} for swappability.
+ * Rows are the links the drive handles list for the nodes the acting admin can share
+ * ({@see PanelShares}); every mutation flows through the same handle's share operations:
+ *   - create → mints + hashes the token; raw shown once;
+ *   - rotate → replaces the token; the new raw token shown once;
+ *   - revoke → stamps revoked_at; idempotent.
+ * All require Ability::Share on the node, so the panel never bypasses the ACL.
+ *
+ * @phpstan-import-type ShareRow from PanelShares
  */
 #[Internal]
 final class NodeShareResource extends Resource
 {
-    protected static ?string $model = NodeShare::class;
+    protected static ?string $model = PanelRecord::class;
+
+    protected static ?string $modelLabel = 'node share';
+
+    protected static bool $isGloballySearchable = false;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-link';
 
     protected static string|UnitEnum|null $navigationGroup = 'Vaulter';
-
-    protected static ?string $recordTitleAttribute = 'token_prefix';
-
-    #[Override]
-    public static function getModel(): string
-    {
-        return app(VaulterConfig::class)->model('node_share');
-    }
-
-    /**
-     * Access-aware listing: narrow to share rows whose node_id is in
-     * the acting admin's grant-reachable candidate set. Empty candidate set (no
-     * actor, or an actor with zero grants) ⇒ empty table.
-     */
-    #[Override]
-    public static function getEloquentQuery(): Builder
-    {
-        $query = app(TenancyBoundary::class)->constrain(parent::getEloquentQuery(), 'node.storage');
-
-        $ids = [];
-        $nodeClass = app(VaulterConfig::class)->model('node');
-        foreach (app(TenancyBoundary::class)->constrain($nodeClass::query())->whereNull('trashed_at')->lazyById(100) as $node) {
-            try {
-                foreach (self::operations($node)->list(Identity::stringify($node->getKey())) as $row) {
-                    $ids[] = $row->id;
-                }
-            } catch (VaulterException) {
-                // Hidden nodes and disabled features contribute no rows.
-            }
-        }
-
-        return $query->whereKey($ids);
-    }
 
     #[Override]
     public static function form(Schema $schema): Schema
@@ -110,6 +80,8 @@ final class NodeShareResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->records(self::records(...))
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 TextColumn::make('node_id')
                     ->label('Node')
@@ -137,17 +109,16 @@ final class NodeShareResource extends Resource
                     ->toggleable(),
 
                 TextColumn::make('status')
-                    ->state(fn (NodeShare $record): string => self::statusLabel($record))
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'Live' => 'success',
-                        'Revoked' => 'danger',
+                        PanelShares::LIVE => 'success',
+                        PanelShares::REVOKED => 'danger',
                         default => 'warning',
                     }),
 
                 TextColumn::make('use_count')
                     ->label('Uses')
-                    ->formatStateUsing(fn (int $state, NodeShare $record): string => $record->max_uses === null ? (string) $state : $state.' / '.$record->max_uses)
+                    ->formatStateUsing(fn (int $state, array $record): string => ($max = self::maxUses($record)) === null ? (string) $state : $state.' / '.$max)
                     ->toggleable(),
 
                 TextColumn::make('expires_at')
@@ -165,12 +136,7 @@ final class NodeShareResource extends Resource
                     ->label('Revoked')
                     ->placeholder('All')
                     ->trueLabel('Revoked only')
-                    ->falseLabel('Live only')
-                    ->queries(
-                        true: fn (Builder $query): Builder => $query->whereNotNull('revoked_at'),
-                        false: fn (Builder $query): Builder => $query->whereNull('revoked_at'),
-                        blank: fn (Builder $query): Builder => $query,
-                    ),
+                    ->falseLabel('Live only'),
             ])
             ->recordActions([
                 self::rotateAction(),
@@ -248,23 +214,27 @@ final class NodeShareResource extends Resource
     }
 
     /**
-     * Mint a share-link from the create-form data via the core Action and surface the
-     * raw token ONCE via a persistent notification. The Share ability on the chosen
-     * node is enforced first; a denial surfaces a warning, never a silent mint.
+     * Mint a share-link from the create-form data through the node's drive handle and surface
+     * the raw token ONCE via a persistent notification. The node must be one the admin can
+     * view and the Share ability on it is enforced first; a denial surfaces a warning, never a
+     * silent mint. A hidden node and a missing node answer alike.
      *
      * @param array<string, mixed> $data
      */
     public static function createFromData(array $data): void
     {
-        $node = self::resolveNode($data['node_id'] ?? null);
+        $nodeId = $data['node_id'] ?? null;
+        $found = is_int($nodeId) || is_string($nodeId) ? PanelNodes::find($nodeId) : null;
 
-        if (!$node instanceof Node) {
+        if ($found === null) {
             self::notifyDenied('The selected node no longer exists.');
 
             return;
         }
 
-        if (!self::actorCanShare($node)) {
+        [$handle, $node] = $found;
+
+        if (!self::actorCanShare($handle->shares(), $node->id)) {
             self::notifyDenied('You may not share this node.');
 
             return;
@@ -277,8 +247,8 @@ final class NodeShareResource extends Resource
         $maxUses = $data['max_uses'] ?? null;
 
         try {
-            $minted = self::operations($node)->create(
-                node: Identity::stringify($node->getKey()),
+            $minted = $handle->shares()->create(
+                node: $node->id,
                 input: new ShareLinkInput(
                     // Filament validation already supplies enum/string values with these types.
                     role: (string) ($data['role'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
@@ -301,6 +271,49 @@ final class NodeShareResource extends Resource
         self::notifyToken('Share link created', $minted->token);
     }
 
+    /**
+     * Revoke a share-link through the drive's share operations, which re-check Share inside
+     * the mutation.
+     *
+     * @param array<mixed> $record a panel share row
+     */
+    public static function revokeRecord(array $record): void
+    {
+        $handle = PanelDrives::handle(self::field($record, 'drive_id')) ?? throw NodeNotFoundException::forId('missing');
+        $handle->shares()->revoke(node: self::field($record, 'node_id'), share: self::field($record, 'id'));
+    }
+
+    /**
+     * Rotate the link's token; returns the new raw token.
+     *
+     * @param array<mixed> $record a panel share row
+     */
+    public static function rotateRecord(array $record): string
+    {
+        $handle = PanelDrives::handle(self::field($record, 'drive_id')) ?? throw NodeNotFoundException::forId('missing');
+
+        return $handle->shares()->rotate(node: self::field($record, 'node_id'), share: self::field($record, 'id'))->token;
+    }
+
+    /**
+     * @param  array<string, mixed>                    $filters
+     * @return Paginator<string, array<string, mixed>>
+     */
+    private static function records(?string $search, array $filters, ?string $sortColumn, ?string $sortDirection, int $page, int|string $recordsPerPage): Paginator
+    {
+        $revoked = PanelRecords::filterValue($filters, 'revoked');
+        $rows = array_values(array_filter(
+            PanelShares::rows(),
+            static fn (array $row): bool => match ($revoked) {
+                '1' => $row['revoked_at'] !== null,
+                '0' => $row['revoked_at'] === null,
+                default => true,
+            },
+        ));
+
+        return PanelRecords::paginate($rows, $sortColumn, $sortDirection, $page, $recordsPerPage, 'created_at');
+    }
+
     private static function notifyToken(string $title, string $token): void
     {
         Notification::make()
@@ -312,8 +325,8 @@ final class NodeShareResource extends Resource
     }
 
     /**
-     * Revoke a share-link via the core Action. Gated by Ability::Share on the node;
-     * hidden on an already-revoked share.
+     * Revoke a share-link. Gated by Ability::Share on the node: the rows are only built for
+     * nodes the admin can share; hidden on an already-revoked share.
      */
     private static function revokeAction(): Action
     {
@@ -322,8 +335,8 @@ final class NodeShareResource extends Resource
             ->icon('heroicon-o-x-mark')
             ->color('danger')
             ->requiresConfirmation()
-            ->visible(fn (NodeShare $record): bool => !$record->isRevoked() && self::actorCanShare($record->node))
-            ->action(function (NodeShare $record): void {
+            ->visible(fn (array $record): bool => self::isLive($record))
+            ->action(function (array $record): void {
                 self::revokeRecord($record);
 
                 Notification::make()->title('Share link revoked')->success()->send();
@@ -331,7 +344,7 @@ final class NodeShareResource extends Resource
     }
 
     /**
-     * Replace a link's token via the core Action. The new raw token is shown once.
+     * Replace a link's token. The new raw token is shown once.
      */
     private static function rotateAction(): Action
     {
@@ -340,39 +353,23 @@ final class NodeShareResource extends Resource
             ->icon('heroicon-o-arrow-path')
             ->requiresConfirmation()
             ->modalDescription('The current link stops working at once.')
-            ->visible(fn (NodeShare $record): bool => !$record->isRevoked() && self::actorCanShare($record->node))
-            ->action(function (NodeShare $record): void {
+            ->visible(fn (array $record): bool => self::isLive($record))
+            ->action(function (array $record): void {
                 self::notifyToken('Share link rotated', self::rotateRecord($record));
             });
     }
 
-    private static function statusLabel(NodeShare $share): string
+    /** @param array<mixed> $record */
+    private static function isLive(array $record): bool
     {
-        if ($share->isRevoked()) {
-            return 'Revoked';
-        }
-
-        if ($share->isExpired()) {
-            return 'Expired';
-        }
-
-        if ($share->isExhausted()) {
-            return 'Exhausted';
-        }
-
-        return 'Live';
+        return ($record['revoked_at'] ?? null) === null;
     }
 
-    private static function actorCanShare(Node $node): bool
+    /** Whether the handle lets the acting admin share the node (listing its links needs Share). */
+    private static function actorCanShare(ShareOperations $shares, string $nodeId): bool
     {
-        $actor = PanelActor::current();
-
-        if ($actor === null) {
-            return false;
-        }
-
         try {
-            self::operations($node)->list(Identity::stringify($node->getKey()));
+            $shares->list($nodeId);
 
             return true;
         } catch (VaulterException) {
@@ -380,38 +377,20 @@ final class NodeShareResource extends Resource
         }
     }
 
-    public static function revokeRecord(NodeShare $record): void
+    /** @param array<mixed> $record */
+    private static function field(array $record, string $key): string
     {
-        $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
-        self::operations($node)->revoke(node: Identity::stringify($node->getKey()), share: Identity::stringify($record->getKey()));
+        $value = $record[$key] ?? null;
+
+        return is_scalar($value) ? (string) $value : '';
     }
 
-    /** Rotate the record's token; returns the new raw token. */
-    public static function rotateRecord(NodeShare $record): string
+    /** @param array<mixed> $record */
+    private static function maxUses(array $record): ?int
     {
-        $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
+        $max = $record['max_uses'] ?? null;
 
-        return self::operations($node)->rotate(node: Identity::stringify($node->getKey()), share: Identity::stringify($record->getKey()))->token;
-    }
-
-    private static function operations(Node $node): ShareOperations
-    {
-        $actor = PanelActor::current() ?? throw MissingActorException::required();
-        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
-
-        return app()->makeWith(ShareOperations::class, ['context' => DriveContext::for(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
-    }
-
-    private static function resolveNode(int|string|null $id): ?Node
-    {
-        // Both values also produce `find() === null`; this fast path avoids a needless query.
-        if ($id === null || $id === '') { // @pest-mutate-ignore: BooleanOrToBooleanAnd,EmptyStringToNotEmpty
-            return null;
-        }
-
-        $model = app(VaulterConfig::class)->model('node');
-
-        return app(TenancyBoundary::class)->constrain($model::query())->find($id);
+        return is_int($max) ? $max : null;
     }
 
     /**
@@ -419,19 +398,13 @@ final class NodeShareResource extends Resource
      */
     private static function nodeOptions(): array
     {
-        $model = app(VaulterConfig::class)->model('node');
+        $options = [];
 
-        /** @var array<int|string, string> $options */
-        $options = app(TenancyBoundary::class)->constrain($model::query())
-            ->whereNull('trashed_at')
-            ->orderBy('drive_id')
-            ->orderBy('name')
-            ->get()
-            ->filter(fn (Node $node): bool => self::actorCanShare($node))
-            ->mapWithKeys(fn (Node $node): array => [
-                $node->getKey() => sprintf('#%s %s [%s]', $node->getKey(), $node->name === '' ? '(root)' : $node->name, $node->drive_id),
-            ])
-            ->all();
+        foreach (PanelNodes::rows() as $node) {
+            if ($node['trashed_at'] === null && ($node['abilities'][Ability::Share->value] ?? false) === true) {
+                $options[$node['id']] = sprintf('#%s %s [%s]', $node['id'], $node['name'] === '' ? '(root)' : $node['name'], $node['drive_id']);
+            }
+        }
 
         return $options;
     }

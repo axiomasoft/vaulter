@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Resources\NodeGrantResource\Pages;
 
 use Filament\Actions\Action;
-use Filament\Resources\Pages\ListRecords;
 use Override;
 use Vaulter\Attributes\Internal;
 use Vaulter\Filament\Resources\NodeGrantResource;
+use Vaulter\Filament\Resources\Pages\ListPanelRecords;
 
 #[Internal]
-final class ListNodeGrants extends ListRecords
+final class ListNodeGrants extends ListPanelRecords
 {
     protected static string $resource = NodeGrantResource::class;
 

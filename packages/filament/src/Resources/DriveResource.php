@@ -5,93 +5,52 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Resources;
 
 use BackedEnum;
-use Filament\Infolists\Components\TextEntry;
+use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Paginator;
 use Override;
 use UnitEnum;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Drive\Models\Drive;
 use Vaulter\Filament\Resources\DriveResource\Pages\ListDrives;
-use Vaulter\Filament\Resources\DriveResource\Pages\ViewDrive;
 use Vaulter\Filament\Support\PanelDrives;
+use Vaulter\Filament\Support\PanelRecord;
+use Vaulter\Filament\Support\PanelRecords;
 
 /**
- * The drive admin surface: a read-mostly view of
- * the ownable, polymorphic disk roots — owner, disk, used/quota accounting and
- * status. Drives are provisioned by the DriveProvisioner (get-or-create on a
- * host entity), never minted from the panel, so this resource never creates/edits a
- * row; it lists and inspects.
+ * The drive admin surface: a read-mostly view of the ownable, polymorphic disk roots —
+ * owner, profile, used/quota accounting and status. Drives are provisioned by the
+ * DriveProvisioner (get-or-create on a host entity), never minted from the panel, so this
+ * resource never creates/edits a row; it lists and inspects.
  *
- * The model resolves through {@see app(VaulterConfig::class)->model('drive')} so a host that swaps the
- * Drive model still gets governed here.
+ * Rows are the snapshots of the drives the acting admin can open ({@see PanelDrives}): the
+ * drive entry point decides what is listed, and the panel reads no drive table itself.
+ *
+ * @phpstan-import-type DriveRow from \Vaulter\Filament\Support\PanelDriveAccess
  */
 #[Internal]
 final class DriveResource extends Resource
 {
-    protected static ?string $model = Drive::class;
+    protected static ?string $model = PanelRecord::class;
+
+    protected static ?string $modelLabel = 'drive';
+
+    protected static bool $isGloballySearchable = false;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-circle-stack';
 
     protected static string|UnitEnum|null $navigationGroup = 'Vaulter';
 
-    protected static ?string $recordTitleAttribute = 'name';
-
-    #[Override]
-    public static function getModel(): string
-    {
-        return app(VaulterConfig::class)->model('drive');
-    }
-
-    /**
-     * Access-aware listing: the rows are the drives whose handle opens for the acting
-     * admin ({@see PanelDrives}); no actor or no openable drive means an empty table.
-     */
-    #[Override]
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->whereKey(PanelDrives::ids());
-    }
-
-    #[Override]
-    public static function infolist(Schema $schema): Schema
-    {
-        return $schema->components([
-            Section::make('Drive')->schema([
-                TextEntry::make('name'),
-                TextEntry::make('profile')->badge(),
-                TextEntry::make('disk'),
-                TextEntry::make('storage_type')->label('Type'),
-                TextEntry::make('status')->badge(),
-            ])->columns(2),
-
-            Section::make('Owner')->schema([
-                TextEntry::make('owner_type')->label('Type'),
-                TextEntry::make('owner_id')->label('Id'),
-            ])->columns(2),
-
-            Section::make('Usage')->schema([
-                TextEntry::make('used_bytes')
-                    ->label('Used')
-                    ->formatStateUsing(fn (int $state): string => self::humanBytes($state)),
-                TextEntry::make('quota_bytes')
-                    ->label('Quota')
-                    ->placeholder('Unlimited')
-                    ->formatStateUsing(fn (?int $state): string => $state === null ? '∞' : self::humanBytes($state)),
-            ])->columns(2),
-        ]);
-    }
-
     #[Override]
     public static function table(Table $table): Table
     {
         return $table
+            ->records(self::records(...))
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
@@ -99,22 +58,22 @@ final class DriveResource extends Resource
 
                 TextColumn::make('owner_type')
                     ->label('Owner')
-                    ->formatStateUsing(fn (string $state, Drive $record): string => $state.' #'.$record->owner_id)
+                    ->formatStateUsing(fn (string $state, array $record): string => $state.' #'.self::field($record, 'owner_id'))
                     ->toggleable(),
 
-                TextColumn::make('disk')
+                TextColumn::make('profile')
                     ->badge()
                     ->toggleable(),
 
                 TextColumn::make('used_bytes')
                     ->label('Used')
-                    ->formatStateUsing(fn (int $state): string => self::humanBytes($state))
+                    ->formatStateUsing(fn (int $state): string => PanelRecords::humanBytes($state, '0 B'))
                     ->sortable(),
 
                 TextColumn::make('quota_bytes')
                     ->label('Quota')
                     ->placeholder('∞')
-                    ->formatStateUsing(fn (?int $state): string => $state === null ? '∞' : self::humanBytes($state))
+                    ->formatStateUsing(fn (?int $state): string => $state === null ? '∞' : PanelRecords::humanBytes($state, '0 B'))
                     ->toggleable(),
 
                 TextColumn::make('status')
@@ -126,6 +85,7 @@ final class DriveResource extends Resource
                     ->sortable()
                     ->toggleable(),
             ])
+            ->recordActions([self::viewAction()])
             ->defaultSort('created_at', 'desc');
     }
 
@@ -144,23 +104,72 @@ final class DriveResource extends Resource
     {
         return [
             'index' => ListDrives::route('/'),
-            'view' => ViewDrive::route('/{record}'),
         ];
     }
 
     /**
-     * A compact, dependency-free human byte size for the usage columns.
+     * @return Paginator<string, array<string, mixed>>
      */
-    private static function humanBytes(int $bytes): string
+    private static function records(?string $search, ?string $sortColumn, ?string $sortDirection, int $page, int|string $recordsPerPage): Paginator
     {
-        if ($bytes <= 0) {
-            return '0 B';
-        }
+        $rows = array_values(array_filter(
+            PanelDrives::rows(),
+            static fn (array $row): bool => is_string($row['name']) && PanelRecords::contains($row['name'], $search),
+        ));
 
-        $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-        $power = (int) min(floor(log($bytes, 1024)), count($units) - 1);
-        $value = $bytes / (1024 ** $power);
+        return PanelRecords::paginate($rows, $sortColumn, $sortDirection, $page, $recordsPerPage, 'created_at');
+    }
 
-        return sprintf('%s %s', rtrim(rtrim(number_format($value, 2), '0'), '.'), $units[$power]);
+    /** The drive's details, read-only: a modal over the row, since the row is a snapshot with no model to open. */
+    private static function viewAction(): Action
+    {
+        return Action::make('view')
+            ->label('View')
+            ->icon('heroicon-o-eye')
+            ->modalHeading('Drive')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Close')
+            ->fillForm(fn (array $record): array => [
+                'name' => self::field($record, 'name'),
+                'profile' => self::field($record, 'profile'),
+                'status' => self::status($record),
+                'owner_type' => self::field($record, 'owner_type'),
+                'owner_id' => self::field($record, 'owner_id'),
+                'used' => PanelRecords::humanBytes(self::bytes($record, 'used_bytes') ?? 0, '0 B'),
+                'quota' => ($quota = self::bytes($record, 'quota_bytes')) === null ? '∞' : PanelRecords::humanBytes($quota, '0 B'),
+            ])
+            ->schema([
+                TextInput::make('name')->disabled(),
+                TextInput::make('profile')->disabled(),
+                TextInput::make('status')->disabled(),
+                TextInput::make('owner_type')->label('Owner type')->disabled(),
+                TextInput::make('owner_id')->label('Owner id')->disabled(),
+                TextInput::make('used')->disabled(),
+                TextInput::make('quota')->disabled(),
+            ]);
+    }
+
+    /** @param array<mixed> $record */
+    private static function field(array $record, string $key): string
+    {
+        $value = $record[$key] ?? null;
+
+        return is_scalar($value) ? (string) $value : '';
+    }
+
+    /** @param array<mixed> $record */
+    private static function bytes(array $record, string $key): ?int
+    {
+        $value = $record[$key] ?? null;
+
+        return is_int($value) ? $value : null;
+    }
+
+    /** @param array<mixed> $record */
+    private static function status(array $record): string
+    {
+        $status = $record['status'] ?? null;
+
+        return $status instanceof BackedEnum ? (string) $status->value : '';
     }
 }

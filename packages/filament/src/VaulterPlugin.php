@@ -27,8 +27,9 @@ use Vaulter\Filament\Resources\NodeShareResource;
  * NodeShare, Activity), each toggleable through
  * FilamentConfig.
  *
- * Resources resolve their model through VaulterConfig::model(), so a host
- * that swaps a model keeps being governed by these resources.
+ * Resources show snapshots read through the drive entry point and the authorized drive
+ * handles (`Vaulter::drives()`, the handle's node, access, share and activity operations), so
+ * what a panel admin sees and does is decided by the drive, whichever models the host swapped.
  */
 #[Api]
 final class VaulterPlugin implements Plugin

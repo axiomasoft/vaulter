@@ -1,253 +1,7 @@
 {
     "base": "35718fd2",
     "consumers": {
-        "filament_model_reads": [
-            {
-                "file": "packages/filament/src/Resources/ActivityResource.php",
-                "model": "Vaulter\\Drive\\Models\\Activity\\Activity",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "<file>"
-            },
-            {
-                "file": "packages/filament/src/Resources/ActivityResource.php",
-                "model": "Vaulter\\Drive\\Models\\Activity\\Activity",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\ActivityResource"
-            },
-            {
-                "file": "packages/filament/src/Resources/ActivityResource.php",
-                "model": "Vaulter\\Drive\\Models\\Activity\\Activity",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\ActivityResource::table"
-            },
-            {
-                "file": "packages/filament/src/Resources/DriveResource.php",
-                "model": "Vaulter\\Drive\\Models\\Drive",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "<file>"
-            },
-            {
-                "file": "packages/filament/src/Resources/DriveResource.php",
-                "model": "Vaulter\\Drive\\Models\\Drive",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\DriveResource"
-            },
-            {
-                "file": "packages/filament/src/Resources/DriveResource.php",
-                "model": "Vaulter\\Drive\\Models\\Drive",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\DriveResource::table"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "<file>"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "<file>"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::actorCanManage"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::grantFromData"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::nodeOptions"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::operations"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::resolveNode"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::revokeAction"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::revokeRecord"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeGrantResource.php",
-                "model": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::table"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "<file>"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeResource"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "<file>"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "<file>"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::actorCanShare"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::createFromData"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::nodeOptions"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::operations"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Node",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::resolveNode"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::revokeAction"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::revokeRecord"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::rotateAction"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::rotateRecord"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::statusLabel"
-            },
-            {
-                "file": "packages/filament/src/Resources/NodeShareResource.php",
-                "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::table"
-            },
-            {
-                "file": "packages/filament/src/Support/PanelDriveAccess.php",
-                "model": "Vaulter\\Drive\\Models\\Drive",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "<file>"
-            },
-            {
-                "file": "packages/filament/src/Support/PanelDriveAccess.php",
-                "model": "Vaulter\\Drive\\Models\\Drive",
-                "owner": "drive",
-                "replacement": "P4: authorized drive listing/lookup API and snapshots (I9)",
-                "symbol": "Vaulter\\Filament\\Support\\PanelDriveAccess::handle"
-            }
-        ]
+        "filament_model_reads": []
     },
     "files": [
         {
@@ -10322,6 +10076,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Queries/VisibleDrivesQuery.php",
+            "fqcn": "Vaulter\\Drive\\Queries\\VisibleDrivesQuery",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Queries\\VisibleDrivesQuery"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Quota/QuotaCalculator.php",
             "fqcn": "Vaulter\\Drive\\Quota\\QuotaCalculator",
             "kind": "final-class",
@@ -12170,20 +11938,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/filament/src/Resources/ActivityResource/Pages/ViewActivity.php",
-            "fqcn": "Vaulter\\Filament\\Resources\\ActivityResource\\Pages\\ViewActivity",
-            "kind": "final-class",
-            "note": null,
-            "owner": "filament",
-            "package": "filament",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Filament\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Filament\\Resources\\ActivityResource\\Pages\\ViewActivity"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/filament/src/Resources/DriveResource.php",
             "fqcn": "Vaulter\\Filament\\Resources\\DriveResource",
             "kind": "final-class",
@@ -12208,20 +11962,6 @@
             "rule": "other-packages:prefix:Vaulter\\Filament\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Filament\\Resources\\DriveResource\\Pages\\ListDrives"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/filament/src/Resources/DriveResource/Pages/ViewDrive.php",
-            "fqcn": "Vaulter\\Filament\\Resources\\DriveResource\\Pages\\ViewDrive",
-            "kind": "final-class",
-            "note": null,
-            "owner": "filament",
-            "package": "filament",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Filament\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Filament\\Resources\\DriveResource\\Pages\\ViewDrive"
         },
         {
             "action": "keep",
@@ -12310,6 +12050,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/filament/src/Resources/Pages/ListPanelRecords.php",
+            "fqcn": "Vaulter\\Filament\\Resources\\Pages\\ListPanelRecords",
+            "kind": "abstract-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Resources\\Pages\\ListPanelRecords"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/filament/src/Support/PanelActivity.php",
+            "fqcn": "Vaulter\\Filament\\Support\\PanelActivity",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Support\\PanelActivity"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/filament/src/Support/PanelActor.php",
             "fqcn": "Vaulter\\Filament\\Support\\PanelActor",
             "kind": "final-class",
@@ -12352,6 +12120,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/filament/src/Support/PanelGrants.php",
+            "fqcn": "Vaulter\\Filament\\Support\\PanelGrants",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Support\\PanelGrants"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/filament/src/Support/PanelNodes.php",
             "fqcn": "Vaulter\\Filament\\Support\\PanelNodes",
             "kind": "final-class",
@@ -12362,6 +12144,48 @@
             "rule": "other-packages:prefix:Vaulter\\Filament\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Filament\\Support\\PanelNodes"
+        },
+        {
+            "action": "keep",
+            "eloquent": true,
+            "file": "packages/filament/src/Support/PanelRecord.php",
+            "fqcn": "Vaulter\\Filament\\Support\\PanelRecord",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Support\\PanelRecord"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/filament/src/Support/PanelRecords.php",
+            "fqcn": "Vaulter\\Filament\\Support\\PanelRecords",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Support\\PanelRecords"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/filament/src/Support/PanelShares.php",
+            "fqcn": "Vaulter\\Filament\\Support\\PanelShares",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Support\\PanelShares"
         },
         {
             "action": "keep",

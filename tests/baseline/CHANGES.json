@@ -11386,12 +11386,68 @@
       "new_suite": "webhooks",
       "reason": "the case belongs to the webhooks package, which the documents suite no longer installs (P4.13)",
       "decision": "D6"
+    },
+    {
+      "suite": "filament",
+      "old": "P\\Tests\\Arch\\FilamentBoundaryArchTest::__pest_evaluable_the_panel_never_uses_core_Actions__Repositories_or_the_AccessResolver",
+      "new": "P\\Tests\\Arch\\FilamentBoundaryArchTest::__pest_evaluable_the_panel_never_uses_drive_models__Actions__Repositories__the_AccessResolver_or_an_Eloquent_Builder",
+      "reason": "I9: the panel boundary now also forbids drive models and the Eloquent Builder (P4.15)",
+      "decision": "D10"
+    },
+    {
+      "suite": "filament",
+      "old": "P\\Tests\\Feature\\ActivityResourceTest::__pest_evaluable_it_resolves_the_configured_activity_model__swappable_",
+      "new": "P\\Tests\\Feature\\ActivityResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_activity_model",
+      "reason": "resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15)",
+      "decision": "D10"
+    },
+    {
+      "suite": "filament",
+      "old": "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_resolves_the_configured_drive_model__swappable_",
+      "new": "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_model",
+      "reason": "resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15)",
+      "decision": "D10"
+    },
+    {
+      "suite": "filament",
+      "old": "P\\Tests\\Feature\\NodeGrantResourceTest::__pest_evaluable_it_resolves_the_configured_grant_model__swappable_",
+      "new": "P\\Tests\\Feature\\NodeGrantResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_a_drive_grant_model",
+      "reason": "resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15)",
+      "decision": "D10"
+    },
+    {
+      "suite": "filament",
+      "old": "P\\Tests\\Feature\\NodeResourceTest::__pest_evaluable_it_resolves_the_configured_node_model__swappable_",
+      "new": "P\\Tests\\Feature\\NodeResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_node_model",
+      "reason": "resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15)",
+      "decision": "D10"
+    },
+    {
+      "suite": "filament",
+      "old": "P\\Tests\\Feature\\NodeShareResourceTest::__pest_evaluable_it_resolves_the_configured_node_share_model__swappable_",
+      "new": "P\\Tests\\Feature\\NodeShareResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_a_drive_share_model",
+      "reason": "resources declare the panel record class; rows are drive snapshots, no swappable drive model (P4.15)",
+      "decision": "D10"
+    },
+    {
+      "suite": "filament",
+      "old": "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_lists_the_provisioned_drives",
+      "new": "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_lists_the_provisioned_drives_the_admin_can_open__with_their_accounting",
+      "reason": "the drive table reads Vaulter::drives() snapshots instead of the drive model (P4.15)",
+      "decision": "D10"
+    },
+    {
+      "suite": "filament",
+      "old": "P\\Tests\\Feature\\ResourcePagesTest::__pest_evaluable_it_declares_a_view_page_for_the_read_mostly_resources",
+      "new": "P\\Tests\\Feature\\ResourcePagesTest::__pest_evaluable_it_declares_no_record_page__every_row_is_a_snapshot_with_no_model_to_open",
+      "reason": "drive and activity details open as a table modal over the snapshot row; no model-bound view page (P4.15)",
+      "decision": "D10"
     }
   ],
   "additions": {
     "repo": {
       "introduced": "P1.3",
-      "count": 221,
+      "count": 222,
       "names": [
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__I3_and_I4_block__I1_and_I2_report_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
@@ -11520,6 +11576,7 @@
         "P\\Tests\\Repo\\Arch\\TargetMapTest::__pest_evaluable_it_keeps_every_public_API_baseline_type_out_of_Internal_unless_a_note_says_why",
         "P\\Tests\\Repo\\Arch\\TargetMapTest::__pest_evaluable_it_matches_the_committed_target_map",
         "P\\Tests\\Repo\\Arch\\TargetMapTest::__pest_evaluable_it_rejects_an_unknown_rules_file_with_exit_2_and_judges_a_known_one_on_its_own",
+        "P\\Tests\\Repo\\Arch\\TargetMapTest::__pest_evaluable_it_rule_engine__a_model_owned_by_Filament_itself_is_no_read_of_a_drive_model",
         "P\\Tests\\Repo\\Arch\\TargetMapTest::__pest_evaluable_it_rule_engine__a_rule_that_wins_nothing_is_stale_and_a_subject_nobody_classifies_is_a_gap",
         "P\\Tests\\Repo\\Arch\\TargetMapTest::__pest_evaluable_it_rule_engine__a_rule_without_why_or_with_an_unknown_owner_or_match_is_refused",
         "P\\Tests\\Repo\\Arch\\TargetMapTest::__pest_evaluable_it_rule_engine__a_target_claimed_twice__also_by_an_existing_type_of_the_target_package__is_a_collision",
@@ -12156,7 +12213,7 @@
       ]
     },
     "drive": {
-      "count": 85,
+      "count": 95,
       "names": [
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_gives_the_host_subclass_configured_in_vaulter_drive_models_the_same_alias",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_is_not_renamed_by_a_host_morph_map_and_is_not_refused_by_enforceMorphMap",
@@ -12207,6 +12264,16 @@
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_releases_every_revision_pin_of_a_purged_file_and_lets_the_collector_take_the_blobs",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_removes_the_edges_and_pins_of_a_deleted_revision_only",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_writes_the_edge_and_its_pin_together_on_upload__keyed_by_the_edge_without_the_blob",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_cuts_the_page_after_the_visibility_decision__so_hidden_drives_take_no_slot",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_does_not_list_a_drive_the_actor_reaches_only_through_a_deeper_node",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_finds_a_drive_by_key_and_answers_null_for_an_unknown_key",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_keeps_the_cost_of_a_further_listed_drive_bounded",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_keeps_the_lookup_and_the_listing_inside_the_current_tenant",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_lists_nothing_for_an_actor_without_any_grant",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_lists_the_drives_whose_root_the_actor_may_view_and_nothing_else",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_refuses_a_malformed_cursor_and_options_a_drive_list_does_not_support",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_reports_no_next_page_when_the_last_visible_drive_fills_the_page_exactly",
+        "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_walks_past_a_full_chunk_of_hidden_candidates_to_a_visible_drive",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_declares_the_drive_codes_located_in_core_under_the_drive_module__D39_",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_says_whether_a_drive_refusal_may_be_retried",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_answers_another_body_under_a_used_key_with_idempotency__key__reused",
@@ -12277,8 +12344,36 @@
       ]
     },
     "filament": {
-      "count": 0,
-      "names": []
+      "count": 27,
+      "names": [
+        "P\\Tests\\Arch\\FilamentBoundaryArchTest::__pest_evaluable_no_panel_source_imports_a_drive_model__repository__action_or_Eloquent_Builder__I9_",
+        "P\\Tests\\Arch\\FilamentBoundaryArchTest::__pest_evaluable_the_panel_never_uses_drive_models__Actions__Repositories__the_AccessResolver_or_an_Eloquent_Builder",
+        "P\\Tests\\Feature\\ActivityResourceTest::__pest_evaluable_it_carries_the_verb__its_label_and_the_projected_fields_on_each_row",
+        "P\\Tests\\Feature\\ActivityResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_activity_model",
+        "P\\Tests\\Feature\\ActivityResourceTest::__pest_evaluable_it_lists_no_activity_when_no_admin_is_acting",
+        "P\\Tests\\Feature\\ActivityResourceTest::__pest_evaluable_it_renders_the_activity_table__filters_by_verb_and_opens_the_details_modal",
+        "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_model",
+        "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_lists_no_drive_when_no_admin_is_acting",
+        "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_lists_the_provisioned_drives_the_admin_can_open__with_their_accounting",
+        "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_renders_the_drive_table_from_the_listing_and_opens_the_details_modal",
+        "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_resolves_a_handle_by_key_without_judging_visibility__so_an_operation_answers_for_itself",
+        "P\\Tests\\Feature\\DriveResourceTest::__pest_evaluable_it_searches_the_drive_table_by_name",
+        "P\\Tests\\Feature\\NodeGrantResourceTest::__pest_evaluable_it_answers_a_node_the_admin_cannot_see_exactly_like_a_missing_node",
+        "P\\Tests\\Feature\\NodeGrantResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_a_drive_grant_model",
+        "P\\Tests\\Feature\\NodeGrantResourceTest::__pest_evaluable_it_renders_the_grant_table_from_the_access_listings_and_revokes_a_row_through_the_table_action",
+        "P\\Tests\\Feature\\NodeResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_the_drive_node_model",
+        "P\\Tests\\Feature\\NodeShareResourceTest::__pest_evaluable_it_answers_a_node_the_admin_cannot_see_exactly_like_a_missing_node",
+        "P\\Tests\\Feature\\NodeShareResourceTest::__pest_evaluable_it_declares_the_panel_record_class__not_a_drive_share_model",
+        "P\\Tests\\Feature\\NodeShareResourceTest::__pest_evaluable_it_renders_the_share_table_from_the_share_listings__filters_revoked_links_and_rotates_through_the_table_action",
+        "P\\Tests\\Feature\\NodeShareResourceTest::__pest_evaluable_it_shows_the_status_of_a_share_row_without_ever_carrying_its_token",
+        "P\\Tests\\Feature\\PanelRecordsTest::__pest_evaluable_it_cuts_the_page_and_knows_whether_a_next_page_exists",
+        "P\\Tests\\Feature\\PanelRecordsTest::__pest_evaluable_it_formats_sizes_in_binary_units_and_shows_the_zero_placeholder_you_give_it",
+        "P\\Tests\\Feature\\PanelRecordsTest::__pest_evaluable_it_keys_the_page_by_row_id_and_sorts_by_date__text_and_enum_value",
+        "P\\Tests\\Feature\\PanelRecordsTest::__pest_evaluable_it_matches_a_search_term_case_insensitively_and_treats_an_empty_term_as_no_filter",
+        "P\\Tests\\Feature\\PanelRecordsTest::__pest_evaluable_it_reads_a_filter_value_only_when_it_is_a_non_empty_scalar",
+        "P\\Tests\\Feature\\PanelRecordsTest::__pest_evaluable_it_takes_the_string_a_per_page_select_posts_and_shows_every_row_for__all_",
+        "P\\Tests\\Feature\\ResourcePagesTest::__pest_evaluable_it_declares_no_record_page__every_row_is_a_snapshot_with_no_model_to_open"
+      ]
     },
     "webhooks": {
       "count": 75,

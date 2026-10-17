@@ -13,6 +13,7 @@ use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Repositories\Access\GrantStoreRepository;
 use Vaulter\Filament\Support\PanelNodes;
 
@@ -73,6 +74,39 @@ final class DriveBuilder
             'created_at' => CarbonImmutable::now(),
             'abilities' => [],
         ];
+    }
+
+    /**
+     * Let the user open the drive (View on its root, item scope only): the panel lists only drives its
+     * admin can open, so a node of any other drive is neither listed nor found.
+     */
+    public static function openDrive(Drive $storage, TestUser $user): NodeGrant
+    {
+        return self::grant($storage->rootNode()->firstOrFail(), $user, RoleRegistry::READER, GrantScope::Item);
+    }
+
+    /**
+     * The panel table row of a grant, as the revoke action receives it.
+     *
+     * @return array<string, mixed>
+     */
+    public static function grantRow(NodeGrant $grant): array
+    {
+        $node = Node::query()->findOrFail($grant->node_id);
+
+        return ['id' => (string) $grant->getKey(), 'node_id' => (string) $node->getKey(), 'drive_id' => (string) $node->getRawOriginal('drive_id')];
+    }
+
+    /**
+     * The panel table row of a share link, as the revoke and rotate actions receive it.
+     *
+     * @return array<string, mixed>
+     */
+    public static function shareRow(NodeShare $share): array
+    {
+        $node = Node::query()->findOrFail($share->node_id);
+
+        return ['id' => (string) $share->getKey(), 'node_id' => (string) $node->getKey(), 'drive_id' => (string) $node->getRawOriginal('drive_id'), 'revoked_at' => $share->revoked_at];
     }
 
     /**

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.15",
   "title": "Filament на authorized listing/lookup Operations drive и snapshots (подготовка I9)",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Drive получает авторизованный листинг дисков `Vaulter\\Drive\\Vaulter::drives()` и lookup/Page-методы Operations там, где их нет (p4-design#filament); Filament-ресурсы и Support переходят с Eloquent-моделей на snapshots через `Table::records()`; FilamentBoundaryArchTest запрещает модели/репозитории/actions drive и Eloquent Builder; `consumers.filament_model_reads` пуст.",
   "why": "I9: Filament — внешний вход, обязан идти через авторизованные Operations (source-review#code-facts «Точка входа/ORM»). Hard risk: ослабление exact-visibility (листинг без текущей авторизации до пагинации) — существующие visibility/authorization тесты Filament не меняют ожиданий.",
   "scope": {
@@ -214,12 +214,49 @@
   },
   "result": {
     "started_at": "2026-10-17T05:11:25Z",
+    "finished_at": "2026-10-17T05:40:08Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
-    }
+    },
+    "notes": "Vaulter::drives()/findDriveById, Filament на публичном API (Table::records), target-map filament_model_reads=0",
+    "deviations": [
+      "Filament: grants/shares/activity требуют root View (строже); скрытый узел отвечает как отсутствующий; drives() ~10 запросов на диск; ViewDrive/ViewActivity удалены (модальные действия); V3 пакетный прогон оркестратором не выполнен по указанию владельца (исполнитель прогнал filament,drive,azgard,repo зелёные)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-17T05:11:25Z"
+  "updated_at": "2026-10-17T05:40:08Z"
 }

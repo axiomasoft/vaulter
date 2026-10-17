@@ -92,13 +92,37 @@ final class PanelNodes
         return $options;
     }
 
+    /**
+     * A node the acting admin may view, with the handle of its drive; null when no listed
+     * drive shows it, which is how a hidden node and a missing node look alike.
+     *
+     * @return array{DriveHandle, NodeSnapshot}|null
+     */
+    public static function find(int|string|null $id): ?array
+    {
+        if ($id === null || $id === '') {
+            return null;
+        }
+
+        foreach (PanelDrives::handles() as $handle) {
+            try {
+                return [$handle, $handle->nodes()->find((string) $id)];
+            } catch (VaulterException) {
+                // Not in this drive, or not visible there.
+            }
+        }
+
+        return null;
+    }
+
     /** @return array<string, string> drive id => name */
     public static function driveOptions(): array
     {
         $options = [];
 
         foreach (PanelDrives::handles() as $handle) {
-            $options[(string) $handle->model()->getKey()] = $handle->snapshot()->name;
+            $snapshot = $handle->snapshot();
+            $options[$snapshot->id] = $snapshot->name;
         }
 
         return $options;

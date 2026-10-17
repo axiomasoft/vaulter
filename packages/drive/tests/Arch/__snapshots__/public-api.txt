@@ -633,13 +633,17 @@ Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests
 FACADE Vaulter\Drive\Facades\Vaulter
   static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
   static DriveHandle|null findDrive(Model $owner, ?string $profile = null)
+  static DriveHandle|null findDriveById(string|int $id)
   static FileHandlerRegistry handlers()
+  static Page<DriveSnapshot> drives(Authorizable $actor, ?ListOptions $options = null)
   static PermissionDriverManager permissions()
   static ProfileRegistry profiles()
 
 Vaulter\Drive\Vaulter
   drive(\Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): \Vaulter\Drive\Contracts\DriveHandle
+  drives(\Illuminate\Contracts\Auth\Access\Authorizable $actor, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
   findDrive(\Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?\Vaulter\Drive\Contracts\DriveHandle
+  findDriveById(int|string $id): ?\Vaulter\Drive\Contracts\DriveHandle
   handlers(): \Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
   permissions(): \Vaulter\Drive\Access\PermissionDriverManager
   profiles(): \Vaulter\Drive\Profiles\ProfileRegistry

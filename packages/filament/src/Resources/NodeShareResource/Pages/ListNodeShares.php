@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Resources\NodeShareResource\Pages;
 
 use Filament\Actions\Action;
-use Filament\Resources\Pages\ListRecords;
 use Override;
 use Vaulter\Attributes\Internal;
 use Vaulter\Filament\Resources\NodeShareResource;
+use Vaulter\Filament\Resources\Pages\ListPanelRecords;
 
 #[Internal]
-final class ListNodeShares extends ListRecords
+final class ListNodeShares extends ListPanelRecords
 {
     protected static string $resource = NodeShareResource::class;
 

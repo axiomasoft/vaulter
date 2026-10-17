@@ -11,9 +11,10 @@ use Vaulter\Drive\Contracts\DriveHandle;
 /**
  * The container bridge for Filament's static resources; dependencies belong to the service.
  *
- * @method static list<DriveHandle> handles()
- * @method static DriveHandle|null  handle(string $driveId)
- * @method static list<string>      ids()
+ * @method static list<DriveHandle>          handles()
+ * @method static DriveHandle|null           handle(string $driveId)
+ * @method static list<string>               ids()
+ * @method static list<array<string, mixed>> rows()
  */
 #[Internal]
 final class PanelDrives extends Facade

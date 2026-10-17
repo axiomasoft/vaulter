@@ -6,7 +6,6 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
-use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 
@@ -28,8 +27,7 @@ it('lists no node when no admin is acting', function (): void {
     $storage = DriveBuilder::storage();
     DriveBuilder::folder($storage, 'Hidden');
 
-    expect(PanelNodes::rows())->toBe([])
-        ->and(NodeResource::getEloquentQuery()->count())->toBe(0);
+    expect(PanelNodes::rows())->toBe([]);
 });
 
 it('lists the nodes of a drive whose root the admin can view and nothing of a drive it cannot', function (): void {

@@ -23,7 +23,7 @@ it('lists every public Vaulter method in the facade @method docblock, F-P2.1-01'
         ->values()
         ->all();
 
-    expect($managerMethods)->toHaveCount(5);
+    expect($managerMethods)->toHaveCount(7);
 
     $doc = (new ReflectionClass(VaulterFacade::class))->getDocComment();
 

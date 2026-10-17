@@ -827,6 +827,7 @@
             "packages/drive/tests/Drive/TrashRootsTest.php",
             "packages/drive/tests/Drive/UploadConfigTest.php",
             "packages/drive/tests/Drive/UploadFileTest.php",
+            "packages/drive/tests/Drive/VisibleDrivesTest.php",
             "packages/drive/tests/Events/DriveEventCatalogConformanceTest.php",
             "packages/drive/tests/Events/DriveEventsRecordedTest.php",
             "packages/drive/tests/Events/FileRevisionDeletedEventTest.php",
@@ -1742,6 +1743,7 @@
             "packages/filament/tests/Feature/NodeResourceTest.php",
             "packages/filament/tests/Feature/NodeShareResourceTest.php",
             "packages/filament/tests/Feature/PanelActorGuardTest.php",
+            "packages/filament/tests/Feature/PanelRecordsTest.php",
             "packages/filament/tests/Feature/ResourceListingScopeTest.php",
             "packages/filament/tests/Feature/ResourcePagesTest.php",
             "packages/filament/tests/Feature/VaulterPluginTest.php"
