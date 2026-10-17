@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Tests\ObservabilityDocuments;
 
 use Illuminate\Foundation\Application;
+use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Tests\TestCase;
 
@@ -19,6 +20,7 @@ abstract class P83DocumentsTestCase extends TestCase
         return [
             ...parent::getPackageProviders($app),
             VaulterDocumentsServiceProvider::class,
+            VaulterCollaborationServiceProvider::class,
         ];
     }
 
@@ -26,7 +28,7 @@ abstract class P83DocumentsTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter-documents.collaboration.enabled', true);
-        $app['config']->set('vaulter-documents.collaboration.hub.jwt_secret', 'vlt-load-dev-collab-secret-not-for-production');
+        $app['config']->set('vaulter.modules.collaboration', true);
+        $app['config']->set('vaulter-collaboration.hub.jwt_secret', 'vlt-load-dev-collab-secret-not-for-production');
     }
 }

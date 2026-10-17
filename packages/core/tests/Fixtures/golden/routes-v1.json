@@ -94,14 +94,14 @@
         ],
         "uri": "api/vaulter/v1/collaboration/hub/authenticate",
         "middleware": [
-            "vaulter.module:documents",
+            "vaulter.module:collaboration",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
             "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
             "throttle:vaulter-public",
-            "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+            "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
         ]
     },
     {
@@ -111,14 +111,14 @@
         ],
         "uri": "api/vaulter/v1/collaboration/hub/load",
         "middleware": [
-            "vaulter.module:documents",
+            "vaulter.module:collaboration",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
             "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
             "throttle:vaulter-public",
-            "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+            "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
         ]
     },
     {
@@ -128,14 +128,14 @@
         ],
         "uri": "api/vaulter/v1/collaboration/hub/store",
         "middleware": [
-            "vaulter.module:documents",
+            "vaulter.module:collaboration",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
             "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
             "throttle:vaulter-public",
-            "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+            "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
         ]
     },
     {
@@ -202,7 +202,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/collaboration/session",
         "middleware": [
-            "vaulter.module:documents",
+            "vaulter.module:collaboration",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",

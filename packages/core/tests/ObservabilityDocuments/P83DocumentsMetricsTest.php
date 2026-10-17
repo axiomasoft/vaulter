@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
+use Vaulter\Collaboration\Actions\PersistCollaborationStateAction;
+use Vaulter\Collaboration\Data\PersistCollaborationStateInput;
+use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
-use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Export\ExportDocumentInput;
-use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -53,8 +53,8 @@ it('records vaulter_export_duration_seconds', function (): void {
 });
 
 it('records vaulter_collab_session_issued_total', function (): void {
-    config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
-    config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-collaboration.driver', 'hocuspocus');
+    config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $node = p83DocumentNode();
     $actor = new TestUser;
@@ -63,12 +63,12 @@ it('records vaulter_collab_session_issued_total', function (): void {
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, subjectId: 1);
 
     $handle = Vaulter::drive($node->storage()->firstOrFail())->actingAs($actor);
-    Documents::in($handle)->collaborationSession($node->getKey());
+    $handle->extension(CollaborationOperations::class)->session($node->getKey());
 
     app(MetricsRecorder::class)->assertCounter(
         name: 'vaulter_collab_session_issued_total',
         labels: [
-            'driver' => config('vaulter-documents.collaboration.driver'),
+            'driver' => config('vaulter-collaboration.driver'),
             'ability' => Ability::Edit->value,
         ],
     );

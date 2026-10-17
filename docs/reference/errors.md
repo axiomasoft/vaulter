@@ -47,9 +47,9 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 | [`actor_required`](#actor_required) | 401 | core | `never` | `never` | `Vaulter\Exceptions\Access\MissingActorException` |
 | [`blob_unavailable`](#blob_unavailable) | 409 | media | `never` | `never` | `Vaulter\Media\Exceptions\Cas\BlobUnavailableException` |
 | [`cannot_delete_head_revision`](#cannot_delete_head_revision) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException` |
-| [`collaboration_epoch_mismatch`](#collaboration_epoch_mismatch) | 409 | documents | `after_refetch` | `cacheable` | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
-| [`collaboration_seed_conflict`](#collaboration_seed_conflict) | 409 | documents | `after_refetch` | `cacheable` | `Vaulter\Documents\Exceptions\CollaborationSeedConflictException` |
-| [`collaboration_unavailable`](#collaboration_unavailable) | 409 | documents | `never` | `never` | `Vaulter\Documents\Exceptions\CollaborationUnavailableException` |
+| [`collaboration_epoch_mismatch`](#collaboration_epoch_mismatch) | 409 | collaboration | `after_refetch` | `cacheable` | `Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException` |
+| [`collaboration_seed_conflict`](#collaboration_seed_conflict) | 409 | collaboration | `after_refetch` | `cacheable` | `Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException` |
+| [`collaboration_unavailable`](#collaboration_unavailable) | 409 | collaboration | `never` | `never` | `Vaulter\Collaboration\Exceptions\CollaborationUnavailableException` |
 | [`comment_not_found`](#comment_not_found) | 404 | documents | `never` | `never` | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
 | [`concurrent_update`](#concurrent_update) | 409 | core | `with_backoff` | `never` | `Vaulter\Exceptions\Database\ConcurrentUpdateException` |
 | [`content_unavailable`](#content_unavailable) | 423 | drive | `with_backoff` | `never` | `Vaulter\Drive\Exceptions\Files\ContentUnavailableException` |
@@ -143,19 +143,19 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 
 ### `collaboration_epoch_mismatch`
 
-**409** · documents · retryable `after_refetch` · receipt `cacheable`
+**409** · collaboration · retryable `after_refetch` · receipt `cacheable`
 
 **Collaboration epoch mismatch** — The collaboration session is out of date.
 
 ### `collaboration_seed_conflict`
 
-**409** · documents · retryable `after_refetch` · receipt `cacheable`
+**409** · collaboration · retryable `after_refetch` · receipt `cacheable`
 
 **Collaboration seed conflict** — The document was seeded differently by another session.
 
 ### `collaboration_unavailable`
 
-**409** · documents · retryable `never` · receipt `never`
+**409** · collaboration · retryable `never` · receipt `never`
 
 **Collaboration unavailable** — Collaboration is not available for this document.
 

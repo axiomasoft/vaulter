@@ -456,6 +456,18 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter-azgard.permissions.manage` | — | `'documents.manage'` | — |
 | `vaulter-azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `'documents.create'` | — |
 
+### `vaulter-collaboration`
+
+| Key | Env | Default | Description |
+|---|---|---|---|
+| `vaulter-collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `'hocuspocus'` | — |
+| `vaulter-collaboration.hub.url` | `VAULTER_COLLAB_URL` | `'ws://localhost:1234'` | — |
+| `vaulter-collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | Signs the room tokens (Laravel only); must differ from the webhook secret the hub holds. |
+| `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | — |
+| `vaulter-collaboration.hub.token_ttl` | — | `3600` | — |
+| `vaulter-collaboration.hub.timestamp_tolerance` | — | `300` | — |
+| `vaulter-collaboration.max_state_bytes` | — | `16777216` | The largest binary Yjs state one hub store may write (413 above it). |
+
 ### `vaulter`
 
 | Key | Env | Default | Description |
@@ -515,15 +527,8 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter-documents.tiptap.extra_marks` | — | `[]` | — |
 | `vaulter-documents.tiptap.extra_attributes` | — | `[]` | — |
 | `vaulter-documents.tiptap.url_attributes` | — | `[]` | — |
-| `vaulter-documents.collaboration.enabled` | — | `false` | — |
-| `vaulter-documents.collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `'hocuspocus'` | — |
-| `vaulter-documents.collaboration.hub.url` | `VAULTER_COLLAB_URL` | `'ws://localhost:1234'` | — |
-| `vaulter-documents.collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | — |
-| `vaulter-documents.collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | — |
-| `vaulter-documents.collaboration.hub.token_ttl` | — | `3600` | — |
-| `vaulter-documents.collaboration.hub.timestamp_tolerance` | — | `300` | — |
-| `vaulter-documents.collaboration.max_state_bytes` | — | `16777216` | The largest binary Yjs state one hub store may write (413 above it). |
-| `vaulter-documents.collaboration.broadcast.channel_prefix` | — | `'vaulter.documents'` | — |
+| `vaulter-documents.broadcast` | — | — | The private broadcast channels of a document ("<prefix>.<nodeId>"): the comment events use them, and the collaboration package authorizes them and names its rooms with the same prefix. |
+| `vaulter-documents.broadcast.channel_prefix` | — | `'vaulter.documents'` | — |
 | `vaulter-documents.models.document_revision` | — | `DocumentRevision::class` | — |
 | `vaulter-documents.models.node_comment` | — | `NodeComment::class` | — |
 

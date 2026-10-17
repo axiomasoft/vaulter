@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Collaboration\CollaborationProblemCodes;
 use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
@@ -28,6 +29,7 @@ function monorepoProblemSources(): array
         'drive' => [DriveSliceProblemCodes::class, DriveProblemCodes::class],
         'webhooks' => [WebhooksProblemCodes::class],
         'documents' => [DocumentsProblemCodes::class],
+        'collaboration' => [CollaborationProblemCodes::class],
     ];
 }
 
@@ -43,6 +45,7 @@ function fullProblemCatalog(): ProblemCatalog
     $translator->addNamespace('vaulter-media', $root.'/media/resources/lang');
     $translator->addNamespace('vaulter-drive', $root.'/drive/resources/lang');
     $translator->addNamespace('vaulter-documents', $root.'/documents/resources/lang');
+    $translator->addNamespace('vaulter-collaboration', $root.'/collaboration/resources/lang');
     $translator->addNamespace('vaulter-webhooks', $root.'/webhooks/resources/lang');
 
     return new ProblemCatalog(

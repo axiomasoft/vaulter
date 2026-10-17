@@ -7,7 +7,7 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 // yet (one-time seed from its JSON) and projects back to JSON on every store. They
 // mirror the backend allow-list (TipTapSchema): a node the hub does not know is
 // dropped from the seed, a node the backend does not know fails every store. Both
-// sides are pinned to packages/documents/tests/Fixtures/tiptap-schema.json, which
+// sides are pinned to packages/collaboration/tests/Fixtures/tiptap-schema.json, which
 // test/schema-parity.test.js compares against.
 //
 // Hosts that add nodes through vaulter-documents.tiptap.extra_* must add the matching

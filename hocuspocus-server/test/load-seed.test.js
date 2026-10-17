@@ -201,7 +201,7 @@ test('the seed of a document with a link carries only attributes the backend all
 
   const [seed] = backend.calls.store
   const attrs = seed.content.content[0].content[0].marks[0].attrs
-  const fixture = JSON.parse(readFileSync(new URL('../../packages/documents/tests/Fixtures/tiptap-schema.json', import.meta.url), 'utf8'))
+  const fixture = JSON.parse(readFileSync(new URL('../../packages/collaboration/tests/Fixtures/tiptap-schema.json', import.meta.url), 'utf8'))
   const allowed = fixture['vaulter/rich-text'].attributes.link
 
   assert.equal(attrs.href, 'https://example.com')

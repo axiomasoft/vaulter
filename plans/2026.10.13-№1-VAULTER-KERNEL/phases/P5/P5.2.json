@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.2",
   "title": "Хаб → packages/collaboration/hub (@vaulter/collaboration-hub) и тест-закрепление поведения Hocuspocus 4.3.0",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "`git mv hocuspocus-server packages/collaboration/hub`, npm name `@vaulter/collaboration-hub`; root `package.json` workspaces и `package-lock.json`; suite/zone `hub` (cwd, list_glob); пути в Makefile, scripts/collab-e2e.sh, load/docker-compose.load.yml, load/scripts/p8-collab-join.mjs, testbench.yaml, .gitignore, release/packages.json (`images[].path`), ci.yml/weekly-full.yml/hocuspocus-image.yml (working-directory/context), PHP-тестах collaboration, читающих файлы хаба, и комментарии TipTapSchema.php; новый `test/hocuspocus-v4.test.js` закрепляет 4 факта 4.3.0 (failed store оставляет документ без повтора; flushPendingStores исполняет только debounced; Server.destroy после failed store не завершается; установленная версия 4.3.0). Поведение хаба не меняется.",
   "why": "D1, architecture#frontend; контекст фазы: перед изменением хаба поведение Hocuspocus v4 проверяется тестом, а не документацией — на нём стоят ledger (P5.7) и shutdown coordinator (P5.9). Hard risks: тихая смена семантики failed store/destroy при обновлении Hocuspocus; битые пути CI/стенда/нагрузки к hocuspocus-server.",
   "scope": {
@@ -228,6 +228,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T09:08:12Z"
+  "result": {
+    "started_at": "2026-10-17T09:09:24Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    }
+  },
+  "updated_at": "2026-10-17T09:09:24Z"
 }
