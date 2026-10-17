@@ -305,6 +305,7 @@
         "packages/webhooks/tests/Events/WebhookAutoDisableCommitTest.php",
         "packages/webhooks/tests/Feature/PruneWebhooksTest.php",
         "packages/webhooks/tests/Outbox/WebhookFanoutConsumerTest.php",
+        "packages/webhooks/tests/Schema/WebhooksKeyColumnsTest.php",
         "packages/webhooks/tests/Webhooks/ConcurrentDeliveryTest.php",
         "packages/webhooks/tests/Webhooks/OutboxTransactionTest.php",
         "packages/webhooks/tests/Webhooks/SigningSecretEncryptionTest.php",

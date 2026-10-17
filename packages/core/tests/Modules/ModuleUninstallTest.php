@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -29,7 +31,9 @@ uses(TestCase::class, DatabaseMigrations::class);
 // only, newest first; --purge (with --force) deletes its rows and releases its own media pins (D23) in one transaction
 // first. Refused, with nothing changed: an installed module that requires it, a foreign key of another owner's table,
 // pins of another owner on its data (the media), references it cannot read, and — without --purge — rows or pins of
-// its own. The suite application is core+media+drive+webhooks; the sets without webhooks or with documents are fresh
+// its own. What the dry run read is read again inside the purge transaction and before each rollback (rows or pins that
+// appeared stop it, exit 1); on a transactional-DDL driver the purge and the rollbacks are one transaction (a failure
+// changes nothing, exit 1), elsewhere a failure after the purge is exit 3 (applied partially). The suite application is core+media+drive+webhooks; the sets without webhooks or with documents are fresh
 // applications on their own database.
 
 /** @return list<string> the tables of the connection, sorted */
@@ -293,4 +297,132 @@ it('refuses to execute when the pins cannot be read: the media is switched off',
     expect($run['exit'])->toBe(1)
         ->and($run['output'])->toContain('the references in module "media" cannot be read');
     uninstallIn($app, static fn () => expect(Schema::hasTable('v_drives'))->toBeTrue());
+});
+
+/** Runs `$callback` once, after the first query whose SQL contains `$needle` — a writer sneaking in after the plan read it. */
+function uninstallAfterQuery(Application $app, string $needle, Closure $callback): void
+{
+    $done = false;
+    $app->make('events')->listen(QueryExecuted::class, static function (QueryExecuted $query) use (&$done, $needle, $callback): void {
+        if (!$done && str_contains($query->sql, $needle)) {
+            $done = true;
+            $callback();
+        }
+    });
+}
+
+/** The migrator runs the migrations on a connection of its own (sharing the PDO), so one transaction cannot cover them. */
+function uninstallMigratorOnOwnConnection(): void
+{
+    $default = config('database.default');
+    config()->set('database.connections.uninstall_alias', config('database.connections.'.$default));
+    $alias = DB::connection('uninstall_alias');
+    $alias->setPdo(DB::connection()->getPdo());
+    $alias->setReadPdo(DB::connection()->getReadPdo());
+    app(Migrator::class)->setConnection('uninstall_alias');
+    DB::setDefaultConnection($default); // the migrator keeps the alias, the Vaulter database stays on the default
+}
+
+function uninstallWebhookEndpointRow(): void
+{
+    DB::table('v_webhook_endpoints')->insert(['url' => 'https://example.test/hook', 'events' => '[]', 'signing_secret' => 'secret', 'created_at' => now(), 'updated_at' => now()]);
+}
+
+it('warns before --force that the module has to be disabled and its traffic stopped', function (): void {
+    $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', '--force' => true])
+        ->expectsOutputToContain('stop its traffic first')
+        ->assertExitCode(0);
+});
+
+it('stops without --purge when a row appears after the plan was read, and touches nothing further', function (): void {
+    uninstallAfterQuery($this->app, 'count(*) as "aggregate" from "v_webhook_endpoints"', uninstallWebhookEndpointRow(...));
+    $before = uninstallTables();
+    $ran = uninstallRan();
+
+    $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', '--force' => true])
+        ->expectsOutputToContain('its tables hold rows; --purge deletes them')
+        ->expectsOutputToContain('nothing was changed')
+        ->assertExitCode(1);
+
+    expect(uninstallTables())->toBe($before)
+        ->and(uninstallRan())->toBe($ran)
+        ->and(DB::table('v_webhook_endpoints')->count())->toBe(1);
+});
+
+it('stops without --purge when a pin of its own appears after the plan was read', function (): void {
+    $app = uninstallApp(UNINSTALL_DRIVE_SET);
+    $blob = uninstallIn($app, static fn (): Blob => uninstallPinnedBlob('late', 'acme.attachment'));
+    uninstallAfterQuery($app, 'group by "owner_type"', static fn () => uninstallIn($app, static fn () => DB::table('v_blob_references')->insert([
+        'blob_id' => $blob->getKey(), 'owner_type' => 'drive.revision_blob', 'reference_key' => 'late', 'created_at' => now(),
+    ])));
+
+    $run = uninstallRun($app, ['module' => 'drive', '--force' => true]);
+
+    expect($run['exit'])->toBe(1)
+        ->and($run['output'])->toContain('it keeps 1 reference(s) of "drive.revision_blob" in media')
+        ->toContain('nothing was changed');
+    uninstallIn($app, static fn () => expect(Schema::hasTable('v_drives'))->toBeTrue()
+        ->and(uninstallPins())->toBe(['acme.attachment' => 1, 'drive.revision_blob' => 1]));
+});
+
+it('undoes the purge when a rollback fails on a transactional-DDL driver: exit 1, nothing changed', function (): void {
+    uninstallWebhookEndpointRow();
+    uninstallAfterQuery($this->app, 'drop table if exists "v_webhook_endpoints"', static function (): void {
+        throw new RuntimeException('DROP is not allowed');
+    });
+    $ran = uninstallRan();
+
+    $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', '--force' => true, '--purge' => true])
+        ->expectsOutputToContain('DROP is not allowed')
+        ->expectsOutputToContain('nothing was changed')
+        ->assertExitCode(1);
+
+    expect(Schema::hasTable('v_webhook_endpoints'))->toBeTrue()
+        ->and(Schema::hasTable('v_webhook_deliveries'))->toBeTrue()
+        ->and(DB::table('v_webhook_endpoints')->count())->toBe(1)
+        ->and(uninstallRan())->toBe($ran);
+});
+
+it('reports a partial application (exit 3) when the migrations run on another connection and a rollback fails after the purge; repeating --force finishes', function (): void {
+    uninstallMigratorOnOwnConnection();
+    uninstallWebhookEndpointRow();
+
+    try {
+        uninstallAfterQuery($this->app, 'drop table if exists "v_webhook_endpoints"', static function (): void {
+            throw new RuntimeException('DROP is not allowed');
+        });
+
+        $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', '--force' => true, '--purge' => true])
+            ->expectsOutputToContain('1 row(s), 0 reference(s)')
+            ->expectsOutputToContain('DROP is not allowed')
+            ->expectsOutputToContain('applied partially')
+            ->assertExitCode(3);
+
+        // The purge is committed and the deliveries are rolled back; the endpoints migration stays recorded.
+        expect(Schema::hasTable('v_webhook_deliveries'))->toBeFalse()
+            ->and(uninstallRan())->not->toContain('0001_01_01_000402_create_v_webhook_deliveries_table')
+            ->and(uninstallRan())->toContain('0001_01_01_000401_create_v_webhook_endpoints_table');
+    } finally {
+        $this->app->make('events')->forget(QueryExecuted::class);
+    }
+
+    $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', '--force' => true])
+        ->expectsOutputToContain('The schema of "webhooks" is removed.')
+        ->assertExitCode(0);
+    expect(Schema::hasTable('v_webhook_endpoints'))->toBeFalse();
+});
+
+it('stops half-way when a row appears after the first rollback of a DDL that commits: exit 3, the rest untouched', function (): void {
+    uninstallMigratorOnOwnConnection();
+    uninstallAfterQuery($this->app, 'drop table if exists "v_webhook_deliveries"', uninstallWebhookEndpointRow(...));
+
+    $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', '--force' => true])
+        ->expectsOutputToContain('its tables hold rows; --purge deletes them')
+        ->expectsOutputToContain('applied partially')
+        ->assertExitCode(3);
+
+    expect(Schema::hasTable('v_webhook_deliveries'))->toBeFalse()
+        ->and(Schema::hasTable('v_webhook_endpoints'))->toBeTrue()
+        ->and(DB::table('v_webhook_endpoints')->count())->toBe(1)
+        ->and(uninstallRan())->toContain('0001_01_01_000401_create_v_webhook_endpoints_table');
 });

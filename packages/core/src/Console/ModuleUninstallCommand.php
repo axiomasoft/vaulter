@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Console;
 
+use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
+use RuntimeException;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Throwable;
 use Vaulter\Attributes\Internal;
@@ -25,14 +27,26 @@ use Vaulter\Modules\VaulterModule;
  * modules that require it, the foreign keys other owners hold on its tables, and the references (media pins, D23)
  * kept on its data or by it. A dry run by default. `--force` rolls back the migrations of the module's own schema paths
  * (newest first) — only while its tables hold no row and it keeps no reference; `--purge` (with `--force`) first
- * deletes its rows and releases its own references in one transaction. It never drops, deletes or releases anything of
- * another owner, and disabling a module never calls it.
+ * deletes its rows and releases its own references. It never drops, deletes or releases anything of another owner, and
+ * disabling a module never calls it.
  *
- * Exit codes: 0 planned or done, 1 refused (nothing changed), 2 usage.
+ * Disable the module in the configuration (`vaulter.modules.<id>`) and stop its traffic before `--force`: no lock keeps
+ * its writers out. What the dry run read is read again — inside the transaction of the purge, and right before the
+ * rollback of every migration — and any row or reference that has appeared stops the removal (fail closed: nothing
+ * further is touched). That narrows the window of a concurrent writer, it does not close it.
+ *
+ * Atomicity: where DDL is transactional (sqlite, pgsql) the purge and the rollbacks run in one transaction, so a failure
+ * leaves nothing changed. Where DDL commits (MySQL) the purge commits before the rollbacks; a failure after it leaves the
+ * module applied partially — repeat `--force` (exit 3).
+ *
+ * Exit codes: 0 planned or done, 1 refused or failed (nothing changed), 2 usage, 3 applied partially (see above).
  */
 #[Internal]
 final class ModuleUninstallCommand extends Command
 {
+    /** Applied partially: the purge or some rollbacks are done, the rest is not (DDL that cannot be rolled back). */
+    private const int PARTIAL = 3;
+
     protected $signature = 'vaulter:module:uninstall
         {module : The module id}
         {--force : Roll back the module\'s migrations}
@@ -144,26 +158,88 @@ final class ModuleUninstallCommand extends Command
             return self::FAILURE;
         }
 
-        if ($purge) {
-            [$deleted, $released] = $database->transaction(static function () use ($holders, $id, $tables, $rows, $connection): array {
-                $released = 0;
-                foreach ($holders as $references) {
-                    $released += $references->releaseKeptBy($id);
-                }
-                $deleted = 0;
-                // A table after the ones it references, so the reverse order deletes the referencing rows first.
-                foreach (array_reverse($tables) as $table) {
-                    if (array_key_exists($table, $rows ?? [])) {
-                        $deleted += $connection->table($table)->delete();
-                    }
-                }
+        $this->components->warn(sprintf(
+            'Disable "%s" (vaulter.modules.%s) and stop its traffic first: writers are not locked out. Rows or references that appear meanwhile stop the removal, but the window cannot be closed.',
+            $id,
+            $id,
+        ));
 
-                return [$deleted, $released];
-            });
-            $this->components->twoColumnDetail('Purged', sprintf('%d row(s), %d reference(s)', $deleted, $released));
+        $steps = self::steps($migrations, $migrator, $files);
+        // Laravel flags only pgsql as transactional DDL, yet SQLite's DDL is transactional too.
+        $atomic = $connection->getSchemaGrammar()->supportsSchemaTransactions() || $connection->getDriverName() === 'sqlite';
+        foreach ($steps as $step) {
+            $atomic = $atomic && $step['db']->getName() === $connection->getName();
+        }
+        $guard = static fn (bool $strict): array => self::blockers($id, $tables, $holders, $connection, $strict);
+        $refusal = new RuntimeException('The removal was refused.');
+        $blockers = $rolledBack = [];
+        $purged = [0, 0];
+        $failure = null;
+
+        try {
+            if ($atomic) {
+                // One transaction: a refusal or a failure of any step leaves the purge undone too.
+                [$purged, $rolledBack] = $database->transaction(static function () use ($purge, $holders, $id, $tables, $rows, $connection, $steps, $migrator, $guard, $refusal, &$blockers): array {
+                    $blockers = $guard(!$purge);
+                    $purged = [0, 0];
+                    $done = [];
+                    if ($blockers === []) {
+                        $purged = $purge ? self::purge($holders, $id, $tables, $rows ?? [], $connection) : $purged;
+                        $blockers = self::rollBack($steps, $migrator, static fn (): array => $guard(true), $done);
+                    }
+                    if ($blockers !== []) {
+                        throw $refusal;
+                    }
+
+                    return [$purged, $done];
+                });
+            } else {
+                if ($purge) {
+                    // DDL commits on this driver: the purge is its own transaction, the rollbacks follow it.
+                    $purged = $database->transaction(static function () use ($holders, $id, $tables, $rows, $connection, $guard, $refusal, &$blockers): array {
+                        $blockers = $guard(false);
+                        if ($blockers !== []) {
+                            throw $refusal;
+                        }
+
+                        return self::purge($holders, $id, $tables, $rows ?? [], $connection);
+                    });
+                }
+                $blockers = self::rollBack($steps, $migrator, static fn (): array => $guard(true), $rolledBack);
+            }
+        } catch (Throwable $e) {
+            if ($e !== $refusal) {
+                $failure = $e->getMessage();
+                $blockers = [];
+            }
         }
 
-        $rolledBack = self::rollBack($migrations, $migrator, $files);
+        $changed = $purged[0] + $purged[1] > 0 || $rolledBack !== [];
+        if ($blockers !== [] || $failure !== null) {
+            foreach ($blockers as $blocker) {
+                $this->line('  <fg=red>refused:</> '.OutputFormatter::escape($blocker));
+            }
+            if ($failure !== null) {
+                $this->line('  <fg=red>failed:</> '.OutputFormatter::escape($failure));
+            }
+            if (!$changed) {
+                $this->components->error('The module was not uninstalled: nothing was changed.');
+
+                return self::FAILURE;
+            }
+            // Only a driver whose DDL commits gets here: the transaction of the atomic path left nothing behind.
+            $this->components->twoColumnDetail('Purged', sprintf('%d row(s), %d reference(s)', $purged[0], $purged[1]));
+            foreach ($rolledBack as $migration) {
+                $this->components->twoColumnDetail(OutputFormatter::escape($migration), '<fg=green;options=bold>ROLLED BACK</>');
+            }
+            $this->components->error('The module "'.$id.'" was applied partially: the purge or some rollbacks are done, the rest is not. Fix the cause and repeat --force (with --purge if rows or references remain).');
+
+            return self::PARTIAL;
+        }
+
+        if ($purge) {
+            $this->components->twoColumnDetail('Purged', sprintf('%d row(s), %d reference(s)', $purged[0], $purged[1]));
+        }
         foreach ($rolledBack as $migration) {
             $this->components->twoColumnDetail(OutputFormatter::escape($migration), '<fg=green;options=bold>ROLLED BACK</>');
         }
@@ -172,6 +248,70 @@ final class ModuleUninstallCommand extends Command
             : 'The schema of "'.$id.'" is removed. Remove its package from Composer, or `migrate` installs it again.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * What stops the removal now, read again: references kept on the module's data, and — when `$strict`, as after the
+     * purge or without it — rows of its tables and references it keeps. A fact that cannot be read stops it too.
+     *
+     * @param  list<string>                    $tables
+     * @param  array<string, ModuleReferences> $holders
+     * @return list<string>
+     */
+    private static function blockers(string $id, array $tables, array $holders, Connection $connection, bool $strict): array
+    {
+        $blockers = [];
+        try {
+            foreach ($holders as $holder => $references) {
+                if ($holder === $id) {
+                    foreach ($references->keptOn($id) as $kind => $count) {
+                        $blockers[] = sprintf('%d reference(s) of "%s" are kept on its data; only the purge of their owner releases them', $count, $kind);
+                    }
+                }
+                if ($strict) {
+                    foreach ($references->keptBy($id) as $kind => $count) {
+                        $blockers[] = sprintf('it keeps %d reference(s) of "%s" in %s; --purge releases them', $count, $kind, $holder);
+                    }
+                }
+            }
+            if ($strict) {
+                $rows = self::rows($tables, $connection);
+                if ($rows === null) {
+                    $blockers[] = 'the database cannot be read';
+                } elseif (array_sum($rows) > 0) {
+                    $blockers[] = 'its tables hold rows; --purge deletes them';
+                }
+            }
+        } catch (Throwable $e) {
+            $blockers[] = 'the references cannot be read ('.$e->getMessage().')';
+        }
+
+        return $blockers;
+    }
+
+    /**
+     * Releases the references the module keeps and deletes its rows, inside the caller's transaction.
+     *
+     * @param  array<string, ModuleReferences> $holders
+     * @param  list<string>                    $tables
+     * @param  array<string, int>              $rows
+     * @return array{0: int, 1: int}           rows deleted, references released
+     */
+    private static function purge(array $holders, string $id, array $tables, array $rows, Connection $connection): array
+    {
+        $released = 0;
+        foreach ($holders as $references) {
+            $released += $references->releaseKeptBy($id);
+        }
+        $deleted = 0;
+        // A table after the ones it references, so the reverse order deletes the referencing rows first.
+        foreach (array_reverse($tables) as $table) {
+            if (array_key_exists($table, $rows)) {
+                $deleted += $connection->table($table)->delete();
+            }
+        }
+
+        return [$deleted, $released];
     }
 
     /** @return array<string, string> the migration files of the module's schema paths (name => real path), sorted by name */
@@ -332,42 +472,64 @@ final class ModuleUninstallCommand extends Command
     }
 
     /**
-     * Runs `down` of the module's migrations that ran, newest first, and forgets them in the migrations table — the
-     * migrator's own rollback picks by batch, not by owner. The migrations table is the one `migrate` records in.
+     * The migrations of the module that ran, newest first, with the connection each runs on — the migrator's own
+     * rollback picks by batch, not by owner. The migrations table is the one `migrate` records in.
      *
-     * @param  array<string, string> $migrations name => real path
-     * @return list<string>          the migrations rolled back
+     * @param  array<string, string>                                           $migrations name => real path
+     * @return list<array{name: string, migration: Migration, db: Connection}>
      */
-    private static function rollBack(array $migrations, Migrator $migrator, Filesystem $files): array
+    private static function steps(array $migrations, Migrator $migrator, Filesystem $files): array
     {
         if (!$migrator->repositoryExists()) {
             return [];
         }
-        $repository = $migrator->getRepository();
-        $ran = $repository->getRan();
-        $rolledBack = [];
+        $ran = $migrator->getRepository()->getRan();
+        $steps = [];
         foreach (array_reverse($migrations, true) as $name => $path) {
             if (!in_array($name, $ran, true)) {
                 continue;
             }
             $migration = $files->getRequire($path);
-            if (!$migration instanceof Migration) {
-                continue;
+            if ($migration instanceof Migration) {
+                $steps[] = ['name' => $name, 'migration' => $migration, 'db' => $migrator->resolveConnection($migration->getConnection())];
             }
-            $db = $migrator->resolveConnection($migration->getConnection());
+        }
+
+        return $steps;
+    }
+
+    /**
+     * Runs `down` of the steps and forgets them in the migrations table; `$guard` is read right before each one and, when
+     * it names a blocker, nothing further is touched. `$done` lists the migrations rolled back so far, also when `down`
+     * throws.
+     *
+     * @param  list<array{name: string, migration: Migration, db: Connection}> $steps
+     * @param  Closure(): list<string>                                         $guard
+     * @param  list<string>                                                    $done
+     * @return list<string>                                                    the blockers that stopped it; empty when every step ran
+     */
+    private static function rollBack(array $steps, Migrator $migrator, Closure $guard, array &$done): array
+    {
+        $repository = $migrator->getRepository();
+        foreach ($steps as $step) {
+            $blockers = $guard();
+            if ($blockers !== []) {
+                return $blockers;
+            }
+            $migration = $step['migration'];
             $down = static function () use ($migration): void {
                 if (method_exists($migration, 'down')) {
                     $migration->down();
                 }
             };
-            $migration->withinTransaction && $db->getSchemaGrammar()->supportsSchemaTransactions()
-                ? $db->transaction($down)
+            $migration->withinTransaction && $step['db']->getSchemaGrammar()->supportsSchemaTransactions()
+                ? $step['db']->transaction($down)
                 : $down();
-            $repository->delete((object) ['migration' => $name]);
-            $rolledBack[] = $name;
+            $repository->delete((object) ['migration' => $step['name']]);
+            $done[] = $step['name'];
         }
 
-        return $rolledBack;
+        return [];
     }
 
     /** @param array<string, int> $references */

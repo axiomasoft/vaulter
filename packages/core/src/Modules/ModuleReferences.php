@@ -12,6 +12,9 @@ use Vaulter\Database\VaulterDatabase;
  * module pins blobs under its own `<module>.<what>` owner type. `vaulter:module:uninstall` reads them from the module
  * that holds them (its manifest implements {@see HoldsReferences}): references kept on the data of the module being
  * removed refuse the removal, and its own are released by `--purge` only. The kernel knows no table of the holder.
+ *
+ * The reads ({@see keptBy()}, {@see keptOn()}) are repeated inside the transaction of the purge and right before each
+ * rollback, so they report the current state, take no lock and cache nothing.
  */
 #[Internal]
 interface ModuleReferences

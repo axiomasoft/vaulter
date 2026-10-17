@@ -41,7 +41,7 @@ it('uses the configured types for every key column on a fresh schema', function 
         $expected = $inspector->expected();
         $columns = array_map(static fn ($item): string => $item->column, $expected);
 
-        expect($expected)->toHaveCount(36)
+        expect($expected)->toHaveCount(39)
             ->and($columns)->toContain(
                 'drive_id',
                 'content_modified_by',
@@ -112,7 +112,7 @@ it('collects the key columns from the schema of every offered module, each on a 
         app(ModuleSchemas::class),
     );
 
-    expect($declared)->toBe(36)
+    expect($declared)->toBe(39)
         ->and($inspector->expected())->toHaveCount($declared)
         ->and(array_map(static fn ($column): string => $column->table, $schemas['core']->keyColumns()))->toBe(['outbox']);
 });

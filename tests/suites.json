@@ -1139,6 +1139,7 @@
             "packages/webhooks/tests/Modules/WebhooksModuleTest.php",
             "packages/webhooks/tests/Outbox/WebhookFanoutConsumerTest.php",
             "packages/webhooks/tests/Schema/MassAssignmentHardeningTest.php",
+            "packages/webhooks/tests/Schema/WebhooksKeyColumnsTest.php",
             "packages/webhooks/tests/Webhooks/ConcurrentDeliveryTest.php",
             "packages/webhooks/tests/Webhooks/DeliverWebhookTest.php",
             "packages/webhooks/tests/Webhooks/OutboundUrlGuardTest.php",

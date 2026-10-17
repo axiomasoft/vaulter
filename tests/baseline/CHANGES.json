@@ -11896,7 +11896,7 @@
       ]
     },
     "core": {
-      "count": 508,
+      "count": 514,
       "names": [
         "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_vaulter_drive_package_nowhere__P2__5___D1__I1_blocks_from_P4_16_",
         "P\\Packages\\core\\tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_core_activity_Operations_depend_on_the_drive_package_only_through_the_moved_access_types",
@@ -12291,8 +12291,14 @@
         "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_refuses_the_drive_while_documents_is_installed",
         "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_refuses_the_media_while_the_drive_requires_it_and_pins_its_blobs__the_pins_stay",
         "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_refuses_to_execute_when_the_pins_cannot_be_read__the_media_is_switched_off",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_reports_a_partial_application__exit_3__when_the_migrations_run_on_another_connection_and_a_rollback_fails_after_the_purge__repeating___force_finishes",
         "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_rolls_back_documents_on___force__its_tables_go__the_drive_stays",
         "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_rolls_back_only_the_webhooks_migrations_on___force__its_tables_go__the_drive_and_the_media_stay__migrate_installs_it_again",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_stops_half_way_when_a_row_appears_after_the_first_rollback_of_a_DDL_that_commits__exit_3__the_rest_untouched",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_stops_without___purge_when_a_pin_of_its_own_appears_after_the_plan_was_read",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_stops_without___purge_when_a_row_appears_after_the_plan_was_read__and_touches_nothing_further",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_undoes_the_purge_when_a_rollback_fails_on_a_transactional_DDL_driver__exit_1__nothing_changed",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallTest::__pest_evaluable_it_warns_before___force_that_the_module_has_to_be_disabled_and_its_traffic_stopped",
         "P\\Packages\\core\\tests\\Modules\\ModulesCommandTest::__pest_evaluable_it_lists_every_offered_module_with_its_policy__activation_and_reason",
         "P\\Packages\\core\\tests\\Modules\\ModulesCommandTest::__pest_evaluable_it_prints_a_table_with_the_fingerprint",
         "P\\Packages\\core\\tests\\Modules\\ModulesCommandTest::__pest_evaluable_it_shows_the_schema_migrations_the_database_has_not_run",
@@ -12688,7 +12694,7 @@
       ]
     },
     "webhooks": {
-      "count": 75,
+      "count": 77,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_domain_exceptions_of_the_webhooks_package_implement_the_HTTP_problem_contract",
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_it_binds_no_route_model_in_the_package",
@@ -12764,6 +12770,8 @@
         "P\\Tests\\Schema\\MassAssignmentHardeningTest::__pest_evaluable_it_discards_a_service_security_column_via_fill___on_the_closed__fillable_WebhookEndpoint__F_P1_8_02_\"dataset \"WebhookEndpoint.failure_count\"\"",
         "P\\Tests\\Schema\\MassAssignmentHardeningTest::__pest_evaluable_it_discards_a_service_security_column_via_fill___on_the_closed__fillable_WebhookEndpoint__F_P1_8_02_\"dataset \"WebhookEndpoint.previous_signing_secret\"\"",
         "P\\Tests\\Schema\\MassAssignmentHardeningTest::__pest_evaluable_it_rejects_ANY_fill___attribute_on_the_fully__guarded_WebhookDelivery_with_MassAssignmentException__F_P1_8_02_\"dataset \"WebhookDelivery.attempts\"\"",
+        "P\\Tests\\Schema\\WebhooksKeyColumnsTest::__pest_evaluable_it_adds_the_webhooks_columns_to_the_key_columns_the_inspector_expects_of_the_whole_installation",
+        "P\\Tests\\Schema\\WebhooksKeyColumnsTest::__pest_evaluable_it_declares_the_key_columns_of_its_own_tables_to_the_key_type_check_of_the_kernel",
         "P\\Tests\\Webhooks\\WebhookEndpointCrudTest::__pest_evaluable_it_answers_an_oversized_endpoint_id_after_the_ability_check__403_without_manage__404_with_it"
       ]
     }
