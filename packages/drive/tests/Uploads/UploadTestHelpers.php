@@ -21,12 +21,12 @@ use Vaulter\Media\Contracts\Cas\ContentScanner;
 final class UploadTestHelpers
 {
     /**
-     * The host's scanner: the capability reads the class from `vaulter.scan.scanner` and the container
+     * The host's scanner: the capability reads the class from `vaulter-drive.scan.scanner` and the container
      * hands out this very object.
      */
     public static function scanner(ContentScanner $scanner): ContentScanner
     {
-        config()->set('vaulter.scan.scanner', $scanner::class);
+        config()->set('vaulter-drive.scan.scanner', $scanner::class);
         app()->instance($scanner::class, $scanner);
         app()->instance(ContentScanner::class, $scanner);
 

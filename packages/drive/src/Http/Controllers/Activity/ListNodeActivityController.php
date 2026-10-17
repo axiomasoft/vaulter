@@ -10,10 +10,10 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
-use Vaulter\Http\Resources\Activity\ActivityResource;
+use Vaulter\Drive\Http\Resources\Activity\ActivityResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Http\Resources\PageResponse;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Support\LoadTier;
 
 /** A node's activity the caller may see (View on the node), newest first. */

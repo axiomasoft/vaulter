@@ -14,7 +14,7 @@ use Vaulter\Drive\Testing\Http\V1;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $this->drive = V1::drive(userId: 1);
     $this->node = V1::folder($this->drive, 'shared');
     $this->actingAs(V1::user(1));

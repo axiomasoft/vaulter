@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     NodeProbeRoutes::register();
     $this->drive = V1::drive();
     $this->actingAs(V1::user());

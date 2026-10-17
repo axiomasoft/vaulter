@@ -108,9 +108,9 @@ it('keeps every HTTP and Filament boundary on Operations except the shrinking ex
     ]);
     $exempt = [
         ...$webhookAdmin,
-        'core/src/Http/Support/ContentResponder.php',
-        'core/src/Http/Support/HttpResourceResolver.php',
-        'core/src/Http/Support/SharedNodeResolver.php',
+        'drive/src/Http/Support/ContentResponder.php',
+        'drive/src/Http/Support/HttpResourceResolver.php',
+        'drive/src/Http/Support/SharedNodeResolver.php',
         // The protocol controllers look a session up by its upload id only to learn its
         // drive; the upload operations then authorize every act on it.
         'drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php',

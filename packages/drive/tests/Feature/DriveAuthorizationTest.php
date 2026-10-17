@@ -22,7 +22,7 @@ use Vaulter\Testing\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 

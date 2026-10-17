@@ -26,7 +26,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * and a previewer that sees but cannot download.
  */
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->drive = AccessTestHelpers::storage();
     $this->owner = AccessTestHelpers::user(1);
     AccessTestHelpers::grant($this->drive->rootNode()->firstOrFail(), RoleRegistry::OWNER, subjectId: 1);

@@ -65,7 +65,7 @@ function exampleProducers(): array
             return $test->postJson(V1::url('nodes/'.$folder->id.'/grants'), ['subject' => ['type' => V1::user(7)->getMorphClass(), 'id' => 7], 'role' => 'reader'])->assertCreated();
         }],
         'share' => ['shares.store', 201, function () use ($test, $prepare): TestResponse {
-            config()->set('vaulter.features.share_links', true);
+            config()->set('vaulter-drive.features.share_links', true);
             [, , $file] = $prepare();
 
             return $test->postJson(V1::url('nodes/'.$file->id.'/shares'), ['role' => 'reader', 'audience' => 'authenticated', 'max_uses' => 3])->assertCreated();

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vaulter\Configuration\ScanConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\FailScanAttemptAction;
@@ -13,6 +12,7 @@ use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
 use Vaulter\Drive\Actions\Content\ReuseScanEvidenceAction;
 use Vaulter\Drive\Actions\Content\RevokeScanEvidenceAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
+use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\ScanSnapshot;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanRequest;
@@ -33,8 +33,8 @@ use Vaulter\Media\Models\Cas\Blob;
 /** Real persisted scope and exact CAS edge, independent from upload orchestration. */
 function scanBoundaryFixture(?Blob $sharedBlob = null, ?Drive $drive = null): array
 {
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive ??= (new Drive)->forceFill(['owner_type' => 'team', 'owner_id' => random_int(1, 100000000), 'name' => 'scan drive', 'disk' => 'default']);
     if (!$drive->exists) {
         $drive->save();
@@ -231,7 +231,7 @@ it('SEC-R08 optional failed rescan retains exact clean proof and a new scanner e
     expect(app(SettleScanWorkAction::class)->execute(app(ClaimScanWorkAction::class)->execute($rescan->id, 2, new DateTimeImmutable), new ScanResult(ScanVerdict::Failed, 'unknown')))->toBeTrue()
         ->and($revision->fresh()->scan_status)->toBe('clean')->and($rescan->fresh()->outcome)->toBe('failed')
         ->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->not->toBeNull();
-    config()->set('vaulter.scan.scanner_version', '2');
+    config()->set('vaulter-drive.scan.scanner_version', '2');
     $newSpec = app(ScanConfig::class)->globalSpec();
     expect(app(ScanEvidenceRepository::class)->compatible($revision, $newSpec))->toBeNull();
     $newWork = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $newSpec, (string) Str::uuid(), $context));

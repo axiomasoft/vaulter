@@ -152,7 +152,7 @@ it('expires a concurrent reader\'s cursor or lets it read everything, never a ga
 
 it('never skips an entry committed after a transaction snapshot, nor projects it with older nodes', function (): void {
     changeRaceSkipOnSqlite($this);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $drive = DriveTestHelpers::drive();
     $shared = $drive->folders()->create('shared');
     $hidden = $drive->folders()->create('hidden');

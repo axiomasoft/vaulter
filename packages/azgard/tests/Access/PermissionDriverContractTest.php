@@ -29,8 +29,8 @@ use Vaulter\Drive\Enums\Access\GrantScope;
 function bindDriver(PermissionDriver $driver): AccessResolver
 {
     app()->instance($driver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.contract', $driver::class);
-    config()->set('vaulter.access.permission_driver', 'contract');
+    config()->set('vaulter-drive.access.permission_drivers.contract', $driver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'contract');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 

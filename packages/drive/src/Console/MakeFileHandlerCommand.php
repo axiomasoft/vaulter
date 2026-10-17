@@ -66,7 +66,7 @@ final class MakeFileHandlerCommand extends Command
         $this->components->task(sprintf('file handler app/Vaulter/FileHandlers/%s.php', $class));
         $this->components->task(sprintf('Test tests/Unit/Vaulter/%sTest.php', $class));
         $this->newLine();
-        $this->line("Register it in <info>config/vaulter.php</info> under 'handlers':");
+        $this->line("Register it in <info>config/vaulter-drive.php</info> under 'handlers':");
         $this->line(sprintf('    \\%s::class,', $namespace.'\\'.$class));
 
         return self::SUCCESS;

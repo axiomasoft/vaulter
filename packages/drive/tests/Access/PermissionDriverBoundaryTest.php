@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Configuration\AccessConfig;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Configuration\AccessConfig;
 use Vaulter\Drive\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Drive\Exceptions\Access\MissingPermissionDriverException;
-use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 
 class ActorOnlyBoundaryDriver extends DatabasePermissionDriver implements NonEnumeratingPermissionDriver
 {
@@ -35,7 +35,7 @@ it('retains actor-only classification without naming an optional bridge', functi
 });
 
 it('rejects the open testing driver in production through a neutral contract', function (): void {
-    config()->set('vaulter.access.permission_drivers.open', NullPermissionDriver::class);
+    config()->set('vaulter-drive.access.permission_drivers.open', NullPermissionDriver::class);
     $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: true);
 
     expect(fn () => $manager->driver('open'))->toThrow(MissingPermissionDriverException::class);

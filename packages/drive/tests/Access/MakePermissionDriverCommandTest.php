@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use App\Vaulter\PermissionDrivers\Workspace;
 use Illuminate\Support\Facades\File;
-use Vaulter\Testing\Contracts\PermissionDriverContractTests;
+use Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests;
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     File::deleteDirectory(app_path('Vaulter'));
     File::deleteDirectory(base_path('tests/Unit/Vaulter'));
 });
@@ -18,7 +18,7 @@ afterEach(function (): void {
 });
 
 it('scaffolds a driver that decides like the reference', function (): void {
-    $accessBefore = config('vaulter.access');
+    $accessBefore = config('vaulter-drive.access');
 
     $this->artisan('vaulter:make:permission-driver', ['name' => 'Workspace'])
         ->expectsOutputToContain("'workspace' => \\App\\Vaulter\\PermissionDrivers\\Workspace::class,")
@@ -32,7 +32,7 @@ it('scaffolds a driver that decides like the reference', function (): void {
         expect($code)->toBe(0);
     }
     expect(File::get($test))->toContain('PermissionDriverContractTests')
-        ->and(config('vaulter.access'))->toBe($accessBefore);
+        ->and(config('vaulter-drive.access'))->toBe($accessBefore);
 
     require_once $class;
     (new PermissionDriverContractTests)->assertSameDecisionsAsReference(new Workspace);

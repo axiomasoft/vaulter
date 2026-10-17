@@ -7964,7 +7964,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Feature\\HandlerBaselineTest::__pest_evaluable_it_resolves_the_preview_baseline_even_when_a_stale_published_config_empties_vaulter_handlers__P0_4_D10",
-      "new": "P\\Tests\\Feature\\HandlerBaselineTest::__pest_evaluable_it_resolves_the_preview_baseline_even_when_a_stale_published_config_empties_vaulter_handlers__P0_4_D10",
+      "new": "P\\Tests\\Feature\\HandlerBaselineTest::__pest_evaluable_it_resolves_the_preview_baseline_even_when_a_stale_published_config_empties_vaulter_drive_handlers__P0_4_D10",
       "new_suite": "drive",
       "reason": "the test file moved to packages/drive/tests/Feature/HandlerBaselineTest.php (P4 ownership move)",
       "decision": "D10"
@@ -9572,7 +9572,7 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.profiles.providers', ['Vaulter\\Tests\\Fixtures\\Panels…rofile'])\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.profiles.providers', ['Vaulter\\Drive\\Testing\\Fixture…rofile'])\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['Vaulter\\Drive\\Testing\\Fixture…rofile'])\"",
       "reason": "renamed: the FQCN named by the case title or its dataset changed with the P4.10 move (Vaulter\\Drive\\...)",
       "decision": "D10"
     },
@@ -9630,6 +9630,84 @@
       "new": "P\\Tests\\Testing\\FactoriesTest::__pest_evaluable_it_refuses_to_bulk_insert__which_would_skip_every_Operations_invariant",
       "new_suite": "drive",
       "reason": "the test file moved to packages/drive/tests/Testing/FactoriesTest.php (P4 ownership move)",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Enums_never_uses_the_Testing_namespaces",
+      "new": "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Enums_never_uses_the_Testing_namespaces",
+      "new_suite": "drive",
+      "reason": "the per-namespace case of the moved source directory runs in the drive suite (Vaulter\\Drive\\Enums); the core Enums directory is gone with DriveEventType",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.access.permission_driver', 'missing')\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 'missing')\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.access.permission_driver', 42)\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 42)\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.access.permission_dri…tabase', 'stdClass')\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permissi…tabase', 'stdClass')\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.handlers', [Closure Object ()])\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.handlers', [Closure Object ()])\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.models.node', 'stdClass')\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 'stdClass')\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.models.node', 42)\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 42)\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.profiles.default', 'stdClass')\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.default', 'stdClass')\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.profiles.providers', ['stdClass'])\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['stdClass'])\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.sharing.token_generator', 'stdClass')\"",
+      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.sharing.token_generator', 'stdClass')\"",
+      "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "drive",
+      "old": "P\\Tests\\Drive\\HasDrivesTest::__pest_evaluable_it_deletes_the_drives_of_a_deleted_owner_with_vaulter_drives_delete__with__owner",
+      "new": "P\\Tests\\Drive\\HasDrivesTest::__pest_evaluable_it_deletes_the_drives_of_a_deleted_owner_with_vaulter_drive_drives_delete__with__owner",
+      "reason": "P4.11: the title names the config key under its new root vaulter-drive",
       "decision": "D10"
     }
   ],
@@ -9861,7 +9939,7 @@
       ]
     },
     "core": {
-      "count": 464,
+      "count": 475,
       "names": [
         "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_extracted_vaulter_drive_package_only_from_the_files_that_move_to_it__P2__5___D1__P4_8_",
         "P\\Packages\\core\\tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_core_activity_Operations_depend_on_the_drive_package_only_through_the_moved_access_types",
@@ -9909,8 +9987,19 @@
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_preserves_the_host_replacement_map_instead_of_merging_the_shipped_entries_back",
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_retains_default_exporter_formats_alongside_host_overrides\"(['Host\\HtmlExporter'])\"",
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_retains_default_exporter_formats_alongside_host_overrides\"([])\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.profiles.providers', ['Vaulter\\Drive\\Testing\\Fixture…rofile'])\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 'missing')\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 42)\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permissi…tabase', 'stdClass')\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.handlers', [Closure Object ()])\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 'stdClass')\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 42)\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.default', 'stdClass')\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['Vaulter\\Drive\\Testing\\Fixture…rofile'])\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['stdClass'])\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.sharing.token_generator', 'stdClass')\"",
+        "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_keeps_no_drive_section_in_the_kernel_config_root__P4_11_",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_names_every_table_by_the_configured_prefix_and_the_canonical_entity__ignoring_table__names",
+        "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_resolves_the_model_keys_of_the_core_from_vaulter_models_and_those_of_the_drive_from_vaulter_drive_models",
         "P\\Packages\\core\\tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_schedules_the_outbox__webhook_and_journal_tasks_with_overlap_and_single_server_guards",
         "P\\Packages\\core\\tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_skips_the_webhook_tasks_when_webhooks_are_off_but_keeps_the_outbox_relay_and_the_journal_prune",
         "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_resolves_the_same_dedicated_connection_as_Vaulter_models\"('Vaulter\\Drive\\Models\\Node')\"",
@@ -10425,9 +10514,9 @@
       ]
     },
     "drive": {
-      "count": 66,
+      "count": 78,
       "names": [
-        "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_gives_the_host_subclass_configured_in_vaulter_models_the_same_alias",
+        "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_gives_the_host_subclass_configured_in_vaulter_drive_models_the_same_alias",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_is_not_renamed_by_a_host_morph_map_and_is_not_refused_by_enforceMorphMap",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_merges_the_aliases_without_erasing_a_host_morph_map_entry",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_registers_the_aliases_in_the_morph_map_so_a_host_morphTo___resolves_them",
@@ -10444,12 +10533,21 @@
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Idempotency_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Schema_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Support_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Tenancy_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_ValueObjects_never_uses_the_Testing_namespaces",
         "P\\Tests\\Concurrency\\RevisionBlobsRollbackTest::__pest_evaluable_it_releases_the_drive_pins_and_only_them_before_the_revision_edge_table_is_dropped__D23__P7_",
         "P\\Tests\\Concurrency\\RevisionBlobsRollbackTest::__pest_evaluable_it_rolls_back_an_empty_edge_table_without_a_pin_to_release",
         "P\\Tests\\Concurrency\\RevisionPinPurgeRaceTest::__pest_evaluable_it_keeps_the_bytes_of_an_ingest_that_races_the_purge_of_a_file_with_the_same_content",
         "P\\Tests\\Concurrency\\RootTransactionSnapshotTest::__pest_evaluable_it_sees_a_sibling_name_committed_by_a_peer_between_the_first_read_and_the_tree_lock",
+        "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_owns_the_config_sections_of_the_drive_concepts_under_vaulter_drive__P4_11_",
+        "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_reads_the_handler__profile_and_feature_keys_of_the_drive_root",
+        "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_rejects_a_profile_list_that_is_not_a_list_of_ProfileProvider_classes\"dataset \"a foreign class\"\"",
+        "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_rejects_a_profile_list_that_is_not_a_list_of_ProfileProvider_classes\"dataset \"a map\"\"",
+        "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_rejects_a_profile_list_that_is_not_a_list_of_ProfileProvider_classes\"dataset \"a scalar\"\"",
+        "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_resolves_a_swappable_drive_model_from_vaulter_drive_models_and_refuses_a_foreign_class",
         "P\\Tests\\Configuration\\ModuleRegistrationOrderTest::__pest_evaluable_it_retains_module_defaults_and_applies_host_settings_when_modules_register_before_core",
+        "P\\Tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_leaves_the_change_journal_prune_off_when_the_journal_is_off_or_the_key_is_null",
+        "P\\Tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_schedules_the_change_journal_prune_from_vaulter_drive_schedule_changes__prune_while_the_journal_is_on",
         "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_contributes_the_drive_content_availability_check_as_the_built_in_download_guard",
         "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_denies_the_delivery_when_a_guard_throws__and_a_guard_after_the_denial_never_runs",
         "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_lets_a_problem_a_guard_throws_reach_the_caller_unchanged",
@@ -10458,6 +10556,7 @@
         "P\\Tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_treats_any_other_exception_of_a_guard_as_a_denial__never_a_pass__fail_closed_",
         "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_contributes_the_disk_and_dedup_scope_checks_as_the_drive_and_keeps_them_with_the_drive_module__D33_",
         "P\\Tests\\Doctor\\DiskDoctorChecksTest::__pest_evaluable_it_lists_the_media_default_disk_and_each_distinct_profile_disk_once",
+        "P\\Tests\\Drive\\HasDrivesTest::__pest_evaluable_it_deletes_the_drives_of_a_deleted_owner_with_vaulter_drive_drives_delete__with__owner",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_detaches_one_edge_with_its_pin__and_all_edges_of_the_given_revisions_only",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_gives_a_new_revision__a_restored_revision_and_a_copy_each_a_pin_of_its_own",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_leaves_no_drive_pin_behind_when_a_drive_is_purged__including_revisions_outside_the_root_subtree",
@@ -10466,6 +10565,7 @@
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_releases_every_revision_pin_of_a_purged_file_and_lets_the_collector_take_the_blobs",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_removes_the_edges_and_pins_of_a_deleted_revision_only",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_writes_the_edge_and_its_pin_together_on_upload__keyed_by_the_edge_without_the_blob",
+        "P\\Tests\\Feature\\HandlerBaselineTest::__pest_evaluable_it_resolves_the_preview_baseline_even_when_a_stale_published_config_empties_vaulter_drive_handlers__P0_4_D10",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_declares_the_drive_codes_located_in_core_under_the_drive_module__D39_",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_says_whether_a_drive_refusal_may_be_retried",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_answers_another_body_under_a_used_key_with_idempotency__key__reused",
@@ -10487,6 +10587,7 @@
         "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_declares_the_handle_factory_and_the_node_presenter_as_the_drive_capabilities",
         "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_keeps_the_inspectors_in_the_order_they_ran_before_the_slot_existed__priority_descending_",
         "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_serves_the_upload_protocols_by_key__the_one_shot_direct_upload_through_the_tus_handler",
+        "P\\Tests\\Profiles\\ConfigCacheSafetyTest::__pest_evaluable_it_конфиг_vaulter_drive_сериализуем__config_cache_не_сломается_",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_preserves_singleton_service_lifetimes_in_a_fresh_container",
         "P\\Tests\\PublicApi\\AuthorizationInsideOperationTest::__pest_evaluable_it_authorizes_a_folder_creation_inside_the_operation_transaction",
         "P\\Tests\\PublicApi\\AuthorizationInsideOperationTest::__pest_evaluable_it_authorizes_a_rename_once__inside_the_operation_transaction",

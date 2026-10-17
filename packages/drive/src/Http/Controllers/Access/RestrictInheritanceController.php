@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Http\Controllers\Access;
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
-use Vaulter\Http\Requests\Access\RestrictInheritanceRequest;
-use Vaulter\Http\Resources\Drive\NodeResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Requests\Access\RestrictInheritanceRequest;
+use Vaulter\Drive\Http\Resources\Drive\NodeResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 #[Internal]
 final readonly class RestrictInheritanceController

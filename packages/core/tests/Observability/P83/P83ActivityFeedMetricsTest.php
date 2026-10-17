@@ -13,15 +13,15 @@ use Vaulter\Testing\Fixtures\TestUser;
 beforeEach(function (): void {
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
-    config()->set('vaulter.features.activity', true);
+    config()->set('vaulter-drive.features.activity', true);
     $this->app->forgetInstance(MetricsRecorder::class);
 });
 
 it('records vaulter_activity_feed_duration_seconds for storage feed reads', function (): void {
     LoadTier::set('M');
 
-    config()->set('vaulter.features.grants', true);
-    config()->set('vaulter.features.activity', true);
+    config()->set('vaulter-drive.features.grants', true);
+    config()->set('vaulter-drive.features.activity', true);
 
     $drive = DriveTestHelpers::drive();
     $storage = $drive->model();

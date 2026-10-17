@@ -81,7 +81,7 @@ abstract class TestCase extends OrchestraTestCase
         // H.2 / D6″) grants every actor full access, so the M1c Drive tests keep
         // their open behaviour. The M2a ACL tests opt INTO the 'database' driver
         // explicitly to exercise real grant resolution.
-        $app['config']->set('vaulter.access.permission_driver', 'null');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy for the base suite. The published
         // config now defaults to ulid (D9); the legacy default-panel document

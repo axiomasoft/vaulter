@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Access;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\AccessConfig;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Kernel;
 
 /**
  * The permission drivers a host can select by key: the contributions of the active modules to the
  * {@see PermissionDriver} slot (database, gate, spatie, null; azgard from its module), overlaid by the
- * host's own `vaulter.access.permission_drivers` map, where the host wins on the same key.
+ * host's own `vaulter-drive.access.permission_drivers` map, where the host wins on the same key.
  */
 #[Internal]
 final readonly class PermissionDriverCatalog

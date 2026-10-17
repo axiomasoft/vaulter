@@ -32,7 +32,7 @@ final readonly class AzgardDependencyCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        $selected = $this->config->get('vaulter.access.permission_driver') === 'azgard';
+        $selected = $this->config->get('vaulter-drive.access.permission_driver') === 'azgard';
         $evidence = ['driver_selected' => $selected];
 
         if (!class_exists(AssignmentScopeRef::class)) {

@@ -8,11 +8,11 @@ use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Enums\Changes\ChangeReason;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
-use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\Events\DomainEvent;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * Writes the change journal of a drive: one entry per journalled

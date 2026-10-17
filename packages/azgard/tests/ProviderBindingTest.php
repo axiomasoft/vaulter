@@ -52,7 +52,7 @@ it('contributes its permission driver to the drive slot and lets the host map ov
     expect(app(Kernel::class)->extensions()->handlerClass(PermissionDriver::class, 'azgard'))->toBe(AzgardPermissionDriver::class)
         ->and($catalog->class('azgard'))->toBe(AzgardPermissionDriver::class);
 
-    config()->set('vaulter.access.permission_drivers.azgard', DatabasePermissionDriver::class);
+    config()->set('vaulter-drive.access.permission_drivers.azgard', DatabasePermissionDriver::class);
 
     expect($catalog->class('azgard'))->toBe(DatabasePermissionDriver::class);
 });

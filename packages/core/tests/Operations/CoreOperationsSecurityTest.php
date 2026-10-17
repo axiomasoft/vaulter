@@ -27,8 +27,8 @@ use Vaulter\ValueObjects\Access\ActorRef;
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.share_links', true);
     $this->drive = AccessTestHelpers::storage();
     $this->node = AccessTestHelpers::folder($this->drive, null, 'secured');
     $this->context = DriveContext::for($this->drive, Actor::user(AccessTestHelpers::user()), 'explicit-correlation');

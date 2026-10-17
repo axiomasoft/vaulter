@@ -7,9 +7,9 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ChangesConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\ChangesConfig;
 use Vaulter\Drive\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 
@@ -30,7 +30,7 @@ final class PruneChangesCommand extends Command
     public const int BATCH = 1000;
 
     protected $signature = 'vaulter:changes:prune
-        {--days= : Override the retention window in days (config vaulter.changes.retention_days)}
+        {--days= : Override the retention window in days (config vaulter-drive.changes.retention_days)}
         {--drive=* : Only these drive ids}';
 
     protected $description = 'Delete drive change-journal entries past the retention window.';

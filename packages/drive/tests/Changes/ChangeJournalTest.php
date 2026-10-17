@@ -13,15 +13,15 @@ use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Changes\ChangeReason;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\ValueObjects\Access\Actor;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * Writing the drive change journal (PLAN2.D50, D59, D61): one entry per journalled
@@ -31,7 +31,7 @@ use Vaulter\ValueObjects\Events\JournalEffect;
 uses(TestCase::class, DatabaseMigrations::class, EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->drive = DriveTestHelpers::drive();
 });
 
@@ -184,7 +184,7 @@ it('refuses an entry whose operation contradicts the catalogue', function (): vo
 })->throws(LogicException::class, 'does not match its catalogue operation');
 
 it('writes nothing and leaves changes.seq empty when the journal is switched off', function (): void {
-    config()->set('vaulter.features.changes', false);
+    config()->set('vaulter-drive.features.changes', false);
     $this->drive->folders()->create('alpha');
 
     expect(journalEntries($this->drive))->toBe([])

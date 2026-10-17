@@ -10,9 +10,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Resources\CommentResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Http\Resources\PageResponse;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
 
 /** The comments on a node, oldest first (View). */
 #[Internal]

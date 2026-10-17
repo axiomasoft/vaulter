@@ -27,20 +27,20 @@ it('fails boot for malformed security configuration', function (string $key, mix
     $repository->set($key, $value);
     (new ConfigValidator($repository))->validate(new VaulterConfig($repository), app(Application::class));
 })->with([
-    ['vaulter.access.permission_driver', 'missing'],
-    ['vaulter.access.permission_driver', 42],
-    ['vaulter.access.permission_drivers.database', stdClass::class],
+    ['vaulter-drive.access.permission_driver', 'missing'],
+    ['vaulter-drive.access.permission_driver', 42],
+    ['vaulter-drive.access.permission_drivers.database', stdClass::class],
     ['vaulter.webhooks.delivery.url_guard', stdClass::class],
     ['vaulter.webhooks.relay.fanout_chunk', 0],
     ['vaulter.webhooks.relay.fanout_chunk', 1001],
     ['vaulter.webhooks.relay.fanout_chunk', 'all'],
-    ['vaulter.sharing.token_generator', stdClass::class],
-    ['vaulter.models.node', stdClass::class],
-    ['vaulter.models.node', 42],
-    ['vaulter.profiles.providers', [stdClass::class]],
-    ['vaulter.profiles.default', stdClass::class],
-    ['vaulter.profiles.providers', [OverrideDefaultProfile::class]],
-    ['vaulter.handlers', [static fn (): string => 'closure']],
+    ['vaulter-drive.sharing.token_generator', stdClass::class],
+    ['vaulter-drive.models.node', stdClass::class],
+    ['vaulter-drive.models.node', 42],
+    ['vaulter-drive.profiles.providers', [stdClass::class]],
+    ['vaulter-drive.profiles.default', stdClass::class],
+    ['vaulter-drive.profiles.providers', [OverrideDefaultProfile::class]],
+    ['vaulter-drive.handlers', [static fn (): string => 'closure']],
 ])->throws(InvalidConfigurationException::class);
 
 it('refuses a removed pre-1.0 webhook delivery key and names its replacement', function (string $key, string $replacement): void {
@@ -89,11 +89,14 @@ it('caps the secret rotation overlap at seven days', function (): void {
 });
 
 it('rejects the null permission driver at production boot', function (): void {
-    $repository = new Repository(['vaulter' => require __DIR__.'/../../config/vaulter.php']);
-    $repository->set('vaulter.access.permission_driver', 'null');
+    $repository = new Repository([
+        'vaulter' => require __DIR__.'/../../config/vaulter.php',
+        'vaulter-drive' => require __DIR__.'/../../../drive/config/vaulter-drive.php',
+    ]);
+    $repository->set('vaulter-drive.access.permission_driver', 'null');
     $application = Mockery::mock(Application::class);
     $application->shouldReceive('environment')->with('production')->andReturn(true);
-    // The drive sections are validated while the drive module is active (D39).
+    // The drive sections are validated while the drive module is active.
     $kernel = new Kernel($application);
     $kernel->seal((new ModuleCompiler)->compile([new CoreModule, new MediaModule, new DriveModule], []));
     $application->shouldReceive('make')->with(Kernel::class)->andReturn($kernel);

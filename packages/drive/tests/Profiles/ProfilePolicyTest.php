@@ -38,7 +38,7 @@ it('inherits global flags and cannot enable a globally disabled feature', functi
 })->throws(InvalidConfigurationException::class, 'globally disabled');
 
 it('conjoins every explicit profile flag with the global policy', function (string $feature): void {
-    config()->set('vaulter.features.'.$feature, true);
+    config()->set('vaulter-drive.features.'.$feature, true);
     $setter = ['grants' => 'grants', 'share_links' => 'shareLinks'][$feature];
     $profile = (new Profile)->key('p');
     expect(app(ProfilePolicy::class)->featureEnabled($profile, $feature))->toBeTrue();
@@ -99,7 +99,7 @@ it('hydrates DI profile providers only once during boot validation', function ()
 
         return $provider;
     });
-    config()->set('vaulter.profiles.providers', [$provider::class]);
+    config()->set('vaulter-drive.profiles.providers', [$provider::class]);
     app()->forgetInstance(ProfileRegistry::class);
     app(ConfigValidator::class)->validate(app(VaulterConfig::class), app());
     app(ProfileRegistry::class);

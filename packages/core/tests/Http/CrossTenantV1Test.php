@@ -19,8 +19,8 @@ beforeEach(function (): void {
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
     app()->instance(TenantResolver::class, new MutableTenantResolver);
-    config()->set('vaulter.features.share_links', true);
-    config()->set('vaulter.features.changes', true);
+    config()->set('vaulter-drive.features.share_links', true);
+    config()->set('vaulter-drive.features.changes', true);
 
     // Tenant A owns the drive; user 1 is its owner there.
     $this->foreign = V1::drive(userId: 1);

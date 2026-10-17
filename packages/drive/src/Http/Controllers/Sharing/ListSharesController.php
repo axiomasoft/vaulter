@@ -8,9 +8,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
-use Vaulter\Http\Resources\Sharing\ShareResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Resources\Sharing\ShareResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** The live share links of a node (Share); tokens are never listed. */
 #[Internal]

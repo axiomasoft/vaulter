@@ -15,7 +15,7 @@ use Vaulter\Drive\Testing\Http\V1;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.features.changes', true);
+    config()->set('vaulter-drive.features.changes', true);
     $this->drive = V1::drive(userId: 1);
     $this->base = V1::url('drives/'.$this->drive->model()->getKey().'/changes');
     $this->actingAs(V1::user(1));
@@ -63,7 +63,7 @@ it('refuses a missing or foreign cursor and an out-of-range limit', function ():
 });
 
 it('answers profile_restriction when the journal is off', function (): void {
-    config()->set('vaulter.features.changes', false);
+    config()->set('vaulter-drive.features.changes', false);
 
     $this->getJson($this->base.'/start')->assertForbidden()->assertJsonPath('code', 'profile_restriction');
 });

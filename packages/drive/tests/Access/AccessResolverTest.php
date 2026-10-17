@@ -23,7 +23,7 @@ use Vaulter\Drive\Testing\Fixtures\Access\RoleStubDriver;
  */
 beforeEach(function (): void {
     // The standalone lane: decisions come purely from v_node_grants.
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
 });
 
 function resolver(): AccessResolver
@@ -39,8 +39,8 @@ function resolver(): AccessResolver
 function useRoleDriver(RoleStubDriver $driver): void
 {
     app()->instance(RoleStubDriver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.stub', RoleStubDriver::class);
-    config()->set('vaulter.access.permission_driver', 'stub');
+    config()->set('vaulter-drive.access.permission_drivers.stub', RoleStubDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'stub');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }

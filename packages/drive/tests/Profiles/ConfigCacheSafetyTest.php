@@ -19,11 +19,19 @@ it('конфиг vaulter сериализуем (config:cache не сломае�
     expect(containsClosure($config))->toBeFalse();
 });
 
-it('ключи panels и default_panel — это FQCN, а не замыкания', function (): void {
-    expect(config('vaulter.profiles.providers'))->toBeArray()
-        ->and(config('vaulter.profiles.default'))->toBeString();
+it('конфиг vaulter-drive сериализуем (config:cache не сломается)', function (): void {
+    /** @var array<string, mixed> $config */
+    $config = config('vaulter-drive');
 
-    foreach (config('vaulter.profiles.providers') as $class) {
+    expect(var_export($config, return: true))->toBeString()
+        ->and(containsClosure($config))->toBeFalse();
+});
+
+it('ключи panels и default_panel — это FQCN, а не замыкания', function (): void {
+    expect(config('vaulter-drive.profiles.providers'))->toBeArray()
+        ->and(config('vaulter-drive.profiles.default'))->toBeString();
+
+    foreach (config('vaulter-drive.profiles.providers') as $class) {
         expect($class)->toBeString();
     }
 });

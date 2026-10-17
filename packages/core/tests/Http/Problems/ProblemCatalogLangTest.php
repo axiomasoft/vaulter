@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
+use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Http\Problems\CoreProblemCodes;
-use Vaulter\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Webhooks\WebhooksProblemCodes;
 

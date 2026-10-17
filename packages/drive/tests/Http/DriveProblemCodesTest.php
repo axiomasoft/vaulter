@@ -10,7 +10,7 @@ use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
-use Vaulter\Http\Problems\DriveSliceProblemCodes;
+use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Testing\Support\ProblemProbeRoutes;
 

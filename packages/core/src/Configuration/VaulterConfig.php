@@ -8,7 +8,13 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\ChangesConfig;
+use Vaulter\Drive\Configuration\DownloadsConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\ListingConfig;
+use Vaulter\Drive\Configuration\ScanConfig;
+use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Content\ScanBackfillRun;
@@ -22,9 +28,7 @@ use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\FileRevisionBlob;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
-use Vaulter\Drive\Profiles\DefaultProfile;
 use Vaulter\Drive\Profiles\ProfilePolicy;
-use Vaulter\Drive\Profiles\ProfileProvider;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -43,88 +47,31 @@ final readonly class VaulterConfig
     #[Internal]
     public function __construct(private Repository $config) {}
 
-    /** @return list<class-string<FileHandler>> */
-    public function handlers(): array
-    {
-        $value = $this->config->get('vaulter.handlers', []);
-
-        if (!is_array($value)) {
-            return [];
-        }
-
-        $handlers = [];
-
-        foreach ($value as $class) {
-            if (is_string($class) && is_a($class, FileHandler::class, allow_string: true)) {
-                $handlers[] = $class;
-            }
-        }
-
-        /** @var list<class-string<FileHandler>> $handlers */
-        return $handlers;
-    }
-
     /** @return ($key is 'scan_backfill_run' ? class-string<ScanBackfillRun> : ($key is 'scan_policy_state' ? class-string<ScanPolicyState> : ($key is 'scan_evidence' ? class-string<ScanEvidenceRecord> : ($key is 'scan_request' ? class-string<ScanRequest> : ($key is 'scan_obligation' ? class-string<ScanObligation> : ($key is 'drive' ? class-string<Drive> : ($key is 'node' ? class-string<Node> : ($key is 'file' ? class-string<File> : ($key is 'file_revision' ? class-string<FileRevision> : ($key is 'file_revision_blob' ? class-string<FileRevisionBlob> : ($key is 'blob' ? class-string<Blob> : ($key is 'grant' ? class-string<NodeGrant> : ($key is 'node_share' ? class-string<NodeShare> : ($key is 'activity' ? class-string<Activity> : ($key is 'outbox' ? class-string<OutboxEvent> : ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : ($key is 'webhook_delivery' ? class-string<WebhookDelivery> : class-string<Model>))))))))))))))))) */
     public function model(string $key): string
     {
-        $defaults = [
-            'scan_obligation' => ScanObligation::class,
-            'scan_request' => ScanRequest::class,
-            'scan_evidence' => ScanEvidenceRecord::class,
-            'scan_policy_state' => ScanPolicyState::class,
-            'scan_backfill_run' => ScanBackfillRun::class,
-            'drive' => Drive::class,
-            'node' => Node::class,
-            'file' => File::class,
-            'file_revision' => FileRevision::class,
-            'file_revision_blob' => FileRevisionBlob::class,
-            'grant' => NodeGrant::class,
-            'node_share' => NodeShare::class,
-            'activity' => Activity::class,
-            'outbox' => OutboxEvent::class,
-            'webhook_endpoint' => WebhookEndpoint::class,
-            'webhook_delivery' => WebhookDelivery::class,
-        ];
-
         if ($key === 'blob') {
             // The blob model is the media package's (D6): its key lives in vaulter-media.models.blob.
             return (new MediaConfig($this->config))->blobModel();
         }
 
-        $class = $this->config->get('vaulter.models.'.$key, $defaults[$key] ?? null);
-        if (!is_string($class) || !isset($defaults[$key])) {
-            throw new InvalidConfigurationException('[Vaulter] Invalid model class for vaulter.models.'.$key.'.');
+        // The outbox and the webhook models are the kernel's and the webhooks module's; every other model is the drive's.
+        $core = [
+            'outbox' => OutboxEvent::class,
+            'webhook_endpoint' => WebhookEndpoint::class,
+            'webhook_delivery' => WebhookDelivery::class,
+        ];
+        if (!isset($core[$key])) {
+            return (new DriveConfig($this->config))->modelClass($key);
         }
 
-        ConfigValidator::assertModel('vaulter.models.'.$key, $class, $defaults[$key]);
-
-        return $class;
-    }
-
-    /** @return list<class-string<ProfileProvider>> */
-    public function profileProviders(): array
-    {
-        $classes = $this->config->get('vaulter.profiles.providers', []);
-        if (!is_array($classes) || !array_is_list($classes)) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter.profiles.providers must be a list of ProfileProvider classes.');
-        }
-        foreach ($classes as $class) {
-            if (!is_string($class) || !is_a($class, ProfileProvider::class, true)) {
-                throw new InvalidConfigurationException('[Vaulter] Invalid class in vaulter.profiles.providers.');
-            }
+        $path = 'vaulter.models.'.$key;
+        $class = $this->config->get($path, $core[$key]);
+        if (!is_string($class)) {
+            throw new InvalidConfigurationException('[Vaulter] Invalid model class for '.$path.'.');
         }
 
-        /** @var list<class-string<ProfileProvider>> $classes */
-        return $classes;
-    }
-
-    /** @return class-string<ProfileProvider> */
-    public function defaultProfile(): string
-    {
-        $class = $this->config->get('vaulter.profiles.default', DefaultProfile::class);
-        if (!is_string($class) || !is_a($class, ProfileProvider::class, true)) {
-            throw new InvalidConfigurationException('[Vaulter] Invalid class for vaulter.profiles.default.');
-        }
+        ConfigValidator::assertModel($path, $class, $core[$key]);
 
         return $class;
     }
@@ -135,15 +82,7 @@ final readonly class VaulterConfig
             return app(ProfilePolicy::class)->featureEnabled(app(ProfileRegistry::class)->get($profile), $feature);
         }
 
-        $value = $this->config->get('vaulter.features.'.$feature);
-
-        return is_bool($value) && $value;
-    }
-
-    /** Whether deleting the owner entity deletes its drives (HasDrives). */
-    public function drivesDeleteWithOwner(): bool
-    {
-        return $this->config->get('vaulter.drives.delete_with_owner', false) === true;
+        return (new DriveConfig($this->config))->featureFlag($feature);
     }
 
     public function scan(): ScanConfig

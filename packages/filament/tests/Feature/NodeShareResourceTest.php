@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Vaulter\Configuration\SharingConfig;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
@@ -15,7 +15,7 @@ use Vaulter\Drive\Support\ShareToken;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 
-beforeEach(fn () => config()->set('vaulter.features.share_links', true));
+beforeEach(fn () => config()->set('vaulter-drive.features.share_links', true));
 
 it('resolves the configured node-share model (swappable)', function (): void {
     expect(NodeShareResource::getModel())->toBe(NodeShare::class);
@@ -255,7 +255,7 @@ it('does not mint or list shares when the feature is disabled', function (): voi
     $drive = DriveBuilder::storage();
     $node = DriveBuilder::folder($drive);
     DriveBuilder::grant($node, $owner);
-    config()->set('vaulter.features.share_links', false);
+    config()->set('vaulter-drive.features.share_links', false);
     NodeShareResource::createFromData(['node_id' => $node->id]);
     expect(NodeShare::query()->count())->toBe(0)
         ->and(NodeShareResource::getEloquentQuery()->count())->toBe(0);

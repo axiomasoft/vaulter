@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Handlers;
 
 use Illuminate\Contracts\Container\Container;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Handlers\FileHandler;
 use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry as FileHandlerRegistryContract;
 use Vaulter\Drive\Enums\Handlers\Capability;
@@ -22,7 +22,7 @@ use Vaulter\Kernel;
  *   1. the contributions of the active modules to the {@see FileHandler} slot (the drive's preview and
  *      download-only baseline);
  *   2. the tagged container binding 'vaulter.file_handlers' (FQCN-tagged, no closures) — the host's channel;
- *   3. configuration key vaulter.handlers — an FQCN list (config-cache safe);
+ *   3. configuration key vaulter-drive.handlers — an FQCN list (config-cache safe);
  *   4. runtime registrations via Vaulter::handlers()->register()/register().
  *
  * Resolution order: mime-first → extension-fallback → capability-filter →
@@ -68,7 +68,7 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
     private array $cache = [];
 
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $driveConfig,
         private readonly Container $container,
     ) {}
 
@@ -255,7 +255,7 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
             $byClass[$handler::class] = $handler;
         }
 
-        foreach ($this->vaulterConfig->handlers() as $class) {
+        foreach ($this->driveConfig->handlers() as $class) {
             if (!isset($byClass[$class])) {
                 $byClass[$class] = $this->checkedInstance($class);
             }

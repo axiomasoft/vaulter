@@ -5,12 +5,29 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Models\Content\ScanBackfillRun;
+use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
+use Vaulter\Drive\Models\Content\ScanObligation;
+use Vaulter\Drive\Models\Content\ScanPolicyState;
+use Vaulter\Drive\Models\Content\ScanRequest;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Profiles\DefaultProfile;
+use Vaulter\Drive\Profiles\ProfileProvider;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 #[Api]
@@ -84,6 +101,103 @@ final readonly class DriveConfig implements ScanWorkSettings
             || ($requireBroker && (!is_int($retry) || $retry < 180 || $retry <= $this->scanWork('lease_seconds')))) {
             throw new InvalidConfigurationException('Scanner deadline, job timeout, lease and broker retry_after must be ordered.');
         }
+    }
+
+    /** @return list<class-string<FileHandler>> the FQCN list of `vaulter-drive.handlers`; entries that are no FileHandler are skipped */
+    #[Internal]
+    public function handlers(): array
+    {
+        $value = $this->config->get('vaulter-drive.handlers', []);
+
+        $handlers = [];
+        foreach (is_array($value) ? $value : [] as $class) {
+            if (is_string($class) && is_a($class, FileHandler::class, allow_string: true)) {
+                $handlers[] = $class;
+            }
+        }
+
+        return $handlers;
+    }
+
+    /** @return list<class-string<ProfileProvider>> */
+    #[Internal]
+    public function profileProviders(): array
+    {
+        $classes = $this->config->get('vaulter-drive.profiles.providers', []);
+        if (!is_array($classes) || !array_is_list($classes)) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-drive.profiles.providers must be a list of ProfileProvider classes.');
+        }
+        foreach ($classes as $class) {
+            if (!is_string($class) || !is_a($class, ProfileProvider::class, true)) {
+                throw new InvalidConfigurationException('[Vaulter] Invalid class in vaulter-drive.profiles.providers.');
+            }
+        }
+
+        /** @var list<class-string<ProfileProvider>> $classes */
+        return $classes;
+    }
+
+    /** @return class-string<ProfileProvider> */
+    #[Internal]
+    public function defaultProfile(): string
+    {
+        $class = $this->config->get('vaulter-drive.profiles.default', DefaultProfile::class);
+        if (!is_string($class) || !is_a($class, ProfileProvider::class, true)) {
+            throw new InvalidConfigurationException('[Vaulter] Invalid class for vaulter-drive.profiles.default.');
+        }
+
+        return $class;
+    }
+
+    /** The global switch of a drive feature (`vaulter-drive.features.<feature>`), before any profile narrows it. */
+    #[Internal]
+    public function featureFlag(string $feature): bool
+    {
+        return $this->config->get('vaulter-drive.features.'.$feature) === true;
+    }
+
+    /** Whether deleting the owner entity deletes its drives (HasDrives). */
+    #[Internal]
+    public function drivesDeleteWithOwner(): bool
+    {
+        return $this->config->get('vaulter-drive.drives.delete_with_owner', false) === true;
+    }
+
+    /**
+     * The class of a drive model the host may swap (`vaulter-drive.models.<key>`), checked against the shipped model.
+     *
+     * @throws InvalidConfigurationException when the key names no drive model or the class does not extend the shipped one
+     *
+     * @return class-string<Model>
+     */
+    #[Internal]
+    public function modelClass(string $key): string
+    {
+        $defaults = [
+            'scan_obligation' => ScanObligation::class,
+            'scan_request' => ScanRequest::class,
+            'scan_evidence' => ScanEvidenceRecord::class,
+            'scan_policy_state' => ScanPolicyState::class,
+            'scan_backfill_run' => ScanBackfillRun::class,
+            'drive' => Drive::class,
+            'node' => Node::class,
+            'file' => File::class,
+            'file_revision' => FileRevision::class,
+            'file_revision_blob' => FileRevisionBlob::class,
+            'grant' => NodeGrant::class,
+            'node_share' => NodeShare::class,
+            'activity' => Activity::class,
+        ];
+
+        $path = 'vaulter-drive.models.'.$key;
+        $class = $this->config->get($path, $defaults[$key] ?? null);
+        if (!is_string($class) || !isset($defaults[$key])) {
+            throw new InvalidConfigurationException('[Vaulter] Invalid model class for '.$path.'.');
+        }
+
+        ConfigValidator::assertModel($path, $class, $defaults[$key]);
+
+        return $class;
     }
 
     public function defaultQuota(): ?int

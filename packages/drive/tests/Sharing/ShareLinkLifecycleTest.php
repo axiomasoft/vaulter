@@ -47,7 +47,7 @@ uses(EnablesWebhooksModule::class);
  * and the drive policy's TTL applied on every visit.
  */
 beforeEach(function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $this->drive = AccessTestHelpers::storage();
     $this->node = AccessTestHelpers::folder($this->drive, null, 'lifecycle');
     $this->shares = fn (): ShareOperations => app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($this->drive, 'lifecycle fixture')]);

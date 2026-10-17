@@ -127,7 +127,7 @@ it('lists what was shared with the caller across drives, with its abilities', fu
 });
 
 it('refuses the shared listing with 403 profile_restriction when grants are off', function (): void {
-    config()->set('vaulter.features.grants', false);
+    config()->set('vaulter-drive.features.grants', false);
 
     $this->getJson(V1::url('shared'))->assertForbidden()->assertJsonPath('code', 'profile_restriction');
 });

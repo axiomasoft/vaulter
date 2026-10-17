@@ -25,10 +25,10 @@ use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Http\Problems\ProblemCatalog;
-use Vaulter\Testing\NullPermissionDriver;
 use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 it('renders each domain exception with its stable code and HTTP status', function (

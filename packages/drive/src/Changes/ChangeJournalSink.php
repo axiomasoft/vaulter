@@ -14,10 +14,9 @@ use Vaulter\Events\SinkWriter;
 
 /**
  * The drive's change journal as an event sink (`drive.changes`, D38): the entry of a journalled occurrence
- * while `vaulter.features.changes` is on. Its seq is shared with the writer under
+ * while `vaulter-drive.features.changes` is on. Its seq is shared with the writer under
  * {@see SinkWriter::JOURNAL_SEQ}, so the outbox envelope written after the sinks carries it. The journal takes
- * the drive's head lock, so the sinks after it must not lock. Located in core until P4.
- */
+ * the drive's head lock, so the sinks after it must not lock. */
 #[Internal]
 final readonly class ChangeJournalSink implements EventSink
 {

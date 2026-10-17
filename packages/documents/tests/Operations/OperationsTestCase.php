@@ -26,6 +26,6 @@ abstract class OperationsTestCase extends DocumentTestCase
         $app['config']->set('vaulter-documents.comments.enabled', true);
         $app['config']->set('vaulter-documents.collaboration.enabled', true);
         $app['config']->set('vaulter-documents.collaboration.hub.jwt_secret', 'operations-secret-at-least-32-bytes-long');
-        $app['config']->set('vaulter.access.permission_driver', 'database');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'database');
     }
 }

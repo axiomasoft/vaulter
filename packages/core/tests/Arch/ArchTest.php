@@ -344,16 +344,15 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     $nested = layersNestedUnderDomain(__DIR__.'/../../src');
 
     // Public error and test contracts live with their respective families; the event
-    // value objects are the ValueObjects domain "Events", like Enums/Events. Webhooks/Events
+    // value objects are the ValueObjects domain "Events", the "Events" domain of the neutral event values. Webhooks/Events
     // holds the operational Laravel events hosts listen to (WebhookEndpointDisabled); its
     // FQCN is documented, so it stays beside the webhook delivery it reports on.
     // Exceptions/Http holds the exceptions of the HTTP protocol itself (428 precondition).
     // Events/Outbox/Models holds the outbox model of the kernel outbox (D29: Vaulter\Events\Outbox\Models\OutboxEvent).
-    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'Testing/Events', 'ValueObjects/Events', 'Webhooks/Events', 'Events/Outbox/Models'])))->toBe([])
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Testing/Contracts', 'Testing/Events', 'ValueObjects/Events', 'Webhooks/Events', 'Events/Outbox/Models'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
-        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'FileHandlerContractTests.php', 'ModuleContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
-        ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'DriveEventType.php'])
-        ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'ActivityTarget.php', 'EventScope.php', 'EventSubject.php', 'JournalEffect.php']);
+        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ModuleContractTests.php'])
+        ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'EventScope.php', 'EventSubject.php']);
 });
 
 /**
@@ -551,7 +550,7 @@ function coreReferencesTo(string $root): array
 
 /**
  * P4 ownership move (D10, D40): the drive domain (models, repositories, snapshots, profiles, activity, changes) now lives in
- * vaulter-drive while the HTTP/config/kernel slice still sits in core until P4.11–P4.12. These core files name `Vaulter\Drive\` types in the meantime; the list is a ratchet:
+ * vaulter-drive and the HTTP/config/kernel slice moved with P4.11. These core files name `Vaulter\Drive\` types in the meantime; the list is a ratchet:
  * it must shrink as the files move, it is empty from P4.16 (I1 blocks), and a file that stops referencing drive has to leave it.
  */
 test('core source references the extracted vaulter-drive package only from the files that move to it (P2 #5 / D1, P4.8)', function (): void {
@@ -559,51 +558,21 @@ test('core source references the extracted vaulter-drive package only from the f
     $transitional = [
         'Actions/Webhooks/RegisterWebhookEndpointAction.php',
         'Actions/Webhooks/UpdateWebhookEndpointAction.php',
-        'Configuration/AccessConfig.php',
         'Configuration/ConfigValidator.php',
-        'Configuration/ScanConfig.php',
-        'Configuration/SharingConfig.php',
         'Configuration/VaulterConfig.php',
         'Console/InstallCommand.php',
-        'Doctor/Checks/AccessDriverCheck.php',
         'Events/DomainEvent.php',
-        'Exceptions/Registry/DuplicateNodeContentLifecycleException.php',
         'Facades/Vaulter.php',
-        'Http/Middleware/ResolveShareToken.php',
         'Http/Problems/CoreProblemCodes.php',
-        'Http/Problems/DriveSliceProblemCodes.php',
-        'Http/Requests/Access/CreateGrantRequest.php',
-        'Http/Requests/Access/RestrictInheritanceRequest.php',
-        'Http/Requests/Sharing/StoreShareLinkRequest.php',
-        'Http/Requests/Sharing/UpdateShareLinkRequest.php',
-        'Http/Resources/Access/GrantResource.php',
-        'Http/Resources/Activity/ActivityResource.php',
-        'Http/Resources/Changes/ChangePageResource.php',
-        'Http/Resources/Changes/ChangeResource.php',
-        'Http/Resources/Drive/NodeResource.php',
         'Http/Resources/PageResponse.php',
-        'Http/Resources/Sharing/MintedShareResource.php',
-        'Http/Resources/Sharing/ShareResource.php',
-        'Http/Resources/Sharing/SharedNodeResource.php',
-        'Http/Support/ContentResponder.php',
-        'Http/Support/HttpOperationContextFactory.php',
-        'Http/Support/HttpResourceResolver.php',
+        'Http/Support/DownloadHeaders.php',
         'Http/Support/Preconditions.php',
-        'Http/Support/SharedNodeResolver.php',
         'Jobs/Middleware/RestoreTenantContext.php',
-        'Models/Concerns/StampsDriveTenant.php',
-        'Providers/AccessRegistrar.php',
-        'Providers/DriveSliceRegistrar.php',
-        'Tenancy/ShareTenantContext.php',
         'Tenancy/TenancyBoundary.php',
-        'Testing/Contracts/FileHandlerContractTests.php',
-        'Testing/Contracts/PermissionDriverContractTests.php',
-        'Testing/Contracts/PermissionFixture.php',
         'Testing/Events/EventConformance.php',
         'Testing/InteractsWithVaulter.php',
-        'Testing/NullPermissionDriver.php',
-        'ValueObjects/Events/JournalEffect.php',
         'VaulterManager.php',
+        'Webhooks/WebhookEndpointWrites.php',
     ];
     $found = array_map(static fn (string $path): string => substr((string) realpath($path), strlen($src) + 1), coreReferencesTo('Drive'));
     sort($found);

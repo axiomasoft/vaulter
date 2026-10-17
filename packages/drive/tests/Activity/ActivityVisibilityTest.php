@@ -7,17 +7,17 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\NodeSort;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\ActivityOperations;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->drive = AccessTestHelpers::storage();
     $this->root = $this->drive->rootNode()->firstOrFail();
     AccessTestHelpers::grant($this->root, RoleRegistry::READER, scope: GrantScope::Item);
@@ -69,7 +69,7 @@ it('fills pages across hidden windows and retains stable tuple ties', function (
 });
 
 it('continues from last scanned tuple even for an empty budget-limited page', function (): void {
-    config()->set('vaulter.listing.scan_budget', 2);
+    config()->set('vaulter-drive.listing.scan_budget', 2);
     $visible = AccessTestHelpers::folder($this->drive, null, 'visible');
     $hidden = AccessTestHelpers::folder($this->drive, null, 'hidden');
     AccessTestHelpers::grant($visible, RoleRegistry::READER);

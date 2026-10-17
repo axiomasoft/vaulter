@@ -65,9 +65,9 @@ function scanScanner(string $key = 'fixture', string $version = '1'): void
 function scanFixture(): array
 {
     Storage::fake('local');
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -92,9 +92,9 @@ it('needs no scanner while every scan policy is off', function (): void {
 });
 
 it('reports an enabled scan policy without a bound scanner as an error in both modes', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
 
     expect(array_map(static fn (DoctorFinding $finding): string => $finding->code, scanFindings('drive.scan.scanner')))->toBe(['drive.scan.scanner_missing'])
         ->and(scanFindings('drive.scan.scanner')[0]->severity)->toBe(DoctorSeverity::Error)
@@ -102,32 +102,32 @@ it('reports an enabled scan policy without a bound scanner as an error in both m
 });
 
 it('accepts a bound scanner whose identity is the configured one', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     scanScanner();
 
     expect(scanFindings('drive.scan.scanner')[0]->code)->toBe('drive.scan.scanner_ok');
 });
 
 it('reports a scanner identity the policy does not name', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     scanScanner(version: '2');
 
     expect(scanFindings('drive.scan.scanner')[0]->code)->toBe('drive.scan.identity_mismatch');
 
-    config()->set('vaulter.scan.scanner_key', null);
-    config()->set('vaulter.scan.scanner_version', null);
+    config()->set('vaulter-drive.scan.scanner_key', null);
+    config()->set('vaulter-drive.scan.scanner_version', null);
     expect(array_unique(array_map(static fn (DoctorFinding $finding): string => $finding->code, scanFindings('drive.scan.scanner'))))->toBe(['drive.scan.identity_missing']);
 });
 
 it('reports a scanner that cannot be built without quoting its message', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
-    config()->set('vaulter.scan.scanner', FakeContentScanner::class);
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.scanner', FakeContentScanner::class);
     app()->bind(ContentScanner::class, static fn (): never => throw new RuntimeException('api key=hunter2'));
 
     $finding = scanFindings('drive.scan.scanner')[0];
@@ -139,7 +139,7 @@ it('finds a drive whose policy cutover is pending, an error in production', func
     [$drive] = scanFixture();
     expect(scanFindings('drive.scan.policy')[0]->code)->toBe('drive.scan.policy_current');
 
-    config()->set('vaulter.scan.scanner_version', '2');
+    config()->set('vaulter-drive.scan.scanner_version', '2');
     $finding = scanFindings('drive.scan.policy')[0];
 
     expect($finding->code)->toBe('drive.scan.policy_cutover_pending')
@@ -152,9 +152,9 @@ it('finds a drive whose policy cutover is pending, an error in production', func
 });
 
 it('finds a drive that has no activation state under an enabled policy', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     UploadTestHelpers::storage();
 
     expect(scanFindings('drive.scan.policy')[0]->code)->toBe('drive.scan.policy_cutover_pending');
@@ -230,7 +230,7 @@ it('finds an unavailable content scope under a policy that scans everything', fu
 
     expect(scanFindings('drive.scan.scope')[0]->evidence)->toHaveKey('unavailable_scope_under_required_policy', 1);
 
-    config()->set('vaulter.scan.mode', 'off');
+    config()->set('vaulter-drive.scan.mode', 'off');
     expect(scanFindings('drive.scan.scope')[0]->code)->toBe('drive.scan.scope_ok');
 });
 

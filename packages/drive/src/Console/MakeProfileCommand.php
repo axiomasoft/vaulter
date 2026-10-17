@@ -137,7 +137,7 @@ final class MakeProfileCommand extends Command
         $this->newLine();
         $this->components->info(sprintf('Profile [%s] scaffolded.', $id));
         $this->line('Next steps:');
-        $this->line("  1. Register the provider in <info>config/vaulter.php</info> under 'profiles.providers':");
+        $this->line("  1. Register the provider in <info>config/vaulter-drive.php</info> under 'profiles.providers':");
         $this->line(sprintf('         \%s::class,', $providerFqcn));
     }
 

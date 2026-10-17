@@ -35,8 +35,8 @@ final class DriveRecordingSigner implements DirectContentUrlSigner
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.downloads.delivery_mode', 'direct_signed');
-    config()->set('vaulter.downloads.direct_ttl_seconds', 120);
+    config()->set('vaulter-drive.downloads.delivery_mode', 'direct_signed');
+    config()->set('vaulter-drive.downloads.direct_ttl_seconds', 120);
     app()->instance(DirectContentUrlSigner::class, $this->signer = new DriveRecordingSigner);
     $this->drive = V1::drive(userId: 1);
     $this->actingAs(V1::user(1));

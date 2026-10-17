@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\RateLimiter;
 use Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Drive\Contracts\Handlers\NodePresenter;
-use Vaulter\Providers\DriveSliceRegistrar;
+use Vaulter\Drive\Providers\DriveSliceRegistrar;
 use Vaulter\VaulterManager;
 
 // The drive slices located in core (D39) are wired by DriveSliceRegistrar, which DriveModule declares.

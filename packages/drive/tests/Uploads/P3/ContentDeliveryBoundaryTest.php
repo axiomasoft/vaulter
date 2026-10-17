@@ -34,9 +34,9 @@ beforeEach(function (): void {
 
 function p37DeliveryRequireScan($test): void
 {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($test->system->model(), $test->context);
 }
 
@@ -66,14 +66,14 @@ it('SEC-R17 checks pending head, explicit older clean, metadata and sticky infec
     fclose($stream->stream);
     expect($descriptor->filename)->toBe('file.txt');
     p37DeliverySettle($node, ScanVerdict::Infected);
-    config()->set('vaulter.scan.mode', 'off');
+    config()->set('vaulter-drive.scan.mode', 'off');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), $this->context);
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
 });
 
 it('SEC-R17 PHP authorization is fresh with a retained model and descriptor after revoke', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('secret', 'file.txt'));
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(87);
     $grant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 87);
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
@@ -97,7 +97,7 @@ it('SEC-R16 strict refuses bearer URLs before touching a signer', function (): v
 it('SEC-R16 explicit direct delivery binds exact immutable bytes and TTL with bounded revoke', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('content', 'file.txt'));
     $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
-    config()->set('vaulter.downloads.delivery_mode', 'direct_signed');
+    config()->set('vaulter-drive.downloads.delivery_mode', 'direct_signed');
     $signer = Mockery::mock(DirectContentUrlSigner::class);
     $signer->shouldReceive('sign')->once()->andReturnUsing(static fn (ImmutableContentIdentity $identity, DateTimeImmutable $expiry): SignedContentUrl => new SignedContentUrl('https://storage.test/exact-capability', $expiry, $identity->fingerprint(), $identity->storageVersion));
     app()->instance(DirectContentUrlSigner::class, $signer);

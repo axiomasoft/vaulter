@@ -11,9 +11,9 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
-use Vaulter\Http\Resources\Activity\ActivityResource;
+use Vaulter\Drive\Http\Resources\Activity\ActivityResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Resources\PageResponse;
-use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Support\LoadTier;
 
 /** The drive's activity the caller may see (View on the root), newest first. */

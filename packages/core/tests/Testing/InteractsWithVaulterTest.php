@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\AssertionFailedError;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Contracts\PermissionFixture;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Events\DriveEventType;
-use Vaulter\Testing\Contracts\PermissionFixture;
 use Vaulter\Testing\Fixtures\FixtureActor;
 use Vaulter\Testing\InteractsWithVaulter;
 
 uses(InteractsWithVaulter::class);
 
-beforeEach(fn () => config()->set('vaulter.access.permission_driver', 'database'));
+beforeEach(fn () => config()->set('vaulter-drive.access.permission_driver', 'database'));
 
 it('fakes the disks the profiles write to', function (): void {
     $disk = $this->vaulterFakeStorage();

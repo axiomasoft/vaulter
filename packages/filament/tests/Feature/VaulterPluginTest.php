@@ -72,13 +72,13 @@ it('keeps resources enabled for an omitted or malformed host toggle', function (
  * core 'activity' feature flag, on top of its own default-on config toggle.
  * Red-before-fix (D7): before this item, resourceEnabled() consulted ONLY
  * config('vaulter-filament.resources.activity') (default true) — a host that
- * disabled the CORE 'activity' feature (config('vaulter.features.activity',
+ * disabled the CORE 'activity' feature (config('vaulter-drive.features.activity',
  * false)) but never touched the Filament toggle still got ActivityResource
  * registered against a subsystem it turned off. This assertion FAILS on the
  * pre-fix code (ActivityResource stays registered).
  */
 it('drops ActivityResource when the core activity feature is off, even with its own toggle left on, F-P1.10-03', function (): void {
-    config()->set('vaulter.features.activity', false);
+    config()->set('vaulter-drive.features.activity', false);
 
     $panel = Panel::make()->id('probe-activity-off');
     VaulterPlugin::make()->register($panel);
@@ -89,7 +89,7 @@ it('drops ActivityResource when the core activity feature is off, even with its 
 });
 
 it('control: ActivityResource registers when the core activity feature is on (default), F-P1.10-03', function (): void {
-    expect(config('vaulter.features.activity'))->toBeTrue();
+    expect(config('vaulter-drive.features.activity'))->toBeTrue();
 
     $panel = Panel::make()->id('probe-activity-on');
     VaulterPlugin::make()->register($panel);

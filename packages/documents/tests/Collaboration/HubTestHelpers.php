@@ -34,7 +34,7 @@ final class HubTestHelpers
 
     public static function configure(): void
     {
-        config()->set('vaulter.access.permission_driver', 'database');
+        config()->set('vaulter-drive.access.permission_driver', 'database');
         config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
         config()->set('vaulter-documents.collaboration.hub.webhook_secret', self::WEBHOOK_SECRET);
         config()->set('vaulter-documents.collaboration.hub.jwt_secret', self::JWT_SECRET);

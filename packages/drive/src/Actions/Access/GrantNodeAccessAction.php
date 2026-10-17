@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Actions\Access;
 
 use Illuminate\Support\Facades\Log;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\AccessConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Configuration\AccessConfig;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;

@@ -39,7 +39,7 @@ use Vaulter\Tenancy\TenancyBypass;
 
 /**
  * The container wiring of the core module ({@see CoreModule}): config, database, ids, tenancy and
- * observability. The drive slices located in core are wired by {@see DriveSliceRegistrar} (D39).
+ * observability. The drive slices are wired by the drive's own registrars.
  */
 #[Internal]
 final class BindingsRegistrar implements ModuleBindings

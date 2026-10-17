@@ -8,8 +8,8 @@ use Closure;
 use Illuminate\Database\QueryException;
 use RuntimeException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\SharingConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Drive\Support\ShareToken;
 

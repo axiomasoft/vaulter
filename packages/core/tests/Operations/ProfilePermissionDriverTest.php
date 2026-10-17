@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Configuration\AccessConfig;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
@@ -13,6 +12,7 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Access\GrantNodeAccessAction;
+use Vaulter\Drive\Configuration\AccessConfig;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -28,8 +28,8 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileAllowDriver;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\Drive\Testing\Fixtures\Access\ProfileRoleSubjectsDriver;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Testing\NullPermissionDriver;
 use Vaulter\Tests\TestCase;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
@@ -37,10 +37,10 @@ uses(TestCase::class, RefreshDatabase::class);
 
 function permissionProfiles(): void
 {
-    config()->set('vaulter.access.permission_driver', 'database');
-    config()->set('vaulter.access.permission_drivers.positive', ProfileAllowDriver::class);
-    config()->set('vaulter.access.permission_drivers.negative', ProfileDenyDriver::class);
-    config()->set('vaulter.access.permission_drivers.roles', ProfileRoleSubjectsDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_drivers.positive', ProfileAllowDriver::class);
+    config()->set('vaulter-drive.access.permission_drivers.negative', ProfileDenyDriver::class);
+    config()->set('vaulter-drive.access.permission_drivers.roles', ProfileRoleSubjectsDriver::class);
     $registry = new ProfileRegistry;
     foreach ([(new Profile)->key('default'), (new Profile)->key('positive')->permissionDriver('positive'), (new Profile)->key('negative')->permissionDriver('negative'), (new Profile)->key('roles')->permissionDriver('roles')] as $profile) {
         $registry->register($profile);
@@ -79,7 +79,7 @@ it('isolates profile drivers across alternating scalar batch explain and create 
             expect($sets[(string) $node->id]->allows($ability))->toBe($resolver->can($actor, $ability, $node));
         }
     }
-    config()->set('vaulter.access.permission_drivers.positive', ProfileDenyDriver::class);
+    config()->set('vaulter-drive.access.permission_drivers.positive', ProfileDenyDriver::class);
     expect($resolver->can($actor, Ability::View, $a))->toBeFalse()
         ->and($resolver->canCreateIn($actor, $positive))->toBeFalse();
 });
@@ -123,7 +123,7 @@ it('uses each selected subject lane for shared candidates and role grant inserti
 
 it('keeps the host block when grants are disabled', function (): void {
     permissionProfiles();
-    config()->set('vaulter.features.grants', false);
+    config()->set('vaulter-drive.features.grants', false);
     $node = AccessTestHelpers::folder(permissionDrive('negative'), null, 'denied');
     AccessTestHelpers::grant($node, RoleRegistry::OWNER);
     $resolver = app(AccessResolver::class);
@@ -148,7 +148,7 @@ it('builds node-blind drive tenant owner and morph-alias coordinates', function 
 
 it('rejects non-production drivers selected by a profile at boot and resolution', function (): void {
     permissionProfiles();
-    config()->set('vaulter.access.permission_drivers.positive', NullPermissionDriver::class);
+    config()->set('vaulter-drive.access.permission_drivers.positive', NullPermissionDriver::class);
     $manager = new PermissionDriverManager(app(AccessConfig::class), app(), true);
     expect(fn () => $manager->forProfile('positive'))->toThrow(MissingPermissionDriverException::class);
     app()->detectEnvironment(static fn (): string => 'production');

@@ -69,13 +69,13 @@ Vaulter\Documents\Configuration\DocumentsConfig
 
 Vaulter\Documents\Events\Comments\CommentAdded
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
   broadcastOn(): array
   broadcastWith(): array
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -88,13 +88,13 @@ Vaulter\Documents\Events\Comments\CommentAdded
 
 Vaulter\Documents\Events\Comments\CommentDeleted
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
   broadcastOn(): array
   broadcastWith(): array
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -107,13 +107,13 @@ Vaulter\Documents\Events\Comments\CommentDeleted
 
 Vaulter\Documents\Events\Comments\CommentResolved
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
   broadcastOn(): array
   broadcastWith(): array
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -126,10 +126,10 @@ Vaulter\Documents\Events\Comments\CommentResolved
 
 Vaulter\Documents\Events\Documents\DocumentContentUpdated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -146,10 +146,10 @@ Vaulter\Documents\Events\Documents\DocumentContentUpdated
 
 Vaulter\Documents\Events\Documents\DocumentCreated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -165,10 +165,10 @@ Vaulter\Documents\Events\Documents\DocumentCreated
 
 Vaulter\Documents\Events\Revisions\DocumentRestored
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -185,10 +185,10 @@ Vaulter\Documents\Events\Revisions\DocumentRestored
 
 Vaulter\Documents\Events\Revisions\DocumentRevisionCreated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject

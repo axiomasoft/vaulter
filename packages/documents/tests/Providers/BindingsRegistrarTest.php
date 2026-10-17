@@ -59,7 +59,7 @@ it('normalizes module defaults in a fresh container while retaining host overrid
     $app = new Application;
     Container::setInstance($this->app);
     $config = new Repository([
-        'vaulter' => ['handlers' => ['Host\\Handler']],
+        'vaulter-drive' => ['handlers' => ['Host\\Handler']],
         'vaulter-documents' => [
             'models' => ['node_comment' => 'Host\\Comment'],
             'exporters' => ['Host\\Exporter'],
@@ -74,7 +74,7 @@ it('normalizes module defaults in a fresh container while retaining host overrid
 
     expect($config->get('vaulter-documents.models.node_comment'))->toBe('Host\\Comment')
         ->and($config->get('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class)
-        ->and($config->get('vaulter.handlers'))->toBe(['Host\\Handler'])
+        ->and($config->get('vaulter-drive.handlers'))->toBe(['Host\\Handler'])
         ->and($app->tagged('vaulter.file_handlers'))->toBeIterable()
         ->and($config->get('vaulter-documents.exporters'))->toContain('Host\\Exporter', MarkdownExporter::class);
 });

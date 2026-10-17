@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Kernel;

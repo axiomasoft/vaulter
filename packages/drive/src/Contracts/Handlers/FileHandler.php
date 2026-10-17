@@ -19,8 +19,8 @@ use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
  * FileDescriptor.
  *
  * Adding a NEW format is a ONE-CLASS + register operation: implement this interface
- * and register it (tagged container binding 'vaulter.handlers', config(
- * 'vaulter.handlers') FQCN list, or runtime Vaulter::handlers()->register()). No
+ * and register it (tagged container binding 'vaulter-drive.handlers', config(
+ * 'vaulter-drive.handlers') FQCN list, or runtime Vaulter::handlers()->register()). No
  * migration, no core change, NOT gated by the sealed NodeKind/DocumentType enum
  * (the registry's string keys are the source of truth).
  *

@@ -18,11 +18,11 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Database\Factories\NodeFactory;
 use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Support\NodeName;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Support\Concerns\HasStableMorphAlias;
 
 /**
@@ -33,7 +33,7 @@ use Vaulter\Support\Concerns\HasStableMorphAlias;
  * The recursive relationships come from staudenmeir/laravel-adjacency-list; the
  * adjacency key column is parent_id and the local key is the strategy-driven
  * primary key (ulid|uuid7|bigint), so descendants()/ancestors() resolve the same
- * under every id strategy. Swappable — point configuration key vaulter.models.node at a
+ * under every id strategy. Swappable — point configuration key vaulter-drive.models.node at a
  * subclass for tenant scoping.
  *
  * @property int|string                                $id

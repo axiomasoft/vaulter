@@ -85,7 +85,7 @@ abstract class TestCase extends OrchestraTestCase
         // The resource tests exercise the REAL ACL: opt into the database host-role
         // driver so AccessResolver resolves grants from v_node_grants (the open
         // 'null' driver would grant everything and hide the authorization tests).
-        $app['config']->set('vaulter.access.permission_driver', 'database');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'database');
 
         $app['config']->set('vaulter.routes.middleware.authenticated', []);
     }

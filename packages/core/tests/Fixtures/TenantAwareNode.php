@@ -8,7 +8,7 @@ use Vaulter\Drive\Models\Node;
 
 /**
  * A bare Node subclass — no behaviour change, no scope added. It exists ONLY to
- * be a non-default `config('vaulter.models.node')` value: F-P1.9-01's boot-time
+ * be a non-default `config('vaulter-drive.models.node')` value: F-P1.9-01's boot-time
  * footgun guard ({@see TenantFootgunGuard::check()})
  * fires when `vaulter.tenancy.enabled=true` AND the node model is still the
  * package default, on the theory that the default carries no tenant scope. Tests

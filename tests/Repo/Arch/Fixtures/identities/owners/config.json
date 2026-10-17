@@ -38,12 +38,6 @@
             "why": "the host-scheduler switch is read by every package's schedule keys; the switch itself is kernel"
         },
         {
-            "match": "prefix",
-            "value": "config:vaulter.features.",
-            "owner": "drive",
-            "why": "the feature switches of the disk, access, activity, journal and sharing — drive's concepts (architecture#ownership-map)"
-        },
-        {
             "match": "exact",
             "value": "config:vaulter.modules",
             "owner": "core",
@@ -81,60 +75,6 @@
         },
         {
             "match": "prefix",
-            "value": "config:vaulter.profiles.",
-            "owner": "drive",
-            "why": "Profiles (11) -> drive (architecture#ownership-map)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.scan.",
-            "owner": "drive",
-            "why": "D28: scan obligations, policy state and rollout are drive's; the scanner binding is the media SPI but the keys feed drive state"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.drives.",
-            "owner": "drive",
-            "why": "HasDrives owner cleanup belongs to the disk concept"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.access.",
-            "owner": "drive",
-            "why": "Access, drivers and Gate/Spatie mapping -> drive (architecture#ownership-map)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.listing.",
-            "owner": "drive",
-            "why": "Queries (2) -> drive: listing scan budget"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.sharing.",
-            "owner": "drive",
-            "why": "Sharing (9) -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.downloads.",
-            "owner": "drive",
-            "why": "content delivery (ContentAvailabilityGuard, DownloadGuard) -> drive (D28)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.changes.",
-            "owner": "drive",
-            "why": "Changes -> drive: the journal is a drive EventSink"
-        },
-        {
-            "match": "exact",
-            "value": "config:vaulter.schedule.changes_prune",
-            "owner": "drive",
-            "why": "vaulter:changes:prune -> drive"
-        },
-        {
-            "match": "prefix",
             "value": "config:vaulter.schedule.webhooks_",
             "owner": "webhooks",
             "why": "relay/retry/prune of webhooks -> webhooks"
@@ -144,18 +84,6 @@
             "value": "config:vaulter.webhooks.",
             "owner": "webhooks",
             "why": "Webhooks (all) -> webhooks (architecture#ownership-map)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.handlers",
-            "owner": "drive",
-            "why": "Handlers (6) -> drive (architecture#ownership-map)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.models.",
-            "owner": "drive",
-            "why": "the model registry names drive models; blob, outbox and webhooks models are overridden below"
         },
         {
             "match": "exact",

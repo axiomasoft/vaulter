@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
@@ -13,6 +12,7 @@ use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Trash\RestoreNodeAction;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
@@ -37,7 +37,7 @@ use Vaulter\Media\Enums\Cas\ScanVerdict;
 it('SEC-POLICY rejects enabled unactivated drives without allocating admission', function (): void {
     Storage::fake('local');
     $drive = UploadTestHelpers::storage();
-    config()->set('vaulter.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
     $stream = UploadTestHelpers::streamFor('policy test');
     try {
         expect(fn () => app(IngestFileAction::class)->execute(DriveContext::system($drive, 'fixture'),
@@ -51,16 +51,16 @@ it('SEC-POLICY rejects enabled unactivated drives without allocating admission',
 it('SEC-POLICY preserves first new content boundary across reactivation and off', function (): void {
     $drive = UploadTestHelpers::storage();
     app(VaulterDatabase::class)->write(fn () => $drive->forceFill(['scan_admission_sequence' => 7])->save());
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'first');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'first');
     $context = DriveContext::system($drive, 'fixture');
     app(VaulterDatabase::class)->transaction(fn () => app(ScanPolicyResolver::class)->initialize($drive, $context));
     $class = app(VaulterConfig::class)->model('scan_policy_state');
     expect($class::query()->where('drive_id', $drive->id)->pluck('boundary_sequence')->all())->toBe([7, 7]);
-    config()->set('vaulter.scan.mode', 'off');
+    config()->set('vaulter-drive.scan.mode', 'off');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     app(VaulterDatabase::class)->write(fn () => $drive->forceFill(['scan_admission_sequence' => 12])->save());
-    config()->set('vaulter.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     expect($class::query()->where('drive_id', $drive->id)->pluck('boundary_sequence')->all())->toBe([7, 7]);
 });
@@ -75,9 +75,9 @@ it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is c
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['scan_status' => 'clean'])->save());
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision))
         ->toThrow(ContentUnavailableException::class);
@@ -92,10 +92,10 @@ it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is c
 it('SEC-R02 forged timestamps cannot exempt a new admission and failures remain unavailable SEC-R07', function (): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'first');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'first');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -118,10 +118,10 @@ it('SEC-R02 forged timestamps cannot exempt a new admission and failures remain 
 it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independently', function (): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'first');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'first');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $bind = function (ScanMode $mode): void {
         $registry = new ProfileRegistry;
         $registry->register((new Profile)->key('default')->uploads(new UploadPolicy(scanMode: $mode, scanPolicyVersion: 'profile-v1')));
@@ -156,9 +156,9 @@ it('SEC-R05 trash restoration preserves admission while current scan policy bloc
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => now(), 'trashed_from_parent_id' => $drive->root_node_id, 'trash_root_id' => $node->getKey()])->save());
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $restored = app(RestoreNodeAction::class)->execute($context,
         new RestoreNodeInput($node, $drive->rootNode()->firstOrFail()));
@@ -169,11 +169,11 @@ it('SEC-R05 trash restoration preserves admission while current scan policy bloc
 });
 
 it('SEC-POLICY missing scanner and conflicting required aliases fail scanner boot validation', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
     expect(fn () => (new BindingsRegistrar)->register(app()))
         ->toThrow(InvalidConfigurationException::class);
-    config()->set('vaulter.scan.mode', null);
-    config()->set('vaulter.scan.required', true);
+    config()->set('vaulter-drive.scan.mode', null);
+    config()->set('vaulter-drive.scan.required', true);
     config()->set('vaulter-drive.uploads.scan.required', false);
     expect(fn () => app(ScanConfig::class)->globalSpec())
         ->toThrow(InvalidConfigurationException::class);

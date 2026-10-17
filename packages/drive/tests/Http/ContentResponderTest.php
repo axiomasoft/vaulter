@@ -14,10 +14,10 @@ use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Http\Support\ContentResponder;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
-use Vaulter\Http\Support\ContentResponder;
 use Vaulter\Http\Support\DownloadHeaders;
 use Vaulter\Media\Content\ImmutableContentIdentity;
 use Vaulter\Media\Content\SignedContentUrl;
@@ -84,7 +84,7 @@ it('strips CR/LF, control characters and path separators from the disposition', 
 });
 
 it('redirects to a signed URL of the exact requested revision in direct_signed mode, without caching', function (): void {
-    config()->set('vaulter.downloads.delivery_mode', 'direct_signed');
+    config()->set('vaulter-drive.downloads.delivery_mode', 'direct_signed');
     app()->instance(DirectContentUrlSigner::class, $signer = new RecordingSigner);
     $file = V1::file($this->drive, 'v.txt', 'first bytes');
     $first = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();
@@ -102,7 +102,7 @@ it('redirects to a signed URL of the exact requested revision in direct_signed m
 });
 
 it('answers 423 before any byte or URL when the revision is not clean', function (string $mode): void {
-    config()->set('vaulter.downloads.delivery_mode', $mode);
+    config()->set('vaulter-drive.downloads.delivery_mode', $mode);
     app()->instance(DirectContentUrlSigner::class, $signer = new RecordingSigner);
     $file = V1::file($this->drive, 'q.txt', 'quarantined');
     $revision = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();
@@ -114,7 +114,7 @@ it('answers 423 before any byte or URL when the revision is not clean', function
 })->with(['strict', 'direct_signed']);
 
 it('gives a previewer 403 and a stranger 404, in both modes', function (string $mode): void {
-    config()->set('vaulter.downloads.delivery_mode', $mode);
+    config()->set('vaulter-drive.downloads.delivery_mode', $mode);
     app()->instance(DirectContentUrlSigner::class, $signer = new RecordingSigner);
     $file = V1::file($this->drive, 'p.txt', 'preview only');
     AccessTestHelpers::grant(DriveTestHelpers::model($file), RoleRegistry::PREVIEWER, subjectId: 5);

@@ -15,9 +15,9 @@ use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Http\Resources\NodeResponses;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\VaulterManager;
 
@@ -33,7 +33,7 @@ final class V1
     /** A fresh drive (system handle) whose root grants $role to user $userId. */
     public static function drive(int $userId = 1, string $role = RoleRegistry::OWNER): DriveHandle
     {
-        config()->set('vaulter.access.permission_driver', 'database');
+        config()->set('vaulter-drive.access.permission_driver', 'database');
         $drive = DriveTestHelpers::drive();
         AccessTestHelpers::grant($drive->root(), $role, scope: GrantScope::Subtree, subjectId: $userId);
 

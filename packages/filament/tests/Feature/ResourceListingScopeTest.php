@@ -77,7 +77,7 @@ it('NodeGrantResource lists a grant on a reachable node and hides one on an unre
 });
 
 it('NodeShareResource lists a share on a reachable node and hides one on an unreachable node (F-P1.10-01)', function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $owner = DriveBuilder::user(1);
     $this->actingAs($owner);
 
@@ -129,7 +129,7 @@ it('ActivityResource lists activity targeting a reachable node and hides a forei
 });
 
 it('isolates database resources from a sibling profile with an open candidate lane', function (string $mode): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $owner = DriveBuilder::user(1);
     $stranger = DriveBuilder::user(2);
     $visible = DriveBuilder::storage();
@@ -162,7 +162,7 @@ it('isolates database resources from a sibling profile with an open candidate la
 })->with(['gate', 'disabled']);
 
 it('V31 Filament node grant share and activity listings stay in the current tenant', function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
     $resolver = new MutableTenantResolver;

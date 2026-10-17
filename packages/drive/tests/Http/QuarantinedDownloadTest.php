@@ -19,7 +19,7 @@ beforeEach(function (): void {
 });
 
 it('answers 423 for an infected head, in both delivery modes', function (string $mode): void {
-    config()->set('vaulter.downloads.delivery_mode', $mode);
+    config()->set('vaulter-drive.downloads.delivery_mode', $mode);
     $signer = new class implements DirectContentUrlSigner
     {
         public int $calls = 0;

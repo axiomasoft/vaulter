@@ -32,10 +32,10 @@ it('matches individual ACL resolution on 500 seeded random trees', function (): 
         $driver->shouldReceive('override')->andReturn(null);
         $driver->shouldReceive('resolve')->andReturn(null);
         app()->instance(PermissionDriver::class, $driver);
-        config()->set('vaulter.access.permission_drivers.equivalence', PermissionDriver::class);
+        config()->set('vaulter-drive.access.permission_drivers.equivalence', PermissionDriver::class);
         app()->forgetInstance(PermissionDriverManager::class);
         app()->forgetInstance(AccessResolver::class);
-        config()->set('vaulter.access.permission_driver', 'equivalence');
+        config()->set('vaulter-drive.access.permission_driver', 'equivalence');
         $nodes = [];
         $depths = [];
         $count = mt_rand(8, 15);
@@ -80,8 +80,8 @@ it('preserves absolute overrides, empty subjects and role grants in batch', func
     AccessTestHelpers::grant($nodes[0], RoleRegistry::PREVIEWER);
     $driver = new RoleStubDriver(role: $role, overrideEffect: $override, includeActor: $subjects);
     app()->instance(PermissionDriver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.batch', PermissionDriver::class);
-    config()->set('vaulter.access.permission_driver', 'batch');
+    config()->set('vaulter-drive.access.permission_drivers.batch', PermissionDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'batch');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     $resolver = app(AccessResolver::class);
@@ -127,8 +127,8 @@ it('evaluates override, role and subjects once per drive in the batch', function
         return new Decision(role: (new RoleRegistry)->latest(RoleRegistry::READER));
     });
     app()->instance(PermissionDriver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.batch', PermissionDriver::class);
-    config()->set('vaulter.access.permission_driver', 'batch');
+    config()->set('vaulter-drive.access.permission_drivers.batch', PermissionDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'batch');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     $resolver = app(AccessResolver::class);
@@ -153,8 +153,8 @@ it('preserves deciding grants and boundaries above the 64th ancestor', function 
     }
     $driver = new RoleStubDriver;
     app()->instance(PermissionDriver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.deep', PermissionDriver::class);
-    config()->set('vaulter.access.permission_driver', 'deep');
+    config()->set('vaulter-drive.access.permission_drivers.deep', PermissionDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'deep');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     $resolver = app(AccessResolver::class);

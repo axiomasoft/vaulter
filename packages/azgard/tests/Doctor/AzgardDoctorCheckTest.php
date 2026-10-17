@@ -35,7 +35,7 @@ it('reports a configured guard that cannot be built as an error in both modes', 
 });
 
 it('notes whether the azgard driver is the selected one', function (): void {
-    config(['vaulter.access.permission_driver' => 'database']);
+    config(['vaulter-drive.access.permission_driver' => 'database']);
 
     expect(azgardFindings()[0]->evidence['driver_selected'])->toBeFalse();
 });

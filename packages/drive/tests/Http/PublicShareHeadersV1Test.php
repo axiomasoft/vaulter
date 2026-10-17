@@ -18,7 +18,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
 });
 
 it('sends private, no-store and no-referrer on every public answer, the throttle included', function (): void {

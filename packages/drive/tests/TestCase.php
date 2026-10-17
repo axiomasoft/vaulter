@@ -64,7 +64,7 @@ abstract class TestCase extends OrchestraTestCase
         // The Drive suite runs OPEN under the env-gated NullPermissionDriver (non-prod
         // only, H.2 / D6″): every actor gets full access so the tests exercise pure
         // file/folder/upload mechanics without an access-control lane.
-        $app['config']->set('vaulter.access.permission_driver', 'null');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the Drive tests assert integer
         // keys on the Storage→Node→File→Version chain they build.

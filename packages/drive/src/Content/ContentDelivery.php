@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Content;
 
 use DateTimeImmutable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DownloadsConfig;
 use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Configuration\DownloadsConfig;
 use Vaulter\Drive\Data\FileStream;
 use Vaulter\Drive\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
 use Vaulter\Drive\Enums\Access\Ability;

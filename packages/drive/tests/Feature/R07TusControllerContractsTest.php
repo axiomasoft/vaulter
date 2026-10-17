@@ -298,7 +298,7 @@ it('Location header normalizes a trailing slash on the route prefix', function (
 });
 
 it('guardCreate workspace AND node create cannot be split under the null ACL driver', function (): void {
-    // The Drive suite pins vaulter.access.permission_driver=null — every authenticated actor
+    // The Drive suite pins vaulter-drive.access.permission_driver=null — every authenticated actor
     // receives both workspace-create and node-create, so a single-permission-denied case
     // is not expressible here without swapping the permission driver (out of R07 scope).
     expect(true)->toBeTrue();

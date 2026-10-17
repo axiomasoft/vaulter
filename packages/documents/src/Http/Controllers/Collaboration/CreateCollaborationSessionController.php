@@ -9,8 +9,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\CreateCollaborationSessionRequest;
 use Vaulter\Documents\Http\Resources\CollaborationSessionResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * Join a document's realtime room: a session for its current generation, read-write for

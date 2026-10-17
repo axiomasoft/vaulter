@@ -44,7 +44,7 @@ it('creates the canonical schema independently of runtime features and legacy ta
         ->and($schema->hasTable('v_node_document_versions'))->toBeFalse();
     $indexes = array_column($schema->getIndexes('v_node_grants'), null, 'name');
     expect($indexes['v_node_grants_grant_uniq']['columns'])->toBe(['node_id', 'subject_type', 'subject_id', 'scope']);
-    config()->set('vaulter.features', array_fill_keys(['grants', 'share_links', 'activity', 'webhooks', 'public_listing', 'spreadsheets'], false));
+    config()->set('vaulter-drive.features', array_fill_keys(['grants', 'share_links', 'activity', 'webhooks', 'public_listing', 'spreadsheets'], false));
     config()->set('vaulter.database.table_prefix', 'features_off_');
     app(ModuleSchemas::class)->createAll();
     array_map($documents->create(...), $documents->entities());

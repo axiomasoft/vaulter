@@ -75,7 +75,7 @@ abstract class TestCase extends OrchestraTestCase
         // The Documents suite runs OPEN under the env-gated NullPermissionDriver (non-prod
         // only, H.2 / D6″): every actor gets full access so the tests exercise pure
         // document mechanics without an access-control lane.
-        $app['config']->set('vaulter.access.permission_driver', 'null');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the Documents tests assert
         // integer keys on the Storage→Node chain they build.

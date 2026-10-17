@@ -13,6 +13,7 @@ use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Repositories\NodeReadRepository;
@@ -21,7 +22,6 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\TestCase;
@@ -114,7 +114,7 @@ it('I15 restores nested maintenance exceptions without carrying bypass into a Fi
 });
 
 it('I15 maintenance keeps ACL checks and authoritative child consistency', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $a = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($a, null, 'secret');
     app(TenantResolver::class)->tenant = 'B';
@@ -162,7 +162,7 @@ it('V31 optional owner tenant resolver rereads owner on both provision and exist
 });
 
 it('V31 anonymous bearer shares derive only their target tenant and do not open a foreign system handle', function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $a = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
     $rootA = $a->root();
     $childA = AccessTestHelpers::folder($a->model(), $rootA, 'shared child');
@@ -222,7 +222,7 @@ it('V31 F1 binds optional owner validation lookup and insert to one persisted id
     expect(fn () => Vaulter::drive($owner))->toThrow(NodeNotFoundException::class)
         ->and(fn () => Vaulter::findDrive($owner))->toThrow(NodeNotFoundException::class)
         ->and(fn () => app(DriveReadRepository::class)->forOwner($owner, 'default'))->toThrow(NodeNotFoundException::class);
-    $driveClass = config('vaulter.models.drive');
+    $driveClass = config('vaulter-drive.models.drive');
     expect($driveClass::query()->count())->toBe(0);
     $owner->setAttribute($owner->getKeyName(), $original);
     $drive = Vaulter::drive($owner)->model();
@@ -248,7 +248,7 @@ it('V31 F2 rejects mismatched descendant ancestor breadcrumb and ACL tree stamps
         fn () => $read->ancestorChains([$leaf->id])] as $walk) {
         expect($walk)->toThrow(NodeNotFoundException::class);
     }
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     expect(fn () => app(AccessResolver::class)->can(AccessTestHelpers::user(), Ability::View, $leaf))->toThrow(NodeNotFoundException::class);
     Vaulter::withoutTenancy(function () use ($read, $root): void {
         expect(fn () => $read->subtree($root))->toThrow(NodeNotFoundException::class);

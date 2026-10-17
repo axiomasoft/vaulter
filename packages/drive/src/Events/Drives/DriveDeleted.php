@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Events\Drives;
 
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
-use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;

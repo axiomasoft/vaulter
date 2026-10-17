@@ -82,8 +82,8 @@ it('guards scan authority against mass assignment and validates aliased model su
         $model = new $class;
         expect($model->isFillable('tenant_id'))->toBeFalse()->and($model->isFillable('outcome'))->toBeFalse()
             ->and($model->isFillable('lease_token'))->toBeFalse();
-        config()->set('vaulter.models.'.$alias, Drive::class);
+        config()->set('vaulter-drive.models.'.$alias, Drive::class);
         expect(fn () => $config->model($alias))->toThrow(InvalidConfigurationException::class);
-        config()->set('vaulter.models.'.$alias, $class);
+        config()->set('vaulter-drive.models.'.$alias, $class);
     }
 });

@@ -44,7 +44,7 @@ final class E2eServiceProvider extends ServiceProvider
             // ON TOP of document_versions — the e2e stand exercises the collaboration session +
             // the hub endpoints, so it must flip this too (default false).
             'vaulter-documents.collaboration.enabled' => true,
-            'vaulter.access.permission_driver' => 'database',
+            'vaulter-drive.access.permission_driver' => 'database',
             'vaulter.ids.strategy' => 'bigint',
             'vaulter.routes.middleware.authenticated' => ['api', E2eActingAs::class],
         ]);

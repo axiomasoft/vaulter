@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
-use Vaulter\Http\Support\ContentResponder;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\ContentResponder;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * Render a document's working state — or the checkpoint named by `?revision=` — in the

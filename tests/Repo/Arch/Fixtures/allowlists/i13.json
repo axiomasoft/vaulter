@@ -217,7 +217,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Access\\NodeGrantCreated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -228,7 +228,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Access\\NodeGrantCreated::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -250,7 +250,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Access\\NodeGrantRevoked::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -261,7 +261,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Access\\NodeGrantRevoked::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -283,7 +283,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Access\\NodeInheritanceChanged::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -294,7 +294,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Access\\NodeInheritanceChanged::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -305,7 +305,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Events\\DomainEvent::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -316,7 +316,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Events\\DomainEvent::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -360,7 +360,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Events\\DomainEvent::nodeUpsert()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -393,7 +393,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Sharing\\NodeShareCreated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -415,7 +415,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Sharing\\NodeShareRevoked::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -437,7 +437,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Sharing\\NodeShareRotated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -459,7 +459,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Sharing\\NodeShareUpdated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -619,55 +619,55 @@
         {
             "category": "internal-type",
             "count": 1,
-            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "file": "packages/drive/src/Testing/Contracts/PermissionDriverContractTests.php",
             "kind": "param",
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::assertPermissionDriverContract()",
+            "symbol": "Vaulter\\Drive\\Testing\\Contracts\\PermissionDriverContractTests::assertPermissionDriverContract()",
             "target": "Vaulter\\Drive\\Access\\AccessResolver",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 2,
-            "file": "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+            "file": "packages/drive/src/Testing/Contracts/PermissionDriverContractTests.php",
             "kind": "param",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests::assertPermissionDriverContract()",
+            "symbol": "Vaulter\\Drive\\Testing\\Contracts\\PermissionDriverContractTests::assertPermissionDriverContract()",
             "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "file": "packages/drive/src/Testing/Contracts/PermissionFixture.php",
             "kind": "property",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::$child",
+            "symbol": "Vaulter\\Drive\\Testing\\Contracts\\PermissionFixture::$child",
             "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "file": "packages/drive/src/Testing/Contracts/PermissionFixture.php",
             "kind": "property",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::$drive",
+            "symbol": "Vaulter\\Drive\\Testing\\Contracts\\PermissionFixture::$drive",
             "target": "Vaulter\\Drive\\Models\\Drive",
             "view": "signature"
         },
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
+            "file": "packages/drive/src/Testing/Contracts/PermissionFixture.php",
             "kind": "property",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::$parent",
+            "symbol": "Vaulter\\Drive\\Testing\\Contracts\\PermissionFixture::$parent",
             "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },
@@ -932,7 +932,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentAdded::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -954,7 +954,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentDeleted::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -976,7 +976,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentResolved::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1009,7 +1009,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentContentUpdated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1020,7 +1020,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentContentUpdated::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1053,7 +1053,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentCreated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1064,7 +1064,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentCreated::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1108,7 +1108,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRestored::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1119,7 +1119,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRestored::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1152,7 +1152,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRevisionCreated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1493,7 +1493,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Drives\\DriveArchived::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1526,7 +1526,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Drives\\DriveCreated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1548,7 +1548,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Drives\\DriveUnarchived::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1592,7 +1592,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileRevisionAdded::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1603,7 +1603,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileRevisionAdded::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1636,7 +1636,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileRevisionDeleted::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1680,7 +1680,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileUploaded::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1691,7 +1691,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Files\\FileUploaded::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1713,7 +1713,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\FolderCreated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1724,7 +1724,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\FolderCreated::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1757,7 +1757,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeCopied::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1768,7 +1768,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeCopied::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1790,7 +1790,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeMoved::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1801,7 +1801,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeMoved::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1823,7 +1823,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeRenamed::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1834,7 +1834,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeRenamed::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1856,7 +1856,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeRestored::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1867,7 +1867,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeRestored::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1889,7 +1889,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeTrashed::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1900,7 +1900,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeTrashed::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {
@@ -1922,7 +1922,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeUpdated::activityTarget()",
-            "target": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget",
             "view": "signature"
         },
         {
@@ -1933,7 +1933,7 @@
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Events\\Nodes\\NodeUpdated::journal()",
-            "target": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "target": "Vaulter\\Drive\\ValueObjects\\Events\\JournalEffect",
             "view": "signature"
         },
         {

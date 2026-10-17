@@ -11,8 +11,8 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(function (): void {
-    config()->set('vaulter.features.share_links', true);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.share_links', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 
     $storage = AccessTestHelpers::storage();

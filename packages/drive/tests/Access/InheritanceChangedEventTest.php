@@ -6,12 +6,12 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Operations\AccessOperations;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Support\CanonicalJson;
 
@@ -22,7 +22,7 @@ uses(EnablesWebhooksModule::class);
  * event; the grants copied by copy_current keep producing grant.created.
  */
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->drive = AccessTestHelpers::storage();
     $this->access = app()->makeWith(AccessOperations::class, ['context' => DriveContext::system($this->drive, 'inheritance events')]);
     $this->parent = AccessTestHelpers::folder($this->drive, null, 'parent');

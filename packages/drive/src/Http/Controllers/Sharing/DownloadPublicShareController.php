@@ -11,9 +11,9 @@ use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
-use Vaulter\Http\Middleware\ResolveShareToken;
-use Vaulter\Http\Support\ContentResponder;
-use Vaulter\Http\Support\SharedNodeResolver;
+use Vaulter\Drive\Http\Middleware\ResolveShareToken;
+use Vaulter\Drive\Http\Support\ContentResponder;
+use Vaulter\Drive\Http\Support\SharedNodeResolver;
 
 /**
  * The bytes of a shared file (`?node=` picks a listed child of a shared folder). A link

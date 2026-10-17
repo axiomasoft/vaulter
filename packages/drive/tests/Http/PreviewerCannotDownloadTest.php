@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 
 it('shows the node to a previewer, with download off, and refuses the bytes with 403', function (string $mode): void {
     Storage::fake('local');
-    config()->set('vaulter.downloads.delivery_mode', $mode);
+    config()->set('vaulter-drive.downloads.delivery_mode', $mode);
     $drive = V1::drive(userId: 1);
     $file = V1::file($drive, 'preview.txt', 'preview only');
     $revision = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();

@@ -8,11 +8,11 @@ it('SEC-R17 inventory keeps descriptors metadata-only and installed delivery med
         'packages/drive/src/Handlers/FileDescriptorFactory.php',
         'packages/drive/src/Handlers/NodePresenter.php',
         'packages/drive/src/Handlers/Builtin/PreviewHandler.php',
-        'packages/core/src/Http/Resources/Drive/NodeResource.php',
+        'packages/drive/src/Http/Resources/Drive/NodeResource.php',
         'packages/drive/src/Http/Controllers/Files/DownloadFileController.php',
         'packages/drive/src/Http/Controllers/Sharing/DownloadPublicShareController.php',
         'packages/drive/src/Http/Controllers/Sharing/ShowPublicShareController.php',
-        'packages/core/src/Http/Support/ContentResponder.php',
+        'packages/drive/src/Http/Support/ContentResponder.php',
         'packages/documents/src/Actions/Export/ExportDocumentAction.php',
         'packages/documents/src/Presentation/DocumentPresenter.php',
     ];

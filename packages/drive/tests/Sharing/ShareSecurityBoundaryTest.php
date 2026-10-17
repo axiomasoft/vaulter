@@ -27,8 +27,8 @@ use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
-    config()->set('vaulter.features.share_links', true);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.share_links', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
 });
 
 it('rejects foreign share identity even when a model claims own node membership', function (): void {
@@ -112,9 +112,9 @@ it('checks the public download availability hook before opening bytes and keeps 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('quarantined'), 'sample.txt'));
     $revision = Node::query()->findOrFail($node->id)->file()->firstOrFail()->currentRevision()->firstOrFail();
     app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['scan_status' => 'pending'])->save());
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive->model(), DriveContext::system($drive->model(), 'share availability fixture'));
     ShareTestHelpers::share($node, token: 'pending-hook');
     $storage = Mockery::mock(StorageDriver::class);

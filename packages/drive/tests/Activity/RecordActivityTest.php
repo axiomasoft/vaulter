@@ -12,6 +12,7 @@ use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Events\Access\NodeGrantRevoked;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
@@ -23,7 +24,6 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Activity\ActivityTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Schema\IdStrategyResolver;
@@ -39,7 +39,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  */
 beforeEach(function (): void {
     // The recorder runs; the base suite is open (null driver) so Drive ops succeed.
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $this->actingAs((new TestUser)->forceFill(['id' => 7]));
 });
 

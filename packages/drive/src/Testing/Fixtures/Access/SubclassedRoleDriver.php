@@ -7,9 +7,9 @@ namespace Vaulter\Drive\Testing\Fixtures\Access;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\AccessConfig;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Configuration\AccessConfig;
 
 /**
  * A host driver following the DOCUMENTED extension path (F-P1.2-01 review): it

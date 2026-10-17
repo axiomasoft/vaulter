@@ -16,8 +16,8 @@ use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Testing\NullPermissionDriver;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
@@ -162,7 +162,7 @@ it('samples drives without a single root and limits the sample', function (): vo
 });
 
 it('lists every failing validator, not the first one', function (): void {
-    config(['vaulter.models.drive' => stdClass::class, 'vaulter.access.permission_driver' => 'nonexistent']);
+    config(['vaulter-drive.models.drive' => stdClass::class, 'vaulter-drive.access.permission_driver' => 'nonexistent']);
 
     $findings = coreFindings('core.config.valid');
 
@@ -216,14 +216,14 @@ it('requires an auth middleware with a defined guard on the authenticated routes
 it('refuses the null driver always and a non-production driver in production', function (): void {
     expect(coreCodes('core.access.driver'))->toBe(['core.access.null_driver']);
 
-    config(['vaulter.access.permission_driver' => 'database']);
+    config(['vaulter-drive.access.permission_driver' => 'database']);
     expect(coreCodes('core.access.driver'))->toBe(['core.access.driver_ok']);
 
-    config(['vaulter.access.permission_drivers.test_double' => NullPermissionDriver::class, 'vaulter.access.permission_driver' => 'test_double']);
+    config(['vaulter-drive.access.permission_drivers.test_double' => NullPermissionDriver::class, 'vaulter-drive.access.permission_driver' => 'test_double']);
     expect(coreCodes('core.access.driver'))->toBe(['core.access.driver_ok'])
         ->and(coreCodes('core.access.driver', production: true))->toBe(['core.access.non_production_driver']);
 
-    config(['vaulter.access.permission_drivers.broken' => 'Missing\\Driver', 'vaulter.access.permission_driver' => 'broken']);
+    config(['vaulter-drive.access.permission_drivers.broken' => 'Missing\\Driver', 'vaulter-drive.access.permission_driver' => 'broken']);
     expect(coreCodes('core.access.driver'))->toBe(['core.access.unresolved']);
 });
 

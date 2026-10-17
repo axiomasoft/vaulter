@@ -42,7 +42,7 @@ final class OperationMatrixNoCreateDriver extends DatabasePermissionDriver
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->owner = DriveTestHelpers::host();
     $this->system = Vaulter::drive($this->owner)->asSystem('operation matrix fixture');
     $this->user = AccessTestHelpers::user(71);
@@ -253,8 +253,8 @@ it('checks each move copy and changed restore destination independently', functi
 it('checks the host drive admission gate for both create and upload despite a full parent grant', function (string $operation): void {
     $parent = $this->system->folders()->create('parent');
     operationMatrixGrant($this->system, $parent, $this->user, RoleRegistry::OWNER);
-    config()->set('vaulter.access.permission_drivers.no_create', OperationMatrixNoCreateDriver::class);
-    config()->set('vaulter.access.permission_driver', 'no_create');
+    config()->set('vaulter-drive.access.permission_drivers.no_create', OperationMatrixNoCreateDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'no_create');
     $before = operationMatrixState();
     $run = fn () => $operation === 'create'
         ? $this->actor->folders()->create('blocked', $parent)

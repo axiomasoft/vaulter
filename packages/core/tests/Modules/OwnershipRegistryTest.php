@@ -50,7 +50,7 @@ const I5_DECLARED_ELSEWHERE = [
  * @var array<string, array{declared_by: string, phase: string, owners: list<string>}>
  */
 const I5_SHARED_CONFIG_ROOTS = [
-    'vaulter' => ['declared_by' => 'core', 'phase' => 'P4', 'owners' => ['core', 'drive', 'webhooks']],
+    'vaulter' => ['declared_by' => 'core', 'phase' => 'P4', 'owners' => ['core', 'webhooks']],
     'vaulter-documents' => ['declared_by' => 'documents', 'phase' => 'P5', 'owners' => ['collaboration', 'documents']],
 ];
 

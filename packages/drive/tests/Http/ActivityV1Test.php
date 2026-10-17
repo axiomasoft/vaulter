@@ -12,7 +12,7 @@ use Vaulter\Drive\Testing\Http\V1;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.features.activity', true);
+    config()->set('vaulter-drive.features.activity', true);
     $this->drive = V1::drive(userId: 1);
     $this->actingAs(V1::user(1));
 });

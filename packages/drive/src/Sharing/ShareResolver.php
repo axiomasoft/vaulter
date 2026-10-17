@@ -29,7 +29,7 @@ use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Drive\Support\ShareToken;
-use Vaulter\Tenancy\ShareTenantContext;
+use Vaulter\Drive\Tenancy\ShareTenantContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**

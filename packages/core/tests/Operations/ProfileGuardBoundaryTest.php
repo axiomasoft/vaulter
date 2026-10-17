@@ -21,8 +21,8 @@ use Vaulter\ValueObjects\Access\Actor;
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.share_links', true);
     config()->set('vaulter-documents.comments.enabled', true);
 });
 
@@ -101,7 +101,7 @@ it('SEC-R14 disabling grants removes scalar and batch ACL contributions without 
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorize($user, Ability::View, $node))->toThrow(NodeNotFoundException::class)
         ->and($guard->visible($user, [$node]))->toBe([]);
-    config()->set('vaulter.access.permission_driver', 'null');
+    config()->set('vaulter-drive.access.permission_driver', 'null');
     // A host-role override remains independent from the disabled grant lane.
     $guard = app(OperationGuard::class);
     $guard->authorize($user, Ability::View, $node);

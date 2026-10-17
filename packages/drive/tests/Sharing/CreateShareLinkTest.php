@@ -24,7 +24,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
  * hash + prefix are persisted; the password is hashed; the lifecycle events fire.
  */
 beforeEach(function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
 });
 
 it('returns the raw token once and persists ONLY its hash + prefix', function (): void {

@@ -28,6 +28,7 @@ use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
+use Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
@@ -35,7 +36,6 @@ use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
-use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Facades\Vaulter;
 
 /** Injects a failure after real CAS edge detach, so transaction rollback is observable. */
@@ -181,10 +181,10 @@ it('uses fresh destination admission without inheriting a legacy scan exemption'
     $node = $this->system->files()->upload(UploadSource::fromString('legacy admitted bytes', 'legacy.txt'));
     $original = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $original->forceFill(['scan_status' => 'not_required'])->save();
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'legacy-copy');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'legacy-copy');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), DriveContext::system($this->system->model(), 'lifecycle acceptance fixture'));
     $copy = $this->system->nodes()->copy($node);
     $copied = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->firstOrFail();
@@ -289,7 +289,7 @@ it('retention purge reports a failed root exits one and still physically commits
 });
 
 it('restores to the active original parent without Create when no destination is given', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(83);
     $parent = $this->system->folders()->create('original');
     $source = $this->system->folders()->create('source', $parent);
@@ -303,7 +303,7 @@ it('restores to the active original parent without Create when no destination is
 });
 
 it('authorizes View and Create on the actual fallback destination', function (string $lane): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(84);
     $parent = $this->system->folders()->create('original');
     $source = $this->system->folders()->create('source', $parent);
@@ -329,7 +329,7 @@ it('authorizes View and Create on the actual fallback destination', function (st
 })->with(['hidden', 'missing Create', 'allowed']);
 
 it('repeats public destination authorization when the original parent changes after precheck', function (bool $allowFallback): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(85);
     $parent = $this->system->folders()->create('racing original');
     $source = $this->system->folders()->create('source', $parent);

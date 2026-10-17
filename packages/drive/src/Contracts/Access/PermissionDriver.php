@@ -20,7 +20,7 @@ use Vaulter\Drive\Enums\Access\Effect;
  * coordinates). The Vaulter-owned, NON-swappable {@see AccessResolver} unions this
  * driver's roles with the roles of the v_node_grants rows.
  *
- * Swap it via configuration key vaulter.access.permission_driver + permission_drivers map); the
+ * Swap it via configuration key vaulter-drive.access.permission_driver + permission_drivers map); the
  * default is the standalone {@see DatabasePermissionDriver}.
  *
  * Implementations are a SemVer-frozen public API from — 's Gate/Spatie/

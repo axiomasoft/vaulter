@@ -9,8 +9,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\AddCommentRequest;
 use Vaulter\Documents\Http\Resources\CommentResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Add a comment, or a reply to one of the node's comments (Comment). */
 #[Internal]

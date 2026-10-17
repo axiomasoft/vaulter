@@ -9,17 +9,17 @@ use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Testing\Contracts\FileHandlerContractTests;
+use Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests;
+use Vaulter\Drive\Testing\Contracts\PermissionFixture;
 use Vaulter\Drive\Testing\Fixtures\Access\RoleStubDriver;
-use Vaulter\Testing\Contracts\FileHandlerContractTests;
-use Vaulter\Testing\Contracts\PermissionDriverContractTests;
-use Vaulter\Testing\Contracts\PermissionFixture;
 use Vaulter\Tests\Fixtures\Testing\BrokenFileHandler;
 
 /**
  * Every contract suite is proved twice: green on a reference implementation and red
  * on one that breaks the contract, so a suite that stops catching a violation fails here.
  */
-beforeEach(fn () => config()->set('vaulter.access.permission_driver', 'database'));
+beforeEach(fn () => config()->set('vaulter-drive.access.permission_driver', 'database'));
 
 it('accepts a conforming file handler', function (): void {
     (new FileHandlerContractTests)->assertFileHandlerContract(new PreviewHandler);
@@ -51,9 +51,9 @@ it('rejects a driver that opens everything up even when the profile pins its own
 })->throws(AssertionFailedError::class, 'decides differently');
 
 it('restores the access configuration after a driver was compared', function (): void {
-    $before = config('vaulter.access');
+    $before = config('vaulter-drive.access');
 
     (new PermissionDriverContractTests)->assertSameDecisionsAsReference(new DatabasePermissionDriver);
 
-    expect(config('vaulter.access'))->toBe($before);
+    expect(config('vaulter-drive.access'))->toBe($before);
 });

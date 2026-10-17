@@ -9,12 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Events\EventTypeCast;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
  * An APPEND-ONLY audit/activity row. ONE row per
@@ -29,7 +29,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * actor, and a storage-level row has no node target. ip/user_agent/request_id are
  * captured from the current request when one exists and degrade to null off it.
  *
- * Swappable — point configuration key vaulter.models.activity at a subclass for tenant
+ * Swappable — point configuration key vaulter-drive.models.activity at a subclass for tenant
  * scoping or extra behaviour.
  *
  * @property int|string               $id

@@ -172,7 +172,7 @@
                     "accepts_value": true,
                     "array": false,
                     "default": null,
-                    "description": "Override the retention window in days (config vaulter.changes.retention_days)",
+                    "description": "Override the retention window in days (config vaulter-drive.changes.retention_days)",
                     "name": "days",
                     "shortcut": null,
                     "value_required": false

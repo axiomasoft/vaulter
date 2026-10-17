@@ -13,7 +13,7 @@ use Vaulter\Testing\Fixtures\TestUser;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.features.grants', true);
+    config()->set('vaulter-drive.features.grants', true);
     $this->drive = V1::drive(userId: 1);
     $this->folder = V1::folder($this->drive, 'team');
     $this->actingAs(V1::user(1));

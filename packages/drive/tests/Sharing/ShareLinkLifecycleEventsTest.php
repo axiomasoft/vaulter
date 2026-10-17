@@ -7,13 +7,13 @@ use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Operations\ActivityOperations;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\ShareOperations;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\ValueObjects\Access\Actor;
@@ -25,8 +25,8 @@ uses(EnablesWebhooksModule::class);
  * the activity feed and the outbox, and neither leaks the token or the new password.
  */
 beforeEach(function (): void {
-    config()->set('vaulter.features.share_links', true);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.share_links', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->drive = AccessTestHelpers::storage();
     $this->node = AccessTestHelpers::folder($this->drive, null, 'shared');
     $this->shares = app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($this->drive, 'lifecycle events')]);

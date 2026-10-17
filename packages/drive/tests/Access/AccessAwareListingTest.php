@@ -22,7 +22,7 @@ beforeEach(function (): void {
     StorageFacade::fake('local');
     // The standalone, grant-authoritative lane: v_node_grants is the sole authority,
     // so the listing may narrow to the candidate set.
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
@@ -33,8 +33,8 @@ beforeEach(function (): void {
 function useListingDriver(object $driver): void
 {
     app()->instance($driver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.stub', $driver::class);
-    config()->set('vaulter.access.permission_driver', 'stub');
+    config()->set('vaulter-drive.access.permission_drivers.stub', $driver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'stub');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 }
@@ -312,7 +312,7 @@ it('keeps grantFilteringApplies true on the database driver and false on the nul
     expect(nodeRepo()->grantFilteringApplies())->toBeTrue();
 
     // The null driver does NOT carry the marker ⇒ filtering does not apply.
-    config()->set('vaulter.access.permission_driver', 'null');
+    config()->set('vaulter-drive.access.permission_driver', 'null');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 
@@ -325,7 +325,7 @@ it('keeps the listing OPEN (every node) on the null driver', function (): void {
     $b = AccessTestHelpers::folder($storage, null, 'b');
     // No grants at all — on the open driver the listing must still return every node.
 
-    config()->set('vaulter.access.permission_driver', 'null');
+    config()->set('vaulter-drive.access.permission_driver', 'null');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 

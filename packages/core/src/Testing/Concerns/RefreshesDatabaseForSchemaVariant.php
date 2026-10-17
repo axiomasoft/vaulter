@@ -46,7 +46,6 @@ trait RefreshesDatabaseForSchemaVariant
             $config->get('vaulter.ids'),
             $config->get('vaulter.database'),
             $config->get('vaulter.tenancy.enabled'),
-            $config->get('vaulter.features'),
         ]);
 
         if (self::$databaseSchema !== $schema) {

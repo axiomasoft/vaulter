@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Repositories\Activity\ActivityReadRepository;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;

@@ -15,7 +15,7 @@ use Vaulter\Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class);
 
 it('SEC-R14 system bypasses ACL within scope for each public operation category', function (OperationKind $kind, Ability $ability): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'own');
     $context = DriveContext::system(drive: $drive, reason: 'maintenance');

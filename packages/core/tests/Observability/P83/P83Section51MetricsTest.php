@@ -67,8 +67,8 @@ it('records vaulter_tree_query_duration_seconds for search queries', function ()
 it('records vaulter_tree_cte_anchors when grant filtering resolves subtree anchors', function (): void {
     LoadTier::set('S');
 
-    config()->set('vaulter.features.grants', true);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.grants', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
 
     app()->forgetInstance(NodeReadRepository::class);
 

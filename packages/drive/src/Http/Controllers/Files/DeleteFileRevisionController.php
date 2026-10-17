@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Http\Controllers\Files;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vaulter\Attributes\Internal;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Delete a revision that is neither the head nor kept forever (Manage), releasing its bytes. */
 #[Internal]

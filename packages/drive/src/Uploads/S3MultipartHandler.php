@@ -16,8 +16,8 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Drive\Support\AssembleSizeBucket;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
-use Vaulter\Support\AssembleSizeBucket;
 use Vaulter\Support\LoadTier;
 
 /**

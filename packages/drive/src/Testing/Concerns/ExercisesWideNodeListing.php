@@ -22,7 +22,7 @@ trait ExercisesWideNodeListing
     protected function assertWideNodeListing(): void
     {
         Storage::fake('local');
-        config()->set('vaulter.access.permission_driver', 'database');
+        config()->set('vaulter-drive.access.permission_driver', 'database');
         $actor = AccessTestHelpers::user();
         $this->actingAs($actor);
 

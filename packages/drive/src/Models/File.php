@@ -11,15 +11,15 @@ use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
  * The mutable 1:1 handle for a kind=file node: it owns the
  * version history and caches the head's mime/size. Swappable via
- * configuration key vaulter.models.file.
+ * configuration key vaulter-drive.models.file.
  *
  * @property int|string      $id
  * @property int|string|null $tenant_id

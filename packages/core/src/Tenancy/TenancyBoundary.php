@@ -15,6 +15,7 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Tenancy\ShareTenantContext;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Support\Identity;
 

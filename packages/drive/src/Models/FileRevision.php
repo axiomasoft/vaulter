@@ -15,6 +15,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Database\Factories\FileRevisionFactory;
+use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Content\ScanUtcDateTime;
@@ -22,13 +23,12 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
  * An immutable file version: a monotonic number per file
  * pointing at a content-addressed blob (or a chunk manifest). The version ↔ blob
  * edges in v_file_revision_blobs carry the media pins (D23). Swappable via
- * configuration key vaulter.models.file_revision.
+ * configuration key vaulter-drive.models.file_revision.
  *
  * @property int                  $scan_admission_sequence
  * @property CarbonImmutable|null $quarantined_at

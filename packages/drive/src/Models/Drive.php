@@ -23,7 +23,7 @@ use Vaulter\Support\Concerns\HasStableMorphAlias;
 /**
  * An ownable, polymorphic disk container: one storage row is a
  * disk root mounted on ANY host entity through the owner_type/owner_id morph
- * . Swappable — point configuration key vaulter.models.drive at a subclass to add
+ * . Swappable — point configuration key vaulter-drive.models.drive at a subclass to add
  * tenant scoping or extra behaviour.
  *
  * @property int             $scan_admission_sequence

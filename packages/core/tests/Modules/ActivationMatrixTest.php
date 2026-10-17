@@ -228,10 +228,10 @@ it('builds the services of an active module only when something asks for them', 
 });
 
 it('refuses a misconfigured active module at boot and boots the same configuration while it is off', function (): void {
-    $config = ['vaulter.access.permission_driver' => 'no-such-driver'];
+    $config = ['vaulter-drive.access.permission_driver' => 'no-such-driver'];
 
     expect(fn () => FreshApplication::boot($config))
-        ->toThrow(InvalidConfigurationException::class, 'Unknown vaulter.access.permission_driver "no-such-driver"');
+        ->toThrow(InvalidConfigurationException::class, 'Unknown vaulter-drive.access.permission_driver "no-such-driver"');
 
     $app = FreshApplication::boot([...$config, 'vaulter.modules' => ['drive' => false]]);
 

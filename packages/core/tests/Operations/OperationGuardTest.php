@@ -20,7 +20,7 @@ use Vaulter\ValueObjects\Access\Actor;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(fn () => config()->set('vaulter.access.permission_driver', 'database'));
+beforeEach(fn () => config()->set('vaulter-drive.access.permission_driver', 'database'));
 
 it('conceals a hidden node before checking the requested ability', function (): void {
     $drive = AccessTestHelpers::storage();
@@ -57,8 +57,8 @@ it('requires both the workspace gate and parent Create permission', function ():
     $driver->shouldReceive('resolve')->andReturn(null);
     $driver->shouldReceive('canCreateIn')->andReturn(false);
     app()->instance(PermissionDriver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.no_create', PermissionDriver::class);
-    config()->set('vaulter.access.permission_driver', 'no_create');
+    config()->set('vaulter-drive.access.permission_drivers.no_create', PermissionDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'no_create');
     app()->forgetInstance(PermissionDriverManager::class);
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorizeCreate(context: $context, parent: $node))->toThrow(PermissionDeniedException::class);

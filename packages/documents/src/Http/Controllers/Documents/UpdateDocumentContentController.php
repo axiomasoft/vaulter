@@ -9,8 +9,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\UpdateDocumentContentRequest;
 use Vaulter\Documents\Http\Resources\DocumentResponses;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * Replace a document's content (Edit). If-Match is required and is compared with the

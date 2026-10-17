@@ -34,7 +34,7 @@ use Vaulter\Drive\Tests\TestCase;
 uses(TestCase::class, DatabaseMigrations::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->drive = DriveTestHelpers::drive();
     $this->shared = $this->drive->folders()->create('shared');
     $this->hidden = $this->drive->folders()->create('hidden');
@@ -189,7 +189,7 @@ it('(i) pages by limit and advances the cursor over entries the reader cannot se
 });
 
 it('refuses a limit outside 1..max_page_size', function (int $limit): void {
-    config()->set('vaulter.changes.max_page_size', 50);
+    config()->set('vaulter-drive.changes.max_page_size', 50);
 
     $this->reader->changes()->list($this->cursor, limit: $limit);
 })->with([0, 51])->throws(InvalidArgumentException::class);

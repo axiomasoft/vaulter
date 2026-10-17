@@ -68,7 +68,7 @@ final class AccessTestHelpers
      */
     public static function folder(Drive $storage, ?Node $parent, string $name, bool $inheritGrants = true): Node
     {
-        $model = config('vaulter.models.node');
+        $model = config('vaulter-drive.models.node');
 
         /** @var Node $node */
         $node = new $model;
@@ -97,7 +97,7 @@ final class AccessTestHelpers
     ): NodeGrant {
         $subjectType ??= (new TestUser)->getMorphClass();
 
-        $model = config('vaulter.models.grant');
+        $model = config('vaulter-drive.models.grant');
 
         /** @var NodeGrant $grant */
         $grant = new $model;

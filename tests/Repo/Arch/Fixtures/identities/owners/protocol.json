@@ -231,21 +231,9 @@
         },
         {
             "match": "prefix",
-            "value": "morph:Vaulter\\Testing\\Contracts\\PermissionFixture",
-            "owner": "drive",
-            "why": "permission-driver contract tests exercise the drive access model"
-        },
-        {
-            "match": "prefix",
             "value": "morph:Vaulter\\ValueObjects\\Access\\",
             "owner": "drive",
             "why": "access values"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget",
-            "owner": "drive",
-            "why": "Activity -> drive"
         },
         {
             "match": "prefix",
@@ -279,21 +267,9 @@
         },
         {
             "match": "prefix",
-            "value": "serialized:config:vaulter.access.",
-            "owner": "drive",
-            "why": "permission drivers -> drive"
-        },
-        {
-            "match": "prefix",
             "value": "serialized:config:vaulter.ids.",
             "owner": "core",
             "why": "id strategies are kernel"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.models.",
-            "owner": "drive",
-            "why": "the model registry names drive models"
         },
         {
             "match": "exact",
@@ -312,18 +288,6 @@
             "value": "serialized:config:vaulter.models.webhook_",
             "owner": "webhooks",
             "why": "webhook models"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.profiles.",
-            "owner": "drive",
-            "why": "Profiles -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.sharing.",
-            "owner": "drive",
-            "why": "Sharing -> drive"
         },
         {
             "match": "prefix",

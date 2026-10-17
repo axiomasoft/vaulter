@@ -50,7 +50,7 @@ use Vaulter\ValueObjects\Operations\TenantRef;
  */
 uses(TestCase::class, DatabaseMigrations::class);
 
-beforeEach(fn () => config()->set('vaulter.access.permission_driver', 'database'));
+beforeEach(fn () => config()->set('vaulter-drive.access.permission_driver', 'database'));
 
 function idemRows(): int
 {

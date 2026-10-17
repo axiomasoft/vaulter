@@ -60,17 +60,26 @@ arch('the protocol controllers use the session repository only to find a session
     ->expect(['Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController', 'Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController'])
     ->not->toUse(['Vaulter\Actions', 'Vaulter\Drive\Actions', 'Vaulter\Repositories']);
 
+// Http\Support (ContentResponder, the id resolvers) is the HTTP infrastructure the controllers delegate to.
+const DRIVE_V1_EDGE_NAMESPACES = [
+    'Vaulter\Drive\Http\Controllers', 'Vaulter\Drive\Http\Resources', 'Vaulter\Drive\Http\Requests', 'Vaulter\Drive\Http\Middleware',
+];
+
 arch('no drive controller or resource asks the AccessResolver itself')
-    ->expect(['Vaulter\Drive\Http'])
+    ->expect(DRIVE_V1_EDGE_NAMESPACES)
     ->not->toUse(AccessResolver::class);
 
 arch('drive controllers hand out bytes only through the ContentResponder')
-    ->expect(['Vaulter\Drive\Http'])
+    ->expect(DRIVE_V1_EDGE_NAMESPACES)
     ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Drive\Content\ContentDelivery']);
 
 it('streams nothing and mints no storage URL in the drive HTTP layer', function (): void {
     $offenders = [];
     foreach ((new Finder)->files()->in(dirname(__DIR__, 2).'/src/Http')->name('*.php') as $file) {
+        // The ContentResponder is the one class that turns a delivery into a response.
+        if ($file->getRelativePathname() === 'Support/ContentResponder.php') {
+            continue;
+        }
         if (preg_match('/temporaryUrl\s*\(|streamDownload\s*\(|new\s+StreamedResponse\b/', $file->getContents()) === 1) {
             $offenders[] = $file->getRelativePathname();
         }

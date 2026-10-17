@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Testing\Fixtures\TestUser;
 
@@ -21,7 +21,7 @@ use Vaulter\Testing\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     // The feed endpoints authorise via the real grant resolver (View on the scope).
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 

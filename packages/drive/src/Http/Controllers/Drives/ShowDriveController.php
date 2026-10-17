@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Http\Resources\DriveResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 
 /** A drive's meta and quota, for a caller who can see its root folder. */
 #[Internal]

@@ -114,7 +114,7 @@ it('uploads under the open driver in a host test (recipes guide)', function (): 
 
     // [recipe:testing-open-driver]
     // In a Pest test, force the open driver for the duration of the test.
-    config()->set('vaulter.access.permission_driver', 'null'); // non-production only
+    config()->set('vaulter-drive.access.permission_driver', 'null'); // non-production only
 
     $drive = Vaulter::drive($task)->actingAs($user);
     $node = $drive->files()->upload(UploadSource::fromString('hello', 'note.txt'));

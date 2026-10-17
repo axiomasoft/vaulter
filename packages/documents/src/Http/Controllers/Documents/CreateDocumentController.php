@@ -10,8 +10,8 @@ use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\CreateDocumentRequest;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Contracts\DriveHandle;
-use Vaulter\Http\Resources\Drive\NodeResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Resources\Drive\NodeResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 
 /** Create a document under a folder (Create in the parent; the drive root when no parent is given). */
 #[Internal]

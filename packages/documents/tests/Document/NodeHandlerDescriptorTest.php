@@ -10,9 +10,9 @@ use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Contracts\Handlers\NodePresenter;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Http\Resources\Drive\NodeResource;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Http\Resources\Drive\NodeResource;
 
 /**
  * The presentation embedded in the node payload (§4.5 / §5 / M4a): the client routes a
@@ -77,7 +77,7 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
     // A pdf file node resolves to the preview handler off its persisted mime_type.
     $drive = DocumentTestHelpers::drive();
 
-    $model = config('vaulter.models.node');
+    $model = config('vaulter-drive.models.node');
     /** @var Node $node */
     $node = new $model;
     app(VaulterDatabase::class)->write(fn () => $node->forceFill([
@@ -100,7 +100,7 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
 it('presents docx, md and xlsx FILES as preview/download, never editable (V34)', function (string $name, string $mime): void {
     $drive = DocumentTestHelpers::drive();
 
-    $model = config('vaulter.models.node');
+    $model = config('vaulter-drive.models.node');
     /** @var Node $node */
     $node = new $model;
     app(VaulterDatabase::class)->write(fn () => $node->forceFill([

@@ -9,8 +9,8 @@ use Illuminate\Http\Response;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * Delete a trashed node for good (Delete). Only what is in the trash can be purged

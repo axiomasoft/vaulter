@@ -32,7 +32,7 @@ it('loads document defaults under their owner and contributes a kind presenter, 
         ->and(config('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class)
         ->and(config('vaulter-documents.types'))->toBe([RichTextDocumentType::class, MarkdownDocumentType::class])
         ->and(config('vaulter-documents.default_type'))->toBe('vaulter/rich-text')
-        ->and(config('vaulter.handlers'))->toBe([])
+        ->and(config('vaulter-drive.handlers'))->toBe([])
         ->and(config('vaulter-documents.exporters'))->toBe([HtmlExporter::class, MarkdownExporter::class]);
 
     // The drive contributes the file handlers; the documents module only a presenter for its kind.

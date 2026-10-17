@@ -786,7 +786,7 @@
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
             "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
             "throttle:vaulter-public",
-            "Vaulter\\Http\\Middleware\\ResolveShareToken"
+            "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
         ]
     },
     {
@@ -804,7 +804,7 @@
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
             "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
             "throttle:vaulter-public",
-            "Vaulter\\Http\\Middleware\\ResolveShareToken"
+            "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
         ]
     },
     {
@@ -822,7 +822,7 @@
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
             "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
             "throttle:vaulter-public",
-            "Vaulter\\Http\\Middleware\\ResolveShareToken"
+            "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
         ]
     },
     {

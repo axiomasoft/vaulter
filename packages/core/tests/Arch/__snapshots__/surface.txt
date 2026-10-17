@@ -37,23 +37,6 @@ Vaulter\Attributes\SpiKind api since 1.0 enum: string
   case Call = 'call'
   case Implement = 'implement'
 
-Vaulter\Configuration\AccessConfig api since 1.0 final readonly class
-  public function gateAbilityMap(): array
-  public function gateCreateAbility(): string
-  public function gateSuperAbility(): string
-  public function permissionDriver(): string
-  public function permissionDrivers(): array
-  public function spatieCreatePermission(): string
-  public function spatiePermissionMap(): array
-  public function spatieRoleSubjectType(): string
-  public function spatieSuperPermission(): string
-  public function spatieTeamSubjectType(): string
-  public function spatieTeamsEnabled(): bool
-
-Vaulter\Configuration\ChangesConfig api since 1.0 final readonly class
-  public function maxPageSize(): int
-  public function retentionDays(): int
-
 Vaulter\Configuration\ConfigNormalizer api since 1.0 final class
   public function normalize(Illuminate\Contracts\Config\Repository $config, array $packageDefaults): void
   public function packageDefaults(): array
@@ -71,19 +54,11 @@ Vaulter\Configuration\DatabaseConfig api since 1.0 final readonly class
   public function tablePrefix(): string
   public function writeGuard(): bool
 
-Vaulter\Configuration\DownloadsConfig api since 1.0 final readonly class
-  public function deliveryMode(): string
-  public function directTtlSeconds(): int
-  public function inlineMimeTypes(): array
-
 Vaulter\Configuration\IdsConfig api since 1.0 final readonly class
   public function hostKeys(): string
   public function strategies(): array
   public function strategy(): string
   public function usesUlids(): bool
-
-Vaulter\Configuration\ListingConfig api since 1.0 final readonly class
-  public function scanBudget(): int
 
 Vaulter\Configuration\ObservabilityConfig api since 1.0 final readonly class
   public function enabled(): bool
@@ -112,11 +87,6 @@ Vaulter\Configuration\RoutesConfig api since 1.0 final readonly class
   public function uploadsRateLimit(): int
   public function versionedPrefix(): string
 
-Vaulter\Configuration\ScanConfig api since 1.0 final readonly class
-  public function globalSpec(): Vaulter\Drive\Content\ScanPolicySpec
-  public function mode(): Vaulter\Media\Enums\Cas\ScanMode
-  public function scanner(): ?string
-
 Vaulter\Configuration\ScheduleConfig api since 1.0 final readonly class
   public function enabled(): bool
   public function frequencies(string $root, array $keys): array
@@ -125,36 +95,25 @@ Vaulter\Configuration\ScheduleFrequency api since 1.0 final readonly class
   public function applyTo(Illuminate\Console\Scheduling\Event $event): Illuminate\Console\Scheduling\Event
   public static function parse(string $key, mixed $value): ?self
 
-Vaulter\Configuration\SharingConfig api since 1.0 final readonly class
-  public function defaultTtlHours(): int
-  public function maxTtlHours(): int
-  public function prefixLength(): int
-  public function tokenGenerator(): string
-  public function urlBase(): string
-
 Vaulter\Configuration\TenancyConfig api since 1.0 final readonly class
   public const string COLUMN = 'tenant_id'
   public function enabled(): bool
   public function resolver(): string
 
 Vaulter\Configuration\VaulterConfig api since 1.0 final readonly class
-  public function access(): Vaulter\Configuration\AccessConfig
-  public function changes(): Vaulter\Configuration\ChangesConfig
+  public function access(): Vaulter\Drive\Configuration\AccessConfig
+  public function changes(): Vaulter\Drive\Configuration\ChangesConfig
   public function database(): Vaulter\Configuration\DatabaseConfig
-  public function defaultProfile(): string
-  public function downloads(): Vaulter\Configuration\DownloadsConfig
-  public function drivesDeleteWithOwner(): bool
+  public function downloads(): Vaulter\Drive\Configuration\DownloadsConfig
   public function featureEnabled(string $feature, ?string $profile = null): bool
-  public function handlers(): array
   public function ids(): Vaulter\Configuration\IdsConfig
-  public function listing(): Vaulter\Configuration\ListingConfig
+  public function listing(): Vaulter\Drive\Configuration\ListingConfig
   public function model(string $key): string
   public function observability(): Vaulter\Configuration\ObservabilityConfig
   public function outbox(): Vaulter\Configuration\OutboxConfig
-  public function profileProviders(): array
   public function routes(): Vaulter\Configuration\RoutesConfig
-  public function scan(): Vaulter\Configuration\ScanConfig
-  public function sharing(): Vaulter\Configuration\SharingConfig
+  public function scan(): Vaulter\Drive\Configuration\ScanConfig
+  public function sharing(): Vaulter\Drive\Configuration\SharingConfig
   public function tenancy(): Vaulter\Configuration\TenancyConfig
   public function webhooks(): Vaulter\Configuration\WebhooksConfig
 
@@ -262,33 +221,6 @@ Vaulter\Doctor\DoctorSeverity api since 1.0 enum: string
   case Ok = 'ok'
   case Warning = 'warning'
 
-Vaulter\Enums\Events\DriveEventType api since 1.0 enum: string implements Vaulter\Events\EventTypeContract uses Vaulter\Events\Concerns\DescribesEvent
-  case DriveArchived = 'drive.archived'
-  case DriveCreated = 'drive.created'
-  case DriveDeleted = 'drive.deleted'
-  case DriveUnarchived = 'drive.unarchived'
-  case FileRevisionAdded = 'file.revision_added'
-  case FileRevisionDeleted = 'file.revision_deleted'
-  case FileUploaded = 'file.uploaded'
-  case FolderCreated = 'folder.created'
-  case GrantCreated = 'grant.created'
-  case GrantRevoked = 'grant.revoked'
-  case InheritanceChanged = 'access.inheritance_changed'
-  case NodeCopied = 'node.copied'
-  case NodeMoved = 'node.moved'
-  case NodePurged = 'node.purged'
-  case NodeRenamed = 'node.renamed'
-  case NodeRestored = 'node.restored'
-  case NodeTrashed = 'node.trashed'
-  case NodeUpdated = 'node.updated'
-  case ShareCreated = 'share.created'
-  case ShareRevoked = 'share.revoked'
-  case ShareRotated = 'share.rotated'
-  case ShareUpdated = 'share.updated'
-  case UploadAborted = 'upload.aborted'
-  case UploadExpired = 'upload.expired'
-  case UploadInitiated = 'upload.initiated'
-
 Vaulter\Events\Concerns\DescribesEvent spi:implement since 1.0 trait uses Vaulter\Support\Concerns\HasLabel
   public function spec(): Vaulter\Attributes\EventSpec
 
@@ -299,14 +231,14 @@ Vaulter\Events\DomainEvent api since 1.0 abstract readonly class
   public Carbon\CarbonImmutable $occurredAt
   public function __construct(Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?Carbon\CarbonImmutable $occurredAt = null)
   public function activityContext(): array
-  public function activityTarget(): ?Vaulter\ValueObjects\Events\ActivityTarget
+  public function activityTarget(): ?Vaulter\Drive\ValueObjects\Events\ActivityTarget
   public abstract function data(): array
   protected static function id(mixed $value): ?string
   public function isExternal(): bool
-  public function journal(): ?Vaulter\ValueObjects\Events\JournalEffect
+  public function journal(): ?Vaulter\Drive\ValueObjects\Events\JournalEffect
   protected static function nodeScope(Vaulter\Drive\Models\Node $node): Vaulter\ValueObjects\Events\EventScope
   protected static function nodeSubject(Vaulter\Drive\Models\Node $node): Vaulter\ValueObjects\Events\EventSubject
-  protected static function nodeUpsert(Vaulter\Drive\Models\Node $node, bool $subtree = false, ?int $sequence = null): Vaulter\ValueObjects\Events\JournalEffect
+  protected static function nodeUpsert(Vaulter\Drive\Models\Node $node, bool $subtree = false, ?int $sequence = null): Vaulter\Drive\ValueObjects\Events\JournalEffect
   public abstract function scope(): Vaulter\ValueObjects\Events\EventScope
   public function sequence(): ?int
   public abstract function subject(): Vaulter\ValueObjects\Events\EventSubject
@@ -789,22 +721,8 @@ Vaulter\Support\Identity api since 1.0 final class
 Vaulter\Tenancy\Tenancy api since 1.0 final class
   public static function without(Closure $callback): mixed
 
-Vaulter\Testing\Contracts\FileHandlerContractTests api since 1.0 final class
-  public function assertFileHandlerContract(Vaulter\Drive\Contracts\Handlers\FileHandler $handler, ?Vaulter\Drive\ValueObjects\Handlers\FileDescriptor $claimed = null): void
-
 Vaulter\Testing\Contracts\ModuleContractTests api since 1.0 final class
   public function assertModuleContract(Vaulter\Modules\VaulterModule $module, array $requires = []): void
-
-Vaulter\Testing\Contracts\PermissionDriverContractTests api since 1.0 final class
-  public function assertPermissionDriverContract(Vaulter\Drive\Access\AccessResolver $resolver, Illuminate\Contracts\Auth\Access\Authorizable $actor, Vaulter\Drive\Models\Node $parent, Vaulter\Drive\Models\Node $child): void
-  public function assertSameDecisionsAsReference(Vaulter\Drive\Contracts\Access\PermissionDriver $driver, ?Vaulter\Testing\Contracts\PermissionFixture $fixture = null): void
-
-Vaulter\Testing\Contracts\PermissionFixture api since 1.0 final readonly class
-  public Illuminate\Contracts\Auth\Access\Authorizable $actor
-  public Vaulter\Drive\Models\Node $child
-  public Vaulter\Drive\Models\Drive $drive
-  public Vaulter\Drive\Models\Node $parent
-  public static function build(?Illuminate\Database\Eloquent\Model $owner = null, ?Illuminate\Contracts\Auth\Access\Authorizable $actor = null): self
 
 Vaulter\Testing\FakeMetricsRecorder api since 1.0 final class implements Vaulter\Contracts\Observability\MetricsRecorder
   public function assertCounter(string $name, ?array $labels = null): void

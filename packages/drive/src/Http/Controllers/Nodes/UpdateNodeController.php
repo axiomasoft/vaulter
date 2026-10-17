@@ -11,9 +11,9 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Drive\Http\Requests\Nodes\RenameNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
 
 /** Rename a node (Edit); If-Match is required; idempotent by Idempotency-Key. */
 #[Internal]

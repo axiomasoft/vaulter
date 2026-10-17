@@ -12,8 +12,8 @@ use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests;
 use Vaulter\Drive\Testing\Fixtures\Access\RoleStubDriver;
-use Vaulter\Testing\Contracts\PermissionDriverContractTests;
 
 /**
  * The PermissionDriver contract test (master plan §12 / H.2): ANY driver that only
@@ -29,8 +29,8 @@ use Vaulter\Testing\Contracts\PermissionDriverContractTests;
 function bindDriver(PermissionDriver $driver): AccessResolver
 {
     app()->instance($driver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.contract', $driver::class);
-    config()->set('vaulter.access.permission_driver', 'contract');
+    config()->set('vaulter-drive.access.permission_drivers.contract', $driver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'contract');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 

@@ -21,7 +21,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
 });
 
 it('grants access through the action and dispatches NodeGrantCreated', function (): void {

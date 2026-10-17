@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Api;
-use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Tenancy\TenantResolver;
@@ -25,6 +24,7 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
+use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Contracts\DriveHandle;
@@ -55,7 +55,7 @@ use Vaulter\Testing\InteractsWithVaulter;
  *
  * ```php
  * (new ScanLifecycleContractTests)->assertScanLifecycleContract(
- *     static fn () => Config::set('vaulter.scan.mode', 'all_content'),
+ *     static fn () => Config::set('vaulter-drive.scan.mode', 'all_content'),
  *     $user,
  * );
  * ```
@@ -91,7 +91,7 @@ final class ScanLifecycleContractTests
 
         $this->scanner = new FakeContentScanner($spec->scannerKey, $spec->scannerVersion);
         // The scanner is the capability the host names in config: the class, and the very object behind it.
-        Config::set('vaulter.scan.scanner', FakeContentScanner::class);
+        Config::set('vaulter-drive.scan.scanner', FakeContentScanner::class);
         App::instance(FakeContentScanner::class, $this->scanner);
         App::instance(ContentScanner::class, $this->scanner);
         (new class
@@ -162,14 +162,14 @@ final class ScanLifecycleContractTests
         $this->settle();
         Assert::assertTrue($this->readable($drive, $node), 'New content must be readable once it is clean.');
 
-        $previous = Config::get('vaulter.scan');
-        Config::set('vaulter.scan.mode', ScanMode::Off->value);
+        $previous = Config::get('vaulter-drive.scan');
+        Config::set('vaulter-drive.scan.mode', ScanMode::Off->value);
         try {
             [$legacyDrive, $legacy] = $this->uploaded($actor, 'legacy proof '.bin2hex(random_bytes(4)));
         } finally {
-            Config::set('vaulter.scan', $previous);
+            Config::set('vaulter-drive.scan', $previous);
         }
-        Assert::assertSame(ScanStatus::NotRequired->value, $this->status($legacy), 'Legacy content could not be created: the suite switches vaulter.scan.mode off for it, so the host must read the mode from there.');
+        Assert::assertSame(ScanStatus::NotRequired->value, $this->status($legacy), 'Legacy content could not be created: the suite switches vaulter-drive.scan.mode off for it, so the host must read the mode from there.');
 
         $model = $legacyDrive->model();
         App::make(VaulterDatabase::class)->write(static fn () => App::make(ScanPolicyResolver::class)->initialize($model, DriveContext::system($model, 'scan lifecycle contract')));

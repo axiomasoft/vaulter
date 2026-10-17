@@ -80,7 +80,7 @@ it('refuses an invalid transition with invalid_drive_state', function (): void {
 });
 
 it('an archived drive refuses mutations, purge and creation of non-system actors but still reads', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $folder = $system->folders()->create('Docs');
     $trashed = $system->folders()->create('Old');
@@ -106,8 +106,8 @@ it('an archived drive refuses mutations, purge and creation of non-system actors
 });
 
 it('an archived drive refuses grant and share changes', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.share_links', true);
     $system = DriveTestHelpers::drive();
     $folder = $system->folders()->create('Docs');
     $user = DriveTestHelpers::actor($system, 32);
@@ -118,7 +118,7 @@ it('an archived drive refuses grant and share changes', function (): void {
 });
 
 it('archive and unarchive need Manage on the root or the system actor', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $reader = new TestUser;
     $reader->forceFill(['id' => 33]);
@@ -135,7 +135,7 @@ it('archive and unarchive need Manage on the root or the system actor', function
 
 it('a drive being deleted is absent for users and the handle', function (): void {
     Queue::fake();
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $folder = $system->folders()->create('Docs');
     $user = DriveTestHelpers::actor($system, 35);

@@ -12,6 +12,9 @@ use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Access\PermissionDriverCatalog;
+use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
@@ -56,14 +59,14 @@ final readonly class ConfigValidator
         $config->outbox()->validate();
         $schedule = new ScheduleConfig($this->config);
         $schedule->enabled();
-        // changes_prune is the drive's core-located key (D39); the webhooks keys belong to WebhooksModule.
-        $schedule->frequencies('vaulter', ['changes_prune', IdempotencySchedule::KEY, ...OutboxSchedule::KEYS, ...WebhooksSchedule::KEYS]);
+        // The webhooks keys belong to WebhooksModule.
+        $schedule->frequencies('vaulter', [IdempotencySchedule::KEY, ...OutboxSchedule::KEYS, ...WebhooksSchedule::KEYS]);
         $ttl = $this->config->get('vaulter.idempotency.ttl_seconds', IdempotencyClaim::DEFAULT_TTL_SECONDS);
         if (!is_int($ttl) || $ttl < 1) {
             throw new InvalidConfigurationException('[Vaulter] vaulter.idempotency.ttl_seconds must be a positive integer (seconds).');
         }
 
-        // The drive sections located in the core config are its active path (D39): validated only while it is active.
+        // The drive sections live in vaulter-drive: validated only while the drive is active.
         if ($app->make(Kernel::class)->isActive('drive')) {
             $this->validateDrive($config, $app);
         }
@@ -75,9 +78,9 @@ final readonly class ConfigValidator
         $key = $access->permissionDriver();
         $drivers = (new PermissionDriverCatalog($access, $app->make(Kernel::class)))->classes();
         if (!isset($drivers[$key])) {
-            throw new InvalidConfigurationException('[Vaulter] Unknown vaulter.access.permission_driver "'.$key.'".');
+            throw new InvalidConfigurationException('[Vaulter] Unknown '.AccessConfig::PERMISSION_DRIVER_KEY.' "'.$key.'".');
         }
-        self::assertImplements('vaulter.access.permission_drivers.'.$key, $drivers[$key], PermissionDriver::class);
+        self::assertImplements(AccessConfig::PERMISSION_DRIVERS_KEY.'.'.$key, $drivers[$key], PermissionDriver::class);
         if ($app->environment('production') && is_a($drivers[$key], NonProductionPermissionDriver::class, true)) {
             throw new InvalidConfigurationException('[Vaulter] Non-production permission driver "'.$key.'" is forbidden in production.');
         }
@@ -101,22 +104,23 @@ final readonly class ConfigValidator
             $config->model($key);
         }
 
+        $driveConfig = new DriveConfig($this->config);
         try {
             if ($app->resolved(ProfileRegistry::class)) {
                 $registry = $app->make(ProfileRegistry::class);
                 // Standalone validation may use a different Repository than the booted app.
                 if ($config !== $app->make(VaulterConfig::class)) {
-                    $registry = ProfileRegistry::fromConfig($config->profileProviders(), $config->defaultProfile(), $app);
+                    $registry = ProfileRegistry::fromConfig($driveConfig->profileProviders(), $driveConfig->defaultProfile(), $app);
                 }
             } else {
-                $registry = ProfileRegistry::fromConfig($config->profileProviders(), $config->defaultProfile(), $app);
+                $registry = ProfileRegistry::fromConfig($driveConfig->profileProviders(), $driveConfig->defaultProfile(), $app);
                 $app->instance(ProfileRegistry::class, $registry);
             }
             $policy = new ProfilePolicy($config, $this->config, $registry, new ScanConfig($this->config), $app->make(Kernel::class));
             foreach ($registry->all() as $profile) {
                 $policy->validate($profile);
                 $profileKey = $profile->getPermissionDriver() ?? $access->permissionDriver();
-                self::assertImplements('vaulter.access.permission_drivers.'.$profileKey, $drivers[$profileKey] ?? '', PermissionDriver::class);
+                self::assertImplements(AccessConfig::PERMISSION_DRIVERS_KEY.'.'.$profileKey, $drivers[$profileKey] ?? '', PermissionDriver::class);
                 if ($app->environment('production') && is_a($drivers[$profileKey], NonProductionPermissionDriver::class, true)) {
                     throw new InvalidConfigurationException('[Vaulter] Non-production profile permission driver "'.$profileKey.'" is forbidden in production.');
                 }

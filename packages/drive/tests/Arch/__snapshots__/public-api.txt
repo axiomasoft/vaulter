@@ -140,6 +140,28 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
   isComplete(\Vaulter\Drive\Models\Uploads\UploadSession $session): bool
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
 
+Vaulter\Drive\Configuration\AccessConfig
+  gateAbilityMap(): array
+  gateCreateAbility(): string
+  gateSuperAbility(): string
+  permissionDriver(): string
+  permissionDrivers(): array
+  spatieCreatePermission(): string
+  spatiePermissionMap(): array
+  spatieRoleSubjectType(): string
+  spatieSuperPermission(): string
+  spatieTeamSubjectType(): string
+  spatieTeamsEnabled(): bool
+
+Vaulter\Drive\Configuration\ChangesConfig
+  maxPageSize(): int
+  retentionDays(): int
+
+Vaulter\Drive\Configuration\DownloadsConfig
+  deliveryMode(): string
+  directTtlSeconds(): int
+  inlineMimeTypes(): array
+
 Vaulter\Drive\Configuration\DriveConfig
   allowedMimeTypes(): array
   blockedExtensions(): array
@@ -161,16 +183,31 @@ Vaulter\Drive\Configuration\DriveConfig
   trashRetentionDays(): int
   validateScanWork(bool $requireBroker = false): void
 
+Vaulter\Drive\Configuration\ListingConfig
+  scanBudget(): int
+
+Vaulter\Drive\Configuration\ScanConfig
+  globalSpec(): \Vaulter\Drive\Content\ScanPolicySpec
+  mode(): \Vaulter\Media\Enums\Cas\ScanMode
+  scanner(): ?string
+
+Vaulter\Drive\Configuration\SharingConfig
+  defaultTtlHours(): int
+  maxTtlHours(): int
+  prefixLength(): int
+  tokenGenerator(): string
+  urlBase(): string
+
 Vaulter\Drive\Events\Access\NodeGrantCreated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Access\NodeGrant $grant
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -179,14 +216,14 @@ Vaulter\Drive\Events\Access\NodeGrantCreated
 
 Vaulter\Drive\Events\Access\NodeGrantRevoked
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Access\ValueObjects\Subject $subject
   readonly \Vaulter\Drive\Models\Node $node
@@ -197,14 +234,14 @@ Vaulter\Drive\Events\Access\NodeGrantRevoked
 
 Vaulter\Drive\Events\Access\NodeInheritanceChanged
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -214,14 +251,14 @@ Vaulter\Drive\Events\Access\NodeInheritanceChanged
 
 Vaulter\Drive\Events\Drives\DriveArchived
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Drive $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -230,14 +267,14 @@ Vaulter\Drive\Events\Drives\DriveArchived
 
 Vaulter\Drive\Events\Drives\DriveCreated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Drive $storage
   readonly \Vaulter\Drive\Models\Node $root
@@ -248,14 +285,14 @@ Vaulter\Drive\Events\Drives\DriveCreated
 Vaulter\Drive\Events\Drives\DriveDeleted
   __construct(string $driveId, string $ownerType, string $ownerId, int|null|string $tenantId, string $profile, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int|null|string $tenantId
@@ -268,14 +305,14 @@ Vaulter\Drive\Events\Drives\DriveDeleted
 
 Vaulter\Drive\Events\Drives\DriveUnarchived
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Drive $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -284,14 +321,14 @@ Vaulter\Drive\Events\Drives\DriveUnarchived
 
 Vaulter\Drive\Events\Files\FileRevisionAdded
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\File $file
   readonly \Vaulter\Drive\Models\FileRevision $version
@@ -303,14 +340,14 @@ Vaulter\Drive\Events\Files\FileRevisionAdded
 
 Vaulter\Drive\Events\Files\FileRevisionDeleted
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\File $file
   readonly \Vaulter\Drive\Models\Node $node
@@ -323,14 +360,14 @@ Vaulter\Drive\Events\Files\FileRevisionDeleted
 
 Vaulter\Drive\Events\Files\FileUploaded
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\File $file
   readonly \Vaulter\Drive\Models\FileRevision $version
@@ -341,14 +378,14 @@ Vaulter\Drive\Events\Files\FileUploaded
 
 Vaulter\Drive\Events\Nodes\FolderCreated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -357,14 +394,14 @@ Vaulter\Drive\Events\Nodes\FolderCreated
 
 Vaulter\Drive\Events\Nodes\NodeCopied
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Node $copy
   readonly \Vaulter\Drive\Models\Node $source
@@ -374,14 +411,14 @@ Vaulter\Drive\Events\Nodes\NodeCopied
 
 Vaulter\Drive\Events\Nodes\NodeMoved
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -393,14 +430,14 @@ Vaulter\Drive\Events\Nodes\NodeMoved
 Vaulter\Drive\Events\Nodes\NodePurged
   __construct(int|string $storageId, array $nodeIds, int $freedBytes, int|null|string $tenantId, string $profile, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly array $nodeIds
@@ -413,14 +450,14 @@ Vaulter\Drive\Events\Nodes\NodePurged
 
 Vaulter\Drive\Events\Nodes\NodeRenamed
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -431,14 +468,14 @@ Vaulter\Drive\Events\Nodes\NodeRenamed
 
 Vaulter\Drive\Events\Nodes\NodeRestored
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -447,14 +484,14 @@ Vaulter\Drive\Events\Nodes\NodeRestored
 
 Vaulter\Drive\Events\Nodes\NodeTrashed
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -463,14 +500,14 @@ Vaulter\Drive\Events\Nodes\NodeTrashed
 
 Vaulter\Drive\Events\Nodes\NodeUpdated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -479,14 +516,14 @@ Vaulter\Drive\Events\Nodes\NodeUpdated
 
 Vaulter\Drive\Events\Sharing\NodeShareCreated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -495,14 +532,14 @@ Vaulter\Drive\Events\Sharing\NodeShareCreated
 
 Vaulter\Drive\Events\Sharing\NodeShareRevoked
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -511,14 +548,14 @@ Vaulter\Drive\Events\Sharing\NodeShareRevoked
 
 Vaulter\Drive\Events\Sharing\NodeShareRotated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -527,14 +564,14 @@ Vaulter\Drive\Events\Sharing\NodeShareRotated
 
 Vaulter\Drive\Events\Sharing\NodeShareUpdated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -544,14 +581,14 @@ Vaulter\Drive\Events\Sharing\NodeShareUpdated
 
 Vaulter\Drive\Events\Uploads\UploadAborted
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -560,14 +597,14 @@ Vaulter\Drive\Events\Uploads\UploadAborted
 
 Vaulter\Drive\Events\Uploads\UploadExpired
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -576,14 +613,14 @@ Vaulter\Drive\Events\Uploads\UploadExpired
 
 Vaulter\Drive\Events\Uploads\UploadInitiated
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
   isExternal(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\DriveEventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor

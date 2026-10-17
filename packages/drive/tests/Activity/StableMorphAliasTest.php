@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Activity\ActivityTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Testing\Fixtures\Panels\FakeProject;
 use Vaulter\Testing\Fixtures\TestUser;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\VaulterServiceProvider;
 
 /**
@@ -48,11 +48,11 @@ it('writes the alias as the target type of an activity row', function (): void {
     expect($row->target_type)->toBe('vaulter.node');
 });
 
-it('gives the host subclass configured in vaulter.models the same alias', function (): void {
+it('gives the host subclass configured in vaulter-drive.models the same alias', function (): void {
     $node = new class extends Node {};
     $drive = new class extends Drive {};
-    config()->set('vaulter.models.node', $node::class);
-    config()->set('vaulter.models.drive', $drive::class);
+    config()->set('vaulter-drive.models.node', $node::class);
+    config()->set('vaulter-drive.models.drive', $drive::class);
 
     expect($node->getMorphClass())->toBe('vaulter.node')
         ->and($drive->getMorphClass())->toBe('vaulter.drive')

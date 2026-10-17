@@ -90,7 +90,7 @@ final class DriveTestHelpers
         }
 
         /** @var class-string<Node> $class */
-        $class = config('vaulter.models.node');
+        $class = config('vaulter-drive.models.node');
 
         return $class::query()->findOrFail(is_string($node) ? $node : $node->id);
     }

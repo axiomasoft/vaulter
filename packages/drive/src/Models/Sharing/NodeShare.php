@@ -15,11 +15,11 @@ use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
  * A bearer share-link on a node — the SEPARATE public sharing
@@ -34,7 +34,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * raw token is returned to the creator exactly once at mint time and is never
  * re-derivable from this row.
  *
- * Swappable — point configuration key vaulter.models.node_share at a subclass for tenant
+ * Swappable — point configuration key vaulter-drive.models.node_share at a subclass for tenant
  * scoping or extra behaviour.
  *
  * @property int|string      $id

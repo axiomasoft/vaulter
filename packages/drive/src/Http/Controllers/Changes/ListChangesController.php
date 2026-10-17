@@ -9,9 +9,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Changes\NodeChange;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
-use Vaulter\Http\Requests\Changes\ListChangesRequest;
-use Vaulter\Http\Resources\Changes\ChangePageResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Requests\Changes\ListChangesRequest;
+use Vaulter\Drive\Http\Resources\Changes\ChangePageResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 
 /**
  * The changes after a cursor, projected for the reader. The abilities of every node in

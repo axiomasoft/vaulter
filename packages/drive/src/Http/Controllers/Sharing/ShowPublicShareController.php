@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException;
-use Vaulter\Http\Middleware\ResolveShareToken;
-use Vaulter\Http\Resources\Sharing\SharedNodeResource;
+use Vaulter\Drive\Http\Middleware\ResolveShareToken;
+use Vaulter\Drive\Http\Resources\Sharing\SharedNodeResource;
 
 /**
  * The node behind a share link. Public routes authorize only by the link's own role on

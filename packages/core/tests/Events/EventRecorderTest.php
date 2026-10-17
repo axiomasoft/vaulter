@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxEnvelope;
@@ -162,7 +162,7 @@ it('does not notify listeners of an attempt whose commit failed and was retried'
 });
 
 it('writes the activity row only while its feature is on, and the outbox whatever modules are active', function (bool $activity, bool $webhooks): void {
-    config()->set('vaulter.features.activity', $activity);
+    config()->set('vaulter-drive.features.activity', $activity);
     WebhookTestHelpers::switchModule($this->app, $webhooks);
 
     eventRecorderRename($this, 'beta');

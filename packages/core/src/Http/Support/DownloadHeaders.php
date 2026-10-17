@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\DownloadsConfig;
+use Vaulter\Drive\Configuration\DownloadsConfig;
 
 /**
  * The ONE shared response-header builder for a file download, used by BOTH PHP-stream download surfaces — the identity

@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Http\Controllers\Access;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Http\Requests\Access\CreateGrantRequest;
-use Vaulter\Http\Resources\Access\GrantResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Requests\Access\CreateGrantRequest;
+use Vaulter\Drive\Http\Resources\Access\GrantResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 #[Internal]
 final readonly class CreateGrantController

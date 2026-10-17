@@ -83,14 +83,14 @@ final class LoadServiceProvider extends ServiceProvider
         // Must land BEFORE VaulterServiceProvider::boot(), where routes are gated by
         // feature flags (same ordering constraint as E2eServiceProvider).
         config([
-            'vaulter.features.grants' => true,
-            'vaulter.features.activity' => true,
-            'vaulter.features.share_links' => true,
+            'vaulter-drive.features.grants' => true,
+            'vaulter-drive.features.activity' => true,
+            'vaulter-drive.features.share_links' => true,
             'vaulter-drive.uploads.resumable.enabled' => true,
             'vaulter-documents.comments.enabled' => true,
             'vaulter-documents.collaboration.enabled' => true,
 
-            'vaulter.access.permission_driver' => 'database',
+            'vaulter-drive.access.permission_driver' => 'database',
             'vaulter.ids.strategy' => env('VAULTER_LOAD_ID_STRATEGY', 'bigint'),
             'vaulter.routes.middleware.authenticated' => [
                 'api',
@@ -372,7 +372,7 @@ final class LoadServiceProvider extends ServiceProvider
 
     private static function grantOwnerOnce(Node $root, int $actorId): void
     {
-        $grantModel = config('vaulter.models.grant');
+        $grantModel = config('vaulter-drive.models.grant');
         $subjectType = (new TestUser)->getMorphClass();
 
         $exists = $grantModel::query()

@@ -22,7 +22,7 @@ final class CursorExpiredException extends VaulterException implements ProblemEx
     {
         return new self(
             '[Vaulter] The change cursor has expired. '
-            .'Why: entries after it were removed by the retention prune (vaulter.changes.retention_days). '
+            .'Why: entries after it were removed by the retention prune (vaulter-drive.changes.retention_days). '
             .'Fix: take a new startCursor(), list the drive again and replace the local copy. '
             .'Docs: '.self::docs('cursor-expired'),
         );

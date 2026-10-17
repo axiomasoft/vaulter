@@ -66,7 +66,7 @@ final class MakePermissionDriverCommand extends Command
         $this->components->task(sprintf('permission driver app/Vaulter/PermissionDrivers/%s.php', $class));
         $this->components->task(sprintf('Test tests/Unit/Vaulter/%sTest.php', $class));
         $this->newLine();
-        $this->line("Add it to <info>config/vaulter.php</info> under 'access.permission_drivers' (key => class):");
+        $this->line("Add it to <info>config/vaulter-drive.php</info> under 'access.permission_drivers' (key => class):");
         $this->line(sprintf("    '%s' => \\%s::class,", $slug, $namespace.'\\'.$class));
 
         return self::SUCCESS;

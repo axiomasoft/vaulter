@@ -58,7 +58,7 @@ it('requires Sanctum on protected routes and accepts an authenticated actor', fu
 });
 
 it('serves a valid public share without a Sanctum token', function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $node = DocumentTestHelpers::drive()->root();
     ShareTestHelpers::share($node, token: 'middleware-stack-public-token');
     $this->getJson('api/vaulter/v1/shares/middleware-stack-public-token')->assertOk();

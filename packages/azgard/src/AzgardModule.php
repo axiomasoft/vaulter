@@ -18,7 +18,7 @@ use Vaulter\Modules\VaulterModule;
 
 /**
  * The AzGuard bridge module (D22): Auto, because it is an adapter the host still selects explicitly in its
- * config (`vaulter.access.permission_driver = 'azgard'`). It extends the drive's access, so it requires the
+ * config (`vaulter-drive.access.permission_driver = 'azgard'`). It extends the drive's access, so it requires the
  * drive module.
  */
 #[Internal]
@@ -53,7 +53,7 @@ final class AzgardModule implements VaulterModule
             ->defineCapability(AzgardGuard::class, Cardinality::OptionalSingle)
             ->providesFromConfig(AzgardGuard::class, 'vaulter-azgard.guard')
             ->slot(DoctorCheck::class, AzgardDependencyCheck::class, 'azgard.dependency', key: 'azgard.dependency')
-            // `vaulter.access.permission_driver = 'azgard'` selects it; the host still picks the lane explicitly.
+            // `vaulter-drive.access.permission_driver = 'azgard'` selects it; the host still picks the lane explicitly.
             ->slot(PermissionDriver::class, AzgardPermissionDriver::class, 'azgard.permission', key: 'azgard');
     }
 }

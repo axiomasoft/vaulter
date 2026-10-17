@@ -29,7 +29,7 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  * still vetoes through the AccessResolver, since the driver only RAISES access).
  */
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'azgard');
+    config()->set('vaulter-drive.access.permission_driver', 'azgard');
 });
 
 /**

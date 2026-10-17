@@ -157,8 +157,8 @@ function r07dInstall(int $bits, bool $workspaceCreate): void
         bits: $bits,
         workspaceCreate: $workspaceCreate,
     ));
-    config()->set('vaulter.access.permission_drivers.r07d', R07dBitsDriver::class);
-    config()->set('vaulter.access.permission_driver', 'r07d');
+    config()->set('vaulter-drive.access.permission_drivers.r07d', R07dBitsDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'r07d');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }
@@ -351,7 +351,7 @@ it('authorizes the requested parent, not the storage root', function (): void {
 
     // Writer on the folder and the file only; nothing on the root. The driver lane is
     // node-blind, so this case runs on the database driver's stored grants.
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     AccessTestHelpers::grant(Node::query()->findOrFail($folderId), RoleRegistry::WRITER, subjectId: 41);

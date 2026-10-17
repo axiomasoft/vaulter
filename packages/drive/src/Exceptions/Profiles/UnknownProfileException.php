@@ -11,7 +11,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * Thrown when a storage panel is looked up by an id that is not registered in
- * the ProfileRegistry (configuration key vaulter.profiles.providers plus the default panel).
+ * the ProfileRegistry (configuration key vaulter-drive.profiles.providers plus the default panel).
  */
 #[Api]
 final class UnknownProfileException extends VaulterException implements ProblemException
@@ -31,7 +31,7 @@ final class UnknownProfileException extends VaulterException implements ProblemE
 
         return new self(
             "Unknown Vaulter storage panel [{$name}]. Registered: {$available}. "
-            .'Fix: register a ProfileProvider FQCN under configuration key vaulter.profiles.providers.',
+            .'Fix: register a ProfileProvider FQCN under configuration key vaulter-drive.profiles.providers.',
         );
     }
 

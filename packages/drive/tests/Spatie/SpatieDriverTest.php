@@ -157,7 +157,7 @@ it('overrides through a configurable super-permission', function (): void {
     $folder = AccessTestHelpers::folder($storage, null, 'super');
 
     // No ACL grant; the super-permission short-circuits to full access.
-    config()->set('vaulter.access.spatie.super_permission', 'vaulter.super');
+    config()->set('vaulter-drive.access.spatie.super_permission', 'vaulter.super');
 
     expect(app(AccessResolver::class)->can($user, Ability::Manage, $folder))->toBeTrue();
 });

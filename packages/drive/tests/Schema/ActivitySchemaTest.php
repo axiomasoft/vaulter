@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
-use Vaulter\Enums\Events\DriveEventType;
 
 /**
  * The v_activity schema (§2.9 / M2c-activity): every column exists and the table is

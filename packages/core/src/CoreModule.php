@@ -28,7 +28,6 @@ use Vaulter\Doctor\Checks\OutboxLeasesCheck;
 use Vaulter\Doctor\Checks\OutboxSettleWindowCheck;
 use Vaulter\Doctor\Checks\QueueCheck;
 use Vaulter\Doctor\Checks\SchedulerCheck;
-use Vaulter\Doctor\Checks\SchemaIntegrityCheck;
 use Vaulter\Doctor\Checks\SchemaKeyTypesCheck;
 use Vaulter\Doctor\Checks\SchemaTablesCheck;
 use Vaulter\Doctor\Checks\TenancyCheck;
@@ -67,7 +66,6 @@ final class CoreModule implements OwnsSchema, VaulterModule
         'core.database.connection' => DatabaseConnectionCheck::class,
         'core.schema.tables' => SchemaTablesCheck::class,
         'core.schema.key_types' => SchemaKeyTypesCheck::class,
-        'core.schema.integrity' => SchemaIntegrityCheck::class,
         'core.config.valid' => ConfigValidCheck::class,
         'core.tenancy' => TenancyCheck::class,
         'core.queue' => QueueCheck::class,

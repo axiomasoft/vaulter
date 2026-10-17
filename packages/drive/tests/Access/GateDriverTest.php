@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  * by selecting the 'gate' driver and defining the matching Laravel gates.
  */
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'gate');
+    config()->set('vaulter-drive.access.permission_driver', 'gate');
 });
 
 it('grants an absolute override from a super-admin gate', function (): void {

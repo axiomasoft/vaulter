@@ -7,8 +7,8 @@ namespace Vaulter\Drive\Http\Controllers\Access;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vaulter\Attributes\Internal;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Revoke one grant; a grant of another node is as unknown as a missing one. */
 #[Internal]

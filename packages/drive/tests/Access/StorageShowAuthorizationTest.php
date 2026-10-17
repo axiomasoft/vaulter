@@ -33,7 +33,7 @@ use Vaulter\Testing\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
@@ -55,7 +55,7 @@ function actAsStorageGuest(): void
  */
 function useNullPermissionDriver(): void
 {
-    config()->set('vaulter.access.permission_driver', 'null');
+    config()->set('vaulter-drive.access.permission_driver', 'null');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 }
@@ -94,8 +94,8 @@ it('refuses a rooted storage show when an administrative block overrides the roo
     // The root has no ancestor, so no inheritance boundary can cut it off; the host's
     // administrative block is what still closes it.
     AccessTestHelpers::grant($root, RoleRegistry::OWNER, scope: GrantScope::Subtree);
-    config()->set('vaulter.access.permission_drivers.blocked', ProfileDenyDriver::class);
-    config()->set('vaulter.access.permission_driver', 'blocked');
+    config()->set('vaulter-drive.access.permission_drivers.blocked', ProfileDenyDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'blocked');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 

@@ -87,7 +87,7 @@ it('V08 a deleted queued actor fails without promotion to system or invoking nex
 it('V08 rehydrates a user through Auth and evaluates changed permissions at execution', function (): void {
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     app()->instance(TenantResolver::class, new MutableTenantResolver);
     $drive = AccessTestHelpers::storage();
     $actor = AccessTestHelpers::user(31);

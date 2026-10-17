@@ -16,11 +16,11 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Access\UnknownRoleException;
+use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
  * A positive per-node grant: a subject morph (user|role|team — a registered alias)
@@ -29,7 +29,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * The AccessResolver unions the roles of every grant that applies with the
  * PermissionDriver's decisions.
  *
- * Swappable — point configuration key vaulter.models.grant at a subclass for tenant scope.
+ * Swappable — point configuration key vaulter-drive.models.grant at a subclass for tenant scope.
  *
  * @property int|string      $id
  * @property int|string|null $tenant_id

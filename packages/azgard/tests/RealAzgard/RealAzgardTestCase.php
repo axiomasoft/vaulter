@@ -49,7 +49,7 @@ abstract class RealAzgardTestCase extends Orchestra
      */
     protected function defineEnvironment($app): void
     {
-        $app['config']->set('vaulter.access.permission_driver', 'azgard');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'azgard');
 
         // AzGuard identities are type aliases, never class names: the host maps its
         // subject and workspace models.

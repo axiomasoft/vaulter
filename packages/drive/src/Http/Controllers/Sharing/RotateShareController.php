@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Http\Controllers\Sharing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\SharingConfig;
-use Vaulter\Http\Resources\Sharing\MintedShareResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Configuration\SharingConfig;
+use Vaulter\Drive\Http\Resources\Sharing\MintedShareResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Replace a link's token: the old token and its visits stop working at once. */
 #[Internal]

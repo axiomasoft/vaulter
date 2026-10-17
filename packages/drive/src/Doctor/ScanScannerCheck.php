@@ -47,7 +47,7 @@ final readonly class ScanScannerCheck implements DoctorCheck
         }
 
         if (!$this->container->make(Kernel::class)->capabilities()->has(ContentScanner::class)) {
-            return [DoctorFinding::error(code: 'drive.scan.scanner_missing', message: 'A scan policy is enabled but no ContentScanner is configured.', hint: 'set vaulter.scan.scanner to a ContentScanner class', evidence: ['policies' => count($enabled)])];
+            return [DoctorFinding::error(code: 'drive.scan.scanner_missing', message: 'A scan policy is enabled but no ContentScanner is configured.', hint: 'set vaulter-drive.scan.scanner to a ContentScanner class', evidence: ['policies' => count($enabled)])];
         }
         try {
             $scanner = $this->container->make(ContentScanner::class);
@@ -60,9 +60,9 @@ final readonly class ScanScannerCheck implements DoctorCheck
         foreach ($enabled as $spec) {
             $evidence = ['predicate' => $spec->predicateKey, 'scanner_key' => $spec->scannerKey, 'scanner_version' => $spec->scannerVersion, 'policy_version' => $spec->policyVersion];
             if ($spec->scannerKey === 'none' || $spec->scannerVersion === 'none') {
-                $findings[] = DoctorFinding::error(code: 'drive.scan.identity_missing', message: 'The scan policy "'.$spec->predicateKey.'" has no scanner_key or scanner_version.', hint: 'set vaulter.scan.scanner_key and vaulter.scan.scanner_version to the scanner\'s own identity', evidence: $evidence);
+                $findings[] = DoctorFinding::error(code: 'drive.scan.identity_missing', message: 'The scan policy "'.$spec->predicateKey.'" has no scanner_key or scanner_version.', hint: 'set vaulter-drive.scan.scanner_key and vaulter-drive.scan.scanner_version to the scanner\'s own identity', evidence: $evidence);
             } elseif ($identity !== [$spec->scannerKey, $spec->scannerVersion]) {
-                $findings[] = DoctorFinding::error(code: 'drive.scan.identity_mismatch', message: 'The bound scanner answers to another key or version than the scan policy "'.$spec->predicateKey.'" names.', hint: 'align vaulter.scan.scanner_key / scanner_version with the scanner', evidence: $evidence + ['bound_key' => $identity[0], 'bound_version' => $identity[1]]);
+                $findings[] = DoctorFinding::error(code: 'drive.scan.identity_mismatch', message: 'The bound scanner answers to another key or version than the scan policy "'.$spec->predicateKey.'" names.', hint: 'align vaulter-drive.scan.scanner_key / scanner_version with the scanner', evidence: $evidence + ['bound_key' => $identity[0], 'bound_version' => $identity[1]]);
             }
         }
 

@@ -16,7 +16,7 @@ it('applies the selected profile create gate to folder options and canonical fol
     $this->actingAs(DriveBuilder::user());
     $drive = DriveBuilder::storage();
     $node = DriveBuilder::folder($drive, 'source');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $registry = new ProfileRegistry;
     $registry->register((new Profile)->key('default')->permissionDriver('gate'));
     $registry->freeze();

@@ -24,7 +24,7 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
  * asserts its PRESENCE, which is exactly the delta the fix introduces.
  */
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
 });
 
 it('AccessResolver::can() compiles the ancestor CTE with a withMaxDepth bound (F-P4.2-01)', function (): void {

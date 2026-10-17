@@ -407,7 +407,7 @@ describe('committed fixtures', function (): void {
         $http = id_fixture('http');
         $items = array_column($http['items'], null, 'id');
 
-        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter.features.share_links', 'vaulter-documents.collaboration.enabled'])
+        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter-drive.features.share_links', 'vaulter-documents.collaboration.enabled'])
             ->and($http['flags'])->not->toHaveKey('vaulter.features.webhooks')
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['requires'])->toBe(['vaulter.modules.webhooks'])
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['default_registered'] ?? false)->toBeFalse()
@@ -437,7 +437,7 @@ describe('committed fixtures', function (): void {
             ->and($items['problem:rate_limited']['owner'])->toBe('core')
             ->and($items['problem:permission_denied']['owner'])->toBe('core')
             ->and($items['serialized:queue:Vaulter\Jobs\Webhooks\DeliverWebhook']['owner'])->toBe('webhooks')
-            ->and($items['serialized:config:vaulter.models.node']['fqcns'])->toBe(['Vaulter\Drive\Models\Node'])
+            ->and($items['serialized:config:vaulter-drive.models.node']['fqcns'])->toBe(['Vaulter\Drive\Models\Node'])
             ->and($items['format:cas-key']['manual'])->toBeTrue()
             ->and($items['format:jwt-claims-room']['owner'])->toBe('collaboration');
     });

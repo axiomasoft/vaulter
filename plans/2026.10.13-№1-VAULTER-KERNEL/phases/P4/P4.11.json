@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.11",
   "title": "Drive D: kernel-срез drive, конфиг vaulter-drive (65 ключей), маршруты drive из core",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`move-types --owner=drive --rule-file=core-kernel` (45: Configuration-секции drive, Http Middleware/Problems/Requests/Resources/Support drive, AccessRegistrar, DriveSliceRegistrar, ShareTenantContext, Testing contracts drive, DriveEventType, ValueObjects\\Events, Doctor-проверки drive); `packages/core/routes/drive.php` сливается с `packages/drive/routes/drive.php`; 65 ключей `vaulter.*` с владельцем drive → `vaulter-drive.*`; VaulterConfig теряет config-root ключи drive.",
   "why": "D10, D39 временное снимается: DriveModule больше не регистрирует файлы из core. Риск: порядок регистрации маршрутов и middleware (golden routes-v1.json), config-ключи в доках/тестах/e2e/load.",
   "scope": {
@@ -259,6 +259,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T01:47:19Z",
+    "finished_at": "2026-10-17T02:30:13Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "65 ключей vaulter.* → vaulter-drive.*, routes слиты в drive, 40 типов перенесены",
+    "deviations": [
+      "VaulterConfig остаётся тонким делегатом на DriveConfig до P4.16 (страж запрещает core читать vaulter-drive.*); routes-v1.json golden: FQCN middleware ResolveShareToken"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T02:30:13Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T02:30:13Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T02:30:13Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T02:30:13Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T02:30:13Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T02:30:13Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T02:30:13Z"
 }

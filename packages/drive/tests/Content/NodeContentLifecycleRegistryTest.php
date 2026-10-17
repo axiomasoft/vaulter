@@ -8,9 +8,9 @@ use Vaulter\Drive\Contracts\PurgeOnlyContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
+use Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
-use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 
 function registryLifecycle(NodeKind $kind, bool $purgeOnly = false): NodeContentLifecycle
 {

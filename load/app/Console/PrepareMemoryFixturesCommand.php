@@ -515,7 +515,7 @@ final class PrepareMemoryFixturesCommand extends Command
 
     private static function grantOwnerOnce(Node $root, int $actorId): void
     {
-        $grantModel = config('vaulter.models.grant');
+        $grantModel = config('vaulter-drive.models.grant');
         $subjectType = (new TestUser)->getMorphClass();
 
         $exists = $grantModel::query()

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Vaulter\FileHandlers\Csv;
 use Illuminate\Support\Facades\File;
-use Vaulter\Testing\Contracts\FileHandlerContractTests;
+use Vaulter\Drive\Testing\Contracts\FileHandlerContractTests;
 
 beforeEach(function (): void {
     File::deleteDirectory(app_path('Vaulter'));
@@ -17,7 +17,7 @@ afterEach(function (): void {
 });
 
 it('writes a handler and a contract test that both lint, and the handler passes its contract', function (): void {
-    $handlersBefore = config('vaulter.handlers');
+    $handlersBefore = config('vaulter-drive.handlers');
 
     $this->artisan('vaulter:make:file-handler', ['name' => 'Csv'])
         ->expectsOutputToContain('Csv::class')
@@ -31,7 +31,7 @@ it('writes a handler and a contract test that both lint, and the handler passes 
         expect($code)->toBe(0);
     }
     expect(File::get($test))->toContain('FileHandlerContractTests')
-        ->and(config('vaulter.handlers'))->toBe($handlersBefore);
+        ->and(config('vaulter-drive.handlers'))->toBe($handlersBefore);
 
     require_once $class;
     $handler = new Csv;

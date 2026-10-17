@@ -143,9 +143,9 @@ it('SEC-CLEANUP-revoked-result requires fresh View and rejects another actor and
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $other, session: $session->refresh()))->toThrow(PermissionDeniedException::class);
     $foreign = DriveContext::system(UploadTestHelpers::storage(), 'foreign upload');
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $foreign, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
-    config()->set('vaulter.access.permission_driver', 'null');
+    config()->set('vaulter-drive.access.permission_driver', 'null');
     $node->forceFill(['trashed_at' => now(), 'trash_root_id' => $node->getKey()])->save();
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
     expect(FileRevision::query()->count())->toBe(1);
@@ -182,7 +182,7 @@ it('SEC-CLEANUP-backoff follows the bounded retry schedule without re-ingest', f
 });
 
 it('SEC-C03-replay-ability replays a committed completion only while the actor still holds the mutation right', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $session = assembledIdempotencyUpload();
     $user = AccessTestHelpers::user(993);
     $session->forceFill(['created_by' => $user->getKey(), 'metadata' => ['actor_type' => $user->getMorphClass()]])->save();

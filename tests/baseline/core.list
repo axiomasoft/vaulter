@@ -124,7 +124,6 @@ P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Data_ne
 P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Database_Factories_never_uses_the_Testing_namespaces
 P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Database_never_uses_the_Testing_namespaces
 P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Doctor_never_uses_the_Testing_namespaces
-P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Enums_never_uses_the_Testing_namespaces
 P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Events_never_uses_the_Testing_namespaces
 P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Exceptions_never_uses_the_Testing_namespaces
 P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Facades_never_uses_the_Testing_namespaces
@@ -177,16 +176,16 @@ P\Packages\core\tests\Configuration\ConfigNormalizerTest::__pest_evaluable_it_re
 P\Packages\core\tests\Configuration\ConfigNormalizerTest::__pest_evaluable_it_retains_default_exporter_formats_alongside_host_overrides"([])"
 P\Packages\core\tests\Configuration\ConfigNormalizerTest::__pest_evaluable_it_retains_module_defaults_registered_before_the_core_provider
 P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_caps_the_secret_rotation_overlap_at_seven_days
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.access.permission_driver', 'missing')"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.access.permission_driver', 42)"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.access.permission_dri…tabase', 'stdClass')"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.handlers', [Closure Object ()])"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.models.node', 'stdClass')"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.models.node', 42)"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.profiles.default', 'stdClass')"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.profiles.providers', ['Vaulter\Drive\Testing\Fixture…rofile'])"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.profiles.providers', ['stdClass'])"
-P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.sharing.token_generator', 'stdClass')"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.access.permission_driver', 'missing')"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.access.permission_driver', 42)"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.access.permissi…tabase', 'stdClass')"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.handlers', [Closure Object ()])"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.models.node', 'stdClass')"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.models.node', 42)"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.profiles.default', 'stdClass')"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.profiles.providers', ['Vaulter\Drive\Testing\Fixture…rofile'])"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.profiles.providers', ['stdClass'])"
+P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter-drive.sharing.token_generator', 'stdClass')"
 P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.webhooks.delivery.url_guard', 'stdClass')"
 P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.webhooks.relay.fanout_chunk', 'all')"
 P\Packages\core\tests\Configuration\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration"('vaulter.webhooks.relay.fanout_chunk', 0)"
@@ -234,8 +233,10 @@ P\Packages\core\tests\Configuration\ScheduleFrequencyTest::__pest_evaluable_it_r
 P\Packages\core\tests\Configuration\ScheduleFrequencyTest::__pest_evaluable_it_requires_a_boolean_enabled_flag
 P\Packages\core\tests\Configuration\ScheduleFrequencyTest::__pest_evaluable_it_treats_null_as_a_disabled_task
 P\Packages\core\tests\Configuration\VaulterConfigTest::__pest_evaluable_it_adds_the_package_middleware_exactly_once_to_each_route_middleware_stack
+P\Packages\core\tests\Configuration\VaulterConfigTest::__pest_evaluable_it_keeps_no_drive_section_in_the_kernel_config_root__P4_11_
 P\Packages\core\tests\Configuration\VaulterConfigTest::__pest_evaluable_it_names_every_table_by_the_configured_prefix_and_the_canonical_entity__ignoring_table__names
 P\Packages\core\tests\Configuration\VaulterConfigTest::__pest_evaluable_it_reads_repository_changes_without_caching_values
+P\Packages\core\tests\Configuration\VaulterConfigTest::__pest_evaluable_it_resolves_the_model_keys_of_the_core_from_vaulter_models_and_those_of_the_drive_from_vaulter_drive_models
 P\Packages\core\tests\Console\CommandsReferenceCommandTest::__pest_evaluable_it_exits_1_from___check_without_writing_when_the_page_drifted
 P\Packages\core\tests\Console\CommandsReferenceCommandTest::__pest_evaluable_it_renders_one_row_per_registered_vaulter_command_with_its_synopsis
 P\Packages\core\tests\Console\CommandsReferenceCommandTest::__pest_evaluable_it_replaces_only_the_block_between_the_markers

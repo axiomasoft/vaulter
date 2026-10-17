@@ -14,7 +14,7 @@ final class ProfileCreateGate
 {
     public static function install(bool $allow): void
     {
-        config()->set('vaulter.access.permission_driver', 'database');
+        config()->set('vaulter-drive.access.permission_driver', 'database');
         $registry = new ProfileRegistry;
         $registry->register((new Profile)->key('default')->permissionDriver('gate'));
         $registry->freeze();

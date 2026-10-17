@@ -10,8 +10,8 @@ use Vaulter\Drive\Data\MoveOptions;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Nodes\MoveNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Move a node into another folder of its drive (Move, Create there); If-Match is required. */
 #[Internal]

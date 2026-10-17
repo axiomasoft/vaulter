@@ -18,7 +18,6 @@
                 "packages/core/src/Configuration",
                 "packages/core/src/Contracts",
                 "packages/core/src/Data",
-                "packages/core/src/Enums",
                 "packages/core/src/Exceptions",
                 "packages/core/src/Facades",
                 "packages/core/src/Models",

@@ -879,7 +879,7 @@
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
@@ -980,42 +980,42 @@
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.access.permission_drivers.database",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.database",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.access.permission_drivers.gate",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.gate",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.access.permission_drivers.spatie",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.spatie",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.models.grant",
+            "id": "serialized:config:vaulter-drive.models.grant",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.models.node_share",
+            "id": "serialized:config:vaulter-drive.models.node_share",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.sharing.token_generator",
+            "id": "serialized:config:vaulter-drive.sharing.token_generator",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
@@ -1118,35 +1118,35 @@
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_backfill_run",
+            "id": "serialized:config:vaulter-drive.models.scan_backfill_run",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_evidence",
+            "id": "serialized:config:vaulter-drive.models.scan_evidence",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_obligation",
+            "id": "serialized:config:vaulter-drive.models.scan_obligation",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_policy_state",
+            "id": "serialized:config:vaulter-drive.models.scan_policy_state",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_request",
+            "id": "serialized:config:vaulter-drive.models.scan_request",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         }
@@ -1165,8 +1165,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::InheritanceChanged"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::InheritanceChanged"
             },
             "subject": "node"
         },
@@ -1322,8 +1322,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::DriveArchived"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::DriveArchived"
             },
             "subject": "drive"
         },
@@ -1341,8 +1341,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::DriveCreated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::DriveCreated"
             },
             "subject": "drive"
         },
@@ -1357,8 +1357,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::DriveDeleted"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::DriveDeleted"
             },
             "subject": "drive"
         },
@@ -1373,8 +1373,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::DriveUnarchived"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::DriveUnarchived"
             },
             "subject": "drive"
         },
@@ -1393,8 +1393,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::FileRevisionAdded"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::FileRevisionAdded"
             },
             "subject": "node"
         },
@@ -1412,8 +1412,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::FileRevisionDeleted"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::FileRevisionDeleted"
             },
             "subject": "node"
         },
@@ -1432,8 +1432,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::FileUploaded"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::FileUploaded"
             },
             "subject": "node"
         },
@@ -1450,8 +1450,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::FolderCreated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::FolderCreated"
             },
             "subject": "node"
         },
@@ -1472,8 +1472,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::GrantCreated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::GrantCreated"
             },
             "subject": "node"
         },
@@ -1491,8 +1491,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::GrantRevoked"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::GrantRevoked"
             },
             "subject": "node"
         },
@@ -1510,8 +1510,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeCopied"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeCopied"
             },
             "subject": "node"
         },
@@ -1529,8 +1529,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeMoved"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeMoved"
             },
             "subject": "node"
         },
@@ -1549,8 +1549,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodePurged"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodePurged"
             },
             "subject": "drive"
         },
@@ -1565,8 +1565,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeRenamed"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeRenamed"
             },
             "subject": "node"
         },
@@ -1583,8 +1583,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeRestored"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeRestored"
             },
             "subject": "node"
         },
@@ -1599,8 +1599,8 @@
                 "journal": "remove"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeTrashed"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeTrashed"
             },
             "subject": "node"
         },
@@ -1617,8 +1617,8 @@
                 "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeUpdated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeUpdated"
             },
             "subject": "node"
         },
@@ -1640,8 +1640,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::ShareCreated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::ShareCreated"
             },
             "subject": "share"
         },
@@ -1658,8 +1658,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::ShareRevoked"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::ShareRevoked"
             },
             "subject": "share"
         },
@@ -1676,8 +1676,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::ShareRotated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::ShareRotated"
             },
             "subject": "share"
         },
@@ -1695,8 +1695,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::ShareUpdated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::ShareUpdated"
             },
             "subject": "share"
         },
@@ -1714,8 +1714,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::UploadAborted"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::UploadAborted"
             },
             "subject": "upload"
         },
@@ -1733,8 +1733,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::UploadExpired"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::UploadExpired"
             },
             "subject": "upload"
         },
@@ -1752,8 +1752,8 @@
                 "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/DriveEventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::UploadInitiated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::UploadInitiated"
             },
             "subject": "upload"
         },
@@ -2120,6 +2120,16 @@
         {
             "call": "getMorphClass",
             "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Testing\\Contracts\\PermissionFixture::build#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Testing/Contracts/PermissionFixture.php",
+                "symbol": "Vaulter\\Drive\\Testing\\Contracts\\PermissionFixture::build"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
             "id": "morph:Vaulter\\Drive\\Testing\\Contracts\\ScanLifecycleContractTests::uploaded#getMorphClass",
             "owner": "drive",
             "source": {
@@ -2139,22 +2149,22 @@
         },
         {
             "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/ValueObjects/Events/ActivityTarget.php",
+                "symbol": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget::of"
+            }
+        },
+        {
+            "call": "getMorphClass",
             "calls": 2,
             "id": "morph:Vaulter\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
             "owner": "core",
             "source": {
                 "file": "packages/core/src/Tenancy/TenancyBoundary.php",
                 "symbol": "Vaulter\\Tenancy\\TenancyBoundary::assertOwner"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Testing\\Contracts\\PermissionFixture::build#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
-                "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::build"
             }
         },
         {
@@ -2185,16 +2195,6 @@
             "source": {
                 "file": "packages/core/src/ValueObjects/Access/OwnerRef.php",
                 "symbol": "Vaulter\\ValueObjects\\Access\\OwnerRef::ofModel"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/ValueObjects/Events/ActivityTarget.php",
-                "symbol": "Vaulter\\ValueObjects\\Events\\ActivityTarget::of"
             }
         },
         {
@@ -2238,8 +2238,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2310,8 +2310,8 @@
             "receipt": "never",
             "retryable": "with_backoff",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 423
         },
@@ -2334,8 +2334,8 @@
             "receipt": "never",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 410
         },
@@ -2418,8 +2418,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2430,13 +2430,13 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Registry\\DuplicateNodeContentLifecycleException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Registry\\DuplicateNodeContentLifecycleException",
             "id": "problem:duplicate_registration",
             "owner": "core",
             "receipt": "never",
@@ -2466,8 +2466,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 413
         },
@@ -2478,8 +2478,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2490,8 +2490,8 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -2526,8 +2526,8 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 400
         },
@@ -2538,8 +2538,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2562,8 +2562,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2574,8 +2574,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -2586,8 +2586,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -2658,8 +2658,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2670,8 +2670,8 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -2682,8 +2682,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2694,8 +2694,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2706,8 +2706,8 @@
             "receipt": "cacheable",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 412
         },
@@ -2718,8 +2718,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2742,8 +2742,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -2802,8 +2802,8 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 403
         },
@@ -2814,8 +2814,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 413
         },
@@ -2850,8 +2850,8 @@
             "receipt": "never",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2862,8 +2862,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2874,8 +2874,8 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -2886,8 +2886,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2910,8 +2910,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -2922,8 +2922,8 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -2934,8 +2934,8 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 401
         },
@@ -2946,8 +2946,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -2958,8 +2958,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2970,8 +2970,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -3006,8 +3006,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -3018,8 +3018,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -3030,8 +3030,8 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -3469,6 +3469,210 @@
             }
         },
         {
+            "config_key": "vaulter-drive.access.permission_drivers.database",
+            "fqcns": [
+                "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver"
+            ],
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.database",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.access.permission_drivers.gate",
+            "fqcns": [
+                "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver"
+            ],
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.gate",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.access.permission_drivers.null",
+            "fqcns": [
+                "Vaulter\\Drive\\Testing\\NullPermissionDriver"
+            ],
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.null",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.access.permission_drivers.spatie",
+            "fqcns": [
+                "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver"
+            ],
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.spatie",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.activity",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Activity\\Activity"
+            ],
+            "id": "serialized:config:vaulter-drive.models.activity",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.drive",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Drive"
+            ],
+            "id": "serialized:config:vaulter-drive.models.drive",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.file",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\File"
+            ],
+            "id": "serialized:config:vaulter-drive.models.file",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.file_revision",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\FileRevision"
+            ],
+            "id": "serialized:config:vaulter-drive.models.file_revision",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.file_revision_blob",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\FileRevisionBlob"
+            ],
+            "id": "serialized:config:vaulter-drive.models.file_revision_blob",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.grant",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Access\\NodeGrant"
+            ],
+            "id": "serialized:config:vaulter-drive.models.grant",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.node",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Node"
+            ],
+            "id": "serialized:config:vaulter-drive.models.node",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.node_share",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Sharing\\NodeShare"
+            ],
+            "id": "serialized:config:vaulter-drive.models.node_share",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_backfill_run",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_backfill_run",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_evidence",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_evidence",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_obligation",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanObligation"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_obligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_policy_state",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanPolicyState"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_policy_state",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_request",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanRequest"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_request",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "config_key": "vaulter-drive.models.upload_part",
             "fqcns": [
                 "Vaulter\\Drive\\Models\\Uploads\\UploadPart"
@@ -3486,6 +3690,30 @@
                 "Vaulter\\Drive\\Models\\Uploads\\UploadSession"
             ],
             "id": "serialized:config:vaulter-drive.models.upload_session",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.profiles.default",
+            "fqcns": [
+                "Vaulter\\Drive\\Profiles\\DefaultProfile"
+            ],
+            "id": "serialized:config:vaulter-drive.profiles.default",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.sharing.token_generator",
+            "fqcns": [
+                "Vaulter\\Drive\\Support\\RandomShareTokenGenerator"
+            ],
+            "id": "serialized:config:vaulter-drive.sharing.token_generator",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/config/vaulter-drive.php",
@@ -3541,54 +3769,6 @@
             }
         },
         {
-            "config_key": "vaulter.access.permission_drivers.database",
-            "fqcns": [
-                "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver"
-            ],
-            "id": "serialized:config:vaulter.access.permission_drivers.database",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.access.permission_drivers.gate",
-            "fqcns": [
-                "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver"
-            ],
-            "id": "serialized:config:vaulter.access.permission_drivers.gate",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.access.permission_drivers.null",
-            "fqcns": [
-                "Vaulter\\Testing\\NullPermissionDriver"
-            ],
-            "id": "serialized:config:vaulter.access.permission_drivers.null",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.access.permission_drivers.spatie",
-            "fqcns": [
-                "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver"
-            ],
-            "id": "serialized:config:vaulter.access.permission_drivers.spatie",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
             "config_key": "vaulter.ids.strategies.bigint",
             "fqcns": [
                 "Vaulter\\Schema\\AutoIncrementIds"
@@ -3625,168 +3805,12 @@
             }
         },
         {
-            "config_key": "vaulter.models.activity",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Activity\\Activity"
-            ],
-            "id": "serialized:config:vaulter.models.activity",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.drive",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Drive"
-            ],
-            "id": "serialized:config:vaulter.models.drive",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.file",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\File"
-            ],
-            "id": "serialized:config:vaulter.models.file",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.file_revision",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\FileRevision"
-            ],
-            "id": "serialized:config:vaulter.models.file_revision",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.file_revision_blob",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\FileRevisionBlob"
-            ],
-            "id": "serialized:config:vaulter.models.file_revision_blob",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.grant",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Access\\NodeGrant"
-            ],
-            "id": "serialized:config:vaulter.models.grant",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.node",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Node"
-            ],
-            "id": "serialized:config:vaulter.models.node",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.node_share",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Sharing\\NodeShare"
-            ],
-            "id": "serialized:config:vaulter.models.node_share",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
             "config_key": "vaulter.models.outbox",
             "fqcns": [
                 "Vaulter\\Events\\Outbox\\Models\\OutboxEvent"
             ],
             "id": "serialized:config:vaulter.models.outbox",
             "owner": "core",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_backfill_run",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun"
-            ],
-            "id": "serialized:config:vaulter.models.scan_backfill_run",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_evidence",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord"
-            ],
-            "id": "serialized:config:vaulter.models.scan_evidence",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_obligation",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Content\\ScanObligation"
-            ],
-            "id": "serialized:config:vaulter.models.scan_obligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_policy_state",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Content\\ScanPolicyState"
-            ],
-            "id": "serialized:config:vaulter.models.scan_policy_state",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_request",
-            "fqcns": [
-                "Vaulter\\Drive\\Models\\Content\\ScanRequest"
-            ],
-            "id": "serialized:config:vaulter.models.scan_request",
-            "owner": "drive",
             "source": {
                 "file": "packages/core/config/vaulter.php",
                 "symbol": "<file>"
@@ -3811,30 +3835,6 @@
             ],
             "id": "serialized:config:vaulter.models.webhook_endpoint",
             "owner": "webhooks",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.profiles.default",
-            "fqcns": [
-                "Vaulter\\Drive\\Profiles\\DefaultProfile"
-            ],
-            "id": "serialized:config:vaulter.profiles.default",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.sharing.token_generator",
-            "fqcns": [
-                "Vaulter\\Drive\\Support\\RandomShareTokenGenerator"
-            ],
-            "id": "serialized:config:vaulter.sharing.token_generator",
-            "owner": "drive",
             "source": {
                 "file": "packages/core/config/vaulter.php",
                 "symbol": "<file>"

@@ -21,7 +21,7 @@ use Vaulter\Testing\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     // Реальная выдача прав из грантов (база), а не открытый null-драйвер.
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
     config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 });

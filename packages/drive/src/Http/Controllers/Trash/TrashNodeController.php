@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Move a node and its subtree to the trash (Trash); If-Match is required. */
 #[Internal]

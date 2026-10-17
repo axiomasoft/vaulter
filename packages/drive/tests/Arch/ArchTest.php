@@ -126,7 +126,9 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
 
         // Testing/Contracts holds the contract suites a host runs against its own configuration;
         // like core's, they live with the testing kit rather than in the Contracts layer.
-        if (in_array($relative, ['Testing/Contracts', 'Testing/Http'], true)) {
+        // Enums/Events and ValueObjects/Events are the "Events" domain of the enums and value objects (the event types and
+        // the activity/journal values of the drive's sinks), not a technical layer nested under a domain.
+        if (in_array($relative, ['Testing/Contracts', 'Testing/Http', 'Enums/Events', 'ValueObjects/Events'], true)) {
             continue;
         }
 

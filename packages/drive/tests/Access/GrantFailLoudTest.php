@@ -31,7 +31,7 @@ function grantAction(): GrantNodeAccessAction
 
 // ── F-P1.2-01 (red-before: today the grant persists silently, no warning/throw).
 it('warns and throws when a role grant is written under the gate driver, F-P1.2-01', function (): void {
-    config()->set('vaulter.access.permission_driver', 'gate');
+    config()->set('vaulter-drive.access.permission_driver', 'gate');
 
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'role-grant-gate');
@@ -50,7 +50,7 @@ it('warns and throws when a role grant is written under the gate driver, F-P1.2-
 
 // ── F-P1.2-01: a team subject under gate trips the same guard.
 it('throws for a team subject under the gate driver, F-P1.2-01', function (): void {
-    config()->set('vaulter.access.permission_driver', 'gate');
+    config()->set('vaulter-drive.access.permission_driver', 'gate');
 
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'team-grant-gate');
@@ -65,7 +65,7 @@ it('throws for a team subject under the gate driver, F-P1.2-01', function (): vo
 
 // ── F-P1.2-01 control: a USER subject under gate is fine (no role enumeration needed).
 it('does not throw for a plain user subject under the gate driver, F-P1.2-01', function (): void {
-    config()->set('vaulter.access.permission_driver', 'gate');
+    config()->set('vaulter-drive.access.permission_driver', 'gate');
 
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'user-grant-gate');
@@ -87,8 +87,8 @@ it('does not throw for a plain user subject under the gate driver, F-P1.2-01', f
 // the overridden subjectsFor(), not the marker alone (red-before: today the marker
 // proxy throws for this working, documented path).
 it('does not throw for a role grant under an unmarked subclass that overrides subjectsFor, F-P1.2-01', function (): void {
-    config()->set('vaulter.access.permission_drivers.subclassed', SubclassedRoleDriver::class);
-    config()->set('vaulter.access.permission_driver', 'subclassed');
+    config()->set('vaulter-drive.access.permission_drivers.subclassed', SubclassedRoleDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'subclassed');
 
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'role-grant-subclass');
@@ -106,7 +106,7 @@ it('does not throw for a role grant under an unmarked subclass that overrides su
 // ── F-P1.2-01 control: the spatie lane enumerates role subjects, so a role grant is
 // accepted without a warning/throw.
 it('does not throw when a role grant is written under the spatie driver, F-P1.2-01', function (): void {
-    config()->set('vaulter.access.permission_driver', 'spatie');
+    config()->set('vaulter-drive.access.permission_driver', 'spatie');
 
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'role-grant-spatie');

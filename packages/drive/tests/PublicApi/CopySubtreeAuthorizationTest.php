@@ -37,7 +37,7 @@ use Vaulter\Facades\Vaulter;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->owner = DriveTestHelpers::host();
     $this->system = Vaulter::drive($this->owner)->asSystem('copy subtree fixture');
     $this->user = AccessTestHelpers::user(72);
@@ -161,8 +161,8 @@ it('SEC-D30-copy-subtree refuses a copy of nodes the actor may view and copy but
     $this->system->files()->upload(UploadSource::fromString('visible', 'visible.txt'), new UploadOptions(parent: $folder));
     $destination = $this->system->folders()->create('destination');
     app()->instance(CopyWithoutDownloadDriver::class, new CopyWithoutDownloadDriver);
-    config()->set('vaulter.access.permission_drivers.d30', CopyWithoutDownloadDriver::class);
-    config()->set('vaulter.access.permission_driver', 'd30');
+    config()->set('vaulter-drive.access.permission_drivers.d30', CopyWithoutDownloadDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'd30');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     $nodes = Node::query()->count();

@@ -21,7 +21,7 @@ use Vaulter\Testing\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     // Force the streaming branch on the PUBLIC path too — a faked local disk
     // otherwise mints a signed temporaryUrl and 302-redirects, which would make
     // this test non-deterministic (that redirect branch is P1.2's scope).

@@ -2460,7 +2460,7 @@
         {
             "change": "redefined",
             "decision": "D34",
-            "id": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
             "kind": "protocol",
             "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
         },
@@ -2848,42 +2848,42 @@
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "config:vaulter.access.permission_drivers.database",
+            "id": "config:vaulter-drive.access.permission_drivers.database",
             "kind": "config",
             "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "config:vaulter.access.permission_drivers.gate",
+            "id": "config:vaulter-drive.access.permission_drivers.gate",
             "kind": "config",
             "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "config:vaulter.access.permission_drivers.spatie",
+            "id": "config:vaulter-drive.access.permission_drivers.spatie",
             "kind": "config",
             "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "config:vaulter.models.grant",
+            "id": "config:vaulter-drive.models.grant",
             "kind": "config",
             "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "config:vaulter.models.node_share",
+            "id": "config:vaulter-drive.models.node_share",
             "kind": "config",
             "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "config:vaulter.sharing.token_generator",
+            "id": "config:vaulter-drive.sharing.token_generator",
             "kind": "config",
             "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
         },
@@ -3044,42 +3044,42 @@
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.access.permission_drivers.database",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.database",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.access.permission_drivers.gate",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.gate",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.access.permission_drivers.spatie",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.spatie",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.models.grant",
+            "id": "serialized:config:vaulter-drive.models.grant",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.models.node_share",
+            "id": "serialized:config:vaulter-drive.models.node_share",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D10",
-            "id": "serialized:config:vaulter.sharing.token_generator",
+            "id": "serialized:config:vaulter-drive.sharing.token_generator",
             "kind": "protocol",
             "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
         },
@@ -3182,37 +3182,557 @@
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_backfill_run",
+            "id": "serialized:config:vaulter-drive.models.scan_backfill_run",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_evidence",
+            "id": "serialized:config:vaulter-drive.models.scan_evidence",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_obligation",
+            "id": "serialized:config:vaulter-drive.models.scan_obligation",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_policy_state",
+            "id": "serialized:config:vaulter-drive.models.scan_policy_state",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
         },
         {
             "change": "redefined",
             "decision": "D28",
-            "id": "serialized:config:vaulter.models.scan_request",
+            "id": "serialized:config:vaulter-drive.models.scan_request",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.commenter",
+            "id": "config:vaulter-drive.access.gate.abilities.commenter",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.organizer",
+            "id": "config:vaulter-drive.access.gate.abilities.organizer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.owner",
+            "id": "config:vaulter-drive.access.gate.abilities.owner",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.previewer",
+            "id": "config:vaulter-drive.access.gate.abilities.previewer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.reader",
+            "id": "config:vaulter-drive.access.gate.abilities.reader",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.writer",
+            "id": "config:vaulter-drive.access.gate.abilities.writer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.create_ability",
+            "id": "config:vaulter-drive.access.gate.create_ability",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.super_ability",
+            "id": "config:vaulter-drive.access.gate.super_ability",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_driver",
+            "id": "config:vaulter-drive.access.permission_driver",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_drivers.database",
+            "id": "config:vaulter-drive.access.permission_drivers.database",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_drivers.gate",
+            "id": "config:vaulter-drive.access.permission_drivers.gate",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_drivers.null",
+            "id": "config:vaulter-drive.access.permission_drivers.null",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_drivers.spatie",
+            "id": "config:vaulter-drive.access.permission_drivers.spatie",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.create_permission",
+            "id": "config:vaulter-drive.access.spatie.create_permission",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.commenter",
+            "id": "config:vaulter-drive.access.spatie.permissions.commenter",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.organizer",
+            "id": "config:vaulter-drive.access.spatie.permissions.organizer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.owner",
+            "id": "config:vaulter-drive.access.spatie.permissions.owner",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.previewer",
+            "id": "config:vaulter-drive.access.spatie.permissions.previewer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.reader",
+            "id": "config:vaulter-drive.access.spatie.permissions.reader",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.writer",
+            "id": "config:vaulter-drive.access.spatie.permissions.writer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.role_subject_type",
+            "id": "config:vaulter-drive.access.spatie.role_subject_type",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.super_permission",
+            "id": "config:vaulter-drive.access.spatie.super_permission",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.team_subject_type",
+            "id": "config:vaulter-drive.access.spatie.team_subject_type",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.teams",
+            "id": "config:vaulter-drive.access.spatie.teams",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.changes.max_page_size",
+            "id": "config:vaulter-drive.changes.max_page_size",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.changes.retention_days",
+            "id": "config:vaulter-drive.changes.retention_days",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.downloads.delivery_mode",
+            "id": "config:vaulter-drive.downloads.delivery_mode",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.downloads.direct_ttl_seconds",
+            "id": "config:vaulter-drive.downloads.direct_ttl_seconds",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.downloads.inline_mime_types",
+            "id": "config:vaulter-drive.downloads.inline_mime_types",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.drives.delete_with_owner",
+            "id": "config:vaulter-drive.drives.delete_with_owner",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.activity",
+            "id": "config:vaulter-drive.features.activity",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.changes",
+            "id": "config:vaulter-drive.features.changes",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.grants",
+            "id": "config:vaulter-drive.features.grants",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.public_listing",
+            "id": "config:vaulter-drive.features.public_listing",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.share_links",
+            "id": "config:vaulter-drive.features.share_links",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.handlers",
+            "id": "config:vaulter-drive.handlers",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.listing.scan_budget",
+            "id": "config:vaulter-drive.listing.scan_budget",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.activity",
+            "id": "config:vaulter-drive.models.activity",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.drive",
+            "id": "config:vaulter-drive.models.drive",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.file",
+            "id": "config:vaulter-drive.models.file",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.file_revision",
+            "id": "config:vaulter-drive.models.file_revision",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.file_revision_blob",
+            "id": "config:vaulter-drive.models.file_revision_blob",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.grant",
+            "id": "config:vaulter-drive.models.grant",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.node",
+            "id": "config:vaulter-drive.models.node",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.node_share",
+            "id": "config:vaulter-drive.models.node_share",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_backfill_run",
+            "id": "config:vaulter-drive.models.scan_backfill_run",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_evidence",
+            "id": "config:vaulter-drive.models.scan_evidence",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_obligation",
+            "id": "config:vaulter-drive.models.scan_obligation",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_policy_state",
+            "id": "config:vaulter-drive.models.scan_policy_state",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_request",
+            "id": "config:vaulter-drive.models.scan_request",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.profiles.default",
+            "id": "config:vaulter-drive.profiles.default",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.profiles.providers",
+            "id": "config:vaulter-drive.profiles.providers",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.mode",
+            "id": "config:vaulter-drive.scan.mode",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.policy_version",
+            "id": "config:vaulter-drive.scan.policy_version",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.required",
+            "id": "config:vaulter-drive.scan.required",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.rollout_key",
+            "id": "config:vaulter-drive.scan.rollout_key",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.scanner",
+            "id": "config:vaulter-drive.scan.scanner",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.scanner_key",
+            "id": "config:vaulter-drive.scan.scanner_key",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.scanner_version",
+            "id": "config:vaulter-drive.scan.scanner_version",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.schedule.changes_prune",
+            "id": "config:vaulter-drive.schedule.changes_prune",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.default_ttl_hours",
+            "id": "config:vaulter-drive.sharing.default_ttl_hours",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.max_ttl_hours",
+            "id": "config:vaulter-drive.sharing.max_ttl_hours",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.prefix_length",
+            "id": "config:vaulter-drive.sharing.prefix_length",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.token_generator",
+            "id": "config:vaulter-drive.sharing.token_generator",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.url_base",
+            "id": "config:vaulter-drive.sharing.url_base",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

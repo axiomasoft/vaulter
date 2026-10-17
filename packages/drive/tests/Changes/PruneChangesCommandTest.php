@@ -46,7 +46,7 @@ it('deletes entries past the configured window and records how far it pruned', f
 });
 
 it('takes --days over the configuration and limits the run to --drive', function (): void {
-    config()->set('vaulter.changes.retention_days', 365);
+    config()->set('vaulter-drive.changes.retention_days', 365);
     $first = DriveTestHelpers::drive();
     $second = DriveTestHelpers::drive();
     $first->folders()->create('a');

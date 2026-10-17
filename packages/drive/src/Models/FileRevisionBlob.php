@@ -15,7 +15,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * pin (D23, written with it by RevisionBlobLinks) keeps the blob alive; the table
  * is never soft-deleted and its composite primary key is (file_revision_id,
  * blob_id, role, ordinal). Swappable via configuration key
- * vaulter.models.file_revision_blob.
+ * vaulter-drive.models.file_revision_blob.
  *
  * @property int|string $file_revision_id
  * @property int|string $blob_id

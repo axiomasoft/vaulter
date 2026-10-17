@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Http\Controllers\Sharing;
 
 use Illuminate\Http\JsonResponse;
 use Vaulter\Attributes\Internal;
-use Vaulter\Http\Requests\Sharing\UpdateShareLinkRequest;
-use Vaulter\Http\Resources\Sharing\ShareResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Requests\Sharing\UpdateShareLinkRequest;
+use Vaulter\Drive\Http\Resources\Sharing\ShareResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 #[Internal]
 final readonly class UpdateShareController

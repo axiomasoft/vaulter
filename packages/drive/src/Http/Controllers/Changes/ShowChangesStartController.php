@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
-use Vaulter\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 
 /** The cursor to follow the drive's changes from, taken after (not before) a full listing. */
 #[Internal]

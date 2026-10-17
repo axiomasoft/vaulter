@@ -9,8 +9,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\CreateDocumentRevisionRequest;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Checkpoint the working state as a revision that becomes the head (Edit). */
 #[Internal]

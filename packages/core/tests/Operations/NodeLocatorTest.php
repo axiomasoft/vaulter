@@ -47,7 +47,7 @@ it('excludes trashed nodes unless the internal trash mode is explicit', function
 });
 
 it('uses the configured node model', function (): void {
-    config()->set('vaulter.models.node', LocatorConfiguredNode::class);
+    config()->set('vaulter-drive.models.node', LocatorConfiguredNode::class);
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'configured');
     expect(app(NodeLocator::class)->find(context: DriveContext::system(drive: $drive, reason: 'test'), key: $node->id))->toBeInstanceOf(LocatorConfiguredNode::class);

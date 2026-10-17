@@ -9,8 +9,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Http\Requests\Nodes\CopyNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * Copy a node (Copy on the source, Create in the destination). The source is not

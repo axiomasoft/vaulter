@@ -8,10 +8,10 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Http\Resources\Sharing\SharedNodeResource;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
-use Vaulter\Http\Resources\Sharing\SharedNodeResource;
 
 /**
  * The public share routes: the link's own role on its node-set, opaque node ids, one
@@ -22,7 +22,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $this->drive = V1::drive(userId: 1);
 });
 

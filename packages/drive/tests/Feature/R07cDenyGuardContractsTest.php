@@ -63,8 +63,8 @@ function r07cStorage(): Drive
 function r07cDeny(): void
 {
     app()->instance(R07cDenyRoleDriver::class, new R07cDenyRoleDriver);
-    config()->set('vaulter.access.permission_drivers.r07cdeny', R07cDenyRoleDriver::class);
-    config()->set('vaulter.access.permission_driver', 'r07cdeny');
+    config()->set('vaulter-drive.access.permission_drivers.r07cdeny', R07cDenyRoleDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'r07cdeny');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }

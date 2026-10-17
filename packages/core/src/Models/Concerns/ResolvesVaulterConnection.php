@@ -21,7 +21,7 @@ use Vaulter\Configuration\DatabaseConfig;
  * routed to that named connection, matching where {@see
  * \Vaulter\Schema\SchemaHelpers::schemaConnection()} created the table.
  *
- * Host apps that swap in their own model (configuration key vaulter.models.*) simply omit
+ * Host apps that swap in their own model (configuration key vaulter-drive.models.*) simply omit
  * this trait if they want a different connection resolution strategy.
  *
  * @mixin Model

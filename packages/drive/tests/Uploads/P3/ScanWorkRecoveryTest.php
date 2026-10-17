@@ -45,9 +45,9 @@ it('SEC-BACKFILL materializes bounded durable activation work and checkpoints it
         app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, $name, 'text/plain'));
         fclose($stream);
     }
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $run = app(VaulterConfig::class)->model('scan_backfill_run');
     $work = app(VaulterConfig::class)->model('scan_obligation');
@@ -73,9 +73,9 @@ it('SEC-RECOVERY-bounds rejects contradictory command scope and dry run creates 
 it('SEC-R09 committed work survives missing delivery and reconciles publication SEC-R10', function (): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -100,9 +100,9 @@ it('SEC-R09 committed work survives missing delivery and reconciles publication 
 it('SEC-R13 outer rollback removes admission work revision and queued publication', function (): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -124,9 +124,9 @@ it('SEC-R13 outer rollback removes admission work revision and queued publicatio
 it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requires explicit rescan', function (): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -175,8 +175,8 @@ it('SEC-RECOVERY-bounds signed cursors resume one revision and reject signature 
             return new ScanResult(ScanVerdict::Clean);
         }
     });
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     foreach (['a', 'b'] as $name) {
@@ -208,10 +208,10 @@ it('SEC-BACKFILL new content preparation retains legacy work at same spec all co
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'first');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'first');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision);
     app(ScanBackfillReconciler::class)->expand();
@@ -220,7 +220,7 @@ it('SEC-BACKFILL new content preparation retains legacy work at same spec all co
     $runClass = app(VaulterConfig::class)->model('scan_backfill_run');
     $before = $runClass::query()->firstOrFail();
     expect($before->state)->toBe('completed');
-    config()->set('vaulter.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     expect($runClass::query()->firstOrFail()->last_revision_id)->toBe($before->last_revision_id)
         ->and($revision->scanObligations()->count())->toBe(1);
@@ -231,9 +231,9 @@ it('SEC-BACKFILL new content preparation retains legacy work at same spec all co
 it('SEC-POLICY-superseded replacement activation terminates old work while configuration mismatch stalls', function (): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -241,7 +241,7 @@ it('SEC-POLICY-superseded replacement activation terminates old work while confi
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
     $row = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
-    config()->set('vaulter.scan.scanner_version', '2');
+    config()->set('vaulter-drive.scan.scanner_version', '2');
     $result = app(ScanWorkReconciler::class)->reconcile();
     expect($result['stalled_configuration'])->toBe(1)->and($row->refresh()->state)->toBe('pending');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -271,9 +271,9 @@ it('SEC-RECOVERY-bounds optional off rescan rejects sync before SQL or publicati
             throw new RuntimeException('scanner must never run');
         }
     });
-    config()->set('vaulter.scan.mode', 'off');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'off');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     config()->set('queue.default', 'sync');
     $queries = 0;
     app(VaulterDatabase::class)->connection()->listen(function () use (&$queries): void {
@@ -287,9 +287,9 @@ it('SEC-RECOVERY-bounds optional off rescan rejects sync before SQL or publicati
 it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app timezone', function (string $timezone): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $originalTimezone = date_default_timezone_get();
     config()->set('app.timezone', $timezone);
     date_default_timezone_set($timezone);
@@ -327,9 +327,9 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
 it('SEC-C03-db-clock decides which scan work is due regardless of application clock skew', function (): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'clock skew fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -383,9 +383,9 @@ it('SEC-C03-db-clock-live keeps advancing inside an open transaction', function 
 it('SEC-RECOVERY-remaining-due counts all still-due work whatever the batch limit', function (): void {
     Storage::fake('local');
     Bus::fake();
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'remaining fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);

@@ -9,12 +9,12 @@ use Illuminate\Support\Str;
 use Vaulter\Attributes\Api;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * One occurrence of a change in Vaulter. Actions hand it to {@see EventRecorder}

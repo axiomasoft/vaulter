@@ -179,7 +179,7 @@ it('forgets the source of restores whose source revision is deleted', function (
 });
 
 it('lets a writer pin but only a manager delete revisions', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $node = quotaLedgerUpload($system, 'first');
     $first = DriveTestHelpers::model($node)->file()->firstOrFail()->current_revision_id;

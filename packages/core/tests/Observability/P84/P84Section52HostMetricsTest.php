@@ -159,7 +159,7 @@ it('caps vaulter_download_stream_active at php-fpm max children', function (): v
 });
 
 it('records download ttfb and bytes on public share download', function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('share-bytes'), 'shared.bin'));
     ShareTestHelpers::share($file, token: 'metrics-share');

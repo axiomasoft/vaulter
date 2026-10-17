@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive;
 
-use ReflectionClass;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Doctor\Checks\AccessDriverCheck;
 use Vaulter\Doctor\Checks\RoutesAuthCheck;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
@@ -41,6 +39,8 @@ use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Doctor\Checks\AccessDriverCheck;
+use Vaulter\Drive\Doctor\Checks\SchemaIntegrityCheck;
 use Vaulter\Drive\Doctor\DedupScopeCheck;
 use Vaulter\Drive\Doctor\DiskProbeCheck;
 use Vaulter\Drive\Doctor\DrivesDeletingCheck;
@@ -51,13 +51,17 @@ use Vaulter\Drive\Doctor\ScanPolicyCheck;
 use Vaulter\Drive\Doctor\ScanScannerCheck;
 use Vaulter\Drive\Doctor\ScanScopeCheck;
 use Vaulter\Drive\Doctor\UploadsTmpCheck;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Drive\Handlers\NodePresenter as CoreNodePresenter;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
+use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
+use Vaulter\Drive\Providers\AccessRegistrar;
 use Vaulter\Drive\Providers\BindingsRegistrar;
+use Vaulter\Drive\Providers\DriveSliceRegistrar;
 use Vaulter\Drive\Providers\SchedulingRegistrar;
 use Vaulter\Drive\Schema\DriveSchema;
 use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
@@ -66,9 +70,7 @@ use Vaulter\Drive\Uploads\Inspection\ScanDispatchInspector;
 use Vaulter\Drive\Uploads\Inspection\SizeInspector;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventSink;
-use Vaulter\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
@@ -76,15 +78,12 @@ use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
-use Vaulter\Providers\AccessRegistrar;
-use Vaulter\Providers\DriveSliceRegistrar;
-use Vaulter\VaulterServiceProvider;
 
 /**
- * The drive module (D22, D39): everything of the drive package, and the drive slices still located in core
- * until P4 moves them — access (grants, permission drivers, policies), the core routes file of grants,
- * shares, activity and the change feed, the change-journal and scaffolding commands, two doctor checks, the
- * drive's event types with the activity and change-journal event sinks, and the drive part of the core bindings. `vaulter.modules.drive = false` removes all of it.
+ * The drive module (D22): everything of the drive package — the REST routes (nodes, files, uploads, grants,
+ * shares, activity and the change feed), access, the change journal, the scaffolding commands, the doctor
+ * checks, the event types with the activity and change-journal event sinks, and the bindings.
+ * `vaulter.modules.drive = false` removes all of it.
  */
 #[Internal]
 final class DriveModule implements OwnsSchema, VaulterModule
@@ -102,9 +101,11 @@ final class DriveModule implements OwnsSchema, VaulterModule
         // The checks of the disks of the profiles (D33): the profiles are the drive's, the keys keep the media.* identity.
         'media.disk.probe' => DiskProbeCheck::class,
         'media.dedup.scope' => DedupScopeCheck::class,
-        // Located in core until P4 (D39).
+        // The kernel's own check of the route stack, run while the drive routes are mounted.
         'core.routes.auth' => RoutesAuthCheck::class,
         'core.access.driver' => AccessDriverCheck::class,
+        // The invariants of the tree and its aggregates: the check reads the drive, node, file and document tables.
+        'core.schema.integrity' => SchemaIntegrityCheck::class,
     ];
 
     public static function ownedSchema(): string
@@ -138,11 +139,9 @@ final class DriveModule implements OwnsSchema, VaulterModule
             ->config('vaulter-drive', dirname(__DIR__).'/config/vaulter-drive.php')
             ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/drive.php')
-            ->routes(self::coreRoutes())
             ->problems(DriveProblemCodes::class)
-            // Located in core until P4 (D39).
             ->problems(DriveSliceProblemCodes::class)
-            // Located in core until P4 (D38): the drive's event types and its two event sinks.
+            // The drive's event types and its two event sinks.
             ->events(DriveEventType::class)
             ->slot(EventSink::class, ActivitySink::class, 'drive.activity')
             ->slot(EventSink::class, ChangeJournalSink::class, 'drive.changes')
@@ -187,8 +186,7 @@ final class DriveModule implements OwnsSchema, VaulterModule
 
     /**
      * The slots the drive defines (D8) and its own contributions, in the order the drive ran them before the
-     * slots existed. The permission drivers, file handlers, presenter and lifecycle classes are located in
-     * core until P4 (D39).
+     * slots existed.
      */
     private function slots(ModuleBuilder $module): void
     {
@@ -223,11 +221,5 @@ final class DriveModule implements OwnsSchema, VaulterModule
             ->slot(UploadInspector::class, MimeConsistencyInspector::class, 'drive.inspector.mime-consistency', priority: -80)
             ->slot(UploadInspector::class, ScanDispatchInspector::class, 'drive.inspector.scan-dispatch', priority: 0)
             ->slot(DownloadGuard::class, ContentAvailabilityGuard::class, 'drive.content-availability');
-    }
-
-    /** The drive routes file located in core (D39), found from the core provider's class: no Composer lookup, no I/O. */
-    private static function coreRoutes(): string
-    {
-        return dirname((string) (new ReflectionClass(VaulterServiceProvider::class))->getFileName(), 2).'/routes/drive.php';
     }
 }

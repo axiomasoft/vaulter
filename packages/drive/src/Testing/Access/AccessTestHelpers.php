@@ -55,7 +55,7 @@ final class AccessTestHelpers
      */
     public static function folder(Drive $storage, Node|NodeSnapshot|null $parent, string $name, bool $inheritGrants = true): Node
     {
-        $model = config('vaulter.models.node');
+        $model = config('vaulter-drive.models.node');
 
         /** @var Node $node */
         $node = new $model;
@@ -76,7 +76,7 @@ final class AccessTestHelpers
     {
         $id = is_string($link) ? $link : ($link instanceof MintedShareLink ? $link->link->id : $link->id);
         /** @var class-string<NodeShare> $model */
-        $model = config('vaulter.models.node_share');
+        $model = config('vaulter-drive.models.node_share');
 
         return $model::query()->findOrFail($id);
     }
@@ -85,7 +85,7 @@ final class AccessTestHelpers
     public static function grantRow(GrantSnapshot|string $grant): NodeGrant
     {
         /** @var class-string<NodeGrant> $model */
-        $model = config('vaulter.models.grant');
+        $model = config('vaulter-drive.models.grant');
 
         return $model::query()->findOrFail(is_string($grant) ? $grant : $grant->id);
     }
@@ -105,7 +105,7 @@ final class AccessTestHelpers
     ): NodeGrant {
         $subjectType ??= (new TestUser)->getMorphClass();
 
-        $model = config('vaulter.models.grant');
+        $model = config('vaulter-drive.models.grant');
 
         /** @var NodeGrant $grant */
         $grant = new $model;

@@ -121,12 +121,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Support\\AssembleSizeBucket",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Support helpers -> owner of the concept: multipart assembly metric label belongs to uploads (drive)"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Configuration\\VaulterConfig",
             "owner": "core",
             "action": "keep",
@@ -206,42 +200,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel: Конфиг-каркас — generic frequency value of ScheduleConfig (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\AccessConfig",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: access model (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\ChangesConfig",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: change feed (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\DownloadsConfig",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: content delivery (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\ListingConfig",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: node listing (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\ScanConfig",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: scan admission and work (D28) (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Configuration\\SharingConfig",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: sharing (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
@@ -534,18 +492,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Doctor\\Checks\\SchemaIntegrityCheck",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Doctor — tree/aggregate structural invariants are drive"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Doctor\\Checks\\AccessDriverCheck",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Doctor — access driver check is drive"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Doctor\\Checks\\WebhooksDeliveriesCheck",
             "owner": "webhooks",
             "why": "architecture#ownership-map: Doctor — webhook deliveries check is webhooks"
@@ -576,15 +522,6 @@
             "phase": "P3",
             "note": "baseline: public in the 0.x snapshot; becomes a reference of the EventCatalog; P3.17 decided: Internal (D27)",
             "why": "architecture#kernel: События — EventCatalog reference generator (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Enums\\Events\\DriveEventType",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "note": "located in core until P4 moves it to the drive package (D38)",
-            "why": "architecture#events + D38: the event types of the drive, contributed to the EventCatalog by DriveModule"
         },
         {
             "match": "fqcn",
@@ -922,12 +859,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Exceptions\\Registry\\DuplicateNodeContentLifecycleException",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Exceptions by domain owner: node content lifecycle registry is drive"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Http\\Controllers\\Controller",
             "owner": "core",
             "action": "keep",
@@ -1001,12 +932,6 @@
             "why": "architecture#kernel: HTTP-каркас — the throttle mechanism stays, route names belong to their modules"
         },
         {
-            "match": "fqcn",
-            "value": "Vaulter\\Http\\Middleware\\ResolveShareToken",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http middleware of Sharing -> drive"
-        },
-        {
             "match": "prefix",
             "value": "Vaulter\\Http\\Problems\\",
             "owner": "core",
@@ -1033,31 +958,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Http\\Support\\ContentResponder",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http support -> owner of the concept: content responses of file download are drive"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Http\\Support\\HttpOperationContextFactory",
-            "owner": "drive",
-            "why": "architecture#kernel: HTTP owner adapters do admission and call OperationRunner; the factory reaches the drive handle, AccessResolver and VaulterManager"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Http\\Support\\HttpResourceResolver",
-            "owner": "drive",
-            "note": "baseline: public in the 0.x snapshot; P3.17 decided: Internal (D27)",
-            "why": "architecture#ownership-map: Http support -> drive: resolves drives and nodes through drive repositories (I9 authorized lookup)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Http\\Support\\SharedNodeResolver",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http support of Sharing -> drive"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Http\\Support\\Preconditions",
             "owner": "core",
             "action": "split",
@@ -1076,57 +976,9 @@
         },
         {
             "match": "prefix",
-            "value": "Vaulter\\Http\\Requests\\Access\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http requests of Access are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Requests\\Changes\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http requests of Changes are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Requests\\Sharing\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http requests of Sharing are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
             "value": "Vaulter\\Http\\Requests\\Webhooks\\",
             "owner": "webhooks",
             "why": "architecture#ownership-map: Http requests of Webhooks are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Resources\\Access\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http resources of Access are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Resources\\Activity\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http resources of Activity are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Resources\\Changes\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http resources of Changes are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Resources\\Drive\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http resources of Drive are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Resources\\Sharing\\",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Http resources of Sharing are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "prefix",
@@ -1165,12 +1017,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel: Идентичность/Транзакция — model trait of the Vaulter connection and keys used by module models"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Models\\Concerns\\StampsDriveTenant",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Models/Concerns of the drive tenant stamp -> drive"
         },
         {
             "match": "fqcn",
@@ -1398,12 +1244,6 @@
             "why": "architecture#errors + D25: whether an idempotency receipt caches a problem code (P3.11)"
         },
         {
-            "match": "fqcn",
-            "value": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes",
-            "owner": "drive",
-            "why": "D39 + architecture#ownership-map: the problem codes of the drive concepts located in core, declared by DriveModule until P4 moves them (P3.11)"
-        },
-        {
             "match": "prefix",
             "value": "Vaulter\\Exceptions\\Idempotency\\",
             "owner": "core",
@@ -1419,18 +1259,6 @@
             "phase": "P3",
             "note": "registers module slices temporarily inside core (P3 module manifests)",
             "why": "architecture#kernel: Providers ядра — host-registered provider of the kernel"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Providers\\AccessRegistrar",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Providers — registrars of the concept belong to its owner: access drivers"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Providers\\DriveSliceRegistrar",
-            "owner": "drive",
-            "why": "D39 + architecture#ownership-map: the drive part of the core bindings, HTTP limiters and access, declared by DriveModule until P4 moves it (P3.3 split of BindingsRegistrar/HttpRegistrar)"
         },
         {
             "match": "fqcn",
@@ -1573,13 +1401,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Tenancy\\ShareTenantContext",
-            "owner": "drive",
-            "note": "open: typed on the Drive model; stays drive unless a neutral scope ref replaces it (P4)",
-            "why": "architecture#ownership-map: Tenancy — token-authorized, drive-limited issuer evaluation for share redemption: Sharing -> drive"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Testing\\FakeMetricsRecorder",
             "owner": "core",
             "action": "keep",
@@ -1629,35 +1450,11 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Testing\\Contracts\\FileHandlerContractTests",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Testing — FileHandler contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Testing — PermissionDriver contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Testing\\Contracts\\ModuleContractTests",
             "owner": "core",
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: public test kit for third-party module manifests (P3.16, I8); it exercises the kernel's compiler, so it stays with the kernel"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Testing\\Contracts\\PermissionFixture",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Testing — fixture of the PermissionDriver contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Testing\\NullPermissionDriver",
-            "owner": "drive",
-            "why": "architecture#ownership-map: Testing — a PermissionDriver implementation -> drive"
         },
         {
             "match": "fqcn",
@@ -1676,18 +1473,6 @@
             "why": "architecture#kernel: События — neutral subject of the event envelope"
         },
         {
-            "match": "fqcn",
-            "value": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
-            "owner": "drive",
-            "why": "architecture#ownership-map: ValueObjects by domain owner: activity target -> drive (Activity)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\ValueObjects\\Events\\JournalEffect",
-            "owner": "drive",
-            "why": "architecture#ownership-map: ValueObjects by domain owner: change-journal effect -> drive (Changes)"
-        },
-        {
             "match": "file",
             "value": "packages/core/config/vaulter.php",
             "owner": "core",
@@ -1695,15 +1480,6 @@
             "phase": "P4",
             "note": "sections by owner (drive/media/webhooks/documents); kernel sections stay; details in identities/config (P2.3)",
             "why": "architecture#packages: the vaulter.* root is split — sections go to their owners, kernel sections stay"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/routes/drive.php",
-            "owner": "drive",
-            "action": "move",
-            "phase": "P4",
-            "note": "the drive routes located in core, declared by DriveModule (D39); P4 moves the file into the drive package",
-            "why": "architecture#packages + D39: routes of the drive controllers located in core (P3.2 split of routes/api.php)"
         },
         {
             "match": "file",

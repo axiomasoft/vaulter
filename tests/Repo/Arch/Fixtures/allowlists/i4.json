@@ -58,11 +58,11 @@
         {
             "category": "config-validation",
             "count": 1,
-            "file": "packages/core/src/Doctor/Checks/AccessDriverCheck.php",
+            "file": "packages/drive/src/Doctor/Checks/AccessDriverCheck.php",
             "kind": "probe",
             "reason": "doctor проверяет существование класса выбранного access driver: диагностика, не активация",
             "removed_in": "never",
-            "symbol": "Vaulter\\Doctor\\Checks\\AccessDriverCheck::run",
+            "symbol": "Vaulter\\Drive\\Doctor\\Checks\\AccessDriverCheck::run",
             "target": "$class",
             "view": "current"
         },
@@ -290,11 +290,11 @@
         {
             "category": "config-validation",
             "count": 1,
-            "file": "packages/core/src/Providers/DriveSliceRegistrar.php",
+            "file": "packages/drive/src/Providers/DriveSliceRegistrar.php",
             "kind": "probe",
             "reason": "проверка явно выбранного DirectContentUrlSigner: переводится в typed required capability без удаления fail-closed проверки (code-facts)",
             "removed_in": "never",
-            "symbol": "Vaulter\\Providers\\DriveSliceRegistrar::boot",
+            "symbol": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar::boot",
             "target": "\\Vaulter\\Media\\Contracts\\Cas\\DirectContentUrlSigner::class",
             "view": "current"
         }

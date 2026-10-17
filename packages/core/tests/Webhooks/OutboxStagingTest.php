@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Events\Access\NodeGrantRevoked;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
@@ -13,7 +14,6 @@ use Vaulter\Drive\Events\Sharing\NodeShareCreated;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
-use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
@@ -30,7 +30,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  */
 beforeEach(function (): void {
     // The base suite is open (null driver), so the Drive ops succeed and record events.
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $this->actingAs((new TestUser)->forceFill(['id' => 7]));
 });
 

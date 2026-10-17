@@ -28,7 +28,7 @@ use Vaulter\Drive\Tests\TestCase;
 uses(TestCase::class, DatabaseMigrations::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->drive = DriveTestHelpers::drive();
     $this->root = $this->drive->root();
     // User 1 reads the whole drive except "private", which stops inheriting.

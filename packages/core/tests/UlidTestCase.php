@@ -27,6 +27,6 @@ class UlidTestCase extends TestCase
         $app['config']->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
 
         // Strict tenancy uses the host resolver; model swaps remain an optional layer.
-        $app['config']->set('vaulter.models.node', TenantAwareNode::class);
+        $app['config']->set('vaulter-drive.models.node', TenantAwareNode::class);
     }
 }

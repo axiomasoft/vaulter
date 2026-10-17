@@ -21,6 +21,6 @@ abstract class ActivityDisabledTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter.features.activity', false);
+        $app['config']->set('vaulter-drive.features.activity', false);
     }
 }

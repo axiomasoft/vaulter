@@ -66,8 +66,8 @@ it('keeps the drives of a deleted owner by default', function (): void {
     Queue::assertNothingPushed();
 });
 
-it('deletes the drives of a deleted owner with vaulter.drives.delete_with_owner', function (): void {
-    config()->set('vaulter.drives.delete_with_owner', true);
+it('deletes the drives of a deleted owner with vaulter-drive.drives.delete_with_owner', function (): void {
+    config()->set('vaulter-drive.drives.delete_with_owner', true);
     $host = HasDrivesHost::query()->create();
     $host->drive();
 
@@ -78,7 +78,7 @@ it('deletes the drives of a deleted owner with vaulter.drives.delete_with_owner'
 });
 
 it('a host with SoftDeletes reacts to forceDeleted and not to deleted', function (): void {
-    config()->set('vaulter.drives.delete_with_owner', true);
+    config()->set('vaulter-drive.drives.delete_with_owner', true);
     $host = HasDrivesSoftHost::query()->create();
     $host->drive();
     $where = fn () => Drive::query()->where('owner_type', $host->getMorphClass())->where('owner_id', $host->getKey());

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Enums\DocumentEventType;
-use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Events\EventsReference;
 

@@ -36,8 +36,7 @@ it('fills upload model defaults during normalization without replacing host over
     $app = new Application;
     Container::setInstance($this->app);
     $config = new Repository([
-        'vaulter-drive' => ['models' => ['upload_session' => 'Host\\UploadSession']],
-        'vaulter' => ['models' => ['node' => 'Host\\Node']],
+        'vaulter-drive' => ['models' => ['upload_session' => 'Host\\UploadSession', 'node' => 'Host\\Node']],
     ]);
     $app->instance('config', $config);
     $app->singleton(ConfigNormalizer::class);
@@ -47,7 +46,7 @@ it('fills upload model defaults during normalization without replacing host over
 
     expect($config->get('vaulter-drive.models.upload_session'))->toBe('Host\\UploadSession')
         ->and($config->get('vaulter-drive.models.upload_part'))->toBe(UploadPart::class)
-        ->and($config->get('vaulter.models.node'))->toBe('Host\\Node');
+        ->and($config->get('vaulter-drive.models.node'))->toBe('Host\\Node');
 });
 
 it('preserves singleton service lifetimes in a fresh container', function (): void {

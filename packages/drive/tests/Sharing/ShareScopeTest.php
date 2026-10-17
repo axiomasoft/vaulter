@@ -16,7 +16,7 @@ use Vaulter\Facades\Vaulter;
  * storage. An item share reaches exactly one node.
  */
 beforeEach(function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
 });
 
 it('an item-scope share contains only the shared node', function (): void {

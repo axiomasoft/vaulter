@@ -21,7 +21,7 @@ use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $this->system = Vaulter::drive(DriveTestHelpers::host())->asSystem('quarantine fixture');
     $this->context = DriveContext::system($this->system->model(), 'quarantine fixture');
 });
@@ -30,9 +30,9 @@ it('SEC-R01 legacy not_required and bare clean cannot authorize required public 
     $node = $this->system->files()->upload(UploadSource::fromString('legacy', 'legacy.txt'));
     $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['scan_status' => 'clean'])->save());
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), $this->context);
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
     expect($this->system->nodes()->find($node)->id)->toBe($node->id);
@@ -41,9 +41,9 @@ it('SEC-R01 legacy not_required and bare clean cannot authorize required public 
 });
 
 it('SEC-R07 required structured failure never grants PHP or share bytes', function (string $reason, bool $retryable): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), $this->context);
     $node = $this->system->files()->upload(UploadSource::fromString('payload', 'file.txt'));
     $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();

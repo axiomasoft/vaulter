@@ -223,7 +223,7 @@ it('takes a revoked Edit into account on the next call (OPUS D24)', function ():
     $token = Hub::token($node);
     Hub::call('authenticate', ['room' => Hub::room($node)], $token)->assertJsonPath('mode', 'rw');
 
-    $grants = config('vaulter.models.grant');
+    $grants = config('vaulter-drive.models.grant');
     app(VaulterDatabase::class)->write(fn () => $grants::query()->where('node_id', $node->id)->delete());
     AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 1);
 

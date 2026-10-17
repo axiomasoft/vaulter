@@ -10,8 +10,8 @@ use Vaulter\Drive\Data\RestoreOptions;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Trash\RestoreNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * Bring a trash root back (Restore; Create when it lands somewhere else). If-Match is

@@ -9,7 +9,7 @@ use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Contracts\PurgeOnlyContentLifecycle;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
-use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
+use Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 
 #[Internal]
 final class NodeContentLifecycleRegistry

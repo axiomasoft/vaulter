@@ -7,9 +7,9 @@ namespace Vaulter\Drive\Http\Controllers\Files;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Attributes\Internal;
-use Vaulter\Http\Support\ContentResponder;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\ContentResponder;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * The bytes of a file's head revision (Download). A caller who may only view the file

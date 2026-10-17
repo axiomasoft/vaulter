@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Vaulter\Attributes\Api;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Drive\Enums\DriveStatus;
@@ -15,7 +16,7 @@ use Vaulter\Drive\Models\Drive;
 use Vaulter\VaulterManager;
 
 /**
- * Mounts drives on a host model. With vaulter.drives.delete_with_owner
+ * Mounts drives on a host model. With vaulter-drive.drives.delete_with_owner
  * the drives of a deleted owner are deleted too; a host with SoftDeletes reacts to
  * forceDeleted, not to deleted, so a soft-deleted owner keeps its drives.
  *
@@ -30,7 +31,7 @@ trait HasDrives
 
         static::registerModelEvent($event, static function (Model $owner): void {
             $config = self::vaulter(VaulterConfig::class);
-            if (!$config->drivesDeleteWithOwner()) {
+            if (!self::vaulter(DriveConfig::class)->drivesDeleteWithOwner()) {
                 return;
             }
             // The owner is gone, so its drives are deleted outside any tenant scope.

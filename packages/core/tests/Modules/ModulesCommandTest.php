@@ -45,7 +45,7 @@ it('shows the slots a module defines and the contributions it makes', function (
     $slots = array_column(modulesJson()['core']['slots'], null, 'slot');
 
     expect($slots[DoctorCheck::class]['role'])->toBe('defines')
-        ->and($slots[DoctorCheck::class]['contributions'])->toBe(14);
+        ->and($slots[DoctorCheck::class]['contributions'])->toBe(13);
 });
 
 it('prints a table with the fingerprint', function (): void {

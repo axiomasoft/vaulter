@@ -8,10 +8,10 @@ use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\DocumentPurgeLifecycle;
 use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
@@ -106,8 +106,8 @@ final class BindingsRegistrar implements ModuleBindings
             }
             // The `vaulter-drive.uploads.scan.scanner` alias is folded into the key the capability reads.
             $repository = $app->make('config');
-            if ($repository->get('vaulter.scan.scanner') === null) {
-                $repository->set('vaulter.scan.scanner', $class);
+            if ($repository->get('vaulter-drive.scan.scanner') === null) {
+                $repository->set('vaulter-drive.scan.scanner', $class);
             }
         }
         $capabilities = $app->make(Kernel::class)->capabilities();

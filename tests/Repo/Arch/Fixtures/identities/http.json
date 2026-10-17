@@ -662,11 +662,11 @@
     ],
     "flags": {
         "vaulter-documents.collaboration.enabled": false,
-        "vaulter.features.activity": true,
-        "vaulter.features.changes": true,
-        "vaulter.features.grants": true,
-        "vaulter.features.public_listing": false,
-        "vaulter.features.share_links": false,
+        "vaulter-drive.features.activity": true,
+        "vaulter-drive.features.changes": true,
+        "vaulter-drive.features.grants": true,
+        "vaulter-drive.features.public_listing": false,
+        "vaulter-drive.features.share_links": false,
         "vaulter.modules.webhooks": false
     },
     "items": [
@@ -2287,7 +2287,7 @@
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+                "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
             ],
             "name": "vaulter.v1.public-shares.download",
             "openapi": {
@@ -2318,7 +2318,7 @@
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+                "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
             ],
             "name": "vaulter.v1.public-shares.nodes",
             "openapi": {
@@ -2349,7 +2349,7 @@
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+                "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
             ],
             "name": "vaulter.v1.public-shares.show",
             "openapi": {

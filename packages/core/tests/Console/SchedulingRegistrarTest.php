@@ -63,7 +63,7 @@ it('skips the webhook tasks when webhooks are off but keeps the outbox relay and
 });
 
 it('skips the journal prune when the change journal is off', function (): void {
-    expect(bootCoreSchedule(['vaulter.features.changes' => false]))->not->toHaveKey('vaulter:changes:prune');
+    expect(bootCoreSchedule(['vaulter-drive.features.changes' => false]))->not->toHaveKey('vaulter:changes:prune');
 });
 
 it('treats a null frequency as a disabled task', function (): void {
@@ -77,8 +77,8 @@ it('fails boot validation on an invalid frequency', function (): void {
 })->throws(InvalidConfigurationException::class);
 
 it('fails registration on an invalid frequency', function (): void {
-    config(['vaulter.schedule.changes_prune' => 'sometimes']);
+    config(['vaulter-drive.schedule.changes_prune' => 'sometimes']);
 
-    // The change-journal prune is a drive task located in core (D39): DriveModule schedules it.
+    // The change-journal prune is a drive task: the drive's registrar validates its key.
     (new DriveSchedulingRegistrar)->define(app(Schedule::class), app('config'));
 })->throws(InvalidConfigurationException::class);

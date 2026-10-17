@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Enums\DocumentEventType;
-use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Events\EventTypeContract;
 
 it('keeps the 0.2 stored vocabulary and appends the 1.0 lifecycle, document and comment types', function (): void {

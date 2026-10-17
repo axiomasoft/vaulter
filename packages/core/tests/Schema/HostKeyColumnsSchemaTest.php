@@ -15,7 +15,7 @@ it('creates host keys independently of entity IDs on a fresh panel', function (s
     config()->set('vaulter.ids.host_keys', $type);
     config()->set('vaulter.database.table_prefix', 'hostkeys_');
     config()->set('vaulter-documents.comments.enabled', true);
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $builder = app(ModuleSchemas::class);
     $builder->createAll();
 

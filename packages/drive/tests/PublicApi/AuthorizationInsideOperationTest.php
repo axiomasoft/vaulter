@@ -56,8 +56,8 @@ beforeEach(function (): void {
         }
     };
     app()->instance($recording::class, $recording);
-    config()->set('vaulter.access.permission_driver', 'database');
-    config()->set('vaulter.access.permission_drivers.database', $recording::class);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_drivers.database', $recording::class);
 });
 
 it('authorizes a rename once, inside the operation transaction', function (): void {

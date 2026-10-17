@@ -12,8 +12,8 @@ use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Files\AddFileRevisionRequest;
 use Vaulter\Drive\Http\Resources\FileRevisionResource;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Upload the next revision of a file (Edit); If-Match is required. */
 #[Internal]
