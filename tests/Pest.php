@@ -85,7 +85,6 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Feature',
     $core.'/Providers',
     $core.'/Profiles',
-    $core.'/Content',
     $core.'/Support',
     $core.'/Testing',
     $core.'/Configuration',

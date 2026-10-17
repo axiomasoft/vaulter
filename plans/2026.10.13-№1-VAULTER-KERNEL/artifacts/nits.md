@@ -18,3 +18,4 @@ P4.7 | packages/drive/src/Content/RevisionBlobLinks.php | RC2#3: латентн�
 P4.7 | packages/media/src/Cas/BlobGarbageCollector.php:179 | RC2#2: устаревший комментарий '(possibly partial) object'; StorageDriver::put — зафиксировать атомарность в контракте
 P4.8 | load/app/Console/SeedLoadDatasetCommand.php:20 | load/app (3 files) use nonexistent Vaulter\Enums\Access\GrantLevel (bit-level API gone before P4.8); load not run in PLAN3
 P4.8 | packages/azgard/tests/ArchTest.php | заголовки arch-тестов ('only core') устарели: azgard зависит от drive (Access перенесён); require drive в composer — P4.14
+P4.9 | scripts/inventory/move-types.php | инструмент не переносит записи tests/groups.php, uses()->in() в tests/Pest.php и не чистит stale-правила target-map/rules/*.json и src-путь пустой зоны в tests/zones.json — правятся руками
