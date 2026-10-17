@@ -17,6 +17,7 @@ use Vaulter\Kernel;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleGraphException;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\ModuleState;
 use Vaulter\Operations\ModuleReadiness;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
@@ -27,6 +28,8 @@ use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmePinged;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeProbe;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeProvider;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeService;
+use Vaulter\Tests\Modules\Fixtures\Apps\AppSet;
+use Vaulter\Tests\Modules\Fixtures\Apps\AppSets;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
@@ -321,3 +324,99 @@ it('keeps the data of a module while it is off and serves it again when the modu
         @unlink($file);
     }
 });
+
+// The install matrix (P4.18): the same price rules on the downward-closed application sets of the package graph (D6) — core;
+// +media; +drive; +documents; +webhooks; +azgard; +filament. Each set is a fresh application with exactly its providers
+// (Fixtures/Apps). route:cache and config:cache before an activation change: ActivationCacheTest.
+
+/** @param array<string, mixed> $config */
+function setApp(AppSet $set, array $config = []): Application
+{
+    return FreshApplication::boot($config, case: $set->testCase());
+}
+
+/** @return list<string> the ids of the modules the application offers, sorted */
+function setOffered(Application $app): array
+{
+    $ids = array_map(static fn (ModuleState $state): string => $state->id->value, $app->make(Kernel::class)->modules());
+    sort($ids);
+
+    return $ids;
+}
+
+/** @return list<string> the ids of the modules that are active, sorted */
+function setActive(Application $app): array
+{
+    $ids = array_values(array_map(
+        static fn (ModuleState $state): string => $state->id->value,
+        array_filter($app->make(Kernel::class)->modules(), static fn (ModuleState $state): bool => $state->active),
+    ));
+    sort($ids);
+
+    return $ids;
+}
+
+it('boots a set with exactly the modules of its packages active, mounts routes only for those that have them, and runs no query', function (AppSet $set): void {
+    $app = setApp($set, $set->on);
+    $kernel = $app->make(Kernel::class);
+
+    expect($kernel->isValid())->toBeTrue()
+        ->and(setOffered($app))->toBe($set->sortedModules())
+        ->and(setActive($app))->toBe($set->sortedModules())
+        ->and(FreshApplication::$queries)->toBe(0);
+
+    foreach (AppSets::ALL_MODULES as $module) {
+        $mounts = in_array($module, $set->modules, true) && in_array($module, AppSets::ROUTE_MODULES, true);
+        expect(matrixRoutes($app, $module) !== [])->toBe($mounts, "routes of module $module in set {$set->id}");
+    }
+})->with(fn (): array => AppSets::dataset());
+
+it('keeps an OptIn module off in a set until its switch is on, and the Auto modules on without one', function (): void {
+    $set = AppSets::get('+webhooks');
+    $app = setApp($set);
+    $state = array_values(array_filter($app->make(Kernel::class)->modules(), static fn (ModuleState $s): bool => $s->id->value === 'webhooks'))[0];
+
+    expect($app->make(Kernel::class)->isValid())->toBeTrue()
+        ->and($state->active)->toBeFalse()
+        ->and($state->activeReason)->toBe(ModuleState::REASON_DEFAULT)
+        ->and(setActive($app))->toBe(['core', 'drive', 'media'])
+        ->and(matrixRoutes($app, 'webhooks'))->toBe([])
+        ->and(matrixSurface($app))->toBe(matrixSurface(setApp(AppSets::get('core+media+drive'))))
+        ->and(FreshApplication::$queries)->toBe(0);
+});
+
+it('costs nothing for the module a set adds when it is switched off: the application shows what its parent set shows', function (AppSet $set): void {
+    $off = setApp($set, $set->off());
+    $parent = setApp(AppSets::get((string) $set->parent));
+    $kernel = $off->make(Kernel::class);
+
+    expect($kernel->isValid())->toBeTrue()
+        ->and($kernel->isActive($set->top))->toBeFalse()
+        ->and(setOffered($off))->toBe($set->sortedModules())
+        ->and(matrixRoutes($off, $set->top))->toBe([])
+        ->and(FreshApplication::$queries)->toBe(0);
+    expect(matrixSurface($off))->toBe(matrixSurface($parent))
+        ->and(matrixForeignRequest($off))->toBe(200)
+        ->and(FreshApplication::$queries)->toBe(0);
+})->with(fn (): array => AppSets::childrenDataset());
+
+it('activates nothing at all while a module the top of the set requires is switched off, and keeps the diagnostics', function (AppSet $set): void {
+    $app = setApp($set, [...$set->on, 'vaulter.modules' => [...($set->on['vaulter.modules'] ?? []), $set->requiredOff => false, $set->top => true]]);
+    $kernel = $app->make(Kernel::class);
+    $console = $app->make(ConsoleKernel::class);
+
+    expect($kernel->isValid())->toBeFalse()
+        ->and($kernel->reasons())->toContain(sprintf('module "%s" is active but requires "%s", which is not active', $set->top, $set->requiredOff))
+        ->and($kernel->modules())->toBe([])
+        ->and($kernel->isActive('core'))->toBeFalse()
+        ->and(matrixRoutes($app, $set->top))->toBe([])
+        ->and($console->all())->not->toHaveKeys(['vaulter:install', 'vaulter:relay'])
+        ->and($console->all())->toHaveKeys(['vaulter:modules', 'vaulter:doctor']);
+
+    $response = $app->make(HttpKernel::class)->handle(Request::create('/api/vaulter/v1/nodes/n1/grants', server: ['HTTP_ACCEPT' => 'application/json']));
+    expect($response->getStatusCode())->toBe(503)
+        ->and(json_decode((string) $response->getContent(), true))->toMatchArray(['code' => 'module_graph_invalid']);
+
+    expect($console->call('vaulter:modules'))->toBe(1)
+        ->and($console->output())->toContain(sprintf('module "%s" is active but requires "%s", which is not active', $set->top, $set->requiredOff));
+})->with(fn (): array => AppSets::dependentDataset());

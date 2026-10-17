@@ -6,6 +6,8 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
+use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Kernel;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
@@ -14,6 +16,8 @@ use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeProbe;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeProvider;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeService;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\ConfigCachedProvider;
+use Vaulter\Tests\Modules\Fixtures\Apps\AppSet;
+use Vaulter\Tests\Modules\Fixtures\Apps\AppSets;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
@@ -134,3 +138,68 @@ it('keeps the activation of a config cache: the same graph and fingerprint, unti
         ->and($cleared->make(Kernel::class)->isActive('acme'))->toBeFalse()
         ->and($cleared->make(Kernel::class)->fingerprint())->not->toBe($fingerprint);
 });
+
+// The same cache rules on the application sets of the install matrix (P4.18, I6): a set whose top module mounts routes,
+// route:cache built while the module was active, then the module switched off.
+
+/** @param array<string, mixed> $config */
+function cacheSetBoot(AppSet $set, array $config = []): Application
+{
+    return FreshApplication::boot($config, case: $set->testCase());
+}
+
+/**
+ * Boots the set with a route cache present, then loads `$compiled` as the cache.
+ *
+ * @param array<string, mixed> $config
+ */
+function cacheSetFromRoutes(AppSet $set, array $compiled, array $config): Application
+{
+    $path = cacheSetBoot($set)->getCachedRoutesPath();
+    @mkdir(dirname($path), 0o777, true);
+    file_put_contents($path, "<?php\n\n// ActivationCacheTest: the routes are loaded by the test.\n");
+    try {
+        $app = cacheSetBoot($set, $config);
+    } finally {
+        @unlink($path);
+    }
+    $app['router']->setCompiledRoutes($compiled);
+
+    return $app;
+}
+
+/** The first GET route of `$module` (route parameters filled in with 1): the request that must reach the module. */
+function cacheSetProbe(Application $app, string $module): string
+{
+    foreach ($app['router']->getRoutes()->getRoutes() as $route) {
+        if ($route instanceof Route && in_array('GET', $route->methods(), true) && in_array(EnsureModuleActive::ALIAS.':'.$module, $route->middleware(), true)) {
+            return '/'.preg_replace('/\{[^}]+\}/', '1', $route->uri());
+        }
+    }
+
+    throw new RuntimeException("No GET route of module $module.");
+}
+
+it('answers 404 for every cached route of the module a set adds once it is switched off after route:cache, with the cache stale in the doctor', function (AppSet $set): void {
+    $built = cacheSetBoot($set, $set->on);
+    $probe = cacheSetProbe($built, $set->top);
+    $compiled = cacheRoutesOf($built);
+
+    $served = cacheSetFromRoutes($set, $compiled, $set->on);
+    $off = cacheSetFromRoutes($set, $compiled, $set->off());
+
+    expect($off->routesAreCached())->toBeTrue()
+        ->and($off->make(Kernel::class)->isActive($set->top))->toBeFalse()
+        ->and(cacheGet($off, $probe))->toBe(404)
+        // The same request reaches the module while it is active: the 404 is the switch, not a missing record.
+        ->and(cacheGet($served, $probe))->not->toBe(404)
+        ->and(cacheDoctorCodes($off))->toBe(['core.modules.route_cache_stale']);
+})->with(fn (): array => AppSets::routedDataset());
+
+it('reports the module a set adds as missing from a route cache built before it was switched on', function (AppSet $set): void {
+    $compiled = cacheRoutesOf(cacheSetBoot($set, $set->off()));
+    $on = cacheSetFromRoutes($set, $compiled, $set->on);
+
+    expect(cacheGet($on, cacheSetProbe(cacheSetBoot($set, $set->on), $set->top)))->toBe(404)
+        ->and(cacheDoctorCodes($on))->toContain('core.modules.routes_missing');
+})->with(fn (): array => AppSets::routedDataset());

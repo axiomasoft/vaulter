@@ -124,6 +124,7 @@
             "packages/core/tests/Events/EventSinkContractTest.php",
             "packages/core/tests/Idempotency/IdempotencyContractTest.php",
             "packages/core/tests/Modules/AcmeModuleContractTest.php",
+            "packages/core/tests/Modules/CleanInstallMatrixTest.php",
             "packages/core/tests/Modules/ModuleUninstallTest.php",
             "packages/core/tests/Operations/OperationRunnerContractTest.php"
           ]

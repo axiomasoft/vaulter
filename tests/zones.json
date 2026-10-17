@@ -242,6 +242,7 @@
         "packages/drive/tests/Tenancy/TenantProvisioningRaceTest.php",
         "packages/drive/tests/Tenancy/TenantIdentifierPredicateTest.php",
         "packages/core/tests/Modules/AcmeModuleContractTest.php",
+        "packages/core/tests/Modules/CleanInstallMatrixTest.php",
         "packages/core/tests/Modules/ModuleUninstallTest.php",
         "packages/core/tests/Outbox/OutboxRelayTest.php",
         "packages/core/tests/Outbox/OutboxWriteTest.php",

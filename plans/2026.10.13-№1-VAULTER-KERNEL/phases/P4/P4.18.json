@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.18",
   "title": "Матрицы I6 (активация с фикстурами приложений) и I15 (чистая установка и откат; параметризована под sqlite/pgsql/mysql, исполняется на sqlite) — блокирующие",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "ActivationMatrixTest расширяется на downward-closed наборы приложений (core; +media; +drive; +documents; +webhooks; +azgard; +filament) и состояния (inactive override, route:cache до смены активации, InvalidModuleGraph); новый CleanInstallMatrixTest: migrate с нуля → таблицы = schema-дескрипторы набора → rollback до пустой схемы и 0 pins owner_type набора → повторный migrate, по пресетам ids/prefix; тест параметризован под три engine, в PLAN3 исполняется на sqlite (D41).",
   "why": "Фаза V1: I6 и I15 блокирующие после P4. Риск: зависание pins после rollback drive (P7 инварианта pins) и head FK cycles при откате — именно это проверяет I15.",
   "scope": {
@@ -207,6 +207,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T07:01:40Z",
+    "finished_at": "2026-10-17T07:15:21Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "deviations": [
+      "azgard/filament не добавлены в core require-dev (composer update запрещён; azguard внешний): AppSets подключает PSR-4 Vaulter\\Azgard\\ и Vaulter\\Filament\\ из packages/*/src.",
+      "У I6/I15 нет allowlist-файлов: матрицы сами являются проверкой. I15 на pgsql/mysql не запускалась (D41, PLAN4); wipe _test БД внутри DatabaseMigrations там — риск, зафиксирован в nits."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T07:15:21Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T07:15:21Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T07:15:21Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T07:15:21Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T07:15:21Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T07:15:21Z"
 }
