@@ -1080,6 +1080,34 @@
             "id": "publish:vaulter-collaboration-translations",
             "kind": "config",
             "reason": "P5.1: publish tag of the collaboration package provider"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.limits.request_bytes",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.limits.update_bytes",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.mode",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "env:VAULTER_COLLAB_MODE",
+            "kind": "config",
+            "reason": "P5.4: VAULTER_COLLAB_MODE feeds vaulter-collaboration.mode"
         }
     ],
     "items": [
@@ -1336,8 +1364,45 @@
             }
         },
         {
+            "default": 2097152,
+            "id": "config:vaulter-collaboration.limits.request_bytes",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 1048576,
+            "id": "config:vaulter-collaboration.limits.update_bytes",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "default": 16777216,
             "id": "config:vaulter-collaboration.max_state_bytes",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "buffered",
+                "env": "VAULTER_COLLAB_MODE"
+            },
+            "env": "VAULTER_COLLAB_MODE",
+            "id": "config:vaulter-collaboration.mode",
             "owner": "collaboration",
             "registered_defaults": true,
             "root": "vaulter-collaboration",
@@ -3647,6 +3712,20 @@
                 "hocuspocus"
             ],
             "id": "env:VAULTER_COLLAB_DRIVER",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-collaboration.mode"
+            ],
+            "defaults": [
+                "buffered"
+            ],
+            "id": "env:VAULTER_COLLAB_MODE",
             "owner": "collaboration",
             "source": {
                 "file": "packages/collaboration/config/vaulter-collaboration.php",

@@ -4634,6 +4634,510 @@
             "id": "problem:document_state_pending",
             "kind": "protocol",
             "reason": "P5.3: 409, retryable with_backoff, receipt never — content read, export, REST replace, restore and purge of a document whose pending marker could not be drained (C8, C9); thrown by the documents guards, drained through the PendingStateDrainer SPI (D27)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.checkpoint_seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.checkpoint_version",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.created_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.drain_requested_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.head_seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_expires_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_owner",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_token",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.retired_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.updated_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.committed_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.sha256",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.update_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.created_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.payload",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.sha256",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.update_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_checkpoint_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_checkpoint_version_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_3",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_4",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_head_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_update_uniq",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_heads.v_collaboration_heads_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_receipts.v_collaboration_receipts_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_updates.v_collaboration_updates_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.v_collaboration_heads_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.v_collaboration_heads_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.v_collaboration_receipts_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.v_collaboration_receipts_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_update_uniq",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000501_create_v_collaboration_heads_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000502_create_v_collaboration_updates_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000503_create_v_collaboration_receipts_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_heads",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_receipts",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_updates",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_protocol_mismatch",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_update_mismatch",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_update_too_large",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.append",
+            "kind": "http",
+            "reason": "P5.4: protocol 2 append (X-Vaulter-Collab-Protocol: 2, committed receipt ack) on the hub stack behind the size gate and the call signature"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.limits.request_bytes",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.limits.update_bytes",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.mode",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "env:VAULTER_COLLAB_MODE",
+            "kind": "config",
+            "reason": "P5.4: VAULTER_COLLAB_MODE feeds vaulter-collaboration.mode"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

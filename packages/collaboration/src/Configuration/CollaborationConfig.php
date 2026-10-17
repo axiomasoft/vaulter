@@ -88,6 +88,37 @@ final readonly class CollaborationConfig
         return is_numeric($value) && (int) $value > 0 ? (int) $value : 16777216;
     }
 
+    /**
+     * When an edit counts as saved under protocol 2: `buffered` (the default) or `durable`.
+     *
+     * @throws InvalidConfigurationException for any other value
+     */
+    public function mode(): string
+    {
+        $value = $this->config->get(key: 'vaulter-collaboration.mode', default: 'buffered');
+        if (!in_array($value, ['buffered', 'durable'], true)) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.mode must be "buffered" or "durable".');
+        }
+
+        return $value;
+    }
+
+    /** The largest decoded Yjs update one append may carry. */
+    public function updateBytes(): int
+    {
+        $value = $this->config->get(key: 'vaulter-collaboration.limits.update_bytes', default: 1048576);
+
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : 1048576;
+    }
+
+    /** The largest append request body, checked by its Content-Length before the body is read. */
+    public function requestBytes(): int
+    {
+        $value = $this->config->get(key: 'vaulter-collaboration.limits.request_bytes', default: 2097152);
+
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : 2097152;
+    }
+
     public function hubWebhookSecret(): ?string
     {
         $value = $this->config->get('vaulter-collaboration.hub.webhook_secret');

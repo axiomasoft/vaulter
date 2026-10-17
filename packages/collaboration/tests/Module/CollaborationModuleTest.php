@@ -8,6 +8,7 @@ use Illuminate\Routing\Route;
 use Vaulter\Collaboration\CollaborationModule;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
+use Vaulter\Collaboration\Schema\CollaborationSchema;
 use Vaulter\Documents\Contracts\CollaborationDriver;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Http\Problems\ProblemCatalog;
@@ -46,6 +47,8 @@ it('declares an opt-in manifest that needs the documents module', function (): v
         ->and($module->activation())->toBe(Activation::OptIn)
         ->and(array_keys($module->requires()))->toBe(['core', 'drive', 'documents'])
         ->and(array_keys($builder->configs()))->toBe(['vaulter-collaboration'])
+        ->and(CollaborationModule::ownedSchema())->toBe(CollaborationSchema::class)
+        ->and(array_map(realpath(...), $builder->schemaPaths()))->toBe([realpath(__DIR__.'/../../database/migrations')])
         ->and(array_map(realpath(...), $builder->routeFiles()))->toBe([realpath(__DIR__.'/../../routes/collaboration.php')])
         ->and(array_map(static fn ($provider): string => $provider->contract.'=>'.$provider->implementation, $builder->capabilityProviders()))->toBe([CollaborationDriver::class.'=>'.HocuspocusCollaborationDriver::class]);
 });
@@ -78,6 +81,7 @@ it('mounts the session and the hub routes behind the module middleware once it i
             'vaulter.v1.collaboration.hub.authenticate',
             'vaulter.v1.collaboration.hub.load',
             'vaulter.v1.collaboration.hub.store',
+            'vaulter.v1.collaboration.hub.append',
         ])
         ->and($kernel->capabilities()->require(CollaborationDriver::class))->toBeInstanceOf(HocuspocusCollaborationDriver::class)
         ->and($app['config']->get('vaulter-collaboration.driver'))->toBe('hocuspocus')

@@ -569,6 +569,30 @@
         },
         {
             "match": "file",
+            "value": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+            "owner": "collaboration",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D26 (P5.4): v_collaboration_heads is created by the migration of collaboration"
+        },
+        {
+            "match": "file",
+            "value": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+            "owner": "collaboration",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D26 (P5.4): v_collaboration_updates is created by the migration of collaboration"
+        },
+        {
+            "match": "file",
+            "value": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+            "owner": "collaboration",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D26 (P5.4): v_collaboration_receipts is created by the migration of collaboration"
+        },
+        {
+            "match": "file",
             "value": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
             "owner": "drive",
             "action": "keep",

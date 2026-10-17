@@ -265,7 +265,7 @@ it('keeps every table in the migrations and the schema class of the module that 
     $withSchema = array_keys($schemas->all());
     sort($withSchema);
 
-    expect($schemaModules)->toBe(['core', 'documents', 'drive', 'media', 'webhooks'])
+    expect($schemaModules)->toBe(['collaboration', 'core', 'documents', 'drive', 'media', 'webhooks'])
         ->and(array_keys($tables))->toBe($withSchema);
     foreach ($schemas->all() as $module => $schema) {
         expect(count($tables[$module]))->toBe(count($schema->entities()), $module);
@@ -274,7 +274,7 @@ it('keeps every table in the migrations and the schema class of the module that 
 
 it('numbers the create-migrations in the block of the owner and in the order of the foreign keys (D40)', function (): void {
     $root = dirname(__DIR__, 4);
-    $blocks = ['core' => [1, 99], 'media' => [101, 199], 'drive' => [201, 299], 'documents' => [301, 399], 'webhooks' => [401, 499]];
+    $blocks = ['core' => [1, 99], 'media' => [101, 199], 'drive' => [201, 299], 'documents' => [301, 399], 'webhooks' => [401, 499], 'collaboration' => [501, 599]];
     $numbers = [];
     foreach (glob($root.'/packages/*/database/migrations/*.php') ?: [] as $file) {
         expect(preg_match('/^0001_01_01_(\d{6})_create_(v_[a-z_]+)_table\.php$/', basename($file), $m))->toBe(1, $file);

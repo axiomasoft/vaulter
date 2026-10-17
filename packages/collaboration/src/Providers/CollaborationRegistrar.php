@@ -34,6 +34,7 @@ final class CollaborationRegistrar implements ModuleBindings
             $config = $app->make(CollaborationConfig::class);
             $config->assertDistinctHubSecrets();
             $config->hubTokenTtl();
+            $config->mode();
         });
         $app->tag('vaulter.config_validator.collaboration', ConfigValidCheck::TAG);
 

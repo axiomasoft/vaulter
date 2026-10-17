@@ -341,6 +341,7 @@
         "packages/collaboration/tests/Concurrency",
         "packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php",
         "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
+        "packages/collaboration/tests/Persistence",
         "packages/azgard/tests/RealAzgard",
         "packages/azgard/tests/RealAzgardIsolated"
     ],

@@ -9,6 +9,7 @@ use Vaulter\Collaboration\Doctor\CollaborationCheck;
 use Vaulter\Collaboration\Http\Support\CollaborationRouteLabels;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Providers\CollaborationRegistrar;
+use Vaulter\Collaboration\Schema\CollaborationSchema;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Documents\Contracts\CollaborationDriver;
@@ -16,6 +17,7 @@ use Vaulter\Drive\Contracts\DriveExtension;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\VaulterModule;
 
 /**
@@ -25,8 +27,13 @@ use Vaulter\Modules\VaulterModule;
  * and brings its session and hub routes, problem codes, doctor check and `vaulter-collaboration.*` configuration.
  */
 #[Internal]
-final class CollaborationModule implements VaulterModule
+final class CollaborationModule implements OwnsSchema, VaulterModule
 {
+    public static function ownedSchema(): string
+    {
+        return CollaborationSchema::class;
+    }
+
     public function id(): ModuleId
     {
         return new ModuleId('collaboration');
@@ -51,6 +58,8 @@ final class CollaborationModule implements VaulterModule
     {
         $module
             ->config('vaulter-collaboration', dirname(__DIR__).'/config/vaulter-collaboration.php')
+            // The update log, receipts and heads of a document generation (D26); installed with the package, kept when off.
+            ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/collaboration.php')
             ->problems(CollaborationProblemCodes::class)
             ->bindings(CollaborationRegistrar::class)

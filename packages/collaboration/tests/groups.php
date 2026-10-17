@@ -12,6 +12,8 @@ return [
         'Concurrency',
         'Collaboration/CollaborationWebhookTest.php',
         'Collaboration/HubProtocolTest.php',
+        // The update log, receipts and heads (P5.4): binary payloads, composite keys and the FOR UPDATE head lock.
+        'Persistence',
     ],
     // Forked children on their own connections, or process-global state a parallel worker would trample.
     'serial' => [

@@ -1059,7 +1059,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hub: load the state of a room */
+        /**
+         * Hub: load the state of a room
+         * @description With X-Vaulter-Collab-Protocol: 2 the checkpoint and the committed tail (HubLoadedV2); without the header the protocol 1 state (HubLoaded).
+         */
         post: operations["collaboration.hub.load"];
         delete?: never;
         options?: never;
@@ -1084,6 +1087,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/collaboration/hub/append": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hub: append one update to the log of a room (protocol 2)
+         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large). The answer is the committed receipt: a retry with the same update_id and payload gets the same seq.
+         */
+        post: operations["collaboration.hub.append"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1102,8 +1125,11 @@ export interface components {
              * @example blob_unavailable
              * @example cannot_delete_head_revision
              * @example collaboration_epoch_mismatch
+             * @example collaboration_protocol_mismatch
              * @example collaboration_seed_conflict
              * @example collaboration_unavailable
+             * @example collaboration_update_mismatch
+             * @example collaboration_update_too_large
              * @example comment_not_found
              * @example concurrent_update
              * @example content_unavailable
@@ -1520,6 +1546,32 @@ export interface components {
             userId: string | null;
             epoch?: number;
         };
+        /** @description The committed receipt of an appended update (protocol 2), sent only after the commit. */
+        HubAppended: {
+            generation: number;
+            update_id: string;
+            seq: number;
+            sha256: string;
+            persisted: true;
+        };
+        /** @description Protocol 2 load: the checkpoint and the committed tail (checkpoint_seq, head_seq] to replay on it. Before the first checkpoint, content is the JSON projection to seed the room from. */
+        HubLoadedV2: {
+            generation: number;
+            schema_version: number;
+            type: string;
+            state_version: number;
+            /** @description Base64 Yjs checkpoint, null before the first one. */
+            checkpoint: string | null;
+            checkpoint_seq: number;
+            head_seq: number;
+            content: Record<string, never> | null;
+            tail: {
+                seq: number;
+                update_id: string;
+                /** @description Base64 Yjs update. */
+                payload: string;
+            }[];
+        };
         HubLoaded: {
             /** @description Base64 Yjs state, null before the first store. */
             state: string | null;
@@ -1840,6 +1892,8 @@ export interface components {
     parameters: {
         /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
         IfMatch: string;
+        /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
+        XVaulterCollabProtocol: string;
         /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
         IdempotencyKey: string;
         /** @description Required when the request replaces an existing node (node_id given): 428 without it, 412 on a stale tag. */
@@ -1917,6 +1971,8 @@ export interface components {
         XRateLimitLimit: number;
         /** @description Requests left in the window. */
         XRateLimitRemaining: number;
+        /** @description The hub ↔ backend protocol version of the answer (protocol 2 calls). */
+        XVaulterCollabProtocol: "2";
         /** @description attachment or inline, with a filename. */
         ContentDisposition: string;
         /** @description Sandboxes every served byte. */
@@ -4959,7 +5015,10 @@ export interface operations {
     "collaboration.hub.load": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
+                "X-Vaulter-Collab-Protocol"?: components["parameters"]["XVaulterCollabProtocol"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -4979,10 +5038,11 @@ export interface operations {
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
                     "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HubLoaded"];
+                    "application/json": components["schemas"]["HubLoaded"] | components["schemas"]["HubLoadedV2"];
                 };
             };
             401: components["responses"]["Problem401"];
@@ -5025,6 +5085,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HubStoredEnvelope"];
+                };
+            };
+            401: components["responses"]["Problem401"];
+            403: components["responses"]["Problem403"];
+            404: components["responses"]["Problem404"];
+            409: components["responses"]["Problem409"];
+            413: components["responses"]["Problem413"];
+            422: components["responses"]["Problem422"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+        };
+    };
+    "collaboration.hub.append": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
+                "X-Vaulter-Collab-Protocol"?: components["parameters"]["XVaulterCollabProtocol"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    room: string;
+                    generation: number;
+                    /** @description UUID of the update, unchanged on every retry. */
+                    update_id: string;
+                    /** @description Hex sha256 of the decoded payload; checked by the backend, never trusted. */
+                    sha256: string;
+                    /** @description Base64 Yjs update. */
+                    payload: string;
+                    /** @enum {string} */
+                    origin?: "client" | "server";
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubAppended"];
                 };
             };
             401: components["responses"]["Problem401"];

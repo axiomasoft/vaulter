@@ -1239,6 +1239,27 @@
             "id": "problem:document_state_pending",
             "kind": "protocol",
             "reason": "P5.3: 409, retryable with_backoff, receipt never — content read, export, REST replace, restore and purge of a document whose pending marker could not be drained (C8, C9); thrown by the documents guards, drained through the PendingStateDrainer SPI (D27)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_protocol_mismatch",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_update_mismatch",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_update_too_large",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
         }
     ],
     "items": [
@@ -2346,6 +2367,18 @@
             "status": 409
         },
         {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationProtocolMismatchException",
+            "id": "problem:collaboration_protocol_mismatch",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 409
+        },
+        {
             "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationSeedConflictException",
             "id": "problem:collaboration_seed_conflict",
             "owner": "collaboration",
@@ -2368,6 +2401,30 @@
                 "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUpdateMismatchException",
+            "id": "problem:collaboration_update_mismatch",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 422
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUpdateTooLargeException",
+            "id": "problem:collaboration_update_too_large",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 413
         },
         {
             "exception": "Vaulter\\Documents\\Exceptions\\CommentNotFoundException",

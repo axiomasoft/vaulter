@@ -16,6 +16,7 @@ final class CollaborationRouteLabels implements RouteLabelSource
         return [
             'vaulter.v1.documents.collaboration.session' => 'collab_issue',
             'vaulter.v1.collaboration.hub.store' => 'collab_persist',
+            'vaulter.v1.collaboration.hub.append' => 'collab_append',
         ];
     }
 
@@ -24,6 +25,7 @@ final class CollaborationRouteLabels implements RouteLabelSource
         return [
             ['methods' => ['POST'], 'pattern' => 'v1/documents/{id}/collaboration/session', 'operation' => 'collab_issue'],
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/store', 'operation' => 'collab_persist'],
+            ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/append', 'operation' => 'collab_append'],
         ];
     }
 
@@ -32,6 +34,7 @@ final class CollaborationRouteLabels implements RouteLabelSource
         return [
             'vaulter.v1.collaboration.hub.authenticate' => 'collab.authenticate',
             'vaulter.v1.collaboration.hub.store' => 'collab.store',
+            'vaulter.v1.collaboration.hub.append' => 'collab.append',
         ];
     }
 }

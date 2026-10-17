@@ -352,7 +352,8 @@ describe('committed fixtures', function (): void {
 
         expect($schema['presets'])->toBe(48)
             ->and($schema['engines'])->toBe(['pgsql', 'mysql', 'sqlite'])
-            ->and(count($tables))->toBe(29)
+            ->and(count($tables))->toBe(32)
+            ->and($tables['v_collaboration_heads'] ?? null)->toBe('collaboration')
             ->and(array_column(array_filter($schema['items'], static fn (array $i): bool => str_starts_with($i['id'], 'migration:')), 'id'))->toBe(array_map(static fn (string $b): string => 'migration:'.$b, $migrations));
         foreach ($schema['items'] as $item) {
             if (isset($item['table'])) {
@@ -427,7 +428,8 @@ describe('committed fixtures', function (): void {
         $count = static fn (string $prefix): int => count(array_filter(array_keys($items), static fn (string $id): bool => str_starts_with($id, $prefix)));
 
         expect($count('event:'))->toBe(32)
-            ->and($count('problem:'))->toBe(79)
+            ->and($count('problem:'))->toBe(82)
+            ->and($items['problem:collaboration_update_too_large'])->toMatchArray(['status' => 413, 'owner' => 'collaboration', 'retryable' => 'never', 'receipt' => 'never'])
             ->and($items['problem:document_state_pending'])->toMatchArray(['status' => 409, 'owner' => 'documents', 'retryable' => 'with_backoff', 'receipt' => 'never'])
             ->and($items['problem:blob_unavailable'])->toMatchArray(['status' => 409, 'owner' => 'media', 'retryable' => 'never', 'receipt' => 'never'])
             ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'external' => true, 'journal' => 'upsert'])

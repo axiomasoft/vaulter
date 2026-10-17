@@ -3442,8 +3442,12 @@ paths:
       tags:
       - hub
       summary: 'Hub: load the state of a room'
+      description: 'With X-Vaulter-Collab-Protocol: 2 the checkpoint and the committed tail (HubLoadedV2); without the header
+        the protocol 1 state (HubLoaded).'
       security:
       - hubSecret: []
+      parameters:
+      - $ref: '#/components/parameters/XVaulterCollabProtocol'
       requestBody:
         required: true
         content:
@@ -3469,10 +3473,14 @@ paths:
               $ref: '#/components/headers/XRateLimitLimit'
             X-RateLimit-Remaining:
               $ref: '#/components/headers/XRateLimitRemaining'
+            X-Vaulter-Collab-Protocol:
+              $ref: '#/components/headers/XVaulterCollabProtocol'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HubLoaded'
+                oneOf:
+                - $ref: '#/components/schemas/HubLoaded'
+                - $ref: '#/components/schemas/HubLoadedV2'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
@@ -3553,6 +3561,86 @@ paths:
           $ref: '#/components/responses/Problem429'
         '500':
           $ref: '#/components/responses/Problem500'
+  /collaboration/hub/append:
+    post:
+      operationId: collaboration.hub.append
+      tags:
+      - hub
+      summary: 'Hub: append one update to the log of a room (protocol 2)'
+      description: 'Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is
+        checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large).
+        The answer is the committed receipt: a retry with the same update_id and payload gets the same seq.'
+      security:
+      - hubSecret: []
+      parameters:
+      - $ref: '#/components/parameters/XVaulterCollabProtocol'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - room
+              - generation
+              - update_id
+              - sha256
+              - payload
+              properties:
+                room:
+                  type: string
+                generation:
+                  type: integer
+                update_id:
+                  type: string
+                  description: UUID of the update, unchanged on every retry.
+                sha256:
+                  type: string
+                  description: Hex sha256 of the decoded payload; checked by the backend, never trusted.
+                payload:
+                  type: string
+                  description: Base64 Yjs update.
+                origin:
+                  type: string
+                  enum:
+                  - client
+                  - server
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-Vaulter-Collab-Protocol:
+              $ref: '#/components/headers/XVaulterCollabProtocol'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubAppended'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
 components:
   securitySchemes:
     hostAuth:
@@ -3572,6 +3660,14 @@ components:
       required: true
       description: 'The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag:
         412. Checked after authorization.'
+      schema:
+        type: string
+    XVaulterCollabProtocol:
+      name: X-Vaulter-Collab-Protocol
+      in: header
+      required: false
+      description: 'The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409
+        collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed).'
       schema:
         type: string
     IdempotencyKey:
@@ -3814,6 +3910,11 @@ components:
       description: Requests left in the window.
       schema:
         type: integer
+    XVaulterCollabProtocol:
+      description: The hub ↔ backend protocol version of the answer (protocol 2 calls).
+      schema:
+        type: string
+        const: '2'
     ContentDisposition:
       description: attachment or inline, with a filename.
       required: true
@@ -4103,8 +4204,11 @@ components:
           - blob_unavailable
           - cannot_delete_head_revision
           - collaboration_epoch_mismatch
+          - collaboration_protocol_mismatch
           - collaboration_seed_conflict
           - collaboration_unavailable
+          - collaboration_update_mismatch
+          - collaboration_update_too_large
           - comment_not_found
           - concurrent_update
           - content_unavailable
@@ -5207,6 +5311,79 @@ components:
           - 'null'
         epoch:
           type: integer
+    HubAppended:
+      type: object
+      description: The committed receipt of an appended update (protocol 2), sent only after the commit.
+      required:
+      - generation
+      - update_id
+      - seq
+      - sha256
+      - persisted
+      properties:
+        generation:
+          type: integer
+        update_id:
+          type: string
+        seq:
+          type: integer
+        sha256:
+          type: string
+        persisted:
+          type: boolean
+          const: true
+    HubLoadedV2:
+      type: object
+      description: 'Protocol 2 load: the checkpoint and the committed tail (checkpoint_seq, head_seq] to replay on it. Before
+        the first checkpoint, content is the JSON projection to seed the room from.'
+      required:
+      - generation
+      - schema_version
+      - type
+      - state_version
+      - checkpoint
+      - checkpoint_seq
+      - head_seq
+      - content
+      - tail
+      properties:
+        generation:
+          type: integer
+        schema_version:
+          type: integer
+        type:
+          type: string
+        state_version:
+          type: integer
+        checkpoint:
+          type:
+          - string
+          - 'null'
+          description: Base64 Yjs checkpoint, null before the first one.
+        checkpoint_seq:
+          type: integer
+        head_seq:
+          type: integer
+        content:
+          type:
+          - object
+          - 'null'
+        tail:
+          type: array
+          items:
+            type: object
+            required:
+            - seq
+            - update_id
+            - payload
+            properties:
+              seq:
+                type: integer
+              update_id:
+                type: string
+              payload:
+                type: string
+                description: Base64 Yjs update.
     HubLoaded:
       type: object
       required:

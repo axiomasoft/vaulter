@@ -1587,6 +1587,7 @@
             "serial"
           ],
           "files": [
+            "packages/collaboration/tests/Concurrency/AppendRaceTest.php",
             "packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php",
             "packages/collaboration/tests/Concurrency/CollaborationLivenessRaceTest.php"
           ]
@@ -1617,8 +1618,12 @@
             "packages/collaboration/tests/Http/CollaborationRouteLabelsTest.php",
             "packages/collaboration/tests/Http/CollaborationSessionV1Test.php",
             "packages/collaboration/tests/Http/ContentFenceV1Test.php",
+            "packages/collaboration/tests/Http/HubAppendV2Test.php",
             "packages/collaboration/tests/Http/HubV1RoutesTest.php",
-            "packages/collaboration/tests/Operations/CollaborationOperationsTest.php"
+            "packages/collaboration/tests/Operations/CollaborationOperationsTest.php",
+            "packages/collaboration/tests/Persistence/AppendIdempotencyTest.php",
+            "packages/collaboration/tests/Persistence/AppendValidationTest.php",
+            "packages/collaboration/tests/Persistence/GenerationFenceTest.php"
           ]
         },
         {
@@ -1634,6 +1639,7 @@
             "serial"
           ],
           "files": [
+            "packages/collaboration/tests/Arch/BoundaryTest.php",
             "packages/collaboration/tests/Arch/HttpV1ArchTest.php",
             "packages/collaboration/tests/Arch/TestingBoundaryTest.php"
           ]

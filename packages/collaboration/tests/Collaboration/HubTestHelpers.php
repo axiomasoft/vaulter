@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration\Tests\Collaboration;
 
 use Firebase\JWT\JWT;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Vaulter\Collaboration\CollaborationCallResolver;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
+use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
@@ -127,6 +129,42 @@ final class HubTestHelpers
         $body['nonce'] = bin2hex(random_bytes(8));
 
         return test()->postJson('api/vaulter/v1/collaboration/hub/'.$endpoint, $body, self::headers($body, $token));
+    }
+
+    /**
+     * One protocol 2 hub call: the same signed request with `X-Vaulter-Collab-Protocol` (`$protocol` null leaves the
+     * header out).
+     *
+     * @param array<string, mixed> $body
+     */
+    public static function callV2(string $endpoint, array $body, ?string $token, ?string $protocol = '2'): TestResponse
+    {
+        $body['nonce'] = bin2hex(random_bytes(8));
+        $headers = self::headers($body, $token);
+        if ($protocol !== null) {
+            $headers[HubProtocol::HEADER] = $protocol;
+        }
+
+        return test()->postJson('api/vaulter/v1/collaboration/hub/'.$endpoint, $body, $headers);
+    }
+
+    /**
+     * A protocol 2 append body as the hub sends it: the payload is the binary update, its hash is computed unless given.
+     *
+     * @return array<string, mixed>
+     */
+    public static function appendBody(Node $node, string $payload, ?string $updateId = null, ?int $generation = null, ?string $sha256 = null, string $origin = 'client'): array
+    {
+        $generation ??= self::aggregate($node)->collab_epoch;
+
+        return [
+            'room' => self::room($node, $generation),
+            'generation' => $generation,
+            'update_id' => $updateId ?? (string) Str::uuid(),
+            'sha256' => $sha256 ?? hash('sha256', $payload),
+            'payload' => base64_encode($payload),
+            'origin' => $origin,
+        ];
     }
 
     /**

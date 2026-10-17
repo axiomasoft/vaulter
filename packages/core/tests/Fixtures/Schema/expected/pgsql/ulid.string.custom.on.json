@@ -473,6 +473,367 @@
                 }
             }
         },
+        "custom_collaboration_heads": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "character(26)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "head_seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "checkpoint_seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "checkpoint_version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "lease_token",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "lease_owner",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drain_requested_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "retired_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_collaboration_heads_document_id_index": "CREATE INDEX custom_collaboration_heads_document_id_index ON public.custom_collaboration_heads USING btree (document_id)",
+                "custom_collaboration_heads_pkey": "CREATE UNIQUE INDEX custom_collaboration_heads_pkey ON public.custom_collaboration_heads USING btree (document_id, generation)"
+            },
+            "constraints": {
+                "custom_collaboration_heads_checkpoint_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK ((checkpoint_seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_heads_checkpoint_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((checkpoint_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_heads_document_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES custom_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_heads_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK ((generation >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_heads_head_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK ((head_seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_heads_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (document_id, generation)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_collaboration_receipts": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "character(26)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "update_id",
+                    "type": "character(36)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "sha256",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "committed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_collaboration_receipts_document_id_index": "CREATE INDEX custom_collaboration_receipts_document_id_index ON public.custom_collaboration_receipts USING btree (document_id)",
+                "custom_collaboration_receipts_pkey": "CREATE UNIQUE INDEX custom_collaboration_receipts_pkey ON public.custom_collaboration_receipts USING btree (document_id, generation, update_id)"
+            },
+            "constraints": {
+                "custom_collaboration_receipts_document_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES custom_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_receipts_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK ((generation >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_receipts_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (document_id, generation, update_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_receipts_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK ((seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_collaboration_updates": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "character(26)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "update_id",
+                    "type": "character(36)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "payload",
+                    "type": "bytea",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "sha256",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_collaboration_updates_document_id_index": "CREATE INDEX custom_collaboration_updates_document_id_index ON public.custom_collaboration_updates USING btree (document_id)",
+                "custom_collaboration_updates_pkey": "CREATE UNIQUE INDEX custom_collaboration_updates_pkey ON public.custom_collaboration_updates USING btree (document_id, generation, seq)",
+                "custom_collaboration_updates_update_uniq": "CREATE UNIQUE INDEX custom_collaboration_updates_update_uniq ON public.custom_collaboration_updates USING btree (document_id, generation, update_id)"
+            },
+            "constraints": {
+                "custom_collaboration_updates_document_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES custom_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_updates_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK ((generation >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_updates_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (document_id, generation, seq)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_updates_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK ((seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_updates_update_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (document_id, generation, update_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
         "custom_document_revisions": {
             "columns": [
                 {

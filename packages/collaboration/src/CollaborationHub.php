@@ -10,6 +10,9 @@ use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Collaboration\Data\PersistCollaborationStateInput;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationUnavailableException;
+use Vaulter\Collaboration\Persistence\AppendResult;
+use Vaulter\Collaboration\Persistence\UpdateEnvelope;
+use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
@@ -46,14 +49,16 @@ final readonly class CollaborationHub
         private DocumentTypeRegistry $types,
         private AccessResolver $access,
         private HostUserResolver $users,
+        private UpdateLog $log,
     ) {}
 
     /**
      * The live room a call addresses.
      *
      * @throws PermissionDeniedException           the body names another room than the token
-     * @throws NodeNotFoundException               gone, trashed, moved to another drive/tenant, or the drive is not usable
-     * @throws CollaborationEpochMismatchException the document moved to another generation
+     * @throws NodeNotFoundException               gone, trashed, moved to another drive/tenant, the drive is not usable,
+     *                                             or the subject cannot see a document whose generation moved
+     * @throws CollaborationEpochMismatchException the document moved to another generation (a subject with View)
      * @throws CollaborationUnavailableException   the type cannot collaborate
      */
     public function open(CollaborationCall $call, mixed $room): HubRoom
@@ -80,16 +85,22 @@ final readonly class CollaborationHub
         }
 
         $document = $this->documents->forNode($node) ?? throw NotADocumentException::forNode($node->getKey());
+        $type = $this->types->find($document->type);
+        $ability = $this->ability($call->subject, $node);
+        $unsupported = $type !== null && !$type instanceof SupportsCollaboration;
+        // A subject without View learns neither the document's generation nor its type: what would tell them apart
+        // from a missing document answers as one. Without View and nothing to tell, the call goes on and each
+        // endpoint answers for itself (authenticate: allowed=false; load/store v1: 403; protocol 2: 404).
+        if ($ability === null && ($document->collab_epoch !== $ref->epoch || $unsupported)) {
+            throw NodeNotFoundException::forId($ref->nodeId);
+        }
         if ($document->collab_epoch !== $ref->epoch) {
             throw new CollaborationEpochMismatchException(expected: $ref->epoch, actual: $document->collab_epoch);
         }
-
-        $type = $this->types->find($document->type);
-        if ($type !== null && !$type instanceof SupportsCollaboration) {
+        if ($type !== null && $unsupported) {
             throw CollaborationUnavailableException::unsupportedType($type->key());
         }
 
-        $ability = $this->ability($call->subject, $node);
         // The same rule as DocumentOperations::collaborationSession(), re-evaluated now:
         // a token issued read-only stays read-only, and a writable one only writes while
         // every condition still holds.
@@ -170,6 +181,64 @@ final readonly class CollaborationHub
             seed: $seed,
             expectedStateVersion: $seed ? $stateVersion : null,
         ));
+    }
+
+    /**
+     * Protocol 2: append one update of the room's generation to the document's log. Only a writable room appends; a
+     * subject who cannot see the document gets the same 404 as a document that does not exist.
+     *
+     * @throws NodeNotFoundException               the subject cannot see the document (or it is gone)
+     * @throws PermissionDeniedException           the room may not write now
+     * @throws CollaborationEpochMismatchException the update is of another generation than the room's or the document's
+     */
+    public function append(HubRoom $room, CollaborationCall $call, UpdateEnvelope $update): AppendResult
+    {
+        $this->assertVisible($room, $call);
+        if (!$room->writable) {
+            throw PermissionDeniedException::forAbility(Ability::Edit->value);
+        }
+        if ($update->generation !== $call->ref->epoch) {
+            throw new CollaborationEpochMismatchException(expected: $update->generation, actual: $room->document->collab_epoch);
+        }
+
+        return $this->log->append($call->ref->nodeId, $update);
+    }
+
+    /**
+     * Protocol 2 load: the checkpoint and the committed tail (C, H] the hub replays, read together under the document
+     * and head locks. Before the first checkpoint there is no binary state; the JSON projection, read through the type,
+     * is what the hub seeds the room from.
+     *
+     * @return array{generation: int, schema_version: int, type: string, state_version: int, checkpoint: string|null, checkpoint_seq: int, head_seq: int, content: array<string, mixed>|null, tail: list<array{seq: int, update_id: string, payload: string}>}
+     */
+    public function loadLog(HubRoom $room, CollaborationCall $call): array
+    {
+        $this->assertVisible($room, $call);
+        $log = $this->log->snapshot($call->ref->nodeId, $call->ref->epoch);
+
+        // Everything below comes from the locked snapshot, not from the room open() read before the locks: a write
+        // between the two would pair one moment's content with another's state version.
+        return [
+            'generation' => $log->generation,
+            'schema_version' => $room->type?->schemaVersion() ?? $log->schemaVersion,
+            'type' => $log->type,
+            'state_version' => $log->stateVersion,
+            'checkpoint' => $log->checkpoint === null ? null : base64_encode($log->checkpoint),
+            'checkpoint_seq' => $log->checkpointSeq,
+            'head_seq' => $log->headSeq,
+            'content' => $log->checkpoint === null
+                ? $this->decoder->read($log->type, $log->content, $log->schemaVersion)->content->toArray()
+                : null,
+            'tail' => $log->tail,
+        ];
+    }
+
+    /** A subject without View learns nothing a missing document would not tell (protocol 2 calls). */
+    private function assertVisible(HubRoom $room, CollaborationCall $call): void
+    {
+        if ($room->ability === null) {
+            throw NodeNotFoundException::forId($call->ref->nodeId);
+        }
     }
 
     private function assertCanView(HubRoom $room): void

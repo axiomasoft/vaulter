@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.4",
   "title": "Журнал обновлений: heads/updates/receipts, append с receipts, generation-fencing и лимитами (протокол 2, backend)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Миграции `0001_01_01_000501` heads (вкл. lease_token/lease_owner/lease_expires_at/drain_requested_at/retired_at), `000502` updates, `000503` receipts и `Vaulter\\Collaboration\\Schema\\CollaborationSchema`; `Persistence\\UpdateLog::append()` по C1–C4 (CollaborativeState::lock → heads FOR UPDATE → receipt/hash → seq → update+receipt+markPending → commit → ack); `POST /v1/collaboration/hub/append` и `load` v2 (checkpoint + tail (C,H]); заголовок `X-Vaulter-Collab-Protocol: 2` на v2-маршрутах; problems `collaboration_update_mismatch` (422), `collaboration_update_too_large` (413), `collaboration_protocol_mismatch` (409); лимиты до декодирования; config `mode`, `limits.update_bytes`, `limits.request_bytes`; `scripts/schema-snapshot.php` с провайдером collaboration; I15 набор `+collaboration`; arch-тест границы. v1 `/hub/store` пока остаётся.",
   "why": "D26 и p5-design#invariants C1–C4: авторитетны бинарные Yjs-обновления с receipts; сегодняшний store без базовой версии (CollaborationHub:171) перезаписывает full state. Hard risks: ack до commit; вторая запись при повторе после потерянного ответа (сценарий 1); запись в старую generation после restore (7); отказ по размеру после аллокации (17); скрытый документ/тенант отвечает иначе, чем отсутствующий.",
   "scope": {
@@ -186,6 +186,18 @@
     {
       "path": ".swissknifeman/state/artifacts/sha256/ebdcbbbf5dd6175f5633fa32a30df97c91f91a353f44960b5b6889e2bff1d2a8",
       "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/27293395559591a9780723650aa2fb82841332087b899a82db0b6e1bac27a38c",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/4fd5bdb13b78d770a7b78a7ea41a3ba02a2d3172ffdfa9b6350315ce3d657fcd",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/07d1a5457baab01061044863f9230a047ba42f59155a7134e2fcb2734083d71b",
+      "role": "input"
     }
   ],
   "rules": [
@@ -271,6 +283,92 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T11:12:55Z"
+  "result": {
+    "started_at": "2026-10-17T11:13:09Z",
+    "finished_at": "2026-10-17T15:30:42Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "opus",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-d004884dc0a2679764c10361-P5.4",
+    "notes": "Correction round for review findings F1–F4 of P5.4. F1: UpdateLog now uses locking reads (lockForUpdate) after the head lock: the receipt lookup in append (private findReceipt(lock: true); public receipt() stays a plain read), and in snapshot() the document row and the tail query. A comment explains that MySQL REPEATABLE READ snapshots start at the plain node read in lock() and cites the same split in NodeReadRepository::siblingQuery. F2: LogSnapshot carries type, schemaVersion and content from the document row read under lock (stateVersion now also comes from that row). CollaborationHub::loadLog builds content, type and schema_version from the snapshot, not from the room open() read earlier. F3: CollaborationHub::open computes the subject's ability before the epoch and type checks. Without View, a moved generation or a type that cannot collaborate answers NodeNotFoundException (the 404 of a missing document). Subjects with View keep the 409 collaboration_epoch_mismatch. Without View and with nothing to reveal, endpoints still answer for themselves (authenticate allowed=false, v1 403, v2 404). F4: LimitHubAppend never reads the body. A missing or non-decimal Content-Length gives 413 collaboration_update_too_large through the new #[Internal] CollaborationUpdateTooLargeException::undeclared(). sizeBytes became ?int (null when the size is undeclared); surface snapshot updated. Regression tests: new tests/Persistence/LockingReadsTest.php renders every select of append (first and retry) and snapshot through MySqlGrammar on the running sqlite connection (a recording SQLiteGrammar subclass) and asserts that receipt, heads, document and tail selects end with 'for update'. HubAppendV2Test gains: a load seeded from the locked row after a direct v_documents update between open() and loadLog (new content with new state_version); append and load v2 by a subject without View on a document whose epoch moved, with the same body as a missing node, while a visible subject gets 409; HTTP 413 for a missing, non-numeric or signed Content-Length; a middleware unit test with a request subclass that counts getContent() calls (0 reads; within the limit it passes through). tests/baseline refreshed via scripts/t baseline --write -p collaboration. Runs: scripts/t sqlite -p collaboration tests/Persistence tests/Http/HubAppendV2Test.php tests/Arch tests/Collaboration tests/Http exit 0 (123 + 31 tests); pint --test and phpstan for collaboration exit 0; inventory.php --check exit 0; scripts/t baseline --compare -p collaboration exit 0.\nChanged: docs/reference/errors.md, docs/ru/reference/errors.md, openapi/vaulter-v1.yaml, packages/collaboration/config/vaulter-collaboration.php, packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php, packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php, packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php, packages/collaboration/resources/lang/en/problems.php, packages/collaboration/resources/lang/ru/problems.php, packages/collaboration/routes/collaboration.php, packages/collaboration/src/CollaborationHub.php, packages/collaboration/src/CollaborationModule.php, packages/collaboration/src/CollaborationProblemCodes.php, packages/collaboration/src/Configuration/CollaborationConfig.php, packages/collaboration/src/Exceptions/CollaborationProtocolMismatchException.php, packages/collaboration/src/Exceptions/CollaborationUpdateMismatchException.php, packages/collaboration/src/Exceptions/CollaborationUpdateTooLargeException.php, packages/collaboration/src/Http/Controllers/Collaboration/HubAppendController.php, packages/collaboration/src/Http/Controllers/Collaboration/HubLoadController.php, packages/collaboration/src/Http/Middleware/LimitHubAppend.php, packages/collaboration/src/Http/Support/CollaborationRouteLabels.php, packages/collaboration/src/Http/Support/HubProtocol.php, packages/collaboration/src/Persistence/AppendResult.php, packages/collaboration/src/Persistence/LogSnapshot.php, packages/collaboration/src/Persistence/Receipt.php, packages/collaboration/src/Persistence/UpdateEnvelope.php, packages/collaboration/src/Persistence/UpdateLog.php, packages/collaboration/src/Providers/CollaborationRegistrar.php, packages/collaboration/src/Schema/CollaborationSchema.php, packages/collaboration/tests/Arch/BoundaryTest.php, packages/collaboration/tests/Arch/__snapshots__/surface.txt, packages/collaboration/tests/Collaboration/HubTestHelpers.php, packages/collaboration/tests/Concurrency/AppendRaceTest.php, packages/collaboration/tests/Http/HubAppendV2Test.php, packages/collaboration/tests/Module/CollaborationModuleTest.php, packages/collaboration/tests/Persistence/AppendIdempotencyTest.php, packages/collaboration/tests/Persistence/AppendValidationTest.php, packages/collaboration/tests/Persistence/GenerationFenceTest.php, packages/collaboration/tests/Persistence/LockingReadsTest.php, packages/collaboration/tests/Pest.php, packages/collaboration/tests/groups.php, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.uuid.v.on.json, packages/core/tests/Modules/CleanInstallMatrixTest.php, packages/core/tests/Modules/OwnershipRegistryTest.php, packages/vue/src/api/schema.d.ts, scripts/schema-snapshot.php, tests/Repo/Arch/Fixtures/fk-map.json, tests/Repo/Arch/Fixtures/identities/changes.json, tests/Repo/Arch/Fixtures/identities/config.json, tests/Repo/Arch/Fixtures/identities/http.json, tests/Repo/Arch/Fixtures/identities/owners/schema.json, tests/Repo/Arch/Fixtures/identities/protocol.json, tests/Repo/Arch/Fixtures/identities/schema.json, tests/Repo/Arch/Fixtures/target-map.json, tests/Repo/Arch/Fixtures/target-map/rules/other-packages.json, tests/Repo/Arch/IdentitiesTest.php, tests/baseline/CHANGES.json, tests/baseline/CHANGES.md, tests/baseline/collaboration.count, tests/baseline/collaboration.list, tests/suites.json, tests/zones.json",
+    "deviations": [
+      "V9 (scripts/t baseline --compare, all suites) exited 1 in the executor sandbox only because vitest discovery (npx vitest list) tried to download vitest from registry.npmjs.org and the sandbox blocked it (403, host not on the allow list). scripts/t baseline --compare -p collaboration exits 0 (current 219, missing 0).",
+      "Paths changed outside scope.write_set in the first attempt are still in the tree: docs/reference/errors.md, docs/ru/reference/errors.md, packages/collaboration/resources/lang/en/problems.php, packages/collaboration/resources/lang/ru/problems.php (problem titles of the new codes, required by the problem-code docs guard) and packages/core/tests/Modules/OwnershipRegistryTest.php (the new collaboration tables). This correction round changed only paths inside the write set.",
+      "changed outside the write set: docs/reference/errors.md, docs/ru/reference/errors.md, packages/collaboration/resources/lang/en/problems.php, packages/collaboration/resources/lang/ru/problems.php, packages/core/tests/Modules/OwnershipRegistryTest.php"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V6.json"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V7.json"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V8.json"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T15:30:42Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V9.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V1.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V2.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V3.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V4.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V5.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V6.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V7.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V8.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.4/evidence/V9.json"
+    ]
+  },
+  "updated_at": "2026-10-17T15:30:42Z"
 }

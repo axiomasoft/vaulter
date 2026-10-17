@@ -1,0 +1,246 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Collaboration\Persistence;
+
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Carbon;
+use LogicException;
+use Vaulter\Attributes\Internal;
+use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
+use Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\State\CollaborativeState;
+use Vaulter\Documents\State\LockedDocumentState;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Support\Identity;
+
+/**
+ * The update log of a document generation (D26, C1–C4). An append takes the documents' lock order through
+ * CollaborativeState::lock() (T → N → D), then the head row of the generation FOR UPDATE (L4, created on the first
+ * append under the same locks); it fences the generation, answers a known update id from its receipt, and otherwise
+ * writes the update, its receipt, the new head and the documents' pending marker in one transaction. The caller builds
+ * the ack from the result, after the commit.
+ *
+ * The log is written only here, and v_documents never: the marker goes through the documents state contract.
+ */
+#[Internal]
+final readonly class UpdateLog
+{
+    public function __construct(
+        private VaulterDatabase $database,
+        private DatabaseConfig $tables,
+        private CollaborativeState $state,
+    ) {}
+
+    /**
+     * @throws NodeNotFoundException                the node is gone or in the trash
+     * @throws CollaborationEpochMismatchException  the generation is not the document's current one, or it was retired
+     * @throws CollaborationUpdateMismatchException the claimed hash is wrong, or the id was committed with another payload
+     */
+    public function append(int|string $nodeId, UpdateEnvelope $update): AppendResult
+    {
+        $sha256 = $update->sha256();
+        if (!hash_equals($sha256, strtolower($update->claimedSha256))) {
+            throw CollaborationUpdateMismatchException::hash($update->updateId);
+        }
+
+        return $this->database->transaction(function () use ($nodeId, $update, $sha256): AppendResult {
+            $locked = $this->state->lock($nodeId);
+            if ($locked->trashed) {
+                throw NodeNotFoundException::forId($nodeId);
+            }
+            $this->fence($locked, $update->generation);
+            $head = $this->lockHead($locked);
+
+            $receipt = $this->findReceipt($locked->documentId, $update->generation, $update->updateId, lock: true);
+            if ($receipt instanceof Receipt) {
+                if (!hash_equals($receipt->sha256, $sha256)) {
+                    throw CollaborationUpdateMismatchException::receipt($update->updateId);
+                }
+
+                return new AppendResult($locked->documentId, $update->generation, $update->updateId, $receipt->seq, $receipt->sha256, duplicate: true);
+            }
+
+            $seq = $head['head_seq'] + 1;
+            $now = Carbon::now();
+            $key = ['document_id' => Identity::key($locked->documentId), 'generation' => $update->generation];
+            $this->table('collaboration_updates')->insert($key + [
+                'seq' => $seq,
+                'update_id' => $update->updateId,
+                // Base64 binds the binary losslessly (NUL-safe) on every driver, as the documents checkpoint does.
+                'payload' => base64_encode($update->payload),
+                'sha256' => $sha256,
+                'created_at' => $now,
+            ]);
+            $this->table('collaboration_receipts')->insert($key + [
+                'update_id' => $update->updateId,
+                'seq' => $seq,
+                'sha256' => $sha256,
+                'committed_at' => $now,
+            ]);
+            $this->heads($locked->documentId, $update->generation)->update(['head_seq' => $seq, 'updated_at' => $now]);
+            $this->state->markPending($locked, $update->generation, $seq);
+
+            return new AppendResult($locked->documentId, $update->generation, $update->updateId, $seq, $sha256, duplicate: false);
+        });
+    }
+
+    /**
+     * The checkpoint and the committed tail (C, H] of the document's current generation, read under the same locks an
+     * append takes, so no append or publication lands between the parts.
+     *
+     * @throws NodeNotFoundException               the node is gone or in the trash
+     * @throws CollaborationEpochMismatchException the generation is not the document's current one, or it was retired
+     */
+    public function snapshot(int|string $nodeId, int $generation): LogSnapshot
+    {
+        return $this->database->transaction(function () use ($nodeId, $generation): LogSnapshot {
+            $locked = $this->state->lock($nodeId);
+            if ($locked->trashed) {
+                throw NodeNotFoundException::forId($nodeId);
+            }
+            $this->fence($locked, $generation);
+            // The row lock() holds, read again under that lock: a plain read would answer from the transaction's
+            // snapshot on MySQL (see below).
+            $document = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->first();
+            if (!$document instanceof Document) {
+                throw new LogicException('[Vaulter] A locked document has no aggregate row.');
+            }
+
+            $head = $this->lockHead($locked, create: false);
+            // The transaction began with a plain read (the node, in lock()): on MySQL (REPEATABLE READ) a plain read here
+            // would answer from that older snapshot and miss an append committed since, while the head FOR UPDATE sees
+            // it. A locking read sees the committed rows, as every read after the lock does on PostgreSQL
+            // (the same split as NodeReadRepository::siblingQuery).
+            $tail = $this->table('collaboration_updates')
+                ->where('document_id', Identity::key($locked->documentId))
+                ->where('generation', $generation)
+                ->where('seq', '>', $head['checkpoint_seq'])
+                ->where('seq', '<=', $head['head_seq'])
+                ->orderBy('seq')
+                ->lockForUpdate()
+                ->get(['seq', 'update_id', 'payload'])
+                ->map(fn (object $row): array => [
+                    'seq' => self::int($row->seq),
+                    'update_id' => Identity::stringify($row->update_id),
+                    'payload' => $this->stored($row->payload),
+                ])
+                ->all();
+            $tail = array_values($tail);
+
+            return new LogSnapshot(
+                documentId: $locked->documentId,
+                generation: $generation,
+                stateVersion: $document->state_version,
+                type: $document->type,
+                schemaVersion: $document->schema_version,
+                content: $document->content,
+                checkpoint: $document->yjs_state,
+                checkpointSeq: $head['checkpoint_seq'],
+                headSeq: $head['head_seq'],
+                tail: $tail,
+            );
+        });
+    }
+
+    /** The receipt of `$updateId` in the generation, if it was committed. */
+    public function receipt(string $documentId, int $generation, string $updateId): ?Receipt
+    {
+        return $this->findReceipt($documentId, $generation, $updateId, lock: false);
+    }
+
+    /**
+     * `$lock` makes it a locking read for a caller that holds the head lock: on MySQL (REPEATABLE READ) a plain read
+     * would miss a receipt an append of the same id committed while this transaction waited for that lock (the same
+     * split as NodeReadRepository::siblingQuery).
+     */
+    private function findReceipt(string $documentId, int $generation, string $updateId, bool $lock): ?Receipt
+    {
+        $query = $this->table('collaboration_receipts')
+            ->where('document_id', Identity::key($documentId))
+            ->where('generation', $generation)
+            ->where('update_id', $updateId);
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+        $row = $query->first(['seq', 'sha256']);
+
+        return $row === null ? null : new Receipt($documentId, $generation, $updateId, self::int($row->seq), Identity::stringify($row->sha256));
+    }
+
+    /** C4 under L3: only the document's current generation takes writes, and a retired one never again. */
+    private function fence(LockedDocumentState $locked, int $generation): void
+    {
+        if ($generation !== $locked->generation) {
+            throw new CollaborationEpochMismatchException(expected: $generation, actual: $locked->generation);
+        }
+    }
+
+    /**
+     * L4: the head row of the locked document's generation FOR UPDATE. The first append of a generation creates it under
+     * the document lock (which keeps a second creator out); a read without one sees an empty log.
+     *
+     * @return array{head_seq: int, checkpoint_seq: int}
+     */
+    private function lockHead(LockedDocumentState $locked, bool $create = true): array
+    {
+        $row = $this->heads($locked->documentId, $locked->generation)->lockForUpdate()->first(['head_seq', 'checkpoint_seq', 'retired_at']);
+        if ($row === null && !$create) {
+            return ['head_seq' => 0, 'checkpoint_seq' => 0];
+        }
+        if ($row === null) {
+            $now = Carbon::now();
+            $this->table('collaboration_heads')->insert([
+                'document_id' => Identity::key($locked->documentId),
+                'generation' => $locked->generation,
+                'head_seq' => 0,
+                'checkpoint_seq' => 0,
+                'checkpoint_version' => $locked->stateVersion,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+            $row = $this->heads($locked->documentId, $locked->generation)->lockForUpdate()->first(['head_seq', 'checkpoint_seq', 'retired_at']);
+            if ($row === null) {
+                throw new LogicException('[Vaulter] The collaboration head was not created.');
+            }
+        }
+        // A closed generation refuses every write, before and after its rows are pruned (C4).
+        if ($row->retired_at !== null) {
+            throw new CollaborationEpochMismatchException(expected: $locked->generation, actual: $locked->generation);
+        }
+
+        return ['head_seq' => self::int($row->head_seq), 'checkpoint_seq' => self::int($row->checkpoint_seq)];
+    }
+
+    private function heads(string $documentId, int $generation): Builder
+    {
+        return $this->table('collaboration_heads')
+            ->where('document_id', Identity::key($documentId))
+            ->where('generation', $generation);
+    }
+
+    private function table(string $entity): Builder
+    {
+        return $this->database->connection()->table($this->tables->table($entity));
+    }
+
+    /** A counter column as the driver returns it (an int, or a numeric string on some drivers). */
+    private static function int(mixed $value): int
+    {
+        return is_int($value) || (is_string($value) && is_numeric($value)) ? (int) $value : throw new LogicException('[Vaulter] A collaboration counter is not an integer.');
+    }
+
+    /** A stored payload as base64 text; PostgreSQL hands a bytea column out as a stream. */
+    private function stored(mixed $value): string
+    {
+        if (is_resource($value)) {
+            $value = stream_get_contents($value);
+        }
+
+        return is_string($value) ? $value : '';
+    }
+}
