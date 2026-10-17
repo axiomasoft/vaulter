@@ -33,3 +33,6 @@ P4.11 | packages/core/src/Doctor/Checks/RoutesAuthCheck.php:1 | kernel check reg
 P4.11 | packages/drive/src/Http/Support/HttpOperationContextFactory.php:1 | core/src/Webhooks/WebhookEndpointWrites still imports it from drive (webhooks move to their package in P4.13, which depends on drive)
 P4.11 | packages/core/tests/Fixtures/golden/routes-v1.json:789 | the golden changed only in the FQCN of the ResolveShareToken middleware (moved to Vaulter\Drive\Http\Middleware); route names, paths, methods and order are unchanged
 P4.11 | packages/drive/tests/Feature/HandlerBaselineTest.php:19 | comments still say "config/vaulter.php" for the pre-P0.4 published config (historical text)
+P4.12 | packages/core/tests/Feature/VaulterManagerExporterHandlerSeamTest.php:1 | file/class name and `$manager` variables still say VaulterManager (the class is Vaulter\Drive\Vaulter); the test and ServiceProviderTest still live in core, move to drive with the other entry-point tests in P4.16
+P4.12 | packages/documents/src/Collaboration/CollaborationDriverManager.php:18 | docblock mentions a nonexistent Vaulter::driver() (was VaulterManager::driver())
+P4.12 | packages/core/src/Testing/InteractsWithVaulter.php:23 | core test trait imports the drive facade (i1/i2 allowlist entries retargeted, removed_in P4); moves to drive in P4.16

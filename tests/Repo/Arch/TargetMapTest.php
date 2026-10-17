@@ -302,8 +302,10 @@ it('classifies the special cases of the architecture by name', function (): void
         $members[$member['fqcn'].'::'.$member['member']] = $member;
     }
 
-    expect($types['Vaulter\VaulterManager'])->toMatchArray(['owner' => 'drive', 'action' => 'replace', 'phase' => 'P4', 'target_fqcn' => 'Vaulter\Drive\Vaulter'])
-        ->and($types['Vaulter\Facades\Vaulter'])->toMatchArray(['owner' => 'drive', 'action' => 'replace', 'target_fqcn' => 'Vaulter\Drive\Facades\Vaulter'])
+    expect($types)->not->toHaveKey('Vaulter\VaulterManager')
+        ->and($types)->not->toHaveKey('Vaulter\Facades\Vaulter')
+        ->and($types['Vaulter\Drive\Vaulter'])->toMatchArray(['owner' => 'drive', 'package' => 'drive', 'action' => 'keep'])
+        ->and($types['Vaulter\Drive\Facades\Vaulter'])->toMatchArray(['owner' => 'drive', 'package' => 'drive', 'action' => 'keep'])
         ->and($types['Vaulter\ValueObjects\Access\Actor'])->toMatchArray(['owner' => 'core', 'action' => 'keep'])
         ->and($types['Vaulter\Events\Outbox\Models\OutboxEvent'])->toMatchArray(['owner' => 'core', 'action' => 'keep'])
         ->and($types['Vaulter\Drive\Models\Node'])->toMatchArray(['owner' => 'drive', 'action' => 'keep', 'eloquent' => true])

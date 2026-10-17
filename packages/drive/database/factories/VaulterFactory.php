@@ -12,7 +12,7 @@ use LogicException;
 use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Contracts\DriveHandle;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 /**
  * Base of the Vaulter factories. A row is never inserted directly: it is created
