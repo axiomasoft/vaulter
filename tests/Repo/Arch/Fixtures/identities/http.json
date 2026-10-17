@@ -658,6 +658,69 @@
             "id": "route:vaulter.v1.shares.update",
             "kind": "http",
             "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-deliveries.index",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-deliveries.redeliver",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.deactivate",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.destroy",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.index",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.show",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.store",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.update",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
         }
     ],
     "flags": {
@@ -2853,8 +2916,8 @@
             "uri": "api/vaulter/v1/uploads/{upload}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-deliveries.index",
             "methods": [
@@ -2879,14 +2942,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/ListWebhookDeliveriesController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/ListWebhookDeliveriesController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-deliveries.redeliver",
             "methods": [
@@ -2911,14 +2974,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/RedeliverWebhookController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/RedeliverWebhookController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RedeliverWebhookController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.deactivate",
             "methods": [
@@ -2943,14 +3006,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/DeactivateWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/DeactivateWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deactivate"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.destroy",
             "methods": [
@@ -2975,14 +3038,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/DeleteWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/DeleteWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.index",
             "methods": [
@@ -3007,14 +3070,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/ListWebhookEndpointsController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/ListWebhookEndpointsController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
             "methods": [
@@ -3039,14 +3102,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/RotateWebhookSecretController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/RotateWebhookSecretController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/rotate-secret"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.show",
             "methods": [
@@ -3071,14 +3134,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/ShowWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/ShowWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.store",
             "methods": [
@@ -3103,14 +3166,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/RegisterWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/RegisterWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.update",
             "methods": [
@@ -3135,8 +3198,8 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/UpdateWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/UpdateWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
         }

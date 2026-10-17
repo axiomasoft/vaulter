@@ -456,20 +456,20 @@ it('plans a media change for media and its Composer consumers only', function ()
     [$code, $plan] = s_select(['--paths=packages/media/src/Cas/BlobStore.php']);
 
     // azgard consumes media since P3.4: its module requires drive, whose manifest requires media.
-    expect($code)->toBe(0)->and($plan['touched'])->toBe(['media'])->and($plan['affected'])->toBe(['media', 'drive', 'documents', 'azgard', 'filament'])
-        ->and(s_runs($plan))->toBe(['scripts/t sqlite -p media', 'scripts/t sqlite -p drive', 'scripts/t sqlite -p documents', 'scripts/t sqlite -p azgard', 'scripts/t sqlite -p filament']);
+    expect($code)->toBe(0)->and($plan['touched'])->toBe(['media'])->and($plan['affected'])->toBe(['media', 'drive', 'webhooks', 'documents', 'azgard', 'filament'])
+        ->and(s_runs($plan))->toBe(['scripts/t sqlite -p media', 'scripts/t sqlite -p drive', 'scripts/t sqlite -p webhooks', 'scripts/t sqlite -p documents', 'scripts/t sqlite -p azgard', 'scripts/t sqlite -p filament']);
 });
 
 it('plans a core sub-zone change by group and pulls the dependent sub-zones and packages, never load', function (): void {
-    [$code, $plan] = s_select(['--paths=packages/core/src/Webhooks/DeliverWebhook.php']);
+    [$code, $plan] = s_select(['--paths=packages/core/src/Events/EventRecorder.php']);
 
-    expect($code)->toBe(0)->and($plan['touched'])->toBe(['core-events-webhooks'])
-        ->and($plan['affected'])->toBe(['core-operations', 'core-events-webhooks', 'core-http', 'core-observability', 'media', 'drive', 'documents', 'azgard', 'filament'])
+    expect($code)->toBe(0)->and($plan['touched'])->toBe(['core-events'])
+        ->and($plan['affected'])->toBe(['core-operations', 'core-events', 'core-http', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'azgard', 'filament'])
         ->and($plan['affected'])->not->toContain('load')
-        ->and($plan['runs'][0]['command'])->toBe('scripts/t sqlite -p core --group=zone:core-operations,zone:core-events-webhooks,zone:core-http,zone:core-observability');
+        ->and($plan['runs'][0]['command'])->toBe('scripts/t sqlite -p core --group=zone:core-operations,zone:core-events,zone:core-http,zone:core-observability');
 
-    [, $quick] = s_select(['--paths=packages/core/src/Webhooks/DeliverWebhook.php', '--quick']);
-    expect($quick['affected'])->toBe(['core-events-webhooks']);
+    [, $quick] = s_select(['--paths=packages/core/src/Events/EventRecorder.php', '--quick']);
+    expect($quick['affected'])->toBe(['core-events']);
 });
 
 it('plans a Node or load change for its own suite only', function (): void {
@@ -485,7 +485,7 @@ it('refuses a core TestCase change with the whole of core and its consumers', fu
     [$code, $plan] = s_select(['--paths=packages/core/tests/TestCase.php']);
 
     expect($code)->toBe(2)->and($plan['status'])->toBe('harness')
-        ->and($plan['affected'])->toBe(['core-kernel', 'core-modules', 'core-operations', 'core-events-webhooks', 'core-http', 'core-schema', 'core-observability', 'media', 'drive', 'documents', 'azgard', 'filament'])
+        ->and($plan['affected'])->toBe(['core-kernel', 'core-modules', 'core-operations', 'core-events', 'core-http', 'core-schema', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'azgard', 'filament'])
         ->and(s_runs($plan)[0])->toBe('scripts/t sqlite -p core');
 });
 

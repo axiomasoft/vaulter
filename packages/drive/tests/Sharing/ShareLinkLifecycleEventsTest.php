@@ -13,12 +13,9 @@ use Vaulter\Drive\Operations\ActivityOperations;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\ShareOperations;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\ValueObjects\Access\Actor;
-
-uses(EnablesWebhooksModule::class);
 
 /**
  * Updating and rotating a share link are events of their own (PLAN2.D47): both reach

@@ -20,7 +20,7 @@ use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 uses(EnablesWebhooksModule::class);
 

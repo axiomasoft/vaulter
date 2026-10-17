@@ -34,7 +34,8 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "open-telemetry/sdk": "^1.2",
         "open-telemetry/api": "^1.1",
-        "nikic/php-parser": "^5.7"
+        "nikic/php-parser": "^5.7",
+        "axioma-studio/vaulter-webhooks": "@dev"
     },
     "autoload-dev": {
         "psr-4": {

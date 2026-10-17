@@ -68,8 +68,8 @@ use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeWidening;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\Broken\BrokenModule;
 use Vaulter\Tests\Modules\Fixtures\FixtureModule;
 use Vaulter\Tests\TestCase;
-use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhooksModule;
 
 /**

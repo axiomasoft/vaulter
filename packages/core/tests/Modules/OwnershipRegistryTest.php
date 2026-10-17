@@ -50,7 +50,6 @@ const I5_DECLARED_ELSEWHERE = [
  * @var array<string, array{declared_by: string, phase: string, owners: list<string>}>
  */
 const I5_SHARED_CONFIG_ROOTS = [
-    'vaulter' => ['declared_by' => 'core', 'phase' => 'P4', 'owners' => ['core', 'webhooks']],
     'vaulter-documents' => ['declared_by' => 'documents', 'phase' => 'P5', 'owners' => ['collaboration', 'documents']],
 ];
 
@@ -276,18 +275,15 @@ it('keeps every table in the migrations and the schema class of the module that 
         }
         $table = substr($id, strlen('table:'));
         $owner = $item['owner'];
-        // The webhooks migrations ship with core until the webhooks package exists (P4.13).
-        $package = $owner === 'webhooks' ? 'core' : $owner;
-
         expect(in_array(substr($table, 2), $schemas->entitiesOf($owner), true))->toBeTrue($id)
-            ->and(str_starts_with($item['source']['file'], 'packages/'.$package.'/database/migrations/'))->toBeTrue($id);
+            ->and(str_starts_with($item['source']['file'], 'packages/'.$owner.'/database/migrations/'))->toBeTrue($id);
         $tables[$owner][] = $table;
     }
     ksort($tables);
     $withSchema = array_keys($schemas->all());
     sort($withSchema);
 
-    expect($schemaModules)->toBe(['core', 'documents', 'drive', 'media'])
+    expect($schemaModules)->toBe(['core', 'documents', 'drive', 'media', 'webhooks'])
         ->and(array_keys($tables))->toBe($withSchema);
     foreach ($schemas->all() as $module => $schema) {
         expect(count($tables[$module]))->toBe(count($schema->entities()), $module);

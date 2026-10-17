@@ -3,72 +3,6 @@
         {
             "category": "domain-in-core",
             "count": 1,
-            "file": "packages/core/config/vaulter.php",
-            "kind": "name",
-            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Webhooks\\WebhookDelivery",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/config/vaulter.php",
-            "kind": "name",
-            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Webhooks\\WebhookEndpoint",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/config/vaulter.php",
-            "kind": "name",
-            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Webhooks\\DefaultOutboundUrlGuard",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/config/vaulter.php",
-            "kind": "use",
-            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Webhooks\\WebhookDelivery",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/config/vaulter.php",
-            "kind": "use",
-            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Webhooks\\WebhookEndpoint",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/config/vaulter.php",
-            "kind": "use",
-            "reason": "корневой конфиг ядра ссылается на доменные классы по умолчанию: умолчания переезжают в конфиг владельца (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Webhooks\\DefaultOutboundUrlGuard",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
             "file": "packages/core/src/Configuration/ConfigValidator.php",
             "kind": "use",
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
@@ -225,28 +159,6 @@
             "count": 1,
             "file": "packages/core/src/Configuration/VaulterConfig.php",
             "kind": "use",
-            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Webhooks\\WebhookDelivery",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Configuration/VaulterConfig.php",
-            "kind": "use",
-            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Webhooks\\WebhookEndpoint",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Configuration/VaulterConfig.php",
-            "kind": "use",
             "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
@@ -332,28 +244,6 @@
         },
         {
             "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Configuration/VaulterConfig.php",
-            "kind": "name",
-            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Configuration\\VaulterConfig::model",
-            "target": "Vaulter\\Models\\Webhooks\\WebhookDelivery",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Configuration/VaulterConfig.php",
-            "kind": "name",
-            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Configuration\\VaulterConfig::model",
-            "target": "Vaulter\\Models\\Webhooks\\WebhookEndpoint",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
             "count": 2,
             "file": "packages/core/src/Configuration/VaulterConfig.php",
             "kind": "name",
@@ -372,17 +262,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Configuration\\VaulterConfig::sharing",
             "target": "Vaulter\\Drive\\Configuration\\SharingConfig",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 2,
-            "file": "packages/core/src/Configuration/VaulterConfig.php",
-            "kind": "name",
-            "reason": "конфиг-фасад ядра читает и типизирует доменные секции конфигурации: секции читает владелец (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Configuration\\VaulterConfig::webhooks",
-            "target": "Vaulter\\Configuration\\WebhooksConfig",
             "view": "target"
         },
         {
@@ -669,28 +548,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Jobs\\Middleware\\RestoreTenantContext::handle",
             "target": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotFoundException",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Providers/BindingsRegistrar.php",
-            "kind": "use",
-            "reason": "провайдер ядра биндит доменные контракты и реализации: биндинги переезжают в провайдеры владельцев (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Configuration\\WebhooksConfig",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Providers/BindingsRegistrar.php",
-            "kind": "name",
-            "reason": "провайдер ядра биндит доменные контракты и реализации: биндинги переезжают в провайдеры владельцев (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Providers\\BindingsRegistrar::register",
-            "target": "Vaulter\\Configuration\\WebhooksConfig",
             "view": "target"
         },
         {
@@ -1234,50 +1091,6 @@
         },
         {
             "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
-            "kind": "use",
-            "reason": "манифест или провайдер ядра временно объявляет срез владельца, лежащий в core (D39): объявление переезжает к владельцу вместе с кодом (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Webhooks\\WebhooksSchedule",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
-            "kind": "name",
-            "reason": "манифест или провайдер ядра временно объявляет срез владельца, лежащий в core (D39): объявление переезжает к владельцу вместе с кодом (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Configuration\\ConfigValidator::validate",
-            "target": "Vaulter\\Webhooks\\WebhooksSchedule",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/VaulterServiceProvider.php",
-            "kind": "use",
-            "reason": "манифест или провайдер ядра временно объявляет срез владельца, лежащий в core (D39): объявление переезжает к владельцу вместе с кодом (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Webhooks\\WebhooksModule",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/VaulterServiceProvider.php",
-            "kind": "name",
-            "reason": "манифест или провайдер ядра временно объявляет срез владельца, лежащий в core (D39): объявление переезжает к владельцу вместе с кодом (цель: webhooks)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\VaulterServiceProvider::packageRegistered",
-            "target": "Vaulter\\Webhooks\\WebhooksModule",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
             "count": 2,
             "file": "packages/core/src/Configuration/ConfigValidator.php",
             "kind": "name",
@@ -1704,138 +1517,6 @@
             "symbol": "<file>",
             "target": "Vaulter\\Drive\\Models\\Content\\ScanRequest",
             "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Actions/Webhooks/RegisterWebhookEndpointAction.php",
-            "kind": "use",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotFoundException",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Actions/Webhooks/RegisterWebhookEndpointAction.php",
-            "kind": "use",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Models\\Drive",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Actions/Webhooks/RegisterWebhookEndpointAction.php",
-            "kind": "use",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Repositories\\DriveReadRepository",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Actions/Webhooks/RegisterWebhookEndpointAction.php",
-            "kind": "name",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Actions\\Webhooks\\RegisterWebhookEndpointAction::__construct",
-            "target": "Vaulter\\Drive\\Repositories\\DriveReadRepository",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 2,
-            "file": "packages/core/src/Actions/Webhooks/RegisterWebhookEndpointAction.php",
-            "kind": "name",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Actions\\Webhooks\\RegisterWebhookEndpointAction::visibleDrive",
-            "target": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotFoundException",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 2,
-            "file": "packages/core/src/Actions/Webhooks/RegisterWebhookEndpointAction.php",
-            "kind": "name",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Actions\\Webhooks\\RegisterWebhookEndpointAction::visibleDrive",
-            "target": "Vaulter\\Drive\\Models\\Drive",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Actions/Webhooks/UpdateWebhookEndpointAction.php",
-            "kind": "use",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotFoundException",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Actions/Webhooks/UpdateWebhookEndpointAction.php",
-            "kind": "use",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Models\\Drive",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Actions/Webhooks/UpdateWebhookEndpointAction.php",
-            "kind": "use",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Drive\\Repositories\\DriveReadRepository",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Actions/Webhooks/UpdateWebhookEndpointAction.php",
-            "kind": "name",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Actions\\Webhooks\\UpdateWebhookEndpointAction::__construct",
-            "target": "Vaulter\\Drive\\Repositories\\DriveReadRepository",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 2,
-            "file": "packages/core/src/Actions/Webhooks/UpdateWebhookEndpointAction.php",
-            "kind": "name",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Actions\\Webhooks\\UpdateWebhookEndpointAction::visibleDrive",
-            "target": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotFoundException",
-            "view": "current"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 2,
-            "file": "packages/core/src/Actions/Webhooks/UpdateWebhookEndpointAction.php",
-            "kind": "name",
-            "reason": "P4.10: the drive domain model moved to vaulter-drive; this core file still names it until its own move or cleanup (P4.11-P4.16, D10)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Actions\\Webhooks\\UpdateWebhookEndpointAction::visibleDrive",
-            "target": "Vaulter\\Drive\\Models\\Drive",
-            "view": "current"
         },
         {
             "category": "domain-in-core",
@@ -2822,28 +2503,6 @@
             "symbol": "Vaulter\\Tenancy\\TenancyBoundary::current",
             "kind": "name",
             "target": "Vaulter\\Drive\\Tenancy\\ShareTenantContext",
-            "count": 1,
-            "reason": "P4.11: the kernel slice of the drive moved to vaulter-drive; this core file still names it until P4.16 cleans the core (D10)",
-            "removed_in": "P4",
-            "category": "domain-in-core"
-        },
-        {
-            "view": "current",
-            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
-            "symbol": "<file>",
-            "kind": "use",
-            "target": "Vaulter\\Drive\\Http\\Support\\HttpOperationContextFactory",
-            "count": 1,
-            "reason": "P4.11: the kernel slice of the drive moved to vaulter-drive; this core file still names it until P4.16 cleans the core (D10)",
-            "removed_in": "P4",
-            "category": "domain-in-core"
-        },
-        {
-            "view": "current",
-            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
-            "symbol": "Vaulter\\Webhooks\\WebhookEndpointWrites::__construct",
-            "kind": "name",
-            "target": "Vaulter\\Drive\\Http\\Support\\HttpOperationContextFactory",
             "count": 1,
             "reason": "P4.11: the kernel slice of the drive moved to vaulter-drive; this core file still names it until P4.16 cleans the core (D10)",
             "removed_in": "P4",

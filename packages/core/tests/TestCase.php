@@ -6,14 +6,15 @@ namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
 use Vaulter\Testing\Support\OpenApi\ValidatesOpenApiResponses;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
-use Vaulter\Tests\Webhooks\FakeHostResolver;
 use Vaulter\VaulterServiceProvider;
+use Vaulter\Webhooks\Contracts\HostResolver;
+use Vaulter\Webhooks\Testing\FakeHostResolver;
+use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
@@ -51,6 +52,10 @@ abstract class TestCase extends OrchestraTestCase
             // cross-cutting core suites (Activity/Webhooks feeds fed by Drive events,
             // the full-stack Feature specs) resolve it through this provider.
             VaulterDriveServiceProvider::class,
+            // The opt-in webhooks module (a dev dependency of the kernel tests): the activation, outbox and
+            // module-graph suites use it as the module with an external consumer; it stays off unless a test
+            // switches vaulter.modules.webhooks on.
+            VaulterWebhooksServiceProvider::class,
         ];
     }
 

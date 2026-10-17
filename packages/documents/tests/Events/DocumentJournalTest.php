@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
-use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
@@ -18,7 +17,7 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
  * an upsert, compacted to one entry per document, whether or not it took a checkpoint;
  * content events carry no node sequence, a restore is the newest state.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(OperationsTestCase::class, RefreshDatabase::class);
 
 /** @return list<array{seq: int, event_type: string, operation: string, node_sequence: ?int}> */
 function documentJournal(int|string $nodeId): array

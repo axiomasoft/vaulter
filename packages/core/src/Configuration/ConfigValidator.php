@@ -26,7 +26,6 @@ use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotencySchedule;
 use Vaulter\Kernel;
-use Vaulter\Webhooks\WebhooksSchedule;
 
 #[Api]
 final readonly class ConfigValidator
@@ -50,17 +49,11 @@ final readonly class ConfigValidator
             $config->tenancy()->resolver();
             $this->validateTenantResolver($app->make(TenantResolver::class));
         }
-        // These accessors validate the untrusted class strings before returning them.
-        $config->webhooks()->assertNoRemovedKeys();
-        $config->webhooks()->urlGuard();
-        $config->webhooks()->retrySchedule();
-        $config->webhooks()->retryJitter();
-        $config->webhooks()->relayFanoutChunk();
         $config->outbox()->validate();
         $schedule = new ScheduleConfig($this->config);
         $schedule->enabled();
-        // The webhooks keys belong to WebhooksModule.
-        $schedule->frequencies('vaulter', [IdempotencySchedule::KEY, ...OutboxSchedule::KEYS, ...WebhooksSchedule::KEYS]);
+        // Each module validates its own schedule keys.
+        $schedule->frequencies('vaulter', [IdempotencySchedule::KEY, ...OutboxSchedule::KEYS]);
         $ttl = $this->config->get('vaulter.idempotency.ttl_seconds', IdempotencyClaim::DEFAULT_TTL_SECONDS);
         if (!is_int($ttl) || $ttl < 1) {
             throw new InvalidConfigurationException('[Vaulter] vaulter.idempotency.ttl_seconds must be a positive integer (seconds).');
@@ -98,8 +91,6 @@ final readonly class ConfigValidator
             'node_share',
             'activity',
             'outbox',
-            'webhook_endpoint',
-            'webhook_delivery',
         ] as $key) {
             $config->model($key);
         }

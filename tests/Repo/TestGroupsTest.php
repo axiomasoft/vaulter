@@ -17,6 +17,7 @@ function g_suites(): array
         'core' => 'packages/core/tests',
         'media' => 'packages/media/tests',
         'drive' => 'packages/drive/tests',
+        'webhooks' => 'packages/webhooks/tests',
         'documents' => 'packages/documents/tests',
         'azgard' => 'packages/azgard/tests',
         'filament' => 'packages/filament/tests',

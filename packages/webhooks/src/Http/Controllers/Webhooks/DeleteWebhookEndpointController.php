@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Webhooks\Http\Controllers\Webhooks;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Vaulter\Attributes\Internal;
+use Vaulter\Webhooks\Actions\DeleteWebhookEndpointAction;
+use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;
+use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
+use Vaulter\Webhooks\WebhookEndpointWrites;
+
+#[Internal]
+final readonly class DeleteWebhookEndpointController
+{
+    public function __construct(private WebhookEndpointReadRepository $endpoints, private DeleteWebhookEndpointAction $delete, private WebhookEndpointWrites $writes) {}
+
+    public function __invoke(Request $request, string $endpoint): Response
+    {
+        $this->writes->write($request, 'delete', $endpoint, function () use ($endpoint): void {
+            $model = $this->endpoints->find($endpoint) ?? throw WebhookEndpointNotFoundException::forId($endpoint);
+            $this->delete->execute(endpoint: $model);
+        });
+
+        return new Response(status: 204);
+    }
+}

@@ -18,27 +18,18 @@ use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBuilder;
-use Vaulter\Modules\ModuleCatalog;
-use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleId;
 
-it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity, bool $webhooks): void {
+it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity): void {
     config()->set('vaulter-drive.features.activity', $activity);
-    // Reseal the kernel with the webhooks module switched like a process that read another `vaulter.modules`.
-    $overrides = [...(array) config('vaulter.modules', []), 'webhooks' => $webhooks];
-    config()->set('vaulter.modules', $overrides);
-    $kernel = new Kernel($this->app);
-    $kernel->seal((new ModuleCompiler)->compileOffered(ModuleCatalog::of($this->app)->offered(), $overrides));
-    $this->app->instance(Kernel::class, $kernel);
     $this->app->forgetInstance(EventRecorder::class);
 
     expect(Event::hasListeners(FolderCreated::class))->toBeFalse()
         ->and(Event::hasListeners(UploadInitiated::class))->toBeFalse();
 })->with([
-    'both disabled' => [false, false],
-    'both enabled' => [true, true],
+    'activity disabled' => [false],
+    'activity enabled' => [true],
 ]);
 
 it('declares the v1 routes and commands, registered whatever the feature flags say', function (bool $uploads, bool $grants): void {

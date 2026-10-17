@@ -12,8 +12,8 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxEnvelope;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\TestCase;
-use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookFanoutConsumer;
 
 /**

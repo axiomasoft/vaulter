@@ -4,11 +4,13 @@
         "Vaulter\\Drive\\",
         "Vaulter\\Documents\\",
         "Vaulter\\Documents\\Database\\Factories\\",
+        "Vaulter\\Webhooks\\",
         "Vaulter\\Azgard\\",
         "Vaulter\\Filament\\",
         "path:packages/media/",
         "path:packages/drive/",
         "path:packages/documents/",
+        "path:packages/webhooks/",
         "path:packages/azgard/",
         "path:packages/filament/"
     ],
@@ -194,6 +196,46 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#api-surface (D27): the host enters through Vaulter::drive() / DriveHandleFactory; the provisioner is an implementation detail"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Webhooks\\",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D6): the vaulter-webhooks namespace stays in the webhooks package (outbox consumer, endpoint management, signing, delivery, retries); CLI/HTTP are identity surfaces, not PHP API"
+        },
+        {
+            "match": "file",
+            "value": "packages/webhooks/config/vaulter-webhooks.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D6, P4.13): the webhooks section of the configuration is the vaulter-webhooks root of the webhooks package"
+        },
+        {
+            "match": "file",
+            "value": "packages/webhooks/routes/webhooks.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D6, P4.13): the webhooks REST routes live in the webhooks package"
+        },
+        {
+            "match": "file",
+            "value": "packages/webhooks/database/migrations/0001_01_01_000401_create_v_webhook_endpoints_table.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.13): v_webhook_endpoints is created by the migration of webhooks"
+        },
+        {
+            "match": "file",
+            "value": "packages/webhooks/database/migrations/0001_01_01_000402_create_v_webhook_deliveries_table.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.13): v_webhook_deliveries is created by the migration of webhooks"
         },
         {
             "match": "file",

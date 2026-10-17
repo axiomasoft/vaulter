@@ -188,17 +188,6 @@
             "view": "signature"
         },
         {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/core/src/Contracts/Webhooks/OutboundUrlGuard.php",
-            "kind": "return",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Contracts\\Webhooks\\OutboundUrlGuard::pin()",
-            "target": "Vaulter\\ValueObjects\\Webhooks\\PinnedOutboundEndpoint",
-            "view": "signature"
-        },
-        {
             "category": "domain-model",
             "count": 1,
             "file": "packages/drive/src/Events/Access/NodeGrantCreated.php",
@@ -691,17 +680,6 @@
             "removed_in": "P7",
             "symbol": "Vaulter\\Testing\\InteractsWithVaulter::assertNodeVisibleTo()",
             "target": "Vaulter\\Drive\\Models\\Node",
-            "view": "signature"
-        },
-        {
-            "category": "internal-type",
-            "count": 1,
-            "file": "packages/core/src/Webhooks/StandardWebhookVerifier.php",
-            "kind": "param",
-            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Webhooks\\StandardWebhookVerifier::__construct()",
-            "target": "Vaulter\\Webhooks\\WebhookSigner",
             "view": "signature"
         },
         {
@@ -2077,6 +2055,28 @@
             "removed_in": "P7",
             "symbol": "Vaulter\\Drive\\Vaulter::permissions()",
             "target": "Vaulter\\Drive\\Access\\PermissionDriverManager",
+            "view": "signature"
+        },
+        {
+            "category": "internal-type",
+            "count": 1,
+            "file": "packages/webhooks/src/Contracts/OutboundUrlGuard.php",
+            "kind": "return",
+            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
+            "removed_in": "P7",
+            "symbol": "Vaulter\\Webhooks\\Contracts\\OutboundUrlGuard::pin()",
+            "target": "Vaulter\\Webhooks\\ValueObjects\\PinnedOutboundEndpoint",
+            "view": "signature"
+        },
+        {
+            "category": "internal-type",
+            "count": 1,
+            "file": "packages/webhooks/src/StandardWebhookVerifier.php",
+            "kind": "param",
+            "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",
+            "removed_in": "P7",
+            "symbol": "Vaulter\\Webhooks\\StandardWebhookVerifier::__construct()",
+            "target": "Vaulter\\Webhooks\\WebhookSigner",
             "view": "signature"
         }
     ],

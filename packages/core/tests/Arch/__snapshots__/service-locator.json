@@ -1,17 +1,12 @@
 {
     "core/src/Configuration/VaulterConfig.php": 2,
-    "core/src/Console/PruneWebhooksCommand.php": 2,
     "core/src/Events/EventTypeCast.php": 1,
     "core/src/Events/Outbox/Models/OutboxEvent.php": 1,
-    "core/src/Http/Requests/Webhooks/RegisterWebhookEndpointRequest.php": 1,
     "core/src/Http/Support/DownloadHeaders.php": 1,
     "core/src/Jobs/Middleware/RestoreTenantContext.php": 3,
-    "core/src/Jobs/Webhooks/DeliverWebhook.php": 2,
     "core/src/Models/Concerns/GuardsWrites.php": 1,
     "core/src/Models/Concerns/HasVaulterKeys.php": 4,
     "core/src/Models/Concerns/ResolvesVaulterConnection.php": 1,
-    "core/src/Models/Webhooks/WebhookDelivery.php": 2,
-    "core/src/Models/Webhooks/WebhookEndpoint.php": 2,
     "core/src/Schema/HostKeyColumns.php": 2,
     "core/src/Schema/IdStrategyResolver.php": 1,
     "core/src/Schema/VaulterSchema.php": 2,
@@ -87,5 +82,10 @@
     "filament/src/Resources/NodeResource.php": 1,
     "filament/src/Resources/NodeShareResource.php": 10,
     "filament/src/VaulterPlugin.php": 2,
-    "media/src/Models/Cas/Blob.php": 1
+    "media/src/Models/Cas/Blob.php": 1,
+    "webhooks/src/Console/PruneWebhooksCommand.php": 2,
+    "webhooks/src/Http/Requests/Webhooks/RegisterWebhookEndpointRequest.php": 1,
+    "webhooks/src/Jobs/DeliverWebhook.php": 2,
+    "webhooks/src/Models/WebhookDelivery.php": 2,
+    "webhooks/src/Models/WebhookEndpoint.php": 2
 }

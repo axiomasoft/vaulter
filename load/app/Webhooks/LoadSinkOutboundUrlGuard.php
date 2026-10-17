@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Load\Webhooks;
 
-use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
-use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
-use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
+use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
+use Vaulter\Webhooks\Exceptions\BlockedOutboundUrlException;
+use Vaulter\Webhooks\ValueObjects\PinnedOutboundEndpoint;
 
 /**
  * Load-stand outbound guard (P6.2). Delivery may dial only the controlled sink.

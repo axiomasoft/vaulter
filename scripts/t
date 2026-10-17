@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/t — the single entry for every test suite of the monorepo (PLAN3 P1.3).
 #
-#   scripts/t [sqlite|pgsql|mysql|all] [-p core,media,drive,documents,azgard,filament,load,repo,hub,vue]
+#   scripts/t [sqlite|pgsql|mysql|all] [-p core,media,drive,webhooks,documents,azgard,filament,load,repo,hub,vue]
 #             [-j N] [--engines=sqlite,pgsql,mysql] [--full] [--group=G] [--exclude-group=G]
 #             [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
 #   scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql|mysql] [--dry-run [--json]] [-j N] [--junit=DIR] [--no-skips] [-- pest flags]

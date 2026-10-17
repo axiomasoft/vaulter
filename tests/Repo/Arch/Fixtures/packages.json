@@ -97,11 +97,18 @@
             ]
         },
         "webhooks": {
-            "exists": false,
+            "composer": "axioma-studio/vaulter-webhooks",
+            "current_require": [
+                "core",
+                "drive"
+            ],
+            "dir": "packages/webhooks",
+            "exists": true,
             "psr4": {
-                "Vaulter\\Webhooks\\": null
+                "Vaulter\\Webhooks\\": "src/"
             },
             "target_require": [
+                "core",
                 "drive"
             ]
         }

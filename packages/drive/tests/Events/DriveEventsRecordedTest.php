@@ -13,7 +13,6 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Events\EventCatalog;
@@ -26,7 +25,7 @@ use Vaulter\Testing\Support\CanonicalJson;
  * types, one outbox row with the same event id. Commands are distinct occurrences even
  * when they repeat a state (V06).
  */
-uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('local');

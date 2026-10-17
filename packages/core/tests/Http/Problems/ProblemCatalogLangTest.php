@@ -35,15 +35,16 @@ it('keeps the lang files of a package in step with its code list', function (str
         expect($keys)->toBe($codes);
     }
 })->with([
-    // The drive and webhooks codes located in core keep their lines in the core lang files until P4 (D39).
-    'core' => ['core', [CoreProblemCodes::class, DriveSliceProblemCodes::class, WebhooksProblemCodes::class]],
+    // The drive slice codes located in core keep their lines in the core lang files until P4.16 (D39).
+    'core' => ['core', [CoreProblemCodes::class, DriveSliceProblemCodes::class]],
     'drive' => ['drive', [DriveProblemCodes::class]],
     'documents' => ['documents', [DocumentsProblemCodes::class]],
+    'webhooks' => ['webhooks', [WebhooksProblemCodes::class]],
 ]);
 
 it('lists the code and status of every ProblemException in the source tree', function (): void {
     $catalog = fullProblemCatalog()->all();
-    $files = glob(dirname(__DIR__, 5).'/packages/{core,drive,documents}/src/Exceptions/{,*/}*.php', GLOB_BRACE) ?: [];
+    $files = glob(dirname(__DIR__, 5).'/packages/{core,drive,documents,webhooks}/src/Exceptions/{,*/}*.php', GLOB_BRACE) ?: [];
     $seen = 0;
 
     foreach ($files as $file) {

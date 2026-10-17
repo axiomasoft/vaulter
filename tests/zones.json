@@ -3,7 +3,7 @@
     "note": "The single source of test zones (PLAN3 P1.4). A zone is an index over existing directories: it never moves a test. Leaf zones own src[] and tests[] (repo-relative, files or directories, never nested across leaves); `core` is an aggregator of its sub-zones. uses[] = zones whose change affects this one's tests (the Composer graph for packages, a coarse leaf graph inside core). `suite` is the tests/suites.json suite a leaf runs in. `explicit` = never pulled in as a consumer, selected only when touched directly. harness[] = paths whose change means \"run the whole affected set\" (scripts/test-select.php exits 2); database[] = engine-dependent tests (P1.5; the union of the database lists of every packages/*/tests/groups.php, kept equal by tests/Repo/TestGroupsTest.php); tail[] = glob allowlist of prose paths that need no test. This map proves the classification of every source root and test file is complete — not that uses[] is the true dependency graph.",
     "zones": {
         "core": {
-            "children": ["core-kernel", "core-modules", "core-operations", "core-events-webhooks", "core-http", "core-schema", "core-observability"],
+            "children": ["core-kernel", "core-modules", "core-operations", "core-events", "core-http", "core-schema", "core-observability"],
             "suite": "core",
             "uses": []
         },
@@ -12,7 +12,6 @@
             "suite": "core",
             "src": [
                 "packages/core/src/VaulterServiceProvider.php",
-                "packages/core/src/Actions",
                 "packages/core/src/Attributes",
                 "packages/core/src/Configuration",
                 "packages/core/src/Contracts",
@@ -20,7 +19,6 @@
                 "packages/core/src/Exceptions",
                 "packages/core/src/Models",
                 "packages/core/src/Providers",
-                "packages/core/src/Repositories",
                 "packages/core/src/Support",
                 "packages/core/src/Tenancy",
                 "packages/core/src/Testing",
@@ -54,30 +52,27 @@
             "suite": "core",
             "src": ["packages/core/src/Operations", "packages/core/src/Idempotency"],
             "tests": ["packages/core/tests/Operations", "packages/core/tests/Idempotency"],
-            "uses": ["core-kernel", "core-modules", "core-schema", "core-events-webhooks"]
+            "uses": ["core-kernel", "core-modules", "core-schema", "core-events"]
         },
-        "core-events-webhooks": {
+        "core-events": {
             "parent": "core",
             "suite": "core",
             "src": [
                 "packages/core/src/Events",
-                "packages/core/src/Jobs",
-                "packages/core/src/Policies",
-                "packages/core/src/Webhooks"
+                "packages/core/src/Jobs"
             ],
             "tests": [
                 "packages/core/tests/Events",
-                "packages/core/tests/Outbox",
-                "packages/core/tests/Webhooks"
+                "packages/core/tests/Outbox"
             ],
             "uses": ["core-kernel"]
         },
         "core-http": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Http", "packages/core/routes", "openapi"],
+            "src": ["packages/core/src/Http", "openapi"],
             "tests": ["packages/core/tests/Http", "packages/core/tests/OpenApi", "packages/core/tests/PublicApi"],
-            "uses": ["core-kernel", "core-operations", "core-events-webhooks"]
+            "uses": ["core-kernel", "core-operations", "core-events"]
         },
         "core-schema": {
             "parent": "core",
@@ -104,7 +99,7 @@
                 "packages/core/tests/Observability",
                 "packages/core/tests/ObservabilityDocuments"
             ],
-            "uses": ["core-kernel", "core-operations", "core-schema", "core-events-webhooks", "core-http"]
+            "uses": ["core-kernel", "core-operations", "core-schema", "core-events", "core-http"]
         },
         "media": {
             "suite": "media",
@@ -117,6 +112,12 @@
             "src": ["packages/drive/src", "packages/drive/config", "packages/drive/database/factories", "packages/drive/resources", "packages/drive/routes", "packages/drive/stubs"],
             "tests": ["packages/drive/tests"],
             "uses": ["core", "media"]
+        },
+        "webhooks": {
+            "suite": "webhooks",
+            "src": ["packages/webhooks/src", "packages/webhooks/config", "packages/webhooks/database", "packages/webhooks/resources", "packages/webhooks/routes"],
+            "tests": ["packages/webhooks/tests"],
+            "uses": ["core", "media", "drive"]
         },
         "documents": {
             "suite": "documents",
@@ -203,6 +204,10 @@
         {"path": "packages/drive/tests/SpatieTestCase.php", "zones": ["drive"]},
         {"path": "packages/drive/tests/database", "zones": ["drive"]},
         {"path": "packages/drive/tests/Fixtures", "zones": ["drive"]},
+        {"path": "packages/webhooks/composer.json", "zones": ["webhooks"]},
+        {"path": "packages/webhooks/phpunit.xml", "zones": ["webhooks"]},
+        {"path": "packages/webhooks/tests/Pest.php", "zones": ["webhooks"]},
+        {"path": "packages/webhooks/tests/TestCase.php", "zones": ["webhooks"]},
         {"path": "packages/documents/composer.json", "zones": ["documents"]},
         {"path": "packages/documents/phpunit.xml", "zones": ["documents"]},
         {"path": "packages/documents/tests/Pest.php", "zones": ["documents"]},
@@ -237,21 +242,11 @@
         "packages/core/tests/HostKeyMysql",
         "packages/core/tests/Database",
         "packages/core/tests/Events/EventRecorderTest.php",
-        "packages/core/tests/Events/WebhookAutoDisableCommitTest.php",
         "packages/core/tests/Tenancy/TenantProvisioningRaceTest.php",
         "packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php",
-        "packages/core/tests/Webhooks/ConcurrentDeliveryTest.php",
         "packages/core/tests/Modules/AcmeModuleContractTest.php",
         "packages/core/tests/Outbox/OutboxRelayTest.php",
         "packages/core/tests/Outbox/OutboxWriteTest.php",
-        "packages/core/tests/Outbox/WebhookFanoutConsumerTest.php",
-        "packages/core/tests/Webhooks/OutboxTransactionTest.php",
-        "packages/core/tests/Webhooks/WebhookSchemaTest.php",
-        "packages/core/tests/Webhooks/SigningSecretEncryptionTest.php",
-        "packages/core/tests/Webhooks/WebhookPruneSafetyTest.php",
-        "packages/core/tests/Webhooks/WebhookRetryDispatcherTest.php",
-        "packages/core/tests/Webhooks/WebhookAutoDisableTest.php",
-        "packages/core/tests/Feature/PruneWebhooksTest.php",
         "packages/core/tests/Doctor/CoreDoctorChecksTest.php",
         "packages/core/tests/Console/InstallCommandTest.php",
         "packages/core/tests/Unit/DatabaseSchemaReuseTest.php",
@@ -307,6 +302,17 @@
         "packages/drive/tests/Access/EvaluateManyEquivalenceTest.php",
         "packages/drive/tests/Access/WideNodeListingTest.php",
         "packages/drive/tests/Sharing/ShareSecurityBoundaryTest.php",
+        "packages/webhooks/tests/Concurrency",
+        "packages/webhooks/tests/Events/WebhookAutoDisableCommitTest.php",
+        "packages/webhooks/tests/Feature/PruneWebhooksTest.php",
+        "packages/webhooks/tests/Outbox/WebhookFanoutConsumerTest.php",
+        "packages/webhooks/tests/Webhooks/ConcurrentDeliveryTest.php",
+        "packages/webhooks/tests/Webhooks/OutboxTransactionTest.php",
+        "packages/webhooks/tests/Webhooks/SigningSecretEncryptionTest.php",
+        "packages/webhooks/tests/Webhooks/WebhookAutoDisableTest.php",
+        "packages/webhooks/tests/Webhooks/WebhookPruneSafetyTest.php",
+        "packages/webhooks/tests/Webhooks/WebhookRetryDispatcherTest.php",
+        "packages/webhooks/tests/Webhooks/WebhookSchemaTest.php",
         "packages/documents/tests/Concurrency",
         "packages/documents/tests/AfterCommit/CommentAfterCommitTest.php",
         "packages/documents/tests/Schema",

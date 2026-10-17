@@ -15,7 +15,6 @@ use Vaulter\Configuration\ObservabilityConfig;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Tenancy\TenantResolver;
@@ -61,7 +60,6 @@ final class BindingsRegistrar implements ModuleBindings
             return $resolver;
         });
         $app->singleton(RoutesConfig::class);
-        $app->singleton(WebhooksConfig::class);
         $app->singleton(ObservabilityConfig::class);
         $app->singletonIf(ConfigNormalizer::class);
         $app->singleton(ConfigValidator::class);

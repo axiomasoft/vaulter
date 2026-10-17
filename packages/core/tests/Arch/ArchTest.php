@@ -344,12 +344,10 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     $nested = layersNestedUnderDomain(__DIR__.'/../../src');
 
     // Public error and test contracts live with their respective families; the event
-    // value objects are the ValueObjects domain "Events", the "Events" domain of the neutral event values. Webhooks/Events
-    // holds the operational Laravel events hosts listen to (WebhookEndpointDisabled); its
-    // FQCN is documented, so it stays beside the webhook delivery it reports on.
+    // value objects are the ValueObjects domain "Events", the "Events" domain of the neutral event values.
     // Exceptions/Http holds the exceptions of the HTTP protocol itself (428 precondition).
     // Events/Outbox/Models holds the outbox model of the kernel outbox (D29: Vaulter\Events\Outbox\Models\OutboxEvent).
-    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Testing/Contracts', 'Testing/Events', 'ValueObjects/Events', 'Webhooks/Events', 'Events/Outbox/Models'])))->toBe([])
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Testing/Contracts', 'Testing/Events', 'ValueObjects/Events', 'Events/Outbox/Models'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
         ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ModuleContractTests.php'])
         ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'EventScope.php', 'EventSubject.php']);
@@ -556,8 +554,6 @@ function coreReferencesTo(string $root): array
 test('core source references the extracted vaulter-drive package only from the files that move to it (P2 #5 / D1, P4.8)', function (): void {
     $src = (string) realpath(__DIR__.'/../../src');
     $transitional = [
-        'Actions/Webhooks/RegisterWebhookEndpointAction.php',
-        'Actions/Webhooks/UpdateWebhookEndpointAction.php',
         'Configuration/ConfigValidator.php',
         'Configuration/VaulterConfig.php',
         'Console/InstallCommand.php',
@@ -570,7 +566,6 @@ test('core source references the extracted vaulter-drive package only from the f
         'Tenancy/TenancyBoundary.php',
         'Testing/Events/EventConformance.php',
         'Testing/InteractsWithVaulter.php',
-        'Webhooks/WebhookEndpointWrites.php',
     ];
     $found = array_map(static fn (string $path): string => substr((string) realpath($path), strlen($src) + 1), coreReferencesTo('Drive'));
     sort($found);
@@ -719,7 +714,6 @@ arch('domain exceptions implement the HTTP problem contract')
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Support\MissingPackageException',
         'Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException',
-        'Vaulter\Exceptions\Webhooks\WebhookResponseTooLargeException',
     ]);
 
 arch('production source never imports testing helpers (D35)')

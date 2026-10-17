@@ -16,7 +16,6 @@ use Vaulter\Drive\Enums\Changes\ChangeReason;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\Events\EventTypeContract;
@@ -28,7 +27,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * event, numbered 1..n per drive under the head row, compacted to the latest state of a
  * node without ever dropping a remove or an entry a weaker one would hide.
  */
-uses(TestCase::class, DatabaseMigrations::class, EnablesWebhooksModule::class);
+uses(TestCase::class, DatabaseMigrations::class);
 
 beforeEach(function (): void {
     config()->set('vaulter-drive.access.permission_driver', 'database');

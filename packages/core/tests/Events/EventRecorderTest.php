@@ -20,8 +20,8 @@ use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\TestCase;
-use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
  * The event pipeline (C05, D29): a change, its activity row and its outbox row commit or

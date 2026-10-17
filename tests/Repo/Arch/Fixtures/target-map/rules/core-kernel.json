@@ -203,13 +203,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Configuration\\WebhooksConfig",
-            "owner": "webhooks",
-            "note": "open: outbox keys (retention, consumer hold) move to core with D29",
-            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: webhooks (baseline (core PublicApiSnapshot) lists it)"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Console\\CommandsReferenceCommand",
             "owner": "core",
             "action": "keep",
@@ -489,12 +482,6 @@
             "phase": "P3",
             "note": "core keeps the check mechanism; each owner contributes its tables (drive/documents/media/webhooks/outbox)",
             "why": "architecture#ownership-map: Doctor — concrete checks belong to the owner of the concept"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Doctor\\Checks\\WebhooksDeliveriesCheck",
-            "owner": "webhooks",
-            "why": "architecture#ownership-map: Doctor — webhook deliveries check is webhooks"
         },
         {
             "match": "fqcn",
@@ -973,18 +960,6 @@
             "phase": "P4",
             "note": "core keeps the generic tag/canonical-json helper; node() -> drive; document() -> documents",
             "why": "architecture#kernel: HTTP-каркас — generic strong ETag/canonical JSON helper stays; entity tags belong to owners"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Requests\\Webhooks\\",
-            "owner": "webhooks",
-            "why": "architecture#ownership-map: Http requests of Webhooks are owned by the concept (identity surface, not PHP API)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Http\\Resources\\Webhooks\\",
-            "owner": "webhooks",
-            "why": "architecture#ownership-map: Http resources of Webhooks are owned by the concept (identity surface, not PHP API)"
         },
         {
             "match": "fqcn",
@@ -1482,15 +1457,6 @@
             "why": "architecture#packages: the vaulter.* root is split — sections go to their owners, kernel sections stay"
         },
         {
-            "match": "file",
-            "value": "packages/core/routes/webhooks.php",
-            "owner": "webhooks",
-            "action": "move",
-            "phase": "P4",
-            "note": "the routes of the logical webhooks module (D39); P4 moves the file with the webhooks package",
-            "why": "architecture#packages + D39: webhook endpoint routes (P3.2 split of routes/api.php)"
-        },
-        {
             "match": "fqcn",
             "value": "Vaulter\\Kernel",
             "owner": "core",
@@ -1809,18 +1775,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#persistence + D40 (P4.5): v_idempotency_keys is owned by core"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/0001_01_01_000401_create_v_webhook_endpoints_table.php",
-            "owner": "webhooks",
-            "why": "architecture#persistence + D40 (P4.5): v_webhook_endpoints is created by the webhooks migration; it moves to the webhooks package with the module (P4.13)"
-        },
-        {
-            "match": "file",
-            "value": "packages/core/database/migrations/0001_01_01_000402_create_v_webhook_deliveries_table.php",
-            "owner": "webhooks",
-            "why": "architecture#persistence + D40 (P4.5): v_webhook_deliveries is created by the webhooks migration; it moves to the webhooks package with the module (P4.13)"
         }
     ]
 }

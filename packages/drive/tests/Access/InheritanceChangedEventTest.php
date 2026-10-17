@@ -11,11 +11,8 @@ use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Operations\AccessOperations;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Support\CanonicalJson;
-
-uses(EnablesWebhooksModule::class);
 
 /**
  * Opening or closing a node to grants from above is an access.inheritance_changed

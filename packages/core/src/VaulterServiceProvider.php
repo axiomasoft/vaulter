@@ -22,10 +22,9 @@ use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\OffersModules;
 use Vaulter\Providers\HttpRegistrar;
-use Vaulter\Webhooks\WebhooksModule;
 
 /**
- * The core provider offers the core and the (logical) webhooks manifests and runs the module kernel:
+ * The core provider offers the core manifest and runs the module kernel:
  * it compiles every offered manifest once all providers registered, seals the result and applies the
  * declarations of the active modules (ADR-0027). It registers nothing else itself.
  */
@@ -44,7 +43,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         $this->offerModule(CoreModule::class);
-        $this->offerModule(WebhooksModule::class);
         $this->registerModuleKernel();
     }
 

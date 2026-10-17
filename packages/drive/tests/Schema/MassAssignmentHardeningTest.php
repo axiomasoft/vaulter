@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\MassAssignmentException;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Drive;
@@ -15,15 +13,14 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
  * Mass-assignment hardening (P1.4 / B13): every vaulter-core model used to carry
  * `$guarded = []` (F-P1.8-02, C6 fail — 16/16 models unguarded). This pins that a
  * service/security column can no longer be set through fill() on any of them, so a
  * future `Model::create($request->validated())`/`->fill($input)` cannot leak a
- * caller-chosen value into tenant_id/token_hash/signing_secret/etc.
+ * caller-chosen value into tenant_id/token_hash/etc. The webhook models are pinned by the
+ * webhooks package (tests/Schema/MassAssignmentHardeningTest.php).
  *
  * Red-before: on the code prior to this item every model declared
  * `protected $guarded = [];`, so `fill()` accepted EVERY key below without
@@ -31,11 +28,11 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  * phases/P1.md P1.4 Completion Notes).
  *
  * Two Eloquent behaviours are exercised, per model:
- *  - a CLOSED $fillable list (Node/Storage/File/FileRevision/NodeShare/
- *    WebhookEndpoint) silently DISCARDS a key outside the list — the attribute is
+ *  - a CLOSED $fillable list (Node/Storage/File/FileRevision/NodeShare)
+ *    silently DISCARDS a key outside the list — the attribute is
  *    simply absent afterwards;
  *  - a fully `$guarded = ['*']` model (Blob/FileRevisionBlob/NodeGrant/Activity/
- *    OutboxEvent/WebhookDelivery) is Eloquent's "totally guarded" state, which THROWS
+ *    OutboxEvent) is Eloquent's "totally guarded" state, which THROWS
  *    MassAssignmentException on ANY fill() with a non-empty array — an even
  *    stronger guarantee for these security-critical rows (CAS identity, ACL,
  *    audit trail, outbox/delivery bookkeeping).
@@ -55,7 +52,6 @@ it('discards a service/security column via fill() on a closed-$fillable vaulter-
     'File.size_bytes' => [File::class, 'size_bytes', 999_999_999],
     'FileRevision.blob_id' => [FileRevision::class, 'blob_id', 999],
     'NodeShare.token_hash' => [NodeShare::class, 'token_hash', 'attacker-hash'],
-    'WebhookEndpoint.signing_secret' => [WebhookEndpoint::class, 'signing_secret', 'ATTACKER-SECRET'],
 ]);
 
 it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with MassAssignmentException (F-P1.8-02)', function (
@@ -73,7 +69,6 @@ it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with Mas
     'NodeGrant.permissions' => [NodeGrant::class, 'permissions', 65535],
     'Activity.verb' => [Activity::class, 'verb', 'fake.verb'],
     'OutboxEvent.type' => [OutboxEvent::class, 'type', 'folder.created'],
-    'WebhookDelivery.status' => [WebhookDelivery::class, 'status', 'delivered'],
 ]);
 
 /**
@@ -96,36 +91,4 @@ it('never mass-assigns sha256 or storage_key on Blob via fill() or create() (F-P
         'storage_key' => 'attacker/controlled/key-2',
         'size_bytes' => 1,
     ]))->toThrow(MassAssignmentException::class);
-});
-
-/**
- * F-P1.7-04: `WebhookEndpoint::fill()` must never let a caller set the HMAC
- * signing_secret — the whole delivery-trust channel depends on it staying
- * server-generated (RegisterWebhookEndpointAction::execute()). WebhookEndpoint
- * carries a closed $fillable list (url/events/is_active), so the key is silently
- * discarded; the column is NOT NULL, so a fill()-only create() that drops it
- * fails the INSERT — a second, DB-level proof.
- */
-it('never mass-assigns signing_secret on WebhookEndpoint via fill() or create() (F-P1.7-04)', function (): void {
-    $filled = new WebhookEndpoint;
-    $filled->fill([
-        'url' => 'https://hooks.test/receive',
-        'signing_secret' => 'ATTACKER-CHOSEN-SECRET',
-    ]);
-
-    expect($filled->getAttributes())->not->toHaveKey('signing_secret')
-        ->and($filled->url)->toBe('https://hooks.test/receive');
-
-    // 'events' is included so signing_secret is the ONLY column the guard drops —
-    // isolating the NOT NULL failure to the attribute this test pins.
-    // PostgreSQL marks the current transaction failed after a constraint error.
-    // Let Laravel observe the exception inside a nested transaction so it rolls
-    // back to the savepoint before Pest catches the expected QueryException.
-    expect(fn () => DB::transaction(
-        fn (): WebhookEndpoint => WebhookEndpoint::query()->create([
-            'url' => 'https://hooks.test/receive-2',
-            'events' => ['folder.created'],
-            'signing_secret' => 'ATTACKER-CHOSEN-SECRET-2',
-        ]),
-    ))->toThrow(QueryException::class);
 });

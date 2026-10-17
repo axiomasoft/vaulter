@@ -115,26 +115,6 @@ Vaulter\Configuration\VaulterConfig api since 1.0 final readonly class
   public function scan(): Vaulter\Drive\Configuration\ScanConfig
   public function sharing(): Vaulter\Drive\Configuration\SharingConfig
   public function tenancy(): Vaulter\Configuration\TenancyConfig
-  public function webhooks(): Vaulter\Configuration\WebhooksConfig
-
-Vaulter\Configuration\WebhooksConfig api since 1.0 final readonly class
-  public const array REMOVED_KEYS = ['max_attempts' => 'vaulter.webhooks.retry_schedule (attempts = entries + 1)', 'backoff' => 'vaulter.webhooks.retry_schedule', 'disable_after_failures' => 'vaulter.webhooks.disable_after_days', 'signature_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'timestamp_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed', 'event_header' => 'the event type, which is the "type" field of the delivery body', 'relay.claim_seconds' => 'vaulter.outbox.lease_seconds (the webhooks.fanout consumer runs under the outbox delivery lease, D29)']
-  public function allowedIpRanges(): array
-  public function allowedSchemes(): array
-  public function assertNoRemovedKeys(): void
-  public function blockedIpRanges(): array
-  public function connectTimeout(): int
-  public function disableAfterDays(): int
-  public function manageAbility(): ?string
-  public function maxResponseBytes(): int
-  public function relayFanoutChunk(): int
-  public function retentionDays(): int
-  public function retryClaimSeconds(): int
-  public function retryJitter(): float
-  public function retrySchedule(): array
-  public function secretRotationOverlap(): int
-  public function timeout(): int
-  public function urlGuard(): string
 
 Vaulter\Contracts\Doctor\DoctorCheck spi:implement since 1.0 interface
   public function key(): string
@@ -163,13 +143,6 @@ Vaulter\Contracts\Tenancy\ResolvesOwnerTenant spi:implement since 1.0 interface
 
 Vaulter\Contracts\Tenancy\TenantResolver spi:implement since 1.0 interface
   public function current(): int|null|string
-
-Vaulter\Contracts\Webhooks\HostResolver spi:implement since 1.0 interface
-  public function resolve(string $host): array
-
-Vaulter\Contracts\Webhooks\OutboundUrlGuard spi:implement since 1.0 interface
-  public function isAllowed(string $url): void
-  public function pin(string $url): Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
 
 Vaulter\Data\Page api since 1.0 final readonly class implements Countable, IteratorAggregate
   public array $items
@@ -794,13 +767,3 @@ Vaulter\VaulterServiceProvider api since 1.0 final class extends Spatie\LaravelP
   public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
   public function packageBooted(): void
   public function packageRegistered(): void
-
-Vaulter\Webhooks\Events\WebhookEndpointDisabled api since 1.0 final readonly class
-  public int|string $endpointId
-  public ?Illuminate\Support\Carbon $failingSince
-  public string $reason
-  public function __construct(int|string $endpointId, string $reason, ?Illuminate\Support\Carbon $failingSince)
-
-Vaulter\Webhooks\StandardWebhookVerifier api since 1.0 final class
-  public function __construct(Vaulter\Webhooks\WebhookSigner $signer = new \Vaulter\Webhooks\WebhookSigner())
-  public function verify(array $headers, string $body, array $secrets, int $toleranceSeconds = 300, ?int $now = null): void

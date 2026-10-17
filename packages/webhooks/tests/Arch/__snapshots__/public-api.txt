@@ -1,0 +1,20 @@
+Vaulter\Webhooks\Configuration\WebhooksConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  allowedIpRanges(): array
+  allowedSchemes(): array
+  assertNoRemovedKeys(): void
+  blockedIpRanges(): array
+  connectTimeout(): int
+  disableAfterDays(): int
+  manageAbility(): ?string
+  maxResponseBytes(): int
+  model(string $key): string
+  relayFanoutChunk(): int
+  retentionDays(): int
+  retryClaimSeconds(): int
+  retryJitter(): float
+  retrySchedule(): array
+  secretRotationOverlap(): int
+  timeout(): int
+  urlGuard(): string
+  validate(): void

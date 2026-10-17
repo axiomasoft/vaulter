@@ -1149,6 +1149,73 @@
             "id": "serialized:config:vaulter-drive.models.scan_request",
             "kind": "protocol",
             "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.models.webhook_delivery",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_delivery",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.models.webhook_endpoint",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_endpoint",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.webhooks.delivery.url_guard",
+            "id": "serialized:config:vaulter-webhooks.delivery.url_guard",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:queue:Vaulter\\Jobs\\Webhooks\\DeliverWebhook",
+            "id": "serialized:queue:Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "format:webhook-signature",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:invalid_webhook_signature",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_delivery_not_found",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_delivery_not_redeliverable",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_endpoint_not_found",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
         }
     ],
     "items": [
@@ -1933,7 +2000,7 @@
             "manual": true,
             "owner": "webhooks",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhookSigner.php",
+                "file": "packages/webhooks/src/WebhookSigner.php",
                 "symbol": "Vaulter\\Webhooks\\WebhookSigner::signatureHeader"
             }
         },
@@ -2592,13 +2659,13 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Webhooks\\InvalidWebhookSignatureException",
+            "exception": "Vaulter\\Webhooks\\Exceptions\\InvalidWebhookSignatureException",
             "id": "problem:invalid_webhook_signature",
             "owner": "webhooks",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "file": "packages/webhooks/src/WebhooksProblemCodes.php",
                 "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 400
@@ -3096,37 +3163,37 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookDeliveryNotFoundException",
+            "exception": "Vaulter\\Webhooks\\Exceptions\\WebhookDeliveryNotFoundException",
             "id": "problem:webhook_delivery_not_found",
             "owner": "webhooks",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "file": "packages/webhooks/src/WebhooksProblemCodes.php",
                 "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookDeliveryNotRedeliverableException",
+            "exception": "Vaulter\\Webhooks\\Exceptions\\WebhookDeliveryNotRedeliverableException",
             "id": "problem:webhook_delivery_not_redeliverable",
             "owner": "webhooks",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "file": "packages/webhooks/src/WebhooksProblemCodes.php",
                 "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookEndpointNotFoundException",
+            "exception": "Vaulter\\Webhooks\\Exceptions\\WebhookEndpointNotFoundException",
             "id": "problem:webhook_endpoint_not_found",
             "owner": "webhooks",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "file": "packages/webhooks/src/WebhooksProblemCodes.php",
                 "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 404
@@ -3769,6 +3836,42 @@
             }
         },
         {
+            "config_key": "vaulter-webhooks.delivery.url_guard",
+            "fqcns": [
+                "Vaulter\\Webhooks\\DefaultOutboundUrlGuard"
+            ],
+            "id": "serialized:config:vaulter-webhooks.delivery.url_guard",
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/webhooks/config/vaulter-webhooks.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-webhooks.models.webhook_delivery",
+            "fqcns": [
+                "Vaulter\\Webhooks\\Models\\WebhookDelivery"
+            ],
+            "id": "serialized:config:vaulter-webhooks.models.webhook_delivery",
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/webhooks/config/vaulter-webhooks.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-webhooks.models.webhook_endpoint",
+            "fqcns": [
+                "Vaulter\\Webhooks\\Models\\WebhookEndpoint"
+            ],
+            "id": "serialized:config:vaulter-webhooks.models.webhook_endpoint",
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/webhooks/config/vaulter-webhooks.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "config_key": "vaulter.ids.strategies.bigint",
             "fqcns": [
                 "Vaulter\\Schema\\AutoIncrementIds"
@@ -3817,42 +3920,6 @@
             }
         },
         {
-            "config_key": "vaulter.models.webhook_delivery",
-            "fqcns": [
-                "Vaulter\\Models\\Webhooks\\WebhookDelivery"
-            ],
-            "id": "serialized:config:vaulter.models.webhook_delivery",
-            "owner": "webhooks",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.webhook_endpoint",
-            "fqcns": [
-                "Vaulter\\Models\\Webhooks\\WebhookEndpoint"
-            ],
-            "id": "serialized:config:vaulter.models.webhook_endpoint",
-            "owner": "webhooks",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.webhooks.delivery.url_guard",
-            "fqcns": [
-                "Vaulter\\Webhooks\\DefaultOutboundUrlGuard"
-            ],
-            "id": "serialized:config:vaulter.webhooks.delivery.url_guard",
-            "owner": "webhooks",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
             "class": "Vaulter\\Drive\\Jobs\\PruneFileRevisionsJob",
             "id": "serialized:queue:Vaulter\\Drive\\Jobs\\PruneFileRevisionsJob",
             "owner": "drive",
@@ -3883,12 +3950,12 @@
             "via": "ShouldQueue"
         },
         {
-            "class": "Vaulter\\Jobs\\Webhooks\\DeliverWebhook",
-            "id": "serialized:queue:Vaulter\\Jobs\\Webhooks\\DeliverWebhook",
+            "class": "Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
+            "id": "serialized:queue:Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
             "owner": "webhooks",
             "source": {
-                "file": "packages/core/src/Jobs/Webhooks/DeliverWebhook.php",
-                "symbol": "Vaulter\\Jobs\\Webhooks\\DeliverWebhook"
+                "file": "packages/webhooks/src/Jobs/DeliverWebhook.php",
+                "symbol": "Vaulter\\Webhooks\\Jobs\\DeliverWebhook"
             },
             "via": "ShouldQueue"
         }

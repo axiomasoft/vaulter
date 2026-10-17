@@ -16,12 +16,9 @@ use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Testing\Fixtures\TestUser;
-
-uses(EnablesWebhooksModule::class);
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

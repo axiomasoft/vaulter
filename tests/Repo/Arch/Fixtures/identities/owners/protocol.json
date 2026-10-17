@@ -243,9 +243,9 @@
         },
         {
             "match": "prefix",
-            "value": "serialized:queue:Vaulter\\Jobs\\Webhooks\\",
+            "value": "serialized:queue:Vaulter\\Webhooks\\Jobs\\",
             "owner": "webhooks",
-            "why": "Jobs/Webhooks -> webhooks"
+            "why": "Jobs -> webhooks"
         },
         {
             "match": "prefix",
@@ -285,15 +285,9 @@
         },
         {
             "match": "prefix",
-            "value": "serialized:config:vaulter.models.webhook_",
+            "value": "serialized:config:vaulter-webhooks.",
             "owner": "webhooks",
-            "why": "webhook models"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.webhooks.",
-            "owner": "webhooks",
-            "why": "outbound URL guard"
+            "why": "outbound URL guard and webhook models"
         },
         {
             "match": "prefix",
@@ -446,7 +440,7 @@
             "owner": "webhooks",
             "format": "Standard Webhooks headers webhook-id, webhook-timestamp, webhook-signature (v1,<base64 HMAC-SHA256>), several secrets space separated during rotation",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhookSigner.php",
+                "file": "packages/webhooks/src/WebhookSigner.php",
                 "symbol": "Vaulter\\Webhooks\\WebhookSigner::signatureHeader"
             },
             "why": "outbound delivery signing"

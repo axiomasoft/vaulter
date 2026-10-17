@@ -8,17 +8,9 @@ use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Kernel;
 use Vaulter\ValueObjects\Access\Actor;
-
-uses(EnablesWebhooksModule::class);
-
-beforeEach(function (): void {
-    expect(app(Kernel::class)->isActive('webhooks'))->toBeTrue();
-});
 
 it('stages three distinct occurrences for rename A to B to A to B', function (): void {
     $drive = DriveTestHelpers::drive();

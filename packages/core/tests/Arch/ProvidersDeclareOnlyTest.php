@@ -109,6 +109,7 @@ it('finds the provider of every package', function (): void {
         'VaulterFilamentServiceProvider.php',
         'VaulterMediaServiceProvider.php',
         'VaulterServiceProvider.php',
+        'VaulterWebhooksServiceProvider.php',
     ]);
 });
 

@@ -240,10 +240,10 @@ it('tags every core sub-zone through the Pest group zone:<name>, and the groups 
 
 it('goes red when a source root loses its zone', function (): void {
     $broken = z_broken(static function (array &$map): void {
-        $map['zones']['core-kernel']['src'] = array_values(array_diff($map['zones']['core-kernel']['src'], ['packages/core/src/Repositories']));
+        $map['zones']['core-kernel']['src'] = array_values(array_diff($map['zones']['core-kernel']['src'], ['packages/core/src/Support']));
     });
 
-    expect($broken['problems'])->toContain('source root packages/core/src/Repositories belongs to no zone');
+    expect($broken['problems'])->toContain('source root packages/core/src/Support belongs to no zone');
 });
 
 it('goes red when a test directory loses its zone', function (): void {

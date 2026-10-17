@@ -9,7 +9,6 @@ use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
-use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -24,7 +23,7 @@ use Vaulter\Testing\Support\CanonicalJson;
  * validators from the writer. Content saves are not audited, and only the saves that
  * took a checkpoint reach webhooks.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(OperationsTestCase::class, RefreshDatabase::class);
 
 /** @return array<string, int> event type => rows */
 function documentEventsCount(string $model): array

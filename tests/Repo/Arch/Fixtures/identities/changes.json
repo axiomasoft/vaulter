@@ -3733,6 +3733,680 @@
             "id": "config:vaulter-drive.sharing.url_base",
             "kind": "config",
             "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.models.webhook_delivery",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.models.webhook_delivery"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.models.webhook_endpoint",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.models.webhook_endpoint"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.schedule.webhooks_prune",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.schedule.webhooks_prune"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.schedule.webhooks_retry",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.schedule.webhooks_retry"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.allowed_ip_ranges",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.allowed_ip_ranges"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.allowed_schemes",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.allowed_schemes"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.blocked_ip_ranges",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.blocked_ip_ranges"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.connect_timeout",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.connect_timeout"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.max_response_bytes",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.max_response_bytes"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.url_guard",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.url_guard"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.disable_after_days",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.disable_after_days"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.manage_ability",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.manage_ability"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.relay.fanout_chunk",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.relay.fanout_chunk"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.retention_days",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.retention_days"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.retry_claim_seconds",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.retry_claim_seconds"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.retry_jitter",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.retry_jitter"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.retry_schedule",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.retry_schedule"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.secret_rotation_overlap",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.secret_rotation_overlap"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.timeout",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.timeout"
+        },
+        {
+            "change": "added",
+            "decision": "D6",
+            "id": "publish:vaulter-webhooks-config",
+            "kind": "config",
+            "reason": "P4.13: the webhooks provider publishes its config and translations under its own tags"
+        },
+        {
+            "change": "added",
+            "decision": "D6",
+            "id": "publish:vaulter-webhooks-translations",
+            "kind": "config",
+            "reason": "P4.13: the webhooks provider publishes its config and translations under its own tags"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "env:VAULTER_WEBHOOKS_MANAGE_ABILITY",
+            "kind": "config",
+            "reason": "P4.13: the env override is read by the vaulter-webhooks config file of the webhooks package; the name and the default are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:prune",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:redeliver",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:retry",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-deliveries.index",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-deliveries.redeliver",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.deactivate",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.destroy",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.index",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.show",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.store",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.update",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.attempts",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.claim_token",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.claim_until",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.created_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.endpoint_id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.event",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.event_id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.last_error",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.next_retry_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.payload",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.status",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.updated_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.created_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.disabled_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.disabled_reason",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.drive_id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.events",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.failing_since",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.failure_count",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.is_active",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.last_triggered_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.previous_secret_expires_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.previous_signing_secret",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.signing_secret",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.tenant_id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.updated_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.url",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "constraint:v_webhook_deliveries.v_webhook_deliveries_event_endpoint_unique",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "constraint:v_webhook_deliveries.v_webhook_deliveries_pkey",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "constraint:v_webhook_endpoints.v_webhook_endpoints_pkey",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "fk:v_webhook_deliveries.v_webhook_deliveries_endpoint_id_foreign",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "fk:v_webhook_endpoints.v_webhook_endpoints_drive_id_foreign",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.PRIMARY",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_endpoint_id_index",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_event_endpoint_unique",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_pkey",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_prune_idx",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_retry_idx",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.PRIMARY",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_active_tenant_idx",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_drive_id_index",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_is_active_index",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_pkey",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_tenant_id_index",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "migration:0001_01_01_000401_create_v_webhook_endpoints_table.php",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "migration:0001_01_01_000402_create_v_webhook_deliveries_table.php",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "table:v_webhook_deliveries",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "table:v_webhook_endpoints",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_delivery",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)",
+            "from": "serialized:config:vaulter.models.webhook_delivery"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_endpoint",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)",
+            "from": "serialized:config:vaulter.models.webhook_endpoint"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "serialized:config:vaulter-webhooks.delivery.url_guard",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)",
+            "from": "serialized:config:vaulter.webhooks.delivery.url_guard"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "serialized:queue:Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)",
+            "from": "serialized:queue:Vaulter\\Jobs\\Webhooks\\DeliverWebhook"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "format:webhook-signature",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:invalid_webhook_signature",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_delivery_not_found",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_delivery_not_redeliverable",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_endpoint_not_found",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

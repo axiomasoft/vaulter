@@ -27,7 +27,6 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\VaulterException;
-use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Testing\Support\ProblemProbeRoutes;
 
@@ -78,7 +77,6 @@ it('renders each domain exception with its stable code and HTTP status', functio
     'comment missing' => [CommentNotFoundException::forNode(1, 2), 'comment_not_found', 404],
     'unknown export format' => [UnknownExportFormatException::forFormat('unknown', ['html']), 'unknown_export_format', 422, ['allowed' => ['html']]],
     'unsupported content' => [UnsupportedDocumentContentException::forExporter('html', 'tiptap', 'other'), 'invalid_document_content', 422, ['reason' => 'unsupported_content']],
-    'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],
     'unenumerable subject' => [$subject = UnenumerableGrantSubjectException::for(Subject::make('role', 1), NullPermissionDriver::class), 'validation_failed', 422, ['errors' => ['subject_type' => [$subject->getMessage()]]]],
     'unknown panel' => [UnknownProfileException::forName('unknown', ['default']), 'unknown_profile', 422],
     'node missing' => [fn (): VaulterException => NodeNotFoundException::forId(1), 'node_not_found', 404],

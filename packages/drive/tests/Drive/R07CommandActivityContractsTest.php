@@ -20,13 +20,10 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\FakeMetricsRecorder;
-
-uses(EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     Storage::fake('local');

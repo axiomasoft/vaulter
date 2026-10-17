@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.13",
   "title": "Новый пакет vaulter-webhooks: скелет, перенос 60 типов, миграций, маршрутов, конфига и тестов; suite webhooks",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Создаётся `packages/webhooks` (`axioma-studio/vaulter-webhooks`, `Vaulter\\Webhooks\\`, require core+drive) по p4-design#webhooks-package; `move-types --owner=webhooks` переносит все 60 типов (WebhooksModule тем же FQCN); миграции 0401/0402, `routes/webhooks.php`, 22 ключа → `vaulter-webhooks.*`; тесты `packages/core/tests/Webhooks` → пакет; suite `webhooks` в scripts/t/suites/zones/groups/baseline; drive/documents тесты больше не включают webhooks.",
   "why": "D6, D29: вебхуки — consumer нейтрального outbox, отдельный устанавливаемый пакет (OptIn). Риск: перекрытие PSR-4 `Vaulter\\` (core) и `Vaulter\\Webhooks\\` — в core/src/Webhooks не должно остаться файлов; drive/documents тесты, ставившие `vaulter.modules.webhooks`, получат InvalidModuleGraph без пакета.",
   "scope": {
@@ -312,6 +312,61 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T03:27:32Z",
+    "finished_at": "2026-10-17T05:02:49Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "пакет packages/webhooks: 61 тип, миграции 0401/0402, routes, config vaulter-webhooks.*, ~120 новых тестов",
+    "deviations": [
+      "Тестовый кит webhooks в src/Testing (нужен тестам core); core оставил webhooks как dev-only пример opt-in модуля (require-dev); vendor/composer/installed.json пропатчен локально"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T05:02:49Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T05:02:49Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T05:02:49Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T05:02:49Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T05:02:49Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T05:02:49Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-17T05:02:49Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-17T05:02:49Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T05:02:49Z"
 }

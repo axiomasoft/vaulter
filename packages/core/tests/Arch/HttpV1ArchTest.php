@@ -15,7 +15,6 @@ use Vaulter\Drive\Access\AccessResolver;
 const V1_CONTROLLER_NAMESPACES = [
     'Vaulter\Drive\Http\Controllers\Activity',
     'Vaulter\Drive\Http\Controllers\Changes',
-    'Vaulter\Http\Controllers\Webhooks',
 ];
 
 arch('v1 controllers are final single-action classes')
@@ -26,10 +25,9 @@ arch('v1 controllers are final single-action classes')
 
 it('gives v1 controllers no public method besides the constructor and __invoke', function (): void {
     $offenders = [];
-    // Activity and Changes moved to vaulter-drive with the drive domain (P4.10); Webhooks stay until P4.13.
+    // Activity and Changes moved to vaulter-drive with the drive domain (P4.10); the webhook controllers are checked by the webhooks package.
     $roots = [
         [dirname(__DIR__, 3).'/drive/src/Http/Controllers', 'Vaulter\\Drive\\Http\\Controllers\\', ['Activity', 'Changes']],
-        [dirname(__DIR__, 2).'/src/Http/Controllers', 'Vaulter\\Http\\Controllers\\', ['Webhooks']],
     ];
     foreach ($roots as [$root, $namespace, $directories]) {
         foreach ((new Finder)->files()->in(array_map(static fn (string $directory): string => $root.'/'.$directory, $directories))->name('*.php') as $file) {
@@ -74,7 +72,7 @@ it('mints no temporary or signed storage URL and streams no download in the HTTP
 
 it('binds no route model in the package', function (): void {
     $offenders = [];
-    foreach ((new Finder)->files()->in([dirname(__DIR__, 2).'/src', dirname(__DIR__, 2).'/routes'])->name('*.php') as $file) {
+    foreach ((new Finder)->files()->in(dirname(__DIR__, 2).'/src')->name('*.php') as $file) {
         if (preg_match('/Route::(bind|model)\s*\(/', $file->getContents()) === 1) {
             $offenders[] = $file->getRelativePathname();
         }

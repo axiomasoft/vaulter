@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 uses(RefreshDatabase::class);
 

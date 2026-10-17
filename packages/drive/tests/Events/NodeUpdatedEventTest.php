@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Support\CanonicalJson;
@@ -15,7 +14,7 @@ use Vaulter\Testing\Support\CanonicalJson;
  * Changing a node's properties is a node.updated event (PLAN2.D41); the values are
  * host data, so only the fact of the change is published.
  */
-uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
     $this->drive = DriveTestHelpers::drive();

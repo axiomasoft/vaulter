@@ -1,0 +1,5 @@
+{
+  "suite": "webhooks",
+  "introduced": "P4",
+  "note": "The webhooks suite does not exist at the base commit c64bba25 (the webhooks code lived in the core suite until P4.13); its immutable original is empty by construction. The moved cases are recorded in CHANGES.json as core -> webhooks, every other case counts as an addition."
+}

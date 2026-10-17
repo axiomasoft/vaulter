@@ -21,9 +21,9 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Support\Config;
 use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
  * VLT-LOAD P2.3 — seed the stand to its tier's volume envelope (reference-env.md §2),
@@ -927,7 +927,7 @@ final class SeedLoadDatasetCommand extends Command
      */
     private function seedWebhookEndpoints(array $profile): array
     {
-        $model = config('vaulter.models.webhook_endpoint');
+        $model = config('vaulter-webhooks.models.webhook_endpoint');
         $ids = [];
 
         for ($i = 1; $i <= $profile['active']; $i++) {

@@ -13,14 +13,11 @@ use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-
-uses(EnablesWebhooksModule::class);
 
 /**
  * PLAN2.F15: comment events leave an Action as part of its unit of work — their

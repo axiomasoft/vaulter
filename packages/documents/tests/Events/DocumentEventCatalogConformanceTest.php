@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
-use Vaulter\Documents\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -17,7 +16,7 @@ use Vaulter\Testing\Events\EventConformance;
  * The document and comment events, produced by the real Actions, carry exactly the
  * data their EventSpec declares and nothing an envelope must not hold.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(OperationsTestCase::class, RefreshDatabase::class);
 
 it('records the document and comment events with the data their specs declare', function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 0);

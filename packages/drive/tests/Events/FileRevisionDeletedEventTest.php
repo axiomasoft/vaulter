@@ -8,7 +8,6 @@ use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Events\EventConformance;
@@ -18,7 +17,7 @@ use Vaulter\Testing\Support\CanonicalJson;
  * Deleting a non-current revision is audited and staged for webhooks like every other
  * lifecycle event (PLAN2.D48).
  */
-uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(TestCase::class, RefreshDatabase::class);
 
 it('records file.revision_deleted in the activity feed and the outbox', function (): void {
     Storage::fake('local');

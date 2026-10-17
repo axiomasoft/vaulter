@@ -23,7 +23,7 @@ use Vaulter\Tests\Outbox\Fixtures\EphemeralConsumer;
 use Vaulter\Tests\Outbox\Fixtures\MisnamedConsumer;
 use Vaulter\Tests\Outbox\Fixtures\ScriptedConsumer;
 use Vaulter\Tests\TestCase;
-use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**
  * The outbox relay (D29, I10): registration, reconciliation up to the settle window, fenced delivery with full

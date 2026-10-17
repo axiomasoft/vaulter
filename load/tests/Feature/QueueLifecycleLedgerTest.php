@@ -81,13 +81,13 @@ it('records uuid class and attempt without unserializing the command', function 
     $path = tempnam(sys_get_temp_dir(), 'p6-ledger-');
     bindLedgerEnv($path);
 
-    $serialized = 'O:32:"Vaulter\\Jobs\\Webhooks\\DeliverWebhook":1:{s:6:"secret";s:11:"sign-me-not";}';
+    $serialized = 'O:32:"Vaulter\\Webhooks\\Jobs\\DeliverWebhook":1:{s:6:"secret";s:11:"sign-me-not";}';
     $payload = [
         'uuid' => 'job-uuid-1',
-        'displayName' => 'Vaulter\\Jobs\\Webhooks\\DeliverWebhook',
+        'displayName' => 'Vaulter\\Webhooks\\Jobs\\DeliverWebhook',
         'attempts' => 0,
         'data' => [
-            'commandName' => 'Vaulter\\Jobs\\Webhooks\\DeliverWebhook',
+            'commandName' => 'Vaulter\\Webhooks\\Jobs\\DeliverWebhook',
             'command' => $serialized,
         ],
     ];
@@ -96,7 +96,7 @@ it('records uuid class and attempt without unserializing the command', function 
         connectionName: 'redis',
         queue: 'default',
         id: 'job-uuid-1',
-        job: 'Vaulter\\Jobs\\Webhooks\\DeliverWebhook',
+        job: 'Vaulter\\Webhooks\\Jobs\\DeliverWebhook',
         payload: json_encode($payload, JSON_THROW_ON_ERROR),
         delay: null,
     ));
@@ -113,7 +113,7 @@ it('records uuid class and attempt without unserializing the command', function 
         ->and($rows[0]['source'])->toBe('queued')
         ->and($rows[0]['outcome'])->toBe('queued')
         ->and($rows[0]['uuid'])->toBe('job-uuid-1')
-        ->and($rows[0]['class'])->toBe('Vaulter\\Jobs\\Webhooks\\DeliverWebhook')
+        ->and($rows[0]['class'])->toBe('Vaulter\\Webhooks\\Jobs\\DeliverWebhook')
         ->and($rows[0]['job_attempt'])->toBe(0)
         ->and($rows[0]['queue'])->toBe('default')
         ->and($rows[0]['run_id'])->toBe('run-ledger')
@@ -132,7 +132,7 @@ it('records exception and failed outcomes without the exception message', functi
     bindLedgerEnv($path);
     $job = ledgerJob([
         'uuid' => 'job-uuid-2',
-        'displayName' => 'Vaulter\\Jobs\\Webhooks\\DeliverWebhook',
+        'displayName' => 'Vaulter\\Webhooks\\Jobs\\DeliverWebhook',
         'attempts' => 1,
         'data' => ['command' => 'secret-body'],
     ]);
@@ -196,7 +196,7 @@ it('records implicit default queue and joins dispatcher and worker through a con
     putenv('LOAD_QUEUE_CONTEXT='.$context);
     $_ENV['LOAD_QUEUE_CONTEXT'] = $context;
     try {
-        $payload = ['uuid' => 'shared-uuid', 'displayName' => 'Vaulter\\Jobs\\Webhooks\\DeliverWebhook'];
+        $payload = ['uuid' => 'shared-uuid', 'displayName' => 'Vaulter\\Webhooks\\Jobs\\DeliverWebhook'];
         $listener = new RecordQueueLifecycle;
         $listener->handleQueueing(new JobQueueing('redis', null, 'Job', json_encode($payload), null));
         $listener->handleProcessing(new JobProcessing('redis', ledgerJob($payload)));

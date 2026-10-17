@@ -38,6 +38,7 @@
         "symfony/yaml": "^8.0",
         "axioma-studio/vaulter-drive": "self.version",
         "axioma-studio/vaulter-media": "self.version",
+        "axioma-studio/vaulter-webhooks": "self.version",
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
@@ -84,6 +85,13 @@
         {
             "type": "path",
             "url": "../media",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../webhooks",
             "options": {
                 "symlink": true
             }

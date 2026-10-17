@@ -12,12 +12,9 @@ use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Drive\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Testing\Support\CanonicalJson;
-
-uses(EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     StorageFacade::fake('local');

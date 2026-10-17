@@ -15,8 +15,8 @@ use Vaulter\Webhooks\WebhooksProblemCodes;
 // by each, so that a test file run in a ParaTest worker without its siblings still finds it.
 
 /**
- * The problem sources of the whole monorepo by declaring module (D39: the drive and webhooks codes located in
- * core are declared by their owners).
+ * The problem sources of the whole monorepo by declaring module (the drive slice codes located in core are
+ * declared by their owner).
  *
  * @return array<string, list<class-string<ProblemCodeSource>>>
  */
@@ -43,6 +43,7 @@ function fullProblemCatalog(): ProblemCatalog
     $translator->addNamespace('vaulter-media', $root.'/media/resources/lang');
     $translator->addNamespace('vaulter-drive', $root.'/drive/resources/lang');
     $translator->addNamespace('vaulter-documents', $root.'/documents/resources/lang');
+    $translator->addNamespace('vaulter-webhooks', $root.'/webhooks/resources/lang');
 
     return new ProblemCatalog(
         static fn (): array => array_map(

@@ -34,8 +34,6 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration
@@ -47,7 +45,7 @@ final readonly class VaulterConfig
     #[Internal]
     public function __construct(private Repository $config) {}
 
-    /** @return ($key is 'scan_backfill_run' ? class-string<ScanBackfillRun> : ($key is 'scan_policy_state' ? class-string<ScanPolicyState> : ($key is 'scan_evidence' ? class-string<ScanEvidenceRecord> : ($key is 'scan_request' ? class-string<ScanRequest> : ($key is 'scan_obligation' ? class-string<ScanObligation> : ($key is 'drive' ? class-string<Drive> : ($key is 'node' ? class-string<Node> : ($key is 'file' ? class-string<File> : ($key is 'file_revision' ? class-string<FileRevision> : ($key is 'file_revision_blob' ? class-string<FileRevisionBlob> : ($key is 'blob' ? class-string<Blob> : ($key is 'grant' ? class-string<NodeGrant> : ($key is 'node_share' ? class-string<NodeShare> : ($key is 'activity' ? class-string<Activity> : ($key is 'outbox' ? class-string<OutboxEvent> : ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : ($key is 'webhook_delivery' ? class-string<WebhookDelivery> : class-string<Model>))))))))))))))))) */
+    /** @return ($key is 'scan_backfill_run' ? class-string<ScanBackfillRun> : ($key is 'scan_policy_state' ? class-string<ScanPolicyState> : ($key is 'scan_evidence' ? class-string<ScanEvidenceRecord> : ($key is 'scan_request' ? class-string<ScanRequest> : ($key is 'scan_obligation' ? class-string<ScanObligation> : ($key is 'drive' ? class-string<Drive> : ($key is 'node' ? class-string<Node> : ($key is 'file' ? class-string<File> : ($key is 'file_revision' ? class-string<FileRevision> : ($key is 'file_revision_blob' ? class-string<FileRevisionBlob> : ($key is 'blob' ? class-string<Blob> : ($key is 'grant' ? class-string<NodeGrant> : ($key is 'node_share' ? class-string<NodeShare> : ($key is 'activity' ? class-string<Activity> : ($key is 'outbox' ? class-string<OutboxEvent> : class-string<Model>))))))))))))))) */
     public function model(string $key): string
     {
         if ($key === 'blob') {
@@ -55,11 +53,9 @@ final readonly class VaulterConfig
             return (new MediaConfig($this->config))->blobModel();
         }
 
-        // The outbox and the webhook models are the kernel's and the webhooks module's; every other model is the drive's.
+        // The outbox model is the kernel's; every other model is the drive's (the webhook models are read through WebhooksConfig).
         $core = [
             'outbox' => OutboxEvent::class,
-            'webhook_endpoint' => WebhookEndpoint::class,
-            'webhook_delivery' => WebhookDelivery::class,
         ];
         if (!isset($core[$key])) {
             return (new DriveConfig($this->config))->modelClass($key);
@@ -128,11 +124,6 @@ final readonly class VaulterConfig
     public function downloads(): DownloadsConfig
     {
         return new DownloadsConfig($this->config);
-    }
-
-    public function webhooks(): WebhooksConfig
-    {
-        return new WebhooksConfig($this->config);
     }
 
     public function outbox(): OutboxConfig

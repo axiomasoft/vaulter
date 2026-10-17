@@ -75,27 +75,15 @@
         },
         {
             "match": "prefix",
-            "value": "config:vaulter.schedule.webhooks_",
+            "value": "config:vaulter-webhooks.",
             "owner": "webhooks",
-            "why": "relay/retry/prune of webhooks -> webhooks"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.webhooks.",
-            "owner": "webhooks",
-            "why": "Webhooks (all) -> webhooks (architecture#ownership-map)"
+            "why": "the vaulter-webhooks root: delivery, retry, schedule and model keys of the webhooks package (D6, P4.13)"
         },
         {
             "match": "exact",
             "value": "config:vaulter.models.outbox",
             "owner": "core",
-            "why": "Models/Webhooks/Outbox stays in core (D29)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.models.webhook_",
-            "owner": "webhooks",
-            "why": "Models/Webhooks/{WebhookEndpoint,WebhookDelivery} -> webhooks"
+            "why": "the outbox model stays in core (D29)"
         },
         {
             "match": "prefix",
@@ -156,6 +144,12 @@
             "value": "publish:vaulter-drive-",
             "owner": "drive",
             "why": "tags of the drive provider"
+        },
+        {
+            "match": "prefix",
+            "value": "publish:vaulter-webhooks-",
+            "owner": "webhooks",
+            "why": "tags of the webhooks provider"
         },
         {
             "match": "prefix",

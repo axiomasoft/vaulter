@@ -63,6 +63,27 @@
             "id": "command:vaulter:make:permission-driver",
             "kind": "cli",
             "reason": "P4.8: the command class moved with the access model to vaulter-drive (Vaulter\\Drive\\Console); the command name and signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:prune",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:redeliver",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:retry",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
         }
     ],
     "items": [
@@ -1302,7 +1323,7 @@
         },
         {
             "arguments": [],
-            "class": "Vaulter\\Console\\PruneWebhooksCommand",
+            "class": "Vaulter\\Webhooks\\Console\\PruneWebhooksCommand",
             "description": "Delete terminal webhook deliveries past the retention window.",
             "exit_codes": [
                 "SUCCESS"
@@ -1314,7 +1335,7 @@
                     "accepts_value": true,
                     "array": false,
                     "default": null,
-                    "description": "Override the retention window in days (config vaulter.webhooks.retention_days)",
+                    "description": "Override the retention window in days (config vaulter-webhooks.retention_days)",
                     "name": "days",
                     "shortcut": null,
                     "value_required": false
@@ -1332,8 +1353,8 @@
             "owner": "webhooks",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/PruneWebhooksCommand.php",
-                "symbol": "Vaulter\\Console\\PruneWebhooksCommand"
+                "file": "packages/webhooks/src/Console/PruneWebhooksCommand.php",
+                "symbol": "Vaulter\\Webhooks\\Console\\PruneWebhooksCommand"
             }
         },
         {
@@ -1346,7 +1367,7 @@
                     "required": false
                 }
             ],
-            "class": "Vaulter\\Console\\RedeliverWebhooksCommand",
+            "class": "Vaulter\\Webhooks\\Console\\RedeliverWebhooksCommand",
             "description": "Send finished webhook deliveries again (same webhook-id).",
             "exit_codes": [
                 "FAILURE",
@@ -1386,13 +1407,13 @@
             "owner": "webhooks",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/RedeliverWebhooksCommand.php",
-                "symbol": "Vaulter\\Console\\RedeliverWebhooksCommand"
+                "file": "packages/webhooks/src/Console/RedeliverWebhooksCommand.php",
+                "symbol": "Vaulter\\Webhooks\\Console\\RedeliverWebhooksCommand"
             }
         },
         {
             "arguments": [],
-            "class": "Vaulter\\Console\\RetryWebhooksCommand",
+            "class": "Vaulter\\Webhooks\\Console\\RetryWebhooksCommand",
             "description": "Re-dispatch webhook deliveries whose backoff window has elapsed (§2.11).",
             "exit_codes": [
                 "SUCCESS"
@@ -1403,8 +1424,8 @@
             "owner": "webhooks",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/RetryWebhooksCommand.php",
-                "symbol": "Vaulter\\Console\\RetryWebhooksCommand"
+                "file": "packages/webhooks/src/Console/RetryWebhooksCommand.php",
+                "symbol": "Vaulter\\Webhooks\\Console\\RetryWebhooksCommand"
             }
         }
     ],

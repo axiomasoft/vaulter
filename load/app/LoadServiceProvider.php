@@ -21,7 +21,6 @@ use Illuminate\Support\ServiceProvider;
 use OpenTelemetry\SDK\Trace\TracerProvider;
 use PDO;
 use Throwable;
-use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Drive\Facades\Vaulter;
@@ -61,6 +60,7 @@ use Vaulter\Load\Observability\RedisMetricsRegistry;
 use Vaulter\Load\Webhooks\LoadSinkOutboundUrlGuard;
 use Vaulter\Support\Config;
 use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 
 /**
  * Load-stand host provider (P2.2). Boots ONLY under the VLT-LOAD nginx+php-fpm SUT
@@ -133,7 +133,7 @@ final class LoadServiceProvider extends ServiceProvider
                 'ttl_seconds' => (int) env('LOAD_METRICS_TTL_SECONDS', RedisMetricsRegistry::DEFAULT_TTL_SECONDS),
             ],
 
-            'vaulter.webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class,
+            'vaulter-webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class,
 
             'queue.default' => env('QUEUE_CONNECTION', 'redis'),
             'queue.connections.redis' => [
@@ -254,7 +254,7 @@ final class LoadServiceProvider extends ServiceProvider
     public function boot(): void
     {
         P5PatchWindow::register();
-        config(['vaulter.webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class]);
+        config(['vaulter-webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class]);
         $this->app->bind(OutboundUrlGuard::class, LoadSinkOutboundUrlGuard::class);
 
         if (
