@@ -751,6 +751,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `core` `P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Access_never_uses_the_Testing_namespaces` → [`drive`] `P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Access_never_uses_the_Testing_namespaces` — the live check follows the moved namespace: its name carries the new owner FQCN (P4.8 ownership move) (D40)
 - `core` `P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Rules_never_uses_the_Testing_namespaces` → [`drive`] `P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Rules_never_uses_the_Testing_namespaces` — the live check follows the moved namespace: its name carries the new owner FQCN (P4.8 ownership move) (D40)
 - `core` `P\Packages\core\tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Sharing_never_uses_the_Testing_namespaces` → [`drive`] `P\Tests\Arch\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_Sharing_never_uses_the_Testing_namespaces` — the live check follows the moved namespace: its name carries the new owner FQCN (P4.8 ownership move) (D40)
+- `documents` `P\Tests\Arch\ArchTest::__pest_evaluable_documents_never_depends_on_drive_or_media__T6_—_documents_requires_only_core_` → `P\Tests\Arch\ArchTest::__pest_evaluable_documents_depends_on_drive_but_never_directly_on_media__D6_` — documents sits on drive in the package graph (D6): the live check now forbids only a direct media dependency (P4.8) (D6)
 
 ## Additions (current − original)
 

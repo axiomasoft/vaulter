@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
@@ -66,4 +68,29 @@ it('помечает dangling-строку: committed-блоб без объек
     $report = $store->reconcile();
 
     expect($report['dangling'])->toContain((string) $blob->getKey());
+});
+
+it('читает строки блобов (берёт lock) раньше, чем считает пины', function (): void {
+    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('lock first'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    CasTestHelpers::pin($blob, CasTestHelpers::reference('a'));
+
+    // sqlite takes no row lock, so the order of the two reads is what is checked here: the
+    // locking read of the batch comes first, the pin count after it (as in the collector's mark).
+    $connection = app(VaulterDatabase::class)->connection();
+    $blobs = app(DatabaseConfig::class)->table('blobs');
+    $pins = app(DatabaseConfig::class)->table('blob_references');
+    $connection->enableQueryLog();
+    $connection->flushQueryLog();
+
+    app(BlobReconciler::class)->reconcile();
+
+    $queries = array_column($connection->getQueryLog(), 'query');
+    $connection->disableQueryLog();
+    $rowsAt = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, '"'.$blobs.'"') && str_starts_with($sql, 'select *') && str_contains($sql, '" in ('));
+    $countAt = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, 'count(*)') && str_contains($sql, '"'.$pins.'"'));
+
+    expect($rowsAt)->not->toBeNull()
+        ->and($countAt)->not->toBeNull()
+        ->and($rowsAt)->toBeLessThan($countAt)
+        ->and($blob->fresh()->ref_count)->toBe(1);
 });

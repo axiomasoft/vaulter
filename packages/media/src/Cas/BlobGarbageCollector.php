@@ -176,7 +176,7 @@ final readonly class BlobGarbageCollector
     /**
      * Sweep PENDING blobs from a crashed staging: a pending row older than
      * the grace window whose commit never finished and that carries no pin. Its
-     * (possibly partial) object is deleted and the row is finalised as a deleted
+     * staged object (if any) is deleted and the row is finalised as a deleted
      * tombstone, all under the lock so a slow-but-live commit is not stolen.
      *
      * @return array{swept: int, skipped: int}

@@ -27,10 +27,11 @@ use Vaulter\Support\Identity;
  * pin() runs the protocol shared with the sweep, inside the caller's transaction: take the per-(scope, sha256)
  * lock, re-read the blob FOR UPDATE, then decide on the fresh status —
  *  - committed: pin;
- *  - tombstoned or pending: pin only when the object still exists, committing the row again (the write also
+ *  - tombstoned: pin only when the object still exists, committing the row again (the write also
  *    conflicts with a SERIALIZABLE sweep that read the row before, so that sweep retries and sees the pin);
- *  - deleting or deleted: refuse — a sweep removes the object before it records the status, so its rollback can
- *    leave a tombstoned row without bytes, and a deleted row has none.
+ *  - pending, deleting or deleted: refuse — a pending row belongs to its commit; a sweep removes the object
+ *    before it records the status, so its rollback can leave a tombstoned row without bytes, and a deleted row
+ *    has none.
  * A refusal is {@see BlobUnavailableException}; a caller that holds the bytes commits them again.
  *
  * unpin() takes no lock: removing a pin only makes the blob a candidate, and both GC phases re-read the pins
@@ -61,8 +62,8 @@ final readonly class BlobPinStore implements BlobPins
 
         match ($fresh->status) {
             BlobStatus::Committed => null,
-            BlobStatus::Tombstoned, BlobStatus::Pending => $this->recommit($fresh),
-            BlobStatus::Deleting, BlobStatus::Deleted => throw BlobUnavailableException::forBlob($fresh->id, $fresh->status),
+            BlobStatus::Tombstoned => $this->recommit($fresh),
+            BlobStatus::Pending, BlobStatus::Deleting, BlobStatus::Deleted => throw BlobUnavailableException::forBlob($fresh->id, $fresh->status),
         };
 
         $pinned = $this->query()
@@ -157,7 +158,7 @@ final readonly class BlobPinStore implements BlobPins
     }
 
     /**
-     * A tombstoned or pending blob is pinned only while its object exists; it is then committed again under the
+     * A tombstoned blob is pinned only while its object exists; it is then committed again under the
      * lock, the way a commit resurrects it.
      */
     private function recommit(Blob $blob): void
@@ -166,7 +167,7 @@ final readonly class BlobPinStore implements BlobPins
             throw BlobUnavailableException::forBlob($blob->id, $blob->status);
         }
 
-        $this->blobs->resurrect(blob: $blob, pending: true);
+        $this->blobs->resurrect(blob: $blob);
     }
 
     private function assertReference(string $method, string $ownerType, ?string $referenceKey): void

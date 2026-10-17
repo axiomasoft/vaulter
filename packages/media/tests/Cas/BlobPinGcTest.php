@@ -149,10 +149,10 @@ it('refuses a pin to the tombstone a rolled-back sweep left without bytes, and t
 it('re-reads the pins under the lock in the sweep of a pending row', function (): void {
     $pending = CasTestHelpers::seedBlobRow('pending pinned', BlobStatus::Pending);
     $pending->forceFill(['first_seen_at' => now()->subDays(2)])->save();
-    CasTestHelpers::pin($pending, 'owner');
+    // Seeded: through the protocol a pin of a pending row is refused (D23).
+    CasTestHelpers::seedPin($pending, 'owner');
 
-    // Through the protocol the pin committed the row: the pending sweep has nothing to take.
-    expect($pending->fresh()->status)->toBe(BlobStatus::Committed)
-        ->and(app(BlobGarbageCollector::class)->sweepPending(graceHours: 1))->toBe(['swept' => 0, 'skipped' => 0]);
+    expect(app(BlobGarbageCollector::class)->sweepPending(graceHours: 1))->toBe(['swept' => 0, 'skipped' => 1])
+        ->and($pending->fresh()->status)->toBe(BlobStatus::Pending);
     Storage::disk('local')->assertExists($pending->storage_key);
 });

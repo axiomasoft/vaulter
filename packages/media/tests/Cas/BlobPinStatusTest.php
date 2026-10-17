@@ -19,8 +19,8 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /*
- * The pin protocol (D23, P2): a committed blob is pinned; a tombstoned (or pending) one only while its object exists
- * and is then committed again; a deleting or deleted one never. A refusal is blob_unavailable and a caller that holds
+ * The pin protocol (D23, P2): a committed blob is pinned; a tombstoned one only while its object exists
+ * and is then committed again; a pending, deleting or deleted one never. A refusal is blob_unavailable and a caller that holds
  * the bytes recovers by committing them again.
  */
 
@@ -67,9 +67,9 @@ it('keeps one pin per owner reference and several references per blob', function
         ->and(app(BlobPins::class)->countByOwner())->toBe(['other.owner' => 1, CasTestHelpers::OWNER => 2]);
 });
 
-it('pins a tombstoned blob whose object exists and commits it again', function (BlobStatus $status): void {
+it('pins a tombstoned blob whose object exists and commits it again', function (): void {
     $blob = pinStatusBlob('tombstoned with bytes');
-    $blob->forceFill(['status' => $status, 'delete_after_at' => now()->subMinute()])->save();
+    $blob->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subMinute()])->save();
 
     CasTestHelpers::pin($blob, 'revived');
 
@@ -79,19 +79,19 @@ it('pins a tombstoned blob whose object exists and commits it again', function (
         ->and($fresh->committed_at)->not->toBeNull()
         ->and(CasTestHelpers::pins($blob))->toBe(1);
     Storage::disk('local')->assertExists($blob->storage_key);
-})->with([BlobStatus::Tombstoned, BlobStatus::Pending]);
+});
 
-it('refuses a tombstoned or pending blob whose object is gone and writes nothing', function (BlobStatus $status): void {
+it('refuses a tombstoned blob whose object is gone and writes nothing', function (): void {
     $blob = pinStatusBlob('tombstoned without bytes');
-    $blob->forceFill(['status' => $status, 'delete_after_at' => now()->subMinute()])->save();
+    $blob->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subMinute()])->save();
     Storage::disk('local')->delete($blob->storage_key);
 
     expect(fn () => CasTestHelpers::pin($blob, 'late'))->toThrow(BlobUnavailableException::class)
         ->and(CasTestHelpers::pins($blob))->toBe(0)
-        ->and($blob->fresh()->status)->toBe($status);
-})->with([BlobStatus::Tombstoned, BlobStatus::Pending]);
+        ->and($blob->fresh()->status)->toBe(BlobStatus::Tombstoned);
+});
 
-it('always refuses a deleting or deleted blob, even with its object still on disk', function (BlobStatus $status): void {
+it('always refuses a pending, deleting or deleted blob, even with its object still on disk', function (BlobStatus $status): void {
     $blob = pinStatusBlob('being swept');
     $blob->forceFill(['status' => $status])->save();
     Storage::disk('local')->assertExists($blob->storage_key);
@@ -99,7 +99,7 @@ it('always refuses a deleting or deleted blob, even with its object still on dis
     expect(fn () => CasTestHelpers::pin($blob, 'late'))->toThrow(BlobUnavailableException::class)
         ->and(CasTestHelpers::pins($blob))->toBe(0)
         ->and($blob->fresh()->status)->toBe($status);
-})->with([BlobStatus::Deleting, BlobStatus::Deleted]);
+})->with([BlobStatus::Pending, BlobStatus::Deleting, BlobStatus::Deleted]);
 
 it('decides on the row read under the lock, not on the caller\'s stale model', function (): void {
     $blob = pinStatusBlob('stale model');

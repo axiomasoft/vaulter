@@ -116,7 +116,9 @@ final readonly class BlobReconciler
     /**
      * Recount one batch inside a transaction that first takes the lock of every blob
      * in it (PostgreSQL: the advisory locks in their global order; MySQL: the rows
-     * FOR UPDATE in key order), so a pin or unpin of these blobs waits or is seen.
+     * FOR UPDATE in key order), so a pin of these blobs either waits or is already visible
+     * to the count read after the lock. An unpin takes no lock; ref_count is a cache, so
+     * an unpin racing this recount is counted by the next run.
      *
      * @param  list<int|string>                       $ids
      * @return list<array{blob: Blob, changed: bool}>
@@ -138,9 +140,11 @@ final readonly class BlobReconciler
                 $query->lockForUpdate();
             }
 
+            // Read the rows first: get() is what takes the FOR UPDATE, the pin counts follow it.
+            $rows = $query->get();
             $counts = $this->pins->countsFor($ids);
             $result = [];
-            foreach ($query->get() as $blob) {
+            foreach ($rows as $blob) {
                 $count = $counts[Identity::stringify($blob->getKey())] ?? 0;
                 $changed = $blob->ref_count !== $count;
                 if ($changed) {
