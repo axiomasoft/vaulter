@@ -76,7 +76,7 @@ outline: deep
 | [`invalid_drive_state`](#invalid_drive_state) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\InvalidDriveStateException` |
 | [`invalid_node_name`](#invalid_node_name) | 422 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException` |
 | [`invalid_properties`](#invalid_properties) | 422 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Nodes\InvalidPropertiesException` |
-| [`invalid_webhook_signature`](#invalid_webhook_signature) | 400 | webhooks | `never` | `never` | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
+| [`invalid_webhook_signature`](#invalid_webhook_signature) | 400 | webhooks | `never` | `never` | `Vaulter\Webhooks\Exceptions\InvalidWebhookSignatureException` |
 | [`method_not_allowed`](#method_not_allowed) | 405 | core | `never` | `never` | `Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException` |
 | [`module_graph_invalid`](#module_graph_invalid) | 503 | core | `never` | `never` | `Vaulter\Modules\ModuleGraphException` |
 | [`module_not_ready`](#module_not_ready) | 503 | core | `never` | `never` | `Vaulter\Exceptions\Modules\ModuleNotReadyException` |
@@ -118,9 +118,9 @@ outline: deep
 | [`upload_offset_mismatch`](#upload_offset_mismatch) | 409 | drive | `after_refetch` | `never` | `Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException` |
 | [`upload_rejected`](#upload_rejected) | 422 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Files\UploadRejectedException` |
 | [`validation_failed`](#validation_failed) | 422 | core | `never` | `never` | `Illuminate\Validation\ValidationException` |
-| [`webhook_delivery_not_found`](#webhook_delivery_not_found) | 404 | webhooks | `never` | `never` | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotFoundException` |
-| [`webhook_delivery_not_redeliverable`](#webhook_delivery_not_redeliverable) | 409 | webhooks | `never` | `cacheable` | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException` |
-| [`webhook_endpoint_not_found`](#webhook_endpoint_not_found) | 404 | webhooks | `never` | `never` | `Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException` |
+| [`webhook_delivery_not_found`](#webhook_delivery_not_found) | 404 | webhooks | `never` | `never` | `Vaulter\Webhooks\Exceptions\WebhookDeliveryNotFoundException` |
+| [`webhook_delivery_not_redeliverable`](#webhook_delivery_not_redeliverable) | 409 | webhooks | `never` | `cacheable` | `Vaulter\Webhooks\Exceptions\WebhookDeliveryNotRedeliverableException` |
+| [`webhook_endpoint_not_found`](#webhook_endpoint_not_found) | 404 | webhooks | `never` | `never` | `Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException` |
 | [`write_outside_operation`](#write_outside_operation) | 500 | core | `never` | `never` | `Vaulter\Exceptions\Database\WriteOutsideOperationException` |
 
 ### `actor_required`

@@ -16,7 +16,6 @@ use Vaulter\Tests\Support\OpenApi\OpenApiTestCase;
 use Vaulter\Tests\TablePrefixTestCase;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\UlidTestCase;
-use Vaulter\Tests\Webhooks\WebhooksTestCase;
 
 $core = dirname(__DIR__).'/packages/core/tests';
 
@@ -89,11 +88,6 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Doctor',
     $core.'/Recipes',
     $core.'/WriteGuard',
-);
-
-// The webhook suites boot the opt-in webhooks module switched on (D22); the default boot keeps it off.
-uses(WebhooksTestCase::class, RefreshDatabase::class)->in(
-    $core.'/Webhooks',
 );
 
 uses(TestCase::class, RefreshDatabase::class)->in(...glob($core.'/Schema/*Test.php'));

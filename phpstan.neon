@@ -39,6 +39,8 @@ parameters:
                 - packages/core/src/Support/Concerns/HasIcon.php
                 - packages/core/src/Support/Concerns/HasLabel.php
                 - packages/core/src/Support/Concerns/HasStableMorphAlias.php
+                # Applied by the models of the drive and of the webhooks package (P4.13), by no model of the kernel.
+                - packages/core/src/Models/Concerns/HasVaulterKeys.php
 
         # The commit path stages the upload stream INTO the CAS inside the transaction
         # (uploadFile->execute), which may consume + fclose it; the finally re-guards

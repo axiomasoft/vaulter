@@ -12,8 +12,8 @@ Pest on Orchestra Testbench (PHP), `node --test` (hub) and Vitest (vue). Every s
 
 | Suite (`-p`) | cwd | Zones |
 |---|---|---|
-| `core` | repo root | `core-kernel`, `core-access`, `core-sharing`, `core-events-webhooks`, `core-http`, `core-schema`, `core-observability` (aggregator `core`) |
-| `media`, `drive`, `documents`, `azgard`, `filament` | `packages/<name>` | one zone each; `uses` follows the Composer graph (drive uses core+media, documents uses core+media+drive, …) |
+| `core` | repo root | `core-kernel`, `core-access`, `core-sharing`, `core-events`, `core-http`, `core-schema`, `core-observability` (aggregator `core`) |
+| `media`, `drive`, `webhooks`, `documents`, `azgard`, `filament` | `packages/<name>` | one zone each; `uses` follows the Composer graph (drive uses core+media, webhooks and documents use core+media+drive, …) |
 | `repo` | repo root | `tests/Repo`: the harness itself (runner, selector, zone map, groups) |
 | `hub` | `hocuspocus-server` | Node tests of the collaboration hub (not Pest) |
 | `vue` | `packages/vue` | the TypeScript client (not Pest) |
@@ -95,7 +95,7 @@ A split package is tested without `packages/core/tests`: the helpers every suite
 
 - Core kit `Vaulter\Testing\…` (`packages/core/src/Testing`): `Concerns\{RefreshesDatabaseForSchemaVariant, WithoutDatabaseSchema, EnablesModules, FreshApplication}`, `Support\{SuiteDatabaseConnection, TestGroups, CanonicalJson, ProblemProbeRoutes, OpenApi\*}`, `Concurrency\{ForkRace, RaceOutcome}`, `Tenancy\MutableTenantResolver`, `Events\EventConformance`, `Fixtures\{TestUser, Panels\FakeProject}`.
 - Drive kit `Vaulter\Drive\Testing\…`: `Drive\DriveTestHelpers`, `Access\AccessTestHelpers`, `Sharing\ShareTestHelpers`, `Activity\ActivityTestHelpers`, `Http\V1`, `Fixtures\Access\*`, `Fixtures\Panels\TeamProfile`. Documents kit: `Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver`.
-- A kit never imports `Vaulter\Tests\*` and never reads a file of `packages/core/tests`; the core kit names no other package's module (`webhooks` included). A test case of a package declares what it needs: `EnablesModules` switches `vaulter.modules.<id>` on (property `$enabledModules`, or override `modulesToEnable()` in a trait of the package that owns the module — `EnablesWebhooksModule` in the tests of core, drive and documents until the webhooks package ships its own kit).
+- A kit never imports `Vaulter\Tests\*` and never reads a file of `packages/core/tests`; the core kit names no other package's module (`webhooks` included). A test case of a package declares what it needs: `EnablesModules` switches `vaulter.modules.<id>` on (property `$enabledModules`, or override `modulesToEnable()` in a trait of the package that owns the module — `EnablesWebhooksModule` in the tests of core). Drive and documents tests do not enable the webhooks module: the package is not installed there. The webhooks kit `Vaulter\Webhooks\Testing\{WebhookTestHelpers, FakeHostResolver}` (`packages/webhooks/src/Testing`) serves the webhooks suite and the kernel suites that use the webhooks module as their external outbox consumer; core requires the package as a dev dependency.
 - `FreshApplication::boot()` takes providers and environment from the running test case (or its `$case` argument), so it works in any package.
 - The kit is analysed by the PHPStan of its package; its dependencies on dev packages (Testbench, Pest, opis/json-schema, symfony/yaml) are `suggest` entries of `vaulter-core`.
 

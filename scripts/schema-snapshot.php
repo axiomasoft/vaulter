@@ -32,6 +32,7 @@ use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Support\Schema\SchemaPresets;
 use Vaulter\Tests\Support\Schema\SchemaSnapshot;
 use Vaulter\VaulterServiceProvider;
+use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 $root = dirname(__DIR__);
 require $root.'/vendor/autoload.php';
@@ -76,6 +77,7 @@ try {
             VaulterMediaServiceProvider::class,
             VaulterDriveServiceProvider::class,
             VaulterDocumentsServiceProvider::class,
+            VaulterWebhooksServiceProvider::class,
         ],
         'env' => [
             'APP_KEY=base64:tJ4mVwShl8LETWdRtTCwcoKS7MS2ipekchk9seHrIVc=',

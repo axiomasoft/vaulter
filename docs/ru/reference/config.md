@@ -38,8 +38,8 @@ php artisan vendor:publish --tag=vaulter-config
 | `vaulter-documents.models.document_revision` | `Vaulter\Documents\Models\Revisions\DocumentRevision` | `axioma-studio/vaulter-documents` |
 | `models.activity` | `Vaulter\Models\Activity\Activity` | core |
 | `models.outbox` | `Vaulter\Models\Webhooks\Outbox` | core |
-| `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` | core |
-| `models.webhook_delivery` | `Vaulter\Models\Webhooks\WebhookDelivery` | core |
+| `models.webhook_endpoint` | `Vaulter\Webhooks\Models\WebhookEndpoint` | core |
+| `models.webhook_delivery` | `Vaulter\Webhooks\Models\WebhookDelivery` | core |
 
 Модели модулей находятся в `vaulter-drive.models.*` и `vaulter-documents.models.*`; они не мержатся в карту моделей core.
 
@@ -472,22 +472,6 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter.routes.middleware.hub` | — | `['api']` | — |
 | `vaulter.routes.rate_limits.public` | `VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE` | `60` | — |
 | `vaulter.routes.rate_limits.uploads` | `VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE` | `120` | — |
-| `vaulter.webhooks.timeout` | — | `15` | — |
-| `vaulter.webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three days in total). Jitter is the +/- fraction applied to each delay. |
-| `vaulter.webhooks.retry_jitter` | — | `0.1` | — |
-| `vaulter.webhooks.disable_after_days` | — | `5` | Days of uninterrupted failure before an endpoint is disabled; 0 never disables. |
-| `vaulter.webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (max 604800). |
-| `vaulter.webhooks.retention_days` | — | `30` | — |
-| `vaulter.webhooks.retry_claim_seconds` | — | `60` | — |
-| `vaulter.webhooks.relay` | — | — | The webhooks.fanout outbox consumer materializes deliveries fanout_chunk endpoints at a time (1..1000), each chunk in its own transaction under the outbox delivery lease. |
-| `vaulter.webhooks.relay.fanout_chunk` | — | `100` | — |
-| `vaulter.webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `'vaulter.webhooks.manage'` | — |
-| `vaulter.webhooks.delivery.url_guard` | — | `DefaultOutboundUrlGuard::class` | — |
-| `vaulter.webhooks.delivery.allowed_schemes` | — | `['http', 'https']` | — |
-| `vaulter.webhooks.delivery.blocked_ip_ranges` | — | `null` | — |
-| `vaulter.webhooks.delivery.allowed_ip_ranges` | — | `[]` | — |
-| `vaulter.webhooks.delivery.connect_timeout` | — | `2` | — |
-| `vaulter.webhooks.delivery.max_response_bytes` | — | `65536` | — |
 | `vaulter.outbox` | — | — | The transactional outbox (D29): every domain event is written to v_outbox in the transaction of its operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once. settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events older than it, so a long transaction committing a smaller seq later is not skipped. |
 | `vaulter.outbox.settle_window_seconds` | — | `300` | — |
 | `vaulter.outbox.retention_seconds` | — | `604800` | — |
@@ -504,16 +488,12 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter.schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | — |
 | `vaulter.schedule.outbox_relay` | — | `'everyMinute'` | — |
 | `vaulter.schedule.outbox_prune` | — | `'hourly'` | — |
-| `vaulter.schedule.webhooks_retry` | — | `'everyMinute'` | — |
-| `vaulter.schedule.webhooks_prune` | — | `'dailyAt:03:10'` | — |
 | `vaulter.schedule.idempotency_prune` | — | `'dailyAt:03:30'` | — |
 | `vaulter.observability.enabled` | `VAULTER_OBSERVABILITY_ENABLED` | `false` | — |
 | `vaulter.observability.recorder` | `VAULTER_OBSERVABILITY_RECORDER` | `null` | — |
 | `vaulter.observability.tracing.enabled` | `VAULTER_TRACING_ENABLED` | `false` | — |
 | `vaulter.observability.tracing.recorder` | `VAULTER_TRACING_RECORDER` | `null` | — |
 | `vaulter.models.outbox` | — | `OutboxEvent::class` | — |
-| `vaulter.models.webhook_endpoint` | — | `WebhookEndpoint::class` | — |
-| `vaulter.models.webhook_delivery` | — | `WebhookDelivery::class` | — |
 
 ### `vaulter-documents`
 
@@ -674,4 +654,30 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter-media.blob_store` | — | `BlobStore::class` | — |
 | `vaulter-media.models` | — | — | Swappable Eloquent model of the blob table (must extend the package model). |
 | `vaulter-media.models.blob` | — | `Blob::class` | — |
+
+### `vaulter-webhooks`
+
+| Key | Env | Default | Description |
+|---|---|---|---|
+| `vaulter-webhooks.timeout` | — | `15` | — |
+| `vaulter-webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three days in total). Jitter is the +/- fraction applied to each delay. |
+| `vaulter-webhooks.retry_jitter` | — | `0.1` | — |
+| `vaulter-webhooks.disable_after_days` | — | `5` | Days of uninterrupted failure before an endpoint is disabled; 0 never disables. |
+| `vaulter-webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (max 604800). |
+| `vaulter-webhooks.retention_days` | — | `30` | — |
+| `vaulter-webhooks.retry_claim_seconds` | — | `60` | — |
+| `vaulter-webhooks.relay` | — | — | The webhooks.fanout outbox consumer materializes deliveries fanout_chunk endpoints at a time (1..1000), each chunk in its own transaction under the outbox delivery lease. |
+| `vaulter-webhooks.relay.fanout_chunk` | — | `100` | — |
+| `vaulter-webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `'vaulter.webhooks.manage'` | — |
+| `vaulter-webhooks.delivery.url_guard` | — | `DefaultOutboundUrlGuard::class` | — |
+| `vaulter-webhooks.delivery.allowed_schemes` | — | `['http', 'https']` | — |
+| `vaulter-webhooks.delivery.blocked_ip_ranges` | — | `null` | — |
+| `vaulter-webhooks.delivery.allowed_ip_ranges` | — | `[]` | — |
+| `vaulter-webhooks.delivery.connect_timeout` | — | `2` | — |
+| `vaulter-webhooks.delivery.max_response_bytes` | — | `65536` | — |
+| `vaulter-webhooks.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
+| `vaulter-webhooks.schedule.webhooks_retry` | — | `'everyMinute'` | — |
+| `vaulter-webhooks.schedule.webhooks_prune` | — | `'dailyAt:03:10'` | — |
+| `vaulter-webhooks.models.webhook_endpoint` | — | `WebhookEndpoint::class` | — |
+| `vaulter-webhooks.models.webhook_delivery` | — | `WebhookDelivery::class` | — |
 <!-- vaulter:config-reference:end -->
