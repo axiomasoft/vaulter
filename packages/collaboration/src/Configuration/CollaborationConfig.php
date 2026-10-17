@@ -17,8 +17,9 @@ use Vaulter\Support\Identity;
 /**
  * The typed reader of the `vaulter-collaboration` configuration root: the transport, the hub (URL, secrets,
  * token lifetime), the largest Yjs state a store may write, the protocol 2 limits, the compaction triggers and lease,
- * the drain deadline and the retention of closed generations. The room channel prefix is the documents package's
- * ({@see DocumentsConfig::channelPrefix()}): the comment events of a document broadcast on the same channels.
+ * the drain deadline, flag store and append window, and the retention of closed generations. The room channel prefix
+ * is the documents package's ({@see DocumentsConfig::channelPrefix()}): the comment events of a document broadcast on
+ * the same channels.
  */
 #[Api]
 final readonly class CollaborationConfig
@@ -157,6 +158,20 @@ final readonly class CollaborationConfig
     public function restoreDeadline(): int
     {
         return $this->positive('vaulter-collaboration.drain.restore_deadline', 10);
+    }
+
+    /** The cache store of the draining flag; null for the default store. */
+    public function drainCacheStore(): ?string
+    {
+        $value = $this->config->get('vaulter-collaboration.drain.cache_store');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /** The longest an append transaction lasts (seconds): a drain decides no earlier than this after it set the flag. */
+    public function drainMaxAppendTx(): int
+    {
+        return $this->positive('vaulter-collaboration.drain.max_append_tx', 5);
     }
 
     /** Days the rows of a closed generation stay once no token or retry of it can arrive any more. */

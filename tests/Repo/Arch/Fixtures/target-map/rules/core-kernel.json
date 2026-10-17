@@ -1720,6 +1720,22 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Modules\\GuardsRemoval",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#module-system + D26 (P5.6): a module manifest names the class that refuses the module's removal (pending collaboration), read statically for an inactive module too"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\RemovalGuard",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#module-system + D26 (P5.6): what stops a module's removal that no row, foreign key or reference shows, read by vaulter:module:uninstall in the dry run, the purge transaction and before each rollback"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Support\\Concerns\\HasStableMorphAlias",
             "owner": "core",
             "action": "keep",

@@ -507,6 +507,8 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-collaboration.compaction.trigger_age` | — | `600` | — |
 | `vaulter-collaboration.compaction.lease_ttl` | — | `60` | — |
 | `vaulter-collaboration.drain.restore_deadline` | — | `10` | How long a restore, REST replace, content read or export of a document with uncheckpointed edits waits for the hub to compact them (seconds); after it the request answers 409 document_state_pending. |
+| `vaulter-collaboration.drain.cache_store` | — | `null` | The cache store of the draining flag vaulter:collaboration:drain sets (null: the default store). Every PHP process must see it, so not an `array` or `null` store (the doctor reports one as an error). |
+| `vaulter-collaboration.drain.max_append_tx` | — | `5` | The longest an append transaction lasts, lock waits included (seconds): a drain reports its outcome no earlier than this after it set the flag, so an append that read the flag before it was set has committed by then. |
 | `vaulter-collaboration.retention.retired_generation_days` | — | `7` | Days the log and receipts of a closed generation stay after its last token and retry could still arrive. |
 | `vaulter-collaboration.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
 | `vaulter-collaboration.schedule.collaboration_prune` | — | `'dailyAt:03:40'` | — |

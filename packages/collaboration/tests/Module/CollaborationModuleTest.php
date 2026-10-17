@@ -7,8 +7,10 @@ use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
 use Vaulter\Collaboration\CollaborationModule;
 use Vaulter\Collaboration\CollaborationSchedule;
+use Vaulter\Collaboration\Console\DrainCommand;
 use Vaulter\Collaboration\Console\PruneGenerationsCommand;
 use Vaulter\Collaboration\Drain\HubDrainer;
+use Vaulter\Collaboration\Drain\PendingRemovalGuard;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Schema\CollaborationSchema;
@@ -19,6 +21,7 @@ use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Kernel;
 use Vaulter\Modules\Activation;
+use Vaulter\Modules\GuardsRemoval;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Modules\SlotContribution;
@@ -60,8 +63,11 @@ it('declares an opt-in manifest that needs the documents module', function (): v
             CollaborationDriver::class.'=>'.HocuspocusCollaborationDriver::class,
             PendingStateDrainer::class.'=>'.HubDrainer::class,
         ])
-        ->and($builder->commandClasses())->toBe([PruneGenerationsCommand::class])
-        ->and($builder->schedules())->toBe([CollaborationSchedule::class]);
+        ->and($builder->commandClasses())->toBe([PruneGenerationsCommand::class, DrainCommand::class])
+        ->and($builder->schedules())->toBe([CollaborationSchedule::class])
+        // Read statically by vaulter:module:uninstall, also while the module is off (C10).
+        ->and($module)->toBeInstanceOf(GuardsRemoval::class)
+        ->and(CollaborationModule::removalGuard())->toBe(PendingRemovalGuard::class);
 });
 
 it('drains pending documents through the hub and closes the generations a restore leaves once it is switched on', function (): void {
@@ -72,8 +78,11 @@ it('drains pending documents through the hub and closes the generations a restor
     expect($kernel->capabilities()->require(PendingStateDrainer::class))->toBeInstanceOf(HubDrainer::class)
         ->and($sinks)->toContain('collaboration.generations')
         ->and($app->make(ConsoleKernel::class)->all())->toHaveKey('vaulter:collaboration:prune')
+        ->and($app->make(ConsoleKernel::class)->all())->toHaveKey('vaulter:collaboration:drain')
         ->and(FreshApplication::$queries)->toBe(0);
-    expect(FreshApplication::boot()->make(Kernel::class)->capabilities()->has(PendingStateDrainer::class))->toBeFalse();
+    $off = FreshApplication::boot();
+    expect($off->make(Kernel::class)->capabilities()->has(PendingStateDrainer::class))->toBeFalse()
+        ->and($off->make(ConsoleKernel::class)->all())->not->toHaveKey('vaulter:collaboration:drain');
 });
 
 it('stays off by default: no routes, no driver, no operations, and the host still serves its own requests', function (): void {
@@ -127,7 +136,7 @@ it('keeps the problem codes of the collaboration concept out of the catalogue wh
     $off = FreshApplication::boot()->make(ProblemCatalog::class);
     $on = FreshApplication::boot(['vaulter.modules.collaboration' => true])->make(ProblemCatalog::class);
 
-    foreach (['collaboration_epoch_mismatch', 'collaboration_seed_conflict', 'collaboration_unavailable', 'collaboration_checkpoint_conflict'] as $code) {
+    foreach (['collaboration_epoch_mismatch', 'collaboration_seed_conflict', 'collaboration_unavailable', 'collaboration_checkpoint_conflict', 'collaboration_draining'] as $code) {
         expect($off->has($code))->toBeFalse($code)
             ->and($on->has($code))->toBeTrue($code)
             ->and($on->module($code))->toBe('collaboration')

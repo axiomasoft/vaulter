@@ -1098,7 +1098,7 @@ export interface paths {
         put?: never;
         /**
          * Hub: append one update to the log of a room (protocol 2)
-         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large). The answer is the committed receipt: a retry with the same update_id and payload gets the same seq.
+         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large). The answer is the committed receipt: a retry with the same update_id and payload gets the same seq. While vaulter:collaboration:drain drains the log before the module is switched off, every append answers 503 collaboration_draining and nothing is written; the hub keeps the update and retries it with backoff.
          */
         post: operations["collaboration.hub.append"];
         delete?: never;
@@ -1165,6 +1165,7 @@ export interface components {
              * @example blob_unavailable
              * @example cannot_delete_head_revision
              * @example collaboration_checkpoint_conflict
+             * @example collaboration_draining
              * @example collaboration_epoch_mismatch
              * @example collaboration_protocol_mismatch
              * @example collaboration_seed_conflict
@@ -1948,6 +1949,18 @@ export interface components {
         };
         /** @description Unexpected failure (internal_error). */
         Problem500: {
+            headers: {
+                "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                "X-Request-Id": components["headers"]["XRequestId"];
+                "Cache-Control": components["headers"]["CacheControlError"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Temporarily unavailable; retry with backoff (collaboration_draining). */
+        Problem503: {
             headers: {
                 "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                 "X-Request-Id": components["headers"]["XRequestId"];
@@ -5217,6 +5230,7 @@ export interface operations {
             422: components["responses"]["Problem422"];
             429: components["responses"]["Problem429"];
             500: components["responses"]["Problem500"];
+            503: components["responses"]["Problem503"];
         };
     };
     "collaboration.hub.compaction.lease": {

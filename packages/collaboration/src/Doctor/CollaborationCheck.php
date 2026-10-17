@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Doctor;
 
+use Illuminate\Contracts\Config\Repository;
 use Throwable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Drain\DrainState;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
@@ -14,11 +16,17 @@ use Vaulter\Doctor\DoctorFinding;
 /**
  * The settings of an active collaboration module. Evidence names the settings and says whether they are set; the
  * secrets themselves never leave the config. (An inactive module registers no check: it is simply not collaborating.)
+ *
+ * The draining flag of a managed disable must live in a cache store every PHP process shares: an `array` or `null`
+ * store is an error (C10). While the flag is set, appends are refused: a warning says so.
  */
 #[Internal]
 final readonly class CollaborationCheck implements DoctorCheck
 {
-    public function __construct(private CollaborationConfig $config) {}
+    /** Cache drivers no other process sees. */
+    private const array LOCAL_CACHE_DRIVERS = ['array', 'null'];
+
+    public function __construct(private CollaborationConfig $config, private Repository $settings, private DrainState $draining) {}
 
     public function key(): string
     {
@@ -35,7 +43,15 @@ final readonly class CollaborationCheck implements DoctorCheck
         $jwt = $this->config->hubJwtSecret();
         $webhook = $this->config->hubWebhookSecret();
         $url = $this->config->hubUrl();
-        $evidence = ['jwt_secret_set' => $jwt !== null, 'webhook_secret_set' => $webhook !== null, 'hub_url_set' => $url !== null];
+        $store = $this->config->drainCacheStore() ?? $this->string('cache.default');
+        $driver = $store === null ? null : $this->string('cache.stores.'.$store.'.driver');
+        $evidence = [
+            'jwt_secret_set' => $jwt !== null,
+            'webhook_secret_set' => $webhook !== null,
+            'hub_url_set' => $url !== null,
+            'drain_cache_store' => $store,
+            'drain_cache_driver' => $driver,
+        ];
 
         $problems = [];
         if ($jwt === null || $webhook === null) {
@@ -53,14 +69,41 @@ final readonly class CollaborationCheck implements DoctorCheck
         } catch (Throwable) {
             $problems[] = ['collaboration.hub_token_ttl', 'The room token lifetime must be between 1 and 3600 seconds.', 'set vaulter-collaboration.hub.token_ttl to at most 3600'];
         }
+        $shared = false;
+        if ($driver === null) {
+            $problems[] = ['collaboration.drain_cache_missing', sprintf('The cache store "%s" of the draining flag is not configured.', $store ?? ''), 'set vaulter-collaboration.drain.cache_store to a store of config/cache.php'];
+        } elseif (in_array($driver, self::LOCAL_CACHE_DRIVERS, true)) {
+            $problems[] = ['collaboration.drain_cache_local', sprintf('The draining flag of vaulter:collaboration:drain would live in the cache store "%s" (driver %s), which no other PHP process sees: their appends would go on during a drain.', $store, $driver), 'set vaulter-collaboration.drain.cache_store to a store every process shares (redis, database, memcached)'];
+        } else {
+            $shared = true;
+        }
 
-        if ($problems === []) {
+        $warnings = [];
+        if ($shared) {
+            try {
+                $since = $this->draining->since();
+                if ($since !== null) {
+                    $warnings[] = ['collaboration.draining', sprintf('The collaboration log refuses updates: vaulter:collaboration:drain set the draining flag at %s.', $since->toDateTimeString()), 'run vaulter:collaboration:drain --release to accept updates again'];
+                }
+            } catch (Throwable) {
+                $problems[] = ['collaboration.drain_cache_unreadable', 'The draining flag cannot be read from its cache store, so every append fails.', 'check the cache store vaulter-collaboration.drain.cache_store names'];
+            }
+        }
+
+        if ($problems === [] && $warnings === []) {
             return [DoctorFinding::ok(code: 'collaboration.hub_ok', message: 'The collaboration settings are complete.', evidence: $evidence)];
         }
 
-        return array_map(
-            static fn (array $problem): DoctorFinding => DoctorFinding::error(code: $problem[0], message: $problem[1], hint: $problem[2], evidence: $evidence),
-            $problems,
-        );
+        return [
+            ...array_map(static fn (array $problem): DoctorFinding => DoctorFinding::error(code: $problem[0], message: $problem[1], hint: $problem[2], evidence: $evidence), $problems),
+            ...array_map(static fn (array $warning): DoctorFinding => DoctorFinding::warning(code: $warning[0], message: $warning[1], hint: $warning[2], evidence: $evidence), $warnings),
+        ];
+    }
+
+    private function string(string $key): ?string
+    {
+        $value = $this->settings->get($key);
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 }

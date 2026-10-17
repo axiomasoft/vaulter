@@ -7,6 +7,10 @@ return [
         'title' => 'Collaboration checkpoint conflict',
         'detail' => 'The document log changed since the compaction lease was granted.',
     ],
+    'collaboration_draining' => [
+        'title' => 'Collaboration draining',
+        'detail' => 'Collaboration is being drained before it is switched off; the update was not saved, retry later.',
+    ],
     'collaboration_epoch_mismatch' => [
         'title' => 'Collaboration epoch mismatch',
         'detail' => 'The collaboration session is out of date.',

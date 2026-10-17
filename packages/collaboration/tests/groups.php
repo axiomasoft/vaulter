@@ -17,6 +17,8 @@ return [
         // Compaction, drain, closing and prune of generations (P5.5): the same tables, timestamps of leases and retirement.
         'Restore',
         'Console/PruneGenerationsTest.php',
+        // Managed and raw disable (P5.6): the drain over the same tables, and the uninstall that rolls them back.
+        'Disable',
     ],
     // Forked children on their own connections, or process-global state a parallel worker would trample.
     'serial' => [

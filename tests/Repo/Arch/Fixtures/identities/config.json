@@ -1157,6 +1157,20 @@
             "id": "config:vaulter-collaboration.schedule.collaboration_prune",
             "kind": "config",
             "reason": "P5.5: the schedule of vaulter:collaboration:prune (ModuleSchedule of the collaboration module)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.drain.cache_store",
+            "kind": "config",
+            "reason": "P5.6: the cache store of the draining flag vaulter:collaboration:drain sets (key vaulter:collaboration:draining; null: the default store); doctor collaboration.hub refuses an array or null driver"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.drain.max_append_tx",
+            "kind": "config",
+            "reason": "P5.6: the longest append transaction (5 s): a drain decides no earlier than this after it set the flag, so an append that read the flag before it was set has committed"
         }
     ],
     "items": [
@@ -1368,6 +1382,28 @@
         {
             "default": 500,
             "id": "config:vaulter-collaboration.compaction.trigger_updates",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-collaboration.drain.cache_store",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 5,
+            "id": "config:vaulter-collaboration.drain.max_append_tx",
             "owner": "collaboration",
             "registered_defaults": true,
             "root": "vaulter-collaboration",

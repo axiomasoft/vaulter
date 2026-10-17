@@ -8,6 +8,8 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use LogicException;
 use Vaulter\Attributes\Internal;
+use Vaulter\Collaboration\Drain\DrainState;
+use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException;
 use Vaulter\Configuration\DatabaseConfig;
@@ -19,7 +21,8 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Support\Identity;
 
 /**
- * The update log of a document generation (D26, C1–C4). An append takes the documents' lock order through
+ * The update log of a document generation (D26, C1–C4). An append reads the draining flag first ({@see DrainState},
+ * C10: refused while a managed disable drains the log), then takes the documents' lock order through
  * CollaborativeState::lock() (T → N → D), then the head row of the generation FOR UPDATE (L4, created on the first
  * append under the same locks); it fences the generation, answers a known update id from its receipt, and otherwise
  * writes the update, its receipt, the new head and the documents' pending marker in one transaction. The caller builds
@@ -34,15 +37,19 @@ final readonly class UpdateLog
         private VaulterDatabase $database,
         private DatabaseConfig $tables,
         private CollaborativeState $state,
+        private DrainState $draining,
     ) {}
 
     /**
+     * @throws CollaborationDrainingException       a managed disable drains the log; nothing was read or written
      * @throws NodeNotFoundException                the node is gone or in the trash
      * @throws CollaborationEpochMismatchException  the generation is not the document's current one, or it was retired
      * @throws CollaborationUpdateMismatchException the claimed hash is wrong, or the id was committed with another payload
      */
     public function append(int|string $nodeId, UpdateEnvelope $update): AppendResult
     {
+        // Before any lock: a drain counts on every append that missed the flag ending within drain.max_append_tx.
+        $this->draining->assertAccepting();
         $sha256 = $update->sha256();
         if (!hash_equals($sha256, strtolower($update->claimedSha256))) {
             throw CollaborationUpdateMismatchException::hash($update->updateId);

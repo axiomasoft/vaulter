@@ -394,8 +394,10 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(32)
+        expect(count($items))->toBe(33)
             ->and($items['command:vaulter:collaboration:prune']['owner'])->toBe('collaboration')
+            ->and($items['command:vaulter:collaboration:drain']['owner'])->toBe('collaboration')
+            ->and(array_column($items['command:vaulter:collaboration:drain']['options'], 'default', 'name'))->toBe(['deadline' => '30', 'release' => false])
             ->and($doctor['parse'])->toBe('signature')
             ->and(array_column($doctor['options'], 'name'))->toBe(['production', 'json', 'check', 'sample', 'probe-storage'])
             ->and(array_column($doctor['options'], 'accepts_value', 'name')['sample'])->toBeTrue()
@@ -429,7 +431,8 @@ describe('committed fixtures', function (): void {
         $count = static fn (string $prefix): int => count(array_filter(array_keys($items), static fn (string $id): bool => str_starts_with($id, $prefix)));
 
         expect($count('event:'))->toBe(32)
-            ->and($count('problem:'))->toBe(83)
+            ->and($count('problem:'))->toBe(84)
+            ->and($items['problem:collaboration_draining'])->toMatchArray(['status' => 503, 'owner' => 'collaboration', 'retryable' => 'with_backoff', 'receipt' => 'never'])
             ->and($items['problem:collaboration_checkpoint_conflict'])->toMatchArray(['status' => 409, 'owner' => 'collaboration', 'retryable' => 'after_refetch', 'receipt' => 'never'])
             ->and($items['problem:collaboration_update_too_large'])->toMatchArray(['status' => 413, 'owner' => 'collaboration', 'retryable' => 'never', 'receipt' => 'never'])
             ->and($items['problem:document_state_pending'])->toMatchArray(['status' => 409, 'owner' => 'documents', 'retryable' => 'with_backoff', 'receipt' => 'never'])

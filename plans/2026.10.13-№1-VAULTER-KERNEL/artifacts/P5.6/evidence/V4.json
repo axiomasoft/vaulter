@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T153211Z-ca681c:P5.6:checks.1:V4",
+  "check_id": "V4",
+  "subject": "PLAN3.P5.6",
+  "candidate": {
+    "head": "21d34c6dd0979cf7edb01ba271d40d600ed2431e",
+    "dirty_digest": "7d01bf23c5fc8de019cfcb7beb713a19333d80f6102b651c0673f94a42a04c9b"
+  },
+  "started_at": "2026-10-17T17:27:20Z",
+  "procedure": {
+    "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T17:27:43Z"
+}

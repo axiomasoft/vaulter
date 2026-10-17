@@ -839,6 +839,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/collaboration/src/Console/DrainCommand.php",
+            "fqcn": "Vaulter\\Collaboration\\Console\\DrainCommand",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Collaboration\\Console\\DrainCommand"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/collaboration/src/Console/PruneGenerationsCommand.php",
             "fqcn": "Vaulter\\Collaboration\\Console\\PruneGenerationsCommand",
             "kind": "final-class",
@@ -923,6 +937,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/collaboration/src/Drain/DrainState.php",
+            "fqcn": "Vaulter\\Collaboration\\Drain\\DrainState",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Collaboration\\Drain\\DrainState"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/collaboration/src/Drain/DrainWaiter.php",
             "fqcn": "Vaulter\\Collaboration\\Drain\\DrainWaiter",
             "kind": "interface",
@@ -947,6 +975,34 @@
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Collaboration\\Drain\\HubDrainer"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/collaboration/src/Drain/PendingDocuments.php",
+            "fqcn": "Vaulter\\Collaboration\\Drain\\PendingDocuments",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Collaboration\\Drain\\PendingDocuments"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/collaboration/src/Drain/PendingRemovalGuard.php",
+            "fqcn": "Vaulter\\Collaboration\\Drain\\PendingRemovalGuard",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Collaboration\\Drain\\PendingRemovalGuard"
         },
         {
             "action": "keep",
@@ -989,6 +1045,20 @@
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Collaboration\\Exceptions\\CollaborationConfigException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/collaboration/src/Exceptions/CollaborationDrainingException.php",
+            "fqcn": "Vaulter\\Collaboration\\Exceptions\\CollaborationDrainingException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Collaboration\\Exceptions\\CollaborationDrainingException"
         },
         {
             "action": "keep",
@@ -14307,6 +14377,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Modules/GuardsRemoval.php",
+            "fqcn": "Vaulter\\Modules\\GuardsRemoval",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\GuardsRemoval",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\GuardsRemoval"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Modules/HoldsReferences.php",
             "fqcn": "Vaulter\\Modules\\HoldsReferences",
             "kind": "interface",
@@ -14513,6 +14597,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Modules\\OwnsSchema",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Modules\\OwnsSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Modules/RemovalGuard.php",
+            "fqcn": "Vaulter\\Modules\\RemovalGuard",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\RemovalGuard",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\RemovalGuard"
         },
         {
             "action": "keep",

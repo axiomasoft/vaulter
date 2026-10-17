@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration;
 
 use Vaulter\Attributes\Internal;
+use Vaulter\Collaboration\Console\DrainCommand;
 use Vaulter\Collaboration\Console\PruneGenerationsCommand;
 use Vaulter\Collaboration\Doctor\CollaborationCheck;
 use Vaulter\Collaboration\Drain\HubDrainer;
+use Vaulter\Collaboration\Drain\PendingRemovalGuard;
 use Vaulter\Collaboration\Http\Support\CollaborationRouteLabels;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Persistence\GenerationCloser;
@@ -20,6 +22,7 @@ use Vaulter\Documents\State\PendingStateDrainer;
 use Vaulter\Drive\Contracts\DriveExtension;
 use Vaulter\Events\EventSink;
 use Vaulter\Modules\Activation;
+use Vaulter\Modules\GuardsRemoval;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\OwnsSchema;
@@ -30,14 +33,21 @@ use Vaulter\Modules\VaulterModule;
  * Opt-in, because it opens a network channel and needs secrets; it edits documents, so it requires the documents
  * module. It provides the `CollaborationDriver` and `PendingStateDrainer` capabilities the documents module defines (the
  * realtime transport and the drain of a pending document through the hub), and brings its session and hub routes,
- * problem codes, doctor check, generation closing and prune, and `vaulter-collaboration.*` configuration.
+ * problem codes, doctor check, generation closing and prune, the managed drain, and `vaulter-collaboration.*`
+ * configuration. Its removal is refused while a document carries saved edits not in a checkpoint yet.
  */
 #[Internal]
-final class CollaborationModule implements OwnsSchema, VaulterModule
+final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterModule
 {
     public static function ownedSchema(): string
     {
         return CollaborationSchema::class;
+    }
+
+    /** The documents with uncheckpointed edits refuse `vaulter:module:uninstall collaboration` (C10). */
+    public static function removalGuard(): string
+    {
+        return PendingRemovalGuard::class;
     }
 
     public function id(): ModuleId
@@ -69,7 +79,7 @@ final class CollaborationModule implements OwnsSchema, VaulterModule
             ->routes(dirname(__DIR__).'/routes/collaboration.php')
             ->problems(CollaborationProblemCodes::class)
             ->bindings(CollaborationRegistrar::class)
-            ->commands(PruneGenerationsCommand::class)
+            ->commands(PruneGenerationsCommand::class, DrainCommand::class)
             ->schedule(CollaborationSchedule::class)
             ->slot(RouteLabelSource::class, CollaborationRouteLabels::class, 'collaboration.routes')
             ->slot(DoctorCheck::class, CollaborationCheck::class, 'collaboration.hub', key: 'collaboration.hub')

@@ -1591,6 +1591,8 @@
             "packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php",
             "packages/collaboration/tests/Concurrency/CollaborationLivenessRaceTest.php",
             "packages/collaboration/tests/Concurrency/CompactionRaceTest.php",
+            "packages/collaboration/tests/Disable/ManagedDrainTest.php",
+            "packages/collaboration/tests/Disable/UninstallGuardTest.php",
             "packages/collaboration/tests/Restore/RestoreFenceTest.php",
             "packages/collaboration/tests/Restore/RestorePendingTest.php"
           ]
@@ -1650,6 +1652,24 @@
             "packages/collaboration/tests/Arch/BoundaryTest.php",
             "packages/collaboration/tests/Arch/HttpV1ArchTest.php",
             "packages/collaboration/tests/Arch/TestingBoundaryTest.php"
+          ]
+        },
+        {
+          "key": "DatabaseMigrations+TestCase",
+          "fingerprint": "c83ff6c62f49",
+          "lifecycle": "migrations",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/collaboration/tests/Disable/RawDisableTest.php"
           ]
         },
         {

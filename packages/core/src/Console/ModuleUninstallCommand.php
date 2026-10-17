@@ -17,23 +17,25 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Kernel;
+use Vaulter\Modules\GuardsRemoval;
 use Vaulter\Modules\HoldsReferences;
 use Vaulter\Modules\ModuleReferences;
 use Vaulter\Modules\ModuleState;
+use Vaulter\Modules\RemovalGuard;
 use Vaulter\Modules\VaulterModule;
 
 /**
  * Plans, and on `--force` performs, the removal of a module's schema (D36): its migrations and tables, the installed
- * modules that require it, the foreign keys other owners hold on its tables, and the references (media pins, D23)
- * kept on its data or by it. A dry run by default. `--force` rolls back the migrations of the module's own schema paths
- * (newest first) — only while its tables hold no row and it keeps no reference; `--purge` (with `--force`) first
- * deletes its rows and releases its own references. It never drops, deletes or releases anything of another owner, and
- * disabling a module never calls it.
+ * modules that require it, the foreign keys other owners hold on its tables, the references (media pins, D23) kept on
+ * its data or by it, and what its removal guard reports (the collaboration edits not in a checkpoint yet, D26). A dry
+ * run by default. `--force` rolls back the migrations of the module's own schema paths (newest first) — only while its
+ * tables hold no row and it keeps no reference; `--purge` (with `--force`) first deletes its rows and releases its own
+ * references. It never drops, deletes or releases anything of another owner, and disabling a module never calls it.
  *
  * Disable the module in the configuration (`vaulter.modules.<id>`) and stop its traffic before `--force`: no lock keeps
  * its writers out. What the dry run read is read again — inside the transaction of the purge, and right before the
- * rollback of every migration — and any row or reference that has appeared stops the removal (fail closed: nothing
- * further is touched). That narrows the window of a concurrent writer, it does not close it.
+ * rollback of every migration — and any row, reference or guard blocker that has appeared stops the removal (fail
+ * closed: nothing further is touched). That narrows the window of a concurrent writer, it does not close it.
  *
  * Atomicity: where DDL is transactional (sqlite, pgsql) the purge and the rollbacks run in one transaction, so a failure
  * leaves nothing changed. Where DDL commits (MySQL) the purge commits before the rollbacks; a failure after it leaves the
@@ -82,7 +84,9 @@ final class ModuleUninstallCommand extends Command
         $connection = $database->connection();
         $incoming = self::incomingForeignKeys($tables, $connection);
         $rows = self::rows($tables, $connection);
-        [$holders, $unreadable] = $this->holders($id, $kernel->modules());
+        $closure = self::requirementClosure($id, $kernel->modules());
+        [$holders, $unreadable] = $this->holders($closure);
+        [$guards, $unguarded] = $this->guards($closure);
         $kept = $keptOn = [];
         foreach ($holders as $holder => $references) {
             try {
@@ -94,6 +98,14 @@ final class ModuleUninstallCommand extends Command
                 }
             } catch (Throwable $e) {
                 $unreadable[$holder] = $e->getMessage();
+            }
+        }
+        $guarded = [];
+        foreach ($guards as $guardian => $guard) {
+            try {
+                $guarded = [...$guarded, ...self::guardBlockers($id, $guardian, $guard)];
+            } catch (Throwable $e) {
+                $unguarded[$guardian] = $e->getMessage();
             }
         }
 
@@ -110,6 +122,7 @@ final class ModuleUninstallCommand extends Command
         foreach ($keptOn as $kind => $count) {
             $refusals[] = sprintf('%d reference(s) of "%s" are kept on its data; only the purge of their owner releases them', $count, $kind);
         }
+        $refusals = [...$refusals, ...$guarded];
 
         $this->components->twoColumnDetail('Module', $id.($module->active ? ' (active)' : ' (inactive)'));
         $this->components->twoColumnDetail('Migrations', $migrations === [] ? 'none of its own' : (string) count($migrations));
@@ -124,6 +137,12 @@ final class ModuleUninstallCommand extends Command
         $this->components->twoColumnDetail('References kept on it', $keptOn === [] ? 'none' : self::describe($keptOn));
         foreach ($unreadable as $holder => $reason) {
             $this->components->twoColumnDetail('References in '.$holder, 'unknown ('.OutputFormatter::escape($reason).')');
+        }
+        if ($guards !== [] || $unguarded !== []) {
+            $this->components->twoColumnDetail('Removal guards', $guarded === [] ? 'nothing blocks it' : count($guarded).' blocker(s)');
+        }
+        foreach ($unguarded as $guardian => $reason) {
+            $this->components->twoColumnDetail('Removal guard of '.$guardian, 'unknown ('.OutputFormatter::escape($reason).')');
         }
         foreach ($refusals as $refusal) {
             $this->line('  <fg=red>refused:</> '.OutputFormatter::escape($refusal));
@@ -142,6 +161,9 @@ final class ModuleUninstallCommand extends Command
         }
         foreach ($unreadable as $holder => $reason) {
             $blocked[] = sprintf('the references in module "%s" cannot be read (%s)', $holder, $reason);
+        }
+        foreach ($unguarded as $guardian => $reason) {
+            $blocked[] = sprintf('the removal guard of module "%s" cannot be read (%s)', $guardian, $reason);
         }
         if (!$purge && array_sum($rows ?? []) > 0) {
             $blocked[] = 'its tables hold rows; --purge deletes them';
@@ -170,7 +192,7 @@ final class ModuleUninstallCommand extends Command
         foreach ($steps as $step) {
             $atomic = $atomic && $step['db']->getName() === $connection->getName();
         }
-        $guard = static fn (bool $strict): array => self::blockers($id, $tables, $holders, $connection, $strict);
+        $guard = static fn (bool $strict): array => self::blockers($id, $tables, $holders, $guards, $connection, $strict);
         $refusal = new RuntimeException('The removal was refused.');
         $blockers = $rolledBack = [];
         $purged = [0, 0];
@@ -251,16 +273,25 @@ final class ModuleUninstallCommand extends Command
     }
 
     /**
-     * What stops the removal now, read again: references kept on the module's data, and — when `$strict`, as after the
-     * purge or without it — rows of its tables and references it keeps. A fact that cannot be read stops it too.
+     * What stops the removal now, read again: references kept on the module's data, what the removal guards report,
+     * and — when `$strict`, as after the purge or without it — rows of its tables and references it keeps. A fact that
+     * cannot be read stops it too.
      *
      * @param  list<string>                    $tables
      * @param  array<string, ModuleReferences> $holders
+     * @param  array<string, RemovalGuard>     $guards
      * @return list<string>
      */
-    private static function blockers(string $id, array $tables, array $holders, Connection $connection, bool $strict): array
+    private static function blockers(string $id, array $tables, array $holders, array $guards, Connection $connection, bool $strict): array
     {
         $blockers = [];
+        foreach ($guards as $guardian => $guard) {
+            try {
+                $blockers = [...$blockers, ...self::guardBlockers($id, $guardian, $guard)];
+            } catch (Throwable $e) {
+                $blockers[] = sprintf('the removal guard of module "%s" cannot be read (%s)', $guardian, $e->getMessage());
+            }
+        }
         try {
             foreach ($holders as $holder => $references) {
                 if ($holder === $id) {
@@ -371,13 +402,31 @@ final class ModuleUninstallCommand extends Command
     }
 
     /**
-     * The holders of references `$id` may keep or that are kept on its data: the module itself and the modules it
-     * requires, directly or not (a reference, like a foreign key, points along a Composer dependency, D6).
+     * What one removal guard reports for `$id`, as refusals.
      *
-     * @param  list<ModuleState>                                                   $modules
-     * @return array{0: array<string, ModuleReferences>, 1: array<string, string>} holder id => its references; holder id => why it cannot be read
+     * @return list<string>
      */
-    private function holders(string $id, array $modules): array
+    private static function guardBlockers(string $id, string $guardian, RemovalGuard $guard): array
+    {
+        $blockers = [];
+        foreach ($guard->blockers($id) as $what => $count) {
+            if ($count > 0) {
+                $blockers[] = sprintf('module "%s" refuses it: %d %s', $guardian, $count, $what);
+            }
+        }
+
+        return $blockers;
+    }
+
+    /**
+     * The module `$id` and the modules it requires, directly or not, with their manifest classes: the holders of the
+     * references it may keep or that are kept on its data (a reference, like a foreign key, points along a Composer
+     * dependency, D6), and the guards of its removal.
+     *
+     * @param  list<ModuleState>                          $modules
+     * @return array<string, class-string<VaulterModule>> module id => manifest class
+     */
+    private static function requirementClosure(string $id, array $modules): array
     {
         $manifests = [];
         foreach ($modules as $module) {
@@ -388,7 +437,7 @@ final class ModuleUninstallCommand extends Command
             if (isset($closure[$module]) || !isset($manifests[$module])) {
                 return;
             }
-            $closure[$module] = true;
+            $closure[$module] = $manifests[$module];
             /** @var VaulterModule $manifest */
             $manifest = new ($manifests[$module]);
             foreach (array_keys($manifest->requires()) as $required) {
@@ -397,9 +446,19 @@ final class ModuleUninstallCommand extends Command
         };
         $visit($id);
 
+        return $closure;
+    }
+
+    /**
+     * The references of the modules in `$closure` that hold some.
+     *
+     * @param  array<string, class-string<VaulterModule>>                          $closure
+     * @return array{0: array<string, ModuleReferences>, 1: array<string, string>} holder id => its references; holder id => why it cannot be read
+     */
+    private function holders(array $closure): array
+    {
         $holders = $unreadable = [];
-        foreach (array_keys($closure) as $module) {
-            $manifest = $manifests[$module];
+        foreach ($closure as $module => $manifest) {
             if (!is_subclass_of($manifest, HoldsReferences::class)) {
                 continue;
             }
@@ -415,6 +474,35 @@ final class ModuleUninstallCommand extends Command
         ksort($holders, SORT_STRING);
 
         return [$holders, $unreadable];
+    }
+
+    /**
+     * The removal guards of the modules in `$closure` that have one.
+     *
+     * @param  array<string, class-string<VaulterModule>>                      $closure
+     * @return array{0: array<string, RemovalGuard>, 1: array<string, string>} module id => its guard; module id => why it cannot be read
+     */
+    private function guards(array $closure): array
+    {
+        $guards = $unreadable = [];
+        foreach ($closure as $module => $manifest) {
+            if (!is_subclass_of($manifest, GuardsRemoval::class)) {
+                continue;
+            }
+            try {
+                $guard = $this->laravel->make($manifest::removalGuard());
+                if (!$guard instanceof RemovalGuard) {
+                    throw new RuntimeException(sprintf('%s is not a %s', get_debug_type($guard), RemovalGuard::class));
+                }
+                $guards[$module] = $guard;
+            } catch (Throwable $e) {
+                $unreadable[$module] = $e->getMessage();
+            }
+        }
+        ksort($guards, SORT_STRING);
+        ksort($unreadable, SORT_STRING);
+
+        return [$guards, $unreadable];
     }
 
     /**

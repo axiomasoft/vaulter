@@ -1267,6 +1267,13 @@
             "id": "problem:collaboration_checkpoint_conflict",
             "kind": "protocol",
             "reason": "P5.5: 409, retryable after_refetch, receipt never — a checkpoint publication that lost its CAS (lease, coverage or checkpoint version); nothing changes, the hub takes a new lease"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_draining",
+            "kind": "protocol",
+            "reason": "P5.6: 503, retryable with_backoff, receipt never — an append while vaulter:collaboration:drain drains the log before the module is switched off; nothing is written, the hub keeps the update"
         }
     ],
     "items": [
@@ -2372,6 +2379,18 @@
                 "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationDrainingException",
+            "id": "problem:collaboration_draining",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "with_backoff",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 503
         },
         {
             "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationEpochMismatchException",

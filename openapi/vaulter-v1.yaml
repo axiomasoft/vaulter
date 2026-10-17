@@ -3569,7 +3569,9 @@ paths:
       summary: 'Hub: append one update to the log of a room (protocol 2)'
       description: 'Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is
         checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large).
-        The answer is the committed receipt: a retry with the same update_id and payload gets the same seq.'
+        The answer is the committed receipt: a retry with the same update_id and payload gets the same seq. While
+        vaulter:collaboration:drain drains the log before the module is switched off, every append answers 503
+        collaboration_draining and nothing is written; the hub keeps the update and retries it with backoff.'
       security:
       - hubSecret: []
       parameters:
@@ -3641,6 +3643,8 @@ paths:
           $ref: '#/components/responses/Problem429'
         '500':
           $ref: '#/components/responses/Problem500'
+        '503':
+          $ref: '#/components/responses/Problem503'
   /collaboration/hub/compaction/lease:
     post:
       operationId: collaboration.hub.compaction.lease
@@ -4334,6 +4338,19 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    Problem503:
+      description: Temporarily unavailable; retry with backoff (collaboration_draining).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
   schemas:
     Problem:
       type: object
@@ -4362,6 +4379,7 @@ components:
           - blob_unavailable
           - cannot_delete_head_revision
           - collaboration_checkpoint_conflict
+          - collaboration_draining
           - collaboration_epoch_mismatch
           - collaboration_protocol_mismatch
           - collaboration_seed_conflict

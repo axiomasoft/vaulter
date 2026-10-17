@@ -344,6 +344,7 @@
         "packages/collaboration/tests/Persistence",
         "packages/collaboration/tests/Restore",
         "packages/collaboration/tests/Console/PruneGenerationsTest.php",
+        "packages/collaboration/tests/Disable",
         "packages/azgard/tests/RealAzgard",
         "packages/azgard/tests/RealAzgardIsolated"
     ],

@@ -48,6 +48,7 @@ outline: deep
 | [`blob_unavailable`](#blob_unavailable) | 409 | media | `never` | `never` | `Vaulter\Media\Exceptions\Cas\BlobUnavailableException` |
 | [`cannot_delete_head_revision`](#cannot_delete_head_revision) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException` |
 | [`collaboration_checkpoint_conflict`](#collaboration_checkpoint_conflict) | 409 | collaboration | `after_refetch` | `never` | `Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException` |
+| [`collaboration_draining`](#collaboration_draining) | 503 | collaboration | `with_backoff` | `never` | `Vaulter\Collaboration\Exceptions\CollaborationDrainingException` |
 | [`collaboration_epoch_mismatch`](#collaboration_epoch_mismatch) | 409 | collaboration | `after_refetch` | `cacheable` | `Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException` |
 | [`collaboration_protocol_mismatch`](#collaboration_protocol_mismatch) | 409 | collaboration | `never` | `never` | `Vaulter\Collaboration\Exceptions\CollaborationProtocolMismatchException` |
 | [`collaboration_seed_conflict`](#collaboration_seed_conflict) | 409 | collaboration | `after_refetch` | `cacheable` | `Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException` |
@@ -151,6 +152,12 @@ outline: deep
 **409** · collaboration · retryable `after_refetch` · receipt `never`
 
 **Конфликт контрольной точки совместной работы** — Журнал документа изменился с момента выдачи аренды компактации.
+
+### `collaboration_draining`
+
+**503** · collaboration · retryable `with_backoff` · receipt `never`
+
+**Совместная работа завершается** — Совместная работа сбрасывает журнал перед отключением; обновление не сохранено, повторите позже.
 
 ### `collaboration_epoch_mismatch`
 
