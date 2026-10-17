@@ -1,0 +1,361 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.5",
+  "title": "Раскладка create-миграций по пакетам-владельцам блоками 0001_01_01_00NNNN, без publish-копий; I3 блокирующий",
+  "status": "done_with_deviations",
+  "summary": "28 create-миграций переименовываются по таблице p4-design#schema и переезжают в database/migrations своих пакетов (core 4, media 1, drive 18, documents 3; webhooks 2 — финальные имена, физически в core до P4.13); манифесты объявляют schema() своего каталога; publish-копии миграций убраны; OwnershipRegistryTest I5 сверяет таблицы со schema-дескрипторами владельцев; I3 → mode block.",
+  "why": "architecture#persistence п.2/п.4, D21, D40. Нужен до pins (P4.7, новая media-таблица после v_blobs), uninstall (P4.17) и I15 (P4.18). Риск: порядок имён ≠ граф FK (миграция падает) и rollback head FK — ловит sqlite snapshot --rollback (pgsql/mysql — PLAN4, D41).",
+  "scope": {
+    "include": [
+      "git mv + переименование 28 файлов",
+      "->schema() в MediaModule/DriveModule/DocumentsModule; CoreModule — свой каталог",
+      "ModuleApplier: без publishesMigrations; identities config publish-теги",
+      "OwnershipRegistryTest: удалить I5_TABLES_BY_OWNER_UNTIL_P4, строгая проверка",
+      "scripts/schema-snapshot.php: миграции всех модулей",
+      "allowlists/i3.json mode block",
+      "Тесты, ссылающиеся на имена файлов миграций"
+    ],
+    "exclude": [
+      "Изменение DDL",
+      "Перенос webhooks-файлов в пакет (P4.13)",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.4"
+  ],
+  "decisions": [
+    "D40",
+    "D21",
+    "D36",
+    "D41",
+    "D43",
+    "D44",
+    "D42"
+  ],
+  "skills": [
+    "php:database",
+    "php-packages:laravel-package-service-provider"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "таблица имён миграций, schema(), publish, снапшоты",
+      "required": true,
+      "section": "schema"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "нумерация, head FK cycles, rollback наборов",
+      "required": true,
+      "section": "persistence"
+    },
+    {
+      "ref": "D40",
+      "why": "порядок",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Modules/ModuleApplier.php",
+      "why": "publishesMigrations (строки ~87–120)",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/CoreModule.php",
+      "why": "schema() ядра",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Modules/OwnershipRegistryTest.php",
+      "why": "I5 ожидания до P4 (строки ~52–110, 285–305)",
+      "required": true
+    },
+    {
+      "path": "scripts/schema-snapshot.sh",
+      "why": "--rollback/--compare",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    },
+    {
+      "ref": "D42",
+      "why": "ревью-чекпоинт и карта ревью",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "карта ревью-чекпоинтов, запуск ревью",
+      "required": true,
+      "section": "review-map"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/database/migrations/*",
+      "change": "modify",
+      "note": "rename/move"
+    },
+    {
+      "path": "packages/media/database/migrations/*",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/database/migrations/*",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/database/migrations/*",
+      "change": "create"
+    },
+    {
+      "path": "packages/media/src/MediaModule.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/DriveModule.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/DocumentsModule.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/CoreModule.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Modules/ModuleApplier.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Modules/**",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/schema-snapshot.php",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/schema-snapshot.sh",
+      "change": "modify",
+      "note": "только если перечисляет каталоги"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/expected/**",
+      "change": "modify",
+      "note": "--write только при изменении имён миграций в снапшоте"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/allowlists/i3.json",
+      "change": "modify",
+      "note": "mode block"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Имена строго по p4-design#schema; одна миграция = одна таблица.",
+    "Нет publish-копий и нет координатора миграций.",
+    "original-снапшот неизменен; expected меняется только в части имён миграций.",
+    "Ledger: каждая migration-идентичность `renamed` (from) D40; owner таблиц не меняется.",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "Проверить отсутствие коллизии с Laravel 0001_01_01_000000_create_users_table: имена различаются суффиксом, порядок внутри одной секунды — по полному имени. Перед правкой ModuleApplier найти тест publish-тегов (`grep -rn 'migrationsTag' packages/*/tests`).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test \"$(ls packages/core/database/migrations | wc -l)\" = 6 && ls packages/*/database/migrations/*.php | grep -v -E '/0001_01_01_00[0-9]{4}_create_v_[a-z_]+_table\\.php$' | wc -l | grep -qx 0",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/schema-snapshot.sh --driver=sqlite --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "git diff --quiet 2a657840 -- packages/core/tests/Fixtures/Schema/original",
+      "expect": "exit 0: original P1.10 неизменен",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p core,media,drive,documents",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t sqlite -p repo tests/Repo/Arch/BoundaryScanTest.php",
+      "expect": "exit 0: I3 в режиме block",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/media && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/documents && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Миграции по пакетам",
+    "schema() в манифестах",
+    "I3 block",
+    "I5 строгая сверка таблиц"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "gpt-6.1-sol",
+      "note": "RC1: покрывает P4.3–P4.5 (диапазон от 2a657840). Фокус: порядок имён миграций = граф FK, rollback head-FK, расхождения DDL между движками (на серверах не запускалось).",
+      "provider": "codex",
+      "effort": "high"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-16T14:35:24Z",
+    "finished_at": "2026-10-16T17:20:47Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "Работа прошлой сессии проверена и доведена; добавлен тест D40; Fast-набор зелёный",
+    "deviations": [
+      "docs/ и docs/ru правлены ради теста-стража InstallationDocsGuardTest; текст отказа --force/--purge в ModuleUninstallCommand заменён (P4.17 перепишет)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-16T17:20:47Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-16T17:20:47Z"
+}

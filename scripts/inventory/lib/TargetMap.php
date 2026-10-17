@@ -33,6 +33,12 @@ final class TargetMap
 
     public const SURFACES = ['Api', 'Spi:Implement', 'Spi:Call', 'Internal', 'undecided'];
 
+    public const API_ATTRIBUTE = 'Vaulter\\Attributes\\Api';
+
+    public const SPI_ATTRIBUTE = 'Vaulter\\Attributes\\Spi';
+
+    public const INTERNAL_ATTRIBUTE = 'Vaulter\\Attributes\\Internal';
+
     public const SCHEMA_BUILDER = 'Vaulter\\Schema\\SchemaBuilder';
 
     /** Types whose every method is classified (member rules), and the named methods of other split types. */
@@ -49,8 +55,6 @@ final class TargetMap
         'core' => '', 'media' => 'Media', 'drive' => 'Drive', 'documents' => 'Documents', 'collaboration' => 'Collaboration',
         'webhooks' => 'Webhooks', 'azgard' => 'Azgard', 'filament' => 'Filament',
     ];
-
-    private const CLASS_KINDS = ['class', 'abstract-class', 'final-class'];
 
     private const ROLES = ['config' => 'config', 'database/migrations' => 'migration', 'database/factories' => 'factory', 'routes' => 'routes'];
 
@@ -182,7 +186,7 @@ final class TargetMap
     public static function sourceFiles(Repo $repo): array
     {
         $files = [];
-        foreach (SourceIndex::PACKAGES as $package) {
+        foreach ($repo->sourcePackages() as $package) {
             foreach (self::SOURCE_ROOTS as $root) {
                 $dir = $repo->path("packages/{$package}/{$root}");
                 if (!is_dir($dir)) {
@@ -381,10 +385,7 @@ final class TargetMap
         }
 
         $note = isset($rule['note']) ? (string) $rule['note'] : null;
-        $surface = $this->surface($winner, $declaration['kind'], "type {$fqcn}");
-        if ($surface === 'undecided' && $note === null) {
-            $this->problem('undecided-without-note', "type {$fqcn}: surface undecided needs a note (rule {$winner['id']})", $winner['file']);
-        }
+        $surface = $this->surface($declaration, "type {$fqcn}", $winner['file']);
         if ($surface === 'Internal' && $note === null && isset($baseline[$fqcn])) {
             $this->problem('baseline-internal', "type {$fqcn} is in the current public API snapshot: Internal needs a note (rule {$winner['id']})", $winner['file']);
         }
@@ -490,26 +491,29 @@ final class TargetMap
         return [$action, $phase];
     }
 
-    /** @param  array{id: string, file: string, rule: Rule} $winner */
-    private function surface(array $winner, string $kind, string $label): string
+    /**
+     * The surface a type declares for itself (D27): its one `#[Api]`, `#[Spi(SpiKind::…)]` or `#[Internal]`; `undecided`
+     * while it carries none (I13 reports that, the rules no longer decide it).
+     *
+     * @param Declaration $declaration
+     */
+    private function surface(array $declaration, string $label, string $file): string
     {
-        $surface = $winner['rule']['surface'] ?? 'undecided';
-        if (is_array($surface)) {
-            $key = match (true) {
-                isset($surface[$kind]) => $kind,
-                in_array($kind, self::CLASS_KINDS, true) && isset($surface['class']) => 'class',
-                isset($surface['*']) => '*',
+        $found = [];
+        foreach ($declaration['attributes'] as $attribute) {
+            $found[] = match ($attribute) {
+                self::API_ATTRIBUTE => 'Api',
+                self::INTERNAL_ATTRIBUTE => 'Internal',
+                self::SPI_ATTRIBUTE => 'Spi:'.($declaration['spi_kind'] ?? 'Implement'),
                 default => null,
             };
-            $surface = $key === null ? 'undecided' : $surface[$key];
         }
-        if (!is_string($surface) || !in_array($surface, self::SURFACES, true)) {
-            $this->problem('invalid-field', "{$label} (rule {$winner['id']}): surface must be one of ".implode(', ', self::SURFACES), $winner['file']);
-
-            return 'undecided';
+        $found = array_values(array_filter($found));
+        if (count($found) > 1) {
+            $this->problem('invalid-field', "{$label}: carries more than one surface attribute (".implode(', ', $found).')', $file);
         }
 
-        return $surface;
+        return $found[0] ?? 'undecided';
     }
 
     /** @param  list<array<string, mixed>> $types */
@@ -531,7 +535,7 @@ final class TargetMap
     }
 
     /**
-     * References from packages/filament/src to Eloquent models, deduplicated by file, symbol and model.
+     * References from packages/filament/src to Eloquent models of other packages, deduplicated by file, symbol and model.
      *
      * @param  array<string, string>      $owners fqcn => owner
      * @return list<array<string, mixed>>
@@ -544,7 +548,8 @@ final class TargetMap
                 continue;
             }
             $model = ltrim($reference['target'], '\\');
-            if (!isset($owners[$model]) || !$index->isEloquent($model)) {
+            // A model the panel owns itself (the in-memory record class Filament resources declare) reads no drive table.
+            if (!isset($owners[$model]) || $owners[$model] === 'filament' || !$index->isEloquent($model)) {
                 continue;
             }
             $reads[$reference['file']."\0".$reference['symbol']."\0".$model] = [

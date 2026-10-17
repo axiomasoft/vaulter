@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Controllers\Collaboration;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\CreateCollaborationSessionRequest;
 use Vaulter\Documents\Http\Resources\CollaborationSessionResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * Join a document's realtime room: a session for its current generation, read-write for
  * an editor and read-only for everyone who may view it (View). A client whose editor
  * speaks another schema version than the document's type gets a read-only session.
  */
+#[Internal]
 final readonly class CreateCollaborationSessionController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}

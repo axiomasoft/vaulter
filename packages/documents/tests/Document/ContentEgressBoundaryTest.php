@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->handle = DocumentTestHelpers::drive()->asSystem('document egress fixture');
     $this->node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->handle->model()), new CreateDocumentInput(storage: $this->handle->model(), name: 'protected', content: DocumentTestHelpers::content('secret body'), parent: DriveTestHelpers::model($this->handle->root())));
 });

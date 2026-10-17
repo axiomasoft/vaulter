@@ -12,6 +12,7 @@
                 "Vaulter\\Azgard\\": "src/"
             },
             "target_require": [
+                "core",
                 "drive"
             ]
         },
@@ -21,7 +22,9 @@
                 "Vaulter\\Collaboration\\": null
             },
             "target_require": [
-                "documents"
+                "core",
+                "documents",
+                "drive"
             ]
         },
         "core": {
@@ -30,8 +33,7 @@
             "dir": "packages/core",
             "exists": true,
             "psr4": {
-                "Vaulter\\": "src/",
-                "Vaulter\\Database\\Factories\\": "database/factories/"
+                "Vaulter\\": "src/"
             },
             "target_require": []
         },
@@ -48,6 +50,7 @@
                 "Vaulter\\Documents\\Database\\Factories\\": "database/factories/"
             },
             "target_require": [
+                "core",
                 "drive"
             ]
         },
@@ -60,7 +63,8 @@
             "dir": "packages/drive",
             "exists": true,
             "psr4": {
-                "Vaulter\\Drive\\": "src/"
+                "Vaulter\\Drive\\": "src/",
+                "Vaulter\\Drive\\Database\\Factories\\": "database/factories/"
             },
             "target_require": [
                 "core",
@@ -79,6 +83,7 @@
                 "Vaulter\\Filament\\": "src/"
             },
             "target_require": [
+                "core",
                 "drive"
             ]
         },
@@ -97,11 +102,18 @@
             ]
         },
         "webhooks": {
-            "exists": false,
+            "composer": "axioma-studio/vaulter-webhooks",
+            "current_require": [
+                "core",
+                "drive"
+            ],
+            "dir": "packages/webhooks",
+            "exists": true,
             "psr4": {
-                "Vaulter\\Webhooks\\": null
+                "Vaulter\\Webhooks\\": "src/"
             },
             "target_require": [
+                "core",
                 "drive"
             ]
         }

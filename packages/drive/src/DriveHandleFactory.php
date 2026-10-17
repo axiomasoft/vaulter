@@ -7,16 +7,18 @@ namespace Vaulter\Drive;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Drive\DriveHandle as Contract;
-use Vaulter\Contracts\Drive\DriveHandleFactory as Factory;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Repositories\Drive\DriveReadRepository;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Contracts\DriveHandle as Contract;
+use Vaulter\Drive\Contracts\DriveHandleFactory as Factory;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Repositories\DriveReadRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 
+#[Internal]
 final readonly class DriveHandleFactory implements Factory
 {
-    public function __construct(private Container $container, private VaulterConfig $config)
+    public function __construct(private Container $container, private DriveConfig $config)
     {
         if (PHP_INT_SIZE !== 8) {
             throw new \LogicException('Node sequence APIs require a 64-bit PHP runtime.');
@@ -35,6 +37,13 @@ final readonly class DriveHandleFactory implements Factory
     {
         $owner = $this->owner($owner);
         $drive = $this->container->make(DriveReadRepository::class)->forOwner(owner: $owner, panel: $profile);
+
+        return $drive === null ? null : $this->forDrive($drive);
+    }
+
+    public function findById(int|string $id): ?Contract
+    {
+        $drive = $this->container->make(DriveReadRepository::class)->find($id);
 
         return $drive === null ? null : $this->forDrive($drive);
     }

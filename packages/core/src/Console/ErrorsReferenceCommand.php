@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Problems\ErrorsReference;
 use Vaulter\Http\Problems\ProblemCatalog;
 
@@ -13,6 +14,7 @@ use Vaulter\Http\Problems\ProblemCatalog;
  * With --check nothing is written and the exit code says whether the docs are current
  * (for CI).
  */
+#[Internal]
 final class ErrorsReferenceCommand extends Command
 {
     protected $signature = 'vaulter:errors:reference

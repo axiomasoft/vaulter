@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\Eloquent\Collection;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Uploads\UploadPart;
@@ -15,6 +16,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
  * recording a part REPLACES any prior row for the same (session, part_no) — the S3
  * re-upload semantics encoded in the composite primary key. Opens NO transactions.
  */
+#[Internal]
 final class UploadPartStoreRepository
 {
     public function __construct(

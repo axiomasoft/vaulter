@@ -10,7 +10,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 it('maps a framework exception to its problem status and code', function (Throwable $exception, int $status, string $code): void {
     ProblemProbeRoutes::register(['case' => $exception]);

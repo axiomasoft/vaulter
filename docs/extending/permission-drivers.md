@@ -18,9 +18,9 @@ only an `Authorizable` actor and an `AccessScope` (profile + drive coordinates +
 
 ## The PermissionDriver contract
 
-`Vaulter\Contracts\Access\PermissionDriver`:
+`Vaulter\Drive\Contracts\Access\PermissionDriver`:
 
-<!-- snippet: signature Vaulter\Contracts\Access\PermissionDriver -->
+<!-- snippet: signature Vaulter\Drive\Contracts\Access\PermissionDriver -->
 
 ```php
 interface PermissionDriver
@@ -69,16 +69,16 @@ The active driver is a single config key (and env var):
 VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 ```
 
-The key → FQCN map is `access.permission_drivers`. Register your own driver by adding an FQCN
+The key → FQCN map is `vaulter-drive.access.permission_drivers`. Register your own driver by adding an FQCN
 that implements `PermissionDriver` (config-cache safe — FQCNs only, no closures):
 
 <!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
 
 ```php
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
-use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 
 // config/vaulter.php
 'access' => ['permission_drivers' => [
@@ -96,7 +96,7 @@ throws `MissingPermissionDriverException::unknownDriver()`, and `null` in produc
 
 ## Database — the default, standalone lane
 
-`Vaulter\Access\Drivers\DatabasePermissionDriver` introduces **no** external role
+`Vaulter\Drive\Access\Drivers\DatabasePermissionDriver` introduces **no** external role
 system. Every decision is a `v_node_grants` row resolved by the `AccessResolver`; the
 driver only contributes the actor's own identity to the subject-set.
 
@@ -131,7 +131,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 
 ## Gate — Laravel's built-in lane
 
-`Vaulter\Access\Drivers\GatePermissionDriver` bridges a host that already
+`Vaulter\Drive\Access\Drivers\GatePermissionDriver` bridges a host that already
 authorizes through Gate abilities / policies. It ships with the framework — zero extra
 dependencies.
 
@@ -188,7 +188,7 @@ Gate::define('vaulter.create', fn ($user, array $context) =>
 
 ## Spatie — roles, permissions, and v8 teams
 
-`Vaulter\Access\Drivers\SpatiePermissionDriver` bridges a host running
+`Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` bridges a host running
 `spatie/laravel-permission`, including the **v8 teams** feature. It encapsulates the
 entire v8 team-switch dance so it never leaks into the resolver.
 
@@ -246,7 +246,7 @@ team-scoped permission can't grant a revoked role on the next resolve:
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 
 SpatiePermissionDriver::forgetCachedPermissions($actor);
 ```
@@ -268,7 +268,7 @@ composer require axioma-studio/vaulter-azgard
 ```
 
 Its Laravel-discovered provider offers the `azgard` module, which registers `azgard` in
-`vaulter.access.permission_drivers`, preserving an explicit host override. Then select
+`vaulter-drive.access.permission_drivers`, preserving an explicit host override. Then select
 `VAULTER_PERMISSION_DRIVER=azgard`. Without the installed bridge, the key is unknown
 and throws `MissingPermissionDriverException`.
 
@@ -494,12 +494,12 @@ grants through AzGuard's change pipeline.
 php artisan vaulter:make:permission-driver Workspace
 ```
 
-Writes a pass-through driver in `app/Vaulter/PermissionDrivers/Workspace.php` and a Pest test in `tests/Unit/Vaulter/` that runs `PermissionDriverContractTests`. It prints the line to `vaulter.access.permission_drivers`
+Writes a pass-through driver in `app/Vaulter/PermissionDrivers/Workspace.php` and a Pest test in `tests/Unit/Vaulter/` that runs `PermissionDriverContractTests`. It prints the line to `vaulter-drive.access.permission_drivers`
 and never edits your config. An existing file is kept unless you pass `--force`.
 
 ## Testing your extension
 
-`Vaulter\Testing\Contracts\PermissionDriverContractTests` proves a driver the same way the
+`Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests` proves a driver the same way the
 built-in ones are proved. The shared fixture (`PermissionFixture`) is built through
 Operations: a writer subtree grant for an actor on a parent folder, and a child below it with
 inheritance restricted and no grant of its own.
@@ -507,7 +507,7 @@ inheritance restricted and no grant of its own.
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Testing\Contracts\PermissionDriverContractTests;
+use Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests;
 
 it('decides like the reference driver', function (): void {
     (new PermissionDriverContractTests)->assertSameDecisionsAsReference(new AcmeRoleDriver);

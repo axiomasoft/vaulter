@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Tests\Http\DriveV1;
-use Vaulter\Tests\Http\V1;
 
 /**
  * The cache policy of the drive routes: a single node with its validator is personal and

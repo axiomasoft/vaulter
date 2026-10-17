@@ -5,25 +5,27 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Trash;
 
 use InvalidArgumentException;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Content\NodeContentLifecycleRegistry;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Content\FileContentLifecycle;
+use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Nodes\NodePurged;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Operations\NodeSequence;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
+use Vaulter\Drive\Repositories\NodeReadRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\InvalidDestinationException;
-use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\NodeSequence;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
-use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
+#[Internal]
 final readonly class PurgeNodeAction
 {
     public function __construct(
@@ -45,7 +47,7 @@ final readonly class PurgeNodeAction
         }
         $node = app(NodeLocator::class)->find(context: $context, key: $data->node, includeTrashed: true);
         $this->database->transaction(function () use ($node, $context, $data): void {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $this->lifecycle->assertWritable($context);
             $ids = array_values($this->nodes->subtree($node)->modelKeys());
             $locked = $this->tree->lock($ids);

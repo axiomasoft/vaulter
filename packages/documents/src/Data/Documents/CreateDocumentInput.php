@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Documents;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Command for CreateDocumentAction: a kind=document node under a folder (or the
@@ -16,6 +18,7 @@ use Vaulter\Models\Drive\Node;
  * resolved and authorized by DocumentOperations; the actor comes from the operation
  * context, never from the input.
  */
+#[Api]
 final readonly class CreateDocumentInput
 {
     /**
@@ -24,6 +27,7 @@ final readonly class CreateDocumentInput
      */
     public const string NODE_MIME = 'application/vnd.vaulter.document+json';
 
+    #[Internal]
     public function __construct(
         public Drive $storage,
         public string $name,

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Requests\Trash;
 
 use Illuminate\Validation\Rule;
-use Vaulter\Enums\Drive\OnNameConflict;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -13,6 +14,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * node was trashed from) and what a name clash there does — by default the restored
  * node takes a free name.
  */
+#[Internal]
 final class RestoreNodeRequest extends VaulterFormRequest
 {
     /**

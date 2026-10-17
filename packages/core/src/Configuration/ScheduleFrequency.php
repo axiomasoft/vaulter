@@ -6,12 +6,14 @@ namespace Vaulter\Configuration;
 
 use Cron\CronExpression;
 use Illuminate\Console\Scheduling\Event;
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
  * One validated `schedule.*` config value. The grammar is closed so a typo fails at
  * boot instead of silently never running a maintenance task.
  */
+#[Api]
 final readonly class ScheduleFrequency
 {
     private const array PLAIN = [

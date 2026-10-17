@@ -6,7 +6,7 @@ title: Сбои доставки вебхуков и повторная отпр
 
 Сначала отличите **нет доставки** от **неуспешной доставки**:
 
-- нет строки `v_webhook_deliveries` для события: relay не разложил его — проверьте `core.webhooks.outbox_lag` и что `vaulter:webhooks:relay` в расписании;
+- нет строки `v_webhook_deliveries` для события: relay не разложил его — проверьте `core.outbox.lag` и `core.outbox.consumer_gaps` и что `vaulter:relay` в расписании;
 - строка `dead`: endpoint отвечал ошибкой или таймаутом, пока не кончились попытки.
 
 <!-- snippet: shell -->

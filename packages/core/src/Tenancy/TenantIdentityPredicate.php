@@ -6,8 +6,10 @@ namespace Vaulter\Tenancy;
 
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Grammar;
+use Vaulter\Attributes\Internal;
 
 /** @internal Identifiers compile through the query grammar; tenant values stay bound. */
+#[Internal]
 final readonly class TenantIdentityPredicate implements Expression
 {
     public function __construct(private string $column, private string $driver) {}

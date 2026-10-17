@@ -6,13 +6,17 @@ namespace Vaulter\Modules;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 
 /**
  * The capabilities of the active modules, read from the sealed registry only: a consumer asks by the
  * contract it needs, never probes the container for it.
  */
+#[Api]
 final readonly class Capabilities
 {
+    #[Internal]
     public function __construct(
         private CompiledModules $modules,
         private Container $container,

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Problems\ProblemCodeSource;
 
 /**
  * The sealed outcome of a valid compilation: every offered module with its state, and the
  * declarations of the active ones. Holds only scalars, enums, class-strings and readonly values.
- *
- * @internal
  */
+#[Internal]
 final readonly class CompiledModules
 {
     /**
@@ -28,8 +28,8 @@ final readonly class CompiledModules
      * @param list<class-string<ModuleSchedule>>                       $schedules
      * @param array<string, class-string>                              $routeMiddleware alias => middleware
      * @param list<class-string<ModuleBindings>>                       $bindings
-     * @param list<class-string>                                       $events
-     * @param array<string, list<class-string<ProblemCodeSource>>>     $problems        active module id => sources
+     * @param array<string, list<class-string>>                        $events          active module id => event type enums (D38)
+     * @param array<string, list<string>>                              $problems        active module id => source classes (each checked to be a ProblemCodeSource)
      * @param list<string>                                             $schemaPaths     of every offered module, active or not
      */
     public function __construct(

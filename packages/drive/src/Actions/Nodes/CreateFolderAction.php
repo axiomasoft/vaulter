@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Nodes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\DrivePolicyEnforcer;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\DrivePolicyEnforcer;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Create a kind=folder node under a parent (or the storage root). The
@@ -30,6 +31,7 @@ use Vaulter\Support\TreeGuard;
  *
  * Operations authorize before this command; the destination is checked again under lock.
  */
+#[Internal]
 final readonly class CreateFolderAction
 {
     public function __construct(
@@ -48,7 +50,7 @@ final readonly class CreateFolderAction
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
         return $this->database->transaction(function () use ($context, $data, $name, $parentId): Node {
-            $this->database->lockTreeShared($data->storage->id);
+            $this->database->lockAggregateShared('drives', $data->storage->id);
             $this->lifecycle->assertWritable($context);
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);

@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Operations;
 
 use Closure;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Contracts\Drive\DriveExtension;
-use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Actions\Comments\AddCommentAction;
 use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
 use Vaulter\Documents\Actions\Comments\ResolveCommentAction;
@@ -20,15 +18,19 @@ use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Queries\DocumentQuery;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Contracts\DriveExtension;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
-use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Support\Identity;
 
 /**
@@ -39,8 +41,10 @@ use Vaulter\Support\Identity;
  * A comment id is resolved only inside the addressed node, so another node's comment
  * is "not found" (comment_not_found). The drive profile must enable comments.
  */
+#[Api]
 final readonly class CommentOperations implements DriveExtension
 {
+    #[Internal]
     public function __construct(
         private DriveContext $context,
         private NodeLocator $locator,

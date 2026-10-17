@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-use Vaulter\Facades\Vaulter;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\VaulterManager;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Vaulter as VaulterEntry;
 
 it('merges the vaulter config', function (): void {
     expect(config('vaulter.routes.prefix'))->toBe('api/vaulter')
         ->and(config()->has('vaulter.enabled_document_types'))->toBeFalse();
 });
 
-it('binds the manager as a singleton', function (): void {
-    expect(app('vaulter'))->toBeInstanceOf(VaulterManager::class)
-        ->and(app('vaulter'))->toBe(app(VaulterManager::class));
+it('binds the Vaulter entry point as a singleton', function (): void {
+    expect(app('vaulter'))->toBeInstanceOf(VaulterEntry::class)
+        ->and(app('vaulter'))->toBe(app(VaulterEntry::class));
 });
 
 it('registers the API routes', function (): void {

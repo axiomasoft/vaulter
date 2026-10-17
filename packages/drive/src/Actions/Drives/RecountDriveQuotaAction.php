@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Quota\QuotaCalculator;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Quota\QuotaCalculator;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
 
 /**
  * Recount one drive's eager used_bytes from its retained revisions. The
@@ -16,6 +17,7 @@ use Vaulter\Repositories\Drive\DriveStoreRepository;
  * the revisions sum to at that moment, never by a number read before a concurrent
  * change. Running it again changes nothing.
  */
+#[Internal]
 final readonly class RecountDriveQuotaAction
 {
     public function __construct(private VaulterDatabase $database, private QuotaCalculator $quota, private DriveStoreRepository $drives) {}
@@ -24,7 +26,7 @@ final readonly class RecountDriveQuotaAction
     public function execute(int|string $driveId, bool $dryRun = false): array
     {
         return $this->database->transaction(function () use ($driveId, $dryRun): array {
-            $this->database->lockTree($driveId);
+            $this->database->lockAggregate('drives', $driveId);
             $drive = $this->drives->lock($driveId);
             $before = $drive->used_bytes;
             $after = $this->quota->usedBytes($drive->id);

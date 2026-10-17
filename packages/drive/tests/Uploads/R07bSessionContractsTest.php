@@ -9,27 +9,27 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Events\Nodes\NodePurged;
 use Vaulter\Drive\Events\Uploads\UploadAborted;
 use Vaulter\Drive\Events\Uploads\UploadExpired;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 
@@ -365,7 +365,7 @@ it('R07b: upload.aborted records all three context keys', function (): void {
 
     r07bRecord(new UploadAborted(session: $session, actor: r07bActor(), correlationId: (string) Str::ulid()));
 
-    $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
+    $row = Activity::query()->where('verb', DriveEventType::UploadAborted->value)->sole();
 
     expect($row->context)->toHaveKeys(['upload_id', 'protocol', 'received_bytes'])
         ->and($row->context['upload_id'])->toBeString()->not->toBeEmpty()
@@ -379,7 +379,7 @@ it('R07b: upload.aborted upload_id context is the session upload_id', function (
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
     r07bRecord(new UploadAborted(session: $session->refresh(), actor: r07bActor(), correlationId: (string) Str::ulid()));
 
-    $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
+    $row = Activity::query()->where('verb', DriveEventType::UploadAborted->value)->sole();
     expect($row->context['upload_id'])->toBe($session->upload_id);
 });
 
@@ -394,7 +394,7 @@ it('R07b: upload.expired records all three context keys', function (): void {
 
     r07bRecord(new UploadExpired(session: $session, actor: Actor::system('upload expiry')->ref(), correlationId: (string) Str::ulid()));
 
-    $row = Activity::query()->where('verb', EventType::UploadExpired->value)->sole();
+    $row = Activity::query()->where('verb', DriveEventType::UploadExpired->value)->sole();
 
     expect($row->context)->toHaveKeys(['upload_id', 'protocol', 'received_bytes'])
         ->and($row->context['upload_id'])->toBe($session->upload_id)
@@ -412,7 +412,7 @@ it('R07b: upload.expired protocol is the tus protocol value', function (): void 
 
     r07bRecord(new UploadExpired(session: $session->refresh(), actor: Actor::system('upload expiry')->ref(), correlationId: (string) Str::ulid()));
 
-    $row = Activity::query()->where('verb', EventType::UploadExpired->value)->sole();
+    $row = Activity::query()->where('verb', DriveEventType::UploadExpired->value)->sole();
     expect($row->context['protocol'])->toBe('tus');
 });
 
@@ -445,7 +445,7 @@ it('R07b: node.purged node_ids are string-typed after Identity::stringify', func
         correlationId: (string) Str::ulid(),
     ));
 
-    $row = Activity::query()->where('verb', EventType::NodePurged->value)->sole();
+    $row = Activity::query()->where('verb', DriveEventType::NodePurged->value)->sole();
     $nodeIds = $row->context['node_ids'];
 
     expect($nodeIds)->toBeArray()->not->toBeEmpty();

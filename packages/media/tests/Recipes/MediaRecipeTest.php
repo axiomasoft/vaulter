@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 // The fragments below are copied into the guides byte for byte.
 it('keeps tenants apart under the documented dedup scope (troubleshooting guide)', function (): void {

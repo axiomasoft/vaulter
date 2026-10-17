@@ -12,8 +12,8 @@ use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers;
 use Vaulter\Documents\Tests\Concurrency\RaceFixtures;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
  * The node validator and the content validators do not invalidate each other: a rename

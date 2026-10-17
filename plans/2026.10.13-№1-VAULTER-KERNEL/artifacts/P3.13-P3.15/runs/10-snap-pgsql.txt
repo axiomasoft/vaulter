@@ -1,0 +1,1 @@
+schema-snapshot: driver=pgsql presets=48 failed=0

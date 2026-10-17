@@ -5,24 +5,28 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Documents;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A kind=document node was created with its initial v1 version. Carries
  * both the node and the v1 version so a listener need not re-read either, and the
  * content validators the write produced (state_version, collab_epoch).
  */
-final readonly class DocumentCreated extends DomainEvent
+#[Api]
+final readonly class DocumentCreated extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public DocumentRevision $version,
@@ -36,9 +40,9 @@ final readonly class DocumentCreated extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DocumentEventType
     {
-        return EventType::DocumentCreated;
+        return DocumentEventType::DocumentCreated;
     }
 
     public function scope(): EventScope

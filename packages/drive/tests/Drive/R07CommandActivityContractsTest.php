@@ -7,26 +7,23 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\DriveProvisioner;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-
-uses(EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -97,7 +94,7 @@ it('createFolder activity context carries owner and creator ids', function (): v
 
     $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 42))->withCorrelationId('audited-folder')->folders()->create('Audited');
 
-    expect(Activity::query()->where('verb', EventType::FolderCreated->value)->sole()->context)->toEqual([
+    expect(Activity::query()->where('verb', DriveEventType::FolderCreated->value)->sole()->context)->toEqual([
         'kind' => 'folder',
         'name' => 'Audited',
         'correlation_id' => 'audited-folder',
@@ -112,12 +109,12 @@ it('move within the same parent is a no-op without NodeMoved activity', function
     $child = $drive->folders()->create('Child', $parent);
 
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
-    app(VaulterDatabase::class)->write(fn () => Outbox::query()->delete());
+    app(VaulterDatabase::class)->write(fn () => OutboxEvent::query()->delete());
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->move($child, $parent);
 
-    expect(Activity::query()->where('verb', EventType::NodeMoved->value)->count())->toBe(0)
-        ->and(Outbox::query()->where('event', EventType::NodeMoved->value)->count())->toBe(0);
+    expect(Activity::query()->where('verb', DriveEventType::NodeMoved->value)->count())->toBe(0)
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodeMoved->value)->count())->toBe(0);
 });
 
 it('forceDelete on a folder subtree records zero freed bytes and skips quota adjustment', function (): void {
@@ -130,7 +127,7 @@ it('forceDelete on a folder subtree records zero freed bytes and skips quota adj
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->withCorrelationId('audited-purge')->trash()->purge($folder);
 
     expect($drive->model()->refresh()->used_bytes)->toBe($used)
-        ->and(Activity::query()->where('verb', EventType::NodePurged->value)->sole()->context)->toEqual([
+        ->and(Activity::query()->where('verb', DriveEventType::NodePurged->value)->sole()->context)->toEqual([
             'node_ids' => [(string) $folder->id],
             'freed_bytes' => 0,
             'correlation_id' => 'audited-purge',
@@ -148,7 +145,7 @@ it('restore to an explicit root destination is audited when the original parent 
     $restored = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->withCorrelationId('audited-restore')->trash()->restore($child, new RestoreOptions(destination: $drive->root()));
 
     expect($restored->parentId)->toEqual($drive->model()->root_node_id)
-        ->and(Activity::query()->where('verb', EventType::NodeRestored->value)->orderByDesc('id')->firstOrFail()->context)->toEqual([
+        ->and(Activity::query()->where('verb', DriveEventType::NodeRestored->value)->orderByDesc('id')->firstOrFail()->context)->toEqual([
             'name' => 'Child',
             'correlation_id' => 'audited-restore',
             'parent_id' => (string) $drive->model()->root_node_id,
@@ -168,7 +165,7 @@ it('upload session initiated activity carries the exact lifecycle context', func
         mimeType: null,
     ));
 
-    $row = Activity::query()->where('verb', EventType::UploadInitiated->value)->sole();
+    $row = Activity::query()->where('verb', DriveEventType::UploadInitiated->value)->sole();
 
     // The recorder adds the operation's correlation id and the system actor's reason,
     // as it does for every event.
@@ -183,17 +180,17 @@ it('upload session initiated activity carries the exact lifecycle context', func
 
 it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
     $drive = DriveTestHelpers::drive();
-    app(VaulterDatabase::class)->write(fn () => Outbox::query()->delete());
+    app(VaulterDatabase::class)->write(fn () => OutboxEvent::query()->delete());
 
     $first = $drive->folders()->create('One');
     $drive->nodes()->trash($first);
     $drive->actingAs(DriveTestHelpers::actor($drive, 9))->trash()->purge($first);
-    $firstKey = Outbox::query()->where('event', EventType::NodePurged->value)->sole()->event_id;
+    $firstKey = OutboxEvent::query()->where('type', DriveEventType::NodePurged->value)->sole()->event_id;
 
     $second = $drive->folders()->create('Two');
     $drive->nodes()->trash($second);
     $drive->actingAs(DriveTestHelpers::actor($drive, 9))->trash()->purge($second);
-    $secondKey = Outbox::query()->where('event', EventType::NodePurged->value)->orderByDesc('id')->firstOrFail()->event_id;
+    $secondKey = OutboxEvent::query()->where('type', DriveEventType::NodePurged->value)->orderByDesc('outbox_seq')->firstOrFail()->event_id;
 
     expect($firstKey)->not->toBe($secondKey)
         ->and(Str::isUlid($firstKey))->toBeTrue()

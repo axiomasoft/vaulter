@@ -10,9 +10,9 @@ outline: deep
 набор mime-типов и/или расширений, объявляет, что он умеет делать с файлом (редактировать /
 показывать превью / скачивать / генерировать миниатюру / совместно редактировать) и возвращает
 фронтендовый дескриптор монтирования — в каком Vue-компоненте клиент откроет узел.
-`Vaulter\Handlers\FileHandlerRegistry` подбирает лучший обработчик для файла, и клиент
+`Vaulter\Drive\Handlers\FileHandlerRegistry` подбирает лучший обработчик для файла, и клиент
 направляет узел на эту поверхность **без зашитой mime-логики**. Реестр и его базовые обработчики
-(`PreviewHandler`/`DownloadOnlyHandler`) принадлежат core — хост только с Drive, без других
+(`PreviewHandler`/`DownloadOnlyHandler`) принадлежат drive — хост только с Drive, без других
 пакетов, всё равно резолвит preview/download для любого файла. Обработчики обслуживают только
 **файлы**: узел-документ представляется своим [типом документа](./document-types.md), а не обработчиком.
 
@@ -29,16 +29,16 @@ outline: deep
 
 ## Контракт
 
-Обработчик реализует `Vaulter\Contracts\Handlers\FileHandler`:
+Обработчик реализует `Vaulter\Drive\Contracts\Handlers\FileHandler`:
 
-<!-- snippet: signature Vaulter\Contracts\Handlers\FileHandler -->
+<!-- snippet: signature Vaulter\Drive\Contracts\Handlers\FileHandler -->
 
 ```php
-namespace Vaulter\Contracts\Handlers;
+namespace Vaulter\Drive\Contracts\Handlers;
 
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 interface FileHandler
 {
@@ -64,7 +64,7 @@ interface FileHandler
 
 ### Возможности (capabilities)
 
-`Vaulter\ValueObjects\Handlers\ContentCapabilities` — это то, что обработчик объявляет по каждому
+`Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities` — это то, что обработчик объявляет по каждому
 файлу. `downloadable` по умолчанию `true` (что угодно можно скачать как байты); более богатые флаги
 включаются явно:
 
@@ -80,7 +80,7 @@ new ContentCapabilities(
 );
 ```
 
-Они один-к-одному соответствуют кейсам `Vaulter\Enums\Handlers\Capability`, по которым фильтрует
+Они один-к-одному соответствуют кейсам `Vaulter\Drive\Enums\Handlers\Capability`, по которым фильтрует
 реестр: `Edit`, `Preview`, `Download`, `Thumbnail`, `Collaborate`.
 
 ::: warning `previewable` ≠ безопасно для инлайна
@@ -93,7 +93,7 @@ new ContentCapabilities(
 
 ### Фронтендовый дескриптор монтирования
 
-`Vaulter\ValueObjects\Handlers\ViewerDescriptor` сообщает клиенту, какой Vue-компонент монтировать, через
+`Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor` сообщает клиенту, какой Vue-компонент монтировать, через
 какой маршрут открывать узел и какие дополнительные сериализуемые props передать:
 
 <!-- snippet: host -->
@@ -113,7 +113,7 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 
 ### Дескриптор файла
 
-`Vaulter\ValueObjects\Handlers\FileDescriptor` — это неизменяемое описание, по которому реестр
+`Vaulter\Drive\ValueObjects\Handlers\FileDescriptor` — это неизменяемое описание, по которому реестр
 маршрутизирует: заявленный mime, определённый сервером **по сигнатуре** mime, расширение и размер —
 без обращения к байтам или базе данных. Маршрутизация опирается на `canonicalMime()`.
 
@@ -133,7 +133,7 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 
 ## Алгоритм подбора
 
-`Vaulter\Handlers\FileHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
+`Vaulter\Drive\Handlers\FileHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
 возвращает лучший обработчик и **никогда не возвращает null**. Порядок такой:
 
 1. **Сначала mime** — собираем обработчики, заявившие канонический (снятый по сигнатуре) mime: точное
@@ -152,15 +152,15 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 
 ## Встроенные обработчики
 
-Набор по умолчанию регистрируется из конфига (`config('vaulter.handlers')`):
+Набор по умолчанию регистрируется из конфига (`config('vaulter-drive.handlers')`):
 
 <!-- snippet: config -->
 
 ```php
 // config/vaulter.php
 'handlers' => [
-    Vaulter\Handlers\Builtin\PreviewHandler::class,
-    Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
+    Vaulter\Drive\Handlers\Builtin\PreviewHandler::class,
+    Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -201,7 +201,7 @@ curl https://app.test/api/vaulter/v1/nodes/77
 <!-- snippet: host -->
 
 ```php [PHP — the resolver]
-use Vaulter\Contracts\Handlers\NodePresenter;
+use Vaulter\Drive\Contracts\Handlers\NodePresenter;
 
 $descriptor = app(NodePresenter::class)->present($node);
 // NodePresentation: ->id, ->documentType, ->typeAvailable, ->capabilities, ->ui (->toArray() для сериализации)
@@ -239,10 +239,10 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 final class CsvHandler implements FileHandler
 {
@@ -306,9 +306,9 @@ enum не тронут.
 ```php [config — cache-safe FQCN list]
 // config/vaulter.php — append to the handlers list (FQCN only, config-cache safe)
 'handlers' => [
-    Vaulter\Handlers\Builtin\PreviewHandler::class,
+    Vaulter\Drive\Handlers\Builtin\PreviewHandler::class,
     App\Vaulter\Handlers\CsvHandler::class,        // [!code ++]
-    Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
+    Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -316,7 +316,7 @@ enum не тронут.
 
 ```php [runtime — Vaulter::handlers()->register]
 // In a service provider's boot() — FQCN or an instance
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 use App\Vaulter\Handlers\CsvHandler;
 
 Vaulter::handlers()->register(CsvHandler::class);
@@ -423,15 +423,15 @@ php artisan vaulter:make:file-handler Csv
 ```
 
 Создаёт обработчик в `app/Vaulter/FileHandlers/Csv.php` и Pest-тест в `tests/Unit/Vaulter/`, который запускает `FileHandlerContractTests`. Команда печатает строку для
-`vaulter.handlers` и не меняет ваш конфиг. Существующий файл не перезаписывается без `--force`.
+`vaulter-drive.handlers` и не меняет ваш конфиг. Существующий файл не перезаписывается без `--force`.
 
 ## Справочник
 
-- Контракт — `Vaulter\Contracts\Handlers\FileHandler`
-- Реестр — `Vaulter\Handlers\FileHandlerRegistry` (`resolve`, `register`, `all`) — принадлежит core
-- Резолвер — `Vaulter\Handlers\NodePresenter` (дескриптор по узлу) — принадлежит core
-- Шов менеджера — `Vaulter\VaulterManager::handlers()->register()` / `::handlers()`
+- Контракт — `Vaulter\Drive\Contracts\Handlers\FileHandler`
+- Реестр — `Vaulter\Drive\Handlers\FileHandlerRegistry` (`resolve`, `register`, `all`) — принадлежит drive
+- Резолвер — `Vaulter\Drive\Handlers\NodePresenter` (дескриптор по узлу) — принадлежит drive
+- Шов менеджера — `Vaulter\Drive\Vaulter::handlers()->register()` / `::handlers()`
 - VO — `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`, `FileDescriptor`
-- Enum — `Vaulter\Enums\Handlers\Capability`
+- Enum — `Vaulter\Drive\Enums\Handlers\Capability`
 - Встроенные — `PreviewHandler`, `DownloadOnlyHandler` (документы: см. [Типы документов](./document-types.md))
 - Фронтовые вьюеры (`@vaulter/vue`) — опция плагина `viewers`, `VaulterViewer`, `createViewerRegistry`, `useViewerRegistry`

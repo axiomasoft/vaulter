@@ -5,22 +5,26 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A node was re-parented within its storage tree — a single parent_id UPDATE
  * . Carries the old parent so listeners can reconstruct the move.
  */
-final readonly class NodeMoved extends DomainEvent
+#[Api]
+final readonly class NodeMoved extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public int|string|null $fromParentId,
@@ -33,9 +37,9 @@ final readonly class NodeMoved extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::NodeMoved;
+        return DriveEventType::NodeMoved;
     }
 
     public function scope(): EventScope

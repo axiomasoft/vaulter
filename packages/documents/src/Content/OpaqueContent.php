@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Content;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Contracts\DocumentContent;
 
 /**
@@ -11,6 +12,7 @@ use Vaulter\Documents\Contracts\DocumentContent;
  * a spreadsheet workbook, of any type decoded by {@see OpaqueJsonCodec}, and of a
  * document whose type is not installed (read-only then). Nothing interprets it.
  */
+#[Api]
 final readonly class OpaqueContent implements DocumentContent
 {
     /**

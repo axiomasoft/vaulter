@@ -4,30 +4,31 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
-use Vaulter\Cas\BlobLock;
-use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StagedObject;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * Stage and hash outside the transaction, then lock (scope_key, sha256) before
  * row lookup, resurrection and promotion. SQL rollback can leave orphan bytes;
- * the reconciler uses this same lock before collecting them.
+ * the reconciler uses this same lock before collecting them. Keeping a blob alive
+ * is the owner's pin (BlobPins, D23), not this store's.
  */
+#[Api]
 final readonly class BlobStore implements BlobStoreContract
 {
+    #[Internal]
     public function __construct(
         private ContentStore $content,
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
-        private FileRevisionBlobStoreRepository $edges,
         private VaulterDatabase $database,
         private MediaConfig $mediaConfig,
     ) {}
@@ -71,19 +72,6 @@ final readonly class BlobStore implements BlobStoreContract
 
             return $result['blob'];
         });
-    }
-
-    /**
-     * @param array{role?: string, ordinal?: int, offset_bytes?: int|null, length_bytes?: int|null} $attributes
-     */
-    public function attach(FileRevision $version, Blob $blob, array $attributes = []): void
-    {
-        $this->edges->attach(version: $version, blob: $blob, attributes: $attributes);
-    }
-
-    public function detach(FileRevision $version, Blob $blob, string $role = 'data', int $ordinal = 0): void
-    {
-        $this->edges->detach(version: $version, blob: $blob, role: $role, ordinal: $ordinal);
     }
 
     /**

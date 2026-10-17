@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A folder was created in a storage tree.
  */
-final readonly class FolderCreated extends DomainEvent
+#[Api]
+final readonly class FolderCreated extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         ActorRef $actor,
@@ -30,9 +34,9 @@ final readonly class FolderCreated extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::FolderCreated;
+        return DriveEventType::FolderCreated;
     }
 
     public function scope(): EventScope

@@ -37,14 +37,14 @@ Vaulter даёт вам колонку `tenant_id` на своих таблиц�
 
 ### Пара слов о колонке `tenant_id`
 
-Таблицы Drive (`v_storages`, `v_nodes`, `v_blobs`, `v_files`, …) **всегда** несут
+Таблицы Drive (`v_drives`, `v_nodes`, `v_blobs`, `v_files`, …) **всегда** несут
 nullable-колонку `tenant_id`, независимо от `tenancy.enabled`. Это сделано намеренно:
 UNIQUE-индекс дедупликации блобов ключуется на `tenant_id` при `vaulter-media.dedup.scope = tenant`,
 поэтому колонка обязана существовать, чтобы индекс можно было определить. Когда тенантность
 выключена, индекс просто охватывает `NULL`-колонку.
 
 ```php
-// Vaulter\Schema\SchemaBuilder::tenant() — выполняется для каждой таблицы Drive
+// Vaulter\Schema\SchemaHelpers::tenant() — выполняется для каждой таблицы Drive
 private function tenant(Blueprint $table, IdStrategy $ids): void
 {
     $ids->reference(table: $table, column: 'tenant_id', nullable: true);
@@ -52,9 +52,9 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 ```
 
 Свойство модели объявлено на каждой Drive-модели
-(`Vaulter\Models\Drive\Drive`, `Node`, `File`, `FileRevision`,
-`Vaulter\Models\Cas\Blob`, `Vaulter\Models\Access\NodeGrant`,
-`Vaulter\Models\Sharing\NodeShare`, …) как `int|string|null $tenant_id`.
+(`Vaulter\Drive\Models\Drive`, `Node`, `File`, `FileRevision`,
+`Vaulter\Media\Models\Cas\Blob`, `Vaulter\Drive\Models\Access\NodeGrant`,
+`Vaulter\Drive\Models\Sharing\NodeShare`, …) как `int|string|null $tenant_id`.
 
 ::: tip
 Флаг `tenancy.enabled` — это то, на что должны ориентироваться *ваши* tenant-aware модели и
@@ -72,7 +72,7 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 ваша tenant-aware модель Storage
         │  ставит tenant_id при создании (observer `creating`, глобальный скоуп, …)
         ▼
-   v_storages.tenant_id
+   v_drives.tenant_id
         │  IngestFileAction читает $storage->tenant_id
         ▼
    BlobStore::commit(tenantId: …)
@@ -111,8 +111,8 @@ $blob = $this->blobs->commit(
 );
 ```
 
-Тот же приём работает и в других местах: `Vaulter\Activity\ActivityRecorder` и
-`Vaulter\Uploads\UploadSessionManager` оба копируют `tenant_id` с владеющего
+Тот же приём работает и в других местах: `Vaulter\Drive\Activity\ActivityRecorder` и
+`Vaulter\Drive\Uploads\UploadSessionManager` оба копируют `tenant_id` с владеющего
 хранилища/узла, а не из глобальной настройки Vaulter.
 
 ## Подмена на tenant-aware модель
@@ -137,7 +137,7 @@ $blob = $this->blobs->commit(
 namespace App\Models\Vaulter;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Models\Drive\Drive as BaseStorage;
+use Vaulter\Drive\Models\Drive as BaseStorage;
 
 class TenantStorage extends BaseStorage
 {
@@ -168,6 +168,13 @@ class TenantStorage extends BaseStorage
 Поскольку модели сменяемы, а колонка `tenant_id` уже существует, вы добавляете изоляцию по
 тенантам **без миграции Vaulter или правки ядра** — зеркало слоя
 [дизайна сменяемых моделей](/ru/guides/configuration#models).
+
+## Выполнение вне границы тенанта
+
+Код обслуживания, которому нужно видеть всех тенантов, — команды GC и reconcile блобов в `vaulter-media`, джобы
+drive — выполняется внутри `Vaulter\Tenancy\Tenancy::without(fn () => …)`, точки входа тенантности в ядре
+(drive ей не нужен). Обход fiber-локален, вкладывается, а прежнее состояние восстанавливается, когда колбэк
+возвращается или бросает. В своих командах хоста используйте его так же; у фасада `Vaulter` метода тенантности нет.
 
 ## Взаимодействие с областью дедупликации
 

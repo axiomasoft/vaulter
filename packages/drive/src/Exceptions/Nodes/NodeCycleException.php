@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Nodes;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -14,6 +15,7 @@ use Vaulter\Exceptions\VaulterException;
  * guard checks the destination against the moved node's subtree before the single
  * parent_id UPDATE.
  */
+#[Api]
 final class NodeCycleException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

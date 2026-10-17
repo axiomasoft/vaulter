@@ -82,10 +82,6 @@ return [
         'title' => 'Недопустимые свойства',
         'detail' => 'Изменение свойств нарушает контракт.',
     ],
-    'invalid_webhook_signature' => [
-        'title' => 'Неверная подпись вебхука',
-        'detail' => 'Подпись вебхука не прошла проверку.',
-    ],
     'method_not_allowed' => [
         'title' => 'Метод не разрешён',
         'detail' => 'Точка API не поддерживает этот HTTP-метод; см. заголовок Allow.',
@@ -217,18 +213,6 @@ return [
     'validation_failed' => [
         'title' => 'Ошибка валидации',
         'detail' => 'Данные запроса некорректны; подробности в поле errors.',
-    ],
-    'webhook_delivery_not_found' => [
-        'title' => 'Доставка не найдена',
-        'detail' => 'У этого endpoint нет такой доставки.',
-    ],
-    'webhook_delivery_not_redeliverable' => [
-        'title' => 'Доставку нельзя повторить',
-        'detail' => 'Доставка ещё повторяется или её endpoint отключён.',
-    ],
-    'webhook_endpoint_not_found' => [
-        'title' => 'Webhook endpoint не найден',
-        'detail' => 'Такого webhook endpoint не существует.',
     ],
     'write_outside_operation' => [
         'title' => 'Запись вне операции',

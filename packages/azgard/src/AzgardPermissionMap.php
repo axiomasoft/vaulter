@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Configuration\AzgardConfig;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Ability;
 
 /**
  * Typed accessors over vaulter-azgard — the AzGuard host-role lane's
@@ -15,6 +16,7 @@ use Vaulter\Enums\Access\Ability;
  * documents.view) and asks the {@see AzgardGuard} that permission.
  * Plain strings — cache-safe, no closures.
  */
+#[Internal]
 final readonly class AzgardPermissionMap
 {
     public function __construct(private AzgardConfig $config) {}

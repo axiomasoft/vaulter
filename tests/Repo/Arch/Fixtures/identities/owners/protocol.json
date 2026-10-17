@@ -140,6 +140,12 @@
             "why": "kernel concern: idempotency of the operation pipeline and its dependencies (architecture#errors, D25)"
         },
         {
+            "match": "exact",
+            "value": "problem:blob_unavailable",
+            "owner": "media",
+            "why": "D23: a pin refused because the bytes of the blob are gone — the media pin protocol"
+        },
+        {
             "match": "prefix",
             "value": "problem:collaboration_",
             "owner": "collaboration",
@@ -195,21 +201,9 @@
         },
         {
             "match": "prefix",
-            "value": "morph:Vaulter\\Access\\",
-            "owner": "drive",
-            "why": "the node access model"
-        },
-        {
-            "match": "prefix",
             "value": "morph:Vaulter\\Azgard\\",
             "owner": "azgard",
             "why": "azgard adapter"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Concerns\\HasDrives",
-            "owner": "drive",
-            "why": "the host trait that owns drives"
         },
         {
             "match": "prefix",
@@ -225,57 +219,9 @@
         },
         {
             "match": "prefix",
-            "value": "morph:Vaulter\\Http\\Controllers\\Activity\\",
-            "owner": "drive",
-            "why": "Activity -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Models\\Drive\\",
-            "owner": "drive",
-            "why": "drive models"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Queries\\Activity\\",
-            "owner": "drive",
-            "why": "Activity -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Repositories\\",
-            "owner": "drive",
-            "why": "activity and drive repositories"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Rules\\Access\\",
-            "owner": "drive",
-            "why": "Rules/Access -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Tenancy\\",
-            "owner": "core",
-            "why": "kernel Tenancy"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\Testing\\Contracts\\PermissionFixture",
-            "owner": "drive",
-            "why": "permission-driver contract tests exercise the drive access model"
-        },
-        {
-            "match": "prefix",
             "value": "morph:Vaulter\\ValueObjects\\Access\\",
             "owner": "drive",
             "why": "access values"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget",
-            "owner": "drive",
-            "why": "Activity -> drive"
         },
         {
             "match": "prefix",
@@ -285,9 +231,9 @@
         },
         {
             "match": "prefix",
-            "value": "serialized:queue:Vaulter\\Jobs\\Webhooks\\",
+            "value": "serialized:queue:Vaulter\\Webhooks\\Jobs\\",
             "owner": "webhooks",
-            "why": "Jobs/Webhooks -> webhooks"
+            "why": "Jobs -> webhooks"
         },
         {
             "match": "prefix",
@@ -303,21 +249,9 @@
         },
         {
             "match": "prefix",
-            "value": "serialized:cast:Vaulter\\Models\\",
-            "owner": "drive",
-            "why": "Models/{Access,Activity,Content,Drive,Sharing} -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:cast:Vaulter\\Models\\Cas\\",
+            "value": "serialized:cast:Vaulter\\Media\\Models\\Cas\\",
             "owner": "media",
-            "why": "Models/Cas -> media"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.access.",
-            "owner": "drive",
-            "why": "permission drivers -> drive"
+            "why": "Models/Cas -> media (P4.6: the model lives in vaulter-media)"
         },
         {
             "match": "prefix",
@@ -326,16 +260,10 @@
             "why": "id strategies are kernel"
         },
         {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.models.",
-            "owner": "drive",
-            "why": "the model registry names drive models"
-        },
-        {
             "match": "exact",
-            "value": "serialized:config:vaulter.models.blob",
+            "value": "serialized:config:vaulter-media.models.blob",
             "owner": "media",
-            "why": "Models/Cas/Blob -> media"
+            "why": "Models/Cas/Blob -> media; the key moved to vaulter-media (D6)"
         },
         {
             "match": "exact",
@@ -345,27 +273,9 @@
         },
         {
             "match": "prefix",
-            "value": "serialized:config:vaulter.models.webhook_",
+            "value": "serialized:config:vaulter-webhooks.",
             "owner": "webhooks",
-            "why": "webhook models"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.profiles.",
-            "owner": "drive",
-            "why": "Profiles -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.sharing.",
-            "owner": "drive",
-            "why": "Sharing -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "serialized:config:vaulter.webhooks.",
-            "owner": "webhooks",
-            "why": "outbound URL guard"
+            "why": "outbound URL guard and webhook models"
         },
         {
             "match": "prefix",
@@ -448,8 +358,8 @@
             "owner": "drive",
             "format": "base64url(json{v,t,d,e,a}) \".\" base64url(HMAC-SHA256(json, hmac-sha256('vaulter.changes.cursor', app key))); opaque to clients",
             "source": {
-                "file": "packages/core/src/Changes/ChangeCursor.php",
-                "symbol": "Vaulter\\Changes\\ChangeCursor::encode"
+                "file": "packages/drive/src/Changes/ChangeCursor.php",
+                "symbol": "Vaulter\\Drive\\Changes\\ChangeCursor::encode"
             },
             "why": "position in a drive's change journal"
         },
@@ -508,17 +418,17 @@
             "owner": "webhooks",
             "format": "JSON: id (event id), type, version (1), source (vaulter), time (UTC ms Z), tenant_id, drive_id, subject{type,id}, sequence, actor{type,id}, correlation_id, changes{seq}|null, data (object)",
             "source": {
-                "file": "packages/core/src/Webhooks/EventEnvelope.php",
-                "symbol": "Vaulter\\Webhooks\\EventEnvelope::fromEvent"
+                "file": "packages/core/src/Events/Outbox/OutboxEnvelope.php",
+                "symbol": "Vaulter\\Events\\Outbox\\OutboxEnvelope::body"
             },
-            "why": "the outbound event payload (a neutral envelope after D29)"
+            "why": "the outbound event payload: the outbox envelope body every consumer receives, forwarded byte for byte by webhooks.fanout (D29)"
         },
         {
             "id": "format:webhook-signature",
             "owner": "webhooks",
             "format": "Standard Webhooks headers webhook-id, webhook-timestamp, webhook-signature (v1,<base64 HMAC-SHA256>), several secrets space separated during rotation",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhookSigner.php",
+                "file": "packages/webhooks/src/WebhookSigner.php",
                 "symbol": "Vaulter\\Webhooks\\WebhookSigner::signatureHeader"
             },
             "why": "outbound delivery signing"

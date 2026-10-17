@@ -17,6 +17,7 @@ use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
+use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 require_once dirname(__DIR__, 3).'/vendor/autoload.php';
 
@@ -48,6 +49,7 @@ $app = Testbench::create(basePath: null, options: ['extra' => ['providers' => [
     VaulterMediaServiceProvider::class,
     VaulterDriveServiceProvider::class,
     VaulterDocumentsServiceProvider::class,
+    VaulterWebhooksServiceProvider::class,
 ]], 'load_environment_variables' => false]);
 
 $routes = [];

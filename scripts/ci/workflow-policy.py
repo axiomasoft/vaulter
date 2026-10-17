@@ -21,6 +21,9 @@ PLAN3 P1.6 adds the single-CI contract:
 * weekly-full.yml runs on schedule `0 4 * * 1`, by hand and as a reusable workflow; monorepo-split.yml qualifies the
   exact tagged SHA through it and through `CI gate` before anything is published, and never polls for a green run.
 
+PLAN3 P4.19 adds the I14 lane: `consumer-isolation` (a matrix of core, media, drive, documents, webhooks from the planned
+`consumer_matrix`) runs scripts/release/consumer-check.sh for real and blocks - `ci-gate` needs it like every other job.
+
 Two more subcommands run inside ci.yml (they are the logic the workflow would otherwise inline as shell):
 
   workflow-policy.py plan --workflow ci.yml --mode changed|all [--changes F --db-pgsql F --db-mysql F]
@@ -50,7 +53,7 @@ MUTATION_FLOORS = {
 COVERAGE_MARKERS = ('--coverage', 'codecov', '--coverage-clover')
 
 # PLAN3 P1.6: the single CI.
-PHP_PACKAGES = ['core', 'media', 'drive', 'documents', 'azgard', 'filament']
+PHP_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'azgard', 'filament']
 TESTBENCH_TO_LARAVEL = {'10': '12', '11': '13'}  # the Testbench major that supports each Laravel major
 LARAVEL_TO_TESTBENCH = {'12': '^10.0', '13': '^11.0'}
 REMOVED_WORKFLOWS = [
@@ -59,7 +62,15 @@ REMOVED_WORKFLOWS = [
 ]
 GATE_JOB = 'ci-gate'
 GATE_CHECK_NAME = 'CI gate'
-LANES = ['quality', 'fast', 'db', 'serial', 'vue', 'hub', 'repo', 'openapi']
+LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'hub', 'repo', 'openapi']
+# PLAN3 P4.19 (I14): packages whose split archive must stand alone. azgard is the external gate (D20), filament has its
+# own composer check. A lane that is not named like its job maps here (job id -> `has_<lane>` / `<lane>_matrix` outputs).
+CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks']
+LANE_JOBS = {'consumer': 'consumer-isolation'}
+
+
+def lane_job(lane: str) -> str:
+    return LANE_JOBS.get(lane, lane)
 WEEKLY_CRON = '0 4 * * 1'
 ZERO_SHA = '0' * 40
 
@@ -275,6 +286,29 @@ def check_gate(name: str, doc: dict, gate_job: str, label: str) -> list[str]:
     return errors
 
 
+def check_consumer_isolation(name: str, job: dict) -> list[str]:
+    """The I14 lane runs scripts/release/consumer-check.sh once per consumer package, from the planned matrix, and blocks."""
+    if not job:
+        return []
+    errors: list[str] = []
+    matrix = (job.get('strategy') or {}).get('matrix')
+    if 'consumer_matrix' not in str(matrix):
+        errors.append(f'{name}: consumer-isolation must take its matrix from the planned consumer_matrix output')
+    if 'has_consumer' not in str(job.get('if', '')):
+        errors.append(f'{name}: consumer-isolation must be gated by the planned has_consumer output')
+    commands = ' '.join(str(step.get('run', '')) for step in job.get('steps') or [])
+    if 'scripts/release/consumer-check.sh' not in commands:
+        errors.append(f'{name}: consumer-isolation must run scripts/release/consumer-check.sh')
+    if '--dry-run' in commands:
+        errors.append(f'{name}: consumer-isolation must run the harness for real, not as a --dry-run')
+    for step in job.get('steps') or []:
+        if str(step.get('continue-on-error', 'false')).lower() != 'false':
+            errors.append(f'{name}: consumer-isolation is blocking; a step may not continue-on-error')
+    if str(job.get('continue-on-error', 'false')).lower() != 'false':
+        errors.append(f'{name}: consumer-isolation is blocking; the job may not continue-on-error')
+    return errors
+
+
 def check_ci(doc: dict, root: Path) -> list[str]:
     name = 'ci.yml'
     errors: list[str] = []
@@ -286,8 +320,9 @@ def check_ci(doc: dict, root: Path) -> list[str]:
     errors += check_gate(name, doc, GATE_JOB, GATE_CHECK_NAME)
     jobs = doc.get('jobs') or {}
     for lane in ['changes'] + LANES:
-        if lane not in jobs:
-            errors.append(f'{name}: no {lane} job')
+        if lane_job(lane) not in jobs:
+            errors.append(f'{name}: no {lane_job(lane)} job')
+    errors += check_consumer_isolation(name, jobs.get(lane_job('consumer')) or {})
     for job_id, job in jobs.items():
         if job_id in ('changes', GATE_JOB):
             continue
@@ -423,16 +458,20 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
                   'username': 'vaulter' if engine == 'pgsql' else 'root'}
                  for engine in ('pgsql', 'mysql') for pkg in php if pkg in db_suites[engine]]
     serial = [package(pkg) for pkg in affected if support[pkg]['serial']]
+    # I14: a change to a consumer package re-checks it alone; a harness change (scripts/release, the manifest, CI) re-checks all.
+    harness = 'repo' in suites
+    consumer = [package(pkg) for pkg in CONSUMER_PACKAGES if pkg in support and (pkg in affected or harness)]
 
     flags = {
         'quality': bool(quality_matrix), 'fast': bool(fast), 'db': bool(db_matrix), 'serial': bool(serial),
+        'consumer': bool(consumer),
         'vue': 'vue' in suites, 'hub': 'hub' in suites, 'repo': 'repo' in suites,
         'openapi': skip_reason == '',
     }
     out = {'skip_reason': skip_reason, 'mode': mode}
     for lane, value in flags.items():
         out[f'has_{lane}'] = _bool(value and skip_reason == '')
-    for lane, rows in (('quality', quality_matrix), ('fast', fast), ('db', db_matrix), ('serial', serial)):
+    for lane, rows in (('quality', quality_matrix), ('fast', fast), ('db', db_matrix), ('serial', serial), ('consumer', consumer)):
         out[f'{lane}_matrix'] = json.dumps({'include': rows if skip_reason == '' else []}, separators=(',', ':'))
     return out
 
@@ -452,7 +491,7 @@ def gate_errors(needs: dict) -> list[str]:
         errors.append(f'changes: skip_reason {skip_reason!r} yet lanes are expected: {[lane for lane, on in expected.items() if on]}')
     if not skip_reason and not any(expected.values()):
         errors.append('changes: no lane expected and no explicit skip reason (an empty plan is not a pass)')
-    for lane in ('quality', 'fast', 'db', 'serial'):
+    for lane in ('quality', 'fast', 'db', 'serial', 'consumer'):
         try:
             rows = len(json.loads(outputs.get(f'{lane}_matrix') or '{"include":[]}').get('include', []))
         except ValueError:
@@ -463,7 +502,7 @@ def gate_errors(needs: dict) -> list[str]:
         if not expected[lane] and rows:
             errors.append(f'{lane}: matrix has {rows} rows but the lane is not expected')
     for lane in LANES:
-        result = (needs.get(lane) or {}).get('result', 'missing')
+        result = (needs.get(lane_job(lane)) or {}).get('result', 'missing')
         if expected[lane] and result != 'success':
             errors.append(f'{lane}: required lane is {result}')
         elif not expected[lane] and result not in ('skipped', 'success'):

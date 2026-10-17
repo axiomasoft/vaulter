@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Actions\Content\RequestScanWorkAction;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ScanSnapshot;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tenancy\TenancyBoundary;
 
+#[Internal]
 final readonly class ScanBackfillReconciler
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database,
+    public function __construct(private DriveConfig $config, private VaulterDatabase $database,
         private ScanPolicyResolver $policies, private ScanSnapshot $snapshots,
         private RequestScanWorkAction $request, private ScanWorkReconciler $publisher) {}
 
@@ -79,7 +80,7 @@ final readonly class ScanBackfillReconciler
                 }
                 try {
                     $advanced = $this->database->transaction(function () use ($revision, $run, $spec, $drive, $class, $revisionClass): bool {
-                        $this->database->lockTreeShared($drive->id);
+                        $this->database->lockAggregateShared('drives', $drive->id);
                         $selected = $revisionClass::query()->whereKey($revision->id)->first();
                         $obligation = null;
                         if ($selected !== null) {

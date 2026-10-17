@@ -8,13 +8,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Testing\FakeMetricsRecorder;
 
 beforeEach(function (): void {
@@ -44,13 +42,12 @@ function r21MetricValues(FakeMetricsRecorder $metrics, string $name): array
 
 it('caps mark batches and advances past live candidates without per-row liveness reads', function (): void {
     $blobs = r21SeedCandidates(2105);
-    $version = CasTestHelpers::makeVersion();
-    $store = app(BlobStore::class);
+    $version = CasTestHelpers::reference();
 
     // Stale ref_count pins candidates in the scan; both full batches contain
     // skipped rows, including the checkpoint boundary.
     foreach ([0, 999, 1000, 1999, 2104] as $index) {
-        CasTestHelpers::write(static fn () => $store->attach($version, $blobs[$index]));
+        CasTestHelpers::pin($blobs[$index], $version);
     }
 
     $reads = [];
@@ -74,8 +71,9 @@ it('caps mark batches and advances past live candidates without per-row liveness
 
 it('caps sweep and pending batches while skipped rows stay eligible', function (BlobStatus $status): void {
     $blobs = r21SeedCandidates(1005, $status);
-    $version = CasTestHelpers::makeVersion();
-    CasTestHelpers::write(static fn () => app(BlobStore::class)->attach($version, $blobs[999]));
+    // A pin on a tombstoned or pending row only exists outside the protocol (a pin commits the row again):
+    // seeded, it proves the sweep's re-check.
+    CasTestHelpers::seedPin($blobs[999]);
 
     $collector = app(BlobGarbageCollector::class);
     $result = $status === BlobStatus::Pending ? $collector->sweepPending(graceHours: 24) : $collector->sweep();
@@ -111,12 +109,11 @@ it('does not extend the current pass for candidates inserted after its high-wate
 
 it('rechecks a later candidate whose live edge is added by an earlier model observer', function (): void {
     [$first, $later] = r21SeedCandidates(2);
-    $version = CasTestHelpers::makeVersion();
-    $store = app(BlobStore::class);
+    $version = CasTestHelpers::reference();
 
-    Blob::updated(function (Blob $blob) use ($first, $later, $version, $store): void {
+    Blob::updated(function (Blob $blob) use ($first, $later, $version): void {
         if ($blob->is($first)) {
-            CasTestHelpers::write(static fn () => $store->attach($version, $later));
+            CasTestHelpers::pin($later, $version);
         }
     });
 
@@ -127,12 +124,12 @@ it('rechecks a later candidate whose live edge is added by an earlier model obse
 
 it('rechecks live edges and status after the cheap scan in the optimized mark path', function (): void {
     [$live, $changed, $orphan] = r21SeedCandidates(3);
-    $version = CasTestHelpers::makeVersion();
+    $version = CasTestHelpers::reference();
     $injected = false;
     DB::listen(function (QueryExecuted $query) use (&$injected, $live, $changed, $version): void {
         if (!$injected && str_contains($query->sql, 'limit 1000')) {
             $injected = true;
-            CasTestHelpers::write(static fn () => app(BlobStore::class)->attach($version, $live));
+            CasTestHelpers::pin($live, $version);
             CasTestHelpers::write(static fn () => $changed->forceFill(['status' => BlobStatus::Pending])->save());
         }
     });
@@ -145,12 +142,11 @@ it('rechecks live edges and status after the cheap scan in the optimized mark pa
 
 it('rechecks status liveness and grace for a materialized deletion batch', function (BlobStatus $status): void {
     [$live, $changed, $recent, $orphan] = r21SeedCandidates(4, $status);
-    $version = CasTestHelpers::makeVersion();
     $injected = false;
-    DB::listen(function (QueryExecuted $query) use (&$injected, $live, $changed, $recent, $version, $status): void {
+    DB::listen(function (QueryExecuted $query) use (&$injected, $live, $changed, $recent, $status): void {
         if (!$injected && str_contains($query->sql, 'limit 1000')) {
             $injected = true;
-            CasTestHelpers::write(static fn () => app(BlobStore::class)->attach($version, $live));
+            CasTestHelpers::seedPin($live);
             CasTestHelpers::write(static fn () => $changed->forceFill(['status' => BlobStatus::Committed])->save());
             CasTestHelpers::write(static fn () => $recent->forceFill($status === BlobStatus::Pending
                 ? ['first_seen_at' => now()]
@@ -196,8 +192,16 @@ it('advances sparse string and native UUID keys with configured models', functio
         $table->unsignedInteger('ref_count');
         $table->timestamp('delete_after_at')->nullable();
     });
-    Schema::create('r21_string_edges', function (Blueprint $table) use ($keyType): void {
+    // The pins of these foreign-keyed rows: a pins table of the same key type, without the foreign key to v_blobs
+    // (rolled back with the test's transaction).
+    $pins = app(DatabaseConfig::class)->table('blob_references');
+    Schema::drop($pins);
+    Schema::create($pins, function (Blueprint $table) use ($keyType): void {
+        $table->id();
         $table->{$keyType}('blob_id');
+        $table->string('owner_type', 64);
+        $table->string('reference_key', 191);
+        $table->timestamp('created_at')->nullable();
     });
     $model = new class extends Blob
     {
@@ -212,15 +216,7 @@ it('advances sparse string and native UUID keys with configured models', functio
             return 'r21_string_blobs';
         }
     };
-    $edgeModel = new class extends FileRevisionBlob
-    {
-        public function getTable(): string
-        {
-            return 'r21_string_edges';
-        }
-    };
-    config()->set('vaulter.models.blob', $model::class);
-    config()->set('vaulter.models.file_revision_blob', $edgeModel::class);
+    config()->set('vaulter-media.models.blob', $model::class);
     $keyFor = static fn (int $index): string => $keyType === 'uuid'
         ? sprintf('00000000-0000-7000-8000-%012d', $index * 3)
         : sprintf('blob-%08d', $index * 3);
@@ -236,7 +232,7 @@ it('advances sparse string and native UUID keys with configured models', functio
         ])->save());
     }
 
-    CasTestHelpers::write(static fn () => (new ($edgeModel::class))->forceFill(['blob_id' => $keyFor(999)])->save());
+    CasTestHelpers::seedPin($keyFor(999));
 
     expect(app(BlobGarbageCollector::class)->mark(graceHours: 24))->toBe(['tombstoned' => 1004, 'skipped' => 1])
         ->and(r21MetricValues($this->metrics, 'vaulter_gc_batch_rows'))->toBe([1000, 5])
@@ -257,7 +253,7 @@ it('uses the same PostgreSQL lock namespace for every batched mark candidate bef
 
     expect(app(BlobGarbageCollector::class)->mark(graceHours: 24)['tombstoned'])->toBe(3);
     $lockIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, 'pg_advisory_xact_lock'));
-    $edgeIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, app(DatabaseConfig::class)->table('file_revision_blobs')));
+    $edgeIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, app(DatabaseConfig::class)->table('blob_references')));
     expect($lockIndex)->not->toBeNull()->and($lockIndex)->toBeLessThan($edgeIndex);
 
     config()->set('database.connections.r21_probe', config('database.connections.testing'));

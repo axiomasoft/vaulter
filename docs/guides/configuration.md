@@ -18,22 +18,25 @@ php artisan vendor:publish --tag=vaulter-documents-config
 
 | Package | Published file | Publish tag | Configuration class |
 |---|---|---|---|
-| Core | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterConfig` |
+| Core (kernel) | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterConfig` |
 | Media | `config/vaulter-media.php` | `vaulter-media-config` | `Vaulter\Media\Configuration\MediaConfig` |
 | Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveConfig` |
 | Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsConfig` |
+| Webhooks | `config/vaulter-webhooks.php` | `vaulter-webhooks-config` | `Vaulter\Webhooks\Configuration\WebhooksConfig` |
 | AzGuard | `config/vaulter-azgard.php` | `vaulter-azgard-config` | `Vaulter\Azgard\Configuration\AzgardConfig` |
 | Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentConfig` |
 
 All bindings use FQCN strings. Closures are rejected at boot, so the files remain safe
 for `php artisan config:cache`. See the [key reference](/reference/config) for defaults.
 
-## Core: database, IDs, profiles and access
+## Kernel: database, IDs, tenancy, routes and the outbox
 
 Only core owns schema settings: `database.connection`, `database.table_prefix`,
 `ids.strategy`, `ids.host_keys` and `tenancy.enabled`. A null connection uses Laravel's
 default connection. Tables use the prefix plus their canonical entity name:
-`DatabaseConfig::table('drives')` returns `v_drives` by default.
+`DatabaseConfig::table('drives')` returns `v_drives` by default. Every other root is owned by the
+package whose concept it configures (see the table above and
+[ADR-0030](/adr/0030-package-ownership-and-schema)): a key never lives in two files.
 
 <!-- snippet: config -->
 
@@ -52,28 +55,8 @@ default connection. Tables use the prefix plus their canonical entity name:
         'uuid7' => \Vaulter\Schema\Uuid7Ids::class,
     ],
 ],
-'profiles' => [
-    'default' => \Vaulter\Profiles\DefaultProfile::class,
-    'providers' => [\App\Vaulter\Profiles\ProjectProfile::class],
-],
-'features' => [
-    'grants' => true,
-    'activity' => true,
-    'webhooks' => true,
-    'share_links' => false,
-    'public_listing' => false,
-],
-'access' => [
-    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
-    'permission_drivers' => [
-        'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-        'gate' => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-        'spatie' => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-        'null' => \Vaulter\Testing\NullPermissionDriver::class,
-    ],
-    // gate.* and spatie.* retain their ability/permission maps here.
-],
-'handlers' => [],
+'modules' => [],
+'outbox' => ['batch' => 100, 'max_attempts' => 10],
 ```
 
 ### Host keys (`ids.host_keys`) {#host-keys-ids-host-keys}
@@ -84,25 +67,56 @@ settings after migration requires a schema upgrade; see UPGRADE.md.
 
 Set `tenancy.enabled` to opt into your host's tenancy setup. The column name is always
 `tenant_id`; supply tenant-aware model subclasses to apply your host's scope.
-See [Multi-tenancy](/concepts/tenancy).
+See [Multi-tenancy](/concepts/tenancy). `modules` switches modules on and off
+([Modules](/concepts/modules)); `outbox.*` tunes the relay ([The outbox](/concepts/events-outbox)).
 
-`profiles.providers` and `profiles.default` contain `ProfileProvider` FQCNs. Scaffold one
+## Drive: profiles, features, access, handlers and models {#drive}
+
+<!-- snippet: config -->
+
+```php
+// config/vaulter-drive.php
+'profiles' => [
+    'default' => \Vaulter\Drive\Profiles\DefaultProfile::class,
+    'providers' => [\App\Vaulter\Profiles\ProjectProfile::class],
+],
+'features' => [
+    'grants' => true,
+    'activity' => true,
+    'share_links' => false,
+    'public_listing' => false,
+],
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+    'permission_drivers' => [
+        'database' => \Vaulter\Drive\Access\Drivers\DatabasePermissionDriver::class,
+        'gate' => \Vaulter\Drive\Access\Drivers\GatePermissionDriver::class,
+        'spatie' => \Vaulter\Drive\Access\Drivers\SpatiePermissionDriver::class,
+        'null' => \Vaulter\Drive\Testing\NullPermissionDriver::class,
+    ],
+    // gate.* and spatie.* retain their ability/permission maps here.
+],
+'handlers' => [],
+```
+
+`vaulter-drive.profiles.providers` and `vaulter-drive.profiles.default` contain `ProfileProvider` FQCNs. Scaffold one
 with `php artisan vaulter:make:profile project`. Profile keys must be unique and the
 default must be registered. See [Drive Profiles](/concepts/drives-and-profiles).
 
 ### Models {#models}
 
-Core model overrides are `models.drive`, `node`, `file`, `file_revision`,
-`file_revision_blob`, `blob`, `grant`, `node_share`, `activity`, `outbox`,
-`webhook_endpoint` and `webhook_delivery`; each must extend the matching built-in model.
-Drive and Documents models live under their own config roots.
+Each package keeps the overrides of the models it owns under its own root, and each must extend
+the matching built-in model: `vaulter-drive.models.drive`, `node`, `file`, `file_revision`,
+`file_revision_blob`, `grant`, `node_share`, `activity` and the scan and upload models;
+`vaulter-media.models.blob`; `vaulter-documents.models.*`; `vaulter-webhooks.models.webhook_endpoint` and
+`webhook_delivery`; and `vaulter.models.outbox` for the kernel.
 
-The standalone `database` permission driver is the default. Gate and Spatie maps now
-live at `access.gate.*` and `access.spatie.*`. The installed AzGuard bridge registers
-`access.permission_drivers.azgard`; its own settings remain in `vaulter-azgard.*`.
+The standalone `database` permission driver is the default. Gate and Spatie maps live at
+`vaulter-drive.access.gate.*` and `vaulter-drive.access.spatie.*`. The installed AzGuard bridge registers
+`vaulter-drive.access.permission_drivers.azgard`; its own settings remain in `vaulter-azgard.*`.
 The open `null` driver is rejected in production. See [Permission drivers](/extending/permission-drivers).
 
-`handlers` contains additional `FileHandler` FQCNs. Providers register built-in handlers
+`vaulter-drive.handlers` contains additional `FileHandler` FQCNs. Providers register built-in handlers
 through the `vaulter.file_handlers` container tag, so an empty list retains preview/download
 and the installed Documents handlers.
 
@@ -121,22 +135,32 @@ and the installed Documents handlers.
     ],
     'rate_limits' => ['public' => 60, 'uploads' => 120],
 ],
+```
+
+<!-- snippet: config -->
+
+```php
+// config/vaulter-drive.php
 'sharing' => [
-    'token_generator' => \Vaulter\Support\RandomShareTokenGenerator::class,
+    'token_generator' => \Vaulter\Drive\Support\RandomShareTokenGenerator::class,
     'url_base' => '/share',
     'prefix_length' => 8,
 ],
 ```
 
 The authenticated stack protects actor routes; public share links use `public`, and signed
-collaboration callbacks use `hub`. Request metrics are appended automatically. The old
+collaboration callbacks use `hub`. Request metrics are appended automatically. The
 `middleware` setting affects only the authenticated stack; configure public middleware
 explicitly. Install Sanctum or replace `auth:sanctum` with your host's guard.
 
-Webhooks are an opt-in module: `vaulter.modules.webhooks` (default `false`) mounts their routes,
-commands, schedules and doctor checks (see [Modules](/concepts/modules)). Delivery settings remain
-under `webhooks.*`, including the URL guard, timeout, retry/backoff and retention controls.
-`listing.scan_budget`, `downloads.inline_mime_types` and `observability.*` remain core-owned.
+## Webhooks {#webhooks}
+
+Webhooks are a separate package (`composer require axioma-studio/vaulter-webhooks`) and an opt-in
+module: `vaulter.modules.webhooks` (default `false`) mounts their routes, commands, schedules and doctor checks
+(see [Modules](/concepts/modules)). Delivery settings live in `config/vaulter-webhooks.php` (publish tag
+`vaulter-webhooks-config`): the URL guard, timeouts, retry schedule and retention controls. See
+[Webhooks](/guides/webhooks). `vaulter-drive.listing.scan_budget` and `vaulter-drive.downloads.inline_mime_types`
+belong to the drive; `observability.*` to core.
 
 ## Media: content-addressed storage
 
@@ -264,10 +288,11 @@ $table = $database->table('drives');
 $connection = $database->connection();
 ```
 
-`VaulterConfig` exposes `database()`, `ids()`, `tenancy()`, `access()`, `routes()`,
-`listing()`, `sharing()`, `downloads()`, `webhooks()` and `observability()`, plus
-`model(string)`, `featureEnabled(string)`, `profileProviders()`, `defaultProfile()`,
-`handlers()` and `extraDataEnabled()`. Module classes expose their own models and settings.
+`VaulterConfig` (the kernel) exposes `database()`, `ids()`, `tenancy()`, `routes()`, `outbox()`,
+`observability()` and `outboxModel()`. Everything else is read by the class of its owner: `DriveConfig` has
+`access()`, `sharing()`, `listing()`, `downloads()`, `changes()`, `scan()`, `model(string)`,
+`featureEnabled(string)`, `profileProviders()`, `defaultProfile()` and `handlers()`; `MediaConfig` the disk,
+deduplication and GC; `WebhooksConfig` the timeouts, retries and URL guard; `DocumentsConfig` the documents.
 Values are read on every call: changing the repository with `config()->set()` in tests is
 visible immediately. Package code reads Vaulter keys only within `Configuration` classes;
 architecture checks enforce this boundary.

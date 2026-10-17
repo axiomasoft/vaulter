@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Tests\Stubs\HostGuard;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**

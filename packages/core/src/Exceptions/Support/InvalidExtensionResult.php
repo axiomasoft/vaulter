@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Support;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * fragment key, a fragment of the wrong type, a middleware that skipped or repeated the operation or
  * replaced its result). An integration error, never a silent skip; never retried, never cached.
  */
+#[Api]
 final class InvalidExtensionResult extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

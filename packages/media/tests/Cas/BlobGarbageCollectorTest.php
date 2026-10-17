@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * Two-phase, race-safe GC (H.3): mark unreferenced committed blobs as tombstoned
@@ -43,8 +43,8 @@ it('фаза 1: НЕ трогает блоб с живым ребром (livenes
     $gc = app(BlobGarbageCollector::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('referenced'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
 
     // ref_count cache is stale (0) but the EDGE exists — the blob enters the scan
     // on ref_count<=0, and GC must re-verify under the lock and skip.

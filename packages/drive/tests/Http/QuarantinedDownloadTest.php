@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Content\ImmutableContentIdentity;
-use Vaulter\Content\SignedContentUrl;
-use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Media\Content\ImmutableContentIdentity;
+use Vaulter\Media\Content\SignedContentUrl;
+use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
 
 /** A revision that is not scanned clean answers 423 content_unavailable before any byte or URL. */
 uses(RefreshDatabase::class);
@@ -19,7 +19,7 @@ beforeEach(function (): void {
 });
 
 it('answers 423 for an infected head, in both delivery modes', function (string $mode): void {
-    config()->set('vaulter.downloads.delivery_mode', $mode);
+    config()->set('vaulter-drive.downloads.delivery_mode', $mode);
     $signer = new class implements DirectContentUrlSigner
     {
         public int $calls = 0;

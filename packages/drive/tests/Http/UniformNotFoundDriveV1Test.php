@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Tests\Http\DriveV1;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
 
 /**
  * A node or drive the caller may not see answers exactly like one that does not exist,

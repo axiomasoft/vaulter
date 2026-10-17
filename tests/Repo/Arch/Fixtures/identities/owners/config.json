@@ -38,12 +38,6 @@
             "why": "the host-scheduler switch is read by every package's schedule keys; the switch itself is kernel"
         },
         {
-            "match": "prefix",
-            "value": "config:vaulter.features.",
-            "owner": "drive",
-            "why": "the feature switches of the disk, access, activity, journal and sharing — drive's concepts (architecture#ownership-map)"
-        },
-        {
             "match": "exact",
             "value": "config:vaulter.modules",
             "owner": "core",
@@ -63,99 +57,33 @@
         },
         {
             "match": "prefix",
-            "value": "config:vaulter.profiles.",
-            "owner": "drive",
-            "why": "Profiles (11) -> drive (architecture#ownership-map)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.scan.",
-            "owner": "drive",
-            "why": "D28: scan obligations, policy state and rollout are drive's; the scanner binding is the media SPI but the keys feed drive state"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.drives.",
-            "owner": "drive",
-            "why": "HasDrives owner cleanup belongs to the disk concept"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.access.",
-            "owner": "drive",
-            "why": "Access, drivers and Gate/Spatie mapping -> drive (architecture#ownership-map)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.listing.",
-            "owner": "drive",
-            "why": "Queries (2) -> drive: listing scan budget"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.sharing.",
-            "owner": "drive",
-            "why": "Sharing (9) -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.downloads.",
-            "owner": "drive",
-            "why": "content delivery (ContentAvailabilityGuard, DownloadGuard) -> drive (D28)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.changes.",
-            "owner": "drive",
-            "why": "Changes -> drive: the journal is a drive EventSink"
+            "value": "config:vaulter.outbox.",
+            "owner": "core",
+            "why": "D29: the transactional outbox and its relay are the kernel's (architecture#events, P3.14)"
         },
         {
             "match": "exact",
-            "value": "config:vaulter.schedule.changes_prune",
-            "owner": "drive",
-            "why": "vaulter:changes:prune -> drive"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.schedule.webhooks_",
-            "owner": "webhooks",
-            "why": "relay/retry/prune of webhooks -> webhooks"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.webhooks.",
-            "owner": "webhooks",
-            "why": "Webhooks (all) -> webhooks (architecture#ownership-map)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.handlers",
-            "owner": "drive",
-            "why": "Handlers (6) -> drive (architecture#ownership-map)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.models.",
-            "owner": "drive",
-            "why": "the model registry names drive models; blob, outbox and webhooks models are overridden below"
+            "value": "config:vaulter.schedule.outbox_relay",
+            "owner": "core",
+            "why": "vaulter:relay -> core (D29)"
         },
         {
             "match": "exact",
-            "value": "config:vaulter.models.blob",
-            "owner": "media",
-            "why": "Models/Cas/Blob -> media"
+            "value": "config:vaulter.schedule.outbox_prune",
+            "owner": "core",
+            "why": "vaulter:outbox:prune -> core (D29)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter-webhooks.",
+            "owner": "webhooks",
+            "why": "the vaulter-webhooks root: delivery, retry, schedule and model keys of the webhooks package (D6, P4.13)"
         },
         {
             "match": "exact",
             "value": "config:vaulter.models.outbox",
             "owner": "core",
-            "why": "Models/Webhooks/Outbox stays in core (D29)"
-        },
-        {
-            "match": "prefix",
-            "value": "config:vaulter.models.webhook_",
-            "owner": "webhooks",
-            "why": "Models/Webhooks/{WebhookEndpoint,WebhookDelivery} -> webhooks"
+            "why": "the outbox model stays in core (D29)"
         },
         {
             "match": "prefix",
@@ -201,12 +129,6 @@
         },
         {
             "match": "exact",
-            "value": "publish:vaulter-migrations",
-            "owner": "core",
-            "why": "one core migrations tag until P4 splits the migrations per owning package"
-        },
-        {
-            "match": "exact",
             "value": "publish:vaulter-translations",
             "owner": "core",
             "why": "one core translations tag until P4 splits the problem-code translations"
@@ -225,6 +147,12 @@
         },
         {
             "match": "prefix",
+            "value": "publish:vaulter-webhooks-",
+            "owner": "webhooks",
+            "why": "tags of the webhooks provider"
+        },
+        {
+            "match": "prefix",
             "value": "publish:vaulter-documents-",
             "owner": "documents",
             "why": "tags of the documents provider"
@@ -240,6 +168,30 @@
             "value": "publish:vaulter-filament-",
             "owner": "filament",
             "why": "tags of the filament provider"
+        },
+        {
+            "match": "prefix",
+            "value": "env:DB_",
+            "owner": "core",
+            "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
+        },
+        {
+            "match": "exact",
+            "value": "env:TEST_TOKEN",
+            "owner": "core",
+            "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
+        },
+        {
+            "match": "exact",
+            "value": "env:VAULTER_OPENAPI_VALIDATE",
+            "owner": "core",
+            "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
+        },
+        {
+            "match": "exact",
+            "value": "env:VAULTER_TEST_DB_PER_PROCESS",
+            "owner": "core",
+            "why": "D14: read by the core Testing kit (database connection of the test suites, OpenAPI contract switch), not by a feature"
         }
     ]
 }

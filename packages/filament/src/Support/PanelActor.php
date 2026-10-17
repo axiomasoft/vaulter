@@ -6,6 +6,7 @@ namespace Vaulter\Filament\Support;
 
 use Filament\Facades\Filament;
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Vaulter\Attributes\Internal;
 
 /**
  * Resolves the panel's acting admin for the Vaulter resources. The Filament
@@ -24,6 +25,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
  *
  * Technical axis — no Vaulter domain knowledge beyond "who is acting".
  */
+#[Internal]
 final class PanelActor
 {
     /**

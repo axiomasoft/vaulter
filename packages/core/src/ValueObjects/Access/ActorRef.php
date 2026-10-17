@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Access;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 
+#[Api]
 final readonly class ActorRef
 {
     public const string SYSTEM_TYPE = 'vaulter:system';

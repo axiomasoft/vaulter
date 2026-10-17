@@ -6,14 +6,14 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Providers\BindingsRegistrar;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

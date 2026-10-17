@@ -21,10 +21,13 @@ use Illuminate\Support\ServiceProvider;
 use OpenTelemetry\SDK\Trace\TracerProvider;
 use PDO;
 use Throwable;
-use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Documents\Contracts\HostUserResolver;
+use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Load\Console\ActivityWriterCommand;
 use Vaulter\Load\Console\ChaosOperationCommand;
@@ -55,12 +58,9 @@ use Vaulter\Load\Observability\OpenTelemetryTraceRecorder;
 use Vaulter\Load\Observability\QueryTraceRecorder;
 use Vaulter\Load\Observability\RedisMetricsRegistry;
 use Vaulter\Load\Webhooks\LoadSinkOutboundUrlGuard;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\FakeHostUserResolver;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 
 /**
  * Load-stand host provider (P2.2). Boots ONLY under the VLT-LOAD nginx+php-fpm SUT
@@ -83,14 +83,14 @@ final class LoadServiceProvider extends ServiceProvider
         // Must land BEFORE VaulterServiceProvider::boot(), where routes are gated by
         // feature flags (same ordering constraint as E2eServiceProvider).
         config([
-            'vaulter.features.grants' => true,
-            'vaulter.features.activity' => true,
-            'vaulter.features.share_links' => true,
+            'vaulter-drive.features.grants' => true,
+            'vaulter-drive.features.activity' => true,
+            'vaulter-drive.features.share_links' => true,
             'vaulter-drive.uploads.resumable.enabled' => true,
             'vaulter-documents.comments.enabled' => true,
             'vaulter-documents.collaboration.enabled' => true,
 
-            'vaulter.access.permission_driver' => 'database',
+            'vaulter-drive.access.permission_driver' => 'database',
             'vaulter.ids.strategy' => env('VAULTER_LOAD_ID_STRATEGY', 'bigint'),
             'vaulter.routes.middleware.authenticated' => [
                 'api',
@@ -133,7 +133,7 @@ final class LoadServiceProvider extends ServiceProvider
                 'ttl_seconds' => (int) env('LOAD_METRICS_TTL_SECONDS', RedisMetricsRegistry::DEFAULT_TTL_SECONDS),
             ],
 
-            'vaulter.webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class,
+            'vaulter-webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class,
 
             'queue.default' => env('QUEUE_CONNECTION', 'redis'),
             'queue.connections.redis' => [
@@ -254,7 +254,7 @@ final class LoadServiceProvider extends ServiceProvider
     public function boot(): void
     {
         P5PatchWindow::register();
-        config(['vaulter.webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class]);
+        config(['vaulter-webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class]);
         $this->app->bind(OutboundUrlGuard::class, LoadSinkOutboundUrlGuard::class);
 
         if (
@@ -372,7 +372,7 @@ final class LoadServiceProvider extends ServiceProvider
 
     private static function grantOwnerOnce(Node $root, int $actorId): void
     {
-        $grantModel = config('vaulter.models.grant');
+        $grantModel = config('vaulter-drive.models.grant');
         $subjectType = (new TestUser)->getMorphClass();
 
         $exists = $grantModel::query()

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Revisions;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
@@ -12,10 +13,10 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 
 /**
  * Pin a checkpoint out of the prune window (keep_forever) or release the pin, the one
@@ -26,6 +27,7 @@ use Vaulter\Support\TreeGuard;
  * Runs under T → N → D like every document write, so it serializes with a prune that
  * could otherwise delete the checkpoint between the lookup and the pin.
  */
+#[Internal]
 final readonly class UpdateRevisionRetentionAction
 {
     public function __construct(
@@ -48,7 +50,7 @@ final readonly class UpdateRevisionRetentionAction
             if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === '') {
                 throw NodeNotFoundException::forId('unpersisted');
             }
-            $this->database->lockTreeShared($driveId);
+            $this->database->lockAggregateShared('drives', $driveId);
             $this->lifecycle->assertWritable($context);
             $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
             if (!$this->tree->sameStorage($current, $driveId)) {

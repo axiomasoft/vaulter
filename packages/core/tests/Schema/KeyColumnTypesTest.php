@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\IdsConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Schema\KeyColumnInspector;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Schema\ModuleSchemas;
 
 it('uses the configured types for every key column on a fresh schema', function (string $strategy, string $hostKeys): void {
     if (app(VaulterDatabase::class)->driver() === 'sqlite') {
@@ -24,24 +24,24 @@ it('uses the configured types for every key column on a fresh schema', function 
         'uuid7' => 'v',
     }, $hostKeys === 'bigint' ? 'b' : 's');
     config()->set('vaulter.database.table_prefix', $prefix);
-    foreach ([DatabaseConfig::class, IdsConfig::class, VaulterConfig::class, VaulterDatabase::class, IdStrategyResolver::class] as $binding) {
+    foreach ([DatabaseConfig::class, IdsConfig::class, DriveConfig::class, VaulterDatabase::class, IdStrategyResolver::class] as $binding) {
         $this->app->forgetInstance($binding);
     }
 
-    $builder = new SchemaBuilder;
+    $builder = app(ModuleSchemas::class);
 
     try {
         $builder->createAll();
-
         $inspector = new KeyColumnInspector(
             app(VaulterDatabase::class),
             app(DatabaseConfig::class),
             app(IdsConfig::class),
+            app(ModuleSchemas::class),
         );
         $expected = $inspector->expected();
         $columns = array_map(static fn ($item): string => $item->column, $expected);
 
-        expect($expected)->toHaveCount(46)
+        expect($expected)->toHaveCount(39)
             ->and($columns)->toContain(
                 'drive_id',
                 'content_modified_by',
@@ -91,3 +91,28 @@ it('uses the configured types for every key column on a fresh schema', function 
     ['uuid7', 'string'],
     ['uuid7', 'bigint'],
 ]);
+
+it('collects the key columns from the schema of every offered module, each on a table of its own module', function (): void {
+    $schemas = app(ModuleSchemas::class)->all();
+
+    expect(array_keys($schemas))->toContain('core', 'media', 'drive');
+
+    $declared = 0;
+    foreach ($schemas as $schema) {
+        foreach ($schema->keyColumns() as $column) {
+            expect($schema->entities())->toContain($column->table);
+            $declared++;
+        }
+    }
+
+    $inspector = new KeyColumnInspector(
+        app(VaulterDatabase::class),
+        app(DatabaseConfig::class),
+        app(IdsConfig::class),
+        app(ModuleSchemas::class),
+    );
+
+    expect($declared)->toBe(39)
+        ->and($inspector->expected())->toHaveCount($declared)
+        ->and(array_map(static fn ($column): string => $column->table, $schemas['core']->keyColumns()))->toBe(['outbox']);
+});

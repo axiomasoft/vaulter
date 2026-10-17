@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Database\VaulterDatabase;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Schema\IdStrategyResolver;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
+use Vaulter\Events\Outbox\OutboxStore;
+use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Concurrency\RaceOutcome;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Webhooks\OutboxRecorder;
+use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 uses(EnablesWebhooksModule::class);
 
@@ -37,15 +34,11 @@ beforeEach(function (): void {
 
 it('rolls a rename back on PostgreSQL when its outbox write fails, leaving the connection usable', function (): void {
     $outcomes = ForkRace::run([function (): array {
-        app()->bind(OutboxRecorder::class, fn (): OutboxRecorder => new class(app(VaulterConfig::class), app(MetricsRecorder::class), app(VaulterDatabase::class), app(IdStrategyResolver::class)) extends OutboxRecorder
-        {
-            #[Override]
-            public function stage(DomainEvent $event, array $envelope): bool
-            {
+        $table = app(DatabaseConfig::class)->table(OutboxStore::EVENTS);
+        DB::connection()->beforeExecuting(static function (string $query) use ($table): void {
+            if (str_starts_with($query, 'insert into "'.$table.'"')) {
                 // A real failed statement, so PostgreSQL marks the transaction aborted.
                 DB::statement('select * from vaulter_missing_outbox_table');
-
-                return true;
             }
         });
         $failure = null;
@@ -63,8 +56,8 @@ it('rolls a rename back on PostgreSQL when its outbox write fails, leaving the c
         ->and($outcomes[0]->value['level'])->toBe(0)
         ->and($outcomes[0]->value['alive'])->toBe(1)
         ->and(DriveTestHelpers::model($this->folder->id)->name)->toBe('alpha')
-        ->and(Activity::query()->where('verb', EventType::NodeRenamed->value)->exists())->toBeFalse()
-        ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->exists())->toBeFalse();
+        ->and(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->exists())->toBeFalse()
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->exists())->toBeFalse();
 });
 
 it('keeps the activity and outbox rows of a rename whose process dies right after the commit', function (): void {
@@ -80,10 +73,11 @@ it('keeps the activity and outbox rows of a rename whose process dies right afte
         throw new LogicException('the listener did not run');
     }]);
 
-    $outbox = Outbox::query()->where('event', EventType::NodeRenamed->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->sole();
 
     expect($outcomes[0]->ok)->toBeFalse()
         ->and(DriveTestHelpers::model($this->folder->id)->name)->toBe('beta')
-        ->and(Activity::query()->where('verb', EventType::NodeRenamed->value)->sole()->event_id)->toBe($outbox->event_id)
-        ->and($outbox->status)->toBe('pending');
+        ->and(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->sole()->event_id)->toBe($outbox->event_id)
+        ->and($outbox->external)->toBeTrue()
+        ->and(WebhookTestHelpers::outboxDelivery($outbox->event_id)['state'] ?? null)->toBe('pending');
 });

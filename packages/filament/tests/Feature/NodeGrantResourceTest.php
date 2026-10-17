@@ -2,16 +2,22 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Livewire\Livewire;
+use Livewire\Mechanisms\DataStore;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Repositories\Access\GrantReadRepository;
 use Vaulter\Filament\Resources\NodeGrantResource;
+use Vaulter\Filament\Resources\NodeGrantResource\Pages\ListNodeGrants;
+use Vaulter\Filament\Support\PanelGrants;
+use Vaulter\Filament\Support\PanelRecord;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Repositories\Access\GrantReadRepository;
 
-it('resolves the configured grant model (swappable)', function (): void {
-    expect(NodeGrantResource::getModel())->toBe(NodeGrant::class);
+it('declares the panel record class, not a drive grant model', function (): void {
+    expect(NodeGrantResource::getModel())->toBe(PanelRecord::class)
+        ->and(NodeGrantResource::getModelLabel())->toBe('node grant');
 });
 
 it('is not creatable from a flat form (grants come from the core Action)', function (): void {
@@ -23,6 +29,7 @@ it('creates a grant through the core GrantNodeAccessAction', function (): void {
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Shared');
     DriveBuilder::grant($folder, $owner); // Owner ⇒ may Manage
 
@@ -49,10 +56,11 @@ it('preserves the validated grant form contract at the core Action boundary', fu
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Exact grant');
     DriveBuilder::grant($folder, $owner);
 
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeGrantResource::grantFromData([
         'node_id' => $folder->getKey(),
@@ -76,7 +84,7 @@ it('preserves the validated grant form contract at the core Action boundary', fu
         ->and($grant->expires_at?->format('Y-m-d H:i:s'))->toBe('2035-01-02 03:04:05')
         ->and((string) $grant->granted_by)->toBe('41');
 
-    $notification = session('filament.notifications.0');
+    $notification = pullSentNotifications()[0] ?? null;
 
     expect($notification)->toBeArray()
         ->and($notification['title'])->toBe('Grant saved')
@@ -88,6 +96,7 @@ it('applies grant defaults when optional form values are omitted', function (): 
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Default grant');
     DriveBuilder::grant($folder, $owner);
 
@@ -110,11 +119,11 @@ it('applies grant defaults when optional form values are omitted', function (): 
 });
 
 it('rejects a missing grant node with the declared warning', function (): void {
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeGrantResource::grantFromData([]);
 
-    $notification = session('filament.notifications.0');
+    $notification = pullSentNotifications()[0] ?? null;
 
     expect(NodeGrant::query()->count())->toBe(0)
         ->and($notification)->toBeArray()
@@ -124,14 +133,42 @@ it('rejects a missing grant node with the declared warning', function (): void {
 });
 
 it('does not create a grant when the admin may not manage access on the node', function (): void {
-    $stranger = DriveBuilder::user(9);
-    $this->actingAs($stranger);
+    $viewer = DriveBuilder::user(9);
+    $this->actingAs($viewer);
 
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'Locked');
-    // No grant for $stranger ⇒ AccessResolver denies View ⇒ the create no-ops.
+    // The viewer can open the drive and see the node (read through the root's subtree), but holds no Manage on it.
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $viewer, RoleRegistry::READER);
 
-    session()->forget('filament.notifications');
+    pullSentNotifications();
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => $viewer->getMorphClass(),
+        'subject_id' => 9,
+        'role' => RoleRegistry::OWNER,
+        'scope' => GrantScope::Subtree->value,
+        'expires_at' => '',
+    ]);
+
+    $notification = pullSentNotifications()[0] ?? null;
+
+    expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(0)
+        ->and($notification)->toBeArray()
+        ->and($notification['title'])->toBe('Grant not saved')
+        ->and($notification['body'])->toBe('You may not manage access on this node.')
+        ->and($notification['status'])->toBe('warning');
+});
+
+it('answers a node the admin cannot see exactly like a missing node', function (): void {
+    $stranger = DriveBuilder::user(9);
+    $this->actingAs($stranger);
+
+    $folder = DriveBuilder::folder(DriveBuilder::storage(), 'Hidden');
+    // No grant at all: the drive is not listed, so the node is not found.
+
+    pullSentNotifications();
 
     NodeGrantResource::grantFromData([
         'node_id' => $folder->getKey(),
@@ -141,24 +178,25 @@ it('does not create a grant when the admin may not manage access on the node', f
         'scope' => GrantScope::Subtree->value,
         'expires_at' => '',
     ]);
+    $hidden = pullSentNotifications()[0] ?? null;
 
-    $notification = session('filament.notifications.0');
+    NodeGrantResource::grantFromData(['node_id' => 987654, 'subject_type' => 'user', 'subject_id' => 9, 'role' => RoleRegistry::OWNER]);
+    $missing = pullSentNotifications()[0] ?? null;
 
     expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(0)
-        ->and($notification)->toBeArray()
-        ->and($notification['title'])->toBe('Grant not saved')
-        ->and($notification['body'])->toBe('You may not manage access on this node.')
-        ->and($notification['status'])->toBe('warning');
+        ->and($hidden['body'])->toBe('The selected node no longer exists.')
+        ->and($hidden['body'])->toBe($missing['body']);
 });
 
 it('prevents an organizer from granting itself owner or revoking another subject', function (): void {
     $organizer = DriveBuilder::user(9);
     $this->actingAs($organizer);
     $drive = DriveBuilder::storage();
+    DriveBuilder::openDrive($drive, $organizer);
     $node = DriveBuilder::folder($drive, 'Organizer');
     $grant = DriveBuilder::grant($node, $organizer, RoleRegistry::ORGANIZER);
     $other = DriveBuilder::grant($node, DriveBuilder::user(10), RoleRegistry::READER);
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeGrantResource::grantFromData([
         'node_id' => $node->id,
@@ -168,9 +206,9 @@ it('prevents an organizer from granting itself owner or revoking another subject
     ]);
 
     expect($grant->fresh()?->role_key)->toBe(RoleRegistry::ORGANIZER)
-        ->and(session('filament.notifications.0.status'))->toBe('warning')
-        ->and(NodeGrantResource::getEloquentQuery()->count())->toBe(0)
-        ->and(fn () => NodeGrantResource::revokeRecord($other))->toThrow(PermissionDeniedException::class)
+        ->and((pullSentNotifications()[0]['status'] ?? null))->toBe('warning')
+        ->and(PanelGrants::rows())->toBe([])
+        ->and(fn () => NodeGrantResource::revokeRecord(DriveBuilder::grantRow($other)))->toThrow(PermissionDeniedException::class)
         ->and($other->fresh())->not->toBeNull();
 });
 
@@ -179,6 +217,7 @@ it('revokes every grant a subject holds through the core RevokeNodeAccessAction'
     $this->actingAs($owner);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
     $folder = DriveBuilder::folder($storage, 'Revocable');
     DriveBuilder::grant($folder, $owner);
 
@@ -188,7 +227,7 @@ it('revokes every grant a subject holds through the core RevokeNodeAccessAction'
     expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(2);
 
     // The row revoke action calls exactly this Action.
-    NodeGrantResource::revokeRecord(app(GrantReadRepository::class)->forNode($folder)->where('subject_id', 2)->firstOrFail());
+    NodeGrantResource::revokeRecord(DriveBuilder::grantRow(app(GrantReadRepository::class)->forNode($folder)->where('subject_id', 2)->firstOrFail()));
 
     $remaining = app(GrantReadRepository::class)->forNode($folder)->get();
 
@@ -200,10 +239,33 @@ it('rechecks a reader and foreign membership inside actual grant revoke', functi
     $owner = DriveBuilder::user();
     $this->actingAs($owner);
     $drive = DriveBuilder::storage();
+    DriveBuilder::openDrive($drive, $owner);
     $node = DriveBuilder::folder($drive);
     $grant = DriveBuilder::grant($node, $owner);
     $grant->forceFill(['role_key' => RoleRegistry::READER])->save();
-    expect(fn () => NodeGrantResource::revokeRecord($grant))->toThrow(PermissionDeniedException::class)
+    expect(fn () => NodeGrantResource::revokeRecord(DriveBuilder::grantRow($grant)))->toThrow(PermissionDeniedException::class)
         ->and($grant->fresh())->not->toBeNull()
-        ->and(NodeGrantResource::getEloquentQuery()->count())->toBe(0);
+        ->and(PanelGrants::rows())->toBe([]);
+});
+
+it('renders the grant table from the access listings and revokes a row through the table action', function (): void {
+    app(DataStore::class)->register();
+    $owner = DriveBuilder::user(1);
+    $this->actingAs($owner);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::openDrive($storage, $owner);
+    $folder = DriveBuilder::folder($storage, 'Listed');
+    DriveBuilder::grant($folder, $owner);
+    $writer = DriveBuilder::grant($folder, DriveBuilder::user(2), RoleRegistry::WRITER);
+    $hidden = DriveBuilder::grant(DriveBuilder::folder($storage, 'NotManaged'), DriveBuilder::user(3), RoleRegistry::READER);
+
+    Livewire::test(ListNodeGrants::class)
+        ->assertCanSeeTableRecords([(string) $writer->getKey()])
+        ->assertCanNotSeeTableRecords([(string) $hidden->getKey()])
+        ->filterTable('role_key', RoleRegistry::READER)
+        ->assertCanNotSeeTableRecords([(string) $writer->getKey()])
+        ->resetTableFilters()
+        ->callTableAction('revoke', (string) $writer->getKey());
+
+    expect($writer->fresh())->toBeNull();
 });

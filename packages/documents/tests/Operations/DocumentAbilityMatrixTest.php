@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Facades\Documents;
@@ -12,12 +10,14 @@ use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\DriveHandle;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 /**
  * PLAN2.P4.8: every method of the Documents API against every built-in role, plus a

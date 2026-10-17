@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Tests\Comment\CommentsTestCase;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 uses(CommentsTestCase::class, RefreshDatabase::class);
 
@@ -25,7 +25,7 @@ function documentProfile(Profile $profile): void
 }
 
 it('rejects profile document type restrictions after ACL and leaves unrestricted types available', function (): void {
-    config()->set('vaulter.access.permission_driver', 'null');
+    config()->set('vaulter-drive.access.permission_driver', 'null');
     $this->actingAs(AccessTestHelpers::user());
     documentProfile((new Profile)->key('default')->documentTypes('vaulter/markdown'));
     $drive = Vaulter::drive(DriveTestHelpers::host())->model();

@@ -3,25 +3,25 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Actions\Content\ClaimScanWorkAction;
-use Vaulter\Actions\Content\SettleScanWorkAction;
-use Vaulter\Content\ScanResult;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Content\ScanPolicyResolver;
-use Vaulter\Enums\Cas\ScanVerdict;
-use Vaulter\Exceptions\Files\ContentUnavailableException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Content\ScanObligation;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Content\ScanObligationRepository;
-use Vaulter\Sharing\ShareResolver;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Content\ScanObligation;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
+use Vaulter\Drive\Sharing\ShareResolver;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $this->system = Vaulter::drive(DriveTestHelpers::host())->asSystem('quarantine fixture');
     $this->context = DriveContext::system($this->system->model(), 'quarantine fixture');
 });
@@ -30,9 +30,9 @@ it('SEC-R01 legacy not_required and bare clean cannot authorize required public 
     $node = $this->system->files()->upload(UploadSource::fromString('legacy', 'legacy.txt'));
     $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['scan_status' => 'clean'])->save());
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), $this->context);
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
     expect($this->system->nodes()->find($node)->id)->toBe($node->id);
@@ -41,9 +41,9 @@ it('SEC-R01 legacy not_required and bare clean cannot authorize required public 
 });
 
 it('SEC-R07 required structured failure never grants PHP or share bytes', function (string $reason, bool $retryable): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), $this->context);
     $node = $this->system->files()->upload(UploadSource::fromString('payload', 'file.txt'));
     $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();

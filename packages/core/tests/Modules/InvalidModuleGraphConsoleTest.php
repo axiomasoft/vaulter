@@ -6,8 +6,8 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Symfony\Component\Console\Exception\CommandNotFoundException;
 use Vaulter\Kernel;
-use Vaulter\Tests\Concerns\FreshApplication;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Concerns\FreshApplication;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
@@ -59,4 +59,4 @@ it('does not define the other vaulter commands', function (string $command): voi
     expect($app->make(Kernel::class)->isValid())->toBeFalse()
         ->and($app->make(ConsoleKernel::class)->all())->not->toHaveKey($command)
         ->and(fn () => $app->make(ConsoleKernel::class)->call($command))->toThrow(CommandNotFoundException::class);
-})->with(['vaulter:install', 'vaulter:module:uninstall', 'vaulter:config:reference', 'vaulter:changes:prune', 'vaulter:webhooks:relay']);
+})->with(['vaulter:install', 'vaulter:module:uninstall', 'vaulter:config:reference', 'vaulter:changes:prune', 'vaulter:relay']);

@@ -1,0 +1,111 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Webhooks;
+
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Bus;
+use Vaulter\Attributes\Internal;
+use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Contracts\Observability\TraceRecorder;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Observability\TracingAttributes;
+use Vaulter\Observability\TracingSpanNames;
+use Vaulter\Support\Identity;
+use Vaulter\Webhooks\Configuration\WebhooksConfig;
+use Vaulter\Webhooks\Jobs\DeliverWebhook;
+use Vaulter\Webhooks\Models\WebhookDelivery;
+
+/**
+ * The SINGLE owner of webhook-delivery re-dispatch: vaulter:webhooks:retry routes its
+ * due-retry sweep through here, so two ticks can never fan the same failed delivery out
+ * twice.
+ *
+ * A due batch is claimed under a row lock inside a transaction and its next_retry_at is
+ * re-armed forward by a short claim window BEFORE dispatch — a visibility timeout: a
+ * concurrent or immediately-following sweep no longer sees the row as due, and where
+ * the row lock degrades (SQLite) the committed re-arm still guarantees a single owner
+ * per claim. If the queued job is lost, the window lapses and the row becomes due
+ * again (self-healing) — DeliverWebhook overwrites next_retry_at with the real backoff
+ * on the next failure, or clears it on success. A new intermediate status was avoided
+ * on purpose: it would strand a delivery (neither due nor terminal) if the job were
+ * lost mid-flight.
+ *
+ * The sweep also recovers a 'pending' delivery whose first job never ran (lost
+ * after the fan-out committed it): once it has sat unclaimed for
+ * webhooks.retry_claim_seconds past its due time, it is claimed like a retry.
+ */
+#[Internal]
+final class WebhookRetryDispatcher
+{
+    private const int MAX_CLAIM_ROWS = 1000;
+
+    public function __construct(
+        private readonly WebhooksConfig $webhooksConfig,
+        private readonly MetricsRecorder $metrics,
+        private readonly TraceRecorder $tracer,
+        private readonly VaulterDatabase $database,
+    ) {}
+
+    /**
+     * Claim at most 1000 due retries and dispatch each delivery job once. Returns
+     * how many were re-dispatched; later ticks drain the remaining due rows.
+     */
+    public function redispatchDue(): int
+    {
+        return $this->tracer->span(
+            name: TracingSpanNames::WEBHOOK_RETRY,
+            operation: fn (): int => $this->metrics->timing(
+                name: 'vaulter_webhook_retry_tick_seconds',
+                operation: function (): int {
+                    $deliveries = $this->claimDue();
+
+                    $this->metrics->histogram(
+                        name: 'vaulter_webhook_retry_lockset_rows',
+                        value: $deliveries->count(),
+                    );
+
+                    foreach ($deliveries as $delivery) {
+                        Bus::dispatch(new DeliverWebhook(deliveryId: Identity::stringify($delivery->getKey())));
+                    }
+
+                    return $deliveries->count();
+                },
+            ),
+            attributes: TracingAttributes::forTarget(targetId: 'webhook.pipeline', layer: 'action'),
+        );
+    }
+
+    /**
+     * Atomically read the due retries under a row lock and re-arm their next_retry_at
+     * forward by the claim window, so the same row is claimed once per call.
+     *
+     * @return Collection<int, WebhookDelivery>
+     */
+    private function claimDue(): Collection
+    {
+        /** @var class-string<WebhookDelivery> $deliveryClass */
+        $deliveryClass = $this->webhooksConfig->model('webhook_delivery');
+
+        return $this->database->transaction(function () use ($deliveryClass): Collection {
+            $query = $deliveryClass::query()->dueForRetry(pendingGraceSeconds: $this->webhooksConfig->retryClaimSeconds());
+
+            /** @var Collection<int, WebhookDelivery> $deliveries */
+            $deliveries = $query
+                ->orderBy('next_retry_at')
+                ->orderBy($query->getModel()->getQualifiedKeyName())
+                ->limit(self::MAX_CLAIM_ROWS)
+                ->lockForUpdate()
+                ->get();
+
+            $claimUntil = now()->addSeconds($this->webhooksConfig->retryClaimSeconds());
+
+            $deliveries->each(static function (WebhookDelivery $delivery) use ($claimUntil): void {
+                $delivery->forceFill(['next_retry_at' => $claimUntil])->save();
+            });
+
+            return $deliveries;
+        });
+    }
+}

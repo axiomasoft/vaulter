@@ -55,7 +55,7 @@ HTTP-журнал доступен, если вызывающий видит х�
 
 `list(string $cursor, int $limit = 100): ChangePage` возвращает `changes` (список `NodeChange`),
 следующий `cursor` и `hasMore`. Применяйте изменения по порядку, сохраняйте курсор и, пока
-`hasMore` истинно, сразу запрашивайте снова. `limit` — 1..`changes.max_page_size` (по умолчанию
+`hasMore` истинно, сразу запрашивайте снова. `limit` — 1..`vaulter-drive.changes.max_page_size` (по умолчанию
 1000).
 
 У каждого `NodeChange` есть `nodeId`, `operation`, `reason`, `subtree`, `node` и `nodeSequence`:
@@ -100,7 +100,7 @@ drive, эпоху журнала и позицию и подписан ключ�
 `list()` бросает `CursorExpiredException` (`cursor_expired`, 410), когда записей после курсора
 больше нет:
 
-- их удалил `vaulter:changes:prune` — записи живут `changes.retention_days` (по умолчанию 30) дней;
+- их удалил `vaulter:changes:prune` — записи живут `vaulter-drive.changes.retention_days` (по умолчанию 30) дней;
 - `vaulter:changes:reset` начал новую эпоху журнала drive (после восстановления из бэкапа).
 
 Пересинхронизируйтесь: возьмите новый `startCursor()`, обойдите drive заново и замените копию.
@@ -136,5 +136,5 @@ Schedule::command('vaulter:changes:prune')->daily();
 
 Журнал пишется в транзакции самого изменения, последним шагом: изменение и его запись коммитятся
 вместе, а записи становятся видимыми в порядке своих позиций. По умолчанию он включён
-(`features.changes`); выключение и повторное включение оставляет разрыв, который закрывает только
+(`vaulter-drive.features.changes`); выключение и повторное включение оставляет разрыв, который закрывает только
 `vaulter:changes:reset`.

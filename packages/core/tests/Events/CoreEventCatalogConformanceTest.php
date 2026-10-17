@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Data\Sharing\ShareLinkUpdate;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\ShareOperations;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Operations\AccessOperations;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\ShareOperations;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Events\EventConformance;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Events\EventConformance;
 use Vaulter\Tests\TestCase;
 
 /**
@@ -24,7 +24,7 @@ use Vaulter\Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 
 it('records the kernel events with the data their specs declare', function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $drive = AccessTestHelpers::storage();
     $context = DriveContext::system($drive, 'conformance');
     $access = app()->makeWith(AccessOperations::class, ['context' => $context]);
@@ -41,7 +41,7 @@ it('records the kernel events with the data their specs declare', function (): v
     $shares->revoke($folder->id, $minted->link->id);
 
     EventConformance::assertRecorded([
-        EventType::GrantCreated, EventType::GrantRevoked, EventType::InheritanceChanged,
-        EventType::ShareCreated, EventType::ShareUpdated, EventType::ShareRotated, EventType::ShareRevoked,
+        DriveEventType::GrantCreated, DriveEventType::GrantRevoked, DriveEventType::InheritanceChanged,
+        DriveEventType::ShareCreated, DriveEventType::ShareUpdated, DriveEventType::ShareRotated, DriveEventType::ShareRevoked,
     ]);
 });

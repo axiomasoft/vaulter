@@ -7,27 +7,26 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Cas\BlobLock;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StagedObject;
-use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
+use Vaulter\Media\Cas\BlobLock;
+use Vaulter\Media\Cas\BlobPinStore;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Media\Cas\StagedTempObject;
 use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\NonListableContentStore;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -42,11 +41,10 @@ function r18Collector(FakeMetricsRecorder $metrics): BlobGarbageCollector
         app(ContentStore::class),
         app(BlobLock::class),
         app(BlobStoreRepository::class),
-        app(FileRevisionBlobStoreRepository::class),
+        app(BlobPinStore::class),
         $metrics,
         app(VaulterDatabase::class),
         mediaConfig: app(MediaConfig::class),
-        vaulterConfig: app(VaulterConfig::class),
     );
 }
 
@@ -55,18 +53,18 @@ function r18Reconciler(FakeMetricsRecorder $metrics): BlobReconciler
     return new BlobReconciler(
         app(ContentStore::class),
         app(BlobStoreRepository::class),
-        app(FileRevisionBlobStoreRepository::class),
+        app(BlobPinStore::class),
         app(BlobLock::class),
         $metrics,
         app(VaulterDatabase::class),
         mediaConfig: app(MediaConfig::class),
-        vaulterConfig: app(VaulterConfig::class),
     );
 }
 
 function r18PgAdvisoryLockIsHeld(string $scope, string $sha256): bool
 {
-    config()->set('database.connections.r18_lock_probe', config('database.connections.pgsql'));
+    // advisory locks are per database: probe the connection the suite really runs on (the worker database), not the stock 'pgsql' entry
+    config()->set('database.connections.r18_lock_probe', config('database.connections.'.config('database.default')));
     DB::purge('r18_lock_probe');
     $connection = DB::connection('r18_lock_probe');
     $lockKey = 'cas:'.$scope.':'.$sha256;
@@ -166,10 +164,10 @@ it('records exact sweep metrics including the zero deletion counter', function (
 it('adds skipped candidates from both collect phases', function (): void {
     $store = app(BlobStoreContract::class);
     $markSkipped = $store->commit(CasTestHelpers::streamFor('mark skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $store->attach(CasTestHelpers::makeVersion(name: 'mark skipped edge'), $markSkipped);
+    CasTestHelpers::pin($markSkipped, CasTestHelpers::reference('mark skipped edge'));
 
     $sweepSkipped = $store->commit(CasTestHelpers::streamFor('sweep skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $store->attach(CasTestHelpers::makeVersion(name: 'sweep skipped edge'), $sweepSkipped);
+    CasTestHelpers::pin($sweepSkipped, CasTestHelpers::reference('sweep skipped edge'));
     $sweepSkipped->forceFill([
         'status' => BlobStatus::Tombstoned,
         'delete_after_at' => now()->subMinute(),
@@ -189,10 +187,8 @@ it('keeps a pending blob seen exactly at the grace cutoff', function (): void {
     $atCutoff->forceFill(['first_seen_at' => now()->subHours(2)])->save();
     $older->forceFill(['first_seen_at' => now()->subHours(2)->subSecond()])->save();
     $referenced->forceFill(['first_seen_at' => now()->subHours(3)])->save();
-    app(BlobStoreContract::class)->attach(
-        CasTestHelpers::makeVersion(name: 'pending referenced edge'),
-        $referenced,
-    );
+    // Seeded: through the protocol the pin would commit the pending row again.
+    CasTestHelpers::seedPin($referenced, 'pending referenced edge');
     $olderStatuses = [];
     Blob::updated(function (Blob $updated) use (&$olderStatuses, $older): void {
         if ($updated->is($older)) {

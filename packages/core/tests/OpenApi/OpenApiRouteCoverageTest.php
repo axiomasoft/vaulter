@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Support\OpenApi\OpenApiContract;
-use Vaulter\Tests\Support\OpenApi\ValidateOpenApiResponses;
 
 // The contract describes the webhooks routes and problems too: the opt-in module is on (D22).
 uses(EnablesWebhooksModule::class);

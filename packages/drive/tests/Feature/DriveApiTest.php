@@ -7,14 +7,14 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Http\DriveV1;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The Drive REST surface (M1c-http): a full CRUD cycle through the API plus the
@@ -270,8 +270,8 @@ it('shows storage meta with root node id and quota accounting', function (): voi
 });
 
 it('resolves the swapped Node/Storage models through the scalar route ids', function (): void {
-    config()->set('vaulter.models.node', SwappedNode::class);
-    config()->set('vaulter.models.drive', SwappedStorage::class);
+    config()->set('vaulter-drive.models.node', SwappedNode::class);
+    config()->set('vaulter-drive.models.drive', SwappedStorage::class);
 
     $storage = driveStorage();
 
@@ -282,7 +282,7 @@ it('resolves the swapped Node/Storage models through the scalar route ids', func
         ->json('data.id');
 
     // The id resolves through the swapped model — a successful show proves the
-    // resolver honoured config('vaulter.models.*').
+    // resolver honoured config('vaulter-drive.models.*').
     $this->getJson('api/vaulter/v1/nodes/'.$node)
         ->assertOk()
         ->assertJsonPath('data.name', 'Bound');
@@ -349,7 +349,7 @@ it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N)
 
 /**
  * Swapped models for the route-model-binding test — subclasses the host may point
- * config('vaulter.models.*') at. They inherit everything; only their class
+ * config('vaulter-drive.models.*') at. They inherit everything; only their class
  * identity matters.
  */
 class SwappedNode extends Node {}

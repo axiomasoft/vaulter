@@ -8,13 +8,15 @@ use Carbon\CarbonImmutable;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
@@ -23,8 +25,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * on the node's private collaboration channel so open editors drop it live. The model
  * still carries its id/node_id in memory after the delete, so the payload is complete.
  */
-final readonly class CommentDeleted extends DomainEvent implements ShouldBroadcast
+#[Api]
+final readonly class CommentDeleted extends DriveEvent implements ShouldBroadcast
 {
+    #[Internal]
     public function __construct(
         public NodeComment $comment,
         ActorRef $actor,
@@ -35,9 +39,9 @@ final readonly class CommentDeleted extends DomainEvent implements ShouldBroadca
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DocumentEventType
     {
-        return EventType::CommentDeleted;
+        return DocumentEventType::CommentDeleted;
     }
 
     public function scope(): EventScope

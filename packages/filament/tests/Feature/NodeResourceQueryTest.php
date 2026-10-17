@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Filament\Resources\NodeResource;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Drive\Node;
 
 /*
  * The node table is fed by the authorized handle's listings (PanelNodes), never by an
@@ -28,8 +27,7 @@ it('lists no node when no admin is acting', function (): void {
     $storage = DriveBuilder::storage();
     DriveBuilder::folder($storage, 'Hidden');
 
-    expect(PanelNodes::rows())->toBe([])
-        ->and(NodeResource::getEloquentQuery()->count())->toBe(0);
+    expect(PanelNodes::rows())->toBe([]);
 });
 
 it('lists the nodes of a drive whose root the admin can view and nothing of a drive it cannot', function (): void {

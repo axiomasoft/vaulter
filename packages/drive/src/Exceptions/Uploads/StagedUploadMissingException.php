@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Uploads;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -23,6 +24,7 @@ use Vaulter\Exceptions\VaulterException;
  * a loud 409 that forces the client to re-read HEAD (or restart the upload) than a
  * quietly broken file.
  */
+#[Api]
 final class StagedUploadMissingException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

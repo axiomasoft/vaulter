@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Enums\Handlers\Capability;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
-use Vaulter\Handlers\Builtin\PreviewHandler;
-use Vaulter\Handlers\FileHandlerRegistry;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\Enums\Handlers\Capability;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
+use Vaulter\Drive\Handlers\FileHandlerRegistry;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
  * The format-extensibility registry (§4.5 / §7 / H.5): mime → extension → capability

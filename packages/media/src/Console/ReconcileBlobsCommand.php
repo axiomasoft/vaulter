@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
- * Rebuild the ref_count cache from the v_file_revision_blobs edge counts — the real
+ * Rebuild the ref_count cache from the pin counts (v_blob_references, D23) — the real
  * liveness truth — and report integrity hazards: dangling rows (a committed
  * blob whose canonical object is missing on disk). With --orphans it ALSO walks the
  * disk for the inverse hazard — orphan objects (bytes on disk with no blob row),
@@ -30,6 +31,7 @@ use Vaulter\VaulterManager;
  * EXIT: report-only (or prune-refused) that FINDS orphans exits FAILURE so cron/CI
  * sees the hazard; a prune that cleaned them, and a clean run, exit SUCCESS.
  */
+#[Internal]
 final class ReconcileBlobsCommand extends Command
 {
     use OpensWriteScope;
@@ -46,11 +48,11 @@ final class ReconcileBlobsCommand extends Command
         {--orphan-grace= : Override the orphan grace window in hours (floored at 1h)}
         {--prune : DELETE the orphans found (PostgreSQL/MySQL only; refused on sqlite). Default: report only}';
 
-    protected $description = 'Rebuild blob ref_count from edge counts and report dangling rows; optionally disk-walk for orphan objects (H.3)';
+    protected $description = 'Rebuild blob ref_count from the pins and report dangling rows; optionally disk-walk for orphan objects (H.3)';
 
     public function handle(BlobReconciler $reconciler): int
     {
-        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($reconciler));
+        return Tenancy::without(fn (): int => $this->runMaintenance($reconciler));
     }
 
     private function runMaintenance(BlobReconciler $reconciler): int

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Documents;
 
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\DocumentStateWriter;
@@ -14,22 +15,22 @@ use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\OnNameConflict;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\DrivePolicyEnforcer;
+use Vaulter\Drive\Repositories\NodeReadRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\NodeName;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\InvalidDestinationException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\DrivePolicyEnforcer;
-use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
-use Vaulter\Support\NodeName;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Create a kind=document node under a folder (or the storage root) with its document
@@ -47,6 +48,7 @@ use Vaulter\Support\TreeGuard;
  * destination, profile document types); the Action only does the row work. The actor
  * is the operation's, and the storage must be the operation's drive.
  */
+#[Internal]
 final readonly class CreateDocumentAction
 {
     public function __construct(
@@ -79,7 +81,7 @@ final readonly class CreateDocumentAction
         }
 
         return $this->database->transaction(function () use ($context, $data, $name, $parentId, $actorId): Node {
-            $this->database->lockTreeShared($data->storage->id);
+            $this->database->lockAggregateShared('drives', $data->storage->id);
             $this->lifecycle->assertWritable($context);
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);

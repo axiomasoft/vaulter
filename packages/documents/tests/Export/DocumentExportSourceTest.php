@@ -9,7 +9,7 @@ use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 it('exports the working state with its epoch and state version and no revision id', function (): void {
     $handle = DocumentTestHelpers::drive();

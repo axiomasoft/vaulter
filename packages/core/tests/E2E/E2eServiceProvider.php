@@ -6,7 +6,6 @@ namespace Vaulter\Tests\E2E;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
@@ -14,11 +13,12 @@ use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\FakeHostUserResolver;
+use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
  * Провайдер e2e-стенда realtime-коллаборации (P1.1 мастер-плана).
@@ -44,7 +44,7 @@ final class E2eServiceProvider extends ServiceProvider
             // ON TOP of document_versions — the e2e stand exercises the collaboration session +
             // the hub endpoints, so it must flip this too (default false).
             'vaulter-documents.collaboration.enabled' => true,
-            'vaulter.access.permission_driver' => 'database',
+            'vaulter-drive.access.permission_driver' => 'database',
             'vaulter.ids.strategy' => 'bigint',
             'vaulter.routes.middleware.authenticated' => ['api', E2eActingAs::class],
         ]);

@@ -8,9 +8,6 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Foundation\Application;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigNormalizer;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Contracts\Presentation\KindPresenter;
 use Vaulter\CoreModule;
 use Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Documents\Content\DocumentContentLifecycle;
@@ -29,6 +26,9 @@ use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Kernel;
 use Vaulter\Media\MediaModule;
@@ -59,7 +59,7 @@ it('normalizes module defaults in a fresh container while retaining host overrid
     $app = new Application;
     Container::setInstance($this->app);
     $config = new Repository([
-        'vaulter' => ['handlers' => ['Host\\Handler']],
+        'vaulter-drive' => ['handlers' => ['Host\\Handler']],
         'vaulter-documents' => [
             'models' => ['node_comment' => 'Host\\Comment'],
             'exporters' => ['Host\\Exporter'],
@@ -74,7 +74,7 @@ it('normalizes module defaults in a fresh container while retaining host overrid
 
     expect($config->get('vaulter-documents.models.node_comment'))->toBe('Host\\Comment')
         ->and($config->get('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class)
-        ->and($config->get('vaulter.handlers'))->toBe(['Host\\Handler'])
+        ->and($config->get('vaulter-drive.handlers'))->toBe(['Host\\Handler'])
         ->and($app->tagged('vaulter.file_handlers'))->toBeIterable()
         ->and($config->get('vaulter-documents.exporters'))->toContain('Host\\Exporter', MarkdownExporter::class);
 });

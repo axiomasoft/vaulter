@@ -6,6 +6,7 @@ namespace Vaulter\Azgard\Providers;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardModule;
 use Vaulter\Azgard\Configuration\AzgardConfig;
@@ -22,6 +23,7 @@ use Vaulter\Modules\ModuleBindings;
  * panel, the workspace (drive owner) morph aliases are assignment scope types of the panel, and the User adds
  * `implements AzgardBackedUser` (satisfied for free by AzGuard's HasAzGuard trait).
  */
+#[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

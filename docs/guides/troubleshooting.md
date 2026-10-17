@@ -20,8 +20,8 @@ production:
 ```
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
-Fix: set config(vaulter.access.permission_driver) to a real driver (database|gate|spatie|azgard)
-or bind your own \Vaulter\Contracts\Access\PermissionDriver.
+Fix: set config(vaulter-drive.access.permission_driver) to a real driver (database|gate|spatie|azgard)
+or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 ```
 
 **Why.** The Drive ACL needs a `PermissionDriver` lane. The open `null` driver (every actor is a
@@ -48,7 +48,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 - **`database`** — the standalone default. Authorizes purely from `v_node_grants` rows, zero
   host dependency. Use it if you only need per-node grants.
 - **`gate` / `spatie` / `azgard`** — bridge your existing role system; fill the matching
-  `vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*` config block.
+  `vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*` config block.
 - A **custom** driver — see the [recipe](/guides/recipes#permission-driver).
 
 ::: warning Config cache hides the env you forgot
@@ -180,27 +180,25 @@ shipped paths, but if you plan very deep/wide trees, Postgres is the smoother ro
 ## Migration order & prefix issues {#migrations}
 
 **Symptom.** `php artisan migrate` fails on a foreign-key reference to `v_nodes` /
-`v_storages` / `v_blobs`, or tables land without the `v_` prefix, or a second package's tables
+`v_drives` / `v_blobs`, or tables land without the `v_` prefix, or a second package's tables
 collide with Vaulter's.
 
 **Why & fix.**
 
-- **Order.** Vaulter's migrations are timestamp-ordered (`..._000001_…` → `..._000021_…`) so the
-  parent tables (`v_storages`, `v_nodes`, `v_blobs`) are created before the tables that reference
-  them. The package discovers and runs its own migrations; if you **publish** them with
-  `vendor:publish --tag=vaulter-migrations`, keep the published filenames' ordering intact — don't
-  renumber them.
+- **Order.** Vaulter's migrations are named `0001_01_01_00NNNN_create_v_<table>_table` in one global
+  sequence (core `0001…`, media `0101`, drive `0201…`, documents `0301…`, webhooks `0401…`) so the
+  parent tables (`v_drives`, `v_nodes`, `v_blobs`) are created before the tables that reference
+  them. Each package runs its own migrations from `vendor/`; they are not published.
 
   ```bash
   php artisan vaulter:install        # publishes config, offers to run the migrations
   # or, manually:
   php artisan vendor:publish --tag=vaulter-config
-  php artisan vendor:publish --tag=vaulter-migrations
   php artisan migrate
   ```
 
 - **Prefix.** Every Vaulter table reads `config('vaulter.database.table_prefix')` (default `v_`). The
-  published migrations and the models both read it, so change it in **one** place. If you flip the
+  migrations and the models both read it, so change it in **one** place. If you flip the
   prefix **after** migrating, the models look for `<newprefix>…` tables that don't exist — set the
   prefix **before** the first migrate, or rename the tables to match.
 
@@ -235,8 +233,8 @@ finding has a `code` and, when a command fixes it, a hint:
   [No permission driver in production](#no-permission-driver).
 - `core.schema.tables` errors: run `php artisan migrate`; `core.schema.key_types` means `ids.strategy` or
   `ids.host_keys` differs from what the schema was created with — restore the old value, do not edit columns by hand.
-- `core.webhooks.relay_leases` and `drive.scan.obligations` point at a worker or scheduler that is not
-  running: start the queue worker and `schedule:run`, then `vaulter:webhooks:relay` or
+- `core.outbox.leases`, `core.outbox.lag` and `drive.scan.obligations` point at a worker or scheduler that is not
+  running: start the queue worker and `schedule:run`, then `vaulter:relay` or
   `vaulter:scan:reconcile --all-tenants --dry-run`.
 - `drive.scan.policy` with a cutover warning means the config names a scan policy the drive has not
   activated; run `vaulter:scan:rescan --activate-policy --drive=<id> --dry-run` first.
@@ -264,7 +262,7 @@ still referenced.
   to ≥ your worst-case multipart-commit latency, so an in-flight upload can resurrect a tombstoned
   blob first. See the [blob GC recipe](/guides/recipes#blob-gc).
 - **Drift.** If `ref_count` looks wrong, it's a cache — run `php artisan vaulter:blobs:reconcile`
-  to rebuild it from the edge table (the source of truth).
+  to rebuild it from the pins in `v_blob_references` (the source of truth).
 
 ## Panel validation errors at boot {#panel-validation}
 
@@ -273,7 +271,7 @@ still referenced.
 **Why & fix.** Check that the requested profile is registered:
 
 - **`UnknownProfileException::forName`** — `Vaulter::drive($entity, profile: 'x')` (or a route) named a
-  panel that isn't registered. Register its provider FQCN in `config('vaulter.profiles.providers')`, or use
+  panel that isn't registered. Register its provider FQCN in `config('vaulter-drive.profiles.providers')`, or use
   the `default` panel.
 
 ## Empty "Last updated" in the docs {#last-updated}

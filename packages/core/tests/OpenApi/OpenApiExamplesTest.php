@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Testing\TestResponse;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
-use Vaulter\Tests\Http\V1;
-use Vaulter\Tests\Support\OpenApi\OpenApiContract;
-use Vaulter\Tests\Support\OpenApi\OpenApiResponseValidator;
+use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Testing\Support\OpenApi\OpenApiContract;
+use Vaulter\Testing\Support\OpenApi\OpenApiResponseValidator;
 
 /**
  * openapi/examples/*.json: one real response per resource, written from feature requests
@@ -65,7 +65,7 @@ function exampleProducers(): array
             return $test->postJson(V1::url('nodes/'.$folder->id.'/grants'), ['subject' => ['type' => V1::user(7)->getMorphClass(), 'id' => 7], 'role' => 'reader'])->assertCreated();
         }],
         'share' => ['shares.store', 201, function () use ($test, $prepare): TestResponse {
-            config()->set('vaulter.features.share_links', true);
+            config()->set('vaulter-drive.features.share_links', true);
             [, , $file] = $prepare();
 
             return $test->postJson(V1::url('nodes/'.$file->id.'/shares'), ['role' => 'reader', 'audience' => 'authenticated', 'max_uses' => 3])->assertCreated();

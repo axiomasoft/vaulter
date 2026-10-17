@@ -8,15 +8,15 @@ use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\IdsConfig;
 use Vaulter\Schema\HostKeyColumns;
-use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Schema\VaulterSchema;
 
 it('creates host keys independently of entity IDs on a fresh panel', function (string $type): void {
     config()->set('vaulter.ids.host_keys', $type);
     config()->set('vaulter.database.table_prefix', 'hostkeys_');
     config()->set('vaulter-documents.comments.enabled', true);
-    config()->set('vaulter.features.share_links', true);
-    $builder = new SchemaBuilder;
+    config()->set('vaulter-drive.features.share_links', true);
+    $builder = app(ModuleSchemas::class);
     $builder->createAll();
 
     try {

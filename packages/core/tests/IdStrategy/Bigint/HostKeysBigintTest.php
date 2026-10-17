@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Data\Activity\RecordActivityCommand;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Repositories\Activity\ActivityStoreRepository;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Activity\RecordActivityCommand;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Repositories\Activity\ActivityStoreRepository;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\HostKeyUser;
 
 it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', function (): void {
@@ -25,7 +25,7 @@ it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', functio
     $eventId = (string) Str::ulid();
     app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
         eventId: $eventId,
-        verb: EventType::FolderCreated,
+        verb: DriveEventType::FolderCreated,
         storageId: $drive->model()->getKey(),
         actorType: $user->getMorphClass(),
         actorId: $ulid,

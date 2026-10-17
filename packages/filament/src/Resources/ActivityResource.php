@@ -5,144 +5,69 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Resources;
 
 use BackedEnum;
-use Filament\Infolists\Components\KeyValueEntry;
-use Filament\Infolists\Components\TextEntry;
+use Filament\Actions\Action;
+use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Pagination\Paginator;
 use Override;
 use UnitEnum;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Exceptions\VaulterException;
+use Vaulter\Attributes\Internal;
+use Vaulter\Events\EventCatalog;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
-use Vaulter\Filament\Resources\ActivityResource\Pages\ViewActivity;
-use Vaulter\Filament\Support\PanelActor;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Operations\ActivityOperations;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tenancy\TenancyBoundary;
-use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\Filament\Support\PanelActivity;
+use Vaulter\Filament\Support\PanelRecord;
+use Vaulter\Filament\Support\PanelRecords;
 
 /**
- * The audit-feed admin surface: a READ-ONLY view of the
- * append-only v_activity log — verb, actor, target and time, filterable by verb and
- * storage. The model is append-only by construction (no updated_at, no soft-delete),
- * so this resource is non-creatable, non-editable and non-deletable: it lists and
- * inspects, never mutates.
+ * The audit-feed admin surface: a READ-ONLY view of the append-only activity log — verb,
+ * actor, target and time, filterable by verb. It lists and inspects, never mutates.
  *
- * The model resolves through {@see app(VaulterConfig::class)->model('activity')} for swappability.
+ * Rows are the entries each drive the acting admin can open returns from its own activity
+ * operations ({@see PanelActivity}): the drive's visibility projection decides which entries
+ * and which fields are shown, and the panel reads no activity table itself.
  */
+#[Internal]
 final class ActivityResource extends Resource
 {
-    protected static ?string $model = Activity::class;
+    protected static ?string $model = PanelRecord::class;
+
+    protected static ?string $modelLabel = 'activity';
+
+    protected static ?string $pluralModelLabel = 'activities';
+
+    protected static bool $isGloballySearchable = false;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-clock';
 
     protected static string|UnitEnum|null $navigationGroup = 'Vaulter';
 
     #[Override]
-    public static function getModel(): string
-    {
-        return app(VaulterConfig::class)->model('activity');
-    }
-
-    /**
-     * Access-aware listing: narrow to activity rows whose target is a
-     * node in the acting admin's grant-reachable candidate set. Every recorded verb
-     * targets a node (drive.created targets its root folder — see
-     * ActivityRecorder), so `target_type = <node model>` + `target_id IN
-     * (candidates)` covers the feed; there is no target-less row a candidate-based
-     * narrowing would need to special-case. Empty candidate set (no actor, or an
-     * actor with zero grants) ⇒ empty table.
-     */
-    #[Override]
-    public static function getEloquentQuery(): Builder
-    {
-        $query = app(TenancyBoundary::class)->constrain(parent::getEloquentQuery());
-
-        $actor = PanelActor::current();
-        if ($actor === null) {
-            return $query->whereRaw('1 = 0');
-        }
-        $ids = [];
-        $driveClass = app(VaulterConfig::class)->model('drive');
-        foreach (app(TenancyBoundary::class)->constrain($driveClass::query())->lazyById(100) as $drive) {
-            $operations = app()->makeWith(ActivityOperations::class, ['context' => DriveContext::for(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
-            try {
-                $cursor = null;
-                do {
-                    $page = $operations->forDrive(new ListOptions(perPage: 200, cursor: $cursor));
-                    foreach ($page as $row) {
-                        $ids[] = $row->id;
-                    }
-                    $cursor = $page->nextCursor;
-                } while ($cursor !== null);
-            } catch (VaulterException) {
-                // Drives without root View contribute no activity.
-            }
-        }
-
-        return $query->whereKey($ids);
-    }
-
-    #[Override]
-    public static function infolist(Schema $schema): Schema
-    {
-        return $schema->components([
-            Section::make('Event')->schema([
-                TextEntry::make('verb')
-                    ->badge()
-                    ->formatStateUsing(fn (EventType $state): string => $state->label()),
-                TextEntry::make('created_at')->dateTime('d.m.Y H:i:s'),
-                TextEntry::make('drive_id')->label('Storage')->placeholder('—'),
-            ])->columns(3),
-
-            Section::make('Actor')->schema([
-                TextEntry::make('actor_type')->label('Type')->placeholder('—'),
-                TextEntry::make('actor_id')->label('Id')->placeholder('—'),
-            ])->columns(2),
-
-            Section::make('Target')->schema([
-                TextEntry::make('target_type')->label('Type')->placeholder('—'),
-                TextEntry::make('target_id')->label('Id')->placeholder('—'),
-            ])->columns(2),
-
-            Section::make('Request')->schema([
-                TextEntry::make('ip')->placeholder('—'),
-                TextEntry::make('user_agent')->placeholder('—'),
-                TextEntry::make('request_id')->placeholder('—'),
-                KeyValueEntry::make('context')->columnSpanFull(),
-            ])->columns(3),
-        ]);
-    }
-
-    #[Override]
     public static function table(Table $table): Table
     {
         return $table
+            ->records(self::records(...))
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
-                TextColumn::make('verb')
+                TextColumn::make('verb_label')
+                    ->label('Verb')
                     ->badge()
-                    ->formatStateUsing(fn (EventType $state): string => $state->label())
                     ->sortable(),
 
                 TextColumn::make('actor_type')
                     ->label('Actor')
-                    ->formatStateUsing(fn (?string $state, Activity $record): string => $state === null ? '—' : $state.' #'.$record->actor_id)
+                    ->formatStateUsing(fn (?string $state, array $record): string => $state === null ? '—' : $state.' #'.self::field($record, 'actor_id'))
                     ->toggleable(),
 
                 TextColumn::make('target_type')
                     ->label('Target')
-                    ->formatStateUsing(fn (?string $state, Activity $record): string => $state === null ? '—' : $state.' #'.$record->target_id)
+                    ->formatStateUsing(fn (?string $state, array $record): string => $state === null ? '—' : $state.' #'.self::field($record, 'target_id'))
                     ->toggleable(),
 
                 TextColumn::make('drive_id')
@@ -160,7 +85,7 @@ final class ActivityResource extends Resource
                 SelectFilter::make('verb')
                     ->options(self::verbOptions()),
             ])
-            ->recordActions([])
+            ->recordActions([self::viewAction()])
             ->defaultSort('created_at', 'desc');
     }
 
@@ -172,7 +97,6 @@ final class ActivityResource extends Resource
     {
         return [
             'index' => ListActivities::route('/'),
-            'view' => ViewActivity::route('/{record}'),
         ];
     }
 
@@ -195,13 +119,93 @@ final class ActivityResource extends Resource
     }
 
     /**
+     * @param  array<string, mixed>                    $filters
+     * @return Paginator<string, array<string, mixed>>
+     */
+    private static function records(?string $search, array $filters, ?string $sortColumn, ?string $sortDirection, int $page, int|string $recordsPerPage): Paginator
+    {
+        $verb = PanelRecords::filterValue($filters, 'verb');
+        $rows = array_values(array_filter(
+            PanelActivity::rows(),
+            static fn (array $row): bool => $verb === null || $row['verb'] === $verb,
+        ));
+
+        return PanelRecords::paginate($rows, $sortColumn === 'verb' ? 'verb_label' : $sortColumn, $sortDirection, $page, $recordsPerPage, 'created_at');
+    }
+
+    /** The entry's details, read-only: a modal over the row, since the row is a snapshot with no model to open. */
+    private static function viewAction(): Action
+    {
+        return Action::make('view')
+            ->label('View')
+            ->icon('heroicon-o-eye')
+            ->modalHeading('Activity')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Close')
+            ->fillForm(fn (array $record): array => [
+                'verb' => self::field($record, 'verb_label'),
+                'created_at' => self::field($record, 'created_at'),
+                'drive_id' => self::field($record, 'drive_id'),
+                'actor_type' => self::field($record, 'actor_type'),
+                'actor_id' => self::field($record, 'actor_id'),
+                'target_type' => self::field($record, 'target_type'),
+                'target_id' => self::field($record, 'target_id'),
+                'ip' => self::field($record, 'ip'),
+                'user_agent' => self::field($record, 'user_agent'),
+                'request_id' => self::field($record, 'request_id'),
+                'context' => self::context($record),
+            ])
+            ->schema([
+                TextInput::make('verb')->disabled(),
+                TextInput::make('created_at')->label('When')->disabled(),
+                TextInput::make('drive_id')->label('Storage')->disabled(),
+                TextInput::make('actor_type')->label('Actor type')->disabled(),
+                TextInput::make('actor_id')->label('Actor id')->disabled(),
+                TextInput::make('target_type')->label('Target type')->disabled(),
+                TextInput::make('target_id')->label('Target id')->disabled(),
+                TextInput::make('ip')->disabled(),
+                TextInput::make('user_agent')->disabled(),
+                TextInput::make('request_id')->disabled(),
+                KeyValue::make('context')->disabled(),
+            ]);
+    }
+
+    /** @param array<mixed> $record */
+    private static function field(array $record, string $key): string
+    {
+        $value = $record[$key] ?? null;
+
+        return match (true) {
+            $value instanceof \DateTimeInterface => $value->format('d.m.Y H:i:s'),
+            is_scalar($value) => (string) $value,
+            default => '',
+        };
+    }
+
+    /**
+     * @param  array<mixed>          $record
+     * @return array<string, string>
+     */
+    private static function context(array $record): array
+    {
+        $context = $record['context'] ?? [];
+        $pairs = [];
+
+        foreach (is_array($context) ? $context : [] as $key => $value) {
+            $pairs[(string) $key] = is_scalar($value) ? (string) $value : (json_encode($value) ?: '');
+        }
+
+        return $pairs;
+    }
+
+    /**
      * @return array<string, string>
      */
     private static function verbOptions(): array
     {
         $options = [];
 
-        foreach (EventType::cases() as $verb) {
+        foreach (app(EventCatalog::class)->all() as $verb) {
             $options[$verb->value] = $verb->label();
         }
 

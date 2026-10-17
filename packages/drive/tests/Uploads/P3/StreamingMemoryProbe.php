@@ -7,11 +7,11 @@ require dirname(__DIR__, 3).'/vendor/autoload.php';
 use GuzzleHttp\Psr7\Stream;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\TextUI\Configuration\Builder;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Schema\ModuleSchemas;
 
 /** Deterministic nonseekable source; never materializes the whole payload. */
 final class P37ProbeStream
@@ -98,7 +98,7 @@ try {
     foreach (Storage::disk('local')->allFiles() as $path) {
         Storage::disk('local')->delete($path);
     }
-    app(SchemaBuilder::class)->dropAll();
+    app(ModuleSchemas::class)->dropAll();
 } finally {
     foreach ($streams as $stream) {
         if (is_resource($stream)) {

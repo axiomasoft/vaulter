@@ -1,0 +1,77 @@
+>>> core sqlite [(unbound)] parallel  files=32 processes=8
+{"tool":"pest","result":"passed","tests":346,"passed":343,"assertions":4436,"duration_ms":21014,"skipped":3}
+>>> core sqlite [ActivityDisabledTestCase+RefreshDatabase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":1,"passed":1,"assertions":1,"duration_ms":523}
+>>> core sqlite [BigintStrategyTestCase+RefreshDatabase] parallel  files=5 processes=5
+{"tool":"pest","result":"passed","tests":13,"passed":13,"assertions":63,"duration_ms":1084}
+>>> core sqlite [DatabaseMigrations+EnablesWebhooksModule+TestCase] parallel  files=8 processes=8
+{"tool":"pest","result":"passed","tests":25,"passed":25,"assertions":99,"duration_ms":4484}
+>>> core sqlite [DatabaseMigrations+TestCase] parallel  files=9 processes=8
+{"tool":"pest","result":"passed","tests":88,"passed":88,"assertions":261,"duration_ms":11381}
+>>> core sqlite [EnablesWebhooksModule+RefreshDatabase+TestCase] parallel  files=10 processes=8
+{"tool":"pest","result":"passed","tests":115,"passed":115,"assertions":561,"duration_ms":6709}
+>>> core sqlite [EnablesWebhooksModule+TestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":2,"passed":2,"assertions":3,"duration_ms":630}
+>>> core sqlite [ExercisesWideNodeListing+RefreshDatabase+TestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":1,"passed":1,"assertions":14,"duration_ms":1819}
+>>> core sqlite [ExercisesWideNodeListing+RefreshDatabase+UlidStrategyTestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":1,"passed":1,"assertions":14,"duration_ms":1073}
+>>> core sqlite [HostKeyMysqlTestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":4,"passed":0,"assertions":0,"duration_ms":264,"skipped":4}
+>>> core sqlite [InteractsWithVaulter+RefreshDatabase+TestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":4,"passed":4,"assertions":22,"duration_ms":1099}
+>>> core sqlite [OpenApiTestCase] parallel  files=6 processes=6
+{"tool":"pest","result":"passed","tests":44,"passed":43,"assertions":3830,"duration_ms":4743,"skipped":1}
+>>> core sqlite [P83DocumentsTestCase] single  files=1 processes=1
+{"tool":"pest","result":"failed","tests":0,"passed":0,"assertions":0,"duration_ms":2,"raw":["No tests found."]}
+>>> core sqlite [P83DocumentsTestCase+RefreshDatabase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":3,"passed":3,"assertions":0,"duration_ms":828,"risky":3}
+>>> core sqlite [RefreshDatabase+SpatieTestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":10,"passed":10,"assertions":20,"duration_ms":1581}
+>>> core sqlite [RefreshDatabase+TablePrefixTestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":2,"passed":2,"assertions":9,"duration_ms":476}
+>>> core sqlite [RefreshDatabase+TestCase] parallel  files=129 processes=8
+{"tool":"pest","result":"passed","tests":852,"passed":845,"assertions":4404,"duration_ms":19327,"skipped":7,"risky":9}
+>>> core sqlite [RefreshDatabase+TestCase#skeleton] single  files=4 processes=1
+{"tool":"pest","result":"passed","tests":18,"passed":18,"assertions":86,"duration_ms":2945}
+>>> core sqlite [RefreshDatabase+UlidStrategyTestCase] parallel  files=3 processes=3
+{"tool":"pest","result":"passed","tests":5,"passed":5,"assertions":29,"duration_ms":912}
+>>> core sqlite [RefreshDatabase+UlidTestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":3,"passed":3,"assertions":8,"duration_ms":636}
+>>> core sqlite [RefreshDatabase+Uuid7StrategyTestCase] parallel  files=2 processes=2
+{"tool":"pest","result":"passed","tests":4,"passed":4,"assertions":22,"duration_ms":890}
+>>> core sqlite [RefreshDatabase+WebhooksTestCase] parallel  files=18 processes=8
+{"tool":"pest","result":"passed","tests":165,"passed":165,"assertions":568,"duration_ms":4717}
+>>> core sqlite [TestCase] parallel  files=4 processes=4
+{"tool":"pest","result":"passed","tests":15,"passed":15,"assertions":158,"duration_ms":1459}
+>>> core sqlite [TestCase+WithoutDatabaseSchema] parallel  files=18 processes=8
+{"tool":"pest","result":"passed","tests":183,"passed":183,"assertions":2767,"duration_ms":1729}
+>>> core sqlite [TestCase+WithoutDatabaseSchema#skeleton] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":3,"passed":3,"assertions":7,"duration_ms":668}
+
+== scripts/t summary ==
+core sqlite [(unbound)] parallel   exit=0 skipped=3 21s  ok
+core sqlite [ActivityDisabledTestCase+RefreshDatabase] single exit=0 skipped=0 1s  ok
+core sqlite [BigintStrategyTestCase+RefreshDatabase] parallel exit=0 skipped=0 1s  ok
+core sqlite [DatabaseMigrations+EnablesWebhooksModule+TestCase] parallel exit=0 skipped=0 5s  ok
+core sqlite [DatabaseMigrations+TestCase] parallel exit=0 skipped=0 11s  ok
+core sqlite [EnablesWebhooksModule+RefreshDatabase+TestCase] parallel exit=0 skipped=0 7s  ok
+core sqlite [EnablesWebhooksModule+TestCase] single exit=0 skipped=0 1s  ok
+core sqlite [ExercisesWideNodeListing+RefreshDatabase+TestCase] single exit=0 skipped=0 2s  ok
+core sqlite [ExercisesWideNodeListing+RefreshDatabase+UlidStrategyTestCase] single exit=0 skipped=0 2s  ok
+core sqlite [HostKeyMysqlTestCase] single exit=0 skipped=4 0s  ok
+core sqlite [InteractsWithVaulter+RefreshDatabase+TestCase] single exit=0 skipped=0 2s  ok
+core sqlite [OpenApiTestCase] parallel exit=0 skipped=1 5s  ok
+core sqlite [P83DocumentsTestCase] single exit=1 skipped=0 0s  empty (allowed by inventory)
+core sqlite [P83DocumentsTestCase+RefreshDatabase] single exit=0 skipped=0 1s  ok
+core sqlite [RefreshDatabase+SpatieTestCase] single exit=0 skipped=0 2s  ok
+core sqlite [RefreshDatabase+TablePrefixTestCase] single exit=0 skipped=0 1s  ok
+core sqlite [RefreshDatabase+TestCase] parallel exit=0 skipped=7 19s  ok
+core sqlite [RefreshDatabase+TestCase#skeleton] single exit=0 skipped=0 4s  ok
+core sqlite [RefreshDatabase+UlidStrategyTestCase] parallel exit=0 skipped=0 1s  ok
+core sqlite [RefreshDatabase+UlidTestCase] single exit=0 skipped=0 1s  ok
+core sqlite [RefreshDatabase+Uuid7StrategyTestCase] parallel exit=0 skipped=0 1s  ok
+core sqlite [RefreshDatabase+WebhooksTestCase] parallel exit=0 skipped=0 5s  ok
+core sqlite [TestCase] parallel    exit=0 skipped=0 2s  ok
+core sqlite [TestCase+WithoutDatabaseSchema] parallel exit=0 skipped=0 1s  ok
+core sqlite [TestCase+WithoutDatabaseSchema#skeleton] single exit=0 skipped=0 2s  ok

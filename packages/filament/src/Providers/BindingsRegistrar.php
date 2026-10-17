@@ -6,10 +6,12 @@ namespace Vaulter\Filament\Providers;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Attributes\Internal;
 use Vaulter\Filament\Configuration\FilamentConfig;
 use Vaulter\Modules\ModuleBindings;
 
 /** The container wiring of the Filament module: its config reader. */
+#[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void

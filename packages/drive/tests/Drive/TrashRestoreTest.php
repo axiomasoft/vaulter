@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException;
-use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\Nodes\NodeTrashedByAncestorException;
+use Vaulter\Drive\Exceptions\Nodes\RestoreDestinationRequiredException;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');

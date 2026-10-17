@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Problems;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * Renders the error reference of the docs from the {@see ProblemCatalog}, so the docs
  * cannot drift from the codes: one summary table (status, declaring module, retryability
  * and idempotency receipt policy), then a heading per code, which is the anchor the
  * `type` URI of a problem body points at.
  */
+#[Internal]
 final readonly class ErrorsReference
 {
     public const START = '<!-- vaulter:errors:start -->';

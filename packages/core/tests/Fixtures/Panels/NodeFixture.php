@@ -9,7 +9,7 @@ use Vaulter\Models\Concerns\HasVaulterKeys;
 
 /**
  * A base "node" model that resolves its table/key from the shared v_* schema and
- * the global id strategy — the stand-in for a default-panel Vaulter\Models\Drive\Node.
+ * the global id strategy — the stand-in for a default-panel Vaulter\Drive\Models\Node.
  */
 class NodeFixture extends Model
 {

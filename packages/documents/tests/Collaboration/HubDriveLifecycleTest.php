@@ -12,9 +12,9 @@ use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 
 it('refuses a store when the drive changes after the room was opened', function (DriveStatus $status, string $exception): void {
     Hub::configure();

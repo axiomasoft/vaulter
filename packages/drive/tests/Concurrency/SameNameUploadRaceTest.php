@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Concurrency\RaceOutcome;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 
 it('V20 creates one x.pdf and returns a domain conflict to the second writer', function (): void {
     ForkRace::skipUnlessSupported($this);

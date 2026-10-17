@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
@@ -14,7 +15,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Sweep stale resumable-upload sessions. It scans the OPEN
@@ -29,6 +30,7 @@ use Vaulter\VaulterManager;
  * rule is the backstop for any orphaned multipart the table never saw (the CAS bucket
  * itself stays UNVERSIONED — lifecycle is never a blob-deletion mechanism).
  */
+#[Internal]
 final class SweepUploadsCommand extends Command
 {
     use OpensWriteScope;
@@ -43,7 +45,7 @@ final class SweepUploadsCommand extends Command
         MetricsRecorder $metrics,
         TraceRecorder $tracer,
     ): int {
-        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($sessions, $manager, $metrics, $tracer));
+        return Tenancy::without(fn (): int => $this->runMaintenance($sessions, $manager, $metrics, $tracer));
     }
 
     private function runMaintenance(

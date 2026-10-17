@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Fixtures\Access\ProfileCreateGate;
 
 /**
  * The drive resource no longer projects create flags; the profile-selected create gate

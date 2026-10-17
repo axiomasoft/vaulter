@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Observability;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * SDK-neutral tracing seam. Package code depends only on this
  * contract; the host binds a real adapter. With no backend installed the container
  * resolves {@see NullTraceRecorder}.
  */
+#[Spi(SpiKind::Implement)]
 interface TraceRecorder
 {
     /**

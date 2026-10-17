@@ -567,21 +567,175 @@
             "id": "route:vaulter.v1.documents.store",
             "kind": "http",
             "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.access.inheritance.restore",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.access.inheritance.restrict",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.destroy",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.index",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.store",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.download",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.nodes",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.show",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.destroy",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.index",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.rotate",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.store",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.update",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-deliveries.index",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-deliveries.redeliver",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.deactivate",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.destroy",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.index",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.show",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.store",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.update",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
         }
     ],
     "flags": {
         "vaulter-documents.collaboration.enabled": false,
-        "vaulter.features.activity": true,
-        "vaulter.features.changes": true,
-        "vaulter.features.grants": true,
-        "vaulter.features.public_listing": false,
-        "vaulter.features.share_links": false,
+        "vaulter-drive.features.activity": true,
+        "vaulter-drive.features.changes": true,
+        "vaulter-drive.features.grants": true,
+        "vaulter-drive.features.public_listing": false,
+        "vaulter-drive.features.share_links": false,
         "vaulter.modules.webhooks": false
     },
     "items": [
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestoreInheritanceController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestoreInheritanceController",
             "default_registered": true,
             "id": "route:vaulter.v1.access.inheritance.restore",
             "methods": [
@@ -604,14 +758,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/RestoreInheritanceController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController"
+                "file": "packages/drive/src/Http/Controllers/Access/RestoreInheritanceController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestoreInheritanceController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/inheritance/restore"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestrictInheritanceController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestrictInheritanceController",
             "default_registered": true,
             "id": "route:vaulter.v1.access.inheritance.restrict",
             "methods": [
@@ -634,14 +788,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/RestrictInheritanceController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController"
+                "file": "packages/drive/src/Http/Controllers/Access/RestrictInheritanceController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\RestrictInheritanceController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/inheritance/restrict"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController",
-            "controller": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController",
             "default_registered": true,
             "id": "route:vaulter.v1.activity.drive",
             "methods": [
@@ -664,14 +818,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Activity/ListDriveActivityController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController"
+                "file": "packages/drive/src/Http/Controllers/Activity/ListDriveActivityController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController"
             },
             "uri": "api/vaulter/v1/drives/{drive}/activity"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController",
-            "controller": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController",
             "default_registered": true,
             "id": "route:vaulter.v1.activity.node",
             "methods": [
@@ -694,14 +848,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Activity/ListNodeActivityController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController"
+                "file": "packages/drive/src/Http/Controllers/Activity/ListNodeActivityController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/activity"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController",
-            "controller": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ListChangesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ListChangesController",
             "default_registered": true,
             "id": "route:vaulter.v1.changes.index",
             "methods": [
@@ -724,14 +878,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Changes/ListChangesController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController"
+                "file": "packages/drive/src/Http/Controllers/Changes/ListChangesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ListChangesController"
             },
             "uri": "api/vaulter/v1/drives/{drive}/changes"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController",
-            "controller": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ShowChangesStartController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ShowChangesStartController",
             "default_registered": true,
             "id": "route:vaulter.v1.changes.start",
             "methods": [
@@ -754,8 +908,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Changes/ShowChangesStartController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController"
+                "file": "packages/drive/src/Http/Controllers/Changes/ShowChangesStartController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Changes\\ShowChangesStartController"
             },
             "uri": "api/vaulter/v1/drives/{drive}/changes/start"
         },
@@ -1670,8 +1824,8 @@
             "uri": "api/vaulter/v1/drives/{drive}/folders"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\RevokeGrantController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\RevokeGrantController",
             "default_registered": true,
             "id": "route:vaulter.v1.grants.destroy",
             "methods": [
@@ -1694,14 +1848,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/RevokeGrantController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController"
+                "file": "packages/drive/src/Http/Controllers/Access/RevokeGrantController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\RevokeGrantController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/grants/{grant}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\ListGrantsController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\ListGrantsController",
             "default_registered": true,
             "id": "route:vaulter.v1.grants.index",
             "methods": [
@@ -1724,14 +1878,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/ListGrantsController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController"
+                "file": "packages/drive/src/Http/Controllers/Access/ListGrantsController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\ListGrantsController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/grants"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController",
-            "controller": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Access\\CreateGrantController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Access\\CreateGrantController",
             "default_registered": true,
             "id": "route:vaulter.v1.grants.store",
             "methods": [
@@ -1754,8 +1908,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Access/CreateGrantController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController"
+                "file": "packages/drive/src/Http/Controllers/Access/CreateGrantController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Access\\CreateGrantController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/grants"
         },
@@ -2181,8 +2335,8 @@
             "uri": "api/vaulter/v1/nodes/{node}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.public-shares.download",
             "methods": [
@@ -2196,7 +2350,7 @@
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+                "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
             ],
             "name": "vaulter.v1.public-shares.download",
             "openapi": {
@@ -2206,14 +2360,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/DownloadPublicShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/DownloadPublicShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\DownloadPublicShareController"
             },
             "uri": "api/vaulter/v1/shares/{token}/download"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
             "default_registered": true,
             "id": "route:vaulter.v1.public-shares.nodes",
             "methods": [
@@ -2227,7 +2381,7 @@
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+                "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
             ],
             "name": "vaulter.v1.public-shares.nodes",
             "openapi": {
@@ -2237,14 +2391,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/ListPublicShareNodesController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/ListPublicShareNodesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListPublicShareNodesController"
             },
             "uri": "api/vaulter/v1/shares/{token}/nodes"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ShowPublicShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ShowPublicShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.public-shares.show",
             "methods": [
@@ -2258,7 +2412,7 @@
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+                "Vaulter\\Drive\\Http\\Middleware\\ResolveShareToken"
             ],
             "name": "vaulter.v1.public-shares.show",
             "openapi": {
@@ -2268,8 +2422,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/ShowPublicShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/ShowPublicShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ShowPublicShareController"
             },
             "uri": "api/vaulter/v1/shares/{token}"
         },
@@ -2304,8 +2458,8 @@
             "uri": "api/vaulter/v1/shared"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RevokeShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RevokeShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.destroy",
             "methods": [
@@ -2328,14 +2482,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/RevokeShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/RevokeShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RevokeShareController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares/{share}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListSharesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListSharesController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.index",
             "methods": [
@@ -2358,14 +2512,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/ListSharesController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/ListSharesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\ListSharesController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RotateShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RotateShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.rotate",
             "methods": [
@@ -2388,14 +2542,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/RotateShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/RotateShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\RotateShareController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares/{share}/rotate"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\CreateShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\CreateShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.store",
             "methods": [
@@ -2418,14 +2572,14 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/CreateShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/CreateShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\CreateShareController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController",
-            "controller": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController",
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController",
             "default_registered": true,
             "id": "route:vaulter.v1.shares.update",
             "methods": [
@@ -2448,8 +2602,8 @@
             "owner": "drive",
             "requires": [],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Sharing/UpdateShareController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController"
+                "file": "packages/drive/src/Http/Controllers/Sharing/UpdateShareController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Sharing\\UpdateShareController"
             },
             "uri": "api/vaulter/v1/nodes/{node}/shares/{share}"
         },
@@ -2762,8 +2916,8 @@
             "uri": "api/vaulter/v1/uploads/{upload}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-deliveries.index",
             "methods": [
@@ -2788,14 +2942,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/ListWebhookDeliveriesController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/ListWebhookDeliveriesController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-deliveries.redeliver",
             "methods": [
@@ -2820,14 +2974,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/RedeliverWebhookController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/RedeliverWebhookController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RedeliverWebhookController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.deactivate",
             "methods": [
@@ -2852,14 +3006,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/DeactivateWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/DeactivateWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deactivate"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.destroy",
             "methods": [
@@ -2884,14 +3038,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/DeleteWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/DeleteWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.index",
             "methods": [
@@ -2916,14 +3070,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/ListWebhookEndpointsController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/ListWebhookEndpointsController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
             "methods": [
@@ -2948,14 +3102,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/RotateWebhookSecretController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/RotateWebhookSecretController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/rotate-secret"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.show",
             "methods": [
@@ -2980,14 +3134,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/ShowWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/ShowWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.store",
             "methods": [
@@ -3012,14 +3166,14 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/RegisterWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/RegisterWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints"
         },
         {
-            "action": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
-            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
+            "action": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
+            "controller": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
             "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.update",
             "methods": [
@@ -3044,8 +3198,8 @@
                 "vaulter.modules.webhooks"
             ],
             "source": {
-                "file": "packages/core/src/Http/Controllers/Webhooks/UpdateWebhookEndpointController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController"
+                "file": "packages/webhooks/src/Http/Controllers/Webhooks/UpdateWebhookEndpointController.php",
+                "symbol": "Vaulter\\Webhooks\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController"
             },
             "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
         }

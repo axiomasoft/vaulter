@@ -3,21 +3,20 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Events\EventConformance;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Events\EventConformance;
 
 /**
  * The document and comment events, produced by the real Actions, carry exactly the
  * data their EventSpec declares and nothing an envelope must not hold.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(OperationsTestCase::class, RefreshDatabase::class);
 
 it('records the document and comment events with the data their specs declare', function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 0);
@@ -36,7 +35,7 @@ it('records the document and comment events with the data their specs declare', 
     Documents::comments($actor)->delete($thread->id, $comment->id);
 
     EventConformance::assertRecorded([
-        EventType::DocumentCreated, EventType::DocumentUpdated, EventType::DocumentRevisionCreated, EventType::DocumentRestored,
-        EventType::CommentAdded, EventType::CommentResolved, EventType::CommentDeleted,
+        DocumentEventType::DocumentCreated, DocumentEventType::DocumentUpdated, DocumentEventType::DocumentRevisionCreated, DocumentEventType::DocumentRestored,
+        DocumentEventType::CommentAdded, DocumentEventType::CommentResolved, DocumentEventType::CommentDeleted,
     ]);
 });

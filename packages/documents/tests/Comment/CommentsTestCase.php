@@ -26,6 +26,6 @@ abstract class CommentsTestCase extends TestCase
         // Opt INTO the node-comment routes (default off) and authorise through the
         // real database grant resolver (the base default is the null driver).
         $app['config']->set('vaulter-documents.comments.enabled', true);
-        $app['config']->set('vaulter.access.permission_driver', 'database');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'database');
     }
 }

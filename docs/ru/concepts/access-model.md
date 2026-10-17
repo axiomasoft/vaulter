@@ -17,7 +17,7 @@ Vaulter, — `AccessResolver`. Он складывает две полосы (la
 Сам резолвер **не** контракт и **не** сменный — сменна только ролевая полоса (драйвер).
 
 ::: info Две полосы, один авторитет
-`AccessResolver` (`Vaulter\Access\AccessResolver`) — единственный авторитет, к которому
+`AccessResolver` (`Vaulter\Drive\Access\AccessResolver`) — единственный авторитет, к которому
 обращаются все Policy, `DriveHandle`, контроллеры и Resource. Хост подключается к нему
 через контракт `PermissionDriver`, но никогда не подменяет сам резолвер.
 :::
@@ -34,8 +34,8 @@ Vaulter, — `AccessResolver`. Он складывает две полосы (la
 | `filterSharedWith(Authorizable $actor, iterable $candidates)` | `list<Node>` | Перепроверяет кандидатов «поделились со мной» полным алгоритмом. |
 
 ```php
-use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Enums\Access\Ability;
 
 $resolver = app(AccessResolver::class);
 
@@ -50,7 +50,7 @@ if ($resolver->can($user, Ability::Edit, $node)) {
 ## Способности и роли
 
 Vaulter рассуждает одним целым числом. У каждой способности **свой бит**
-(`Vaulter\Enums\Access\Permission`), его возвращает `Ability::bits()`:
+(`Vaulter\Drive\Enums\Access\Permission`), его возвращает `Ability::bits()`:
 
 | Способность | Бит | Способность | Бит |
 |---|---|---|---|
@@ -66,7 +66,7 @@ Vaulter рассуждает одним целым числом. У каждой
 
 ### Роли v1
 
-Грант хранит **роль** (`Vaulter\Access\Roles\Role`) и её версию; разрешает пару `RoleRegistry`.
+Грант хранит **роль** (`Vaulter\Drive\Access\Roles\Role`) и её версию; разрешает пару `RoleRegistry`.
 Роль — закрытый набор способностей, каждая встроенная роль включает предыдущую:
 
 | Роль | Способности |
@@ -158,7 +158,7 @@ $access->restoreInheritance($node);                                   // пря�
 
 ## GrantSet
 
-`effectiveGrants()` возвращает `Vaulter\Access\ValueObjects\GrantSet`:
+`effectiveGrants()` возвращает `Vaulter\Drive\Access\ValueObjects\GrantSet`:
 
 | Поле | Смысл |
 |---|---|
@@ -173,7 +173,7 @@ $access->restoreInheritance($node);                                   // пря�
 действия — без дублирования логики прав в JavaScript и лишних запросов.
 
 `NodeResource` заполняет свой объект `abilities` через
-`Vaulter\Access\ValueObjects\NodeAbilities::for($actor, $node, $resolver)`, который зовёт
+`Vaulter\Drive\Access\ValueObjects\NodeAbilities::for($actor, $node, $resolver)`, который зовёт
 `abilitiesFor()`. Когда актора нет, **все флаги false** (клиент показывает read-only
 оболочку, а не рекламирует недоступные действия).
 
@@ -210,7 +210,7 @@ $access->restoreInheritance($node);                                   // пря�
 ## Fail-loud: null-драйвер
 
 Драйвер по умолчанию — `database` (полностью автономная полоса без зависимостей от
-хоста). Для локального старта есть **открытый** драйвер `Vaulter\Testing\NullPermissionDriver`,
+хоста). Для локального старта есть **открытый** драйвер `Vaulter\Drive\Testing\NullPermissionDriver`,
 дающий любому актору полный доступ через абсолютный override `Allow`.
 
 `PermissionDriverManager` отвергает null-драйвер **в продакшене**:

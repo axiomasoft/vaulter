@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
+use Vaulter\Testing\Support\CanonicalJson;
 
 /**
  * Changing a node's properties is a node.updated event (PLAN2.D41); the values are
  * host data, so only the fact of the change is published.
  */
-uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
     $this->drive = DriveTestHelpers::drive();
@@ -27,12 +27,12 @@ it('records node.updated with the new node sequence and no property values', fun
 
     $this->actor->nodes()->setProperties($this->node, 'acme', ['label' => 'confidential-value']);
 
-    $outbox = Outbox::query()->where('event', EventType::NodeUpdated->value)->sole();
-    $activity = Activity::query()->where('verb', EventType::NodeUpdated->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::NodeUpdated->value)->sole();
+    $activity = Activity::query()->where('verb', DriveEventType::NodeUpdated->value)->sole();
 
     expect($outbox->payload['data'])->toBe(['changed' => ['properties']])
         ->and($outbox->payload['sequence'])->toBe($before + 1)
-        ->and($outbox->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->node->id])
+        ->and(CanonicalJson::of($outbox->payload['subject']))->toBe(CanonicalJson::of(['type' => 'node', 'id' => (string) $this->node->id]))
         ->and($activity->event_id)->toBe($outbox->event_id)
         ->and(json_encode([$outbox->payload, $activity->context]))->not->toContain('confidential-value');
 });
@@ -41,5 +41,5 @@ it('records nothing for a patch that changes nothing', function (): void {
     $this->actor->nodes()->setProperties($this->node, 'acme', ['label' => 'same']);
     $this->actor->nodes()->setProperties($this->node, 'acme', ['label' => 'same']);
 
-    expect(Outbox::query()->where('event', EventType::NodeUpdated->value)->count())->toBe(1);
+    expect(OutboxEvent::query()->where('type', DriveEventType::NodeUpdated->value)->count())->toBe(1);
 });

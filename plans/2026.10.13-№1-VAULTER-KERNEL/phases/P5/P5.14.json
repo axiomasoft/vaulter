@@ -1,0 +1,190 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.14",
+  "title": "CI, split и релиз-манифест: collaboration PHP, хаб, vue-collaboration, collaboration-hub-image.yml",
+  "status": "todo",
+  "summary": "ci.yml (`PHP_SUPPORT` + collaboration, Node-джоба хаба, джоба vue-collaboration, consumer-isolation + collaboration), weekly-full.yml (те же матрицы), `git mv .github/workflows/hocuspocus-image.yml .github/workflows/collaboration-hub-image.yml` (image `ghcr.io/axiomasoft/vaulter-collaboration-hub`, тег `vaulter-collaboration-hub-v*`), monorepo-split.yml + collaboration, release-npm.yml + vue-collaboration, release/packages.json (php/npm/images), scripts/release/consumer-check.sh + collaboration и кейс в tests/Repo/ConsumerCheckTest.php.",
+  "why": "D1, D6, architecture#packages: новый Composer-пакет, npm-пакет и образ хаба выпускаются отдельно; I14 требует изоляции каждого split-пакета. Hard risk: CI-джобы и split не запускаются в PLAN3 — ошибки видны только статическими проверками (WorkflowPolicyTest, test-release-tools, consumer-check --dry-run).",
+  "scope": {
+    "include": [
+      ".github/workflows/{ci,weekly-full,monorepo-split,release-npm}.yml, collaboration-hub-image.yml (git mv)",
+      "release/packages.json; scripts/release/{consumer-check.sh,verify-split-tags.sh}; tests/Repo/ConsumerCheckTest.php; scripts/ci/workflow-policy.py — если проверяет матрицы пакетов"
+    ],
+    "exclude": [
+      "Публикация, теги, push (нет grant)",
+      "Отложено в PLAN4: `scripts/release/consumer-check.sh collaboration` без --dry-run, сборка/публикация образа, запуск workflows"
+    ]
+  },
+  "depends_on": [
+    "P5.13"
+  ],
+  "related": [],
+  "decisions": [
+    "D1",
+    "D6",
+    "D41"
+  ],
+  "skills": [
+    "devops:ci-cd"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "release",
+      "why": "точные изменения workflows и манифеста",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "section": "matrices",
+      "why": "I14 consumer-check и consumer-isolation",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "why": "PHP_SUPPORT (строка ~40), Node-джобы (строки ~530–575)",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/hocuspocus-image.yml",
+      "why": "образ хаба",
+      "required": true
+    },
+    {
+      "path": "release/packages.json",
+      "why": "манифест релиза",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/weekly-full.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/monorepo-split.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/release-npm.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/hocuspocus-image.yml",
+      "change": "delete",
+      "note": "git mv"
+    },
+    {
+      "path": ".github/workflows/collaboration-hub-image.yml",
+      "change": "create",
+      "note": "git mv"
+    },
+    {
+      "path": "release/packages.json",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/release/consumer-check.sh",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/release/verify-split-tags.sh",
+      "change": "modify",
+      "note": "если перечисляет пакеты"
+    },
+    {
+      "path": "scripts/ci/workflow-policy.py",
+      "change": "modify",
+      "note": "если проверяет матрицы пакетов"
+    },
+    {
+      "path": "tests/Repo/ConsumerCheckTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/WorkflowPolicyTest.py",
+      "change": "modify",
+      "note": "фикстуры, если политика расширена"
+    }
+  ],
+  "rules": [
+    "Матрица PHP_SUPPORT совпадает с composer.json пакетов (test_support_matrix_follows_composer).",
+    "Метапакет packages/vaulter collaboration не включает (D6)."
+  ],
+  "guidance": "Образец — коммит P4.19 (`git log --grep 'P4.19' --stat`).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/release/consumer-check.sh collaboration --dry-run",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/Repo -p 'WorkflowPolicyTest.py'",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-tools.py",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "jq -e '([.php[] | select(.path == \"packages/collaboration\")] | length == 1) and ([.npm[] | select(.name == \"@vaulter/vue-collaboration\")] | length == 1) and ([.images[] | select(.path == \"packages/collaboration/hub\")] | length == 1)' release/packages.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "test ! -e .github/workflows/hocuspocus-image.yml && test -f .github/workflows/collaboration-hub-image.yml",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ConsumerCheckTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "CI-матрицы с collaboration",
+    "collaboration-hub-image.yml",
+    "релиз-манифест P5"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:04:33Z"
+}

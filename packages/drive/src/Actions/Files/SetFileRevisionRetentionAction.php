@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Files;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
-use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Support\DriveLifecycle;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\FileRevisionStoreRepository;
+use Vaulter\Drive\Repositories\FileStoreRepository;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Support\Identity;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Pin (keep forever) or unpin one revision of a file. Takes the same
@@ -23,6 +24,7 @@ use Vaulter\Support\TreeGuard;
  *
  * Operations authorize before this command.
  */
+#[Internal]
 final readonly class SetFileRevisionRetentionAction
 {
     public function __construct(
@@ -38,7 +40,7 @@ final readonly class SetFileRevisionRetentionAction
         $revisionId = $revision instanceof FileRevision ? $revision->getRawOriginal($revision->getKeyName()) : $revision;
 
         return $this->database->transaction(function () use ($context, $node, $revisionId, $keepForever): FileRevision {
-            $this->database->lockTreeShared($node->drive_id);
+            $this->database->lockAggregateShared('drives', $node->drive_id);
             $this->lifecycle->assertWritable($context);
             $node = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
             $this->tree->assertLive($node);

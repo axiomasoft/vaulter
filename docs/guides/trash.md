@@ -42,7 +42,7 @@ sit inside it (the same as permanently deleting a folder in Drive or Box).
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-trash -->
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 $drive = Vaulter::drive($project)->actingAs($user);
 
@@ -71,7 +71,7 @@ drive):
 <!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-restore-destination -->
 
 ```php
-use Vaulter\Data\Drive\RestoreOptions;
+use Vaulter\Drive\Data\RestoreOptions;
 
 $drive->trash()->restore($node, new RestoreOptions(destination: $folder));
 ```
@@ -91,7 +91,7 @@ $drive->trash()->purge($node);          // permanent — dispatches NodePurged
 ```
 
 Force-delete only purges from the trash: a live node raises `NodeNotTrashedException`
-(trash it first), and the root is never deleted. It detaches every version↔blob edge in the subtree (the bytes become
+(trash it first), and the root is never deleted. It removes every revision↔blob link in the subtree and releases its pin (the bytes become
 [GC](/guides/recipes)-eligible) and releases the storage quota.
 
 ::: danger Irreversible
@@ -176,7 +176,7 @@ protected function schedule(Schedule $schedule): void
 :::
 
 ::: warning Purge releases bytes, GC reclaims them
-`vaulter:trash:purge` detaches the version↔blob edges, but the underlying CAS
+`vaulter:trash:purge` removes the revision↔blob links and their pins, but the underlying CAS
 objects are reclaimed by the separate **blob GC** pass. Schedule both — see
 [Blob GC](/guides/recipes).
 :::
@@ -242,7 +242,7 @@ const page = await client.nodes.search(driveId, 'roadmap')
 
 ::: tip Scaling search
 The default search uses a `LIKE` scan — fine for typical storages. For large datasets, swap in
-a real search index (e.g. Laravel Scout / Meilisearch) by pointing `config('vaulter.models.node')`
+a real search index (e.g. Laravel Scout / Meilisearch) by pointing `config('vaulter-drive.models.node')`
 at a searchable model and overriding the read repository.
 :::
 
@@ -255,7 +255,7 @@ and its metadata. Listing `abilities` come from the same batch evaluation.
 Pages expose `meta.next_cursor` and `meta.per_page` (1–200, default 50; outside that range
 `422`). They have no `total` or numbered page links. Send `cursor` from the previous response
 until `next_cursor` is null. An empty page may still have a cursor:
-`vaulter.listing.scan_budget` (default 1000) limits inspected candidates per request.
+`vaulter-drive.listing.scan_budget` (default 1000) limits inspected candidates per request.
 Cursors are signed with the application key and bound to the listing query; reuse
 with another storage, parent or search term returns 422 `validation_failed` and
 `errors.cursor`. Restart without a cursor after changing the query.

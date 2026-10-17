@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Facades\Documents;
+use Vaulter\Documents\Tests\Fixtures\FakeExporter;
 use Vaulter\Documents\Tests\Fixtures\Types\KeyedType;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
-use Vaulter\Tests\Fixtures\Documents\FakeExporter;
 
 it('owns the document type registry and exporter registrations in the documents manager', function (): void {
     // Types register while the application boots; afterwards the set is frozen (PLAN2.P4.3).

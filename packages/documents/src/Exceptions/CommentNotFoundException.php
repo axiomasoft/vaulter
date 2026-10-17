@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Support\Identity;
  * A comment id did not resolve to a comment of the addressed node. A comment of
  * another node answers the same way, so a caller cannot probe foreign threads.
  */
+#[Api]
 final class CommentNotFoundException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

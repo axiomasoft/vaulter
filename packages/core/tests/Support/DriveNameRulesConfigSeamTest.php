@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Validator;
-use Vaulter\Support\DriveNameRules;
+use Vaulter\Drive\Support\DriveNameRules;
 
 /*
  * P4.5 / F-P3.1-01/02 — DriveNameRules' length bound and separator pattern moved

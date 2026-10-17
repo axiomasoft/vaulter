@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
@@ -19,7 +20,7 @@ it('keeps Eloquent out of the documents operations', function (string $class): v
     $leaks = [];
     $forbidden = [Model::class, Builder::class, Collection::class, AbstractPaginator::class, AbstractCursorPaginator::class];
     foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-        if ($method->isConstructor() || str_contains((string) $method->getDocComment(), '@internal')) {
+        if ($method->isConstructor() || str_contains((string) $method->getDocComment(), '@internal') || $method->getAttributes(Internal::class) !== []) {
             continue;
         }
         $types = [$method->getReturnType(), ...array_map(static fn (ReflectionParameter $parameter): ?ReflectionType => $parameter->getType(), $method->getParameters())];

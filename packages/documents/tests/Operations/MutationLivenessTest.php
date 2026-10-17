@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Comments\AddCommentAction;
 use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
 use Vaulter\Documents\Actions\Comments\ResolveCommentAction;
@@ -22,12 +21,13 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\DriveHandle;
-use Vaulter\Exceptions\Drive\DriveArchivedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Exceptions\DriveArchivedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
  * PLAN2.F05/F06: a writer that holds the tree lock and the node lock re-checks that

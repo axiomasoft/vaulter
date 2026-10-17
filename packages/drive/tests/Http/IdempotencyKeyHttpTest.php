@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Http\V1;
 
 /**
  * Idempotency-Key over v1 (D25, ADR-0029): folders.store and nodes.update read the header — one Structured Field
@@ -120,4 +120,17 @@ it('ignores the header on the route of an operation without idempotency', functi
     $this->postJson(V1::url('nodes/'.$folder->id.'/trash'), [], [...V1::ifMatch($folder->id), 'Idempotency-Key' => 'ignored'])
         ->assertOk()
         ->assertHeaderMissing('Idempotent-Replayed');
+});
+
+it('replays a rename of a node that is in the trash by now instead of answering 404', function (): void {
+    $folder = V1::folder($this->drive, 'Before trash');
+    $headers = [...V1::ifMatch($folder->id), 'Idempotency-Key' => 'rename-trashed'];
+
+    $first = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'After trash'], $headers)->assertOk();
+    $this->drive->nodes()->trash($folder->id);
+
+    $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'After trash'], $headers)
+        ->assertOk()
+        ->assertHeader('Idempotent-Replayed', 'true')
+        ->assertJsonPath('data.id', $first->json('data.id'));
 });

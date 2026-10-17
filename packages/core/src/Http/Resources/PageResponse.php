@@ -8,7 +8,7 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Attributes\Api;
 use Vaulter\Data\Page;
 
 /**
@@ -16,6 +16,7 @@ use Vaulter\Data\Page;
  * Lists are cursor-paginated and never count the total, which would cost a scan of
  * everything the caller can see on every page.
  */
+#[Api]
 final class PageResponse
 {
     public const int DEFAULT_PER_PAGE = 50;
@@ -44,12 +45,7 @@ final class PageResponse
         return self::envelope(array_values(array_map($map, $paginator->items())), $paginator->nextCursor()?->encode(), $paginator->perPage());
     }
 
-    /** `per_page` and `cursor` of the query string; out of range → 422 validation_failed. */
-    public static function listOptions(Request $request): ListOptions
-    {
-        return new ListOptions(perPage: self::perPage($request), cursor: self::cursor($request));
-    }
-
+    /** `per_page` of the query string; out of range → 422 validation_failed. */
     public static function perPage(Request $request): int
     {
         self::validate($request);

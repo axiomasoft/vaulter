@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests\Uploads;
 
 use Illuminate\Support\Str;
-use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
 
 /**
  * Shared builders for the resumable-upload slice tests (M3a): a real Storage with a
@@ -21,12 +21,12 @@ use Vaulter\Models\Drive\Node;
 final class UploadTestHelpers
 {
     /**
-     * The host's scanner: the capability reads the class from `vaulter.scan.scanner` and the container
+     * The host's scanner: the capability reads the class from `vaulter-drive.scan.scanner` and the container
      * hands out this very object.
      */
     public static function scanner(ContentScanner $scanner): ContentScanner
     {
-        config()->set('vaulter.scan.scanner', $scanner::class);
+        config()->set('vaulter-drive.scan.scanner', $scanner::class);
         app()->instance($scanner::class, $scanner);
         app()->instance(ContentScanner::class, $scanner);
 
@@ -124,5 +124,28 @@ final class UploadTestHelpers
         rewind($stream);
 
         return $stream;
+    }
+
+    /**
+     * Point a session at a drive row that does not exist: the corrupt state every engine's foreign key refuses. The
+     * check is lifted for this one write only — PostgreSQL drops the constraint (it cannot be switched off inside the
+     * test transaction), SQLite defers it to a commit RefreshDatabase never makes, MySQL turns FOREIGN_KEY_CHECKS off.
+     */
+    public static function danglingDrive(UploadSession $session, int $missingDriveId = 9_999_999): void
+    {
+        $connection = $session->getConnection();
+        $table = $session->getTable();
+        $write = static fn () => UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => $missingDriveId]);
+        match ($connection->getDriverName()) {
+            'pgsql' => (static function () use ($connection, $table, $write): void {
+                $connection->statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_drive_id_foreign"');
+                $write();
+            })(),
+            'sqlite' => (static function () use ($connection, $write): void {
+                $connection->statement('PRAGMA defer_foreign_keys = ON');
+                $write();
+            })(),
+            default => $connection->getSchemaBuilder()->withoutForeignKeyConstraints($write),
+        };
     }
 }

@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Comments;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\ResolveCommentInput;
 use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Mark a node comment thread resolved (docs/adr/0014-legacy-docvault-strangler.md шаг 1). Stamps (resolved_at,
@@ -22,6 +23,7 @@ use Vaulter\Support\TreeGuard;
  * comment row, with the drive writable and the node live ({@see AddCommentAction}).
  * {@see CommentResolved} is delivered after the outermost commit.
  */
+#[Internal]
 final readonly class ResolveCommentAction
 {
     public function __construct(
@@ -39,7 +41,7 @@ final readonly class ResolveCommentAction
         return $this->database->transaction(function () use ($context, $data, $resolvedBy): NodeComment {
             $driveId = $context->driveId();
             $nodeId = $data->comment->node_id;
-            $this->database->lockTreeShared($driveId);
+            $this->database->lockAggregateShared('drives', $driveId);
             $this->lifecycle->assertWritable($context);
             $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
             if (!$this->tree->sameStorage($current, $driveId)) {

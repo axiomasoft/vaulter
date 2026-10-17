@@ -23,10 +23,10 @@ const TM_PSR4 = ['Vaulter\\' => 'core', 'Vaulter\\Media\\' => 'media', 'Vaulter\
 function tm_sources(): array
 {
     return [
-        'packages/core/src/Access/AccessResolver.php' => '<?php namespace Vaulter\Access; final class AccessResolver {}',
+        'packages/core/src/Access/AccessResolver.php' => '<?php namespace Vaulter\Access; #[\Vaulter\Attributes\Internal] final class AccessResolver {}',
         'packages/core/src/Models/Drive/Node.php' => '<?php namespace Vaulter\Models\Drive; use Illuminate\Database\Eloquent\Model; class Node extends Model {}',
-        'packages/core/src/Contracts/Cas/BlobStore.php' => '<?php namespace Vaulter\Contracts\Cas; interface BlobStore {}',
-        'packages/core/src/ValueObjects/Access/Actor.php' => '<?php namespace Vaulter\ValueObjects\Access; final class Actor {}',
+        'packages/core/src/Contracts/Cas/BlobStore.php' => '<?php namespace Vaulter\Contracts\Cas; use Vaulter\Attributes\Spi; use Vaulter\Attributes\SpiKind; #[Spi(SpiKind::Implement)] interface BlobStore {}',
+        'packages/core/src/ValueObjects/Access/Actor.php' => '<?php namespace Vaulter\ValueObjects\Access; #[\Vaulter\Attributes\Api] final class Actor {}',
         'packages/core/src/Schema/SchemaBuilder.php' => '<?php namespace Vaulter\Schema; final class SchemaBuilder { public function createAll(): void {} private function defineNodes(): void {} }',
         'packages/core/database/migrations/2026_10_13_000002_create_v_nodes_table.php' => '<?php return new class { public function up(): void {} };',
         'packages/filament/src/Resources/NodeResource.php' => '<?php namespace Vaulter\Filament\Resources; use Vaulter\Models\Drive\Node; final class NodeResource { public function model(): string { return Node::class; } }',
@@ -76,12 +76,12 @@ function tm_types(array $built): array
 function tm_rules(): array
 {
     return ['kernel' => ['scope' => ['Vaulter\\', 'path:packages/'], 'rules' => [
-        ['match' => 'prefix', 'value' => 'Vaulter\\Access\\', 'owner' => 'drive', 'surface' => 'Internal', 'why' => 'architecture#ownership-map Access'],
-        ['match' => 'prefix', 'value' => 'Vaulter\\Models\\Drive\\', 'owner' => 'drive', 'surface' => 'Internal', 'why' => 'architecture#ownership-map Models/Drive'],
-        ['match' => 'prefix', 'value' => 'Vaulter\\Contracts\\Cas\\', 'owner' => 'media', 'surface' => 'Spi:Implement', 'why' => 'architecture#ownership-map Cas'],
-        ['match' => 'fqcn', 'value' => 'Vaulter\\ValueObjects\\Access\\Actor', 'owner' => 'core', 'surface' => 'Api', 'why' => 'architecture#kernel Actor'],
-        ['match' => 'prefix', 'value' => 'Vaulter\\Schema\\', 'owner' => 'core', 'surface' => 'Internal', 'why' => 'architecture#kernel Schema'],
-        ['match' => 'prefix', 'value' => 'Vaulter\\Filament\\', 'owner' => 'filament', 'surface' => 'Internal', 'why' => 'architecture#packages filament'],
+        ['match' => 'prefix', 'value' => 'Vaulter\\Access\\', 'owner' => 'drive', 'why' => 'architecture#ownership-map Access'],
+        ['match' => 'prefix', 'value' => 'Vaulter\\Models\\Drive\\', 'owner' => 'drive', 'why' => 'architecture#ownership-map Models/Drive'],
+        ['match' => 'prefix', 'value' => 'Vaulter\\Contracts\\Cas\\', 'owner' => 'media', 'why' => 'architecture#ownership-map Cas'],
+        ['match' => 'fqcn', 'value' => 'Vaulter\\ValueObjects\\Access\\Actor', 'owner' => 'core', 'why' => 'architecture#kernel Actor'],
+        ['match' => 'prefix', 'value' => 'Vaulter\\Schema\\', 'owner' => 'core', 'why' => 'architecture#kernel Schema'],
+        ['match' => 'prefix', 'value' => 'Vaulter\\Filament\\', 'owner' => 'filament', 'why' => 'architecture#packages filament'],
         ['match' => 'member', 'value' => 'Vaulter\\Schema\\SchemaBuilder::createAll', 'owner' => 'drive', 'action' => 'split', 'note' => 'orchestration goes to owners', 'why' => 'source-review#code-facts SchemaBuilder'],
         ['match' => 'member', 'value' => 'Vaulter\\Schema\\SchemaBuilder::defineNodes', 'owner' => 'drive', 'why' => 'domain DDL'],
         ['match' => 'file', 'value' => 'packages/core/database/migrations/2026_10_13_000002_create_v_nodes_table.php', 'owner' => 'drive', 'why' => 'v_nodes is drive'],
@@ -119,36 +119,38 @@ it('rule engine: default target drops the owner segment after the top directory 
 
 it('rule engine: an fqcn rule beats the longest prefix and may name an explicit target', function (): void {
     $files = tm_rules();
-    $files['kernel']['rules'][] = ['match' => 'fqcn', 'value' => 'Vaulter\Access\AccessResolver', 'owner' => 'drive', 'action' => 'replace', 'target' => '\Vaulter\Drive\Access\Resolver', 'surface' => 'Internal', 'why' => 'architecture#entry-point'];
+    $files['kernel']['rules'][] = ['match' => 'fqcn', 'value' => 'Vaulter\Access\AccessResolver', 'owner' => 'drive', 'action' => 'replace', 'target' => '\Vaulter\Drive\Access\Resolver', 'why' => 'architecture#entry-point'];
     $types = tm_types(tm_build(tm_sources(), $files));
 
     expect($types['Vaulter\Access\AccessResolver'])->toMatchArray(['action' => 'replace', 'target_fqcn' => 'Vaulter\Drive\Access\Resolver', 'rule' => 'kernel:fqcn:Vaulter\Access\AccessResolver']);
 });
 
-it('rule engine: fills surface from a map by declaration kind with a class group and a fallback', function (): void {
-    $files = tm_rules();
-    $files['kernel']['rules'][0]['surface'] = ['interface' => 'Spi:Call', 'class' => 'Api', '*' => 'Internal'];
-    $files['kernel']['rules'][2]['surface'] = ['interface' => 'Spi:Implement', 'final-class' => 'Api'];
-    $built = tm_build(tm_sources(), $files);
-    $types = tm_types($built);
+it('rule engine: reads the surface of a type from its own attribute, and an unmarked type is undecided', function (): void {
+    $types = tm_types(tm_build(tm_sources(), tm_rules()));
 
-    expect($types['Vaulter\Access\AccessResolver']['surface'])->toBe('Api')
-        ->and($built['problems'])->toBe([]);
+    expect($types['Vaulter\Access\AccessResolver']['surface'])->toBe('Internal')
+        ->and($types['Vaulter\ValueObjects\Access\Actor']['surface'])->toBe('Api')
+        ->and($types['Vaulter\Contracts\Cas\BlobStore']['surface'])->toBe('Spi:Implement')
+        ->and($types['Vaulter\Schema\SchemaBuilder']['surface'])->toBe('undecided');
 
-    $files['kernel']['rules'][0]['surface'] = ['interface' => 'Spi:Call'];
-    expect(tm_codes(tm_build(tm_sources(), $files)))->toContain('undecided-without-note');
+    $sources = tm_sources();
+    $sources['packages/core/src/Contracts/Cas/BlobStore.php'] = '<?php namespace Vaulter\Contracts\Cas; use Vaulter\Attributes\Spi; use Vaulter\Attributes\SpiKind; #[Spi(kind: SpiKind::Call, since: "1.0")] interface BlobStore {}';
+    expect(tm_types(tm_build($sources, tm_rules()))['Vaulter\Contracts\Cas\BlobStore']['surface'])->toBe('Spi:Call');
+
+    $sources['packages/core/src/Access/AccessResolver.php'] = '<?php namespace Vaulter\Access; use Vaulter\Attributes\Api; use Vaulter\Attributes\Internal; #[Api] #[Internal] final class AccessResolver {}';
+    expect(tm_codes(tm_build($sources, tm_rules())))->toBe(['invalid-field']);
 });
 
 it('rule engine: the longest scope answers for a subject, a rule outside its file scope and equal prefixes are refused', function (): void {
     $files = [
         'wide' => ['scope' => ['Vaulter\\', 'path:packages/'], 'rules' => [
-            ['match' => 'prefix', 'value' => 'Vaulter\\', 'owner' => 'core', 'surface' => 'Internal', 'why' => 'rest'],
+            ['match' => 'prefix', 'value' => 'Vaulter\\', 'owner' => 'core', 'why' => 'rest'],
             ['match' => 'file', 'value' => 'packages/core/database/migrations/2026_10_13_000002_create_v_nodes_table.php', 'owner' => 'drive', 'why' => 'v_nodes'],
             ['match' => 'member', 'value' => 'Vaulter\\Schema\\SchemaBuilder::createAll', 'owner' => 'core', 'why' => 'generic'],
             ['match' => 'member', 'value' => 'Vaulter\\Schema\\SchemaBuilder::defineNodes', 'owner' => 'drive', 'why' => 'domain'],
         ]],
         'access' => ['scope' => ['Vaulter\\Access\\'], 'rules' => [
-            ['match' => 'prefix', 'value' => 'Vaulter\\Access\\', 'owner' => 'drive', 'surface' => 'Internal', 'why' => 'architecture#ownership-map Access'],
+            ['match' => 'prefix', 'value' => 'Vaulter\\Access\\', 'owner' => 'drive', 'why' => 'architecture#ownership-map Access'],
         ]],
     ];
     expect(tm_build(tm_sources(), $files)['problems'])->toBe([])
@@ -198,23 +200,22 @@ it('rule engine: a rule without why or with an unknown owner or match is refused
 it('rule engine: a target claimed twice, also by an existing type of the target package, is a collision', function (): void {
     $sources = tm_sources() + ['packages/drive/src/Models/Node.php' => '<?php namespace Vaulter\Drive\Models; class Node {}'];
     $files = tm_rules();
-    $files['kernel']['rules'][] = ['match' => 'prefix', 'value' => 'Vaulter\\Drive\\', 'owner' => 'drive', 'surface' => 'Internal', 'why' => 'architecture#packages drive'];
+    $files['kernel']['rules'][] = ['match' => 'prefix', 'value' => 'Vaulter\\Drive\\', 'owner' => 'drive', 'why' => 'architecture#packages drive'];
 
     $built = tm_build($sources, $files);
     expect(tm_codes($built))->toBe(['target-collision'])
         ->and($built['problems'][0]['message'])->toContain('Vaulter\Drive\Models\Node');
 
     $files['kernel']['rules'] = array_values(array_filter($files['kernel']['rules'], static fn (array $r): bool => $r['value'] !== 'Vaulter\\Models\\Drive\\'));
-    $files['kernel']['rules'][] = ['match' => 'fqcn', 'value' => 'Vaulter\Models\Drive\Node', 'owner' => 'drive', 'target' => 'Vaulter\Drive\Models\CoreNode', 'surface' => 'Internal', 'note' => 'name taken by drive', 'why' => 'architecture#ownership-map'];
+    $files['kernel']['rules'][] = ['match' => 'fqcn', 'value' => 'Vaulter\Models\Drive\Node', 'owner' => 'drive', 'target' => 'Vaulter\Drive\Models\CoreNode', 'note' => 'name taken by drive', 'why' => 'architecture#ownership-map'];
     expect(tm_build($sources, $files)['problems'])->toBe([]);
 });
 
-it('rule engine: validates action, phase, keep/move direction and the notes delete, split and undecided need', function (): void {
+it('rule engine: validates action, phase, keep/move direction and the notes delete and split need', function (): void {
     $cases = [
         'invalid-field' => [['action' => 'keep'], ['action' => 'move', 'owner' => 'core'], ['phase' => 'P9'], ['action' => 'copy'], ['phase' => 'stay']],
         'delete-without-note' => [['action' => 'delete']],
         'split-without-note' => [['action' => 'split']],
-        'undecided-without-note' => [['surface' => 'undecided']],
     ];
     foreach ($cases as $code => $variants) {
         foreach ($variants as $patch) {
@@ -225,7 +226,7 @@ it('rule engine: validates action, phase, keep/move direction and the notes dele
     }
 
     $files = tm_rules();
-    $files['kernel']['rules'][0] = ['action' => 'delete', 'note' => 'removed by D12', 'surface' => 'Internal'] + $files['kernel']['rules'][0];
+    $files['kernel']['rules'][0] = ['action' => 'delete', 'note' => 'removed by D12'] + $files['kernel']['rules'][0];
     $built = tm_build(tm_sources(), $files);
     expect($built['problems'])->toBe([])
         ->and(tm_types($built)['Vaulter\Access\AccessResolver']['target_fqcn'])->toBeNull();
@@ -240,9 +241,9 @@ it('rule engine: a type of the current public API snapshot is not Internal witho
     $files['kernel']['rules'][0]['note'] = 'internal helper kept only for the snapshot';
     expect(tm_build(tm_sources(), $files, $baseline)['problems'])->toBe([]);
 
-    $files = tm_rules();
-    $files['kernel']['rules'][0]['surface'] = 'Api';
-    expect(tm_build(tm_sources(), $files, $baseline)['problems'])->toBe([]);
+    $sources = tm_sources();
+    $sources['packages/core/src/Access/AccessResolver.php'] = '<?php namespace Vaulter\Access; #[\Vaulter\Attributes\Api] final class AccessResolver {}';
+    expect(tm_build($sources, tm_rules(), $baseline)['problems'])->toBe([]);
 });
 
 it('rule engine: lists the Filament reads of Eloquent models once per file, symbol and model', function (): void {
@@ -252,6 +253,17 @@ it('rule engine: lists the Filament reads of Eloquent models once per file, symb
         ['file' => 'packages/filament/src/Resources/NodeResource.php', 'symbol' => '<file>', 'model' => 'Vaulter\Models\Drive\Node', 'owner' => 'drive', 'replacement' => TargetMap::REPLACEMENT],
         ['file' => 'packages/filament/src/Resources/NodeResource.php', 'symbol' => 'Vaulter\Filament\Resources\NodeResource::model', 'model' => 'Vaulter\Models\Drive\Node', 'owner' => 'drive', 'replacement' => TargetMap::REPLACEMENT],
     ]);
+});
+
+it('rule engine: a model owned by Filament itself is no read of a drive model', function (): void {
+    $sources = tm_sources() + [
+        'packages/filament/src/Support/PanelRecord.php' => '<?php namespace Vaulter\Filament\Support; use Illuminate\Database\Eloquent\Model; final class PanelRecord extends Model {}',
+        'packages/filament/src/Resources/DriveResource.php' => '<?php namespace Vaulter\Filament\Resources; use Vaulter\Filament\Support\PanelRecord; final class DriveResource { public function model(): string { return PanelRecord::class; } }',
+    ];
+    $reads = tm_build($sources, tm_rules())['data']['consumers']['filament_model_reads'];
+
+    expect(array_values(array_unique(array_column($reads, 'file'))))->toBe(['packages/filament/src/Resources/NodeResource.php'])
+        ->and(array_values(array_unique(array_column($reads, 'model'))))->toBe(['Vaulter\\Models\\Drive\\Node']);
 });
 
 it('rule engine: output is deterministic and carries no line numbers or absolute paths', function (): void {
@@ -301,17 +313,18 @@ it('classifies the special cases of the architecture by name', function (): void
         $members[$member['fqcn'].'::'.$member['member']] = $member;
     }
 
-    expect($types['Vaulter\VaulterManager'])->toMatchArray(['owner' => 'drive', 'action' => 'replace', 'phase' => 'P4', 'target_fqcn' => 'Vaulter\Drive\Vaulter'])
-        ->and($types['Vaulter\Facades\Vaulter'])->toMatchArray(['owner' => 'drive', 'action' => 'replace', 'target_fqcn' => 'Vaulter\Drive\Facades\Vaulter'])
+    expect($types)->not->toHaveKey('Vaulter\VaulterManager')
+        ->and($types)->not->toHaveKey('Vaulter\Facades\Vaulter')
+        ->and($types['Vaulter\Drive\Vaulter'])->toMatchArray(['owner' => 'drive', 'package' => 'drive', 'action' => 'keep'])
+        ->and($types['Vaulter\Drive\Facades\Vaulter'])->toMatchArray(['owner' => 'drive', 'package' => 'drive', 'action' => 'keep'])
         ->and($types['Vaulter\ValueObjects\Access\Actor'])->toMatchArray(['owner' => 'core', 'action' => 'keep'])
-        ->and($types['Vaulter\Models\Webhooks\Outbox'])->toMatchArray(['owner' => 'core', 'action' => 'keep'])
-        ->and($types['Vaulter\Models\Drive\Node'])->toMatchArray(['owner' => 'drive', 'target_fqcn' => 'Vaulter\Drive\Models\Node', 'eloquent' => true])
-        ->and($types['Vaulter\Contracts\Cas\BlobStore']['owner'])->toBe('media')
+        ->and($types['Vaulter\Events\Outbox\Models\OutboxEvent'])->toMatchArray(['owner' => 'core', 'action' => 'keep'])
+        ->and($types['Vaulter\Drive\Models\Node'])->toMatchArray(['owner' => 'drive', 'action' => 'keep', 'eloquent' => true])
+        ->and($types['Vaulter\Media\Contracts\Cas\BlobStore']['owner'])->toBe('media')
+        ->and($types['Vaulter\Tenancy\Tenancy'])->toMatchArray(['owner' => 'core', 'action' => 'keep', 'surface' => 'Api'])
+        ->and($types['Vaulter\Drive\Doctor\DiskSet']['owner'])->toBe('drive')
         ->and($types['Vaulter\Documents\Collaboration\CollaborationHub'])->toMatchArray(['owner' => 'collaboration', 'phase' => 'P5'])
-        ->and($members['Vaulter\Media\Cas\BlobStore::attach']['owner'])->toBe('drive')
-        ->and($members['Vaulter\Schema\SchemaBuilder::addHeadForeignKey']['action'])->toBe('split')
-        ->and($members['Vaulter\Schema\SchemaBuilder::createAll']['action'])->toBe('split')
-        ->and($members['Vaulter\Schema\SchemaBuilder::dropAll']['action'])->toBe('split');
+        ->and($members['Vaulter\Media\Cas\BlobStore::attach']['owner'])->toBe('drive');
 });
 
 it('keeps every public-API baseline type out of Internal unless a note says why', function (): void {

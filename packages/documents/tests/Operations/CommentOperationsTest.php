@@ -3,10 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
@@ -14,14 +11,17 @@ use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * PLAN2.P4.8: CommentOperations. Read needs View, write needs Comment; resolve needs

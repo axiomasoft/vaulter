@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Collaboration;
 
 use Firebase\JWT\JWT;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\CollaborationDriver;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Exceptions\CollaborationConfigException;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Support\Identity;
 
 /**
@@ -23,6 +24,7 @@ use Vaulter\Support\Identity;
  * mode ('rw'|'ro'), room, iat, exp. The room repeats drive, node and epoch, so a token
  * is bound to exactly one generation of one document.
  */
+#[Internal]
 final readonly class HocuspocusCollaborationDriver implements CollaborationDriver
 {
     public function __construct(

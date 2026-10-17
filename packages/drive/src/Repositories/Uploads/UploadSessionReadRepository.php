@@ -6,16 +6,20 @@ namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
+use Vaulter\Support\Identity;
 
 /**
  * Read-side lookups over v_upload_sessions. The resumable endpoints
  * address a session by its client upload_id handle; the sweeper scans the stale
  * candidates. No transactions, no mutations.
  */
+#[Internal]
 final class UploadSessionReadRepository
 {
     public function __construct(
@@ -24,7 +28,9 @@ final class UploadSessionReadRepository
 
     public function find(int|string $id): ?UploadSession
     {
-        return $this->query()->find($id);
+        $query = $this->query();
+
+        return Identity::fitsKey($query->getModel(), $id) ? $query->find($id) : null;
     }
 
     /**
@@ -34,7 +40,8 @@ final class UploadSessionReadRepository
      */
     public function findByUploadId(string $uploadId): ?UploadSession
     {
-        return $this->query()->where('upload_id', $uploadId)->first();
+        // upload_id is a uuid column: any other string names no session (and PostgreSQL would fail the cast).
+        return Str::isUuid($uploadId) ? $this->query()->where('upload_id', $uploadId)->first() : null;
     }
 
     /**

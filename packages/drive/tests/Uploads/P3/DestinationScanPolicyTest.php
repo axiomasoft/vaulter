@@ -4,31 +4,31 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Actions\Content\ClaimScanWorkAction;
-use Vaulter\Actions\Content\SettleScanWorkAction;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ScanResult;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Files\RestoreFileRevisionAction;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Enums\Cas\ScanVerdict;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Content\ContentQuarantinedException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 
 it('SEC-R03 COPY owns fresh admission and clean evidence without copying a source lease', function (): void {
     Storage::fake('local');
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -55,10 +55,10 @@ it('SEC-R03 exempt legacy COPY receives required destination work and fresh admi
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
     $source = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'first');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'first');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $copy = app(CopyNodeAction::class)->execute($context, new CopyNodeInput($node, $drive->rootNode()->firstOrFail(), 'copy.txt'));
     $target = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
@@ -76,10 +76,10 @@ it('SEC-R04 revision restore creates fresh admission and its own destination wor
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
     $source = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'first');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'first');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $target = app(RestoreFileRevisionAction::class)->execute($context,
         new RestoreFileRevisionInput($node, $source));
@@ -121,19 +121,20 @@ it('SEC-R03 folder COPY creates every child obligation and later failure rolls b
         app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, $name.'.txt', 'text/plain', $folder));
         fclose($stream);
     }
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'first');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'first');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $copy = app(CopyNodeAction::class)->execute($context, new CopyNodeInput($folder, $drive->rootNode()->firstOrFail(), 'copy'));
     expect($copy->children()->count())->toBe(2);
-    $workClass = app(VaulterConfig::class)->model('scan_obligation');
+    $workClass = app(DriveConfig::class)->model('scan_obligation');
     expect($workClass::query()->count())->toBe(2)->and($drive->refresh()->scan_admission_sequence)->toBe(4);
     $beforeNodes = Node::query()->count();
     $writes = 0;
     app(VaulterDatabase::class)->connection()->listen(function ($query) use (&$writes): void {
-        if (str_starts_with($query->sql, 'insert into "v_scan_obligations"') && ++$writes === 2) {
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        if (str_starts_with(str_replace('`', '"', $query->sql), 'insert into "v_scan_obligations"') && ++$writes === 2) {
             throw new RuntimeException('fixture obligation failure');
         }
     });

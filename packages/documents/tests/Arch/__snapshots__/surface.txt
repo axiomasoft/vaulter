@@ -1,0 +1,613 @@
+# Surface manifest of the package `documents` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
+# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
+
+Vaulter\Documents\Configuration\DocumentsConfig api since 1.0 final readonly class
+  public function assertCollaborationSecrets(Illuminate\Contracts\Foundation\Application $app): void
+  public function assertDistinctHubSecrets(): void
+  public function channelPrefix(): string
+  public function checkpointIntervalSeconds(): int
+  public function collaborationDriver(): string
+  public function collaborationEnabled(): bool
+  public function collaborationMaxStateBytes(): int
+  public function collaborationRoom(mixed $driveId, mixed $nodeId, int $epoch): string
+  public function commentsEnabled(): bool
+  public function defaultType(): string
+  public function exporters(): array
+  public function hubJwtSecret(): ?string
+  public function hubTimestampTolerance(): int
+  public function hubTokenTtl(): int
+  public function hubUrl(): ?string
+  public function hubWebhookSecret(): ?string
+  public function maxContentSizeKb(): int
+  public function model(string $key): string
+  public function parseRoom(string $room): ?Vaulter\Documents\Data\Collaboration\RoomRef
+  public function revisionLimit(): int
+  public function tiptapExtraAttributes(): array
+  public function tiptapExtraMarks(): array
+  public function tiptapExtraNodes(): array
+  public function tiptapUrlAttributes(): array
+  public function types(): array
+
+Vaulter\Documents\Content\ContentHasher api since 1.0 final class
+  public static function hash(array $content): string
+  public static function size(array $content): int
+
+Vaulter\Documents\Content\OpaqueContent api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentContent
+  public array $data
+  public function contentHash(): string
+  public static function fromArray(array $data): self
+  public function sizeInBytes(): int
+  public function toArray(): array
+
+Vaulter\Documents\Content\OpaqueJsonCodec api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentCodec
+  public function __construct(?int $maxSizeBytes = null)
+  public function decode(array $raw, int $schemaVersion): Vaulter\Documents\Contracts\DocumentContent
+  public function maxSizeBytes(): ?int
+
+Vaulter\Documents\Content\TipTap\LinkSchemeValidator api since 1.0 final readonly class
+  public static function isAllowed(string $href): bool
+  public static function isDangerous(string $value): bool
+  public static function sanitize(string $href): ?string
+
+Vaulter\Documents\Content\TipTap\TipTapCodec api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentCodec
+  public function __construct(Vaulter\Documents\Content\TipTap\TipTapSchema $schema, ?int $maxSizeBytes = null)
+  public function decode(array $raw, int $schemaVersion): Vaulter\Documents\Contracts\DocumentContent
+  public function decodeForRead(array $stored): Vaulter\Documents\Content\ReadContent
+  public function maxSizeBytes(): ?int
+  public function schema(): Vaulter\Documents\Content\TipTap\TipTapSchema
+
+Vaulter\Documents\Content\TipTap\TipTapContent api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentContent
+  public array $doc
+  public static function allowedAttributes(string $type): array
+  public static function allowedMarkTypes(): array
+  public static function allowedNodeTypes(): array
+  public function contentHash(): string
+  public static function decayFrom(array $doc, ?Vaulter\Documents\Content\TipTap\TipTapSchema $schema = null): self
+  public static function decayReporting(array $doc, ?Vaulter\Documents\Content\TipTap\TipTapSchema $schema = null): array
+  public static function empty(): self
+  public function ensureWithin(int $maxKb): self
+  public static function fromArray(array $doc, ?Vaulter\Documents\Content\TipTap\TipTapSchema $schema = null): self
+  public function sizeInBytes(): int
+  public function sizeInKb(): float
+  public function toArray(): array
+  public static function urlAttributes(string $type): array
+  public function withSanitizedUrls(): self
+
+Vaulter\Documents\Content\TipTap\TipTapRenderer api since 1.0 final class
+  public function __construct(Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface $sanitizer)
+  public function toHtml(Vaulter\Documents\Content\TipTap\TipTapContent $content): string
+  public function toMarkdown(Vaulter\Documents\Content\TipTap\TipTapContent $content): string
+
+Vaulter\Documents\Content\TipTap\TipTapSchema api since 1.0 final readonly class
+  public const array REQUIRED_URL_ATTRIBUTES = ['link' => ['href'], 'image' => ['src']]
+  public function allowsMark(string $type): bool
+  public function allowsNode(string $type): bool
+  public function attributes(string $type): array
+  public function markTypes(): array
+  public static function markdown(): self
+  public function nodeTypes(): array
+  public static function richText(): self
+  public function urlAttributes(string $type): array
+
+Vaulter\Documents\Contracts\CollaborationDriver spi:implement since 1.0 interface
+  public function issueSession(Vaulter\Drive\Models\Node $node, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): Vaulter\Documents\Data\Collaboration\CollaborationSession
+  public function type(): Vaulter\Documents\Enums\Collaboration\CollaborationDriverType
+
+Vaulter\Documents\Contracts\DocumentCodec spi:implement since 1.0 interface
+  public function decode(array $raw, int $schemaVersion): Vaulter\Documents\Contracts\DocumentContent
+  public function maxSizeBytes(): ?int
+
+Vaulter\Documents\Contracts\DocumentContent spi:implement since 1.0 interface
+  public function contentHash(): string
+  public function sizeInBytes(): int
+  public function toArray(): array
+
+Vaulter\Documents\Contracts\DocumentExporter spi:implement since 1.0 interface
+  public function documentTypes(): array
+  public function export(Vaulter\Documents\Contracts\DocumentContent $content, Vaulter\Documents\Contracts\DocumentType $type): string
+  public function extension(): string
+  public function format(): string
+  public function key(): string
+  public function mimeType(): string
+
+Vaulter\Documents\Contracts\DocumentType spi:implement since 1.0 interface
+  public function capabilities(): Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
+  public function codec(): Vaulter\Documents\Contracts\DocumentCodec
+  public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
+  public function key(): string
+  public function label(): string
+  public function schemaVersion(): int
+  public function viewer(): Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Documents\Contracts\ExportFilenameResolver spi:implement since 1.0 interface
+  public function resolve(Vaulter\Drive\Models\Node $node, string $extension): string
+
+Vaulter\Documents\Contracts\HostUserResolver spi:implement since 1.0 interface
+  public function find(int|string $id): ?Illuminate\Contracts\Auth\Access\Authorizable
+
+Vaulter\Documents\Contracts\SupportsCollaboration spi:implement since 1.0 interface
+  public function collaborationProtocol(): string
+  public function projectFromState(string $state): ?Vaulter\Documents\Contracts\DocumentContent
+
+Vaulter\Documents\Contracts\UpgradesSchema spi:implement since 1.0 interface
+  public function upgrade(array $content, int $fromVersion): array
+
+Vaulter\Documents\Data\Collaboration\CollaborationSession api since 1.0 final readonly class
+  public string $driveId
+  public Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver
+  public int $epoch
+  public string $nodeId
+  public bool $readOnly
+  public string $room
+  public int $schemaVersion
+  public string $token
+  public ?string $url
+  public function __construct(Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver, string $room, string $nodeId, string $driveId, int $epoch, int $schemaVersion, bool $readOnly, string $token, ?string $url = null)
+  public function mode(): string
+  public function toArray(): array
+
+Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput api since 1.0 final readonly class
+  public int|null|string $actorId
+  public ?array $content
+  public ?int $expectedEpoch
+  public ?int $expectedStateVersion
+  public Vaulter\Drive\Models\Node $node
+  public bool $seed
+  public string $yjsState
+
+Vaulter\Documents\Data\Collaboration\RoomRef api since 1.0 final readonly class
+  public string $driveId
+  public int $epoch
+  public string $nodeId
+  public function __construct(string $driveId, string $nodeId, int $epoch)
+
+Vaulter\Documents\Data\Comments\AddCommentInput api since 1.0 final readonly class
+  public ?array $anchor
+  public string $body
+  public int|null|string $parentId
+  public function __construct(string $body, int|null|string $parentId = null, ?array $anchor = null)
+
+Vaulter\Documents\Data\Comments\DeleteCommentInput api since 1.0 final readonly class
+  public Vaulter\Documents\Models\Comments\NodeComment $comment
+
+Vaulter\Documents\Data\Comments\ResolveCommentInput api since 1.0 final readonly class
+  public Vaulter\Documents\Models\Comments\NodeComment $comment
+
+Vaulter\Documents\Data\Documents\CreateDocumentInput api since 1.0 final readonly class
+  public const string NODE_MIME = 'application/vnd.vaulter.document+json'
+  public Vaulter\Documents\Contracts\DocumentContent $content
+  public string $name
+  public Vaulter\Drive\Enums\OnNameConflict $onConflict
+  public ?Vaulter\Drive\Models\Node $parent
+  public int $schemaVersion
+  public Vaulter\Drive\Models\Drive $storage
+  public string $type
+
+Vaulter\Documents\Data\Documents\UpdateDocumentContentInput api since 1.0 final readonly class
+  public Vaulter\Documents\Contracts\DocumentContent $content
+  public ?int $expectedStateVersion
+  public Vaulter\Drive\Models\Node $node
+  public ?string $yjsState
+
+Vaulter\Documents\Data\Export\ExportDocumentInput api since 1.0 final readonly class
+  public string $format
+  public Vaulter\Drive\Models\Node $node
+  public ?Vaulter\Documents\Models\Revisions\DocumentRevision $revision
+
+Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput api since 1.0 final readonly class
+  public bool $keepForever
+  public ?string $label
+  public Vaulter\Drive\Models\Node $node
+
+Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput api since 1.0 final readonly class
+  public ?int $expectedStateVersion
+  public Vaulter\Drive\Models\Node $node
+  public Vaulter\Documents\Models\Revisions\DocumentRevision|int|string $revision
+
+Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput api since 1.0 final readonly class
+  public bool $keepForever
+  public Vaulter\Drive\Models\Node $node
+  public Vaulter\Documents\Models\Revisions\DocumentRevision|int|string $revision
+
+Vaulter\Documents\Data\Snapshots\CommentSnapshot api since 1.0 final readonly class
+  public ?array $anchor
+  public string $authorId
+  public string $authorType
+  public string $body
+  public DateTimeImmutable $createdAt
+  public string $id
+  public string $nodeId
+  public ?string $parentId
+  public ?DateTimeImmutable $resolvedAt
+  public ?string $resolvedBy
+
+Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot api since 1.0 final readonly class
+  public ?string $contentHash
+  public ?int $contentSize
+  public DateTimeImmutable $createdAt
+  public ?string $createdBy
+  public string $documentId
+  public string $id
+  public bool $isAutosave
+  public bool $isHead
+  public bool $keepForever
+  public ?string $label
+  public string $nodeId
+  public int $number
+  public ?string $restoredFromRevisionId
+  public int $schemaVersion
+  public int $stateVersion
+  public string $type
+  public ?int $yjsStateSize
+
+Vaulter\Documents\Data\Snapshots\DocumentSnapshot api since 1.0 final readonly class
+  public Vaulter\Documents\Contracts\DocumentContent $content
+  public ?string $contentHash
+  public bool $dirty
+  public string $documentId
+  public bool $editable
+  public int $epoch
+  public ?string $headRevisionId
+  public string $nodeId
+  public ?Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot $revision
+  public int $schemaVersion
+  public int $stateVersion
+  public string $type
+  public bool $typeAvailable
+  public DateTimeImmutable $updatedAt
+  public ?string $updatedBy
+  public ?int $yjsStateSize
+
+Vaulter\Documents\Database\Factories\DocumentFactory api since 1.0 final class extends Vaulter\Drive\Database\Factories\VaulterFactory
+  protected $model = \Vaulter\Documents\Models\Documents\Document::class
+  public function definition(): array
+  public function in(Vaulter\Drive\Models\Drive|Vaulter\Drive\Models\Node $container): static
+  public function named(string $name): static
+  public function ofType(string $type): static
+  protected function persist(Illuminate\Database\Eloquent\Model $draft): Illuminate\Database\Eloquent\Model
+  public function richText(string $text = 'fixture'): static
+
+Vaulter\Documents\DocumentsManager api since 1.0 final readonly class
+  public function __construct(Vaulter\Documents\Types\DocumentTypeRegistry $types, Vaulter\Documents\Export\DocumentExporterRegistry $exporters)
+  public function comments(Vaulter\Drive\Contracts\DriveHandle $drive): Vaulter\Documents\Operations\CommentOperations
+  public function exporters(): Vaulter\Documents\Export\DocumentExporterRegistry
+  public function in(Vaulter\Drive\Contracts\DriveHandle $drive): Vaulter\Documents\Operations\DocumentOperations
+  public function types(): Vaulter\Documents\Types\DocumentTypeRegistry
+
+Vaulter\Documents\Enums\Collaboration\CollaborationDriverType api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Hocuspocus = 'hocuspocus'
+
+Vaulter\Documents\Enums\DocumentEventType api since 1.0 enum: string implements Vaulter\Events\EventTypeContract uses Vaulter\Events\Concerns\DescribesEvent
+  case CommentAdded = 'comment.added'
+  case CommentDeleted = 'comment.deleted'
+  case CommentResolved = 'comment.resolved'
+  case DocumentCreated = 'document.created'
+  case DocumentRestored = 'document.restored'
+  case DocumentRevisionCreated = 'document.revision_created'
+  case DocumentUpdated = 'document.updated'
+
+Vaulter\Documents\Events\Comments\CommentAdded api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent implements Illuminate\Contracts\Broadcasting\ShouldBroadcast
+  public Vaulter\Documents\Models\Comments\NodeComment $comment
+  public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  public function broadcastAs(): string
+  public function broadcastOn(): array
+  public function broadcastWith(): array
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Documents\Enums\DocumentEventType
+
+Vaulter\Documents\Events\Comments\CommentDeleted api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent implements Illuminate\Contracts\Broadcasting\ShouldBroadcast
+  public Vaulter\Documents\Models\Comments\NodeComment $comment
+  public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  public function broadcastAs(): string
+  public function broadcastOn(): array
+  public function broadcastWith(): array
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Documents\Enums\DocumentEventType
+
+Vaulter\Documents\Events\Comments\CommentResolved api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent implements Illuminate\Contracts\Broadcasting\ShouldBroadcast
+  public Vaulter\Documents\Models\Comments\NodeComment $comment
+  public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  public function broadcastAs(): string
+  public function broadcastOn(): array
+  public function broadcastWith(): array
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Documents\Enums\DocumentEventType
+
+Vaulter\Documents\Events\Documents\DocumentContentUpdated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
+  public bool $created
+  public int $epoch
+  public Vaulter\Drive\Models\Node $node
+  public int $stateVersion
+  public Vaulter\Documents\Models\Revisions\DocumentRevision $version
+  public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function isExternal(): bool
+  public function journal(): Vaulter\Drive\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Documents\Enums\DocumentEventType
+
+Vaulter\Documents\Events\Documents\DocumentCreated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
+  public int $epoch
+  public Vaulter\Drive\Models\Node $node
+  public int $stateVersion
+  public Vaulter\Documents\Models\Revisions\DocumentRevision $version
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\Drive\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): int
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Documents\Enums\DocumentEventType
+
+Vaulter\Documents\Events\Revisions\DocumentRestored api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
+  public int $epoch
+  public Vaulter\Drive\Models\Node $node
+  public Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom
+  public int $stateVersion
+  public Vaulter\Documents\Models\Revisions\DocumentRevision $version
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function journal(): Vaulter\Drive\ValueObjects\Events\JournalEffect
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Documents\Enums\DocumentEventType
+
+Vaulter\Documents\Events\Revisions\DocumentRevisionCreated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
+  public int $epoch
+  public Vaulter\Drive\Models\Node $node
+  public bool $restored
+  public int $stateVersion
+  public Vaulter\Documents\Models\Revisions\DocumentRevision $version
+  public function activityContext(): array
+  public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Documents\Enums\DocumentEventType
+
+Vaulter\Documents\Exceptions\CollaborationConfigException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function missingJwt(): self
+  public static function missingSecret(): self
+
+Vaulter\Documents\Exceptions\CollaborationEpochMismatchException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly int $actual
+  public readonly int $expected
+  public function __construct(int $expected, int $actual)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Documents\Exceptions\CollaborationSeedConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly ?int $actualStateVersion
+  public readonly ?int $expectedStateVersion
+  public readonly string $nodeId
+  public function __construct(string $nodeId, ?int $expectedStateVersion = null, ?int $actualStateVersion = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Documents\Exceptions\CollaborationUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly string $reason
+  public readonly ?string $type
+  public function __construct(string $reason, ?string $type = null)
+  public static function disabled(): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+  public static function unsupportedType(string $type): self
+
+Vaulter\Documents\Exceptions\CommentNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forNode(mixed $nodeId, mixed $commentId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Documents\Exceptions\DocumentContentDegradedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly string $type
+  public function __construct(string $type)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forNode(mixed $nodeId, mixed $versionId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Documents\Exceptions\DocumentStateTooLargeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly int $maxBytes
+  public readonly int $sizeBytes
+  public function __construct(int $sizeBytes, int $maxBytes)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Documents\Exceptions\DocumentTypeUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly string $type
+  public function __construct(string $type)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Documents\Exceptions\DuplicateDocumentExporterException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forKey(string $key): self
+  public static function forPair(string $type, string $format, string $existing, string $incoming): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Documents\Exceptions\DuplicateDocumentTypeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forKey(string $key): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Documents\Exceptions\InvalidDocumentContentException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function disallowedAttribute(string $nodeType, string $attribute): self
+  public static function disallowedUrlScheme(string $href): self
+  public function httpStatus(): int
+  public static function malformedNode(string $nodeType, string $field): self
+  public static function missingDocNode(): self
+  public static function missingProjection(string $type): self
+  public static function notAnObject(): self
+  public function problemCode(): string
+  public function problemDetails(): array
+  public static function tooLarge(float $sizeKb, int $maxKb): self
+  public static function tooLargeBytes(int $sizeBytes, int $maxBytes): self
+  public static function unknownMarkType(string $type): self
+  public static function unknownNodeType(string $type): self
+
+Vaulter\Documents\Exceptions\NotADocumentException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forNode(mixed $nodeId): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Documents\Exceptions\StaleDocumentStateException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly int $actual
+  public readonly int $expected
+  public function __construct(int $expected, int $actual, ?string $nodeId = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Documents\Exceptions\UnknownDocumentTypeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forType(string $type, array $allowed): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Documents\Exceptions\UnknownExportFormatException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forFormat(string $format, array $allowed): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Documents\Exceptions\UnsupportedDocumentContentException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forExporter(string $exporterFormat, string $expected, string $actual): self
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Documents\Export\DefaultExportFilenameResolver api since 1.0 final class implements Vaulter\Documents\Contracts\ExportFilenameResolver
+  public function resolve(Vaulter\Drive\Models\Node $node, string $extension): string
+
+Vaulter\Documents\Export\DocumentExporterRegistry api since 1.0 final class
+  public function all(): array
+  public function for(string $typeKey, string $format): Vaulter\Documents\Contracts\DocumentExporter
+  public function formatsFor(string $typeKey): array
+  public function register(Vaulter\Documents\Contracts\DocumentExporter|string $exporter): void
+  public function replace(string $key, Vaulter\Documents\Contracts\DocumentExporter|string $exporter): void
+
+Vaulter\Documents\Export\HtmlExporter api since 1.0 final class implements Vaulter\Documents\Contracts\DocumentExporter
+  public function __construct(Vaulter\Documents\Content\TipTap\TipTapRenderer $renderer)
+  public function documentTypes(): array
+  public function export(Vaulter\Documents\Contracts\DocumentContent $content, Vaulter\Documents\Contracts\DocumentType $type): string
+  public function extension(): string
+  public function format(): string
+  public function key(): string
+  public function mimeType(): string
+
+Vaulter\Documents\Export\MarkdownExporter api since 1.0 final class implements Vaulter\Documents\Contracts\DocumentExporter
+  public function __construct(Vaulter\Documents\Content\TipTap\TipTapRenderer $renderer)
+  public function documentTypes(): array
+  public function export(Vaulter\Documents\Contracts\DocumentContent $content, Vaulter\Documents\Contracts\DocumentType $type): string
+  public function extension(): string
+  public function format(): string
+  public function key(): string
+  public function mimeType(): string
+
+Vaulter\Documents\Facades\Documents api since 1.0 final class extends Illuminate\Support\Facades\Facade
+  @method static CommentOperations comments(DriveHandle $drive)
+  @method static DocumentExporterRegistry exporters()
+  @method static DocumentOperations in(DriveHandle $drive)
+  @method static DocumentTypeRegistry types()
+  protected static function getFacadeAccessor(): string
+
+Vaulter\Documents\Operations\CommentOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\DriveExtension
+  public function add(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Documents\Data\Comments\AddCommentInput $input): Vaulter\Documents\Data\Snapshots\CommentSnapshot
+  public function delete(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment): void
+  public function list(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?Vaulter\Drive\Data\ListOptions $options = null): Vaulter\Data\Page
+  public function resolve(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment): Vaulter\Documents\Data\Snapshots\CommentSnapshot
+
+Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\DriveExtension
+  public function collaborationSession(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationSession
+  public function content(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
+  public function create(string $name, ?string $type = null, ?array $content = null, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?Vaulter\Drive\Data\CreateFolderOptions $options = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  public function export(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\ValueObjects\DocumentExport
+  public function restore(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, ?int $expectedStateVersion = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
+  public function revisions(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?Vaulter\Drive\Data\ListOptions $options = null): Vaulter\Data\Page
+  public function setRetention(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, bool $keepForever): Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
+  public function snapshot(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?string $label = null, bool $keepForever = false): Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
+  public function update(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, array $content, ?int $expectedStateVersion = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
+
+Vaulter\Documents\Presentation\DocumentPresenter api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Presentation\KindPresenter
+  public function kind(): Vaulter\Drive\Enums\NodeKind
+  public function present(Vaulter\Drive\Data\Snapshots\NodeSnapshot|Vaulter\Drive\Models\Node $node): Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests api since 1.0 trait
+  public function assertDocumentTypeContract(Vaulter\Documents\Contracts\DocumentType $type): void
+
+Vaulter\Documents\Testing\Contracts\ExporterContractTests api since 1.0 final class
+  public function assertExporterContract(Vaulter\Documents\Contracts\DocumentExporter $exporter): void
+
+Vaulter\Documents\Types\DocumentTypeRegistry api since 1.0 final class
+  public function all(): array
+  public function find(string $key): ?Vaulter\Documents\Contracts\DocumentType
+  public function get(string $key): Vaulter\Documents\Contracts\DocumentType
+  public function has(string $key): bool
+  public function register(Vaulter\Documents\Contracts\DocumentType|string $type): void
+  public function replace(string $key, Vaulter\Documents\Contracts\DocumentType|string $type): void
+
+Vaulter\Documents\Types\MarkdownDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType, Vaulter\Documents\Contracts\SupportsCollaboration
+  public const string KEY = 'vaulter/markdown'
+  public function capabilities(): Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
+  public function codec(): Vaulter\Documents\Contracts\DocumentCodec
+  public function collaborationProtocol(): string
+  public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
+  public function key(): string
+  public function label(): string
+  public function projectFromState(string $state): ?Vaulter\Documents\Contracts\DocumentContent
+  public function schemaVersion(): int
+  public function viewer(): Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Documents\Types\RichTextDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType, Vaulter\Documents\Contracts\SupportsCollaboration
+  public const string KEY = 'vaulter/rich-text'
+  public function capabilities(): Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
+  public function codec(): Vaulter\Documents\Contracts\DocumentCodec
+  public function collaborationProtocol(): string
+  public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
+  public function key(): string
+  public function label(): string
+  public function projectFromState(string $state): ?Vaulter\Documents\Contracts\DocumentContent
+  public function schemaVersion(): int
+  public function viewer(): Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Documents\Types\SpreadsheetDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType
+  public const string KEY = 'vaulter/spreadsheet'
+  public function capabilities(): Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
+  public function codec(): Vaulter\Documents\Contracts\DocumentCodec
+  public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
+  public function key(): string
+  public function label(): string
+  public function schemaVersion(): int
+  public function viewer(): Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Documents\ValueObjects\DocumentExport api since 1.0 final readonly class
+  public string $bytes
+  public string $filename
+  public string $format
+  public bool $lossy
+  public string $mimeType
+  public int $sourceEpoch
+  public int|null|string $sourceRevisionId
+  public int $sourceStateVersion
+  public function __construct(string $bytes, string $filename, string $mimeType, string $format, int $sourceEpoch, int $sourceStateVersion, int|null|string $sourceRevisionId, bool $lossy = false)
+
+Vaulter\Documents\VaulterDocumentsServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
+  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
+  public function packageRegistered(): void

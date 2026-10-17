@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
+
 /**
  * The manifest of a module: who it is, what it needs and what it declares. A package's service
  * provider offers its manifest from `register()` ({@see OffersModules}); the kernel compiles every
@@ -11,6 +14,7 @@ namespace Vaulter\Modules;
  *
  * `register()` only declares: no I/O, no container lookups, no actor, tenant or clock.
  */
+#[Spi(SpiKind::Implement)]
 interface VaulterModule
 {
     public function id(): ModuleId;

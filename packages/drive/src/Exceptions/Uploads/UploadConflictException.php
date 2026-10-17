@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Uploads;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -21,6 +22,7 @@ use Vaulter\Exceptions\VaulterException;
  * (B7); here the handler raises this typed exception and the controller is left
  * untouched beyond what the fix requires.
  */
+#[Api]
 final class UploadConflictException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

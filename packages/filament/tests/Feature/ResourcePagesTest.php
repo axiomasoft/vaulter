@@ -20,9 +20,10 @@ it('declares an index page for every Drive resource', function (string $resource
     ActivityResource::class,
 ]);
 
-it('declares a view page for the read-mostly resources', function (): void {
-    expect(DriveResource::getPages())->toHaveKey('view')
-        ->and(ActivityResource::getPages())->toHaveKey('view');
+it('declares no record page: every row is a snapshot with no model to open', function (): void {
+    foreach ([DriveResource::class, NodeResource::class, NodeGrantResource::class, NodeShareResource::class, ActivityResource::class] as $resource) {
+        expect(array_keys($resource::getPages()))->toBe(['index']);
+    }
 });
 
 it('lists every Drive resource under the Vaulter navigation group', function (string $resource): void {

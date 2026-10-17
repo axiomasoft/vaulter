@@ -7,35 +7,36 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Content\NodeContentLifecycleRegistry;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\CopyResult;
-use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\RevisionOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Content\FileContentLifecycle;
+use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\RevisionOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\RestoreDestinationRequiredException;
+use Vaulter\Drive\Exceptions\Nodes\UnsupportedNodeKindException;
+use Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Providers\BindingsRegistrar;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Content\ContentQuarantinedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
-use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
-use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 
 /** Injects a failure after real CAS edge detach, so transaction rollback is observable. */
 final readonly class LifecycleBoundaryFailingFile implements NodeContentLifecycle
@@ -73,11 +74,7 @@ beforeEach(function (): void {
 /** Database state includes side effects, not just the returned node. */
 function lifecycleBoundaryState(): array
 {
-    $db = app(VaulterDatabase::class)->connection();
-
-    return array_map(static fn (string $table): array => $db->table($table)->orderBy($table === 'v_file_revision_blobs' ? 'blob_id' : 'id')->get()->map(fn ($row): array => (array) $row)->all(), [
-        'v_nodes', 'v_files', 'v_file_revisions', 'v_file_revision_blobs', 'v_blobs', 'v_drives', 'v_activity', 'v_outbox',
-    ]);
+    return DriveTestHelpers::writeTablesSnapshot();
 }
 
 function lifecycleBoundaryEdges(FileRevision $revision): array
@@ -88,6 +85,8 @@ function lifecycleBoundaryEdges(FileRevision $revision): array
         'ordinal' => $blob->pivot->ordinal,
         'offset_bytes' => $blob->pivot->offset_bytes,
         'length_bytes' => $blob->pivot->length_bytes,
+        // Every edge carries its own media pin (D23).
+        'pinned' => in_array(RevisionBlobLinks::referenceKey($revision->id, $blob->pivot->role, $blob->pivot->ordinal), RevisionBlobPins::keys($blob), true),
     ])->sortBy(fn (array $edge): string => $edge['role'].':'.$edge['ordinal'])->values()->all();
 }
 
@@ -139,10 +138,11 @@ it('copies and restores immutable payload identity edge attributes and metadata 
         'keep_forever' => true,
     ])->save()));
     DriveTestHelpers::insideOperation(); // the CAS edge is attached by hand, outside an operation
-    app(BlobStore::class)->attach(version: $original, blob: $blob, attributes: [
+    app(VaulterDatabase::class)->transaction(fn () => app(RevisionBlobLinks::class)->attach(revision: $original, blob: $blob, attributes: [
         'role' => 'chunk', 'ordinal' => 7, 'offset_bytes' => 1, 'length_bytes' => 3,
-    ]);
+    ]));
     $edges = lifecycleBoundaryEdges($original);
+    expect(array_column($edges, 'pinned'))->toBe([true, true]);
     $originalBeforeCopy = $original->fresh()->getAttributes();
     $copy = $this->system->nodes()->copy($node, options: new CopyOptions(name: 'copied.txt'));
     $copied = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->firstOrFail();
@@ -181,10 +181,10 @@ it('uses fresh destination admission without inheriting a legacy scan exemption'
     $node = $this->system->files()->upload(UploadSource::fromString('legacy admitted bytes', 'legacy.txt'));
     $original = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $original->forceFill(['scan_status' => 'not_required'])->save();
-    config()->set('vaulter.scan.mode', 'new_content_only');
-    config()->set('vaulter.scan.rollout_key', 'legacy-copy');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'new_content_only');
+    config()->set('vaulter-drive.scan.rollout_key', 'legacy-copy');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), DriveContext::system($this->system->model(), 'lifecycle acceptance fixture'));
     $copy = $this->system->nodes()->copy($node);
     $copied = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->firstOrFail();
@@ -289,7 +289,7 @@ it('retention purge reports a failed root exits one and still physically commits
 });
 
 it('restores to the active original parent without Create when no destination is given', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(83);
     $parent = $this->system->folders()->create('original');
     $source = $this->system->folders()->create('source', $parent);
@@ -303,7 +303,7 @@ it('restores to the active original parent without Create when no destination is
 });
 
 it('authorizes View and Create on the actual fallback destination', function (string $lane): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(84);
     $parent = $this->system->folders()->create('original');
     $source = $this->system->folders()->create('source', $parent);
@@ -314,7 +314,9 @@ it('authorizes View and Create on the actual fallback destination', function (st
             subjectId: 84);
     }
     $this->system->nodes()->trash($source);
-    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($parent)->delete());
+    // The original parent leaves the active tree. Trashed, not deleted: parent_id cascades on delete, so on an engine
+    // that enforces foreign keys a delete would take the trashed source with it.
+    $this->system->nodes()->trash($parent);
     $before = lifecycleBoundaryState();
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
     $run = fn () => $actor->trash()->restore($source, new RestoreOptions(destination: $fallback));
@@ -327,7 +329,7 @@ it('authorizes View and Create on the actual fallback destination', function (st
 })->with(['hidden', 'missing Create', 'allowed']);
 
 it('repeats public destination authorization when the original parent changes after precheck', function (bool $allowFallback): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(85);
     $parent = $this->system->folders()->create('racing original');
     $source = $this->system->folders()->create('source', $parent);

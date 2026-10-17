@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Tests\Concerns\ExercisesWideNodeListing;
+use Vaulter\Drive\Testing\Concerns\ExercisesWideNodeListing;
 
 uses(ExercisesWideNodeListing::class);
 

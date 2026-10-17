@@ -7,12 +7,14 @@ namespace Vaulter\Schema;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
 
 /**
  * Lexicographically sortable ULID keys (26-char Crockford base32). The default
  * strategy — its morph keys line up with the Corex/host authorization ecosystem.
  */
+#[Internal]
 final class UlidIds implements IdStrategy
 {
     public function key(Blueprint $table, string $column = 'id'): void

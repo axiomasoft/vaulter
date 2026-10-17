@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 
 /**
  * GET nodes/{node} answers 304 only to a caller who may still see the node, and only

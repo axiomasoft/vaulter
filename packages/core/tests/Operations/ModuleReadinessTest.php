@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Doctor\Checks\SchemaTablesCheck;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\ModuleReadiness;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -59,13 +59,15 @@ it('refuses a module that is not active', function (): void {
         ->toThrow(ModuleNotReadyException::class, 'not active');
 });
 
-it('splits the doctor tables by their owning module without losing one', function (): void {
-    $doctor = (new ReflectionClassConstant(SchemaTablesCheck::class, 'ENTITIES'))->getValue();
-    $owned = array_merge(...array_values(SchemaTablesCheck::OWNED_ENTITIES));
-    sort($doctor);
-    sort($owned);
+it('lists the tables by the module that owns them, from the schema class of each manifest', function (): void {
+    $schemas = app(ModuleSchemas::class);
+    $owned = $schemas->allEntities();
 
-    expect($owned)->toBe($doctor)
-        ->and(SchemaTablesCheck::ownedBy('webhooks'))->toBe(['webhook_endpoints', 'webhook_deliveries'])
-        ->and(SchemaTablesCheck::ownedBy('filament'))->toBe([]);
+    expect($schemas->entitiesOf('core'))->toBe(['outbox', 'outbox_consumers', 'outbox_deliveries', 'idempotency_keys'])
+        ->and($schemas->entitiesOf('media'))->toBe(['blobs', 'blob_references'])
+        ->and($schemas->entitiesOf('webhooks'))->toBe(['webhook_endpoints', 'webhook_deliveries'])
+        ->and($schemas->entitiesOf('filament'))->toBe([])
+        ->and($schemas->entitiesOf('documents'))->toBe([])
+        ->and($owned)->toContain('nodes', 'blobs', 'outbox', 'webhook_endpoints')
+        ->and(array_unique($owned))->toHaveCount(count($owned));
 });

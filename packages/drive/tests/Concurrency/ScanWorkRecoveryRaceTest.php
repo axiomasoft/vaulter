@@ -5,27 +5,27 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Actions\Content\ClaimScanWorkAction;
-use Vaulter\Actions\Content\FenceScanAttemptAction;
-use Vaulter\Actions\Content\RecoverScanWorkAction;
-use Vaulter\Actions\Content\SettleScanWorkAction;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ScanAttempt;
-use Vaulter\Content\ScanResult;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Drive\Actions\Content\FenceScanAttemptAction;
+use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
+use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Enums\Cas\ScanVerdict;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Content\ScanObligationRepository;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);
@@ -34,9 +34,9 @@ beforeEach(function (): void {
 });
 
 it('SEC-R11 concurrent claims acquire one live lease and late old token cannot settle', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -74,9 +74,9 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
 });
 
 it('SEC-R09 killed committed publisher leaves intent recoverable by an independent process', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -92,7 +92,7 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
         });
     }]);
     expect($outcomes[0]->ok)->toBeFalse();
-    $workClass = app(VaulterConfig::class)->model('scan_obligation');
+    $workClass = app(DriveConfig::class)->model('scan_obligation');
     $row = $workClass::query()->where('drive_id', $drive->id)->firstOrFail();
     expect($row->state)->toBe('pending')->and($row->attempt)->toBe(0);
     $recovered = ForkRace::run([function () use ($row): bool {
@@ -107,9 +107,9 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
 });
 
 it('SEC-R11 killed lease owner is fenced while a surviving process recovers', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -146,7 +146,7 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
         $outcomes = ForkRace::run([
             function () use ($drive, $context, $ready): int {
                 return app(VaulterDatabase::class)->transaction(function () use ($drive, $context, $ready): int {
-                    app(VaulterDatabase::class)->lockTreeShared($drive->id);
+                    app(VaulterDatabase::class)->lockAggregateShared('drives', $drive->id);
                     $stream = UploadTestHelpers::streamFor('before activation');
                     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'before.txt', 'text/plain'));
                     fclose($stream);
@@ -164,12 +164,12 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
                     }
                     usleep(1000);
                 }
-                config()->set('vaulter.scan.mode', 'new_content_only');
-                config()->set('vaulter.scan.rollout_key', 'first');
-                config()->set('vaulter.scan.scanner_key', 'fixture');
-                config()->set('vaulter.scan.scanner_version', '1');
+                config()->set('vaulter-drive.scan.mode', 'new_content_only');
+                config()->set('vaulter-drive.scan.rollout_key', 'first');
+                config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+                config()->set('vaulter-drive.scan.scanner_version', '1');
                 app(ScanPolicyResolver::class)->initialize($drive, $context);
-                $class = app(VaulterConfig::class)->model('scan_policy_state');
+                $class = app(DriveConfig::class)->model('scan_policy_state');
 
                 return $class::query()->where('drive_id', $drive->id)->where('predicate_key', 'global')->firstOrFail()->boundary_sequence;
             },
@@ -177,10 +177,10 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
         foreach ($outcomes as $outcome) {
             expect($outcome->ok)->toBeTrue($outcome->message ?? '')->and($outcome->value)->toBe(1);
         }
-        config()->set('vaulter.scan.mode', 'new_content_only');
-        config()->set('vaulter.scan.rollout_key', 'first');
-        config()->set('vaulter.scan.scanner_key', 'fixture');
-        config()->set('vaulter.scan.scanner_version', '1');
+        config()->set('vaulter-drive.scan.mode', 'new_content_only');
+        config()->set('vaulter-drive.scan.rollout_key', 'first');
+        config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+        config()->set('vaulter-drive.scan.scanner_version', '1');
         $stream = UploadTestHelpers::streamFor('after activation');
         $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'after.txt', 'text/plain'));
         fclose($stream);
@@ -194,9 +194,9 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
 });
 
 it('SEC-R12 purge and settlement serialize without resurrecting a head or work', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);

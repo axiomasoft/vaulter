@@ -14,6 +14,7 @@
         "code": "precondition_required",
         "detail": "The If-Match header is required for this request.",
         "request_id": "01M4MPFJQVZ8HQ13QTP32QCFGR",
+        "retryable": "after_refetch",
         "errors": null,
         "meta": {
             "header": "If-Match",

@@ -5,25 +5,29 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Files;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A brand-new file node was uploaded — first version committed against a
  * (possibly deduplicated) blob. A subsequent upload onto the same node
  * fires FileRevisionAdded instead.
  */
-final readonly class FileUploaded extends DomainEvent
+#[Api]
+final readonly class FileUploaded extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public File $file,
@@ -36,9 +40,9 @@ final readonly class FileUploaded extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::FileUploaded;
+        return DriveEventType::FileUploaded;
     }
 
     public function scope(): EventScope

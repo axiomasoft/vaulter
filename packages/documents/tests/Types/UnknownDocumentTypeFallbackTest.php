@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Handlers\NodePresenter;
-use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
@@ -16,8 +14,10 @@ use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\Types\SpreadsheetDocumentType;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Contracts\Handlers\NodePresenter;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * PLAN2.P4.3 / V10: a third-party document type is installed, a document of it is

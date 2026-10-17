@@ -1,0 +1,752 @@
+# Surface manifest of the package `core` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
+# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
+
+Vaulter\Attributes\Api api since 1.0 final readonly class
+  public string $since
+  public function __construct(string $since = '1.0')
+
+Vaulter\Attributes\EventSpec api since 1.0 final readonly class
+  public bool $activity
+  public array $data
+  public string $description
+  public bool $external
+  public ?string $journal
+  public string $subject
+  public function __construct(string $subject, array $data, bool $activity, bool $external, ?string $journal, string $description)
+  public function allowedKeys(): array
+  public function requiredKeys(): array
+
+Vaulter\Attributes\Icon api since 1.0 final readonly class
+  public string $value
+  public function __construct(string $value)
+
+Vaulter\Attributes\Internal api since 1.0 final readonly class
+  public ?string $reason
+  public function __construct(?string $reason = null)
+
+Vaulter\Attributes\Label api since 1.0 final readonly class
+  public string $value
+  public function __construct(string $value)
+
+Vaulter\Attributes\Spi api since 1.0 final readonly class
+  public Vaulter\Attributes\SpiKind $kind
+  public string $since
+  public function __construct(Vaulter\Attributes\SpiKind $kind, string $since = '1.0')
+
+Vaulter\Attributes\SpiKind api since 1.0 enum: string
+  case Call = 'call'
+  case Implement = 'implement'
+
+Vaulter\Configuration\ConfigNormalizer api since 1.0 final class
+  public function normalize(Illuminate\Contracts\Config\Repository $config, array $packageDefaults): void
+  public function packageDefaults(): array
+  public function registerDefaults(string $root, string $path): void
+
+Vaulter\Configuration\ConfigValidator api since 1.0 final readonly class
+  public static function assertImplements(string $key, string $class, string $base): void
+  public static function assertModel(string $key, string $class, string $base): void
+  public function validate(Vaulter\Configuration\VaulterConfig $config, Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Configuration\DatabaseConfig api since 1.0 final readonly class
+  public function connection(): ?string
+  public function table(string $name): string
+  public function tablePrefix(): string
+  public function writeGuard(): bool
+
+Vaulter\Configuration\IdsConfig api since 1.0 final readonly class
+  public function hostKeys(): string
+  public function strategies(): array
+  public function strategy(): string
+  public function usesUlids(): bool
+
+Vaulter\Configuration\ObservabilityConfig api since 1.0 final readonly class
+  public function enabled(): bool
+  public function recorder(): ?string
+  public function tracingEnabled(): bool
+  public function tracingRecorder(): ?string
+
+Vaulter\Configuration\OutboxConfig api since 1.0 final readonly class
+  public function backoffBaseSeconds(): int
+  public function backoffCapSeconds(): int
+  public function batch(): int
+  public function deadRetentionSeconds(): int
+  public function leaseSeconds(): int
+  public function maxAttempts(): int
+  public function maxConsumerHoldSeconds(): int
+  public function retentionSeconds(): int
+  public function settleWindowSeconds(): int
+  public function validate(): void
+
+Vaulter\Configuration\RoutesConfig api since 1.0 final readonly class
+  public function authenticatedMiddleware(): array
+  public function hubMiddleware(): array
+  public function prefix(): string
+  public function publicMiddleware(): array
+  public function publicRateLimit(): int
+  public function uploadsRateLimit(): int
+  public function versionedPrefix(): string
+
+Vaulter\Configuration\ScheduleConfig api since 1.0 final readonly class
+  public function enabled(): bool
+  public function frequencies(string $root, array $keys): array
+
+Vaulter\Configuration\ScheduleFrequency api since 1.0 final readonly class
+  public function applyTo(Illuminate\Console\Scheduling\Event $event): Illuminate\Console\Scheduling\Event
+  public static function parse(string $key, mixed $value): ?self
+
+Vaulter\Configuration\TenancyConfig api since 1.0 final readonly class
+  public const string COLUMN = 'tenant_id'
+  public function enabled(): bool
+  public function resolver(): string
+
+Vaulter\Configuration\VaulterConfig api since 1.0 final readonly class
+  public function database(): Vaulter\Configuration\DatabaseConfig
+  public function ids(): Vaulter\Configuration\IdsConfig
+  public function observability(): Vaulter\Configuration\ObservabilityConfig
+  public function outbox(): Vaulter\Configuration\OutboxConfig
+  public function outboxModel(): string
+  public function routes(): Vaulter\Configuration\RoutesConfig
+  public function tenancy(): Vaulter\Configuration\TenancyConfig
+
+Vaulter\Contracts\Doctor\DoctorCheck spi:implement since 1.0 interface
+  public function key(): string
+  public function run(Vaulter\Doctor\DoctorContext $context): array
+  public function title(): string
+
+Vaulter\Contracts\IdStrategy spi:implement since 1.0 interface
+  public function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  public function cast(): string
+  public function key(Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
+  public function modelConcern(): ?string
+  public function newId(): int|null|string
+  public function reference(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+
+Vaulter\Contracts\Observability\MetricsRecorder spi:implement since 1.0 interface
+  public function counter(string $name, float|int $amount = 1, array $labels = []): void
+  public function gauge(string $name, float|int $value, array $labels = []): void
+  public function histogram(string $name, float|int $value, array $labels = []): void
+  public function timing(string $name, callable $operation, array $labels = []): mixed
+
+Vaulter\Contracts\Observability\TraceRecorder spi:implement since 1.0 interface
+  public function span(string $name, callable $operation, array $attributes = []): mixed
+
+Vaulter\Contracts\Routing\RouteLabelSource spi:implement since 1.0 interface
+  public function operationPaths(): array
+  public function operations(): array
+  public function throttled(): array
+
+Vaulter\Contracts\Tenancy\ResolvesOwnerTenant spi:implement since 1.0 interface
+  public function tenantOf(Illuminate\Database\Eloquent\Model $owner): int|null|string
+
+Vaulter\Contracts\Tenancy\TenantResolver spi:implement since 1.0 interface
+  public function current(): int|null|string
+
+Vaulter\Data\Page api since 1.0 final readonly class implements Countable, IteratorAggregate
+  public array $items
+  public ?string $nextCursor
+  public int $scanned
+  public function count(): int
+  public function getIterator(): Traversable
+  public function hasMore(): bool
+
+Vaulter\Database\VaulterDatabase api since 1.0 final class
+  public function advisoryLock(string $key): void
+  public function afterCommit(Closure $callback): void
+  public function connection(): Illuminate\Database\Connection
+  public function driver(): string
+  public function lockAggregate(string $entity, int|string $id): void
+  public function lockAggregateShared(string $entity, int|string $id): void
+  public function transaction(Closure $callback, int $attempts = 3): mixed
+
+Vaulter\Doctor\DoctorCheckResult api since 1.0 final readonly class
+  public ?string $detail
+  public array $findings
+  public string $key
+  public string $title
+  public function __construct(string $key, string $title, array $findings, ?string $detail = null)
+
+Vaulter\Doctor\DoctorContext api since 1.0 final readonly class
+  public DateTimeImmutable $now
+  public bool $probeStorage
+  public bool $production
+  public int $sampleLimit
+  public function __construct(bool $production, bool $probeStorage, int $sampleLimit, DateTimeImmutable $now)
+  public function mayProbeStorage(): bool
+  public function strictSeverity(): Vaulter\Doctor\DoctorSeverity
+
+Vaulter\Doctor\DoctorFinding api since 1.0 final readonly class
+  public string $code
+  public array $evidence
+  public ?string $hint
+  public string $message
+  public Vaulter\Doctor\DoctorSeverity $severity
+  public function __construct(Vaulter\Doctor\DoctorSeverity $severity, string $code, string $message, ?string $hint = null, array $evidence = [])
+  public static function at(Vaulter\Doctor\DoctorSeverity $severity, string $code, string $message, ?string $hint = null, array $evidence = []): self
+  public static function error(string $code, string $message, ?string $hint = null, array $evidence = []): self
+  public static function ok(string $code, string $message, array $evidence = []): self
+  public static function warning(string $code, string $message, ?string $hint = null, array $evidence = []): self
+
+Vaulter\Doctor\DoctorSeverity api since 1.0 enum: string
+  case Error = 'error'
+  case Ok = 'ok'
+  case Warning = 'warning'
+
+Vaulter\Events\Concerns\DescribesEvent spi:implement since 1.0 trait uses Vaulter\Support\Concerns\HasLabel
+  public function spec(): Vaulter\Attributes\EventSpec
+
+Vaulter\Events\DomainEvent api since 1.0 abstract readonly class
+  public Vaulter\ValueObjects\Access\ActorRef $actor
+  public string $correlationId
+  public string $eventId
+  public Carbon\CarbonImmutable $occurredAt
+  public function __construct(Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?Carbon\CarbonImmutable $occurredAt = null)
+  public function activityContext(): array
+  public abstract function data(): array
+  protected static function id(mixed $value): ?string
+  public function isExternal(): bool
+  public abstract function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function sequence(): ?int
+  public abstract function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public abstract function type(): Vaulter\Events\EventTypeContract
+
+Vaulter\Events\EventCatalog api since 1.0 final class
+  public function __construct(Closure $active, Closure $installed)
+  public function all(): array
+  public function external(): array
+  public function externalValues(): array
+  public function get(string $value): Vaulter\Events\EventTypeContract
+  public function has(string $value): bool
+  public function owner(string $value): Vaulter\Modules\ModuleId
+  public function resolve(string $value): ?Vaulter\Events\EventTypeContract
+  public function values(): array
+
+Vaulter\Events\EventRecorder api since 1.0 final readonly class
+  public function record(Vaulter\Events\DomainEvent $event): void
+
+Vaulter\Events\EventSink spi:implement since 1.0 interface
+  public function record(Vaulter\Events\DomainEvent $event, Vaulter\Events\SinkWriter $writer): Vaulter\Events\SinkResult
+
+Vaulter\Events\EventTypeContract spi:implement since 1.0 interface extends BackedEnum
+  public function label(): string
+  public function spec(): Vaulter\Attributes\EventSpec
+
+Vaulter\Events\Outbox\ConsumeResult spi:call since 1.0 final readonly class
+  public const string DEAD = 'dead'
+  public const string DONE = 'done'
+  public const string RETRY = 'retry'
+  public ?string $error
+  public string $outcome
+  public static function dead(string $error): self
+  public static function done(): self
+  public static function retry(string $error): self
+
+Vaulter\Events\Outbox\DeliveryClass spi:call since 1.0 enum: string
+  case Durable = 'durable'
+  case Ephemeral = 'ephemeral'
+
+Vaulter\Events\Outbox\DeliveryControl spi:call since 1.0 final class
+  public readonly string $consumerId
+  public readonly string $eventId
+  public readonly int $generation
+  public function __construct(Vaulter\Database\VaulterDatabase $database, Vaulter\Configuration\DatabaseConfig $tables, string $eventId, string $consumerId, int $generation, ?string $continuation)
+  public function continuation(): ?string
+  public function isCurrent(): bool
+  public function saveContinuation(string $cursor): bool
+
+Vaulter\Events\Outbox\OutboxConsumer spi:implement since 1.0 interface
+  public function consume(Vaulter\Events\Outbox\OutboxEnvelope $envelope, Vaulter\Events\Outbox\DeliveryControl $control): Vaulter\Events\Outbox\ConsumeResult
+  public function deliveryClass(): Vaulter\Events\Outbox\DeliveryClass
+  public function id(): string
+  public function subscribes(Vaulter\Events\EventTypeContract $type): bool
+
+Vaulter\Events\Outbox\OutboxEnvelope spi:call since 1.0 final readonly class
+  public const array FORBIDDEN_KEYS = ['name', 'from_name', 'to_name', 'path', 'mime', 'mime_type', 'content', 'token', 'token_hash', 'token_prefix', 'secret', 'password', 'ip', 'user_agent', 'request_id', 'storage_path']
+  public const string SCOPE_DRIVE = 'drive'
+  public const string SCOPE_TENANT = 'tenant'
+  public ?string $aggregateId
+  public ?string $aggregateType
+  public Carbon\CarbonImmutable $createdAt
+  public string $eventId
+  public bool $external
+  public int $outboxSeq
+  public array $payload
+  public ?string $scopeId
+  public string $scopeKind
+  public ?int $sequence
+  public ?string $tenantId
+  public string $type
+  public function __construct(string $eventId, int $outboxSeq, string $type, bool $external, ?string $tenantId, string $scopeKind, ?string $scopeId, ?string $aggregateType, ?string $aggregateId, ?int $sequence, Carbon\CarbonImmutable $createdAt, array $payload)
+  public static function body(Vaulter\Events\DomainEvent $event, ?int $changeSeq = null): array
+  public static function fromModel(Vaulter\Events\Outbox\Models\OutboxEvent $row): self
+
+Vaulter\Events\SinkResult spi:call since 1.0 enum: string
+  case Replayed = 'replayed'
+  case Skipped = 'skipped'
+  case Stored = 'stored'
+
+Vaulter\Events\SinkWriter spi:call since 1.0 final class
+  public const string JOURNAL_SEQ = 'journal_seq'
+  public function __construct(Vaulter\Database\VaulterDatabase $database)
+  public function connection(): Illuminate\Database\Connection
+  public function insertOnce(string $table, array $row, string $uniqueColumn): bool
+  public function share(string $key, int|null|string $value): void
+  public function shared(string $key): int|null|string
+
+Vaulter\Exceptions\Access\MissingActorException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public function problemCode(): string
+  public static function required(): self
+
+Vaulter\Exceptions\Concerns\ProvidesProblemDetails api since 1.0 trait
+  public function problemDetails(): array
+  public function problemHeaders(): array
+
+Vaulter\Exceptions\Configuration\InvalidConfigurationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public function problemCode(): string
+
+Vaulter\Exceptions\Contracts\ProblemException api since 1.0 interface
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Exceptions\Database\ConcurrentUpdateException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct(?Throwable $previous = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemHeaders(): array
+
+Vaulter\Exceptions\Database\WriteOutsideOperationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct(string $target, ?string $caller = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Http\PreconditionRequiredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function missing(string $header): self
+  public function problemCode(): string
+  public function problemDetails(): array
+  public static function wildcard(): self
+
+Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forOperation(string $operation): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Idempotency\OperationInProgressException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct(int $retryAfter = 1, ?Throwable $previous = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemHeaders(): array
+
+Vaulter\Exceptions\Modules\ModuleNotReadyException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function inactive(string $module): self
+  public static function missingTables(string $module, array $missing): self
+  public function problemCode(): string
+
+Vaulter\Exceptions\Nodes\SequenceOverflowException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function __construct()
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Registry\RegistryFrozenException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forRegistry(string $registry): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Exceptions\Schema\UnknownIdStrategyException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function forKey(string $key, array $available): self
+
+Vaulter\Exceptions\Support\InvalidExtensionResult api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function duplicateKey(string $slot, string $key): self
+  public static function foreignOperation(string $middleware, string $operation): self
+  public function httpStatus(): int
+  public static function invalidFragment(string $slot, string $key, string $expected): self
+  public static function nextCalls(string $middleware, string $operation, int $calls): self
+  public function problemCode(): string
+  public static function replacedResult(string $middleware, string $operation): self
+  public static function reservedKey(string $slot, string $key): self
+
+Vaulter\Exceptions\Support\MissingPackageException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function forContract(string $contract, string $package): self
+
+Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+
+Vaulter\Exceptions\VaulterException api since 1.0 class extends RuntimeException
+  protected static function docs(string $anchor): string
+
+Vaulter\Http\Controllers\Controller api since 1.0 abstract class uses Illuminate\Foundation\Auth\Access\AuthorizesRequests
+  protected function actorId(Illuminate\Http\Request $request): int|null|string
+  protected function scalarId(Illuminate\Http\Request $request, string $key): int|string
+
+Vaulter\Http\Problems\ProblemCodeSource spi:implement since 1.0 interface
+  public function codes(): array
+  public function translationNamespace(): string
+
+Vaulter\Http\Problems\ProblemSpec api since 1.0 final readonly class
+  public ?string $exception
+  public Vaulter\Http\Problems\ReceiptPolicy $receipt
+  public Vaulter\Http\Problems\Retryable $retryable
+  public int $status
+  public function __construct(int $status, ?string $exception = null, Vaulter\Http\Problems\Retryable $retryable = \Vaulter\Http\Problems\Retryable::Never, Vaulter\Http\Problems\ReceiptPolicy $receipt = \Vaulter\Http\Problems\ReceiptPolicy::Never)
+
+Vaulter\Http\Problems\ReceiptPolicy api since 1.0 enum: string
+  case Cacheable = 'cacheable'
+  case Never = 'never'
+
+Vaulter\Http\Problems\Retryable api since 1.0 enum: string
+  case AfterRefetch = 'after_refetch'
+  case Never = 'never'
+  case WithBackoff = 'with_backoff'
+
+Vaulter\Http\Requests\VaulterFormRequest api since 1.0 abstract class extends Illuminate\Foundation\Http\FormRequest
+  protected function actorId(): int|null|string
+  protected function arrayInput(string $key): array
+  public function authorize(): bool
+  protected function nullableArrayInput(string $key): ?array
+  protected function nullableScalarId(string $key): int|null|string
+  protected function scalarId(string $key): int|string
+
+Vaulter\Http\Resources\PageResponse api since 1.0 final class
+  public const int DEFAULT_PER_PAGE = 50
+  public const int MAX_PER_PAGE = 200
+  public static function cursor(Illuminate\Http\Request $request): ?string
+  public static function fromPaginator(Illuminate\Contracts\Pagination\CursorPaginator $paginator, callable $map): Illuminate\Http\JsonResponse
+  public static function make(Vaulter\Data\Page $page, callable $map, int $perPage): Illuminate\Http\JsonResponse
+  public static function perPage(Illuminate\Http\Request $request): int
+
+Vaulter\Idempotency\IdempotentWrite api since 1.0 final readonly class
+  public Vaulter\Idempotency\ReplayAuthorizer $authorizer
+  public Vaulter\Idempotency\ReceiptCodec $codec
+  public array $fingerprint
+  public function __construct(Vaulter\Idempotency\ReceiptCodec $codec, Vaulter\Idempotency\ReplayAuthorizer $authorizer, array $fingerprint)
+
+Vaulter\Idempotency\ReceiptCodec spi:implement since 1.0 interface
+  public function decode(array $body, int $version): mixed
+  public function encode(mixed $result): array
+  public function kind(): string
+  public function resource(mixed $result): ?Vaulter\Idempotency\ResourceRef
+  public function version(): int
+
+Vaulter\Idempotency\ReplayAuthorizer spi:implement since 1.0 interface
+  public function authorize(?Vaulter\Idempotency\ResourceRef $resource, ?Vaulter\Idempotency\ResourceRef $scope): void
+  public function scope(mixed $result): ?Vaulter\Idempotency\ResourceRef
+
+Vaulter\Idempotency\ReplayedProblemException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException
+  public function __construct(string $problem, int $status, array $details = [], array $headers = [])
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+  public function problemHeaders(): array
+
+Vaulter\Idempotency\ResourceRef api since 1.0 final readonly class
+  public string $id
+  public string $kind
+  public function __construct(string $kind, string $id)
+  public function equals(self $other): bool
+
+Vaulter\Kernel api since 1.0 final class
+  public function assertValid(): void
+  public function capabilities(): Vaulter\Modules\Capabilities
+  public function extensions(): Vaulter\Modules\ExtensionRegistry
+  public function fingerprint(): ?string
+  public function isActive(string $id): bool
+  public function isSealed(): bool
+  public function isValid(): bool
+  public function modules(): array
+  public function reasons(): array
+
+Vaulter\Models\Concerns\GuardsWrites api since 1.0 trait
+  protected function newBaseQueryBuilder(): Illuminate\Database\Query\Builder
+  protected function vaulterWriteScope(): Vaulter\Database\WriteScope
+
+Vaulter\Models\Concerns\HasVaulterKeys api since 1.0 trait
+  public static function bootHasVaulterKeys(): void
+  public function initializeHasVaulterKeys(): void
+  protected function vaulterIdStrategyKey(): string
+
+Vaulter\Models\Concerns\ResolvesVaulterConnection api since 1.0 trait
+  public function getConnectionName(): ?string
+
+Vaulter\Modules\Activation api since 1.0 enum: string
+  case Auto = 'auto'
+  case OptIn = 'opt-in'
+
+Vaulter\Modules\Capabilities api since 1.0 final readonly class
+  public function all(string $contract): array
+  public function has(string $contract): bool
+  public function require(string $contract): object
+
+Vaulter\Modules\Cardinality api since 1.0 enum: string
+  case Many = 'many'
+  case OptionalSingle = 'optional-single'
+  case RequiredSingle = 'required-single'
+  public function admits(int $count): bool
+
+Vaulter\Modules\ExtensionRegistry api since 1.0 final readonly class
+  public function contributions(string $slot): array
+  public function handler(string $slot, string $key): object
+  public function handlerClass(string $slot, string $key): string
+  public function handlerKeys(string $slot): array
+  public function resolve(string $slot): array
+
+Vaulter\Modules\MissingExtensionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function capability(string $contract): self
+  public static function handler(string $slot, string $key): self
+  public static function notSingle(string $contract): self
+
+Vaulter\Modules\ModuleBindings spi:implement since 1.0 interface
+  public function boot(Illuminate\Contracts\Foundation\Application $app): void
+  public function register(Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Modules\ModuleBuilder api since 1.0 final class
+  public function __construct(Vaulter\Modules\ModuleId $module)
+  public function bindingClasses(): array
+  public function bindings(string $bindings): self
+  public function capabilityDefinitions(): array
+  public function capabilityProviders(): array
+  public function commandClasses(): array
+  public function commands(string ...$commands): self
+  public function config(string $root, string $defaultsFile): self
+  public function configs(): array
+  public function contributions(): array
+  public function defineCapability(string $contract, Vaulter\Modules\Cardinality $cardinality): self
+  public function defineSlot(string $contract, Vaulter\Modules\SlotKind $kind, Vaulter\Modules\Cardinality $cardinality = \Vaulter\Modules\Cardinality::Many): self
+  public function eventSources(): array
+  public function events(string $enum): self
+  public function listen(string $event, string $listener): self
+  public function listeners(): array
+  public function module(): Vaulter\Modules\ModuleId
+  public function problemSources(): array
+  public function problems(string $source): self
+  public function provides(string $contract, string $implementation): self
+  public function providesFromConfig(string $contract, string $configKey, ?string $default = null): self
+  public function routeFiles(): array
+  public function routeMiddleware(string $alias, string $middleware): self
+  public function routeMiddlewareAliases(): array
+  public function routes(string $file): self
+  public function schedule(string $schedule): self
+  public function schedules(): array
+  public function schema(string $migrationsDir): self
+  public function schemaPaths(): array
+  public function slot(string $contract, string $implementation, string $id, int $priority = 0, ?string $key = null): self
+  public function slotDefinitions(): array
+  public function translationDirs(): array
+  public function translations(string $dir, string $namespace): self
+
+Vaulter\Modules\ModuleGraphException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function invalid(array $reasons): self
+  public static function notCompiled(): self
+  public function problemCode(): string
+
+Vaulter\Modules\ModuleId api since 1.0 final readonly class implements Stringable
+  public const string PATTERN = '/^[a-z][a-z0-9-]{1,31}$/'
+  public string $value
+  public function __construct(string $value)
+  public function __toString(): string
+  public function equals(self $other): bool
+  public static function isValid(string $value): bool
+
+Vaulter\Modules\ModuleSchedule spi:implement since 1.0 interface
+  public function define(Illuminate\Console\Scheduling\Schedule $schedule, Illuminate\Contracts\Config\Repository $config): void
+
+Vaulter\Modules\ModuleState api since 1.0 final readonly class
+  public const string REASON_DEFAULT = 'default'
+  public const string REASON_OVERRIDE = 'override'
+  public Vaulter\Modules\Activation $activation
+  public bool $active
+  public string $activeReason
+  public Vaulter\Modules\ModuleId $id
+  public string $manifest
+  public array $schemaPaths
+  public string $version
+  public function __construct(Vaulter\Modules\ModuleId $id, string $manifest, string $version, Vaulter\Modules\Activation $activation, bool $active, string $activeReason, array $schemaPaths = [])
+
+Vaulter\Modules\OffersModules spi:implement since 1.0 trait
+  protected function offerModule(string $manifest): void
+
+Vaulter\Modules\SlotContribution api since 1.0 final readonly class
+  public string $id
+  public string $implementation
+  public ?string $key
+  public string $module
+  public int $priority
+  public string $slot
+  public function __construct(string $slot, string $id, string $module, string $implementation, int $priority = 0, ?string $key = null)
+
+Vaulter\Modules\SlotKind api since 1.0 enum: string
+  case Contributor = 'contributor'
+  case EventSink = 'event-sink'
+  case Guard = 'guard'
+  case Handler = 'handler'
+  case OperationMiddleware = 'operation-middleware'
+  case OutboxConsumer = 'outbox-consumer'
+  case Restriction = 'restriction'
+
+Vaulter\Modules\VaulterModule spi:implement since 1.0 interface
+  public function activation(): Vaulter\Modules\Activation
+  public function id(): Vaulter\Modules\ModuleId
+  public function register(Vaulter\Modules\ModuleBuilder $module): void
+  public function requires(): array
+  public function version(): string
+
+Vaulter\Operations\Operation api since 1.0 final readonly class
+  public int $attemptNo
+  public Vaulter\Operations\OperationContext $context
+  public Vaulter\Operations\OperationSpec $spec
+  public function __construct(Vaulter\Operations\OperationSpec $spec, Vaulter\Operations\OperationContext $context, int $attemptNo = 1, bool $nested = false)
+  public function isNested(): bool
+
+Vaulter\Operations\OperationContext api since 1.0 final readonly class
+  public Vaulter\ValueObjects\Access\Actor $actor
+  public ?string $causationId
+  public string $correlationId
+  public ?string $idempotencyKey
+  public ?string $requestFingerprint
+  public Vaulter\ValueObjects\Operations\ScopeRef $scope
+  public ?string $systemReason
+  public Vaulter\ValueObjects\Operations\TenantRef $tenant
+  public function __construct(Vaulter\ValueObjects\Access\Actor $actor, Vaulter\ValueObjects\Operations\ScopeRef $scope, Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null, ?string $requestFingerprint = null)
+  public static function for(Vaulter\ValueObjects\Access\Actor $actor, Vaulter\ValueObjects\Operations\ScopeRef $scope, Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null, ?string $requestFingerprint = null): self
+  public static function system(Vaulter\ValueObjects\Operations\ScopeRef $scope, Vaulter\ValueObjects\Operations\TenantRef $tenant, string $reason, ?string $correlationId = null): self
+  public function telemetry(): array
+  public function withCausation(string $causationId): self
+  public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): self
+
+Vaulter\Operations\OperationMiddleware spi:implement since 1.0 interface
+  public function handle(Vaulter\Operations\Operation $operation, Closure $next): mixed
+
+Vaulter\Operations\OperationRunner api since 1.0 final class
+  public function inOperation(): bool
+  public function write(Vaulter\Operations\OperationSpec $spec, Vaulter\Operations\OperationContext $context, Closure $attempt, ?Vaulter\Idempotency\IdempotentWrite $idempotency = null): mixed
+
+Vaulter\Operations\OperationSpec api since 1.0 final readonly class
+  public const string NAME_PATTERN = '/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/'
+  public Vaulter\Modules\ModuleId $module
+  public bool $mutating
+  public string $name
+  public function __construct(string $name, Vaulter\Modules\ModuleId $module, bool $mutating = true)
+
+Vaulter\Schema\HostKeyColumns api since 1.0 final class
+  public static function add(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
+  public static function sqlType(string $driver): string
+
+Vaulter\Schema\SchemaHelpers spi:call since 1.0 final class
+  public function addHeadForeignKey(string $aggregate, string $revisions, string $owner): void
+  public function assertEnforcedMysqlChecks(): void
+  public function binaryColumn(Illuminate\Database\Schema\Blueprint $table, string $column): void
+  public function counterColumn(Illuminate\Database\Schema\Blueprint $table, string $column): void
+  public function dbConnection(): Illuminate\Database\Connection
+  public function dropHeadForeignKey(string $aggregate): void
+  public function hasForeignKey(string $table, string $name): bool
+  public function ids(): Vaulter\Contracts\IdStrategy
+  public function ipColumn(Illuminate\Database\Schema\Blueprint $table): void
+  public function nameKeyColumn(Illuminate\Database\Schema\Blueprint $table): void
+  public function panelDiscriminator(Illuminate\Database\Schema\Blueprint $table): void
+  public function schemaConnection(): Illuminate\Database\Schema\Builder
+  public function table(string $entity): string
+  public function tenant(Illuminate\Database\Schema\Blueprint $table): void
+
+Vaulter\Schema\VaulterSchema api since 1.0 final class
+  public static function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
+  public static function bits(Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void
+  public static function foreignKey(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  public static function hostKey(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  public static function key(Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
+  public static function morphs(Illuminate\Database\Schema\Blueprint $table, string $name): void
+  public static function panel(Illuminate\Database\Schema\Blueprint $table): void
+  public static function reference(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  public static function tenant(Illuminate\Database\Schema\Blueprint $table): void
+
+Vaulter\Support\Concerns\HasIcon api since 1.0 trait
+  public function icon(): ?string
+
+Vaulter\Support\Concerns\HasLabel api since 1.0 trait
+  public function label(): string
+
+Vaulter\Support\Concerns\HasStableMorphAlias api since 1.0 trait
+  public function getMorphClass(): string
+
+Vaulter\Support\Identity api since 1.0 final class
+  public static function fitsKey(Illuminate\Database\Eloquent\Model $model, int|string $key): bool
+  public static function key(mixed $value): int|null|string
+  public static function stringify(mixed $value): string
+
+Vaulter\Tenancy\Tenancy api since 1.0 final class
+  public static function without(Closure $callback): mixed
+
+Vaulter\Testing\Contracts\ModuleContractTests api since 1.0 final class
+  public function assertModuleContract(Vaulter\Modules\VaulterModule $module, array $requires = []): void
+
+Vaulter\Testing\FakeMetricsRecorder api since 1.0 final class implements Vaulter\Contracts\Observability\MetricsRecorder
+  public function assertCounter(string $name, ?array $labels = null): void
+  public function assertGauge(string $name, ?array $labels = null): void
+  public function assertHistogram(string $name, ?array $labels = null): void
+  public function counter(string $name, float|int $amount = 1, array $labels = []): void
+  public function emissions(): array
+  public function gauge(string $name, float|int $value, array $labels = []): void
+  public function histogram(string $name, float|int $value, array $labels = []): void
+  public function timing(string $name, callable $operation, array $labels = []): mixed
+
+Vaulter\Testing\FakeTraceRecorder api since 1.0 final class implements Vaulter\Contracts\Observability\TraceRecorder
+  public function assertSpan(string $name, ?array $attributes = null, ?string $parent = null): void
+  public function span(string $name, callable $operation, array $attributes = []): mixed
+  public function spans(): array
+
+Vaulter\ValueObjects\Access\Actor api since 1.0 final readonly class
+  public function __serialize(): array
+  public function authorizable(): ?Illuminate\Contracts\Auth\Access\Authorizable
+  public function isSystem(): bool
+  public function ref(): Vaulter\ValueObjects\Access\ActorRef
+  public static function system(string $reason): self
+  public static function user(Illuminate\Contracts\Auth\Access\Authorizable $user): self
+
+Vaulter\ValueObjects\Access\ActorRef api since 1.0 final readonly class
+  public const string SYSTEM_TYPE = 'vaulter:system'
+  public int|null|string $id
+  public ?string $reason
+  public ?string $type
+  public function __construct(?string $type, int|null|string $id, ?string $reason = null)
+
+Vaulter\ValueObjects\Access\OwnerRef api since 1.0 final readonly class
+  public int|string $id
+  public string $type
+  public function __construct(string $type, int|string $id)
+  public static function ofModel(Illuminate\Database\Eloquent\Model $owner): self
+
+Vaulter\ValueObjects\Events\EventScope api since 1.0 final readonly class
+  public ?string $driveId
+  public string $profile
+  public ?string $tenantId
+  public function __construct(mixed $tenantId, mixed $driveId, string $profile)
+
+Vaulter\ValueObjects\Events\EventSubject api since 1.0 final readonly class
+  public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload']
+  public string $id
+  public string $type
+  public function __construct(string $type, mixed $id)
+
+Vaulter\ValueObjects\Operations\ScopeRef api since 1.0 final readonly class
+  public const string DRIVE = 'drive'
+  public string $id
+  public string $kind
+  public function __construct(string $kind, string $id)
+  public static function drive(int|string $id): self
+  public function equals(self $other): bool
+
+Vaulter\ValueObjects\Operations\TenantRef api since 1.0 final readonly class
+  public const string ID = 'id'
+  public const string NONE = 'none'
+  public ?string $id
+  public string $kind
+  public function equals(self $other): bool
+  public static function id(int|string $id): self
+  public function isNone(): bool
+  public static function none(): self
+  public static function of(mixed $key): self
+
+Vaulter\VaulterServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
+  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
+  public function packageBooted(): void
+  public function packageRegistered(): void

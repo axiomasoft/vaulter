@@ -7,37 +7,43 @@ namespace Vaulter\Drive\Providers;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
-use Vaulter\Configuration\ScanConfig;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
-use Vaulter\Content\NodeContentLifecycleRegistry;
-use Vaulter\Contracts\Cas\ContentScanner;
-use Vaulter\Contracts\Content\ScanPolicyResolver;
-use Vaulter\Contracts\Content\ScanWorkSettings;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveConfigValidator;
+use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\DocumentPurgeLifecycle;
+use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
+use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
+use Vaulter\Drive\Contracts\Content\ScanWorkSettings;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Modules\ModuleBindings;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
 
 /**
  * The container wiring of the drive module ({@see DriveModule}): drive config, scan policy and
  * scanner validation, uploads, content lifecycles, the
  * drive config validator.
  */
+#[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
         $app->singleton(DriveConfig::class, static fn (Container $app): DriveConfig => new DriveConfig($app->make('config')));
         $app->bind(ScanWorkSettings::class, DriveConfig::class);
+        $app->bind(TenancyBoundary::class);
 
         $app->singleton(ScanPolicyResolver::class, \Vaulter\Drive\Content\ScanPolicyResolver::class);
         $app->singleton(\Vaulter\Drive\Content\ScanPolicyResolver::class);
@@ -49,6 +55,7 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(UploadSessionManager::class);
         $app->bind('vaulter.config_validator.drive', static fn (Container $app): Closure => static function () use ($app): void {
             $config = $app->make(DriveConfig::class);
+            (new DriveConfigValidator($app->make('config')))->validate($config, $app->make(Application::class));
             $config->model('upload_session');
             $config->model('upload_part');
             $config->validateScanWork();
@@ -104,8 +111,8 @@ final class BindingsRegistrar implements ModuleBindings
             }
             // The `vaulter-drive.uploads.scan.scanner` alias is folded into the key the capability reads.
             $repository = $app->make('config');
-            if ($repository->get('vaulter.scan.scanner') === null) {
-                $repository->set('vaulter.scan.scanner', $class);
+            if ($repository->get('vaulter-drive.scan.scanner') === null) {
+                $repository->set('vaulter-drive.scan.scanner', $class);
             }
         }
         $capabilities = $app->make(Kernel::class)->capabilities();
@@ -129,8 +136,17 @@ final class BindingsRegistrar implements ModuleBindings
     public function boot(Application $app): void
     {
         $config = $app->make(DriveConfig::class);
+        (new DriveConfigValidator($app->make('config')))->validate($config, $app);
         $config->model('upload_session');
         $config->model('upload_part');
+        // The stable morph aliases (`vaulter.node`, `vaulter.drive`) are stored in polymorphic columns, so a host's
+        // morphTo() must resolve them to the configured model classes. Merged into the host's map once every
+        // provider booted (never replacing it), and without enforceMorphMap().
+        $app->booted(static function () use ($config): void {
+            $drive = $config->model('drive');
+            $node = $config->model('node');
+            Relation::morphMap([$drive::MORPH_ALIAS => $drive, $node::MORPH_ALIAS => $node], merge: true);
+        });
         // Fail at boot on a bad value; the tasks themselves read the config when the scheduler resolves.
         (new ScheduleConfig($app->make('config')))->frequencies('vaulter-drive', SchedulingRegistrar::KEYS);
         // Invalid or duplicate registrations fail at application boot.

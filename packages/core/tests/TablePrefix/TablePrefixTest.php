@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 it('creates every table with the configured prefix', function (): void {
     expect(Schema::hasTable('custom_nodes'))->toBeTrue()

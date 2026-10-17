@@ -6,11 +6,13 @@ namespace Vaulter\Media\Providers;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Providers\SchedulingRegistrar as CoreSchedulingRegistrar;
 
 /** Puts the blob maintenance commands of the media module on the host scheduler. */
+#[Internal]
 final class SchedulingRegistrar implements ModuleSchedule
 {
     public const array KEYS = ['blobs_gc', 'blobs_reconcile'];

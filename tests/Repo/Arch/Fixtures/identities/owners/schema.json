@@ -21,6 +21,12 @@
         },
         {
             "match": "exact",
+            "value": "table:v_blob_references",
+            "owner": "media",
+            "why": "D23: media owns the pins of its blobs (opaque owner_type/reference_key, FK to v_blobs only)"
+        },
+        {
+            "match": "exact",
             "value": "table:v_files",
             "owner": "drive",
             "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
@@ -132,6 +138,18 @@
             "value": "table:v_idempotency_keys",
             "owner": "core",
             "why": "D25: claims and receipts of keyed writes are a kernel table (architecture#persistence)"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_outbox_consumers",
+            "owner": "core",
+            "why": "D29: the registry of outbox consumers is a kernel table (architecture#events)"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_outbox_deliveries",
+            "owner": "core",
+            "why": "D29: the delivery rows of the outbox consumers are a kernel table (architecture#events)"
         },
         {
             "match": "exact",

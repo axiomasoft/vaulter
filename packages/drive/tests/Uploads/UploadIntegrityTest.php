@@ -8,14 +8,14 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Media\Models\Cas\Blob;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
 beforeEach(fn () => DriveTestHelpers::insideOperation());

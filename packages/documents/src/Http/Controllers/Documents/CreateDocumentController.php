@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Controllers\Documents;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Access\ValueObjects\NodeAbilities;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\CreateDocumentRequest;
-use Vaulter\Http\Resources\Drive\NodeResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Http\Resources\Drive\NodeResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 
 /** Create a document under a folder (Create in the parent; the drive root when no parent is given). */
+#[Internal]
 final readonly class CreateDocumentController
 {
     public function __construct(private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}

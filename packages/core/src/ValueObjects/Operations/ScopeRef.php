@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Operations;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
 use Vaulter\Support\Identity;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Support\Identity;
  * `drive`) and the string id of that resource. The kernel never loads the resource;
  * the owning module maps its own models to and from this reference.
  */
+#[Api]
 final readonly class ScopeRef
 {
     public const string DRIVE = 'drive';

@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Package ownership of schema, models and configuration (PLAN3.P4, ADR-0030)
+
+There are no installations to upgrade (1.0 is the starting point), so identities moved without shims or aliases;
+every moved identity is recorded in `tests/Repo/Arch/Fixtures/identities/changes.json`.
+
+- Added: the package `axioma-studio/vaulter-webhooks` (`Vaulter\Webhooks\`) with its own tables, config file `vaulter-webhooks`,
+  commands, routes, outbox consumer `webhooks.fanout`, doctor check and test kit; it is an opt-in module
+  (`vaulter.modules.webhooks`), requires core and drive, is not part of the `axioma-studio/vaulter` metapackage and has
+  its own split target in `monorepo-split.yml` and `release/packages.json`.
+- Changed: core is the kernel only. Media owns `v_blobs`, the new `v_blob_references` (the pins, `BlobPins`) and the CAS
+  contracts; drive owns the drive tables, models, access, sharing, activity, change journal, quotas, profiles, routes,
+  commands and the entry point `Vaulter\Drive\Vaulter` (facade `Vaulter\Drive\Facades\Vaulter`, alias `Vaulter`);
+  documents own their tables. `Vaulter\VaulterManager` and `Vaulter\Facades\Vaulter` are gone, as are the old FQCNs of
+  every moved class (`Vaulter\Models\Drive\*`, `Vaulter\Data\Drive\*`, `Vaulter\Contracts\Handlers\*`, …).
+- Changed: blob liveness is the pins of media, not the drive's edge table: the drive pins and unpins in the transaction
+  of its revision link; garbage collection and `vaulter:blobs:reconcile` read only media tables. `v_blobs.drive_id` is
+  now the neutral `storage_id`. A pin to a deleting or deleted blob is refused with `blob_unavailable` (409).
+- Changed: config keys moved with their concept and are written with their root: `vaulter.access.*`, `sharing.*`,
+  `profiles.*`, `features.*`, `handlers`, `downloads.*`, `listing.*`, `changes.*`, `scan.*`, `drives.*` and the drive
+  models are `vaulter-drive.*`; `vaulter.webhooks.*` and the webhook models and schedule keys are `vaulter-webhooks.*`;
+  `vaulter.models.blob` is `vaulter-media.models.blob`. `vaulter.features.webhooks` no longer exists
+  (`vaulter.modules.webhooks`).
+- Changed: migrations live in the package that owns the table, one create migration per table with a block of numbers
+  per package (core `0000NN`, media `0001NN`, drive `0002NN`, documents `0003NN`, webhooks `0004NN`); they run from
+  `vendor/` and are not published (no `vaulter-migrations` tag). A development database created from an earlier
+  `main` must be recreated (`migrate:fresh`): the migration names changed.
+- Changed: stable morph aliases `vaulter.node` and `vaulter.drive` replace the class names in polymorphic columns
+  (activity targets); `vaulter-drive` merges them into the morph map without `enforceMorphMap()`.
+- Changed: `vaulter:install` no longer asks for or prints the permission driver (`--driver` is gone); choose it with
+  `vaulter-drive.access.permission_driver`. `vaulter:blobs:reconcile` rebuilds `ref_count` from the pins.
+- Added: `vaulter:module:uninstall --force` (roll back the owner's migrations, refused while its tables hold rows or it
+  keeps pins) and `--purge` (delete its rows and release its own pins first); exit codes `0` done, `1` refused or
+  failed, `2` usage, `3` applied partially on a driver whose DDL commits (repeat `--force`).
+- Added: each package has its own `TestCase` on the public test kits (`Vaulter\Testing`, `Vaulter\Drive\Testing`,
+  `Vaulter\Documents\Testing`, `Vaulter\Webhooks\Testing`); no package autoloads `../core/tests`.
+- Added: `scripts/release/consumer-check.sh <package>` builds a package in an empty directory with only its declared
+  dependencies and runs its fast set; the blocking CI job `consumer-isolation` (core, media, drive, documents, webhooks)
+  runs it.
+- Added: the module system, operations pipeline, outbox with `vaulter:relay`, idempotency and event/problem-code
+  catalogues contributed by modules (ADR-0027 to ADR-0029), and ADR-0030.
+- Fixed: `scripts/check-doc-snippets.php` counts the commands of opt-in modules as registered.
+
+### Test run tiers and the supported Node versions
+
+- Changed: Node 20 (end-of-life 2026-04-30) is no longer supported by `@vaulter/vue` (`engines.node: >=22`, like the collaboration hub). A pull request checks Node 22, the weekly full run Node 22 and 24.
+- Added: `scripts/mysql-local.sh` (`make db-up-mysql`) — a reusable local MySQL 8.4 test server on tmpfs; `make test-db`, `test-db-mysql`, `test-full` and `composer test:changed`, `test:db`; a "which run when" table in `tests/README.md`.
+- Fixed: `scripts/t <engine> --group=database` runs only the database-classified files instead of failing every partition without one; two runs on one local test server wait for each other instead of corrupting each other's schema.
+- Changed: CI starts the PostgreSQL/MySQL lanes after the SQLite fast lane is green.
+- Fixed: a REST id the key column cannot hold (`no-such-node` for a bigint or uuid key, a non-uuid `upload_id`) answers 404 on PostgreSQL instead of a 500 from the failed cast (`Identity::fitsKey()` in the drive, node and upload-session lookups).
+
 ### No 0.x upgrade path, one create migration per table (PLAN3.P1.10, D21)
 
 - Removed: the 43-migration chain of 0.x (renames, backfills, host-key widening, rollback guards, preflight) — `packages/core/database/migrations` holds 25 `create_v_<table>_table` migrations built from `SchemaBuilder::createTable()`; the installed schema is unchanged per engine, id strategy, host-key type, table prefix and tenancy setting (`scripts/schema-snapshot.sh --compare`).

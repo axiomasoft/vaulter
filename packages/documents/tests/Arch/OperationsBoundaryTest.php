@@ -76,13 +76,13 @@ it('reaches the operations from the facade manager', function (): void {
 it('detects an aliased repository, a grouped Action import and a class-name string', function (): void {
     expect(documentsBoundaryOffenders(<<<'PHP_CODE'
 <?php
-use Vaulter\Repositories\Drive\NodeReadRepository as ReadNodes;
+use Vaulter\Drive\Repositories\NodeReadRepository as ReadNodes;
 use Vaulter\Documents\Actions\Comments\{AddCommentAction as Add};
 app(ReadNodes::class);
 app('Vaulter\\Documents\\Repositories\\Documents\\DocumentReadRepository');
 // Vaulter\Documents\Actions\Documents\CreateDocumentAction is only a comment.
 PHP_CODE))->toContain(
-        'Vaulter\Repositories\Drive\NodeReadRepository',
+        'Vaulter\Drive\Repositories\NodeReadRepository',
         'Vaulter\Documents\Actions\Comments\AddCommentAction',
         'Vaulter\Documents\Repositories\Documents\DocumentReadRepository',
     )->not->toContain('Vaulter\Documents\Actions\Documents\CreateDocumentAction');

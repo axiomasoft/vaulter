@@ -4,25 +4,24 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
+use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Events\EventConformance;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Events\EventConformance;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The drive events, produced by the real Actions, carry exactly the data their
  * EventSpec declares and nothing an envelope must not hold.
  */
-uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -50,10 +49,10 @@ it('records every drive event with the data its spec declares', function (): voi
     $drive->unarchive();
 
     EventConformance::assertRecorded([
-        EventType::DriveCreated, EventType::FolderCreated, EventType::FileUploaded, EventType::FileRevisionAdded,
-        EventType::FileRevisionDeleted, EventType::NodeRenamed, EventType::NodeMoved, EventType::NodeCopied,
-        EventType::NodeUpdated, EventType::NodeTrashed, EventType::NodeRestored, EventType::NodePurged,
-        EventType::DriveArchived, EventType::DriveUnarchived,
+        DriveEventType::DriveCreated, DriveEventType::FolderCreated, DriveEventType::FileUploaded, DriveEventType::FileRevisionAdded,
+        DriveEventType::FileRevisionDeleted, DriveEventType::NodeRenamed, DriveEventType::NodeMoved, DriveEventType::NodeCopied,
+        DriveEventType::NodeUpdated, DriveEventType::NodeTrashed, DriveEventType::NodeRestored, DriveEventType::NodePurged,
+        DriveEventType::DriveArchived, DriveEventType::DriveUnarchived,
     ]);
 });
 
@@ -72,6 +71,6 @@ it('records drive.deleted and the upload sessions with their specs', function ()
         // One batch per step; a fresh drive finishes in the first.
     }
 
-    EventConformance::assertRecorded([EventType::DriveDeleted]);
-    EventConformance::assertAuditedOnly([EventType::UploadInitiated, EventType::UploadAborted]);
+    EventConformance::assertRecorded([DriveEventType::DriveDeleted]);
+    EventConformance::assertAuditedOnly([DriveEventType::UploadInitiated, DriveEventType::UploadAborted]);
 });

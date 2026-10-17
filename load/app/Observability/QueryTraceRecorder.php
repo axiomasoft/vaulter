@@ -164,7 +164,7 @@ final class QueryTraceRecorder
             $path = ltrim(substr($path, strlen($prefix)), '/');
         }
 
-        return VaulterHttpOperationMap::resolve(method: $request->method(), pathAfterPrefix: $path);
+        return app(VaulterHttpOperationMap::class)->resolve(method: $request->method(), pathAfterPrefix: $path);
     }
 
     private static function normalizeSqlTemplate(string $sql): string

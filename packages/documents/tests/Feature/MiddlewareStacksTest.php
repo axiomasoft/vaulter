@@ -14,15 +14,15 @@ use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Documents\Tests\Collaboration\CollaborationEnabledTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\FakeHostUserResolver;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
 
 class MiddlewareStackUser extends User
 {
@@ -58,7 +58,7 @@ it('requires Sanctum on protected routes and accepts an authenticated actor', fu
 });
 
 it('serves a valid public share without a Sanctum token', function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $node = DocumentTestHelpers::drive()->root();
     ShareTestHelpers::share($node, token: 'middleware-stack-public-token');
     $this->getJson('api/vaulter/v1/shares/middleware-stack-public-token')->assertOk();

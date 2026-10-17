@@ -56,7 +56,7 @@ final class Protocol
         }
 
         $files = [];
-        foreach (SourceIndex::PACKAGES as $package) {
+        foreach ($repo->sourcePackages() as $package) {
             array_push($files, ...AstFiles::tree($repo, "packages/{$package}/src"));
         }
         sort($files, SORT_STRING);
@@ -122,7 +122,7 @@ final class Protocol
                 }
                 $spec = [];
                 foreach ($attr->args as $position => $arg) {
-                    $name = $arg->name?->toString() ?? ['subject', 'data', 'activity', 'webhook', 'journal', 'description'][$position] ?? (string) $position;
+                    $name = $arg->name?->toString() ?? ['subject', 'data', 'activity', 'external', 'journal', 'description'][$position] ?? (string) $position;
                     $spec[$name] = Config::evaluate($arg->value);
                 }
 
@@ -132,7 +132,7 @@ final class Protocol
                     'case' => $case->name->toString(),
                     'subject' => $spec['subject'] ?? null,
                     'data' => $spec['data'] ?? [],
-                    'sinks' => ['activity' => $spec['activity'] ?? null, 'webhook' => $spec['webhook'] ?? null, 'journal' => $spec['journal'] ?? null],
+                    'sinks' => ['activity' => $spec['activity'] ?? null, 'external' => $spec['external'] ?? null, 'journal' => $spec['journal'] ?? null],
                 ];
             }
         }

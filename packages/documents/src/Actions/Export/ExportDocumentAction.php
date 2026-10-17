@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Export;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
@@ -11,7 +12,7 @@ use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
 
@@ -24,6 +25,7 @@ use Vaulter\Support\LoadTier;
  * the type reads it (never as a blank document), and a type nothing registers is
  * refused rather than exported as opaque JSON.
  */
+#[Internal]
 final readonly class ExportDocumentAction
 {
     public function __construct(

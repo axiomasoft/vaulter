@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
-use Vaulter\Tests\Http\V1;
 
 /**
  * The v1 kernel: one correlation id per request (kept when the caller sent a sane one),

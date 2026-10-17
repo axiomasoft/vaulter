@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "deferred-runs",
+  "title": "Отложенные прогоны — вход PLAN4 (в PLAN3 НЕ ИСПОЛНЯТЬ)",
+  "sections": [
+    {
+      "id": "purpose",
+      "title": "Назначение",
+      "text": "Документ — список прогонов, снятых из PLAN3 решением D41, как вход для следующего плана (PLAN4: «добить прогоны»). Не входит в `reads` пунктов; исполнители PLAN3 его не читают и ничего из него не запускают.\n\nКогда PLAN3 закрыт (код заморожен), PLAN4 выполняет по порядку: (1) серверные database-линии pgsql, затем mysql по каждому пакету; (2) serial/extended группы; (3) полная матрица `scripts/t all --full --engines=sqlite,pgsql,mysql` и `scripts/t-matrix`; (4) снимки схемы на pgsql/mysql + rollback; (5) матрицы I6/I15 на трёх движках; (6) stand: сценарии коллаборации 2, 3, 10 и `scripts/collab-e2e.sh`; (7) coverage; (8) мутации после MUTATION-RUN grant (D3); (9) release-изоляция архивов: `scripts/release/consumer-check.sh` по всем пакетам без `--dry-run`; (10) стабильный тег AzGuard (D20), `composer/npm audit`; (11) нагрузка/k6 — только по задаче владельца. Дефекты, найденные там, чинятся в PLAN4."
+    },
+    {
+      "id": "risks",
+      "title": "Принятые риски",
+      "text": "Не проверяются в PLAN3: DDL и порядок FK на pgsql/mysql, коллации и регистр, `FOR UPDATE`/advisory locks/`SKIP LOCKED`, гонки pin vs sweep и relay, поведение серверных partition-ов `DatabaseMigrations`, stand-сценарии durability коллаборации, архивы split-пакетов. Снижение: тесты для этих линий написаны и классифицированы; ревью RC1/RC2 читают SQL/DDL/локи; Fast-набор включает sqlite snapshot-compare. Известные красные: 10 `RealAzgard*` (дрейф ../azguard) — чинить в PLAN4 на закреплённом коммите."
+    },
+    {
+      "id": "items-a",
+      "title": "Снятые команды P4.5–P4.12",
+      "text": "**P4.5**\n- `scripts/schema-snapshot.sh --driver=pgsql --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected`\n- `scripts/schema-snapshot.sh --driver=mysql --all-presets --compare=packages/core/tests/Fixtures/Schema/expected`\n- `scripts/t pgsql -p core --group=database`\n- `scripts/t pgsql -p media --group=database`\n- `scripts/t pgsql -p drive --group=database`\n- `scripts/t pgsql -p documents --group=database`\n\n**P4.6**\n- `scripts/t pgsql -p media --group=database`\n\n**P4.7**\n- `scripts/t pgsql -p media --group=database`\n- `scripts/t pgsql -p drive --group=database`\n- `scripts/t pgsql -p media --group=serial tests/Cas/PinSweepRaceTest.php`\n- `scripts/schema-snapshot.sh --driver=pgsql --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected`\n- `scripts/schema-snapshot.sh --driver=mysql --all-presets --compare=packages/core/tests/Fixtures/Schema/expected`\n\n**P4.8**\n- `scripts/t pgsql -p drive --group=database`\n- `scripts/t pgsql -p core --group=database`\n\n**P4.9**\n- `scripts/t pgsql -p drive --group=database`\n- `scripts/t pgsql -p core --group=database`\n\n**P4.10**\n- `scripts/t pgsql -p drive --group=database`\n- `scripts/t pgsql -p core --group=database`\n\n**P4.11**\n- `scripts/t pgsql -p drive --group=database`\n- `scripts/t pgsql -p core --group=database`"
+    },
+    {
+      "id": "items-b",
+      "title": "Снятые команды P4.13–P4.21",
+      "text": "**P4.13**\n- `scripts/t pgsql -p webhooks --group=database`\n- `scripts/schema-snapshot.sh --driver=pgsql --all-presets --compare=packages/core/tests/Fixtures/Schema/expected`\n\n**P4.15**\n- `scripts/t pgsql -p drive --group=database`\n\n**P4.16**\n- `scripts/t pgsql -p core --group=database`\n\n**P4.17**\n- `scripts/t pgsql -p core packages/core/tests/Modules/ModuleUninstallTest.php`\n\n**P4.18**\n- `scripts/t pgsql -p core packages/core/tests/Modules/CleanInstallMatrixTest.php`\n- `scripts/t mysql -p core packages/core/tests/Modules/CleanInstallMatrixTest.php`\n\n**P4.19**\n- `scripts/release/consumer-check.sh media`\n\n**P4.21**\n- `for p in core media drive documents webhooks; do scripts/t pgsql -p $p --group=database || exit 1; done`\n- `for p in core media drive documents webhooks; do scripts/t mysql -p $p --group=database || exit 1; done`\n- `scripts/t pgsql -p core --group=serial packages/core/tests/Concurrency && scripts/t pgsql -p media --group=serial tests/Cas/PinSweepRaceTest.php && scripts/t pgsql -p drive --group=serial tests/Concurrency`\n- `for e in sqlite pgsql mysql; do scripts/schema-snapshot.sh --driver=$e --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected || exit 1; done`\n- `for e in sqlite pgsql mysql; do scripts/t $e -p core packages/core/tests/Modules/CleanInstallMatrixTest.php || exit 1; done`\n- `npm --prefix packages/vue run typecheck && npm --prefix packages/vue run api:check && npm --prefix packages/vue run build`\n- `scripts/release/consumer-check.sh core && scripts/release/consumer-check.sh webhooks`"
+    },
+    {
+      "id": "items-p5",
+      "title": "Снятые команды P5.1–P5.16",
+      "text": "Команды, снятые из validation пунктов P5 решением D41/D45 (исполнять в PLAN4; в PLAN3 не запускать):\n- P5.1: `scripts/t pgsql -p collaboration --group=database`; `scripts/t pgsql -p documents --group=database`; `scripts/t pgsql -p collaboration --group=serial tests/Concurrency/CollaborationFenceRaceTest.php`; полные `scripts/t sqlite -p collaboration,documents,core`.\n- P5.2: `npm --prefix packages/collaboration/hub run test:e2e`; `bash scripts/collab-e2e.sh`; сборка образа `packages/collaboration/hub/Dockerfile`.\n- P5.3: `scripts/t pgsql -p documents --group=database`; `scripts/t pgsql -p documents --group=serial tests/Concurrency/PendingMarkerRaceTest.php`; `scripts/schema-snapshot.sh --driver=pgsql --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected`; то же `--driver=mysql`.\n- P5.4: `scripts/t pgsql -p collaboration --group=database`; `scripts/t pgsql -p collaboration --group=serial tests/Concurrency/AppendRaceTest.php`; `scripts/t pgsql -p core packages/core/tests/Modules/CleanInstallMatrixTest.php` и `scripts/t mysql -p core packages/core/tests/Modules/CleanInstallMatrixTest.php`; снимки схемы pgsql/mysql.\n- P5.5: `scripts/t pgsql -p collaboration --group=serial tests/Concurrency/CompactionRaceTest.php`; `scripts/t pgsql -p collaboration --group=database`.\n- P5.6: `scripts/t pgsql -p collaboration --group=database tests/Disable`; `scripts/t pgsql -p core packages/core/tests/Modules/ModuleUninstallTest.php`.\n- P5.7–P5.9, P5.11: реальный Redis и два хаба — `bash scripts/collab-stand.sh` (сценарии 2, 3, 10); сборка образа хаба.\n- P5.10: `scripts/t pgsql -p drive --group=database`; `scripts/t pgsql -p collaboration --group=database tests/Revocation`.\n- P5.12: `npm --prefix packages/vue run build`; `npm --prefix packages/vue-collaboration run build`; Playwright e2e коллаборации.\n- P5.13: `bash scripts/collab-stand.sh`; `bash scripts/collab-e2e.sh`.\n- P5.14: `scripts/release/consumer-check.sh collaboration` (без `--dry-run`); сборка и публикация образа `ghcr.io/axiomasoft/vaulter-collaboration-hub`.\n- P5.16: полные `scripts/t sqlite -p core,media,drive,documents,webhooks,collaboration,filament,azgard`; pgsql/mysql database-группы всех пакетов; serial-гонки collaboration/documents; stand 2/3/10; снимки схемы pgsql/mysql; coverage; мутации (D3); load."
+    },
+    {
+      "id": "runner-facts",
+      "title": "Факты раннера для серверных прогонов",
+      "text": "Любой server validation group/path/full/serial проходит TestCase/schema partitions каждого пакета (test-strategy#runner-contract); worker DB не решает schema changes внутри worker. Серверы: `make db-up` (pgsql), `make db-up-mysql` (mysql) один раз за сессию. mysql DDL-партиции — `eatmydata`/tmpfs (tests/README «Timings»)."
+    },
+    {
+      "id": "future-phases",
+      "title": "Отложенное из P5–P7",
+      "text": "P5: сценарии `knowledge/collaboration#tests` 2, 3, 10 (stand: PG + Redis + 2 хаба, SIGKILL), серверные движки для таблиц журнала/receipts. P6: I18 PG-гонка «GC ∥ новая ревизия», серверные прогоны идемпотентности/конкуренции. P7: release-gate условия с тремя СУБД, матрица чистых установок на трёх движках по архивам, release-изоляция, coverage-floor, стабильный AzGuard (D20), опциональный MUTATION-RUN, supply-chain audit."
+    }
+  ]
+}

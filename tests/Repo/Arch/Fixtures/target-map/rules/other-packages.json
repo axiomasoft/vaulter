@@ -4,11 +4,13 @@
         "Vaulter\\Drive\\",
         "Vaulter\\Documents\\",
         "Vaulter\\Documents\\Database\\Factories\\",
+        "Vaulter\\Webhooks\\",
         "Vaulter\\Azgard\\",
         "Vaulter\\Filament\\",
         "path:packages/media/",
         "path:packages/drive/",
         "path:packages/documents/",
+        "path:packages/webhooks/",
         "path:packages/azgard/",
         "path:packages/filament/"
     ],
@@ -19,7 +21,6 @@
             "owner": "media",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: media namespace stays in vaulter-media (CAS, GC, reconcile, doctor, console)"
         },
         {
@@ -28,7 +29,6 @@
             "owner": "media",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal; MediaConfig is the config object hosts read, DedupScope is visible from it"
         },
         {
@@ -37,7 +37,6 @@
             "owner": "media",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "host-registered provider of the package (architecture#api-surface: ServiceProvider classes of the host are Api)"
         },
         {
@@ -46,7 +45,6 @@
             "owner": "media",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "reads only pins (v_blob_references, D23): drive vocabulary is removed in P4",
             "why": "architecture#ownership-map: GC stays in media"
         },
@@ -56,7 +54,6 @@
             "owner": "media",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "reads only pins (v_blob_references, D23): drive vocabulary is removed in P4",
             "why": "architecture#ownership-map: reconcile of own pins stays in media"
         },
@@ -66,7 +63,6 @@
             "owner": "media",
             "action": "split",
             "phase": "P4",
-            "surface": "Api",
             "note": "split: attach/detach -> drive link service (see the member rules); commitStaged and the rest stay in media",
             "why": "architecture#ownership-map: BlobStore stays in media, attach/detach (drive FileRevision links) go to the drive link service"
         },
@@ -102,7 +98,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: the vaulter-drive namespace stays in drive (Actions, Http, Console, Jobs, Models, Queries, Providers, Uploads…); CLI/HTTP are identity surfaces, not PHP API"
         },
         {
@@ -111,7 +106,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DriveConfig"
         },
         {
@@ -120,7 +114,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: UploadInspector and UploadProtocolHandler are implemented or registered by the host (architecture#api-surface)"
         },
         {
@@ -129,7 +122,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: domain events are consumed by host listeners (architecture#api-surface)"
         },
         {
@@ -138,7 +130,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#api-surface: Data objects visible from the Api signatures of the Operations"
         },
         {
@@ -147,7 +138,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#api-surface: enums visible from Api signatures"
         },
         {
@@ -156,7 +146,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#api-surface: exceptions a host catches from the Operations"
         },
         {
@@ -165,7 +154,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#api-surface: the typed drive Operations are the supported programmatic surface"
         },
         {
@@ -174,7 +162,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: ScanLifecycleContractTests is part of the testing kit"
         },
         {
@@ -183,7 +170,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "host-registered provider of the package (architecture#api-surface)"
         },
         {
@@ -192,7 +178,6 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#entry-point: the handle returned by the drive entry point is the Api object a host works with"
         },
         {
@@ -201,8 +186,7 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
-            "note": "open: folds into Vaulter\\Drive\\Vaulter or stays as an Internal factory once the entry point moves to drive (D10)",
+            "note": "P3.17 decided: Internal — the host enters through Vaulter::drive(); the factory is the implementation of the entry point (D10, D27)",
             "why": "architecture#entry-point: the factory the core VaulterManager probes for (bound(DriveHandleFactory)); it disappears with the move of the entry point to drive"
         },
         {
@@ -211,9 +195,47 @@
             "owner": "drive",
             "action": "keep",
             "phase": "stay",
-            "surface": "undecided",
-            "note": "open: Api (host provisions drives) or Internal — P3 decides with the typed surface (D27)",
-            "why": "no ownership-map row: provisioning of a drive for a host owner"
+            "why": "architecture#api-surface (D27): the host enters through Vaulter::drive() / DriveHandleFactory; the provisioner is an implementation detail"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Webhooks\\",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D6): the vaulter-webhooks namespace stays in the webhooks package (outbox consumer, endpoint management, signing, delivery, retries); CLI/HTTP are identity surfaces, not PHP API"
+        },
+        {
+            "match": "file",
+            "value": "packages/webhooks/config/vaulter-webhooks.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D6, P4.13): the webhooks section of the configuration is the vaulter-webhooks root of the webhooks package"
+        },
+        {
+            "match": "file",
+            "value": "packages/webhooks/routes/webhooks.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D6, P4.13): the webhooks REST routes live in the webhooks package"
+        },
+        {
+            "match": "file",
+            "value": "packages/webhooks/database/migrations/0001_01_01_000401_create_v_webhook_endpoints_table.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.13): v_webhook_endpoints is created by the migration of webhooks"
+        },
+        {
+            "match": "file",
+            "value": "packages/webhooks/database/migrations/0001_01_01_000402_create_v_webhook_deliveries_table.php",
+            "owner": "webhooks",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.13): v_webhook_deliveries is created by the migration of webhooks"
         },
         {
             "match": "file",
@@ -237,7 +259,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: the vaulter-documents namespace stays in documents (aggregate, revisions, comments, types, export)"
         },
         {
@@ -246,7 +267,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DocumentsConfig"
         },
         {
@@ -255,7 +275,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: document type/codec/exporter and collaboration SPI contracts are implemented by the host or by the collaboration package"
         },
         {
@@ -264,7 +283,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: domain events consumed by host listeners"
         },
         {
@@ -273,7 +291,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: snapshots and inputs visible from the Api signatures of the Operations"
         },
         {
@@ -282,7 +299,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#api-surface: enums visible from Api signatures"
         },
         {
@@ -291,7 +307,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#api-surface: exceptions a host catches from the Operations"
         },
         {
@@ -300,7 +315,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DocumentOperations/CommentOperations"
         },
         {
@@ -309,7 +323,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: built-in document types and their registry"
         },
         {
@@ -318,7 +331,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DocumentExporterRegistry; exporters are registered by hosts"
         },
         {
@@ -327,7 +339,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: OpaqueContent/TipTap codecs and schema"
         },
         {
@@ -336,7 +347,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DocumentPresenter"
         },
         {
@@ -345,7 +355,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DocumentExport"
         },
         {
@@ -354,7 +363,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: the Documents facade"
         },
         {
@@ -363,7 +371,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: contract test kit"
         },
         {
@@ -372,7 +379,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: DocumentFactory is part of the public testing surface"
         },
         {
@@ -381,7 +387,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: the documents entry point"
         },
         {
@@ -390,7 +395,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "host-registered provider of the package (architecture#api-surface)"
         },
         {
@@ -399,7 +403,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Internal",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation (p2-design#type-map: documents Collaboration/** goes to collaboration P5)"
         },
         {
@@ -408,7 +411,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Internal",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: session creation and hub load/store/authenticate endpoints"
         },
         {
@@ -417,7 +419,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Internal",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: resolves the hub call (JWT/shared secret)"
         },
         {
@@ -426,7 +427,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Internal",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: request of the session endpoint"
         },
         {
@@ -435,7 +435,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Internal",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: resource of the session endpoint"
         },
         {
@@ -444,7 +443,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Internal",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: registrar of the collaboration routes and driver"
         },
         {
@@ -453,7 +451,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Internal",
             "note": "jwt probe (class_exists JWT) disappears when collaboration requires firebase/php-jwt (P5)",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: JWT/probe check (architecture#code-facts probes JWT)"
         },
@@ -463,7 +460,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Api",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: thrown for hub/driver misconfiguration"
         },
         {
@@ -472,7 +468,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Api",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: thrown when the hub is unavailable"
         },
         {
@@ -481,7 +476,6 @@
             "owner": "collaboration",
             "action": "move",
             "phase": "P5",
-            "surface": "Api",
             "note": "open: DocumentsConfig reads it today; the config section split decides how documents keeps working without collaboration (P5)",
             "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: selects the collaboration driver"
         },
@@ -491,7 +485,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "note": "open: written for the hub store path; stays with the aggregate unless collaboration takes the write path (P5)",
             "why": "source-review#code-facts: the document aggregate writes its binary state (D26 keeps yjs_state with the document); the hub store endpoint calls it"
         },
@@ -501,7 +494,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: CollaborationSession and the SPI inputs/refs belong to the documents SPI of collaboration (architecture#packages: documents owns the SPI)"
         },
         {
@@ -510,7 +502,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "source-review#code-facts: expectedEpoch/state_version are checked by the document state writer (aggregate state, D26)"
         },
         {
@@ -519,7 +510,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "source-review#code-facts: seed conflicts are decided by the document state writer (aggregate state, D26)"
         },
         {
@@ -546,7 +536,6 @@
             "owner": "azgard",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: vaulter-azgard is only the PermissionDriver adapter"
         },
         {
@@ -555,7 +544,6 @@
             "owner": "azgard",
             "action": "keep",
             "phase": "stay",
-            "surface": "Spi:Implement",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: AzgardBackedUser/AzgardGuard are implemented by the host or the AzGuard bridge"
         },
         {
@@ -564,7 +552,6 @@
             "owner": "azgard",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: AzgardConfig"
         },
         {
@@ -573,7 +560,6 @@
             "owner": "azgard",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: the driver a host selects"
         },
         {
@@ -582,7 +568,6 @@
             "owner": "azgard",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "host-registered provider of the package (architecture#api-surface)"
         },
         {
@@ -591,7 +576,6 @@
             "owner": "azgard",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "architecture#kernel: testing kit for hosts of the adapter"
         },
         {
@@ -608,7 +592,6 @@
             "owner": "filament",
             "action": "keep",
             "phase": "stay",
-            "surface": "Internal",
             "why": "architecture#packages: vaulter-filament is only the admin UI"
         },
         {
@@ -617,7 +600,6 @@
             "owner": "filament",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: FilamentConfig"
         },
         {
@@ -626,7 +608,6 @@
             "owner": "filament",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "host registers the plugin on its panel"
         },
         {
@@ -635,7 +616,6 @@
             "owner": "filament",
             "action": "keep",
             "phase": "stay",
-            "surface": "Api",
             "why": "host-registered provider of the package (architecture#api-surface)"
         },
         {
@@ -645,6 +625,190 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#packages: filament section stays in vaulter-filament"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000301_create_v_node_comments_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_node_comments is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_documents is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+            "owner": "documents",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_document_revisions is created by the migration of documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_drives is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_nodes is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000203_create_v_files_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_files is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000204_create_v_file_revisions_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_file_revisions is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000205_create_v_file_revision_blobs_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_file_revision_blobs is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000206_create_v_scan_policy_states_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_policy_states is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000207_create_v_scan_obligations_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_obligations is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000208_create_v_scan_backfill_runs_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_backfill_runs is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000209_create_v_scan_requests_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_requests is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000210_create_v_scan_evidence_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_scan_evidence is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000211_create_v_node_grants_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_node_grants is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_node_shares is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000213_create_v_node_user_states_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_node_user_states is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000214_create_v_upload_sessions_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_upload_sessions is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000215_create_v_upload_parts_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_upload_parts is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000216_create_v_activity_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_activity is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000217_create_v_drive_change_heads_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_drive_change_heads is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/drive/database/migrations/0001_01_01_000218_create_v_drive_changes_table.php",
+            "owner": "drive",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_drive_changes is created by the migration of drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+            "owner": "media",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D40 (P4.5): v_blobs is created by the migration of media"
+        },
+        {
+            "match": "file",
+            "value": "packages/media/database/migrations/0001_01_01_000102_create_v_blob_references_table.php",
+            "owner": "media",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D23 (P4.7): v_blob_references, the pins media owns, is created by the migration of media"
         }
     ]
 }

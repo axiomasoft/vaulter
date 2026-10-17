@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Database;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * A Vaulter model was written outside an operation: an integration error, never a
  * client one. Go through the DriveHandle operations.
  */
+#[Api]
 final class WriteOutsideOperationException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

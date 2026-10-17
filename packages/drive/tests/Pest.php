@@ -4,21 +4,43 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Drive\Tests\ActivityGate\ActivityDisabledTestCase;
 use Vaulter\Drive\Tests\PanelTestCase;
+use Vaulter\Drive\Tests\SpatieTestCase;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
-use Vaulter\Tests\Support\TestGroups;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Support\TestGroups;
 
-uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi', 'WriteGuard', 'Doctor', 'Testing');
+uses(TestCase::class, RefreshDatabase::class)->in('Access', 'Sharing', 'Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi', 'WriteGuard', 'Doctor', 'Testing', 'Content', 'Activity');
 
 uses(TestCase::class)->in('Providers', 'Http', 'Console', 'Modules');
 
 uses(TestCase::class, RefreshDatabase::class)->in('Recipes');
 
+// ProfileRuntimeTest binds its own TestCase in the file (Pest forbids two bases for one path).
+uses(TestCase::class, RefreshDatabase::class)->in(...array_values(array_filter(
+    glob(__DIR__.'/Profiles/*Test.php') ?: [],
+    static fn (string $path): bool => basename($path) !== 'ProfileRuntimeTest.php',
+)));
+
+// The sequence carrier and the scan-evidence schema tests bind their own TestCase in the file (Pest forbids two bases for one path).
+uses(TestCase::class, RefreshDatabase::class)->in(...array_values(array_filter(
+    glob(__DIR__.'/Schema/*Test.php') ?: [],
+    static fn (string $path): bool => !in_array(basename($path), ['NodeSequenceSchemaTest.php', 'ScanEvidenceSchemaTest.php'], true),
+)));
+
+// The activity-feature-OFF tests boot the package with 'activity' disabled so the subscriber is never registered; kept in
+// their own top-level folder so the Activity binding above does not also claim them (Pest forbids two test cases for one path).
+uses(ActivityDisabledTestCase::class, RefreshDatabase::class)->in('ActivityGate');
+
 // Панели живут отдельной директорией, потому что им нужен ДРУГОЙ TestCase: панель обязана
 // попасть в конфиг ДО boot'а (ProfileRegistry резолвится в packageBooted с P4.4), а Pest
 // разрешает ровно один базовый TestCase на директорию.
 uses(PanelTestCase::class, RefreshDatabase::class)->in('Panels');
+
+// The spatie-driver tests boot the package alongside spatie/laravel-permission with the v8 teams feature; kept in their own
+// folder so the Access binding above does not also claim them (Pest forbids two test cases for one path).
+uses(SpatieTestCase::class, RefreshDatabase::class)->in('Spatie');
 
 // The concurrency slice runs on COMMITTED rows (no wrapping transaction) so a forked
 // child on its own connection can see the session — RefreshDatabase's per-test

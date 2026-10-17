@@ -3,24 +3,24 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Tests\TestCase;
 use Vaulter\ValueObjects\Access\Actor;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-beforeEach(fn () => config()->set('vaulter.access.permission_driver', 'database'));
+beforeEach(fn () => config()->set('vaulter-drive.access.permission_driver', 'database'));
 
 it('conceals a hidden node before checking the requested ability', function (): void {
     $drive = AccessTestHelpers::storage();
@@ -57,8 +57,8 @@ it('requires both the workspace gate and parent Create permission', function ():
     $driver->shouldReceive('resolve')->andReturn(null);
     $driver->shouldReceive('canCreateIn')->andReturn(false);
     app()->instance(PermissionDriver::class, $driver);
-    config()->set('vaulter.access.permission_drivers.no_create', PermissionDriver::class);
-    config()->set('vaulter.access.permission_driver', 'no_create');
+    config()->set('vaulter-drive.access.permission_drivers.no_create', PermissionDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'no_create');
     app()->forgetInstance(PermissionDriverManager::class);
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorizeCreate(context: $context, parent: $node))->toThrow(PermissionDeniedException::class);

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\Types\SpreadsheetDocumentType;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The non-rich-text document-content path (§7 level 2): the spreadsheet document type
@@ -64,7 +64,7 @@ it('creates a spreadsheet document from its type key', function (): void {
     $nodeId = $created->json('data.id');
 
     // A document is presented by its type, so its node carries the document mime.
-    $node = app(VaulterConfig::class)->model('node')::query()->findOrFail($nodeId);
+    $node = app(DriveConfig::class)->model('node')::query()->findOrFail($nodeId);
     expect($node->mime_type)->toBe(CreateDocumentInput::NODE_MIME);
 
     // Its v1 head content round-trips the workbook verbatim (the opaque path, not TipTap).

@@ -10,10 +10,10 @@ use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Http\Problems\ProblemRenderer;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(function (): void {
     StorageFacade::fake('local');

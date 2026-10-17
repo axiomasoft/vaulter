@@ -5,25 +5,25 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use LogicException;
-use Vaulter\Content\ContentAvailabilityGuard;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Data\Drive\CopyResult;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
-use Vaulter\Repositories\Drive\FileStoreRepository;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\FileRevisionStoreRepository;
+use Vaulter\Drive\Repositories\FileStoreRepository;
 
+#[Internal]
 final readonly class FileContentLifecycle implements NodeContentLifecycle
 {
     public function __construct(
         private FileStoreRepository $files,
         private FileRevisionStoreRepository $revisions,
-        private BlobStore $blobs,
+        private RevisionBlobLinks $links,
         private CopyDestinationAdmission $admission,
         private ScanAdmission $scans,
         private ContentAvailabilityGuard $availability,
@@ -132,7 +132,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         foreach ($head->blobs as $blob) {
             /** @var FileRevisionBlob $edge */
             $edge = $blob->getRelationValue('pivot');
-            $this->blobs->attach(version: $revision, blob: $blob, attributes: [
+            $this->links->attach(revision: $revision, blob: $blob, attributes: [
                 'role' => $edge->role,
                 'ordinal' => $edge->ordinal,
                 'offset_bytes' => $edge->offset_bytes,
@@ -152,13 +152,8 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         if (!$file instanceof File) {
             return;
         }
-        foreach ($file->versions()->orderBy('id')->get() as $revision) {
-            foreach ($revision->blobs as $blob) {
-                /** @var FileRevisionBlob $edge */
-                $edge = $blob->getRelationValue('pivot');
-                $this->blobs->detach(version: $revision, blob: $blob, role: $edge->role, ordinal: $edge->ordinal);
-            }
-        }
+        // Every revision's edges and pins go before the node's cascade deletes the rows (D23).
+        $this->links->detachAll($file->versions()->orderBy('id')->pluck('id')->all());
         $this->files->releaseHead($file);
     }
 }

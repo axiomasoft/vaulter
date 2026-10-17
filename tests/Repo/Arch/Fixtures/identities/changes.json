@@ -15,6 +15,20 @@
             "reason": "P3.2: dry-run uninstall plan; --force/--purge refuse until P4"
         },
         {
+            "change": "redefined",
+            "decision": "D36",
+            "id": "command:vaulter:module:uninstall",
+            "kind": "cli",
+            "reason": "P4.17: --force rolls back the owner's migrations (refused while its tables hold rows or it keeps pins), --purge (with --force) deletes its rows and releases its own pins; exit 2 on usage (--purge without --force, unknown module)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D36",
+            "id": "command:vaulter:module:uninstall",
+            "kind": "cli",
+            "reason": "P4.17 RC4: the purge and the rollbacks are one transaction on sqlite/pgsql (a failure changes nothing, exit 1), on a driver whose DDL commits a failure after the purge exits 3 (applied partially; repeat --force); the rows and pins are read again inside the purge transaction and before each rollback (fail closed, exit 1 or 3); disable the module and stop its traffic first"
+        },
+        {
             "change": "added",
             "decision": "D22",
             "id": "config:vaulter.modules",
@@ -41,13 +55,6 @@
             "id": "publish:vaulter-config",
             "kind": "config",
             "reason": "P3.2: published by the module kernel from CoreModule::config instead of spatie hasConfigFile"
-        },
-        {
-            "change": "redefined",
-            "decision": "D22",
-            "id": "publish:vaulter-migrations",
-            "kind": "config",
-            "reason": "P3.2: published by the module kernel from CoreModule::schema instead of spatie discoversMigrations"
         },
         {
             "change": "redefined",
@@ -1459,7 +1466,7 @@
         {
             "change": "added",
             "decision": "D25",
-            "id": "migration:2026_10_13_000028_create_v_idempotency_keys_table.php",
+            "id": "migration:0001_01_01_000004_create_v_idempotency_keys_table.php",
             "kind": "schema",
             "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
         },
@@ -1469,6 +1476,2981 @@
             "id": "table:v_idempotency_keys",
             "kind": "schema",
             "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:access.inheritance_changed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.added",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.resolved",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.restored",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.revision_created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.archived",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.unarchived",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.revision_added",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.revision_deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.uploaded",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:folder.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:grant.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:grant.revoked",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.copied",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.moved",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.purged",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.renamed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.restored",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.trashed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.revoked",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.rotated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.aborted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.expired",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.initiated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.backoff_base_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.backoff_cap_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.batch",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.dead_retention_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.lease_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.max_attempts",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.max_consumer_hold_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.retention_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.outbox.settle_window_seconds",
+            "kind": "config",
+            "reason": "P3.14: the neutral outbox and its relay (settle window, retention, hold, leases, retry budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.outbox_relay",
+            "kind": "config",
+            "reason": "P3.15: vaulter:relay on the host scheduler, every minute"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.outbox_prune",
+            "kind": "config",
+            "reason": "P3.15: vaulter:outbox:prune on the host scheduler, hourly"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "config:vaulter.schedule.webhooks_relay",
+            "kind": "config",
+            "reason": "P3.15: vaulter:webhooks:relay is replaced by the core vaulter:relay (schedule key outbox_relay)"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "config:vaulter.webhooks.relay.claim_seconds",
+            "kind": "config",
+            "reason": "P3.14: the webhooks.fanout consumer runs under the outbox delivery lease, vaulter.outbox.lease_seconds"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "config:vaulter.models.outbox",
+            "kind": "config",
+            "reason": "P3.14: the default model is Vaulter\\Events\\Outbox\\Models\\OutboxEvent (was Vaulter\\Models\\Webhooks\\Outbox)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:relay",
+            "kind": "cli",
+            "reason": "P3.15: the core outbox relay (register, reconcile, deliver, hold)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:relay:replay",
+            "kind": "cli",
+            "reason": "P3.15: replay a range to an outbox consumer or acknowledge its gap"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:outbox:prune",
+            "kind": "cli",
+            "reason": "P3.15: outbox retention without loss"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "command:vaulter:webhooks:relay",
+            "kind": "cli",
+            "reason": "P3.15: replaced by vaulter:relay; the fan-out is the webhooks.fanout outbox consumer"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "command:vaulter:webhooks:prune",
+            "kind": "cli",
+            "reason": "P3.15: prunes the terminal webhook deliveries only; the outbox has vaulter:outbox:prune"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "format:webhook-envelope",
+            "kind": "protocol",
+            "reason": "P3.14: built by Vaulter\\Events\\Outbox\\OutboxEnvelope::body (was EventEnvelope::fromEvent); the bytes are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "serialized:config:vaulter.models.outbox",
+            "kind": "protocol",
+            "reason": "P3.14: the serialized default model class is Vaulter\\Events\\Outbox\\Models\\OutboxEvent"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.external",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.outbox_seq",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.scope_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.scope_kind",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox.type",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.activation_seq",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.consumer_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.created_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.delivery_class",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.gaps",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.lease_expires_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.lease_generation",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.lease_owner",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.paused_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.reconciled_through_seq",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.state",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_consumers.updated_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.attempts",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.consumer_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.continuation",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.created_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.done_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.event_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.last_error",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.lease_expires_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.lease_generation",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.lease_owner",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.next_attempt_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.outbox_seq",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.state",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "column:v_outbox_deliveries.updated_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "constraint:v_outbox_consumers.v_outbox_consumers_pkey",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "constraint:v_outbox_deliveries.v_outbox_deliveries_pkey",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_created_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_consumers.PRIMARY",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_consumers.v_outbox_consumers_pkey",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.PRIMARY",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.v_outbox_deliveries_due_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.v_outbox_deliveries_lease_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.v_outbox_deliveries_pkey",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "index:v_outbox_deliveries.v_outbox_deliveries_seq_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "migration:0001_01_01_000002_create_v_outbox_consumers_table.php",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "migration:0001_01_01_000003_create_v_outbox_deliveries_table.php",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "table:v_outbox_consumers",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "table:v_outbox_deliveries",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox (outbox_seq, scope, type, external) and its consumer and delivery tables"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.attempts",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.available_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.claim_generation",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.claim_token",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.claim_until",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.delivery_count",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.drive_id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.event",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.fanned_out_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.fanout_cursor",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.id",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.legacy_fanout",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.profile",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.status",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.topic",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "column:v_outbox.updated_at",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_drain_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_drive_id_index",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_profile_index",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_prune_idx",
+            "kind": "schema",
+            "reason": "P3.14: the neutral outbox keeps no delivery state, drive or panel column; delivery state lives in v_outbox_deliveries"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "column:v_outbox.created_at",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "column:v_outbox.event_id",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "constraint:v_outbox.v_outbox_pkey",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "index:v_outbox.PRIMARY",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "index:v_outbox.v_outbox_pkey",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "table:v_outbox",
+            "kind": "schema",
+            "reason": "P3.14: v_outbox is keyed by outbox_seq (bigIncrements, independent of the id strategy) with event_id string(64) unique"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_CONNECTION",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_DATABASE",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_HOST",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_PASSWORD",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_PORT",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:DB_USERNAME",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:TEST_TOKEN",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:VAULTER_OPENAPI_VALIDATE",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "env:VAULTER_TEST_DB_PER_PROCESS",
+            "kind": "config",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "morph:Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers::grant#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "morph:Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "removed",
+            "decision": "D40",
+            "id": "publish:vaulter-migrations",
+            "kind": "config",
+            "reason": "P4.5: the migrations are not published; each package runs the migrations of its tables from vendor/"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000021_create_v_outbox_table.php",
+            "id": "migration:0001_01_01_000001_create_v_outbox_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_outbox is created by the migration of the package that owns it (core), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000022_create_v_webhook_endpoints_table.php",
+            "id": "migration:0001_01_01_000401_create_v_webhook_endpoints_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_webhook_endpoints is created by the migration of the package that owns it (core), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000023_create_v_webhook_deliveries_table.php",
+            "id": "migration:0001_01_01_000402_create_v_webhook_deliveries_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_webhook_deliveries is created by the migration of the package that owns it (core), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000003_create_v_blobs_table.php",
+            "id": "migration:0001_01_01_000101_create_v_blobs_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_blobs is created by the migration of the package that owns it (media), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000001_create_v_drives_table.php",
+            "id": "migration:0001_01_01_000201_create_v_drives_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_drives is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000002_create_v_nodes_table.php",
+            "id": "migration:0001_01_01_000202_create_v_nodes_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_nodes is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000004_create_v_files_table.php",
+            "id": "migration:0001_01_01_000203_create_v_files_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_files is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000005_create_v_file_revisions_table.php",
+            "id": "migration:0001_01_01_000204_create_v_file_revisions_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_file_revisions is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000006_create_v_file_revision_blobs_table.php",
+            "id": "migration:0001_01_01_000205_create_v_file_revision_blobs_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_file_revision_blobs is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000007_create_v_scan_policy_states_table.php",
+            "id": "migration:0001_01_01_000206_create_v_scan_policy_states_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_scan_policy_states is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000008_create_v_scan_obligations_table.php",
+            "id": "migration:0001_01_01_000207_create_v_scan_obligations_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_scan_obligations is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000009_create_v_scan_backfill_runs_table.php",
+            "id": "migration:0001_01_01_000208_create_v_scan_backfill_runs_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_scan_backfill_runs is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000010_create_v_scan_requests_table.php",
+            "id": "migration:0001_01_01_000209_create_v_scan_requests_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_scan_requests is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000011_create_v_scan_evidence_table.php",
+            "id": "migration:0001_01_01_000210_create_v_scan_evidence_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_scan_evidence is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000012_create_v_node_grants_table.php",
+            "id": "migration:0001_01_01_000211_create_v_node_grants_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_node_grants is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000013_create_v_node_shares_table.php",
+            "id": "migration:0001_01_01_000212_create_v_node_shares_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_node_shares is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000015_create_v_node_user_states_table.php",
+            "id": "migration:0001_01_01_000213_create_v_node_user_states_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_node_user_states is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000018_create_v_upload_sessions_table.php",
+            "id": "migration:0001_01_01_000214_create_v_upload_sessions_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_upload_sessions is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000019_create_v_upload_parts_table.php",
+            "id": "migration:0001_01_01_000215_create_v_upload_parts_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_upload_parts is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000020_create_v_activity_table.php",
+            "id": "migration:0001_01_01_000216_create_v_activity_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_activity is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000024_create_v_drive_change_heads_table.php",
+            "id": "migration:0001_01_01_000217_create_v_drive_change_heads_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_drive_change_heads is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000025_create_v_drive_changes_table.php",
+            "id": "migration:0001_01_01_000218_create_v_drive_changes_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_drive_changes is created by the migration of the package that owns it (drive), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000014_create_v_node_comments_table.php",
+            "id": "migration:0001_01_01_000301_create_v_node_comments_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_node_comments is created by the migration of the package that owns it (documents), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000016_create_v_documents_table.php",
+            "id": "migration:0001_01_01_000302_create_v_documents_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_documents is created by the migration of the package that owns it (documents), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D40",
+            "from": "migration:2026_10_13_000017_create_v_document_revisions_table.php",
+            "id": "migration:0001_01_01_000303_create_v_document_revisions_table.php",
+            "kind": "schema",
+            "reason": "P4.5: v_document_revisions is created by the migration of the package that owns it (documents), in the global 0001_01_01_00NNNN sequence"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "config:vaulter.models.blob",
+            "id": "config:vaulter-media.models.blob",
+            "kind": "config",
+            "reason": "P4.6: the blob model moved to vaulter-media with the CAS slice, so its swap key lives in the media config root"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.models.blob",
+            "id": "serialized:config:vaulter-media.models.blob",
+            "kind": "protocol",
+            "reason": "P4.6: the blob model moved to vaulter-media with the CAS slice, so its swap key lives in the media config root; the serialized default is Vaulter\\Media\\Models\\Cas\\Blob"
+        },
+        {
+            "change": "renamed",
+            "decision": "D33",
+            "from": "serialized:cast:Vaulter\\Models\\Cas\\Blob.quarantined_at",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.quarantined_at",
+            "kind": "protocol",
+            "reason": "P4.6: the model moved to media (Vaulter\\Media\\Models\\Cas\\Blob) and casts the timestamp with the media UTC cast Vaulter\\Media\\Support\\UtcDateTimeCast, not the drive scan cast"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:cast:Vaulter\\Models\\Cas\\Blob.status",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.status",
+            "kind": "protocol",
+            "reason": "P4.6: the model and the BlobStatus enum moved to media (Vaulter\\Media\\Enums\\Cas\\BlobStatus)"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "table:v_blob_references",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "migration:0001_01_01_000102_create_v_blob_references_table.php",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.id",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.blob_id",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.owner_type",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.reference_key",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "column:v_blob_references.created_at",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "constraint:v_blob_references.v_blob_references_pkey",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "constraint:v_blob_references.v_blob_references_pin_uniq",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "fk:v_blob_references.v_blob_references_blob_fk",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.PRIMARY",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_pkey",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_pin_uniq",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_owner_idx",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "index:v_blob_references.v_blob_references_blob_id_index",
+            "kind": "schema",
+            "reason": "P4.7: media owns the pins of its blobs (D23): v_blob_references (opaque owner_type/reference_key, UNIQUE per blob and reference, FK to v_blobs ON DELETE RESTRICT); GC and reconcile read only the pins"
+        },
+        {
+            "change": "renamed",
+            "decision": "D23",
+            "from": "column:v_blobs.drive_id",
+            "id": "column:v_blobs.storage_id",
+            "kind": "schema",
+            "reason": "P4.7: the blob's storage scope is an opaque identifier of the owner's storage, not a drive reference (D23): v_blobs.drive_id becomes storage_id (nullable, no FK); dedup_scope values, the d- key segment and the key format are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D23",
+            "from": "index:v_blobs.v_blobs_drive_id_index",
+            "id": "index:v_blobs.v_blobs_storage_id_index",
+            "kind": "schema",
+            "reason": "P4.7: the blob's storage scope is an opaque identifier of the owner's storage, not a drive reference (D23): v_blobs.drive_id becomes storage_id (nullable, no FK); dedup_scope values, the d- key segment and the key format are unchanged"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "problem:blob_unavailable",
+            "kind": "protocol",
+            "reason": "P4.7: a pin is refused because the blob's bytes are gone (deleting/deleted, or tombstoned without its object) — 409, never retried or cached; the owner holding the bytes commits them again"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "publish:vaulter-media-translations",
+            "kind": "config",
+            "reason": "P4.7: vaulter-media ships the translations of its problem code blob_unavailable (resources/lang, spatie hasTranslations)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "command:vaulter:make:permission-driver",
+            "kind": "cli",
+            "reason": "P4.8: the command class moved with the access model to vaulter-drive (Vaulter\\Drive\\Console); the command name and signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter-drive.access.permission_drivers.database",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter-drive.access.permission_drivers.gate",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter-drive.access.permission_drivers.spatie",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter-drive.models.grant",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter-drive.models.node_share",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "config:vaulter-drive.sharing.token_generator",
+            "kind": "config",
+            "reason": "P4.8: the default FQCN names the access/sharing class in its new owner namespace (Vaulter\\Drive\\...); the key and its meaning are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.access.inheritance.restore",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.access.inheritance.restrict",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.destroy",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.index",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.grants.store",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.download",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.nodes",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.public-shares.show",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.destroy",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.index",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.rotate",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.store",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "route:vaulter.v1.shares.update",
+            "kind": "http",
+            "reason": "P4.8: the controller/request classes of the route moved to vaulter-drive (Vaulter\\Drive\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:file_size_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:folder_children_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:permission_denied",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_link_ttl_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_not_found",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_password_required",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_role_not_allowed",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:tree_depth_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:unknown_role",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.database",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.gate",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.spatie",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.models.grant",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.models.node_share",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.sharing.token_generator",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.created_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.created_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.available_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.available_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.created_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.created_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.last_published_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.last_published_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.lease_expires_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.lease_expires_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.activated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.activated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanRequest.requested_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanRequest.requested_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_backfill_run",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_evidence",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_obligation",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_policy_state",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_request",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.commenter",
+            "id": "config:vaulter-drive.access.gate.abilities.commenter",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.organizer",
+            "id": "config:vaulter-drive.access.gate.abilities.organizer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.owner",
+            "id": "config:vaulter-drive.access.gate.abilities.owner",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.previewer",
+            "id": "config:vaulter-drive.access.gate.abilities.previewer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.reader",
+            "id": "config:vaulter-drive.access.gate.abilities.reader",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.abilities.writer",
+            "id": "config:vaulter-drive.access.gate.abilities.writer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.create_ability",
+            "id": "config:vaulter-drive.access.gate.create_ability",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.gate.super_ability",
+            "id": "config:vaulter-drive.access.gate.super_ability",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_driver",
+            "id": "config:vaulter-drive.access.permission_driver",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_drivers.database",
+            "id": "config:vaulter-drive.access.permission_drivers.database",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_drivers.gate",
+            "id": "config:vaulter-drive.access.permission_drivers.gate",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_drivers.null",
+            "id": "config:vaulter-drive.access.permission_drivers.null",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.permission_drivers.spatie",
+            "id": "config:vaulter-drive.access.permission_drivers.spatie",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.create_permission",
+            "id": "config:vaulter-drive.access.spatie.create_permission",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.commenter",
+            "id": "config:vaulter-drive.access.spatie.permissions.commenter",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.organizer",
+            "id": "config:vaulter-drive.access.spatie.permissions.organizer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.owner",
+            "id": "config:vaulter-drive.access.spatie.permissions.owner",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.previewer",
+            "id": "config:vaulter-drive.access.spatie.permissions.previewer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.reader",
+            "id": "config:vaulter-drive.access.spatie.permissions.reader",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.permissions.writer",
+            "id": "config:vaulter-drive.access.spatie.permissions.writer",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.role_subject_type",
+            "id": "config:vaulter-drive.access.spatie.role_subject_type",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.super_permission",
+            "id": "config:vaulter-drive.access.spatie.super_permission",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.team_subject_type",
+            "id": "config:vaulter-drive.access.spatie.team_subject_type",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.access.spatie.teams",
+            "id": "config:vaulter-drive.access.spatie.teams",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.changes.max_page_size",
+            "id": "config:vaulter-drive.changes.max_page_size",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.changes.retention_days",
+            "id": "config:vaulter-drive.changes.retention_days",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.downloads.delivery_mode",
+            "id": "config:vaulter-drive.downloads.delivery_mode",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.downloads.direct_ttl_seconds",
+            "id": "config:vaulter-drive.downloads.direct_ttl_seconds",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.downloads.inline_mime_types",
+            "id": "config:vaulter-drive.downloads.inline_mime_types",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.drives.delete_with_owner",
+            "id": "config:vaulter-drive.drives.delete_with_owner",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.activity",
+            "id": "config:vaulter-drive.features.activity",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.changes",
+            "id": "config:vaulter-drive.features.changes",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.grants",
+            "id": "config:vaulter-drive.features.grants",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.public_listing",
+            "id": "config:vaulter-drive.features.public_listing",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.features.share_links",
+            "id": "config:vaulter-drive.features.share_links",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.handlers",
+            "id": "config:vaulter-drive.handlers",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.listing.scan_budget",
+            "id": "config:vaulter-drive.listing.scan_budget",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.activity",
+            "id": "config:vaulter-drive.models.activity",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.drive",
+            "id": "config:vaulter-drive.models.drive",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.file",
+            "id": "config:vaulter-drive.models.file",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.file_revision",
+            "id": "config:vaulter-drive.models.file_revision",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.file_revision_blob",
+            "id": "config:vaulter-drive.models.file_revision_blob",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.grant",
+            "id": "config:vaulter-drive.models.grant",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.node",
+            "id": "config:vaulter-drive.models.node",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.node_share",
+            "id": "config:vaulter-drive.models.node_share",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_backfill_run",
+            "id": "config:vaulter-drive.models.scan_backfill_run",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_evidence",
+            "id": "config:vaulter-drive.models.scan_evidence",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_obligation",
+            "id": "config:vaulter-drive.models.scan_obligation",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_policy_state",
+            "id": "config:vaulter-drive.models.scan_policy_state",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.models.scan_request",
+            "id": "config:vaulter-drive.models.scan_request",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.profiles.default",
+            "id": "config:vaulter-drive.profiles.default",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.profiles.providers",
+            "id": "config:vaulter-drive.profiles.providers",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.mode",
+            "id": "config:vaulter-drive.scan.mode",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.policy_version",
+            "id": "config:vaulter-drive.scan.policy_version",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.required",
+            "id": "config:vaulter-drive.scan.required",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.rollout_key",
+            "id": "config:vaulter-drive.scan.rollout_key",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.scanner",
+            "id": "config:vaulter-drive.scan.scanner",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.scanner_key",
+            "id": "config:vaulter-drive.scan.scanner_key",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.scan.scanner_version",
+            "id": "config:vaulter-drive.scan.scanner_version",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.schedule.changes_prune",
+            "id": "config:vaulter-drive.schedule.changes_prune",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.default_ttl_hours",
+            "id": "config:vaulter-drive.sharing.default_ttl_hours",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.max_ttl_hours",
+            "id": "config:vaulter-drive.sharing.max_ttl_hours",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.prefix_length",
+            "id": "config:vaulter-drive.sharing.prefix_length",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.token_generator",
+            "id": "config:vaulter-drive.sharing.token_generator",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "config:vaulter.sharing.url_base",
+            "id": "config:vaulter-drive.sharing.url_base",
+            "kind": "config",
+            "reason": "P4.11: the drive's config keys moved from the kernel root vaulter.* to the drive root vaulter-drive.*; same tail, same env name and default"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.models.webhook_delivery",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.models.webhook_delivery"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.models.webhook_endpoint",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.models.webhook_endpoint"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.schedule.webhooks_prune",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.schedule.webhooks_prune"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.schedule.webhooks_retry",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.schedule.webhooks_retry"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.allowed_ip_ranges",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.allowed_ip_ranges"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.allowed_schemes",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.allowed_schemes"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.blocked_ip_ranges",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.blocked_ip_ranges"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.connect_timeout",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.connect_timeout"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.max_response_bytes",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.max_response_bytes"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.delivery.url_guard",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.delivery.url_guard"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.disable_after_days",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.disable_after_days"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.manage_ability",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.manage_ability"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.relay.fanout_chunk",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.relay.fanout_chunk"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.retention_days",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.retention_days"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.retry_claim_seconds",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.retry_claim_seconds"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.retry_jitter",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.retry_jitter"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.retry_schedule",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.retry_schedule"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.secret_rotation_overlap",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.secret_rotation_overlap"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "config:vaulter-webhooks.timeout",
+            "kind": "config",
+            "reason": "P4.13: the key moved from the kernel root vaulter.* to the root of the webhooks package vaulter-webhooks.*; same tail, same default",
+            "from": "config:vaulter.webhooks.timeout"
+        },
+        {
+            "change": "added",
+            "decision": "D6",
+            "id": "publish:vaulter-webhooks-config",
+            "kind": "config",
+            "reason": "P4.13: the webhooks provider publishes its config and translations under its own tags"
+        },
+        {
+            "change": "added",
+            "decision": "D6",
+            "id": "publish:vaulter-webhooks-translations",
+            "kind": "config",
+            "reason": "P4.13: the webhooks provider publishes its config and translations under its own tags"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "env:VAULTER_WEBHOOKS_MANAGE_ABILITY",
+            "kind": "config",
+            "reason": "P4.13: the env override is read by the vaulter-webhooks config file of the webhooks package; the name and the default are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:prune",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:redeliver",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:retry",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-deliveries.index",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-deliveries.redeliver",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.deactivate",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.destroy",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.index",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.show",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.store",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "route:vaulter.v1.webhook-endpoints.update",
+            "kind": "http",
+            "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.attempts",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.claim_token",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.claim_until",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.created_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.endpoint_id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.event",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.event_id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.last_error",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.next_retry_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.payload",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.status",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_deliveries.updated_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.created_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.disabled_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.disabled_reason",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.drive_id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.events",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.failing_since",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.failure_count",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.is_active",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.last_triggered_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.previous_secret_expires_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.previous_signing_secret",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.signing_secret",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.tenant_id",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.updated_at",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "column:v_webhook_endpoints.url",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "constraint:v_webhook_deliveries.v_webhook_deliveries_event_endpoint_unique",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "constraint:v_webhook_deliveries.v_webhook_deliveries_pkey",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "constraint:v_webhook_endpoints.v_webhook_endpoints_pkey",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "fk:v_webhook_deliveries.v_webhook_deliveries_endpoint_id_foreign",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "fk:v_webhook_endpoints.v_webhook_endpoints_drive_id_foreign",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.PRIMARY",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_endpoint_id_index",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_event_endpoint_unique",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_pkey",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_prune_idx",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_deliveries.v_webhook_deliveries_retry_idx",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.PRIMARY",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_active_tenant_idx",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_drive_id_index",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_is_active_index",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_pkey",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "index:v_webhook_endpoints.v_webhook_endpoints_tenant_id_index",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "migration:0001_01_01_000401_create_v_webhook_endpoints_table.php",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "migration:0001_01_01_000402_create_v_webhook_deliveries_table.php",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "table:v_webhook_deliveries",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D40",
+            "id": "table:v_webhook_endpoints",
+            "kind": "schema",
+            "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_delivery",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)",
+            "from": "serialized:config:vaulter.models.webhook_delivery"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_endpoint",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)",
+            "from": "serialized:config:vaulter.models.webhook_endpoint"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "serialized:config:vaulter-webhooks.delivery.url_guard",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)",
+            "from": "serialized:config:vaulter.webhooks.delivery.url_guard"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "id": "serialized:queue:Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)",
+            "from": "serialized:queue:Vaulter\\Jobs\\Webhooks\\DeliverWebhook"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "format:webhook-signature",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:invalid_webhook_signature",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_delivery_not_found",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_delivery_not_redeliverable",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_endpoint_not_found",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "morph:Vaulter\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.16: the drive/node tenant boundary moved from the kernel to the drive; the read of the owner's morph class is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "morph:Vaulter\\VaulterServiceProvider::bootModuleKernel#morphMap",
+            "id": "morph:Vaulter\\Drive\\Providers\\BindingsRegistrar::boot#morphMap",
+            "kind": "protocol",
+            "reason": "P4.16: the drive registers the stable morph aliases of its drive and node models (vaulter.drive, vaulter.node) when it boots; the kernel no longer knows them"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "command:vaulter:install",
+            "kind": "cli",
+            "reason": "P4.16: the permission driver is the drive's concept, so the installer no longer asks for it: the --driver option and the VAULTER_PERMISSION_DRIVER hint are gone (the drive's config and doctor own the driver choice)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D23",
+            "id": "command:vaulter:blobs:reconcile",
+            "kind": "cli",
+            "reason": "P4.20: the description says the ref_count is rebuilt from the pins (v_blob_references), not from edge counts; name, signature and behaviour are unchanged"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

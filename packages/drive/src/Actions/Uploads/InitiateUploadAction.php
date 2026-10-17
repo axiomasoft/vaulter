@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Uploads;
 
-use Vaulter\Access\OperationGuard;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NotAFileException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Profiles\DrivePolicyEnforcer;
+use Vaulter\Drive\Support\NodeName;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\NotAFileException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Profiles\DrivePolicyEnforcer;
-use Vaulter\Support\NodeName;
 
+#[Internal]
 final readonly class InitiateUploadAction
 {
     public function __construct(private NodeLocator $locator, private OperationGuard $guard, private UploadSessionManager $manager, private DrivePolicyEnforcer $policy) {}

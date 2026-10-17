@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Http\Controllers\Collaboration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Collaboration\CollaborationHub;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 
@@ -17,6 +18,7 @@ use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
  * or room is 403; a room of a past generation, or a seed over an existing state, is 409
  * and the hub closes the room without retrying.
  */
+#[Internal]
 final readonly class HubStoreController
 {
     public function __construct(private CollaborationHub $hub) {}

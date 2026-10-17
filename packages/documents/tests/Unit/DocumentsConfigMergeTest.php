@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Config\Repository;
 use Illuminate\Foundation\Application;
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Contracts\Presentation\KindPresenter;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
@@ -15,8 +13,10 @@ use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
-use Vaulter\Handlers\Builtin\PreviewHandler;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\Contracts\Presentation\KindPresenter;
+use Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\SlotContribution;
@@ -32,7 +32,7 @@ it('loads document defaults under their owner and contributes a kind presenter, 
         ->and(config('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class)
         ->and(config('vaulter-documents.types'))->toBe([RichTextDocumentType::class, MarkdownDocumentType::class])
         ->and(config('vaulter-documents.default_type'))->toBe('vaulter/rich-text')
-        ->and(config('vaulter.handlers'))->toBe([])
+        ->and(config('vaulter-drive.handlers'))->toBe([])
         ->and(config('vaulter-documents.exporters'))->toBe([HtmlExporter::class, MarkdownExporter::class]);
 
     // The drive contributes the file handlers; the documents module only a presenter for its kind.

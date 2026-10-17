@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
 
 it('applies the selected profile create gate to folder options and canonical folder creation', function (bool $allow): void {
     $this->actingAs(DriveBuilder::user());
     $drive = DriveBuilder::storage();
     $node = DriveBuilder::folder($drive, 'source');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $registry = new ProfileRegistry;
     $registry->register((new Profile)->key('default')->permissionDriver('gate'));
     $registry->freeze();

@@ -36,7 +36,10 @@ final class Schema
     /** Axes whose variation is expected; a record that follows another axis is drift. */
     private const ALLOWED_AXES = ['ids', 'host_keys', 'tenancy'];
 
+    /** A module's create-migrations live in its own package (D40), webhooks' in core until the webhooks package exists. */
     private const MIGRATIONS = 'packages/core/database/migrations';
+
+    private const MIGRATION_DIRS = 'packages/*/database/migrations';
 
     private const FK_FIELDS = ['columns', 'ref_table', 'ref_columns', 'on_delete', 'on_update'];
 
@@ -86,16 +89,18 @@ final class Schema
             $problems[] = ['code' => 'no-table', 'message' => "schema: migration of {$table} creates a table the snapshots do not have", 'exit' => 1];
         }
         $migrationOf = [];
+        $migrationDir = [];
         foreach ($migrations as $basename => $migration) {
             foreach ($migration['tables'] as $table) {
                 $migrationOf[$table] = $basename;
+                $migrationDir[$table] = $migration['dir'];
             }
         }
 
         $items = [];
         foreach ($tables as $table) {
             $basename = $migrationOf[$table] ?? null;
-            $source = ['file' => $basename === null ? self::MIGRATIONS : self::MIGRATIONS.'/'.$basename, 'symbol' => $table];
+            $source = ['file' => $basename === null ? self::MIGRATIONS : $migrationDir[$table].'/'.$basename, 'symbol' => $table];
             $item = ['id' => "table:{$table}", 'source' => $source, 'logical' => substr($table, 2), 'columns' => $columnOrder[$table], 'migration' => $basename];
             if (isset($originalDiff[$table])) {
                 $item['original_diff'] = $originalDiff[$table];
@@ -110,7 +115,7 @@ final class Schema
             $items[] = $item;
         }
         foreach ($migrations as $basename => $migration) {
-            $items[] = ['id' => 'migration:'.$basename, '_owner_key' => 'table:'.$migration['tables'][0], 'source' => ['file' => self::MIGRATIONS.'/'.$basename, 'symbol' => '<file>'], 'tables' => $migration['tables']];
+            $items[] = ['id' => 'migration:'.$basename, '_owner_key' => 'table:'.$migration['tables'][0], 'source' => ['file' => $migration['dir'].'/'.$basename, 'symbol' => '<file>'], 'tables' => $migration['tables']];
         }
 
         // entity id (without engine) => engine => preset => record
@@ -129,7 +134,7 @@ final class Schema
             }
             [$kind, $rest] = explode(':', $id, 2);
             $table = explode('.', $rest, 2)[0];
-            $source = ['file' => isset($migrationOf[$table]) ? self::MIGRATIONS.'/'.$migrationOf[$table] : self::MIGRATIONS, 'symbol' => $table];
+            $source = ['file' => isset($migrationOf[$table]) ? $migrationDir[$table].'/'.$migrationOf[$table] : self::MIGRATIONS, 'symbol' => $table];
             $item = ['id' => $id, '_owner_key' => 'table:'.$table, 'source' => $source, 'table' => $table, 'engines' => [], 'variants' => []];
             foreach (self::ENGINES as $engine) {
                 if (!isset($perEngine[$engine])) {
@@ -680,19 +685,19 @@ final class Schema
     }
 
     /**
-     * basename => {tables}, statically from `…_create_v_<t>_table.php`.
+     * basename => {tables, dir}, statically from `…_create_v_<t>_table.php` of every package.
      *
-     * @return array<string, array{tables: list<string>}>
+     * @return array<string, array{tables: list<string>, dir: string}>
      */
     private static function migrations(Repo $repo): array
     {
         $migrations = [];
-        $files = glob($repo->path(self::MIGRATIONS).'/*.php') ?: [];
+        $files = glob($repo->path(self::MIGRATION_DIRS).'/*.php') ?: [];
         sort($files, SORT_STRING);
         foreach ($files as $path) {
             $basename = basename($path);
             if (preg_match('/_create_(v_[a-z0-9_]+)_table\.php$/', $basename, $m) === 1) {
-                $migrations[$basename] = ['tables' => [$m[1]]];
+                $migrations[$basename] = ['tables' => [$m[1]], 'dir' => substr(dirname($path), strlen($repo->path('')))];
             }
         }
 

@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
-use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
-use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Load\Console\QueueFixtureSupport;
 use Vaulter\Load\Webhooks\LoadSinkOutboundUrlGuard;
 use Vaulter\Support\Config;
+use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
+use Vaulter\Webhooks\Exceptions\BlockedOutboundUrlException;
 
 require_once dirname(__DIR__, 2).'/webhook-sink/router.php';
 

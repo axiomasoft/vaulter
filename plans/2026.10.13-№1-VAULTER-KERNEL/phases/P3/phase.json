@@ -194,6 +194,11 @@
       "note": "Квалификация P3 (D31)"
     }
   ],
+  "closed": {
+    "at": "2026-10-16T05:55:26Z",
+    "result": "done_with_deviations",
+    "summary": "19 item(s): 3 done, 16 done_with_deviations"
+  },
   "sections": [
     {
       "id": "design-inputs",

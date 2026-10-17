@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Registry;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * filled while providers register and boot, then frozen, so every request (and every
  * Octane worker) sees the same set.
  */
+#[Api]
 final class RegistryFrozenException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

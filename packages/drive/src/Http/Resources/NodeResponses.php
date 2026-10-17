@@ -8,22 +8,24 @@ use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Vaulter\Access\ValueObjects\NodeAbilities;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
+use Vaulter\Drive\Http\Resources\Drive\NodeResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Queries\NodeBrowserQuery;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
-use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Resources\PageResponse;
-use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\Preconditions;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /**
  * How the drive routes answer with nodes. Every node goes out as the caller's own
@@ -37,6 +39,7 @@ use Vaulter\Operations\NodeLocator;
  * 428 or 412), and the matching sequence is what the operation then checks again,
  * atomically, while it writes.
  */
+#[Internal]
 final readonly class NodeResponses
 {
     public function __construct(
@@ -109,7 +112,11 @@ final readonly class NodeResponses
             throw PermissionDeniedException::forAbility($ability->value);
         }
 
-        return Preconditions::matchNode($request, (new NodeResource($snapshot, $abilities))->etag(), $snapshot);
+        if (!Preconditions::matches($request, (new NodeResource($snapshot, $abilities))->etag())) {
+            throw StaleNodeException::forNode($snapshot->id);
+        }
+
+        return $snapshot->sequence;
     }
 
     /**

@@ -7,7 +7,8 @@ namespace Vaulter\Filament;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Override;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Api;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Filament\Configuration\FilamentConfig;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
@@ -26,9 +27,11 @@ use Vaulter\Filament\Resources\NodeShareResource;
  * NodeShare, Activity), each toggleable through
  * FilamentConfig.
  *
- * Resources resolve their model through VaulterConfig::model(), so a host
- * that swaps a model keeps being governed by these resources.
+ * Resources show snapshots read through the drive entry point and the authorized drive
+ * handles (`Vaulter::drives()`, the handle's node, access, share and activity operations), so
+ * what a panel admin sees and does is decided by the drive, whichever models the host swapped.
  */
+#[Api]
 final class VaulterPlugin implements Plugin
 {
     public static function make(): static
@@ -76,8 +79,8 @@ final class VaulterPlugin implements Plugin
      * . Only `activity` qualifies today: `drive`/
      * `node` have no corresponding feature (drives/nodes are the unconditional
      * schema roots), and `grant`/`share` map to `grants`/`share_links` — both
-     * consulted by `SchemaBuilder::entityEnabled()` for DYNAMICALLY-built
-     * per-panel schemas, but the package's OWN static migrations always create
+     * consulted when a per-panel schema was built DYNAMICALLY, but the package's OWN
+     * static migrations always create
      * `v_node_grants`/`v_node_shares` unconditionally (only the ROUTES/UI are
      * feature-gated for them) — gating those two resources here would hide them by
      * default (`share_links` defaults `false`) with no missing-table risk to guard
@@ -111,7 +114,7 @@ final class VaulterPlugin implements Plugin
      * Whether a resource is enabled: its OWN config toggle
      * (FilamentConfig::resourceEnabled, default true) AND — when the
      * resource's schema is behind a core feature flag — that flag
-     * (`app(VaulterConfig::class)->featureEnabled()`). Without the AND-condition, a host that disabled
+     * (`app(DriveConfig::class)->featureEnabled()`). Without the AND-condition, a host that disabled
      * the `activity` subsystem but left `ActivityResource`'s own default-on toggle
      * untouched would keep the resource registered against a subsystem it turned
      * off, turning a legitimate "subsystem off" configuration into a broken
@@ -126,6 +129,6 @@ final class VaulterPlugin implements Plugin
             return false;
         }
 
-        return $feature === null || app(VaulterConfig::class)->featureEnabled($feature);
+        return $feature === null || app(DriveConfig::class)->featureEnabled($feature);
     }
 }

@@ -8,24 +8,25 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
 use Vaulter\Kernel;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\CompiledModules;
 use Vaulter\Modules\InvalidModuleGraph;
 use Vaulter\Modules\ModuleGraphException;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\SlotContribution;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ModuleReadiness;
 use Vaulter\Operations\NoOperationClaim;
 use Vaulter\Operations\Operation;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Tests\Operations\Fixtures\OuterMiddleware;
 use Vaulter\Tests\Operations\Fixtures\ProbeMiddleware;
 use Vaulter\Tests\TestCase;
@@ -62,7 +63,7 @@ function runnerContractRunner(array $middleware, CompiledModules|InvalidModuleGr
     }
     $kernel->seal($state);
 
-    return new OperationRunner($kernel, new ModuleReadiness($kernel, app(VaulterDatabase::class), app(DatabaseConfig::class)), app(VaulterDatabase::class), new NoOperationClaim);
+    return new OperationRunner($kernel, new ModuleReadiness($kernel, app(VaulterDatabase::class), app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), app(VaulterDatabase::class), new NoOperationClaim);
 }
 
 function runnerContractSpec(string $name = 'drive.folders.create', string $module = 'drive'): OperationSpec

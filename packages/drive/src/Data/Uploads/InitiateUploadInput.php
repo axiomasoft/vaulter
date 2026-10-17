@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Uploads;
 
 use InvalidArgumentException;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Attributes\Api;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
+#[Api]
 final readonly class InitiateUploadInput
 {
     /** @param array<string, mixed> $metadata */

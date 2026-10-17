@@ -16,11 +16,102 @@
             "reason": "P3.2: dry-run uninstall plan; --force/--purge refuse until P4"
         },
         {
+            "change": "redefined",
+            "decision": "D36",
+            "id": "command:vaulter:module:uninstall",
+            "kind": "cli",
+            "reason": "P4.17: --force rolls back the owner's migrations (refused while its tables hold rows or it keeps pins), --purge (with --force) deletes its rows and releases its own pins; exit 2 on usage (--purge without --force, unknown module)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D36",
+            "id": "command:vaulter:module:uninstall",
+            "kind": "cli",
+            "reason": "P4.17 RC4: the purge and the rollbacks are one transaction on sqlite/pgsql (a failure changes nothing, exit 1), on a driver whose DDL commits a failure after the purge exits 3 (applied partially; repeat --force); the rows and pins are read again inside the purge transaction and before each rollback (fail closed, exit 1 or 3); disable the module and stop its traffic first"
+        },
+        {
             "change": "added",
             "decision": "D25",
             "id": "command:vaulter:idempotency:prune",
             "kind": "cli",
             "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:relay",
+            "kind": "cli",
+            "reason": "P3.15: the core outbox relay (register, reconcile, deliver, hold)"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:relay:replay",
+            "kind": "cli",
+            "reason": "P3.15: replay a range to an outbox consumer or acknowledge its gap"
+        },
+        {
+            "change": "added",
+            "decision": "D29",
+            "id": "command:vaulter:outbox:prune",
+            "kind": "cli",
+            "reason": "P3.15: outbox retention without loss"
+        },
+        {
+            "change": "removed",
+            "decision": "D29",
+            "id": "command:vaulter:webhooks:relay",
+            "kind": "cli",
+            "reason": "P3.15: replaced by vaulter:relay; the fan-out is the webhooks.fanout outbox consumer"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "command:vaulter:webhooks:prune",
+            "kind": "cli",
+            "reason": "P3.15: prunes the terminal webhook deliveries only; the outbox has vaulter:outbox:prune"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "command:vaulter:make:permission-driver",
+            "kind": "cli",
+            "reason": "P4.8: the command class moved with the access model to vaulter-drive (Vaulter\\Drive\\Console); the command name and signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:prune",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:redeliver",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "command:vaulter:webhooks:retry",
+            "kind": "cli",
+            "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "command:vaulter:install",
+            "kind": "cli",
+            "reason": "P4.16: the permission driver is the drive's concept, so the installer no longer asks for it: the --driver option and the VAULTER_PERMISSION_DRIVER hint are gone (the drive's config and doctor own the driver choice)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D23",
+            "id": "command:vaulter:blobs:reconcile",
+            "kind": "cli",
+            "reason": "P4.20: the description says the ref_count is rebuilt from the pins (v_blob_references), not from edge counts; name, signature and behaviour are unchanged"
         }
     ],
     "items": [
@@ -63,7 +154,7 @@
         {
             "arguments": [],
             "class": "Vaulter\\Media\\Console\\ReconcileBlobsCommand",
-            "description": "Rebuild blob ref_count from edge counts and report dangling rows; optionally disk-walk for orphan objects (H.3)",
+            "description": "Rebuild blob ref_count from the pins and report dangling rows; optionally disk-walk for orphan objects (H.3)",
             "exit_codes": [
                 "FAILURE",
                 "SUCCESS"
@@ -117,7 +208,7 @@
         },
         {
             "arguments": [],
-            "class": "Vaulter\\Console\\PruneChangesCommand",
+            "class": "Vaulter\\Drive\\Console\\PruneChangesCommand",
             "description": "Delete drive change-journal entries past the retention window.",
             "exit_codes": [
                 "INVALID",
@@ -130,7 +221,7 @@
                     "accepts_value": true,
                     "array": false,
                     "default": null,
-                    "description": "Override the retention window in days (config vaulter.changes.retention_days)",
+                    "description": "Override the retention window in days (config vaulter-drive.changes.retention_days)",
                     "name": "days",
                     "shortcut": null,
                     "value_required": false
@@ -148,8 +239,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/PruneChangesCommand.php",
-                "symbol": "Vaulter\\Console\\PruneChangesCommand"
+                "file": "packages/drive/src/Console/PruneChangesCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\PruneChangesCommand"
             }
         },
         {
@@ -162,7 +253,7 @@
                     "required": true
                 }
             ],
-            "class": "Vaulter\\Console\\ResetChangesCommand",
+            "class": "Vaulter\\Drive\\Console\\ResetChangesCommand",
             "description": "Expire every change-journal cursor of a drive, forcing its clients to resynchronize.",
             "exit_codes": [
                 "FAILURE",
@@ -174,8 +265,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/ResetChangesCommand.php",
-                "symbol": "Vaulter\\Console\\ResetChangesCommand"
+                "file": "packages/drive/src/Console/ResetChangesCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\ResetChangesCommand"
             }
         },
         {
@@ -521,15 +612,6 @@
                     "value_required": false
                 },
                 {
-                    "accepts_value": true,
-                    "array": false,
-                    "default": null,
-                    "description": "Permission driver: database|gate|spatie|<name from access.permission_drivers>",
-                    "name": "driver",
-                    "shortcut": null,
-                    "value_required": false
-                },
-                {
                     "accepts_value": false,
                     "array": false,
                     "default": false,
@@ -637,7 +719,7 @@
                     "required": true
                 }
             ],
-            "class": "Vaulter\\Console\\MakeFileHandlerCommand",
+            "class": "Vaulter\\Drive\\Console\\MakeFileHandlerCommand",
             "description": "Scaffold a Vaulter file handler with a contract test",
             "exit_codes": [
                 "FAILURE",
@@ -659,8 +741,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/MakeFileHandlerCommand.php",
-                "symbol": "Vaulter\\Console\\MakeFileHandlerCommand"
+                "file": "packages/drive/src/Console/MakeFileHandlerCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\MakeFileHandlerCommand"
             }
         },
         {
@@ -673,7 +755,7 @@
                     "required": true
                 }
             ],
-            "class": "Vaulter\\Console\\MakePermissionDriverCommand",
+            "class": "Vaulter\\Drive\\Console\\MakePermissionDriverCommand",
             "description": "Scaffold a Vaulter permission driver with a contract test",
             "exit_codes": [
                 "FAILURE",
@@ -695,8 +777,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/MakePermissionDriverCommand.php",
-                "symbol": "Vaulter\\Console\\MakePermissionDriverCommand"
+                "file": "packages/drive/src/Console/MakePermissionDriverCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\MakePermissionDriverCommand"
             }
         },
         {
@@ -709,7 +791,7 @@
                     "required": true
                 }
             ],
-            "class": "Vaulter\\Console\\MakeProfileCommand",
+            "class": "Vaulter\\Drive\\Console\\MakeProfileCommand",
             "description": "Scaffold a Vaulter profile provider (zero-migration config envelope)",
             "exit_codes": [
                 "FAILURE",
@@ -749,8 +831,8 @@
             "owner": "drive",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/MakeProfileCommand.php",
-                "symbol": "Vaulter\\Console\\MakeProfileCommand"
+                "file": "packages/drive/src/Console/MakeProfileCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\MakeProfileCommand"
             }
         },
         {
@@ -767,6 +849,7 @@
             "description": "Plan (dry run) or perform the removal of a Vaulter module's schema",
             "exit_codes": [
                 "FAILURE",
+                "INVALID",
                 "SUCCESS"
             ],
             "hidden": false,
@@ -824,6 +907,135 @@
             "source": {
                 "file": "packages/core/src/Console/ModulesCommand.php",
                 "symbol": "Vaulter\\Console\\ModulesCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\PruneOutboxCommand",
+            "description": "Delete outbox events and deliveries past their retention without losing undelivered ones (D29).",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:outbox:prune",
+            "options": [],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/PruneOutboxCommand.php",
+                "symbol": "Vaulter\\Console\\PruneOutboxCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\RelayCommand",
+            "description": "Relay the outbox to its consumers: register, reconcile, deliver, hold (D29).",
+            "exit_codes": [
+                "FAILURE",
+                "INVALID",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:relay",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Only this outbox consumer (registration and holds still cover all)",
+                    "name": "consumer",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Deliveries leased per consumer and pass (default vaulter.outbox.batch)",
+                    "name": "limit",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Run a single pass",
+                    "name": "once",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "50",
+                    "description": "Stop starting passes after this many seconds",
+                    "name": "max-seconds",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/RelayCommand.php",
+                "symbol": "Vaulter\\Console\\RelayCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\RelayReplayCommand",
+            "description": "Replay a range of the outbox to one consumer, or acknowledge its gap (D29).",
+            "exit_codes": [
+                "FAILURE",
+                "INVALID",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:relay:replay",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "The outbox consumer id (webhooks.fanout, …)",
+                    "name": "consumer",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "The first outbox seq",
+                    "name": "from",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "The last outbox seq",
+                    "name": "to",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Acknowledge the gaps of the range without replaying it",
+                    "name": "ack-only",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/RelayReplayCommand.php",
+                "symbol": "Vaulter\\Console\\RelayReplayCommand"
             }
         },
         {
@@ -1131,8 +1343,8 @@
         },
         {
             "arguments": [],
-            "class": "Vaulter\\Console\\PruneWebhooksCommand",
-            "description": "Delete completed outbox rows and terminal webhook deliveries past the retention window.",
+            "class": "Vaulter\\Webhooks\\Console\\PruneWebhooksCommand",
+            "description": "Delete terminal webhook deliveries past the retention window.",
             "exit_codes": [
                 "SUCCESS"
             ],
@@ -1143,7 +1355,7 @@
                     "accepts_value": true,
                     "array": false,
                     "default": null,
-                    "description": "Override the retention window in days (config vaulter.webhooks.retention_days)",
+                    "description": "Override the retention window in days (config vaulter-webhooks.retention_days)",
                     "name": "days",
                     "shortcut": null,
                     "value_required": false
@@ -1161,8 +1373,8 @@
             "owner": "webhooks",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/PruneWebhooksCommand.php",
-                "symbol": "Vaulter\\Console\\PruneWebhooksCommand"
+                "file": "packages/webhooks/src/Console/PruneWebhooksCommand.php",
+                "symbol": "Vaulter\\Webhooks\\Console\\PruneWebhooksCommand"
             }
         },
         {
@@ -1175,7 +1387,7 @@
                     "required": false
                 }
             ],
-            "class": "Vaulter\\Console\\RedeliverWebhooksCommand",
+            "class": "Vaulter\\Webhooks\\Console\\RedeliverWebhooksCommand",
             "description": "Send finished webhook deliveries again (same webhook-id).",
             "exit_codes": [
                 "FAILURE",
@@ -1215,40 +1427,13 @@
             "owner": "webhooks",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/RedeliverWebhooksCommand.php",
-                "symbol": "Vaulter\\Console\\RedeliverWebhooksCommand"
+                "file": "packages/webhooks/src/Console/RedeliverWebhooksCommand.php",
+                "symbol": "Vaulter\\Webhooks\\Console\\RedeliverWebhooksCommand"
             }
         },
         {
             "arguments": [],
-            "class": "Vaulter\\Console\\RelayWebhooksCommand",
-            "description": "Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11).",
-            "exit_codes": [
-                "SUCCESS"
-            ],
-            "hidden": false,
-            "id": "command:vaulter:webhooks:relay",
-            "options": [
-                {
-                    "accepts_value": true,
-                    "array": false,
-                    "default": null,
-                    "description": "Max outbox rows to drain this tick",
-                    "name": "limit",
-                    "shortcut": null,
-                    "value_required": false
-                }
-            ],
-            "owner": "webhooks",
-            "parse": "signature",
-            "source": {
-                "file": "packages/core/src/Console/RelayWebhooksCommand.php",
-                "symbol": "Vaulter\\Console\\RelayWebhooksCommand"
-            }
-        },
-        {
-            "arguments": [],
-            "class": "Vaulter\\Console\\RetryWebhooksCommand",
+            "class": "Vaulter\\Webhooks\\Console\\RetryWebhooksCommand",
             "description": "Re-dispatch webhook deliveries whose backoff window has elapsed (§2.11).",
             "exit_codes": [
                 "SUCCESS"
@@ -1259,8 +1444,8 @@
             "owner": "webhooks",
             "parse": "signature",
             "source": {
-                "file": "packages/core/src/Console/RetryWebhooksCommand.php",
-                "symbol": "Vaulter\\Console\\RetryWebhooksCommand"
+                "file": "packages/webhooks/src/Console/RetryWebhooksCommand.php",
+                "symbol": "Vaulter\\Webhooks\\Console\\RetryWebhooksCommand"
             }
         }
     ],

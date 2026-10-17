@@ -4,42 +4,77 @@ title: Вебхуки
 
 # Вебхуки
 
+## Установка и включение
+
+Вебхуки — отдельный пакет `axioma-studio/vaulter-webhooks`. Он требует `vaulter-core` и `vaulter-drive`
+(эндпоинты привязаны к drive) и не входит в метапакет `axioma-studio/vaulter`, потому что открывает исходящий
+сетевой трафик:
+
+<!-- snippet: shell -->
+
+```bash
+composer require axioma-studio/vaulter-webhooks
+```
+
+Модуль **opt-in**: установка пакета создаёт его таблицы (`v_webhook_endpoints`, `v_webhook_deliveries`) через
+`php artisan migrate`, но ничего не подключается, пока вы его не включите:
+
+<!-- snippet: host -->
+
+```php
+// config/vaulter.php
+'modules' => ['webhooks' => true],
+```
+
+Настройки лежат в `config/vaulter-webhooks.php` (тег публикации `vaulter-webhooks-config`; справочник:
+[Конфигурация](/ru/reference/config)). Позже модуль удаляет `php artisan vaulter:module:uninstall webhooks`
+([Модули](/ru/concepts/modules#удаление-модуля)).
+
 ## Как событие попадает в outbox
 
 Каждое изменение Vaulter записывает своё событие через `EventRecorder` последним шагом
-собственной транзакции базы данных (см. [События](/ru/reference/events)). При включённом
-`vaulter.modules.webhooks` recorder пишет одну строку `v_outbox` на событие **в этой транзакции**:
+собственной транзакции базы данных (см. [События](/ru/reference/events)). Recorder пишет одну
+строку `v_outbox` на событие **в этой транзакции**, какие бы модули ни были активны (см.
+[Outbox](/ru/concepts/events-outbox)); при включённом opt-in модуле вебхуков
+(`vaulter.modules.webhooks` = `true`, по умолчанию выключен) он также пишет ожидающую строку
+доставки consumer'а outbox `webhooks.fanout` для каждого внешнего (`external`) типа события:
 
-- изменение и его строка outbox коммитятся вместе, поэтому закоммиченное изменение никогда не
+- изменение и его строки outbox коммитятся вместе, поэтому закоммиченное изменение никогда не
   остаётся без вебхука, даже если процесс умер сразу после коммита;
 - если строку outbox записать нельзя, изменение откатывается и операция завершается ошибкой —
   Vaulter не коммитит изменение, о котором не может сообщить;
 - ваши слушатели Laravel работают только после коммита; упавший слушатель логируется и никогда не
   отменяет изменение.
 
-Команда `vaulter:webhooks:relay` затем разворачивает каждую ожидающую строку в доставки.
+Затем relay ядра, `vaulter:relay`, передаёт каждое событие `webhooks.fanout`, который
+разворачивает его в доставки вебхуков.
 
 ## Гарантии доставки
 
-Relay превращает каждую строку outbox `pending` в одну строку `v_webhook_deliveries` на каждый
-подходящий эндпоинт и ставит в очередь задачу на доставку:
+Consumer `webhooks.fanout` превращает каждое внешнее событие в одну строку `v_webhook_deliveries`
+на каждый подходящий эндпоинт и ставит в очередь задачу на доставку:
 
-- **Каждый подходящий эндпоинт получает ровно одну строку доставки на событие.** Relay
-  арендует строку outbox (`webhooks.relay.claim_seconds`, по умолчанию 60) и пишет по
-  `webhooks.relay.fanout_chunk` эндпоинтов (по умолчанию 100) за транзакцию, запоминая последний в
-  `fanout_cursor`. Строка становится `completed` в той же транзакции, что и её последние доставки.
-  Если relay умер, следующий запуск забирает строку после истечения аренды и продолжает после
-  курсора; relay, потерявший аренду, ничего не пишет, а `UNIQUE(event_id, endpoint_id)` это
-  страхует. Можно запускать несколько relay одновременно.
+- **Каждый подходящий эндпоинт получает ровно одну строку доставки на событие.** Relay арендует
+  доставку события в outbox (`outbox.lease_seconds`, по умолчанию 60); consumer пишет по
+  `vaulter-webhooks.relay.fanout_chunk` эндпоинтов (по умолчанию 100) за транзакцию и сохраняет последний
+  как continuation доставки — запись, ограждённая арендой. Доставка в outbox завершается только
+  после последнего чанка. Если relay умер, следующий запуск забирает доставку после истечения
+  аренды и продолжает после continuation; воркер, потерявший аренду, ничего не пишет, а
+  `UNIQUE(event_id, endpoint_id)` это страхует. Можно запускать несколько relay одновременно.
 - **Задачи ставятся в очередь после коммита строк.** Задачу, потерянную после этого, заново
-  ставит retry-sweep (`vaulter:webhooks:retry`, его же запускает `vaulter:webhooks:relay`), когда
-  доставка прождала `webhooks.relay.claim_seconds`, никем не взятая.
+  ставит retry-sweep (`vaulter:webhooks:retry`), когда доставка прождала
+  `vaulter-webhooks.retry_claim_seconds`, никем не взятая.
 - **HTTP — at-least-once.** Доставка повторяется при ошибке и может прийти дважды, если ваше
   подтверждение потерялось: дедуплицируйте по `id` конверта. Доставки не упорядочены.
-- **Prune удаляет только завершённое.** `vaulter:webhooks:prune` удаляет строки outbox
-  `completed` и доставки `delivered`/`dead` старше `webhooks.retention_days`; строка `pending` или
-  доставка `pending`/`failed` остаются, сколько бы им ни было. Удалённые строки исчезают навсегда —
-  их нельзя переотправить.
+- **Выключенный модуль ничего не теряет молча.** Пока `vaulter.modules.webhooks` выключен,
+  `webhooks.fanout` приостановлен: его ожидающие доставки ждут, и он удерживает retention outbox
+  не дольше `outbox.max_consumer_hold_seconds`. Затем он отсоединяется с явным разрывом (gap),
+  о котором `vaulter:doctor` сообщает, пока `vaulter:relay:replay` его не переотправит или не
+  подтвердит.
+- **Prune удаляет только завершённое.** `vaulter:webhooks:prune` удаляет доставки
+  `delivered`/`dead` старше `vaulter-webhooks.retention_days`; доставка `pending`/`failed` остаётся,
+  сколько бы ей ни было. У outbox своё хранение — `vaulter:outbox:prune`. Удалённые строки
+  исчезают навсегда — их нельзя переотправить.
 
 ## Кто получает событие
 
@@ -89,7 +124,7 @@ Payload outbox — это тело вебхука. Он собирается о�
   упорядочены; сравнивайте `sequence` (или `state_version`), чтобы отбросить устаревшее.
 - `version` — версия схемы `data` для этого `type`.
 - `changes.seq` — позиция события в [журнале изменений](/ru/concepts/events) drive (`null` для
-  события вне журнала или при выключенном `features.changes`). Это подсказка, а не курсор: клиент,
+  события вне журнала или при выключенном `vaulter-drive.features.changes`). Это подсказка, а не курсор: клиент,
   синхронизирующий drive, считает вебхук сигналом вызвать `changes()->list()` от сохранённого
   курсора и может не вызывать, если его курсор уже дальше `seq`.
 
@@ -120,7 +155,7 @@ Payload outbox — это тело вебхука. Он собирается о�
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
+use Vaulter\Webhooks\Exceptions\InvalidWebhookSignatureException;
 use Vaulter\Webhooks\StandardWebhookVerifier;
 
 // $request->getContent() — СЫРОЕ тело: проверяйте его до декодирования или перекодирования.
@@ -145,7 +180,7 @@ try {
 
 `RotateWebhookSecretAction::execute($endpoint, ?int $overlapSeconds = null)` возвращает
 `RotatedWebhookSecret` (`endpointId`, `secret`) — новый секрет, один раз. Старый секрет ещё
-`webhooks.secret_rotation_overlap` секунд подписывает доставки (по умолчанию 86400, максимум
+`vaulter-webhooks.secret_rotation_overlap` секунд подписывает доставки (по умолчанию 86400, максимум
 604800), поэтому `webhook-signature` несёт две подписи и получатель с любым из секретов проверит
 доставку. Разверните новый секрет у получателя в этом окне. Перекрытие `0` сразу убирает старый
 секрет — используйте его при утечке.
@@ -153,13 +188,13 @@ try {
 ## Повторы и автоматическое отключение
 
 Неудачная попытка (не 2xx, редирект, таймаут, ошибка соединения) повторяется через
-`webhooks.retry_schedule` секунд (по умолчанию `5, 300, 1800, 7200, 18000, 36000, 50400, 72000,
-86400`, каждое ±`webhooks.retry_jitter`, по умолчанию 10 %). Это десять попыток примерно за три
-дня; ошибка после последней делает доставку `dead`. HTTP-таймаут — `webhooks.timeout` (по
+`vaulter-webhooks.retry_schedule` секунд (по умолчанию `5, 300, 1800, 7200, 18000, 36000, 50400, 72000,
+86400`, каждое ±`vaulter-webhooks.retry_jitter`, по умолчанию 10 %). Это десять попыток примерно за три
+дня; ошибка после последней делает доставку `dead`. HTTP-таймаут — `vaulter-webhooks.timeout` (по
 умолчанию 15 с).
 
 Первая неудачная попытка эндпоинта начинает *серию ошибок* (`failing_since`); любая успешная
-доставка её завершает. Когда серии исполняется `webhooks.disable_after_days` (по умолчанию 5; `0` —
+доставка её завершает. Когда серии исполняется `vaulter-webhooks.disable_after_days` (по умолчанию 5; `0` —
 никогда не отключать), эндпоинт выключается (`is_active = false`, `disabled_reason = 'failing'`), а
 его ожидающие и неудачные доставки становятся `dead` с `last_error = 'endpoint_disabled'`. После
 коммита Laravel диспатчит `Vaulter\Webhooks\Events\WebhookEndpointDisabled` (`endpointId`,
@@ -174,13 +209,13 @@ try {
 `WebhookDeliveryNotRedeliverableException`
 ([`webhook_delivery_not_redeliverable`](/ru/guides/errors#webhook-delivery-not-redeliverable), 409).
 Пакетно: [`vaulter:webhooks:redeliver`](/ru/reference/commands).
-Переотправить можно только доставки, ещё не вышедшие за `webhooks.retention_days`.
+Переотправить можно только доставки, ещё не вышедшие за `vaulter-webhooks.retention_days`.
 
 ## Управление эндпоинтами по HTTP
 
 Админ-маршруты [REST API v1](/ru/reference/rest-api#webhook-эндпоинты) подключаются при
 включённом `vaulter.modules.webhooks`. Это глобальная поверхность, а не ресурс drive: каждый маршрут —
-включая чтение — авторизуется `WebhookEndpointPolicy` по `webhooks.manage_ability` ещё до поиска по
+включая чтение — авторизуется `WebhookEndpointPolicy` по `vaulter-webhooks.manage_ability` ещё до поиска по
 id, поэтому тот, кто не может управлять вебхуками, ничего не узнаёт о существующих эндпоинтах.
 
 | Маршрут | Что делает |
@@ -211,7 +246,7 @@ payload и сырые тексты ошибок остаются на серве
 
 ## Имена событий
 
-`Vaulter\Enums\Events\EventType` использует канонические имена 0.3. Миграция апгрейда №9
+Каталог событий (`DriveEventType`, `DocumentEventType`) использует канонические имена 0.3. Миграция апгрейда №9
 конвертирует `v_activity.verb`, `v_outbox.event`, `v_webhook_deliveries.event` и
 `v_webhook_endpoints.events` вместе. Списки эндпоинтов обрабатываются порциями по 500; порядок,
 дубли, `*` и нераспознанные сторонние имена сохраняются.

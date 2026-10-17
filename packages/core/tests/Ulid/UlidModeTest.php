@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\IdsConfig;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 it('reads the canonical ulid strategy', function (): void {
     expect(config('vaulter.ids.strategy'))->toBe('ulid')

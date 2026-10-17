@@ -1,0 +1,10 @@
+<?php
+
+declare(strict_types=1);
+
+use Acme\Roles\Role;
+use Vaulter\Tests\Roles\Helper;
+
+it('builds a role', function (): void {
+    expect(Helper::role())->toBeInstanceOf(Role::class);
+});

@@ -32,7 +32,7 @@ config key or an event is **MINOR**.
 ## Packages and versions
 
 Every PHP package is released with one version and one tag, and each split repository
-(`axioma-studio/vaulter-core`, `-media`, `-drive`, `-documents`, `-filament`, plus the
+(`axioma-studio/vaulter-core`, `-media`, `-drive`, `-documents`, `-webhooks`, `-filament`, plus the
 `axioma-studio/vaulter` metapackage) receives the same tag. Packages require each other as
 `self.version`, so mixing versions is not possible. `axioma-studio/vaulter-azgard` is released
 only once AzGuard itself has a tagged version; until then it is left out of the release.
@@ -206,7 +206,7 @@ name.
 By default every Vaulter table and model reads/writes through the host application's default
 Laravel database connection. Set `config('vaulter.database.connection')` (or `VAULTER_DB_CONNECTION`) to a
 named connection from `config('database.connections')` to route the entire `v_*` schema — every
-migration `SchemaBuilder` creates and every shipped model's `getConnectionName()` — onto that
+migration creates and every shipped model's `getConnectionName()` — onto that
 connection instead, e.g. to shard Vaulter onto its own database or isolate a heavy CAS/activity
 workload. Leaving the key `null` (the default) keeps the current behaviour exactly as it is today.
 
@@ -229,6 +229,17 @@ $database->transaction(function () use ($database, $storageId): void {
 ```
 
 
+
+### Stored model types
+
+A Vaulter model whose type is stored in a polymorphic column — today the target of an activity row — is
+stored under a constant alias, not under its class name: `vaulter.node` for a node and `vaulter.drive`
+for a drive. The alias does not change when a class moves between packages and a morph map of your
+application does not rename it. `vaulter-drive` merges the two aliases into Laravel's morph map when it boots
+(after your own map, never replacing an entry of it, and without calling `enforceMorphMap()`), so a host that
+enforces its map needs no entry for them (a subclass you configure in `vaulter-drive.models.*` inherits the alias).
+Your own models (a drive owner, a grant subject, a comment
+author) stay under your morph policy.
 
 ### Schema change policy
 

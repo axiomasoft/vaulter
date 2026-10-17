@@ -6,16 +6,18 @@ namespace Vaulter\Drive\Http\Controllers\Shared;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Drive\Http\Resources\Drive\NodeResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\ListQuery;
 use Vaulter\Drive\Queries\SharedWithActorQuery;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Resources\PageResponse;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
@@ -24,6 +26,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * registered). Abilities come from one batch per drive on the page, and a node whose
  * drive the caller may no longer reach (another tenant, being deleted) is left out.
  */
+#[Internal]
 final readonly class ListSharedWithMeController
 {
     public function __construct(
@@ -31,7 +34,7 @@ final readonly class ListSharedWithMeController
         private HttpOperationContextFactory $contexts,
         private SharedWithActorQuery $shared,
         private NodeSnapshotMapper $mapper,
-        private VaulterConfig $config,
+        private DriveConfig $config,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -39,7 +42,7 @@ final readonly class ListSharedWithMeController
         if (!$this->config->featureEnabled('grants')) {
             throw ProfileRestrictionException::forOperation('shared');
         }
-        $options = PageResponse::listOptions($request);
+        $options = ListQuery::options($request);
         $user = $this->contexts->user($request);
         $page = $this->mapper->page($this->shared->execute(actor: $user, options: $options), Actor::user($user)->ref());
 

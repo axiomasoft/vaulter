@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 
 /**
  * F-P4.1-01 / F-P4.1-02 (VLT-REMED P4.3, batch B16) — schema green guard, no
- * behaviour delta (D19): the hot-path index shape SchemaBuilder emits (and
+ * behaviour delta (D19): the hot-path index shape the drive schema emits (and
  * the 2026_07_11_000001 upgrade migration repairs on a pre-fix database) must
  * carry the (trashed_at) scan index PurgeTrashCommand's predicate needs, and
  * must NOT carry the three indexes whose column set duplicates/prefixes another
@@ -54,4 +54,4 @@ it('v_activity carries the (created_at) feed index exactly once, not twice (F-P4
     );
 
     expect($duplicates)->toHaveCount(1);
-})->skip(fn (): bool => !app(VaulterConfig::class)->featureEnabled('activity'), 'v_activity only exists when the activity feature is enabled');
+})->skip(fn (): bool => !app(DriveConfig::class)->featureEnabled('activity'), 'v_activity only exists when the activity feature is enabled');

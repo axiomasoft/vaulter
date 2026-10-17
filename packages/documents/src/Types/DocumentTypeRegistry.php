@@ -6,6 +6,8 @@ namespace Vaulter\Documents\Types;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Log;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Exceptions\DuplicateDocumentTypeException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
@@ -25,6 +27,7 @@ use Vaulter\Exceptions\Registry\RegistryFrozenException;
  * A document whose type is not registered (an extension was removed) stays readable:
  * find() returns null and the operations fall back to {@see UnknownDocumentType}.
  */
+#[Api]
 final class DocumentTypeRegistry
 {
     private const string KEY_PATTERN = '/^[a-z0-9-]+\/[a-z0-9-]+$/';
@@ -34,6 +37,7 @@ final class DocumentTypeRegistry
 
     private bool $frozen = false;
 
+    #[Internal]
     public function __construct(private readonly Container $container) {}
 
     /**
@@ -105,13 +109,14 @@ final class DocumentTypeRegistry
         return $types;
     }
 
-    /** @internal Called once the application has booted. */
+    /** Called once the application has booted. */
+    #[Internal]
     public function freeze(): void
     {
         $this->frozen = true;
     }
 
-    /** @internal */
+    #[Internal]
     public function isFrozen(): bool
     {
         return $this->frozen;

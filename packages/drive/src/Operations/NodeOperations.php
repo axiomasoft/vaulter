@@ -5,47 +5,49 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Closure;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Access\ValueObjects\NodeAbilities;
-use Vaulter\Contracts\Drive\NodeOperations as Contract;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\MoveOptions;
-use Vaulter\Data\Drive\SearchOptions;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Actions\Nodes\RenameNodeAction;
 use Vaulter\Drive\Actions\Nodes\SetNodePropertiesAction;
 use Vaulter\Drive\Actions\Nodes\StarNodeAction;
 use Vaulter\Drive\Actions\Trash\TrashNodeAction;
+use Vaulter\Drive\Contracts\NodeOperations as Contract;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\MoveOptions;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Drive\Data\Nodes\SetNodePropertiesInput;
+use Vaulter\Drive\Data\SearchOptions;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;
 use Vaulter\Drive\Idempotency\NodeSnapshotCodec;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Queries\ListChildrenQuery;
 use Vaulter\Drive\Queries\NodePageQuery;
 use Vaulter\Drive\Queries\SearchQuery;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Repositories\NodeReadRepository;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Idempotency\IdempotentWrite;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
-use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\TreeGuard;
 
+#[Api]
 final readonly class NodeOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes, private StarNodeAction $starAction, private SetNodePropertiesAction $propertiesAction, private NodePageQuery $pages, private NodeSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     public function find(NodeSnapshot|string|int $node): NodeSnapshot

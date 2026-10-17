@@ -10,19 +10,19 @@ use RuntimeException;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\Uploads\UploadModels;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * P4.2 — bounded on-disk fixtures + API handles for the memory path matrix.
@@ -515,7 +515,7 @@ final class PrepareMemoryFixturesCommand extends Command
 
     private static function grantOwnerOnce(Node $root, int $actorId): void
     {
-        $grantModel = config('vaulter.models.grant');
+        $grantModel = config('vaulter-drive.models.grant');
         $subjectType = (new TestUser)->getMorphClass();
 
         $exists = $grantModel::query()

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Access\AccessResolver;
+use Vaulter\Drive\Access\AccessResolver;
 
 /**
  * The shape of the v1 HTTP layer (P6-invariants#Bypass): single-action controllers over
@@ -13,11 +13,8 @@ use Vaulter\Access\AccessResolver;
  * point for bytes and signed URLs.
  */
 const V1_CONTROLLER_NAMESPACES = [
-    'Vaulter\Http\Controllers\Access',
-    'Vaulter\Http\Controllers\Sharing',
-    'Vaulter\Http\Controllers\Activity',
-    'Vaulter\Http\Controllers\Changes',
-    'Vaulter\Http\Controllers\Webhooks',
+    'Vaulter\Drive\Http\Controllers\Activity',
+    'Vaulter\Drive\Http\Controllers\Changes',
 ];
 
 arch('v1 controllers are final single-action classes')
@@ -27,13 +24,18 @@ arch('v1 controllers are final single-action classes')
     ->toHaveSuffix('Controller');
 
 it('gives v1 controllers no public method besides the constructor and __invoke', function (): void {
-    $root = dirname(__DIR__, 2).'/src/Http/Controllers';
     $offenders = [];
-    foreach ((new Finder)->files()->in([$root.'/Access', $root.'/Sharing', $root.'/Activity', $root.'/Changes', $root.'/Webhooks'])->name('*.php') as $file) {
-        $class = 'Vaulter\\Http\\Controllers\\'.str_replace(['/', '.php'], ['\\', ''], substr($file->getPathname(), strlen($root) + 1));
-        foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if (!in_array($method->getName(), ['__construct', '__invoke'], true)) {
-                $offenders[] = $class.'::'.$method->getName();
+    // Activity and Changes moved to vaulter-drive with the drive domain (P4.10); the webhook controllers are checked by the webhooks package.
+    $roots = [
+        [dirname(__DIR__, 3).'/drive/src/Http/Controllers', 'Vaulter\\Drive\\Http\\Controllers\\', ['Activity', 'Changes']],
+    ];
+    foreach ($roots as [$root, $namespace, $directories]) {
+        foreach ((new Finder)->files()->in(array_map(static fn (string $directory): string => $root.'/'.$directory, $directories))->name('*.php') as $file) {
+            $class = $namespace.str_replace(['/', '.php'], ['\\', ''], substr($file->getPathname(), strlen($root) + 1));
+            foreach ((new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                if (!in_array($method->getName(), ['__construct', '__invoke'], true)) {
+                    $offenders[] = $class.'::'.$method->getName();
+                }
             }
         }
     }
@@ -42,7 +44,7 @@ it('gives v1 controllers no public method besides the constructor and __invoke',
 });
 
 arch('drive-scoped v1 controllers go through the operations, never Actions or Repositories')
-    ->expect(array_slice(V1_CONTROLLER_NAMESPACES, 0, 4))
+    ->expect(array_slice(V1_CONTROLLER_NAMESPACES, 0, 2))
     ->not->toUse(['Vaulter\Actions', 'Vaulter\Drive\Actions', 'Vaulter\Repositories', 'Vaulter\Drive\Repositories']);
 
 arch('no v1 controller or resource asks the AccessResolver itself')
@@ -51,7 +53,7 @@ arch('no v1 controller or resource asks the AccessResolver itself')
 
 arch('bytes leave only through the ContentResponder')
     ->expect([...V1_CONTROLLER_NAMESPACES, 'Vaulter\Http\Resources'])
-    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Content\ContentDelivery']);
+    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Drive\Content\ContentDelivery']);
 
 it('mints no temporary or signed storage URL and streams no download in the HTTP layer outside the ContentResponder', function (): void {
     $offenders = [];
@@ -70,7 +72,7 @@ it('mints no temporary or signed storage URL and streams no download in the HTTP
 
 it('binds no route model in the package', function (): void {
     $offenders = [];
-    foreach ((new Finder)->files()->in([dirname(__DIR__, 2).'/src', dirname(__DIR__, 2).'/routes'])->name('*.php') as $file) {
+    foreach ((new Finder)->files()->in(dirname(__DIR__, 2).'/src')->name('*.php') as $file) {
         if (preg_match('/Route::(bind|model)\s*\(/', $file->getContents()) === 1) {
             $offenders[] = $file->getRelativePathname();
         }

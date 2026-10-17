@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Controllers;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleGraphException;
 
@@ -14,6 +15,7 @@ use Vaulter\Modules\ModuleGraphException;
  * built while the graph was invalid keeps this catch-all after the graph is fixed: then it is a plain 404
  * and the doctor reports the stale cache.
  */
+#[Internal]
 final class ModuleGraphInvalidController
 {
     public function __invoke(Kernel $kernel): never

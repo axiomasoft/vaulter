@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Presentation;
 
-use Vaulter\Contracts\Presentation\KindPresenter;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Models\Documents\Document;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\Node;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\NodePresentation;
+use Vaulter\Drive\Contracts\Presentation\KindPresenter;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 
 /**
  * Presents a document node by its document type, never by its mime: no file handler
@@ -19,8 +21,10 @@ use Vaulter\ValueObjects\Handlers\NodePresentation;
  * installed shows the read-only `vaulter/unsupported` viewer. Only the type key leaves
  * this class, never the type's class.
  */
+#[Api]
 final readonly class DocumentPresenter implements KindPresenter
 {
+    #[Internal]
     public function __construct(private ContentDecoder $decoder) {}
 
     public function kind(): NodeKind

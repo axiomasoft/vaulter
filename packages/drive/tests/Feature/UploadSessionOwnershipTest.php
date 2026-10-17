@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * F-P1.4-12: `authorizeSession` checks the ability on the target folder/node but,

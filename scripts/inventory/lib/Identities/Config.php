@@ -13,7 +13,6 @@ use Vaulter\Inventory\Identities;
 use Vaulter\Inventory\IdentityOwners;
 use Vaulter\Inventory\InventoryError;
 use Vaulter\Inventory\Repo;
-use Vaulter\Inventory\SourceIndex;
 
 require_once dirname(__DIR__).'/Identities.php';
 
@@ -132,16 +131,16 @@ final class Config
     }
 
     /**
-     * Config key => default (bool) of every `vaulter.features.*` flag: the switches that can mount routes.
+     * Config key => default (bool) of every `vaulter-drive.features.*` flag: the switches that can mount routes.
      *
      * @return array<string, bool>
      */
     public static function featureFlags(Repo $repo): array
     {
-        $file = 'packages/core/config/vaulter.php';
+        $file = 'packages/drive/config/vaulter-drive.php';
         $flags = [];
-        foreach (self::leaves(self::returned(AstFiles::parse($repo, $file), $file), 'vaulter', new Standard) as $path => $leaf) {
-            if (str_starts_with($path, 'vaulter.features.') && is_bool($leaf['value'])) {
+        foreach (self::leaves(self::returned(AstFiles::parse($repo, $file), $file), 'vaulter-drive', new Standard) as $path => $leaf) {
+            if (str_starts_with($path, 'vaulter-drive.features.') && is_bool($leaf['value'])) {
                 $flags[$path] = $leaf['value'];
             }
         }
@@ -160,7 +159,7 @@ final class Config
     private static function srcFiles(Repo $repo): array
     {
         $files = [];
-        foreach (SourceIndex::PACKAGES as $package) {
+        foreach ($repo->sourcePackages() as $package) {
             array_push($files, ...AstFiles::tree($repo, "packages/{$package}/src"));
         }
         sort($files, SORT_STRING);
@@ -339,8 +338,8 @@ final class Config
     /**
      * Publish tags: `publishes([...], 'tag')` calls, spatie/laravel-package-tools chains
      * (`->name('x')->hasConfigFile()…` publishes `x-config`, `x-migrations`, `x-translations`, `x-views`), and the
-     * declarations of module manifests the kernel publishes: `config('root', …)` as `root-config`, `schema(…)` as
-     * `vaulter-migrations` for the core module and `vaulter-<id>-migrations` for another.
+     * declarations of module manifests the kernel publishes: `config('root', …)` as `root-config`. The migrations of a
+     * module are never published (D40): `schema(…)` is no tag.
      *
      * @return array<string, array{file: string, symbol: string, via: string}>
      */
@@ -350,17 +349,10 @@ final class Config
         foreach (self::srcFiles($repo) as $file) {
             $stmts = AstFiles::parse($repo, $file);
             $moduleIds = self::moduleIds($stmts);
-            AstFiles::walk($stmts, static function (Node $node, string $symbol) use (&$tags, $file, $moduleIds): void {
+            AstFiles::walk($stmts, static function (Node $node, string $symbol) use (&$tags, $file): void {
                 $root = self::manifestCall($node, $symbol, 'config');
                 if ($root !== null) {
                     $tags[$root.'-config'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:config'];
-
-                    return;
-                }
-                $class = explode('::', $symbol)[0];
-                if (self::manifestCall($node, $symbol, 'schema', literal: false) !== null && isset($moduleIds[$class])) {
-                    $id = $moduleIds[$class];
-                    $tags[$id === 'core' ? 'vaulter-migrations' : 'vaulter-'.$id.'-migrations'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:schema'];
 
                     return;
                 }

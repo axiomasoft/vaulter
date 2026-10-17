@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The resumable-upload REST surface (§2.8 / D16 / M3a-http): the tus CORE flow and

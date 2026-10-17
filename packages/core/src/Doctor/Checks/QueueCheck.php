@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
+#[Internal]
 final readonly class QueueCheck implements DoctorCheck
 {
     public function __construct(private Repository $config) {}

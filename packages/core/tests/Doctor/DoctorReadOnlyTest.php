@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 it('writes nothing to the database, the cache or the disks', function (): void {
     Storage::fake('local');

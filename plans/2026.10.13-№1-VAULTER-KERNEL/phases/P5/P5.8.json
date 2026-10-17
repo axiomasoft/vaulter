@@ -1,0 +1,177 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.8",
+  "title": "Хаб: compaction worker, one-shot `compact --pending` и исполнение drain-запросов",
+  "status": "todo",
+  "summary": "`src/compaction.js` (новый Y.Doc: checkpoint, затем tail по seq → `Y.encodeStateAsUpdate` + JSON-проекция через src/schema.js/@hocuspocus/transformer с существующей проверкой потери TipTap-атрибутов → `POST checkpoint` с lease; 409 — отбросить без повтора), `src/worker.js` (цикл lease с интервалом `COMPACTION_INTERVAL_MS`, приоритет drain_requested), `src/cli.js` (`serve` | `compact --pending [--deadline=<s>]`: без WS-сервера до пустого lease-ответа или дедлайна, exit 0 / 1 со списком document_id), `package.json` bin `vaulter-collaboration-hub`, Dockerfile CMD `serve`.",
+  "why": "D26 ревизия 3 п.1: компактацию и drain исполняет только хаб; без worker документ с pending tail без открытой room не снимет marker, REST навсегда 409 (19). Hard risks: публикация по устаревшему lease; потеря атрибутов при проекции; offline-режим сообщает успех при оставшемся pending; worker конкурирует с живой room той же G (разрешается CAS backend).",
+  "scope": {
+    "include": [
+      "src/{compaction,worker,cli}.js, src/index.js (запуск worker в serve), package.json bin, Dockerfile CMD",
+      "Node-тесты: test/{compaction,worker,compact-cli}.test.js (мок backend loopback)"
+    ],
+    "exclude": [
+      "Триггеры и CAS (backend, P5.5); management/shutdown (P5.9)",
+      "Отложено в PLAN4: `docker build packages/collaboration/hub`, offline `compact --pending` против реального backend на стенде"
+    ]
+  },
+  "depends_on": [
+    "P5.7"
+  ],
+  "related": [],
+  "decisions": [
+    "D26",
+    "D41"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "protocol",
+      "why": "эндпоинты протокола 2, ошибки, retry-классы, envelope/ack",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "hub-runtime",
+      "why": "факты Hocuspocus 4.3.0, ledger, режимы, компактация, shutdown, management, лимиты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "tests-map",
+      "why": "сценарии I17 этого пункта: линия и файл",
+      "required": true
+    },
+    {
+      "ref": "knowledge/collaboration",
+      "section": "durability",
+      "why": "ревизия 3 п.1: worker и compact --pending",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/src/schema.js",
+      "why": "TipTap-схема и проверка потери атрибутов",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/src/backend.js",
+      "why": "клиент v2 (после P5.7)",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/Dockerfile",
+      "why": "CMD образа",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/collaboration/hub/src/compaction.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/worker.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/cli.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/hub/package.json",
+      "change": "any",
+      "note": "создаётся P5.2 (git mv)"
+    },
+    {
+      "path": "packages/collaboration/hub/Dockerfile",
+      "change": "any",
+      "note": "создаётся P5.2 (git mv)"
+    },
+    {
+      "path": "packages/collaboration/hub/test/compaction.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/worker.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/compact-cli.test.js",
+      "change": "create"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "hub.list"
+    }
+  ],
+  "rules": [
+    "Компактация читает checkpoint и tail одной G из `load`/lease-ответа; публикует covered_from = C, covered_through = H ровно прочитанного диапазона.",
+    "Результат merge = применению всех updates (C,H] к checkpoint; JSON-проекция с потерей атрибутов → checkpoint не публикуется, ошибка в лог и метрику.",
+    "`compact --pending` завершает работу только по пустому lease-ответу (exit 0) или дедлайну (exit 1 со списком оставшихся document_id)."
+  ],
+  "guidance": "compaction.test.js: 3 клиентских update на разных Y.Doc → checkpoint+tail мержится в состояние, равное `Y.mergeUpdates` всех; worker.test.js (19): мок backend отдаёт lease документа без открытой room → один POST checkpoint с covered (C,H); ответ 409 → повтора нет; compact-cli.test.js: запуск `node src/cli.js compact --pending --deadline=2` дочерним процессом против мока → exit 0 при пустом втором lease, exit 1 и document_id в stderr при непустом до дедлайна.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "(cd packages/collaboration/hub && npm run check && node --test test/compaction.test.js test/worker.test.js test/compact-cli.test.js)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "(cd packages/collaboration/hub && npm test)",
+      "expect": "exit 0: весь unit-набор хаба (test/*.test.js), без e2e/stand",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "jq -e '.bin[\"vaulter-collaboration-hub\"] == \"src/cli.js\"' packages/collaboration/hub/package.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "compaction worker",
+    "compact --pending"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:05:06Z"
+}

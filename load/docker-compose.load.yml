@@ -8,8 +8,16 @@
 # env var drops the field, does not emit `cpuset: ""`).
 name: vaulter-load
 
+# Container logs are capped: docker's default json-file driver keeps them without limit (3 × 10 MiB per container).
+x-bounded-logs: &bounded-logs
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
   postgres:
+    logging: *bounded-logs
     build:
       context: .
       dockerfile: docker/Dockerfile.postgres-profile
@@ -74,6 +82,7 @@ services:
       retries: 30
 
   pgbouncer:
+    logging: *bounded-logs
     image: edoburu/pgbouncer:latest
     environment:
       # edoburu/pgbouncer reads DATABASE_URL (parsed into DB_HOST/DB_PORT/DB_USER/
@@ -101,6 +110,7 @@ services:
       retries: 30
 
   minio:
+    logging: *bounded-logs
     image: minio/minio:latest
     command: server /data --console-address :9001
     environment:
@@ -118,6 +128,7 @@ services:
       retries: 30
 
   minio-init:
+    logging: *bounded-logs
     image: minio/mc:latest
     depends_on:
       minio:
@@ -131,6 +142,7 @@ services:
     restart: "no"
 
   app:
+    logging: *bounded-logs
     build:
       context: ..
       dockerfile: load/docker/Dockerfile.app
@@ -199,6 +211,7 @@ services:
       retries: 60
 
   redis:
+    logging: *bounded-logs
     image: redis:7-alpine
     command: ['redis-server', '--save', '', '--appendonly', 'no']
     healthcheck:
@@ -208,6 +221,7 @@ services:
       retries: 30
 
   queue-worker:
+    logging: *bounded-logs
     build:
       context: ..
       dockerfile: load/docker/Dockerfile.app
@@ -259,6 +273,7 @@ services:
         condition: service_started
 
   webhook-sink:
+    logging: *bounded-logs
     build:
       context: ..
       dockerfile: load/docker/Dockerfile.app
@@ -275,6 +290,7 @@ services:
       - "8090"
 
   hocuspocus:
+    logging: *bounded-logs
     build:
       context: ../hocuspocus-server
       dockerfile: Dockerfile
@@ -298,6 +314,7 @@ services:
       retries: 20
 
   prometheus:
+    logging: *bounded-logs
     image: prom/prometheus:latest
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -318,6 +335,7 @@ services:
   # Implementation Rules P2.2) are already correct for P2.4-P2.8 to run
   # `docker compose -f load/docker-compose.load.yml run --rm k6 <script>` against.
   k6:
+    logging: *bounded-logs
     image: grafana/k6:0.55.0
     cpuset: "${CPUSET_K6}"
     mem_limit: "${MEM_K6}"

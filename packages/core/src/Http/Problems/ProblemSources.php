@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Problems;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Internal;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
@@ -13,9 +14,8 @@ use Vaulter\Modules\VaulterModule;
 /**
  * Where the problem catalogue takes its sources from: the sealed declarations of the active modules, or, for
  * the reference docs, the declarations of every offered module.
- *
- * @internal
  */
+#[Internal]
 final class ProblemSources
 {
     /**
@@ -34,7 +34,9 @@ final class ProblemSources
         $sources = [];
         foreach ($kernel->compiled()->problems as $module => $classes) {
             foreach ($classes as $class) {
-                $sources[$module][] = new $class;
+                if (is_a($class, ProblemCodeSource::class, true)) {
+                    $sources[$module][] = new $class;
+                }
             }
         }
 

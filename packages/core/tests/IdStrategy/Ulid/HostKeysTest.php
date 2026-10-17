@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Data\Activity\RecordActivityCommand;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Profiles\Profile;
-use Vaulter\Repositories\Activity\ActivityStoreRepository;
-use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Activity\RecordActivityCommand;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Repositories\Activity\ActivityStoreRepository;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Tests\Fixtures\HostKeyUser;
 
 // Build a fresh panel after upgrade migrations, so the regression cannot be
@@ -21,10 +20,10 @@ use Vaulter\Tests\Fixtures\HostKeyUser;
 beforeEach(function (): void {
     config()->set('vaulter.ids.host_keys', 'string');
     config()->set('vaulter.database.table_prefix', 'hk_v23_');
-    (new SchemaBuilder)->createAll((new Profile)->key('default'));
+    app(ModuleSchemas::class)->createAll();
 });
 afterEach(function (): void {
-    (new SchemaBuilder)->dropAll((new Profile)->key('default'));
+    app(ModuleSchemas::class)->dropAll();
 });
 
 it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulter IDs', function (): void {
@@ -46,7 +45,7 @@ it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulte
     $eventId = (string) Str::ulid();
     app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
         eventId: $eventId,
-        verb: EventType::FolderCreated,
+        verb: DriveEventType::FolderCreated,
         storageId: $storage->getKey(),
         actorType: $user->getMorphClass(),
         actorId: $uuid,

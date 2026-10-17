@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Cas\BlobLock;
-use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
-use Vaulter\Contracts\Cas\ListableStorageDriver;
-use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
+use Vaulter\Media\Cas\BlobLock;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
+use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
+use Vaulter\Media\Contracts\Cas\ListableStorageDriver;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -161,7 +161,7 @@ it('keeps exact mark, sweep and pending totals across multiple candidates', func
     $markOne = $store->commit(CasTestHelpers::streamFor('mark one'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $markTwo = $store->commit(CasTestHelpers::streamFor('mark two'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $referenced = $store->commit(CasTestHelpers::streamFor('referenced mark'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $store->attach(CasTestHelpers::makeVersion(name: 'mark-reference'), $referenced);
+    CasTestHelpers::pin($referenced, CasTestHelpers::reference('mark-reference'));
 
     expect($collector->mark(graceHours: 24))->toBe(['tombstoned' => 2, 'skipped' => 1])
         ->and($markOne->fresh()->delete_after_at?->equalTo(now()->addHours(24)))->toBeTrue()
@@ -187,7 +187,8 @@ it('keeps exact mark, sweep and pending totals across multiple candidates', func
             'first_seen_at' => now()->subHours(3),
         ])->save();
     }
-    $store->attach(CasTestHelpers::makeVersion(name: 'pending-reference'), $pendingLive);
+    // Seeded: through the protocol the pin would commit the pending row again.
+    CasTestHelpers::seedPin($pendingLive, 'pending-reference');
 
     expect($collector->sweepPending(graceHours: 2))->toBe(['swept' => 2, 'skipped' => 1]);
 });
@@ -198,8 +199,8 @@ it('reconciles every blob and preserves all dangling identities', function (): v
     $zeroed = $store->commit(CasTestHelpers::streamFor('reconcile zeroed'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $dangling = $store->commit(CasTestHelpers::streamFor('reconcile dangling'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
-    $store->attach(CasTestHelpers::makeVersion(name: 'reconcile-a'), $counted);
-    $store->attach(CasTestHelpers::makeVersion(name: 'reconcile-b'), $counted);
+    CasTestHelpers::pin($counted, CasTestHelpers::reference('reconcile-a'));
+    CasTestHelpers::pin($counted, CasTestHelpers::reference('reconcile-b'));
     $zeroed->forceFill(['ref_count' => 9])->save();
     Storage::disk('local')->delete($dangling->storage_key);
 

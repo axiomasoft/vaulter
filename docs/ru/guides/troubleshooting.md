@@ -20,8 +20,8 @@ outline: deep
 ```
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
-Fix: set config(vaulter.access.permission_driver) to a real driver (database|gate|spatie|azgard)
-or bind your own \Vaulter\Contracts\Access\PermissionDriver.
+Fix: set config(vaulter-drive.access.permission_driver) to a real driver (database|gate|spatie|azgard)
+or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 ```
 
 **Почему.** ACL Drive нужна полоса `PermissionDriver`. Открытый драйвер `null` (каждый актор —
@@ -48,7 +48,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 - **`database`** — автономный дефолт. Авторизует чисто из строк `v_node_grants`, без зависимости
   от хоста. Берите его, если нужны только гранты на узлы.
 - **`gate` / `spatie` / `azgard`** — мост к вашей существующей системе ролей; заполните
-  соответствующий блок конфига `vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*`.
+  соответствующий блок конфига `vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*`.
 - **Свой** драйвер — см. [рецепт](/ru/guides/recipes#permission-driver).
 
 ::: warning Кэш конфига прячет env, который вы забыли
@@ -186,27 +186,25 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 ## Порядок миграций и проблемы с префиксом {#migrations}
 
 **Симптом.** `php artisan migrate` падает на внешнем ключе, ссылающемся на `v_nodes` /
-`v_storages` / `v_blobs`, либо таблицы приземляются без префикса `v_`, либо таблицы второго пакета
+`v_drives` / `v_blobs`, либо таблицы приземляются без префикса `v_`, либо таблицы второго пакета
 сталкиваются с таблицами Vaulter.
 
 **Почему и решение.**
 
-- **Порядок.** Миграции Vaulter упорядочены по таймстампу (`..._000001_…` → `..._000021_…`), чтобы
-  родительские таблицы (`v_storages`, `v_nodes`, `v_blobs`) создавались раньше таблиц, которые на
-  них ссылаются. Пакет сам обнаруживает и запускает свои миграции; если вы **публикуете** их через
-  `vendor:publish --tag=vaulter-migrations`, сохраните порядок опубликованных имён файлов —
-  не перенумеровывайте их.
+- **Порядок.** Миграции Vaulter названы `0001_01_01_00NNNN_create_v_<table>_table` в одной общей
+  последовательности (core `0001…`, media `0101`, drive `0201…`, documents `0301…`, webhooks `0401…`), чтобы
+  родительские таблицы (`v_drives`, `v_nodes`, `v_blobs`) создавались раньше таблиц, которые на
+  них ссылаются. Каждый пакет запускает свои миграции из `vendor/`; они не публикуются.
 
   ```bash
   php artisan vaulter:install        # publishes config, offers to run the migrations
   # or, manually:
   php artisan vendor:publish --tag=vaulter-config
-  php artisan vendor:publish --tag=vaulter-migrations
   php artisan migrate
   ```
 
 - **Префикс.** Каждая таблица Vaulter читает `config('vaulter.database.table_prefix')` (по умолчанию `v_`).
-  Опубликованные миграции и модели читают его обе, так что меняйте его в **одном** месте. Если вы
+  Миграции и модели читают его обе, так что меняйте его в **одном** месте. Если вы
   переключите префикс **после** миграции, модели будут искать таблицы `<newprefix>…`, которых не
   существует — задайте префикс **до** первой миграции или переименуйте таблицы под него.
 
@@ -242,8 +240,8 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 - Ошибки `core.schema.tables`: выполните `php artisan migrate`; `core.schema.key_types` значит, что
   `ids.strategy` или `ids.host_keys` отличается от значения, с которым создавалась схема, — верните
   прежнее значение, колонки руками не правьте.
-- `core.webhooks.relay_leases` и `drive.scan.obligations` указывают на не запущенный воркер или
-  планировщик: запустите воркер очереди и `schedule:run`, затем `vaulter:webhooks:relay` или
+- `core.outbox.leases`, `core.outbox.lag` и `drive.scan.obligations` указывают на не запущенный воркер или
+  планировщик: запустите воркер очереди и `schedule:run`, затем `vaulter:relay` или
   `vaulter:scan:reconcile --all-tenants --dry-run`.
 - `drive.scan.policy` с предупреждением о переходе значит, что конфиг называет политику сканирования,
   которую drive не активировал; сначала `vaulter:scan:rescan --activate-policy --drive=<id> --dry-run`.
@@ -274,7 +272,7 @@ Doctor — read-only, сам он ничего не чинит. См. [`vaulter:
   загрузка в полёте успела воскресить блоб с меткой tombstone. См.
   [рецепт GC блобов](/ru/guides/recipes#blob-gc).
 - **Дрейф.** Если `ref_count` выглядит неправильным — это кэш; запустите
-  `php artisan vaulter:blobs:reconcile`, чтобы перестроить его из edge-таблицы (источника истины).
+  `php artisan vaulter:blobs:reconcile`, чтобы перестроить его из пинов в `v_blob_references` (источника истины).
 
 ## Ошибки валидации панелей при загрузке {#panel-validation}
 
@@ -284,7 +282,7 @@ Doctor — read-only, сам он ничего не чинит. См. [`vaulter:
 
 - **`UnknownProfileException::forName`** — `Vaulter::drive($entity, profile: 'x')` (или маршрут) назвал
   панель, которая не зарегистрирована. Зарегистрируйте FQCN её провайдера в
-  `config('vaulter.profiles.providers')` или используйте панель `default`.
+  `config('vaulter-drive.profiles.providers')` или используйте панель `default`.
 
 ## Пустое «Last updated» в документации {#last-updated}
 

@@ -2,33 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Content\ScanBackfillRun;
-use Vaulter\Models\Content\ScanEvidenceRecord;
-use Vaulter\Models\Content\ScanObligation;
-use Vaulter\Models\Content\ScanPolicyState;
-use Vaulter\Models\Content\ScanRequest;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Profiles\DefaultProfile;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
 use Vaulter\Schema\Uuid7Ids;
-use Vaulter\Support\RandomShareTokenGenerator;
-use Vaulter\Testing\NullPermissionDriver;
-use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 
 /** Publish with the vaulter-config tag. */
 return [
@@ -48,62 +25,9 @@ return [
         ],
     ],
     'tenancy' => ['enabled' => env('VAULTER_TENANT_ENABLED', false), 'resolver' => null],
-    'profiles' => ['default' => DefaultProfile::class, 'providers' => []],
-    'scan' => [
-        'mode' => null, 'required' => null, 'scanner' => null, 'scanner_key' => null,
-        'scanner_version' => null, 'policy_version' => null, 'rollout_key' => null,
-    ],
     // Module activation overrides (D22): module id => true|false. Auto modules (media, drive, documents…)
     // are active unless switched off; opt-in modules (webhooks) only when switched on.
     'modules' => [],
-    'features' => [
-        'grants' => true,
-        'activity' => true,
-        // The drive change journal behind DriveHandle::changes() (PLAN2.D50).
-        'changes' => true,
-        'share_links' => false,
-        'public_listing' => false,
-    ],
-    'drives' => [
-        // HasDrives: delete the drives of an owner when the owner is deleted.
-        'delete_with_owner' => env('VAULTER_DRIVES_DELETE_WITH_OWNER', false),
-    ],
-    'access' => [
-        'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
-        'permission_drivers' => [
-            'database' => DatabasePermissionDriver::class,
-            'gate' => GatePermissionDriver::class,
-            'spatie' => SpatiePermissionDriver::class,
-            'null' => NullPermissionDriver::class,
-        ],
-        'gate' => [
-            'abilities' => [
-                'previewer' => 'vaulter.preview',
-                'reader' => 'vaulter.view',
-                'commenter' => 'vaulter.comment',
-                'writer' => 'vaulter.edit',
-                'organizer' => 'vaulter.organize',
-                'owner' => 'vaulter.manage',
-            ],
-            'super_ability' => env('VAULTER_GATE_SUPER_ABILITY', 'vaulter.super'),
-            'create_ability' => env('VAULTER_GATE_CREATE_ABILITY', 'vaulter.create'),
-        ],
-        'spatie' => [
-            'permissions' => [
-                'previewer' => 'vaulter.preview',
-                'reader' => 'vaulter.view',
-                'commenter' => 'vaulter.comment',
-                'writer' => 'vaulter.edit',
-                'organizer' => 'vaulter.organize',
-                'owner' => 'vaulter.manage',
-            ],
-            'super_permission' => env('VAULTER_SPATIE_SUPER_PERMISSION', 'vaulter.super'),
-            'create_permission' => env('VAULTER_SPATIE_CREATE_PERMISSION', 'vaulter.create'),
-            'teams' => env('VAULTER_SPATIE_TEAMS', false),
-            'role_subject_type' => 'role',
-            'team_subject_type' => 'team',
-        ],
-    ],
     'routes' => [
         'prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
         'middleware' => [
@@ -116,61 +40,22 @@ return [
             'uploads' => env('VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE', 120),
         ],
     ],
-    'listing' => ['scan_budget' => 1000],
-    'sharing' => [
-        'token_generator' => RandomShareTokenGenerator::class,
-        'url_base' => env('VAULTER_SHARE_URL_BASE', '/share'),
-        'prefix_length' => 8,
-        'default_ttl_hours' => env('VAULTER_SHARE_DEFAULT_TTL_HOURS', 72),
-        'max_ttl_hours' => env('VAULTER_SHARE_MAX_TTL_HOURS', 720),
-    ],
-    'downloads' => [
-        'delivery_mode' => 'strict',
-        'direct_ttl_seconds' => 60,
-        'inline_mime_types' => [
-            'image/png',
-            'image/jpeg',
-            'image/gif',
-            'image/webp',
-            'application/pdf',
-            'text/plain',
-        ],
-    ],
-    'webhooks' => [
-        'timeout' => 15,
-        // Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three
-        // days in total). Jitter is the +/- fraction applied to each delay.
-        'retry_schedule' => [5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400],
-        'retry_jitter' => 0.1,
-        // Days of uninterrupted failure before an endpoint is disabled; 0 never disables.
-        'disable_after_days' => 5,
-        // Seconds the previous secret keeps signing after a rotation (max 604800).
-        'secret_rotation_overlap' => 86400,
-        'retention_days' => 30,
-        'retry_claim_seconds' => 60,
-        // The outbox relay leases a row for claim_seconds while it materializes
-        // deliveries fanout_chunk endpoints at a time (1..1000); a crashed relay's
-        // row is picked up again once the lease lapses.
-        'relay' => [
-            'claim_seconds' => 60,
-            'fanout_chunk' => 100,
-        ],
-        'manage_ability' => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
-        'delivery' => [
-            'url_guard' => DefaultOutboundUrlGuard::class,
-            'allowed_schemes' => ['http', 'https'],
-            'blocked_ip_ranges' => null,
-            'allowed_ip_ranges' => [],
-            'connect_timeout' => 2,
-            'max_response_bytes' => 65536,
-        ],
-    ],
-    'changes' => [
-        // Days a journal entry stays readable; vaulter:changes:prune deletes older ones
-        // and a cursor behind them expires (410 cursor_expired).
-        'retention_days' => 30,
-        // The largest page DriveHandle::changes()->list() returns.
-        'max_page_size' => 1000,
+    // The transactional outbox (D29): every domain event is written to v_outbox in the transaction of its
+    // operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once.
+    // settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events
+    // older than it, so a long transaction committing a smaller seq later is not skipped.
+    'outbox' => [
+        'settle_window_seconds' => 300,
+        'retention_seconds' => 604800,
+        // How long a paused consumer (switched off, missing from the module graph) holds retention before it
+        // is detached with an explicit gap.
+        'max_consumer_hold_seconds' => 604800,
+        'dead_retention_seconds' => 2592000,
+        'lease_seconds' => 60,
+        'batch' => 100,
+        'max_attempts' => 10,
+        'backoff_base_seconds' => 2,
+        'backoff_cap_seconds' => 3600,
     ],
     // Idempotency-Key receipts (D25): how long a retry with the same key gets the stored outcome.
     // vaulter:idempotency:prune deletes expired receipts.
@@ -182,13 +67,10 @@ return [
     // expression. Set enabled to false when the host schedules the commands itself.
     'schedule' => [
         'enabled' => env('VAULTER_SCHEDULE_ENABLED', true),
-        'webhooks_relay' => 'everyMinute',
-        'webhooks_retry' => 'everyMinute',
-        'webhooks_prune' => 'dailyAt:03:10',
-        'changes_prune' => 'dailyAt:03:20',
+        'outbox_relay' => 'everyMinute',
+        'outbox_prune' => 'hourly',
         'idempotency_prune' => 'dailyAt:03:30',
     ],
-    'handlers' => [],
     'observability' => [
         'enabled' => env('VAULTER_OBSERVABILITY_ENABLED', false),
         'recorder' => env('VAULTER_OBSERVABILITY_RECORDER'),
@@ -198,22 +80,6 @@ return [
         ],
     ],
     'models' => [
-        'drive' => Drive::class,
-        'node' => Node::class,
-        'file' => File::class,
-        'scan_obligation' => ScanObligation::class,
-        'scan_request' => ScanRequest::class,
-        'scan_evidence' => ScanEvidenceRecord::class,
-        'scan_policy_state' => ScanPolicyState::class,
-        'scan_backfill_run' => ScanBackfillRun::class,
-        'file_revision' => FileRevision::class,
-        'blob' => Blob::class,
-        'file_revision_blob' => FileRevisionBlob::class,
-        'grant' => NodeGrant::class,
-        'node_share' => NodeShare::class,
-        'activity' => Activity::class,
-        'outbox' => Outbox::class,
-        'webhook_endpoint' => WebhookEndpoint::class,
-        'webhook_delivery' => WebhookDelivery::class,
+        'outbox' => OutboxEvent::class,
     ],
 ];

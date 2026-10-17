@@ -38,37 +38,27 @@ Override these with `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and
 return exit 2 and print the administrator command needed to provision the test
 account; other failures return exit 1. Resolve preflight failures before tests.
 
-Run the PostgreSQL base suite with the same coordinates as CI:
-
-```bash
-DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 \
-DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret \
-scripts/php84 vendor/bin/pest --ci \
-packages/core/tests/Access packages/core/tests/Activity \
-packages/core/tests/Feature packages/core/tests/Panels \
-packages/core/tests/Schema packages/core/tests/Sharing packages/core/tests/Webhooks
-```
+Server engines are started by the harness; see [Which run when](tests/README.md#which-run-when).
 
 ### Tests
 
-Every suite runs through `scripts/t`; zones, groups, lines and the run policy are in [`tests/README.md`](tests/README.md).
+Every suite runs through `scripts/t`. **What to run while iterating, before a commit, before a push and before a
+release is one table: [Which run when](tests/README.md#which-run-when)** (zones, groups and CI lines are in the same file).
 
 ```bash
-scripts/t --changed --dry-run        # what your change affects, nothing runs
-scripts/t --changed                  # the affected zones and their consumers (SQLite)
-scripts/t sqlite -p media            # one package
-scripts/t pgsql -p core --group=database   # engine-dependent tests on a server
+scripts/t sqlite -p <pkg> <path>     # while iterating: the files you change
+scripts/t --changed                  # before a commit: affected zones + consumers (SQLite); make test-changed adds pgsql
+make test-db                         # schema/query change: every database test on pgsql
 ```
 
-Run the named tests of your change, not the whole suite; full, coverage, mutation and load runs are not part of a
-pull request.
+Full, coverage, mutation and load runs are not part of a pull request.
 
 ### Concurrency tests
 
 SQLite serialises writes, so a race test on it passes even against defective code.
 Any test that must prove behaviour under real concurrency (two writers on one row,
 a lock held across a read-modify-write, a sweep racing an upload) runs on PostgreSQL
-through `Vaulter\Tests\Concurrency\ForkRace`: each task runs in its own forked
+through `Vaulter\Testing\Concurrency\ForkRace`: each task runs in its own forked
 process on its own connection, and a file barrier releases them together.
 
 ```php
@@ -87,15 +77,9 @@ Each `RaceOutcome` carries `ok`, the task's JSON-serialisable `value`, and the t
 read must be committed: bind the test directory with `DatabaseMigrations`, not
 `RefreshDatabase`. A task returns or throws, never calls `exit()`. The harness refuses a
 database whose name does not end in `_test`.
-Packages reach it through the `Vaulter\Tests\` autoload-dev mapping to `../core/tests/`.
+Packages reach it through the core testing kit (`Vaulter\Testing\`, shipped in `packages/core/src/Testing`).
 
-Run the harness suite locally exactly as the `test-pgsql` CI job does:
-
-```bash
-DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 \
-DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret \
-scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency
-```
+Run them locally as the `serial` CI lane does: `scripts/t pgsql -p core --group=serial -j1 --no-skips`.
 
 All quality tooling is wired through the `Makefile`:
 
@@ -106,8 +90,8 @@ All quality tooling is wired through the `Makefile`:
 | `make stan` | PHPStan (level max) + Larastan |
 | `make rector` | Rector dry-run |
 | `make rector-fix` | Apply Rector |
-| `make test` | Pest with `--coverage --min=80` |
-| `make ci` | Everything CI runs (quality + tests) |
+| `make test` | Every default suite on SQLite (`scripts/t sqlite`), no coverage |
+| `make ci` | Quality checks + every default suite on SQLite (servers: see the table above) |
 
 Run `make ci` before opening a PR.
 
@@ -132,6 +116,38 @@ scripts/test-db.sh sqlite packages/core/tests                   # in-memory, par
   touched paths on a real database). When a run fails, rerun only the failing files, not the whole suite.
 - **Racing tests need their own database.** Never point two lanes at the same `*_test` database (`DatabaseMigrations`
   and `ForkRace` suites drop and rebuild it); the harness gives each run a server of its own.
+
+#### Private servers never outlive their run
+
+Each private server lives in `${VAULTER_DB_ROOT:-/tmp}/vaulter-dbtest.XXXXXX`, owned by the shell that started it:
+
+- **`db_down`** (the `EXIT` trap of `scripts/test-db.sh` and `scripts/schema-snapshot.sh`) stops every server
+  process of the directory — mysqld on `TERM`, postgres on `INT`, `KILL` after 10 s, found by pid file and, if the
+  server died before writing one, by its command line — and deletes the directory only once they are gone. A server
+  left running without its data directory loops on errors and floods its log; this order prevents it.
+- **`DB_LOG_MAX_BYTES`** (default `52428800`, 50 MiB) caps `server.log` of both engines; past it the output is read
+  and dropped, so the server never blocks. **`DB_FILE_MAX_MB`** (default `16384`, `0` = off) caps every file the
+  server writes with `ulimit -f` — the last guard: a runaway server dies with `SIGXFSZ` instead of filling the disk.
+- **A run killed with `kill -9` or a timeout** cannot run its trap. The directory's `owner` file holds the pid and
+  start time of the owning shell, and a watchdog (`scripts/db-reap.sh --watch`, detached from the run with `setsid`)
+  stops the server and deletes the directory within seconds of the owner's death. A server of another, still running
+  shell is never touched. `db_up` also reaps what dead owners left behind before starting a new server.
+- **`scripts/pg-local.sh`** starts its server with `DB_PERSISTENT=1`: it outlives the shell on purpose, has no
+  watchdog and is never reaped; `scripts/pg-local.sh down` stops it the same way as `db_down`.
+
+Finding and removing orphans by hand:
+
+```bash
+pgrep -a mysqld | grep vaulter-dbtest; pgrep -a postgres | grep vaulter-dbtest   # servers of the harness
+ls -d /tmp/vaulter-dbtest.* /dev/shm/vaulter-dbtest.* 2>/dev/null                 # their directories
+scripts/db-reap.sh --dry-run    # what has a dead owner
+scripts/db-reap.sh              # stop those servers and delete their directories (only yours, only dead owners)
+scripts/db-reap.sh --legacy     # also directories without an owner file (older harness) — only when no run is going
+scripts/db-reap.sh --stop /tmp/vaulter-dbtest.XXXXXX   # one directory of yours, even if its owner is alive
+```
+
+`scripts/db-reap.sh` only considers `vaulter-dbtest.*` directories of the current user and only signals mysqld,
+mariadbd and postgres processes whose command line names that directory.
 
 ### Changing the REST contract
 

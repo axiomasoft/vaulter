@@ -48,7 +48,8 @@ the other writes refuse one in PHP and ignore the header over HTTP until they de
 | more than 24 hours later | the receipt expired: the retry runs as a new request |
 
 A replay never runs the write again: no second folder, no second event, no webhook. Its ETag is the one the
-first response had; it does not satisfy a later `If-Match` by itself.
+first response had while the node is still visible to you (the abilities in the tag are recomputed; for a purged or
+trashed node they are all off, so the tag differs); it does not satisfy a later `If-Match` by itself.
 
 The key is scoped to the actor, the tenant, the drive and the operation: another user, or the same user on
 another drive, never sees your receipt.
@@ -62,6 +63,9 @@ A replay is answered only after the owner checks the actor's current right, as i
 - the grant was revoked, the share expired or the drive is gone → the same `404`/`403` a new request gets.
 
 The stored receipt is not changed by a denial.
+
+Over HTTP the route names only the node, so a retry of a request on a node that was **purged** since cannot find its
+drive and answers `404`; a node in the trash still replays.
 
 ## Which refusals are stored
 

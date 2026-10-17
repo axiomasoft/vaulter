@@ -1,5 +1,6 @@
 Vaulter\Media\Configuration\MediaConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
+  blobModel(): string
   blobStore(): string
   contentStore(): string
   dedupScope(): Vaulter\Media\Configuration\DedupScope

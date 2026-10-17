@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Controllers\Revisions;
 
 use Illuminate\Http\JsonResponse;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\CreateDocumentRevisionRequest;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Checkpoint the working state as a revision that becomes the head (Edit). */
+#[Internal]
 final readonly class CreateDocumentRevisionController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}

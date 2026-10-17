@@ -6,8 +6,10 @@ namespace Vaulter\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Idempotency\IdempotencyDigest;
 use Vaulter\Idempotency\IdempotencyOutcome;
 
@@ -21,6 +23,7 @@ use Vaulter\Idempotency\IdempotencyOutcome;
  *
  * The IETF idempotency-key draft expired unpublished; this follows its shape without claiming conformance.
  */
+#[Internal]
 final readonly class ReadIdempotencyKey
 {
     public const string ALIAS = 'vaulter.idempotency';
@@ -127,7 +130,7 @@ final readonly class ReadIdempotencyKey
     {
         $route = $request->route();
         $parameters = [];
-        if ($route !== null && !is_string($route)) {
+        if ($route instanceof Route) {
             foreach ($route->parameters() as $name => $value) {
                 $parameters[$name] = is_scalar($value) ? (string) $value : get_debug_type($value);
             }
@@ -135,7 +138,7 @@ final readonly class ReadIdempotencyKey
 
         return IdempotencyDigest::request([
             'method' => $request->getMethod(),
-            'route' => $route !== null && !is_string($route) ? (string) $route->getName() : $request->path(),
+            'route' => $route instanceof Route ? (string) $route->getName() : $request->path(),
             'parameters' => $parameters,
             'query' => $request->query->all(),
             'body' => $request->isJson() ? $request->json()->all() : $request->request->all(),

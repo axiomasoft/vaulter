@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /** GET drives/{drive}/nodes: the folder to list (the drive root when absent); paging is PageResponse's. */
+#[Internal]
 final class ListChildrenRequest extends VaulterFormRequest
 {
     /**

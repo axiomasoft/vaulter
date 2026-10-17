@@ -8,12 +8,14 @@ use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
-use Vaulter\Tests\Support\OpenApi\ValidatesOpenApiResponses;
-use Vaulter\Tests\Support\SuiteDatabaseConnection;
+use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
+use Vaulter\Testing\Support\OpenApi\ValidatesOpenApiResponses;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    use RefreshesDatabaseForSchemaVariant;
     use ValidatesOpenApiResponses;
 
     /**
@@ -24,7 +26,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             // Core owns the schema (v_nodes/v_drives/v_files/... + v_upload_*),
-            // the Node/Storage models, Access/Sharing/Activity and Configuration\VaulterConfig.
+            // the Node/Storage models, Access/Sharing/Activity and Configuration\DriveConfig.
             VaulterServiceProvider::class,
             // Media binds the concrete CAS engine behind the Contracts\Cas seam —
             // Drive upload/download/versioning commit through it.
@@ -62,7 +64,7 @@ abstract class TestCase extends OrchestraTestCase
         // The Drive suite runs OPEN under the env-gated NullPermissionDriver (non-prod
         // only, H.2 / D6″): every actor gets full access so the tests exercise pure
         // file/folder/upload mechanics without an access-control lane.
-        $app['config']->set('vaulter.access.permission_driver', 'null');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the Drive tests assert integer
         // keys on the Storage→Node→File→Version chain they build.
@@ -77,7 +79,7 @@ abstract class TestCase extends OrchestraTestCase
         // The whole v_* schema (incl. v_upload_sessions/v_upload_parts) is owned by
         // core; load its migrations through the path-repo symlink Composer places in
         // this package's vendor dir.
-        $this->loadMigrationsFrom(__DIR__.'/../vendor/axioma-studio/vaulter-core/database/migrations');
+        $this->loadMigrationsFrom(SuiteDatabaseConnection::migrationPaths($this->app));
     }
 
     /**

@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Files;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
@@ -20,8 +22,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * its blob edges are gone and its bytes left the drive's quota. The
  * revision row no longer exists, so the event carries its id, number and size.
  */
-final readonly class FileRevisionDeleted extends DomainEvent
+#[Api]
+final readonly class FileRevisionDeleted extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public File $file,
@@ -36,9 +40,9 @@ final readonly class FileRevisionDeleted extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::FileRevisionDeleted;
+        return DriveEventType::FileRevisionDeleted;
     }
 
     public function scope(): EventScope

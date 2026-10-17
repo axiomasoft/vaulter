@@ -4,38 +4,40 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Files;
 
-use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\CopyDestinationAdmission;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
+use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Operations\NodeSequence;
+use Vaulter\Drive\Profiles\DrivePolicyEnforcer;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
+use Vaulter\Drive\Repositories\FileRevisionStoreRepository;
+use Vaulter\Drive\Repositories\FileStoreRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Content\ContentQuarantinedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\NodeSequence;
-use Vaulter\Profiles\DrivePolicyEnforcer;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
-use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
-use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
+#[Internal]
 final readonly class RestoreFileRevisionAction
 {
-    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder) {}
+    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private RevisionBlobLinks $links, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder) {}
 
     public function execute(DriveContext $context, RestoreFileRevisionInput $data): FileRevision
     {
         $node = $this->locator->find($context, $data->node);
 
         return $this->database->transaction(function () use ($context, $data, $node): FileRevision {
-            $this->database->lockTreeShared($node->drive_id);
+            $this->database->lockAggregateShared('drives', $node->drive_id);
             $this->lifecycle->assertWritable($context);
             $node = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
             $this->tree->assertLive($node);
@@ -64,7 +66,7 @@ final readonly class RestoreFileRevisionAction
             foreach ($source->blobs as $blob) {
 
                 /** @var FileRevisionBlob $pivot */ $pivot = $blob->getRelationValue('pivot');
-                $this->blobs->attach($revision, $blob, ['role' => $pivot->role, 'ordinal' => $pivot->ordinal, 'offset_bytes' => $pivot->offset_bytes, 'length_bytes' => $pivot->length_bytes]);
+                $this->links->attach($revision, $blob, ['role' => $pivot->role, 'ordinal' => $pivot->ordinal, 'offset_bytes' => $pivot->offset_bytes, 'length_bytes' => $pivot->length_bytes]);
             }
             app(ScanAdmission::class)->admit($context, $revision, $source);
             if ($previous !== null) {

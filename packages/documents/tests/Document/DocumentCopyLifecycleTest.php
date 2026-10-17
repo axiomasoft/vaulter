@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
@@ -12,8 +10,10 @@ use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
  * V33: a document copy is a new aggregate holding the source's working state as its

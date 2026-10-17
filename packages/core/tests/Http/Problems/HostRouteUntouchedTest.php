@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 
 it('leaves host routes without problem+json and without Vaulter headers', function (): void {
     Route::get('/host/boom', static function (): never {

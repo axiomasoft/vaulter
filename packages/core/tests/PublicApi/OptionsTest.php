@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\CopyResult;
-use Vaulter\Data\Drive\CreateFolderOptions;
-use Vaulter\Data\Drive\FileStream;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\MoveOptions;
-use Vaulter\Data\Drive\NodePage;
-use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\RevisionOptions;
-use Vaulter\Data\Drive\SearchOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Snapshots\FileRevisionSnapshot;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\NodeSort;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Data\CreateFolderOptions;
+use Vaulter\Drive\Data\FileStream;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\MoveOptions;
+use Vaulter\Drive\Data\NodePage;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\RevisionOptions;
+use Vaulter\Drive\Data\SearchOptions;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\NodeSort;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Models\Node;
 
 it('builds independent options with named fields and preserves original defaults', function (): void {
     $parent = (new ReflectionClass(NodeSnapshot::class))->newInstanceWithoutConstructor();

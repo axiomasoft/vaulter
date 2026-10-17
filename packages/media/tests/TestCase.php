@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace Vaulter\Media\Tests;
 
 use Illuminate\Foundation\Application;
+
+use function Orchestra\Testbench\load_migration_paths;
+
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Media\VaulterMediaServiceProvider;
-use Vaulter\Tests\Support\SuiteDatabaseConnection;
+use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    use RefreshesDatabaseForSchemaVariant;
+
     /**
      * @param  Application              $app
      * @return array<int, class-string>
@@ -38,10 +44,10 @@ abstract class TestCase extends OrchestraTestCase
 
         // The CAS slice is ACL-agnostic: run OPEN under the env-gated null driver so
         // the tests exercise pure blob mechanics without an access-control lane.
-        $app['config']->set('vaulter.access.permission_driver', 'null');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the CAS tests assert integer
-        // keys on the Storage→Node→File→Version chain they build.
+        // blob keys.
         $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 
@@ -50,9 +56,10 @@ abstract class TestCase extends OrchestraTestCase
         // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
         SuiteDatabaseConnection::skipOnForeignEngine($this);
 
-        // The v_blobs (+ Drive) schema is owned by core; load its migrations through
-        // the path-repo symlink that Composer places in this package's vendor dir.
-        $this->loadMigrationsFrom(__DIR__.'/../vendor/axioma-studio/vaulter-core/database/migrations');
+        // The migrations of every offered module: the blob tests pin blobs for an opaque owner (D23) and need no drive table.
+        $paths = SuiteDatabaseConnection::migrationPaths($this->app);
+        load_migration_paths($this->app, $paths);
+        $this->loadMigrationsFrom($paths);
     }
 
     /**

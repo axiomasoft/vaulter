@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
 
 it('reads caller resources at their current position and never closes them', function (): void {
     $stream = tmpfile();

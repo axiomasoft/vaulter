@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.15",
   "title": "Relay D29: vaulter:relay, reconciliation с settle_window, leases, DLQ, hold/detach/gap, retention, replay; WebhookFanoutConsumer",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Core `vaulter:relay` регистрирует consumers, сверяет пропущенные строки с settle_window, доставляет с fenced lease/full-jitter/DLQ, переводит paused→detached с явным gap, чистит outbox без потери; `vaulter:relay:replay` и `vaulter:outbox:prune`; fan-out вебхуков — consumer `webhooks.fanout`; `vaulter:webhooks:relay` удалена; I10-сценарии D29 зелёные на pgsql.",
   "why": "D29: тихая потеря исключена только при reconcile+settle_window, retention ниже reconciled_through и явном gap. Риски (hard): late commit меньшего seq, takeover со stale generation, retention при paused consumer, двойной reconcile.",
   "scope": {
@@ -254,6 +254,69 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:47:50Z"
+  "result": {
+    "started_at": "2026-10-14T18:21:39Z",
+    "finished_at": "2026-10-15T06:39:53Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "4d58b15b-bba9-4c93-b6d2-3049eaea3533"
+    },
+    "notes": "Ревью grok-4.7 дорожка R changes -> фиксы; см. review-grok.md",
+    "deviations": [
+      "Единый коммит с P3.14 (общие файлы Outbox); дорожка R: 2 находки (гонка ack/detach — исправлена; settle-check — исправлен), replay-дыры в середине диапазона отклонены; ре-ревью исправлений не проводилось"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-15T06:39:53Z"
+      }
+    ],
+    "commits": [
+      "05656b11"
+    ]
+  },
+  "updated_at": "2026-10-15T06:39:53Z"
 }

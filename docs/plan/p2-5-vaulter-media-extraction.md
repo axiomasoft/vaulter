@@ -42,7 +42,7 @@ core-гейт, dedup-scope цел, PG-тесты живы) и **не созда�
 - Контракты `Contracts\Cas\*` (все 7) — **шов под phpstan**; их зависит core (Actions/Controllers).
 - **`Cas/BlobLock`** — низкоуровневый DB advisory-lock примитив; его импортирует core-резидент
   `Repositories\Cas\BlobStoreRepository` → если увезти в media, вернётся core→media цикл. Остаётся
-  `Vaulter\Cas\BlobLock` (единственный класс в namespace `Vaulter\Cas` у core).
+  `Vaulter\Media\Cas\BlobLock` (единственный класс в namespace `Vaulter\Cas` у core).
 - `Models\Cas\Blob` · `Enums\Cas\BlobStatus` · `Repositories\Cas\BlobStoreRepository`.
 - **Схема `v_blobs`** — `PanelTablesBuilder::defineBlobs` + dedup-uniq по `dedup_scope`. Физический вынос
   схемы/миграции честно **ОТЛОЖЕН** (см. ниже): пока `FileVersion`↔`Blob` FK — cross-package, дробить

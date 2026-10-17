@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Artisan;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\CoreModule;
 use Vaulter\Kernel;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\TestCase;
 use Vaulter\Webhooks\WebhooksModule;
 
@@ -36,16 +36,16 @@ it('lists every offered module with its policy, activation and reason', function
 it('shows the schema migrations the database has not run', function (): void {
     $modules = modulesJson();
 
-    // No schema in this suite: every create-migration of the core is pending; webhooks ships none of its own.
+    // No schema in this suite: every create-migration of the core is pending, and the two of the webhooks package.
     expect($modules['core']['schema_pending'])->toHaveCount(count(glob(dirname(__DIR__, 2).'/database/migrations/*.php') ?: []))
-        ->and($modules['webhooks']['schema_pending'])->toBe([]);
+        ->and($modules['webhooks']['schema_pending'])->toBe(['0001_01_01_000401_create_v_webhook_endpoints_table', '0001_01_01_000402_create_v_webhook_deliveries_table']);
 });
 
 it('shows the slots a module defines and the contributions it makes', function (): void {
     $slots = array_column(modulesJson()['core']['slots'], null, 'slot');
 
     expect($slots[DoctorCheck::class]['role'])->toBe('defines')
-        ->and($slots[DoctorCheck::class]['contributions'])->toBe(10);
+        ->and($slots[DoctorCheck::class]['contributions'])->toBe(13);
 });
 
 it('prints a table with the fingerprint', function (): void {

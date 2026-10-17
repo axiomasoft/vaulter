@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Facades\Documents;
@@ -11,11 +9,13 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\DriveHandle;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /** @return array{DriveHandle, NodeSnapshot, TestUser} */
 function exportFixture(?string $role, string $type = 'vaulter/rich-text', ?array $content = null): array

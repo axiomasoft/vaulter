@@ -61,13 +61,13 @@ it('neither translates nor warns about the keys of earlier development releases'
 ]);
 
 it('preserves the host replacement map instead of merging the shipped entries back', function (): void {
-    $defaults = ['vaulter' => ['access' => ['permission_drivers' => ['database' => 'BuiltIn\\Driver', 'gate' => 'BuiltIn\\Gate']]]];
+    $defaults = ['vaulter-drive' => ['access' => ['permission_drivers' => ['database' => 'BuiltIn\\Driver', 'gate' => 'BuiltIn\\Gate']]]];
     $config = new Repository($defaults);
-    $config->set('vaulter.access.permission_drivers', ['custom' => 'Host\\CustomDriver']);
+    $config->set('vaulter-drive.access.permission_drivers', ['custom' => 'Host\\CustomDriver']);
 
     (new ConfigNormalizer)->normalize($config, $defaults);
 
-    expect($config->get('vaulter.access.permission_drivers'))->toBe(['custom' => 'Host\\CustomDriver']);
+    expect($config->get('vaulter-drive.access.permission_drivers'))->toBe(['custom' => 'Host\\CustomDriver']);
 });
 
 it('keeps an explicit vaulter-documents.types list from growing default entries back (PLAN2.P4.3)', function (): void {

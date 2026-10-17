@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Concurrency\RaceOutcome;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
  * Two concurrent moves that would each be legal alone but together close a loop.

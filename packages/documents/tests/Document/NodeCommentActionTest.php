@@ -16,8 +16,8 @@ use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The node-comment Actions (ADR-0014 шаг 1): add (threaded + anchored + morph-alias

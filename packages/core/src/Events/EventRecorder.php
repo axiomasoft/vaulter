@@ -8,36 +8,36 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use LogicException;
 use Throwable;
-use Vaulter\Activity\ActivityRecorder;
-use Vaulter\Changes\ChangeJournal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Events\Outbox\OutboxWriter;
 use Vaulter\Kernel;
-use Vaulter\Webhooks\EventEnvelope;
-use Vaulter\Webhooks\OutboxRecorder;
 use WeakMap;
 
 /**
- * The only way a domain event is recorded. Called as the last step of an Action's
- * transaction, it writes the activity row, the change-journal entry and the outbox row
- * of the occurrence on the Vaulter connection, then hands the event to host listeners
- * after the commit. The journal takes the drive's head lock, so nothing may lock after
- * it in the same transaction.
+ * The only way a domain event is recorded. Called as the last step of an operation's transaction, it hands
+ * the occurrence to the {@see EventSink} contributions of the active modules in the order (priority, id) —
+ * the drive's activity feed and change journal — then writes the outbox row and the delivery rows of the
+ * subscribed outbox consumers on the Vaulter connection, whatever modules are active (D29), and dispatches
+ * the event to host listeners after the commit. The outbox comes last: its envelope carries the journal seq
+ * a sink shared.
  *
- * A failed write is not caught here: it leaves the transaction, which rolls the change
- * back together with whatever was already recorded, so a committed change always has
- * its rows. Host listeners are the opposite: they run after the commit, and their
- * failure is reported without undoing a change that is already durable.
+ * A failed write is not caught here: it leaves the transaction, which rolls the change back together with
+ * whatever was already recorded, so a committed change always has its rows. Host listeners are the
+ * opposite: they run after the commit, and their failure is reported without undoing a change that is
+ * already durable.
  */
+#[Api]
 final readonly class EventRecorder
 {
     /** @var WeakMap<DomainEvent, true> the instances already recorded; the map itself stays mutable */
     private WeakMap $recorded;
 
+    #[Internal]
     public function __construct(
         private VaulterDatabase $database,
-        private VaulterConfig $config,
         private Container $container,
         private MetricsRecorder $metrics,
         private Kernel $kernel,
@@ -55,43 +55,33 @@ final readonly class EventRecorder
         }
         $this->recorded[$event] = true;
 
+        $writer = new SinkWriter($this->database);
         // Resolved per call: the recorder is a singleton, the sinks are swappable.
         $sinks = [];
-        if ($this->config->featureEnabled('activity') && $event->type()->isActivity()) {
-            $sinks[] = fn (): bool => $this->container->make(ActivityRecorder::class)->record($event);
+        foreach ($this->kernel->extensions()->resolve(EventSink::class) as $sink) {
+            $sinks[] = static fn (): SinkResult => $sink->record($event, $writer);
         }
-        // The journal entry comes before the outbox row, whose envelope carries its seq.
-        $seq = null;
-        $journal = $this->config->featureEnabled('changes') ? $event->journal() : null;
-        if ($journal !== null) {
-            $sinks[] = function () use ($event, $journal, &$seq): bool {
-                $seq = $this->container->make(ChangeJournal::class)->append($event, $journal);
+        // The outbox is written always and last (D29): its envelope carries the journal seq a sink shared.
+        $sinks[] = fn (): SinkResult => $this->container->make(OutboxWriter::class)->append($event, $writer);
 
-                return $seq !== null;
-            };
-        }
-        // The outbox row follows the webhooks module until the outbox is written always (D29, P3.14).
-        if ($this->kernel->isActive('webhooks') && $event->isWebhookEligible()) {
-            $sinks[] = function () use ($event, &$seq): bool {
-                return $this->container->make(OutboxRecorder::class)->stage($event, EventEnvelope::fromEvent($event, $seq));
-            };
-        }
-
-        // The first sink tells a new occurrence from a replay of one already stored
-        // (a retried job recording the event it rebuilt). A replay touches nothing and
-        // is not dispatched again; a new occurrence must land in every sink.
+        // The first sink that keeps the event tells a new occurrence from a replay of one already stored
+        // (a retried job recording the event it rebuilt). A replay touches nothing and is not dispatched
+        // again; a new occurrence must land in every sink that keeps it.
         $fresh = null;
         foreach ($sinks as $sink) {
-            $inserted = $sink();
+            $result = $sink();
+            if ($result === SinkResult::Skipped) {
+                continue;
+            }
             if ($fresh === null) {
-                $fresh = $inserted;
+                $fresh = $result === SinkResult::Stored;
                 if (!$fresh) {
                     return;
                 }
 
                 continue;
             }
-            if (!$inserted) {
+            if ($result !== SinkResult::Stored) {
                 throw new LogicException('[Vaulter] The event '.$event->eventId.' is stored only partially.');
             }
         }

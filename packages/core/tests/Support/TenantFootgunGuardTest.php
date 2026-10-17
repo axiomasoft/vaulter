@@ -6,11 +6,11 @@ use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 it('V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment', function (string $env, mixed $resolver): void {
     app()->detectEnvironment(fn (): string => $env);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', $resolver);
     expect(fn () => app(ConfigValidator::class)->validate(app(VaulterConfig::class), app()))

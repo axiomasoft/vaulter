@@ -6,7 +6,7 @@ use Illuminate\Routing\Route;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Vaulter\Access\AccessResolver;
+use Vaulter\Drive\Access\AccessResolver;
 
 /**
  * The shape of the drive v1 HTTP layer (P6-invariants#Bypass): single-action controllers
@@ -15,6 +15,8 @@ use Vaulter\Access\AccessResolver;
  * through the core ContentResponder.
  */
 const DRIVE_V1_CONTROLLER_NAMESPACES = [
+    'Vaulter\Drive\Http\Controllers\Access',
+    'Vaulter\Drive\Http\Controllers\Sharing',
     'Vaulter\Drive\Http\Controllers\Drives',
     'Vaulter\Drive\Http\Controllers\Nodes',
     'Vaulter\Drive\Http\Controllers\Search',
@@ -58,17 +60,26 @@ arch('the protocol controllers use the session repository only to find a session
     ->expect(['Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController', 'Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController'])
     ->not->toUse(['Vaulter\Actions', 'Vaulter\Drive\Actions', 'Vaulter\Repositories']);
 
+// Http\Support (ContentResponder, the id resolvers) is the HTTP infrastructure the controllers delegate to.
+const DRIVE_V1_EDGE_NAMESPACES = [
+    'Vaulter\Drive\Http\Controllers', 'Vaulter\Drive\Http\Resources', 'Vaulter\Drive\Http\Requests', 'Vaulter\Drive\Http\Middleware',
+];
+
 arch('no drive controller or resource asks the AccessResolver itself')
-    ->expect(['Vaulter\Drive\Http'])
+    ->expect(DRIVE_V1_EDGE_NAMESPACES)
     ->not->toUse(AccessResolver::class);
 
 arch('drive controllers hand out bytes only through the ContentResponder')
-    ->expect(['Vaulter\Drive\Http'])
-    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Content\ContentDelivery']);
+    ->expect(DRIVE_V1_EDGE_NAMESPACES)
+    ->not->toUse([StreamedResponse::class, BinaryFileResponse::class, 'Vaulter\Drive\Content\ContentDelivery']);
 
 it('streams nothing and mints no storage URL in the drive HTTP layer', function (): void {
     $offenders = [];
     foreach ((new Finder)->files()->in(dirname(__DIR__, 2).'/src/Http')->name('*.php') as $file) {
+        // The ContentResponder is the one class that turns a delivery into a response.
+        if ($file->getRelativePathname() === 'Support/ContentResponder.php') {
+            continue;
+        }
         if (preg_match('/temporaryUrl\s*\(|streamDownload\s*\(|new\s+StreamedResponse\b/', $file->getContents()) === 1) {
             $offenders[] = $file->getRelativePathname();
         }

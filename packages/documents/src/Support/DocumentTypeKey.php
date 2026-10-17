@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Support;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * Maps the 0.2 per-revision `format` label to the document type key the aggregate
  * stores, and back for the JSON keys kept until REST v1. Rich-text variants share
  * one type; a label nothing maps keeps its value under the legacy/ namespace so no
  * information is lost. The 0.2 → 0.3 upgrade migration carries a literal copy.
- *
- * @internal
  */
+#[Internal]
 final class DocumentTypeKey
 {
     public static function fromFormat(string $format): string

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -11,25 +10,24 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadPart;
-use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
@@ -266,12 +264,7 @@ it('commit fails loud when the session storage row is missing', function (): voi
 
     $missingStorageId = 9_999_999;
 
-    if (DB::connection()->getDriverName() === 'pgsql') {
-        $table = $session->getTable();
-        DB::statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_drive_id_foreign"');
-    }
-
-    UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => $missingStorageId]);
+    UploadTestHelpers::danglingDrive($session, $missingStorageId);
     $session = $session->fresh();
 
     expect(fn () => app(CompleteUploadAction::class)->execute(context: DriveContext::system($storage, 'test fixture'), session: $session))

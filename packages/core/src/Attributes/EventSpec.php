@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Vaulter\Attributes;
 
 use Attribute;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventTypeContract;
 
 /**
- * The contract of one {@see EventType}: what it is about, which
- * sinks record it and the shape of its webhook data. It is the single source for the
- * sink matrix, the generated events reference and the conformance tests.
+ * The contract of one {@see EventTypeContract} case: what it is about, the shape of its outbound data and
+ * the facts the sinks of the owning module read. It is the single source for the generated events
+ * reference, the conformance tests and the inventory.
  *
- * `data` maps each key to a short type (`string`, `int`, `bool`, `string|null`,
- * `list<string>`, `object`); a trailing `?` on the key marks a key that may be absent.
- * `journal` is the change-journal operation the event produces (`upsert`, `remove`)
- * or null when it is not journalled.
+ * `data` maps each key to a short type (`string`, `int`, `bool`, `string|null`, `list<string>`, `object`);
+ * a trailing `?` on the key marks a key that may be absent. `external` says the type may leave the process
+ * through the outbox consumers (D38): the kernel knows no webhook. `activity` and `journal` are data for
+ * the drive's event sinks — the activity feed and the change journal (`upsert`, `remove`, or null when the
+ * type is not journalled); the kernel does not read them.
  */
+#[Api]
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 final readonly class EventSpec
 {
@@ -27,7 +29,7 @@ final readonly class EventSpec
         public string $subject,
         public array $data,
         public bool $activity,
-        public bool $webhook,
+        public bool $external,
         public ?string $journal,
         public string $description,
     ) {}

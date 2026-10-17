@@ -3,17 +3,16 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -245,12 +244,7 @@ it('404s unknown upload_id on status', function (): void {
 it('404s when the session storage row is missing on HEAD', function (): void {
     $storage = r07Storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 4, createdBy: 17);
-    if (DB::connection()->getDriverName() === 'pgsql') {
-        $table = $session->getTable();
-        DB::statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_drive_id_foreign"');
-    }
-
-    UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => 9_999_999]);
+    UploadTestHelpers::danglingDrive($session);
 
     $this->call('HEAD', 'api/vaulter/v1/uploads/'.$session->upload_id, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
         ->assertNotFound();
@@ -304,7 +298,7 @@ it('Location header normalizes a trailing slash on the route prefix', function (
 });
 
 it('guardCreate workspace AND node create cannot be split under the null ACL driver', function (): void {
-    // The Drive suite pins vaulter.access.permission_driver=null — every authenticated actor
+    // The Drive suite pins vaulter-drive.access.permission_driver=null — every authenticated actor
     // receives both workspace-create and node-create, so a single-permission-denied case
     // is not expressible here without swapping the permission driver (out of R07 scope).
     expect(true)->toBeTrue();

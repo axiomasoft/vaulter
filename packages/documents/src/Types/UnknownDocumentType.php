@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
  * Stands in for a type nothing registers (its extension was removed). Never
  * registered: the content is shown as opaque JSON through the `vaulter/unsupported`
  * viewer and the document is read-only until the type comes back.
- *
- * @internal
  */
+#[Internal]
 final readonly class UnknownDocumentType implements DocumentType
 {
     public function __construct(private string $key) {}

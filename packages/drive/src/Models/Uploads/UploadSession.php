@@ -9,17 +9,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Models\Cas\Blob;
+use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Concerns\StampsDriveTenant;
-use Vaulter\Models\Drive\Drive;
 
 /**
  * A resumable-upload session: the first-class row
@@ -62,6 +62,7 @@ use Vaulter\Models\Drive\Drive;
  * @property Carbon|null               $created_at
  * @property Carbon|null               $updated_at
  */
+#[Internal]
 class UploadSession extends Model
 {
     use GuardsWrites;
@@ -98,7 +99,7 @@ class UploadSession extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('drive'), 'drive_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('drive'), 'drive_id');
     }
 
     /**
@@ -118,7 +119,7 @@ class UploadSession extends Model
      */
     public function assembledBlob(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('blob'), 'assembled_blob_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('blob'), 'assembled_blob_id');
     }
 
     /**

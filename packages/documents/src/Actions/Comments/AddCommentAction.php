@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Comments;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Events\Comments\CommentAdded;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\DriveLifecycle;
-use Vaulter\Support\TreeGuard;
 
 /**
  * Add a comment to a node (docs/adr/0014-legacy-docvault-strangler.md шаг 1). The author is the operation's actor — a
@@ -30,6 +31,7 @@ use Vaulter\Support\TreeGuard;
  * The node is a separate argument because AddCommentInput is the public input of
  * CommentOperations::add(), which names the node on its own.
  */
+#[Internal]
 final readonly class AddCommentAction
 {
     public function __construct(
@@ -49,7 +51,7 @@ final readonly class AddCommentAction
 
         return $this->database->transaction(function () use ($context, $node, $data, $author): NodeComment {
             $driveId = $context->driveId();
-            $this->database->lockTreeShared($driveId);
+            $this->database->lockAggregateShared('drives', $driveId);
             $this->lifecycle->assertWritable($context);
             $current = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
             if (!$this->tree->sameStorage($current, $driveId)) {

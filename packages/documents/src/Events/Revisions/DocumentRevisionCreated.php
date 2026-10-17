@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Revisions;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
@@ -22,8 +24,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * $epoch are the document's content validators at that moment; a named snapshot moves
  * neither.
  */
-final readonly class DocumentRevisionCreated extends DomainEvent
+#[Api]
+final readonly class DocumentRevisionCreated extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public DocumentRevision $version,
@@ -38,9 +42,9 @@ final readonly class DocumentRevisionCreated extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DocumentEventType
     {
-        return EventType::DocumentRevisionCreated;
+        return DocumentEventType::DocumentRevisionCreated;
     }
 
     public function scope(): EventScope

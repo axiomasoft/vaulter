@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Vaulter\Attributes\Internal;
 
 /**
  * One cache policy for the versioned API, decided here rather than in each controller:
@@ -23,6 +24,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * A shared cache must not hand one caller's representation (its abilities, its starred
  * flag) to another, and a revoked caller must not be served from a cache.
  */
+#[Internal]
 final class ApplyResponseCachePolicy
 {
     private const string PUBLIC_SHARE_ROUTES = 'vaulter.v1.public-shares.';

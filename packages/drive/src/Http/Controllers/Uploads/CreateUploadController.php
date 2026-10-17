@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Uploads;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Enums\Access\Ability;
 
 /**
  * POST drives/{drive}/uploads: open a resumable session in the protocol the client asks
@@ -20,6 +21,7 @@ use Vaulter\Enums\Access\Ability;
  * under it. The tag is checked when the session is created; the commit at the end does
  * not compare it again.
  */
+#[Internal]
 final readonly class CreateUploadController
 {
     public function __construct(

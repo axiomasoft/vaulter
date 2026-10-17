@@ -128,7 +128,7 @@ caller's representation to another, nor a revoked caller from cache.
 
 Bytes and signed URLs leave only through one component, which checks access, tenant,
 profile and scan state again for every request and pins the exact revision. Its mode is
-`vaulter.downloads.delivery_mode`:
+`vaulter-drive.downloads.delivery_mode`:
 
 - **`strict`** (default) — the application streams the bytes with
   `Content-Disposition: attachment; filename="…"; filename*=UTF-8''…` (RFC 6266; control
@@ -139,7 +139,7 @@ profile and scan state again for every request and pins the exact revision. Its 
   `application/octet-stream`.
 - **`direct_signed`** (opt-in) — after the same checks, a `302` to a URL signed by your
   `DirectContentUrlSigner` for that exact revision, valid for
-  `vaulter.downloads.direct_ttl_seconds` (1–300), with `Cache-Control: private, no-store`
+  `vaulter-drive.downloads.direct_ttl_seconds` (1–300), with `Cache-Control: private, no-store`
   and `Referrer-Policy: no-referrer`.
 
 A revision that is not clean (pending scan where scanning is required, infected) answers
@@ -640,7 +640,7 @@ A format the type has no exporter for is `422 unknown_export_format` with `meta.
 
 ## Access: grants and inheritance
 
-Roles granted on a node (`vaulter.features.grants`). Every route needs `manage` on the
+Roles granted on a node (`vaulter-drive.features.grants`). Every route needs `manage` on the
 node. See [Grants](/guides/grants).
 
 #### `GET v1/nodes/{node}/grants` — `grants.index`
@@ -695,7 +695,7 @@ Let grants from above apply again; the node's own grants stay. **Response:** `20
 
 ## Share links
 
-Bearer links to a node (`vaulter.features.share_links`). A link grants exactly its
+Bearer links to a node (`vaulter-drive.features.share_links`). A link grants exactly its
 role's abilities on its node-set; identity grants play no part on the public routes.
 See [Sharing](/guides/sharing).
 
@@ -716,7 +716,7 @@ listed.
 | `audience` | `anyone` (default), `authenticated`, `tenant`; `writer` needs `authenticated` or `tenant` |
 | `scope` | `item` (default) or `subtree` |
 | `password` | optional, 1–255 characters |
-| `expires_at` | optional, future, within `vaulter.sharing` and profile limits (`422 share_link_ttl_exceeded`) |
+| `expires_at` | optional, future, within `vaulter-drive.sharing` and profile limits (`422 share_link_ttl_exceeded`) |
 | `max_uses` | optional, ≥ 1 successful visits |
 
 **Response:** `201` — the share plus `token` and `url`, **returned once**:
@@ -797,7 +797,7 @@ the file is not clean.
 ## Activity
 
 What happened on a drive or node, newest first, filtered for the reader
-(`vaulter.features.activity`).
+(`vaulter-drive.features.activity`).
 
 #### `GET v1/drives/{drive}/activity` — `activity.drive`
 
@@ -830,7 +830,7 @@ hides it.
 
 ## Change journal
 
-Follow a drive incrementally instead of re-listing it (`vaulter.features.changes`;
+Follow a drive incrementally instead of re-listing it (`vaulter-drive.features.changes`;
 switched off → `403 profile_restriction`). See [Changes](/concepts/events).
 
 #### `GET v1/drives/{drive}/changes/start` — `changes.start`
@@ -839,7 +839,7 @@ switched off → `403 profile_restriction`). See [Changes](/concepts/events).
 
 #### `GET v1/drives/{drive}/changes?cursor=&limit=` — `changes.index`
 
-`cursor` is required; `limit` is 1–`vaulter.changes.max_page_size`, default 100.
+`cursor` is required; `limit` is 1–`vaulter-drive.changes.max_page_size`, default 100.
 **Response:**
 
 ```json
@@ -870,7 +870,7 @@ pruned: list the drive again and start over.
 ## Webhook endpoints
 
 The global admin surface for webhook subscribers, mounted when `vaulter.modules.webhooks`
-is on. Every route is gated by the `WebhookEndpointPolicy` (`vaulter.webhooks.manage_ability`),
+is on. Every route is gated by the `WebhookEndpointPolicy` (`vaulter-webhooks.manage_ability`),
 reads included, before the id is looked up. See [Webhooks](/guides/webhooks).
 
 | Method and path | Name | Response |

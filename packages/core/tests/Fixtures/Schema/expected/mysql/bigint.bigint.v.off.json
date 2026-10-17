@@ -327,6 +327,147 @@
             "constraints": [],
             "create_sql": "CREATE TABLE `v_activity` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `drive_id` bigint unsigned DEFAULT NULL,\n  `actor_id` bigint unsigned DEFAULT NULL,\n  `actor_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `verb` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `event_id` varchar(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `target_id` bigint unsigned DEFAULT NULL,\n  `target_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `context` json DEFAULT NULL,\n  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `user_agent` text COLLATE utf8mb4_unicode_ci,\n  `request_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_activity_event_id_unique` (`event_id`),\n  KEY `v_activity_actor_idx` (`actor_type`,`actor_id`,`created_at`),\n  KEY `v_activity_target_idx` (`target_type`,`target_id`,`created_at`),\n  KEY `v_activity_verb_idx` (`verb`,`created_at`),\n  KEY `v_activity_drive_idx` (`drive_id`,`created_at`),\n  KEY `v_activity_tenant_id_index` (`tenant_id`),\n  KEY `v_activity_drive_id_index` (`drive_id`),\n  KEY `v_activity_verb_index` (`verb`),\n  KEY `v_activity_target_id_index` (`target_id`),\n  KEY `v_activity_created_idx` (`created_at`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
+        "v_blob_references": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint unsigned",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "auto_increment",
+                    "generation": ""
+                },
+                {
+                    "name": "blob_id",
+                    "type": "bigint unsigned",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "owner_type",
+                    "type": "varchar(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "reference_key",
+                    "type": "varchar(191)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "nullable": "NO",
+                    "default": "CURRENT_TIMESTAMP",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "DEFAULT_GENERATED",
+                    "generation": ""
+                }
+            ],
+            "indexes": {
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "v_blob_references_blob_id_index": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "blob_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "v_blob_references_owner_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "owner_type",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "reference_key",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "v_blob_references_pin_uniq": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "blob_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "owner_type",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "reference_key",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": {
+                "v_blob_references_blob_fk": {
+                    "type": "foreign key",
+                    "ref_table": "v_blobs",
+                    "update": "NO ACTION",
+                    "delete": "RESTRICT",
+                    "columns": [
+                        [
+                            "blob_id",
+                            "id"
+                        ]
+                    ]
+                }
+            },
+            "create_sql": "CREATE TABLE `v_blob_references` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `blob_id` bigint unsigned NOT NULL,\n  `owner_type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `reference_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_blob_references_pin_uniq` (`blob_id`,`owner_type`,`reference_key`),\n  KEY `v_blob_references_owner_idx` (`owner_type`,`reference_key`),\n  KEY `v_blob_references_blob_id_index` (`blob_id`),\n  CONSTRAINT `v_blob_references_blob_fk` FOREIGN KEY (`blob_id`) REFERENCES `v_blobs` (`id`) ON DELETE RESTRICT\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
         "v_blobs": {
             "columns": [
                 {
@@ -350,7 +491,7 @@
                     "generation": ""
                 },
                 {
-                    "name": "drive_id",
+                    "name": "storage_id",
                     "type": "bigint unsigned",
                     "nullable": "YES",
                     "default": null,
@@ -564,19 +705,6 @@
                         }
                     ]
                 },
-                "v_blobs_drive_id_index": {
-                    "unique": false,
-                    "type": "BTREE",
-                    "visible": "YES",
-                    "parts": [
-                        {
-                            "column": "drive_id",
-                            "expression": null,
-                            "sub_part": null,
-                            "direction": "A"
-                        }
-                    ]
-                },
                 "v_blobs_encryption_key_id_index": {
                     "unique": false,
                     "type": "BTREE",
@@ -647,6 +775,19 @@
                         }
                     ]
                 },
+                "v_blobs_storage_id_index": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "storage_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
                 "v_blobs_storage_key_uniq": {
                     "unique": true,
                     "type": "BTREE",
@@ -675,7 +816,7 @@
                 }
             },
             "constraints": [],
-            "create_sql": "CREATE TABLE `v_blobs` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `drive_id` bigint unsigned DEFAULT NULL,\n  `hash_algo` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'sha256',\n  `sha256` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `size_bytes` bigint NOT NULL,\n  `disk` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `storage_key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',\n  `ref_count` bigint NOT NULL DEFAULT '0',\n  `dedup_scope` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'tenant',\n  `quarantined_at` timestamp NULL DEFAULT NULL,\n  `storage_version` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `etag` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `md5` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `crc32c` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `chunked` tinyint(1) NOT NULL DEFAULT '0',\n  `encryption_key_id` bigint unsigned DEFAULT NULL,\n  `first_seen_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `committed_at` timestamp NULL DEFAULT NULL,\n  `delete_after_at` timestamp NULL DEFAULT NULL,\n  `scope_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_blobs_scope_sha_uniq` (`scope_key`,`sha256`),\n  UNIQUE KEY `v_blobs_storage_key_uniq` (`storage_key`),\n  KEY `v_blobs_gc_idx` (`status`,`ref_count`,`delete_after_at`),\n  KEY `v_blobs_tenant_id_index` (`tenant_id`),\n  KEY `v_blobs_drive_id_index` (`drive_id`),\n  KEY `v_blobs_size_bytes_index` (`size_bytes`),\n  KEY `v_blobs_encryption_key_id_index` (`encryption_key_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_blobs` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `storage_id` bigint unsigned DEFAULT NULL,\n  `hash_algo` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'sha256',\n  `sha256` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `size_bytes` bigint NOT NULL,\n  `disk` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `storage_key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `status` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',\n  `ref_count` bigint NOT NULL DEFAULT '0',\n  `dedup_scope` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'tenant',\n  `quarantined_at` timestamp NULL DEFAULT NULL,\n  `storage_version` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `etag` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `md5` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `crc32c` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `chunked` tinyint(1) NOT NULL DEFAULT '0',\n  `encryption_key_id` bigint unsigned DEFAULT NULL,\n  `first_seen_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `committed_at` timestamp NULL DEFAULT NULL,\n  `delete_after_at` timestamp NULL DEFAULT NULL,\n  `scope_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_blobs_scope_sha_uniq` (`scope_key`,`sha256`),\n  UNIQUE KEY `v_blobs_storage_key_uniq` (`storage_key`),\n  KEY `v_blobs_gc_idx` (`status`,`ref_count`,`delete_after_at`),\n  KEY `v_blobs_tenant_id_index` (`tenant_id`),\n  KEY `v_blobs_storage_id_index` (`storage_id`),\n  KEY `v_blobs_size_bytes_index` (`size_bytes`),\n  KEY `v_blobs_encryption_key_id_index` (`encryption_key_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_document_revisions": {
             "columns": [
@@ -4653,7 +4794,7 @@
         "v_outbox": {
             "columns": [
                 {
-                    "name": "id",
+                    "name": "outbox_seq",
                     "type": "bigint unsigned",
                     "nullable": "NO",
                     "default": null,
@@ -4664,19 +4805,9 @@
                 },
                 {
                     "name": "event_id",
-                    "type": "varchar(255)",
-                    "nullable": "NO",
-                    "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "profile",
                     "type": "varchar(64)",
                     "nullable": "NO",
-                    "default": "default",
+                    "default": null,
                     "charset": "utf8mb4",
                     "collation": "utf8mb4_unicode_ci",
                     "extra": "",
@@ -4693,12 +4824,22 @@
                     "generation": ""
                 },
                 {
-                    "name": "drive_id",
-                    "type": "bigint unsigned",
+                    "name": "scope_kind",
+                    "type": "varchar(32)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "scope_id",
+                    "type": "varchar(191)",
                     "nullable": "YES",
                     "default": null,
-                    "charset": null,
-                    "collation": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
                     "extra": "",
                     "generation": ""
                 },
@@ -4733,9 +4874,9 @@
                     "generation": ""
                 },
                 {
-                    "name": "topic",
-                    "type": "varchar(255)",
-                    "nullable": "YES",
+                    "name": "type",
+                    "type": "varchar(64)",
+                    "nullable": "NO",
                     "default": null,
                     "charset": "utf8mb4",
                     "collation": "utf8mb4_unicode_ci",
@@ -4743,12 +4884,12 @@
                     "generation": ""
                 },
                 {
-                    "name": "event",
-                    "type": "varchar(255)",
+                    "name": "external",
+                    "type": "tinyint(1)",
                     "nullable": "NO",
                     "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
+                    "charset": null,
+                    "collation": null,
                     "extra": "",
                     "generation": ""
                 },
@@ -4763,12 +4904,253 @@
                     "generation": ""
                 },
                 {
-                    "name": "available_at",
+                    "name": "created_at",
                     "type": "timestamp",
                     "nullable": "NO",
                     "default": null,
                     "charset": null,
                     "collation": null,
+                    "extra": "",
+                    "generation": ""
+                }
+            ],
+            "indexes": {
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "outbox_seq",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "v_outbox_created_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "created_at",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "v_outbox_event_id_unique": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "event_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "v_outbox_tenant_id_index": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "tenant_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": [],
+            "create_sql": "CREATE TABLE `v_outbox` (\n  `outbox_seq` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `event_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `scope_kind` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `scope_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `aggregate_type` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `aggregate_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `sequence` bigint DEFAULT NULL,\n  `type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `external` tinyint(1) NOT NULL,\n  `payload` json NOT NULL,\n  `created_at` timestamp NOT NULL,\n  PRIMARY KEY (`outbox_seq`),\n  UNIQUE KEY `v_outbox_event_id_unique` (`event_id`),\n  KEY `v_outbox_created_idx` (`created_at`),\n  KEY `v_outbox_tenant_id_index` (`tenant_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
+        "v_outbox_consumers": {
+            "columns": [
+                {
+                    "name": "consumer_id",
+                    "type": "varchar(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "delivery_class",
+                    "type": "varchar(16)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "state",
+                    "type": "varchar(16)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "activation_seq",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "reconciled_through_seq",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "paused_at",
+                    "type": "timestamp",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "lease_owner",
+                    "type": "varchar(64)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "lease_generation",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "timestamp",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "gaps",
+                    "type": "json",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                }
+            ],
+            "indexes": {
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "consumer_id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": [],
+            "create_sql": "CREATE TABLE `v_outbox_consumers` (\n  `consumer_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `delivery_class` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `state` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `activation_seq` bigint NOT NULL,\n  `reconciled_through_seq` bigint NOT NULL,\n  `paused_at` timestamp NULL DEFAULT NULL,\n  `lease_owner` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `lease_generation` bigint NOT NULL DEFAULT '0',\n  `lease_expires_at` timestamp NULL DEFAULT NULL,\n  `gaps` json NOT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`consumer_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
+        "v_outbox_deliveries": {
+            "columns": [
+                {
+                    "name": "event_id",
+                    "type": "varchar(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "consumer_id",
+                    "type": "varchar(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "outbox_seq",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "state",
+                    "type": "varchar(16)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
                     "extra": "",
                     "generation": ""
                 },
@@ -4783,10 +5165,60 @@
                     "generation": ""
                 },
                 {
-                    "name": "status",
-                    "type": "varchar(255)",
+                    "name": "next_attempt_at",
+                    "type": "timestamp",
                     "nullable": "NO",
-                    "default": "pending",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "lease_owner",
+                    "type": "varchar(64)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "lease_generation",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "timestamp",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "continuation",
+                    "type": "varchar(191)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "last_error",
+                    "type": "text",
+                    "nullable": "YES",
+                    "default": null,
                     "charset": "utf8mb4",
                     "collation": "utf8mb4_unicode_ci",
                     "extra": "",
@@ -4813,70 +5245,10 @@
                     "generation": ""
                 },
                 {
-                    "name": "claim_token",
-                    "type": "varchar(32)",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "claim_generation",
-                    "type": "bigint",
-                    "nullable": "NO",
-                    "default": "0",
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "claim_until",
+                    "name": "done_at",
                     "type": "timestamp",
                     "nullable": "YES",
                     "default": null,
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "fanout_cursor",
-                    "type": "varchar(64)",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": "utf8mb4",
-                    "collation": "utf8mb4_unicode_ci",
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "fanned_out_at",
-                    "type": "timestamp",
-                    "nullable": "YES",
-                    "default": null,
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "delivery_count",
-                    "type": "int unsigned",
-                    "nullable": "NO",
-                    "default": "0",
-                    "charset": null,
-                    "collation": null,
-                    "extra": "",
-                    "generation": ""
-                },
-                {
-                    "name": "legacy_fanout",
-                    "type": "tinyint(1)",
-                    "nullable": "NO",
-                    "default": "0",
                     "charset": null,
                     "collation": null,
                     "extra": "",
@@ -4890,97 +5262,70 @@
                     "visible": "YES",
                     "parts": [
                         {
-                            "column": "id",
-                            "expression": null,
-                            "sub_part": null,
-                            "direction": "A"
-                        }
-                    ]
-                },
-                "v_outbox_drain_idx": {
-                    "unique": false,
-                    "type": "BTREE",
-                    "visible": "YES",
-                    "parts": [
-                        {
-                            "column": "status",
-                            "expression": null,
-                            "sub_part": null,
-                            "direction": "A"
-                        },
-                        {
-                            "column": "available_at",
-                            "expression": null,
-                            "sub_part": null,
-                            "direction": "A"
-                        }
-                    ]
-                },
-                "v_outbox_drive_id_index": {
-                    "unique": false,
-                    "type": "BTREE",
-                    "visible": "YES",
-                    "parts": [
-                        {
-                            "column": "drive_id",
-                            "expression": null,
-                            "sub_part": null,
-                            "direction": "A"
-                        }
-                    ]
-                },
-                "v_outbox_event_id_unique": {
-                    "unique": true,
-                    "type": "BTREE",
-                    "visible": "YES",
-                    "parts": [
-                        {
                             "column": "event_id",
                             "expression": null,
                             "sub_part": null,
                             "direction": "A"
-                        }
-                    ]
-                },
-                "v_outbox_profile_index": {
-                    "unique": false,
-                    "type": "BTREE",
-                    "visible": "YES",
-                    "parts": [
+                        },
                         {
-                            "column": "profile",
+                            "column": "consumer_id",
                             "expression": null,
                             "sub_part": null,
                             "direction": "A"
                         }
                     ]
                 },
-                "v_outbox_prune_idx": {
+                "v_outbox_deliveries_due_idx": {
                     "unique": false,
                     "type": "BTREE",
                     "visible": "YES",
                     "parts": [
                         {
-                            "column": "status",
+                            "column": "consumer_id",
                             "expression": null,
                             "sub_part": null,
                             "direction": "A"
                         },
                         {
-                            "column": "fanned_out_at",
+                            "column": "state",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "next_attempt_at",
                             "expression": null,
                             "sub_part": null,
                             "direction": "A"
                         }
                     ]
                 },
-                "v_outbox_tenant_id_index": {
+                "v_outbox_deliveries_lease_idx": {
                     "unique": false,
                     "type": "BTREE",
                     "visible": "YES",
                     "parts": [
                         {
-                            "column": "tenant_id",
+                            "column": "state",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        },
+                        {
+                            "column": "lease_expires_at",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "v_outbox_deliveries_seq_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "outbox_seq",
                             "expression": null,
                             "sub_part": null,
                             "direction": "A"
@@ -4989,7 +5334,7 @@
                 }
             },
             "constraints": [],
-            "create_sql": "CREATE TABLE `v_outbox` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `event_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` bigint unsigned DEFAULT NULL,\n  `drive_id` bigint unsigned DEFAULT NULL,\n  `aggregate_type` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `aggregate_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `sequence` bigint DEFAULT NULL,\n  `topic` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `event` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `payload` json NOT NULL,\n  `available_at` timestamp NOT NULL,\n  `attempts` int unsigned NOT NULL DEFAULT '0',\n  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `claim_token` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `claim_generation` bigint NOT NULL DEFAULT '0',\n  `claim_until` timestamp NULL DEFAULT NULL,\n  `fanout_cursor` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `fanned_out_at` timestamp NULL DEFAULT NULL,\n  `delivery_count` int unsigned NOT NULL DEFAULT '0',\n  `legacy_fanout` tinyint(1) NOT NULL DEFAULT '0',\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `v_outbox_event_id_unique` (`event_id`),\n  KEY `v_outbox_drain_idx` (`status`,`available_at`),\n  KEY `v_outbox_prune_idx` (`status`,`fanned_out_at`),\n  KEY `v_outbox_profile_index` (`profile`),\n  KEY `v_outbox_tenant_id_index` (`tenant_id`),\n  KEY `v_outbox_drive_id_index` (`drive_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_outbox_deliveries` (\n  `event_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `consumer_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `outbox_seq` bigint NOT NULL,\n  `state` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `attempts` int unsigned NOT NULL DEFAULT '0',\n  `next_attempt_at` timestamp NOT NULL,\n  `lease_owner` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `lease_generation` bigint NOT NULL DEFAULT '0',\n  `lease_expires_at` timestamp NULL DEFAULT NULL,\n  `continuation` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `last_error` text COLLATE utf8mb4_unicode_ci,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `done_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`event_id`,`consumer_id`),\n  KEY `v_outbox_deliveries_due_idx` (`consumer_id`,`state`,`next_attempt_at`),\n  KEY `v_outbox_deliveries_lease_idx` (`state`,`lease_expires_at`),\n  KEY `v_outbox_deliveries_seq_idx` (`outbox_seq`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_scan_backfill_runs": {
             "columns": [

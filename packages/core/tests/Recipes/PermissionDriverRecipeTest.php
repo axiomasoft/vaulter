@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 
 // The fragments below are copied into the guides byte for byte.
 it('selects the permission driver by its config key (permission drivers guide)', function (): void {
@@ -22,12 +22,12 @@ it('selects the permission driver by its config key (permission drivers guide)',
     ];
     expect($config['access']['permission_driver'])->toBe('database');
 
-    config()->set('vaulter.access.permission_driver', 'gate');
+    config()->set('vaulter-drive.access.permission_driver', 'gate');
     app()->forgetInstance(PermissionDriverManager::class);
 
     expect(Vaulter::permissions()->driver())->toBeInstanceOf(GatePermissionDriver::class);
 
-    config()->set('vaulter.access.permission_driver', $config['access']['permission_driver']);
+    config()->set('vaulter-drive.access.permission_driver', $config['access']['permission_driver']);
     app()->forgetInstance(PermissionDriverManager::class);
 
     expect(Vaulter::permissions()->driver())->toBeInstanceOf(DatabasePermissionDriver::class);
@@ -49,6 +49,6 @@ it('names a PermissionDriver implementation for every documented key (permission
 
     foreach ($config['access']['permission_drivers'] as $key => $class) {
         expect(is_subclass_of($class, PermissionDriver::class))->toBeTrue("{$key} → {$class}")
-            ->and(config('vaulter.access.permission_drivers.'.$key))->toBe($class);
+            ->and(config('vaulter-drive.access.permission_drivers.'.$key))->toBe($class);
     }
 });

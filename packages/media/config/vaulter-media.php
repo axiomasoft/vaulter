@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Vaulter\Media\Cas\BlobStore;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
+use Vaulter\Media\Models\Cas\Blob;
 
 return [
     'disk' => env('VAULTER_DISK', 'local'),
@@ -19,4 +20,6 @@ return [
     'content_store' => Sha256ContentStore::class,
     'storage_driver' => FlysystemStorageDriver::class,
     'blob_store' => BlobStore::class,
+    // Swappable Eloquent model of the blob table (must extend the package model).
+    'models' => ['blob' => Blob::class],
 ];

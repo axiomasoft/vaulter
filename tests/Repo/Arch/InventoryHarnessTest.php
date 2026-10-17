@@ -248,9 +248,9 @@ it('reads table names from table calls, Schema, $table, named arguments and tabl
     ]);
 });
 
-it('takes the table names of the real repository from the core migrations', function (): void {
+it('takes the table names of the real repository from the migrations of every package', function (): void {
     $index = SourceIndex::forRepo(Repo::discover());
-    $migrations = array_filter($index->references('table'), static fn (array $r): bool => str_contains($r['file'], 'packages/core/database/migrations/') && $r['target'] === 'nodes');
+    $migrations = array_filter($index->references('table'), static fn (array $r): bool => str_contains($r['file'], '/database/migrations/') && $r['target'] === 'nodes');
 
     expect($migrations)->not->toBeEmpty();
 });
@@ -511,9 +511,9 @@ it('is deterministic: two reads of the same sources give identical JSON', functi
     expect(SourceIndex::forRepo($repo))->toBe(SourceIndex::forRepo($repo));
 });
 
-it('indexes the real repository: SchemaBuilder keeps its private define methods and no reference carries a position', function (): void {
+it('indexes the real repository: DriveSchema keeps its private define methods and no reference carries a position', function (): void {
     $index = SourceIndex::forRepo(Repo::discover());
-    $builder = $index->declaration('Vaulter\Schema\SchemaBuilder');
+    $builder = $index->declaration('Vaulter\Drive\Schema\DriveSchema');
     $private = array_column(array_filter($builder['methods'] ?? [], static fn (array $m): bool => $m['visibility'] === 'private' && str_starts_with($m['name'], 'define')), 'name');
 
     expect($builder)->not->toBeNull()->and($private)->toContain('defineNodes')
@@ -588,6 +588,17 @@ it('bounds removed_in by the phase an invariant blocks from and requires an I4 c
         ->and(fn () => inv_list([inv_entry(['removed_in' => 'P3'])], invariant: 'I4'))->toThrow(InventoryError::class, 'I4 needs a "category"')
         ->and(inv_list([inv_entry(['removed_in' => 'P3', 'category' => 'activation'])], invariant: 'I4')->entries())->toHaveCount(1)
         ->and(inv_list([inv_entry(['removed_in' => 'P5', 'category' => 'jwt-optional'])], invariant: 'I4')->entries())->toHaveCount(1);
+});
+
+it('D32: an I2 entry naming a package P5 extracts as target_owner may outlive the blocking phase, nothing else may', function (): void {
+    $late = ['removed_in' => 'P5', 'category' => 'reverse-edge', 'target_owner' => 'collaboration'];
+
+    expect(inv_list([inv_entry($late)], invariant: 'I2')->entries()[0]['target_owner'])->toBe('collaboration')
+        ->and(inv_list([inv_entry($late)], 'block', 'I2')->mode)->toBe('block')
+        ->and(fn () => inv_list([inv_entry([...$late, 'target_owner' => 'drive'])], invariant: 'I2'))->toThrow(InventoryError::class, 'later than I2 blocks (P4)')
+        ->and(fn () => inv_list([inv_entry([...$late, 'removed_in' => 'P4', 'target_owner' => 'drive'])], 'block', 'I2'))->toThrow(InventoryError::class, 'admits only')
+        ->and(fn () => inv_list([inv_entry($late)], invariant: 'I1'))->toThrow(InventoryError::class, 'later than I1 blocks (P4)')
+        ->and(fn () => inv_list([inv_entry([...$late, 'removed_in' => 'P3', 'target_owner' => ''])], invariant: 'I2'))->toThrow(InventoryError::class, 'target_owner');
 });
 
 // --- Rules ----------------------------------------------------------------------------------------------------

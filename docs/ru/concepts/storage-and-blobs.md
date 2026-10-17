@@ -9,17 +9,18 @@ outline: deep
 Vaulter никогда не копирует байты файлов в собственные таблицы. Каждый загруженный файл
 хранится **один раз** как неизменяемый контент-адресуемый **блоб** на диске Flysystem, а
 база данных держит только метаданные: `sha256`, размер, диск, ключ с учётом области,
-статус жизненного цикла и рёбра, которые удерживают блоб живым при версиях файла.
+статус жизненного цикла и **пины**, которые удерживают блоб живым.
 
 Это **контент-адресуемое хранилище (CAS)**. Оно даёт вам прозрачную дедупликацию, чёткое
 разделение между *байтами на диске* и *строками в базе данных*, а также сборщик мусора,
 который безопасно запускать даже во время идущих загрузок.
 
 ::: info Где это живёт
-Реализация CAS — в `Vaulter\Media\Cas\*` (пакет `axioma-studio/vaulter-media`;
-обращённый к хосту `BlobLock` остаётся в core как `Vaulter\Cas\BlobLock`), модель строки —
-`Vaulter\Models\Cas\Blob`, enum жизненного цикла — `Vaulter\Enums\Cas\BlobStatus`, а
-конфигурация лежит под ключами `cas`, `dedup`, `gc` и `storage` файла `config/vaulter.php`.
+CAS принадлежит пакету `axioma-studio/vaulter-media`: реализация — в `Vaulter\Media\Cas\*` (включая `BlobLock`),
+контракты — в `Vaulter\Media\Contracts\Cas\*`, модель строки — `Vaulter\Media\Models\Cas\Blob`, enum
+жизненного цикла — `Vaulter\Media\Enums\Cas\BlobStatus`, таблицы — `v_blobs` и `v_blob_references` (пины), а
+конфигурация лежит в `config/vaulter-media.php` (`vaulter-media.models.blob`, `disk`, `dedup`, `gc`). Media не знает ни
+одной таблицы drive: тот, кто держит байты живыми, пинит их через `BlobPins`.
 :::
 
 ## Ментальная модель
@@ -37,16 +38,16 @@ BlobStore::commit()     ─► одна залоченная транзакци�
 ContentStore::promote() ─► пишем staged-байты в "<scope>/ab/cd/<sha256>" на диске
      │
      ▼
-v_file_version_blobs    ─► РЕБРО, которое удерживает блоб живым (истина о живучести)
+BlobPins::pin()          ─► строка в v_blob_references, удерживающая блоб живым (истина о живучести)
 ```
 
 Работу делят три контракта, и все три сменяемы через `config('vaulter-media')`:
 
 | Контракт | По умолчанию | Ответственность |
 |---|---|---|
-| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | Высокоуровневый жизненный цикл: `commit` / `attach` / `detach` / `read`. Единственная точка входа в CAS. |
-| `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Байтовая сторона: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Знает байты, хэши и ключи — но никогда строку `v_blobs`. |
-| `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Тонкая абстракция над Flysystem: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
+| `Vaulter\Media\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | Высокоуровневый жизненный цикл: `commit` / `commitStaged` / `read`. Единственная точка входа в CAS. Удерживать блоб живым — не его дело: это `BlobPins`. |
+| `Vaulter\Media\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Байтовая сторона: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Знает байты, хэши и ключи — но никогда строку `v_blobs`. |
+| `Vaulter\Media\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Тонкая абстракция над Flysystem: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
 ```php
 // config/vaulter-media.php
@@ -63,7 +64,7 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 
 ## Байты на диске, метаданные в базе
 
-Блоб — это лишь метаданные. Строка `v_blobs` (модель `Vaulter\Models\Cas\Blob`) несёт:
+Блоб — это лишь метаданные. Строка `v_blobs` (модель `Vaulter\Media\Models\Cas\Blob`) несёт:
 
 | Колонка | Смысл |
 |---|---|
@@ -72,7 +73,7 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 | `disk` | Диск Flysystem, на котором живёт канонический объект. |
 | `storage_key` | Путь объекта с учётом области — `"<scope>/ab/cd/<sha256>"`. |
 | `status` | Состояние жизненного цикла (см. [Жизненный цикл блоба](#жизненный-цикл-блоба)). |
-| `ref_count` | **Согласуемый кэш** количества живых рёбер — *не* истина о живучести. |
+| `ref_count` | **Согласуемый кэш** количества живых пинов — *не* истина о живучести. |
 | `dedup_scope` | `tenant` \| `drive` \| `off` (`global` у ещё не исправленных блобов) — граница, в пределах которой адрес уникален. |
 | `tenant_id` / `storage_id` | Дискриминаторы области (присутствуют всегда; индексируется только релевантный). |
 | `first_seen_at` / `committed_at` / `delete_after_at` | Метки времени стейджинга, коммита и grace-окна GC. |
@@ -116,7 +117,7 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 :::
 
 Staged-объект (`Vaulter\Media\Cas\StagedTempObject`, реализующий
-`Vaulter\Contracts\Cas\StagedObject`) отдаёт `path()`, `sha256()`, `sizeBytes()`,
+`Vaulter\Media\Contracts\Cas\StagedObject`) отдаёт `path()`, `sha256()`, `sizeBytes()`,
 `readStream()` и идемпотентный `discard()`, который удаляет temp-файл, как только байты
 запромоучены (или коммит откатился).
 
@@ -144,8 +145,8 @@ Staged-объект (`Vaulter\Media\Cas\StagedTempObject`, реализующи�
 
 Эта единственная настройка приводит в движение **обе** стороны дизайна разом:
 
-1. **Форму дедуп-UNIQUE-индекса.** `SchemaBuilder::dedupUniqueColumns()` выдаёт индекс
-   по `(sha256)`, `(tenant_id, sha256)` или `(storage_id, sha256)`. Колонки `tenant_id` /
+1. **Форму дедуп-UNIQUE-индекса.** `MediaSchema` выдаёт индекс
+   по `(scope_key, sha256)`. Колонки `tenant_id` /
    `storage_id` *всегда* существуют в `v_blobs`; только UNIQUE-индекс покрывает
    релевантное области подмножество.
 2. **Ключ с учётом области**, описанный выше.
@@ -196,22 +197,34 @@ DB::transaction(function () use (…) {
 - **Попадание в дедуп пропускает физическую запись.** Байты промоутятся только когда строка
   создана заново (или канонический объект почему-то отсутствует — `promote()` идемпотентен и
   условен, так что воскрешённая строка, чей объект исчез, безопасно перепромоучивается).
-- **Никакого синхронного `ref_count++`.** Истина о живучести — это *ребро* в
-  `v_file_version_blobs`; `ref_count` — согласуемый кэш, который может отставать.
+- **Никакого синхронного `ref_count++`.** Истина о живучести — это *пин* в
+  `v_blob_references`; `ref_count` — согласуемый кэш, который может отставать.
 
-### Прикрепление и чтение
+### Пины и чтение
 
-Закоммиченный блоб удерживается живым **ребром версия↔блоб**:
+Закоммиченный блоб удерживается живым **пином**: строкой `(blob, owner_type, reference_key)`, уникальной по этой
+тройке, которую через контракт `Vaulter\Media\Contracts\Cas\BlobPins` записывает модуль, держащий байты.
+`owner_type` непрозрачен и называет владельца (`drive.revision_blob` — связь ревизии файла); `reference_key`
+выводится из собственной строки владельца. Владелец ставит пин в **той же транзакции**, что записывает свою строку,
+и снимает его в транзакции, которая её удаляет, под блокировкой блоба по `(scope, sha256)`:
 
 ```php
-$blobStore->attach($fileVersion, $blob, ['role' => 'data', 'ordinal' => 0]);
-$blobStore->detach($fileVersion, $blob);   // байты здесь НЕ удаляются — этим занимается GC
-$stream = $blobStore->read($blob);         // resource|null над каноническими байтами
+$pins->pin($blob, 'drive.revision_blob', $revisionId.':data:0');
+$pins->unpin($blob, 'drive.revision_blob', $revisionId.':data:0'); // байты здесь НЕ удаляются — этим занимается GC
+$stream = $blobStore->read($blob);                                 // resource|null над каноническими байтами
 ```
+
+В drive единственный писатель связи ревизия↔блоб и её пина — `Vaulter\Drive\Content\RevisionBlobLinks`. Пин на
+затомбстоненный блоб принимается, только пока его байты ещё существуют (блоб тогда снова становится committed);
+пин на deleting или deleted блоб бросает `BlobUnavailableException` (код проблемы `blob_unavailable`, 409 по REST) —
+закоммитьте байты заново и пините возвращённый блоб. Пины переживают активацию владельца: выключение drive или
+удаление его из Composer ничего не снимает, а `vaulter:doctor` (`media.blobs.pins`) называет ушедших владельцев.
+Пины снимает только собственный purge или откат владельца (`vaulter:module:uninstall drive --force --purge`); ни одна
+общая команда не удаляет чужие пины. См. [контракт `BlobPins`](/ru/reference/php-api).
 
 В Drive это связывается через `Vaulter\Drive\Actions\Files\IngestFileAction`: он зондирует размер,
 проверяет квоту хранилища *до* коммита байтов, вызывает `BlobStore::commit()` внутри
-транзакции, затем создаёт `File` / `FileRevision` и ребро. `tenant_id` и `storage_id`,
+транзакции, затем создаёт `File` / `FileRevision` и связь (с её пином). `tenant_id` и `storage_id`,
 переданные в `commit()`, читаются прямо из строки владеющего `Storage`.
 
 ## Выдача байтов по HTTP
@@ -219,12 +232,12 @@ $stream = $blobStore->read($blob);         // resource|null над канони�
 Чтение блоба — внутренняя операция. До HTTP-клиента байты доходят только через точку
 [выдачи файлов](/ru/reference/rest-api#выдача-файлов) REST v1, которая на **каждый** запрос заново
 проверяет доступ, арендатора, профиль и состояние проверки и фиксирует **точную ревизию** (голову
-или явно указанную). Способ выбирает `vaulter.downloads.delivery_mode`:
+или явно указанную). Способ выбирает `vaulter-drive.downloads.delivery_mode`:
 
 | Режим | Что получает клиент | Отзыв |
 |---|---|---|
 | `strict` (по умолчанию) | байты потоком через приложение, `Cache-Control: private, no-store` | проверяется каждый новый запрос; уже начатый поток не обрывается |
-| `direct_signed` (по выбору) | `302` на URL, подписанный вашим `Vaulter\Contracts\Cas\DirectContentUrlSigner` для этой версии объекта, действующий `vaulter.downloads.direct_ttl_seconds` (1–300) | уже выданный URL действует до истечения — отзыв доступа его не отменяет |
+| `direct_signed` (по выбору) | `302` на URL, подписанный вашим `Vaulter\Media\Contracts\Cas\DirectContentUrlSigner` для этой версии объекта, действующий `vaulter-drive.downloads.direct_ttl_seconds` (1–300) | уже выданный URL действует до истечения — отзыв доступа его не отменяет |
 
 Для `direct_signed` нужен signer в контейнере; он получает неизменяемую идентичность содержимого
 (блоб, ключ хранилища, версия объекта, sha256, размер) и должен подписать ровно её. Выбирайте этот
@@ -239,7 +252,7 @@ $stream = $blobStore->read($blob);         // resource|null над канони�
 
 ## Жизненный цикл блоба
 
-`Vaulter\Enums\Cas\BlobStatus` — это конечный автомат:
+`Vaulter\Media\Enums\Cas\BlobStatus` — это конечный автомат:
 
 ```
 Pending → Committed → Tombstoned → Deleting → Deleted
@@ -260,11 +273,12 @@ Enum обеспечивает легальные переходы через `al
 
 ## Сборка мусора (двухфазная, безгоночная)
 
-Когда вы удаляете файл в корзину и очищаете её, рёбра версий отцепляются. Блоб без оставшихся
-рёбер — *мусор*, но безопасно удалить его байты, пока загрузки могут воскрешать именно этот
+Когда вы удаляете файл в корзину и очищаете её, связи ревизий удаляются, а их пины снимаются. Блоб без оставшихся
+пинов — *мусор*, но безопасно удалить его байты, пока загрузки могут воскрешать именно этот
 `sha256`, — самое сложное. GC Vaulter (`Vaulter\Media\Cas\BlobGarbageCollector`) решает это в две
 фазы, **слепой к ACL** и работающий от имени системы (узел, который пользователь не видит, всё
-равно удерживает свой блоб).
+равно удерживает свой блоб). Он читает только таблицы media — `v_blobs` и `v_blob_references` — и никогда таблицы
+drive.
 
 ### Фаза 1 — mark
 
@@ -272,7 +286,7 @@ Enum обеспечивает легальные переходы через `al
 кандидата, под блокировкой по `(scope, sha256)`, **перепроверяем**, что:
 
 - статус всё ещё `Committed` (дешёвый скан может быть устаревшим), и
-- в `v_file_version_blobs` нет живого ребра.
+- в `v_blob_references` нет пина.
 
 Если оба условия выполняются, `tombstone()` ставит `status = Tombstoned` и `delete_after_at =
 now + grace`. Grace-дедлайн взводится *здесь*, поэтому sweep никогда не сможет удалить в
@@ -281,7 +295,7 @@ now + grace`. Grace-дедлайн взводится *здесь*, поэтом
 ### Фаза 2 — sweep
 
 Берём `tombstoned`-блобы за пределами их grace (`scopeSweepable`). Под блокировкой
-перепроверяем, что блоб всё ещё `Tombstoned`, у него всё ещё нет живого ребра и он за
+перепроверяем, что блоб всё ещё `Tombstoned`, у него всё ещё нет пина и он за
 пределами `delete_after_at`. Только тогда: `markDeleting` → физическое удаление объекта с
 учётом области → `markDeleted` (идемпотентный tombstone; отсутствующий объект — норма).
 
@@ -290,10 +304,10 @@ now + grace`. Grace-дедлайн взводится *здесь*, поэтом
 берёт блокировку по `(scope, sha256)` **первым оператором** и решает по строкам, прочитанным
 *после* неё. Именно это делает онлайн-GC безопасным: коммит, выигравший блокировку, воскрешает
 tombstone-блоб *до того*, как sweep его увидит; sweep, выигравший блокировку, перепроверяет
-существование ребра *до* удаления.
+существование пина *до* удаления.
 :::
 
-По драйверам БД (`Vaulter\Cas\BlobLock`):
+По драйверам БД (`Vaulter\Media\Cas\BlobLock`):
 
 - **PostgreSQL** — `pg_advisory_xact_lock(hashtext(scope||sha256))`, настоящий мьютекс,
   удерживаемый всю транзакцию. Sweep дополнительно работает в `SERIALIZABLE` с
@@ -308,7 +322,7 @@ advisory-блокировка — no-op.
 ### Sweep pending-строк
 
 `sweepPending()` вычищает строки от упавшего стейджинга — строку `Pending` старше grace-окна
-(`first_seen_at < now − grace`), не несущую ребра. Её, возможно, частичный объект удаляется, а
+(`first_seen_at < now − grace`), не несущую пина. Её, возможно, частичный объект удаляется, а
 строка финализируется как удалённый tombstone, под блокировкой, чтобы медленный-но-живой коммит
 никогда не был украден.
 
@@ -364,7 +378,7 @@ Schedule::command('vaulter:blobs:gc --pending')->dailyAt('03:00');
 ## Согласование: пересборка кэша `ref_count`
 
 `ref_count` — кэш, а не истина, поэтому он дрейфует. `vaulter:blobs:reconcile` (за которым стоит
-`Vaulter\Media\Cas\BlobReconciler`) пересобирает его из счётчиков рёбер `v_file_version_blobs` —
+`Vaulter\Media\Cas\BlobReconciler`) пересобирает его из счётчиков пинов `v_blob_references` —
 реального источника живучести — и сообщает об угрозах целостности. Он **никогда ничего не
 удаляет**.
 
@@ -467,7 +481,7 @@ PostgreSQL/MySQL. Запускайте отчёт локально или prune 
 
 Блобы живут на стандартном диске Laravel Flysystem. Диск для данного блоба резолвится на каждый
 вызов через `FlysystemStorageDriver::disk()`: колонка `disk` самого блоба (заданная из
-владеющего `v_storages.disk`) выигрывает, иначе — дефолт инсталляции:
+владеющего `v_drives.disk`) выигрывает, иначе — дефолт инсталляции:
 
 ```php
 // config/vaulter.php

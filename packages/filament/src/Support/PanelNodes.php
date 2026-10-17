@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Support;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
 
@@ -23,6 +24,7 @@ use Vaulter\Support\Identity;
  *
  * @phpstan-type NodeRow array{id: string, drive_id: string, parent_id: ?string, kind: NodeKind, name: string, size_bytes: int, trashed_at: ?CarbonImmutable, created_at: CarbonImmutable, abilities: array<string, bool>}
  */
+#[Internal]
 final class PanelNodes
 {
     public const int LIMIT = 2000;
@@ -90,13 +92,37 @@ final class PanelNodes
         return $options;
     }
 
+    /**
+     * A node the acting admin may view, with the handle of its drive; null when no listed
+     * drive shows it, which is how a hidden node and a missing node look alike.
+     *
+     * @return array{DriveHandle, NodeSnapshot}|null
+     */
+    public static function find(int|string|null $id): ?array
+    {
+        if ($id === null || $id === '') {
+            return null;
+        }
+
+        foreach (PanelDrives::handles() as $handle) {
+            try {
+                return [$handle, $handle->nodes()->find((string) $id)];
+            } catch (VaulterException) {
+                // Not in this drive, or not visible there.
+            }
+        }
+
+        return null;
+    }
+
     /** @return array<string, string> drive id => name */
     public static function driveOptions(): array
     {
         $options = [];
 
         foreach (PanelDrives::handles() as $handle) {
-            $options[(string) $handle->model()->getKey()] = $handle->snapshot()->name;
+            $snapshot = $handle->snapshot();
+            $options[$snapshot->id] = $snapshot->name;
         }
 
         return $options;

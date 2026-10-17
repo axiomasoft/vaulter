@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Vaulter;
 
 /**
  * Patch one namespace atomically: the set keys.
  *
  * Whole line gone.
- * @property int    $size_bytes
- * Owned by core (docs/adr/0019-kernel-ownership.md) — see {@see Other}.
+ *
+ * @property int $size_bytes
+ *                           Owned by core (docs/adr/0019-kernel-ownership.md) — see {@see Other}.
  */
 final class Sample
 {

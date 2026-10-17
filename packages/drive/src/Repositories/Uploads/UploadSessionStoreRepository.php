@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\QueryException;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -19,6 +19,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
  * no business decision: received_bytes is advanced from the bytes the caller already
  * staged, and the status moves are pure row writes.
  */
+#[Internal]
 final class UploadSessionStoreRepository
 {
     public function __construct(
@@ -188,7 +189,9 @@ final class UploadSessionStoreRepository
                 'updated_at' => now(),
             ]);
 
-        if ($affected === 0) {
+        // MySQL reports CHANGED rows, not matched ones: a re-sent identical chunk within the same second rewrites the very
+        // same values and affects 0 rows although the session is open. Only a session that is no longer open is a conflict.
+        if ($affected === 0 && !$model::query()->whereKey($session->getKey())->whereIn('status', [UploadStatus::Initiated->value, UploadStatus::Uploading->value])->exists()) {
             throw UploadConflictException::forClosedSession($session->upload_id);
         }
 
@@ -215,7 +218,7 @@ final class UploadSessionStoreRepository
         if ($session->status !== UploadStatus::Assembled || $resultNodeId === null || $resultRevisionId === null || $inputFingerprint === null || preg_match('/^[a-f0-9]{64}$/', $inputFingerprint) !== 1) {
             throw UploadConflictException::forClosedSession($session->upload_id);
         }
-        $nodeClass = app(VaulterConfig::class)->model('node');
+        $nodeClass = app(DriveConfig::class)->model('node');
         $node = $nodeClass::query()->where('drive_id', $session->drive_id)->whereKey($resultNodeId)->first();
         $file = $node?->file()->first();
         $revision = $file?->versions()->whereKey($resultRevisionId)->first();

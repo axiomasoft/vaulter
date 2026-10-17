@@ -6,13 +6,9 @@ namespace Vaulter\Documents\Operations;
 
 use Closure;
 use Illuminate\Pagination\CursorPaginator;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Contracts\Drive\DriveExtension;
-use Vaulter\Data\Drive\CreateFolderOptions;
-use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
@@ -46,18 +42,24 @@ use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Queries\MappedCursorPaginator;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Enums\Operations\OperationKind;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Contracts\DriveExtension;
+use Vaulter\Drive\Data\CreateFolderOptions;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
-use Vaulter\Profiles\ProfilePolicy;
 
 /**
  * The public PHP API of documents in one drive: `Documents::in($drive)`.
@@ -79,8 +81,10 @@ use Vaulter\Profiles\ProfilePolicy;
  * room is read-only. Content that reads only partly under its type
  * (DocumentSnapshot::$editable = false) is not overwritten: 409 document_content_degraded.
  */
+#[Api]
 final readonly class DocumentOperations implements DriveExtension
 {
+    #[Internal]
     public function __construct(
         private DriveContext $context,
         private NodeLocator $locator,
@@ -160,10 +164,11 @@ final readonly class DocumentOperations implements DriveExtension
     }
 
     /**
-     * @internal The HTTP autosave, which may also carry the binary Yjs state.
+     * The HTTP autosave, which may also carry the binary Yjs state.
      *
      * @param array<string, mixed> $content
      */
+    #[Internal]
     public function updateContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState = null, ?int $expectedStateVersion = null): DocumentSnapshot
     {
         return $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $yjsState, $expectedStateVersion));
@@ -208,10 +213,11 @@ final readonly class DocumentOperations implements DriveExtension
     }
 
     /**
-     * @internal The HTTP history listing keeps its cursor-paginator JSON until REST v1.
+     * The HTTP history listing keeps its cursor-paginator JSON until REST v1.
      *
      * @return CursorPaginator<int, DocumentRevisionSnapshot>
      */
+    #[Internal]
     public function revisionPage(NodeSnapshot|string|int $document, ?ListOptions $options = null): CursorPaginator
     {
         $node = $this->document($document, Ability::View, OperationKind::Metadata);

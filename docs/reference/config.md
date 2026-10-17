@@ -6,13 +6,18 @@ outline: deep
 
 # Configuration reference
 
-Current keys from core and installed package config files, by section. Publish core with:
+Current keys of the kernel and of every installed package, by section. Each package owns one config root and
+publishes its file under its own tag: `vaulter` (`vaulter-config`, the kernel), `vaulter-media`, `vaulter-drive`,
+`vaulter-documents`, `vaulter-webhooks`, `vaulter-azgard` and `vaulter-filament` (`<root>-config`). A key moved
+with its concept: the drive's access, sharing, profiles, features, handlers and models are under `vaulter-drive`,
+the webhook settings under `vaulter-webhooks`, the blob model under `vaulter-media`. Publish everything with
+`php artisan vaulter:install`.
 
 ```bash
 php artisan vendor:publish --tag=vaulter-config
 ```
 
-Each table column: the config path (relative to `vaulter.` unless a module root is shown), the env override (when
+Each table column: the config path (written with its root), the env override (when
 one exists), the shipped default, and what it controls. Values are read back through
 the package-owned `Configuration\*Config` classes, injected into services instead of raw
 `config()` calls.
@@ -24,29 +29,29 @@ Every binding is an FQCN or a plain scalar — no closures. The config is safe t
 
 ## Models — `models.*`
 
-Swappable Eloquent models. Point any entry at your own subclass to add behaviour
-(ULID keys, tenant scoping, audit). Vaulter always resolves models through this map.
+Swappable Eloquent models, each in the config of the package that owns it. Point any entry at your own subclass to
+add behaviour (ULID keys, tenant scoping, audit). Vaulter always resolves models through these maps.
 
 | Key | Default | Owned by |
 |---|---|---|
-| `models.drive` | `Vaulter\Models\Drive\Drive` | core |
-| `models.node` | `Vaulter\Models\Drive\Node` | core |
-| `models.file` | `Vaulter\Models\Drive\File` | core |
-| `models.file_revision` | `Vaulter\Models\Drive\FileRevision` | core |
-| `models.blob` | `Vaulter\Models\Cas\Blob` | core |
-| `models.file_revision_blob` | `Vaulter\Models\Drive\FileRevisionBlob` | core |
-| `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
-| `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
+| `vaulter-drive.models.drive` | `Vaulter\Drive\Models\Drive` | `axioma-studio/vaulter-drive` |
+| `vaulter-drive.models.node` | `Vaulter\Drive\Models\Node` | `axioma-studio/vaulter-drive` |
+| `vaulter-drive.models.file` | `Vaulter\Drive\Models\File` | `axioma-studio/vaulter-drive` |
+| `vaulter-drive.models.file_revision` | `Vaulter\Drive\Models\FileRevision` | `axioma-studio/vaulter-drive` |
+| `vaulter-media.models.blob` | `Vaulter\Media\Models\Cas\Blob` | `axioma-studio/vaulter-media` |
+| `vaulter-drive.models.file_revision_blob` | `Vaulter\Drive\Models\FileRevisionBlob` | `axioma-studio/vaulter-drive` |
+| `vaulter-drive.models.grant` | `Vaulter\Drive\Models\Access\NodeGrant` | `axioma-studio/vaulter-drive` |
+| `vaulter-drive.models.node_share` | `Vaulter\Drive\Models\Sharing\NodeShare` | `axioma-studio/vaulter-drive` |
 | `vaulter-drive.models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
 | `vaulter-drive.models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
 | `vaulter-documents.models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
 | `vaulter-documents.models.document_revision` | `Vaulter\Documents\Models\Revisions\DocumentRevision` | `axioma-studio/vaulter-documents` |
-| `models.activity` | `Vaulter\Models\Activity\Activity` | core |
-| `models.outbox` | `Vaulter\Models\Webhooks\Outbox` | core |
-| `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` | core |
-| `models.webhook_delivery` | `Vaulter\Models\Webhooks\WebhookDelivery` | core |
+| `vaulter-drive.models.activity` | `Vaulter\Drive\Models\Activity\Activity` | `axioma-studio/vaulter-drive` |
+| `vaulter.models.outbox` | `Vaulter\Events\Outbox\Models\OutboxEvent` | core |
+| `vaulter-webhooks.models.webhook_endpoint` | `Vaulter\Webhooks\Models\WebhookEndpoint` | `axioma-studio/vaulter-webhooks` |
+| `vaulter-webhooks.models.webhook_delivery` | `Vaulter\Webhooks\Models\WebhookDelivery` | `axioma-studio/vaulter-webhooks` |
 
-Module models are configured under `vaulter-drive.models.*` and `vaulter-documents.models.*`; core never merges them into its own model map.
+Models are configured only under their owner's root (`vaulter-drive.models.*`, `vaulter-media.models.*`, `vaulter-documents.models.*`, `vaulter-webhooks.models.*`); the kernel's map holds only the outbox model.
 
 ## Database — `database.*`
 
@@ -64,41 +69,40 @@ Tables use canonical names with `database.table_prefix` (default `v_`).
 
 Choose `ids.strategy` directly. Register a custom strategy under `ids.strategies`.
 
-## Profiles — `profiles.*`
+## Profiles — `vaulter-drive.profiles.*`
 
 | Key | Default |
 |---|---|
-| `profiles.providers` | `[]` |
-| `profiles.default` | `Vaulter\Profiles\DefaultProfile` |
+| `vaulter-drive.profiles.providers` | `[]` |
+| `vaulter-drive.profiles.default` | `Vaulter\Drive\Profiles\DefaultProfile` |
 
 Both keys accept `ProfileProvider` FQCNs. Profile keys are unique and the default is registered.
 
-## Features — `features.*`
+## Features — `vaulter-drive.features.*`
 
-Global feature toggles, read by `VaulterConfig::featureEnabled()`; a panel may override any
+Global feature toggles, read by `DriveConfig::featureEnabled()`; a panel may override any
 of these per-panel.
 
 | Key | Default | Gates |
 |---|---|---|
-| `features.grants` | `true` | Per-node grants (the ACL) |
-| `features.activity` | `true` | The activity log |
-| `features.share_links` | `false` | Bearer node share links |
-| `features.public_listing` | `false` | Public listing |
-| `features.webhooks` | `true` | The outbox subscriber + endpoint routes |
-| `features.changes` | `true` | The drive change journal behind `DriveHandle::changes()` |
+| `vaulter-drive.features.grants` | `true` | Per-node grants (the ACL) |
+| `vaulter-drive.features.activity` | `true` | The activity log |
+| `vaulter-drive.features.share_links` | `false` | Bearer node share links |
+| `vaulter-drive.features.public_listing` | `false` | Public listing |
+| `vaulter-drive.features.changes` | `true` | The drive change journal behind `DriveHandle::changes()` |
 
-## Document handlers — `handlers`
+## Document handlers — `vaulter-drive.handlers`
 
-A list of `FileHandler` FQCNs, resolved by the core-owned `Vaulter\Handlers\FileHandlerRegistry`
+A list of `FileHandler` FQCNs, resolved by the drive-owned `Vaulter\Drive\Handlers\FileHandlerRegistry`
 by mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`
-null-object. The two baseline entries are core's OWN default (VLT-CANON P0.4/D10 — resolved even
+null-object. The two baseline entries are the drive's own default (resolved even
 without `vaulter-documents` installed). File handlers serve files only: document nodes are
 presented by their [document type](/extending/document-types).
 
 | Provider-tagged built-ins | Owner |
 |---|---|
-| `Vaulter\Handlers\Builtin\PreviewHandler` | core |
-| `Vaulter\Handlers\Builtin\DownloadOnlyHandler` | core |
+| `Vaulter\Drive\Handlers\Builtin\PreviewHandler` | `axioma-studio/vaulter-drive` |
+| `Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler` | `axioma-studio/vaulter-drive` |
 
 Add a new file format with one class + an entry here (or `Vaulter::handlers()->register()`).
 
@@ -121,56 +125,56 @@ coexists with host tables.
 
 ## Authorization
 
-### Drive ACL — `access.permission_driver`, `access.permission_drivers.*`
+### Drive ACL — `vaulter-drive.access.permission_driver`, `vaulter-drive.access.permission_drivers.*`
 
 | Key | Env | Default | Accepts |
 |---|---|---|---|
-| `access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `database` | a key in `access.permission_drivers` |
-| `access.permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | standalone — authorises purely from grant rows |
-| `access.permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | the Laravel Gate driver |
-| `access.permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | the spatie/laravel-permission driver |
-| `access.permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | registered by the installed `vaulter-azgard` provider |
-| `access.permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | open, **non-production only** |
+| `vaulter-drive.access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `database` | a key in `vaulter-drive.access.permission_drivers` |
+| `vaulter-drive.access.permission_drivers.database` | — | `Vaulter\Drive\Access\Drivers\DatabasePermissionDriver` | standalone — authorises purely from grant rows |
+| `vaulter-drive.access.permission_drivers.gate` | — | `Vaulter\Drive\Access\Drivers\GatePermissionDriver` | the Laravel Gate driver |
+| `vaulter-drive.access.permission_drivers.spatie` | — | `Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` | the spatie/laravel-permission driver |
+| `vaulter-drive.access.permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | registered by the installed `vaulter-azgard` provider |
+| `vaulter-drive.access.permission_drivers.null` | — | `Vaulter\Drive\Testing\NullPermissionDriver` | open, **non-production only** |
 
 ::: danger Null driver in production
 The `null` driver is open and env-gated. Production config validation rejects a panel
 bound to it — bind a real driver before deploying.
 :::
 
-### Gate driver map — `access.gate.*`
+### Gate driver map — `vaulter-drive.access.gate.*`
 
-Used only when `access.permission_driver = 'gate'`. Maps a `GrantLevel` to a host Gate
+Used only when `vaulter-drive.access.permission_driver = 'gate'`. Maps a `GrantLevel` to a host Gate
 ability; the highest allowed level becomes the actor's role grant.
 
 | Key | Env | Default |
 |---|---|---|
-| `access.gate.abilities.reader` | — | `vaulter.view` |
-| `access.gate.abilities.commenter` | — | `vaulter.comment` |
-| `access.gate.abilities.writer` | — | `vaulter.edit` |
-| `access.gate.abilities.organizer` | — | `vaulter.organize` |
-| `access.gate.abilities.owner` | — | `vaulter.manage` |
-| `access.gate.super_ability` | `VAULTER_GATE_SUPER_ABILITY` | `vaulter.super` |
-| `access.gate.create_ability` | `VAULTER_GATE_CREATE_ABILITY` | `vaulter.create` |
+| `vaulter-drive.access.gate.abilities.reader` | — | `vaulter.view` |
+| `vaulter-drive.access.gate.abilities.commenter` | — | `vaulter.comment` |
+| `vaulter-drive.access.gate.abilities.writer` | — | `vaulter.edit` |
+| `vaulter-drive.access.gate.abilities.organizer` | — | `vaulter.organize` |
+| `vaulter-drive.access.gate.abilities.owner` | — | `vaulter.manage` |
+| `vaulter-drive.access.gate.super_ability` | `VAULTER_GATE_SUPER_ABILITY` | `vaulter.super` |
+| `vaulter-drive.access.gate.create_ability` | `VAULTER_GATE_CREATE_ABILITY` | `vaulter.create` |
 
-### Spatie driver map — `access.spatie.*`
+### Spatie driver map — `vaulter-drive.access.spatie.*`
 
-Used only when `access.permission_driver = 'spatie'` **and** spatie/laravel-permission is
+Used only when `vaulter-drive.access.permission_driver = 'spatie'` **and** spatie/laravel-permission is
 installed.
 
 | Key | Env | Default |
 |---|---|---|
-| `access.spatie.permissions.reader` | — | `vaulter.view` |
-| `access.spatie.permissions.commenter` | — | `vaulter.comment` |
-| `access.spatie.permissions.writer` | — | `vaulter.edit` |
-| `access.spatie.permissions.organizer` | — | `vaulter.organize` |
-| `access.spatie.permissions.owner` | — | `vaulter.manage` |
-| `access.spatie.super_permission` | `VAULTER_SPATIE_SUPER_PERMISSION` | `vaulter.super` |
-| `access.spatie.create_permission` | `VAULTER_SPATIE_CREATE_PERMISSION` | `vaulter.create` |
-| `access.spatie.teams` | `VAULTER_SPATIE_TEAMS` | `false` |
-| `access.spatie.role_subject_type` | — | `role` |
-| `access.spatie.team_subject_type` | — | `team` |
+| `vaulter-drive.access.spatie.permissions.reader` | — | `vaulter.view` |
+| `vaulter-drive.access.spatie.permissions.commenter` | — | `vaulter.comment` |
+| `vaulter-drive.access.spatie.permissions.writer` | — | `vaulter.edit` |
+| `vaulter-drive.access.spatie.permissions.organizer` | — | `vaulter.organize` |
+| `vaulter-drive.access.spatie.permissions.owner` | — | `vaulter.manage` |
+| `vaulter-drive.access.spatie.super_permission` | `VAULTER_SPATIE_SUPER_PERMISSION` | `vaulter.super` |
+| `vaulter-drive.access.spatie.create_permission` | `VAULTER_SPATIE_CREATE_PERMISSION` | `vaulter.create` |
+| `vaulter-drive.access.spatie.teams` | `VAULTER_SPATIE_TEAMS` | `false` |
+| `vaulter-drive.access.spatie.role_subject_type` | — | `role` |
+| `vaulter-drive.access.spatie.team_subject_type` | — | `team` |
 
-`access.spatie.teams` falls back here only when the host's own `config('permission.teams')`
+`vaulter-drive.access.spatie.teams` falls back here only when the host's own `config('permission.teams')`
 is unset. `role_subject_type`/`team_subject_type` are the morph aliases role/team
 grant rows are addressed to.
 
@@ -183,7 +187,7 @@ come from `config/vaulter-azgard.php`, rather than core configuration.
 |---|---|
 | `vaulter-azgard.panel_id` | `null` (resolve the panel from the permission key) |
 
-Used only when `access.permission_driver = 'azgard'`. Action-centric — maps a Vaulter
+Used only when `vaulter-drive.access.permission_driver = 'azgard'`. Action-centric — maps a Vaulter
 `Ability` to an AzGuard permission key.
 
 | Key | Default |
@@ -245,7 +249,7 @@ A blob whose ref-count cache reaches zero is tombstoned with
 
 | Key | Env | Default | Notes |
 |---|---|---|---|
-| `vaulter-media.disk` | `VAULTER_DISK` | `local` | The default Flysystem disk for canonical CAS objects when a blob's `v_storages.disk` doesn't pin its own |
+| `vaulter-media.disk` | `VAULTER_DISK` | `local` | The default Flysystem disk for canonical CAS objects when a blob's `v_drives.disk` doesn't pin its own |
 
 ::: warning Keep the CAS bucket unversioned
 Never use S3 lifecycle/versioning as a blob-deletion mechanism.
@@ -253,13 +257,13 @@ Never use S3 lifecycle/versioning as a blob-deletion mechanism.
 
 ## Sharing
 
-### Bearer node share links — `sharing.*`
+### Bearer node share links — `vaulter-drive.sharing.*`
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `sharing.token_generator` | — | `Vaulter\Support\RandomShareTokenGenerator` | The `ShareTokenGenerator` minting the raw bearer token (only its sha256 hash is stored) |
-| `sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `/share` | The public base a share URL is built from |
-| `sharing.prefix_length` | — | `8` | How many leading chars of the raw token are stored as the non-secret `token_prefix` |
+| `vaulter-drive.sharing.token_generator` | — | `Vaulter\Drive\Support\RandomShareTokenGenerator` | The `ShareTokenGenerator` minting the raw bearer token (only its sha256 hash is stored) |
+| `vaulter-drive.sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `/share` | The public base a share URL is built from |
+| `vaulter-drive.sharing.prefix_length` | — | `8` | How many leading chars of the raw token are stored as the non-secret `token_prefix` |
 
 See [Usage → Sharing](/guides/sharing).
 
@@ -272,11 +276,11 @@ See [Usage → Sharing](/guides/sharing).
 The retention window before a trashed node's subtree is permanently force-deleted by
 `php artisan vaulter:trash:purge`.
 
-## Drives — `vaulter.drives.*`
+## Drives — `vaulter-drive.drives.*`
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `vaulter.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | `HasDrives`: deleting the owner model deletes its drives (system actor `owner-deleted`); with `SoftDeletes` only `forceDeleted` counts |
+| `vaulter-drive.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | `HasDrives`: deleting the owner model deletes its drives (system actor `owner-deleted`); with `SoftDeletes` only `forceDeleted` counts |
 
 See [Drive · lifecycle](/concepts/nodes-and-revisions#drive-lifecycle).
 
@@ -294,41 +298,54 @@ See [Drive · lifecycle](/concepts/nodes-and-revisions#drive-lifecycle).
 | `vaulter-drive.uploads.resumable.metadata.allowed_keys` | `['filename', 'filetype', 'name', 'mime_type']` | — |
 | `vaulter-drive.uploads.resumable.metadata.max_value_length` | `512` | — |
 
-## Reliability — webhooks — `webhooks.*`
+## Reliability — webhooks — `vaulter-webhooks.*`
+
+The separate package `axioma-studio/vaulter-webhooks` (opt-in module `webhooks`; config file `config/vaulter-webhooks.php`,
+tag `vaulter-webhooks-config`).
 
 A transactional outbox + [Standard Webhooks](/guides/webhooks#headers-and-signature) signed delivery
 (at-least-once, a retry schedule, DLQ).
 
-**Removed in 1.0** — a published config that still sets one of these fails boot with
-`InvalidConfigurationException` naming the replacement: `webhooks.max_attempts` and `webhooks.backoff`
-(→ `retry_schedule`), `webhooks.disable_after_failures` (→ `disable_after_days`),
-`webhooks.signature_header`, `webhooks.timestamp_header` and `webhooks.event_header` (the headers are
-fixed by the standard).
+| Key | Env | Default | Controls |
+|---|---|---|---|
+| `vaulter-webhooks.timeout` | — | `15` | HTTP request timeout (seconds) per delivery POST |
+| `vaulter-webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three days), the last failure makes the delivery dead |
+| `vaulter-webhooks.retry_jitter` | — | `0.1` | Fraction (0–0.5) added or removed at random from each retry delay |
+| `vaulter-webhooks.disable_after_days` | — | `5` | Days of unbroken failure after which an endpoint is switched off (`0` = never) |
+| `vaulter-webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (at most 604800) |
+| `vaulter-webhooks.retention_days` | — | `30` | Age past which terminal deliveries are prunable (pending/failed ones never are) |
+| `vaulter-webhooks.relay.fanout_chunk` | — | `100` | Endpoints written per fan-out transaction (integer 1..1000; anything else fails boot) |
+| `vaulter-webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `vaulter.webhooks.manage` | The Gate ability gating the endpoint-management surface; `null` allows any authenticated user |
+
+The opt-in `vaulter.modules.webhooks` switches the `webhooks.fanout` outbox consumer and the endpoint routes; the tables always exist. See [Recipes → Reliability & webhooks](/guides/recipes).
+
+## Outbox — `outbox.*`
+
+The transactional outbox every event is written to, and its relay (`vaulter:relay`); see
+[The outbox](/concepts/events-outbox). Every value is a positive integer; anything else fails boot.
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `webhooks.timeout` | — | `15` | HTTP request timeout (seconds) per delivery POST |
-| `webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three days), the last failure makes the delivery dead |
-| `webhooks.retry_jitter` | — | `0.1` | Fraction (0–0.5) added or removed at random from each retry delay |
-| `webhooks.disable_after_days` | — | `5` | Days of unbroken failure after which an endpoint is switched off (`0` = never) |
-| `webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (at most 604800) |
-| `webhooks.retention_days` | — | `30` | Age past which completed outbox rows + terminal deliveries are prunable (pending rows never are) |
-| `webhooks.relay.claim_seconds` | — | `60` | How long a relay worker leases an outbox row; a crashed worker's row is resumed after it. Also how long a pending delivery may wait for its job before the retry sweep re-queues it |
-| `webhooks.relay.fanout_chunk` | — | `100` | Endpoints written per fan-out transaction (integer 1..1000; anything else fails boot) |
-| `webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `vaulter.webhooks.manage` | The Gate ability gating the endpoint-management surface; `null` allows any authenticated user |
+| `outbox.settle_window_seconds` | — | `300` | Reconciliation trusts only events older than this; keep it above the longest Vaulter transaction (`vaulter:doctor` compares it with the database limits) |
+| `outbox.retention_seconds` | — | `604800` | Age past which an event no open delivery and no consumer holds is pruned |
+| `outbox.max_consumer_hold_seconds` | — | `604800` | How long a paused durable consumer holds retention before it is detached with a gap (at least the settle window) |
+| `outbox.dead_retention_seconds` | — | `2592000` | How long a dead delivery is kept for inspection and replay |
+| `outbox.lease_seconds` | — | `60` | How long a relay worker owns a leased delivery (and a reconciler its consumer) before a takeover |
+| `outbox.batch` | — | `100` | Deliveries one relay pass leases per consumer |
+| `outbox.max_attempts` | — | `10` | Attempts after which a retried delivery is dead |
+| `outbox.backoff_base_seconds` | — | `2` | Base of the full-jitter retry delay |
+| `outbox.backoff_cap_seconds` | — | `3600` | Cap of the full-jitter retry delay (at least the base) |
 
-The `features.webhooks` flag gates the outbox subscriber and endpoint routes; tables always exist. See [Recipes → Reliability & webhooks](/guides/recipes).
-
-## Change journal — `changes.*`
+## Change journal — `vaulter-drive.changes.*`
 
 The per-drive [change journal](/concepts/events) syncing clients read through `DriveHandle::changes()`.
-`features.changes` (default `true`) switches the writing of entries; the tables always exist.
+`vaulter-drive.features.changes` (default `true`) switches the writing of entries; the tables always exist.
 Turning it off and on again leaves a gap only a reset closes (`vaulter:changes:reset`).
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `changes.retention_days` | — | `30` | Days an entry stays readable; `vaulter:changes:prune` deletes older ones and a cursor behind them expires (`410 cursor_expired`). Integer ≥ 1, anything else fails boot |
-| `changes.max_page_size` | — | `1000` | The largest `limit` of one `changes()->list()` page (integer 1..10000, anything else fails boot) |
+| `vaulter-drive.changes.retention_days` | — | `30` | Days an entry stays readable; `vaulter:changes:prune` deletes older ones and a cursor behind them expires (`410 cursor_expired`). Integer ≥ 1, anything else fails boot |
+| `vaulter-drive.changes.max_page_size` | — | `1000` | The largest `limit` of one `changes()->list()` page (integer 1..10000, anything else fails boot) |
 
 ## Scheduling — `schedule.*`
 
@@ -337,12 +354,13 @@ list and the value grammar are in [Commands → Scheduling](/reference/commands#
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | Master switch for every Vaulter scheduled task (core, drive, media); set `false` when the host schedules the commands itself. Must be a boolean |
-| `schedule.webhooks_relay` | — | `'everyMinute'` | `vaulter:webhooks:relay`; `null` turns it off |
-| `schedule.webhooks_retry` | — | `'everyMinute'` | `vaulter:webhooks:retry`; `null` turns it off |
-| `schedule.webhooks_prune` | — | `'dailyAt:03:10'` | `vaulter:webhooks:prune`; `null` turns it off |
-| `schedule.changes_prune` | — | `'dailyAt:03:20'` | `vaulter:changes:prune`; `null` turns it off |
-| `vaulter-drive.schedule.*` | — | `uploads_sweep` `hourlyAt:15`, `trash_purge` `dailyAt:03:30`, `drives_purge` `hourlyAt:25`, `revisions_prune` `dailyAt:03:40`, `scan_reconcile` `everyFiveMinutes`, `drives_recount` `null` | Drive tasks; `scan_reconcile` runs only while the scan mode is not `off` and does not depend on `features.webhooks` |
+| `schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | Master switch for every Vaulter scheduled task (core, drive, media, webhooks); set `false` when the host schedules the commands itself. Must be a boolean |
+| `schedule.outbox_relay` | — | `'everyMinute'` | `vaulter:relay`; `null` turns it off |
+| `schedule.outbox_prune` | — | `'hourly'` | `vaulter:outbox:prune`; `null` turns it off |
+| `vaulter-webhooks.schedule.webhooks_retry` | — | `'everyMinute'` | `vaulter:webhooks:retry`; `null` turns it off |
+| `vaulter-webhooks.schedule.webhooks_prune` | — | `'dailyAt:03:10'` | `vaulter:webhooks:prune`; `null` turns it off |
+| `vaulter-drive.schedule.changes_prune` | — | `'dailyAt:03:20'` | `vaulter:changes:prune`; `null` turns it off |
+| `vaulter-drive.schedule.*` | — | `uploads_sweep` `hourlyAt:15`, `trash_purge` `dailyAt:03:30`, `drives_purge` `hourlyAt:25`, `revisions_prune` `dailyAt:03:40`, `scan_reconcile` `everyFiveMinutes`, `drives_recount` `null` | Drive tasks; `scan_reconcile` runs only while the scan mode is not `off` and does not depend on `vaulter.modules.webhooks` |
 | `vaulter-media.schedule.*` | — | `blobs_gc` `dailyAt:04:00`, `blobs_reconcile` `weeklyOn:0,04:30` | Blob tasks |
 
 An invalid value fails boot with `InvalidConfigurationException`; a key a host leaves out of its
@@ -405,7 +423,7 @@ See [Collaboration → Overview](/guides/collaboration) and
 
 ## See also
 
-- [Facade & Manager](/reference/php-api) — the runtime entry points
+- [Facade](/reference/php-api) — the runtime entry points
 - [Contracts reference](/reference/php-api) — the interfaces these FQCNs implement
 - [Commands reference](/reference/commands) — the schedulable maintenance commands
 
@@ -422,26 +440,26 @@ See [Collaboration → Overview](/guides/collaboration) and
 | `vaulter-documents.tiptap.url_attributes` | `[]` |
 | `vaulter-media.gc.orphan_grace_hours` | `24` (`VAULTER_ORPHAN_GRACE_HOURS`, fallback `VAULTER_GC_GRACE_HOURS`) |
 | `ids.host_keys` | `string` (`VAULTER_HOST_KEYS`) |
-| `listing.scan_budget` | `1000` |
+| `vaulter-drive.listing.scan_budget` | `1000` |
 | `routes.middleware.authenticated` | `['api', 'auth:sanctum']` |
 | `routes.middleware.public` | `['api']` |
 | `routes.middleware.hub` | `['api']` |
 | `routes.rate_limits.public` | `60` (`VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE`) |
 | `routes.rate_limits.uploads` | `120` (`VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE`) |
-| `sharing.default_ttl_hours` | `72` (`VAULTER_SHARE_DEFAULT_TTL_HOURS`) |
-| `sharing.max_ttl_hours` | `720` (`VAULTER_SHARE_MAX_TTL_HOURS`) |
-| `downloads.inline_mime_types` | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain']` |
+| `vaulter-drive.sharing.default_ttl_hours` | `72` (`VAULTER_SHARE_DEFAULT_TTL_HOURS`) |
+| `vaulter-drive.sharing.max_ttl_hours` | `720` (`VAULTER_SHARE_MAX_TTL_HOURS`) |
+| `vaulter-drive.downloads.inline_mime_types` | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain']` |
 | `observability.enabled` | `false` (`VAULTER_OBSERVABILITY_ENABLED`) |
 | `observability.recorder` | `null` (`VAULTER_OBSERVABILITY_RECORDER`) |
 | `observability.tracing.enabled` | `false` (`VAULTER_TRACING_ENABLED`) |
 | `observability.tracing.recorder` | `null` (`VAULTER_TRACING_RECORDER`) |
-| `webhooks.retry_claim_seconds` | `60` |
-| `webhooks.delivery.url_guard` | `Vaulter\Webhooks\DefaultOutboundUrlGuard` |
-| `webhooks.delivery.allowed_schemes` | `['http', 'https']` |
-| `webhooks.delivery.blocked_ip_ranges` | `null` (closed built-in ranges) |
-| `webhooks.delivery.allowed_ip_ranges` | `[]` |
-| `webhooks.delivery.connect_timeout` | `2` seconds |
-| `webhooks.delivery.max_response_bytes` | `65536` bytes |
+| `vaulter-webhooks.retry_claim_seconds` | `60` |
+| `vaulter-webhooks.delivery.url_guard` | `Vaulter\Webhooks\DefaultOutboundUrlGuard` |
+| `vaulter-webhooks.delivery.allowed_schemes` | `['http', 'https']` |
+| `vaulter-webhooks.delivery.blocked_ip_ranges` | `null` (closed built-in ranges) |
+| `vaulter-webhooks.delivery.allowed_ip_ranges` | `[]` |
+| `vaulter-webhooks.delivery.connect_timeout` | `2` seconds |
+| `vaulter-webhooks.delivery.max_response_bytes` | `65536` bytes |
 
 Documents are enabled when their package is installed; blobs and file revisions are always enabled.
 Comments default to true; set `vaulter-documents.comments.enabled = false` to turn them off.
@@ -483,111 +501,35 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.ids.strategies.uuid7` | — | `Uuid7Ids::class` | — |
 | `vaulter.tenancy.enabled` | `VAULTER_TENANT_ENABLED` | `false` | — |
 | `vaulter.tenancy.resolver` | — | `null` | — |
-| `vaulter.profiles.default` | — | `DefaultProfile::class` | — |
-| `vaulter.profiles.providers` | — | `[]` | — |
-| `vaulter.scan.mode` | — | `null` | — |
-| `vaulter.scan.required` | — | `null` | — |
-| `vaulter.scan.scanner` | — | `null` | — |
-| `vaulter.scan.scanner_key` | — | `null` | — |
-| `vaulter.scan.scanner_version` | — | `null` | — |
-| `vaulter.scan.policy_version` | — | `null` | — |
-| `vaulter.scan.rollout_key` | — | `null` | — |
 | `vaulter.modules` | — | `[]` | Module activation overrides (D22): module id => true\|false. Auto modules (media, drive, documents…) are active unless switched off; opt-in modules (webhooks) only when switched on. |
-| `vaulter.features.grants` | — | `true` | — |
-| `vaulter.features.activity` | — | `true` | — |
-| `vaulter.features.changes` | — | `true` | The drive change journal behind DriveHandle::changes() (PLAN2.D50). |
-| `vaulter.features.share_links` | — | `false` | — |
-| `vaulter.features.public_listing` | — | `false` | — |
-| `vaulter.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | HasDrives: delete the drives of an owner when the owner is deleted. |
-| `vaulter.access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `'database'` | — |
-| `vaulter.access.permission_drivers.database` | — | `DatabasePermissionDriver::class` | — |
-| `vaulter.access.permission_drivers.gate` | — | `GatePermissionDriver::class` | — |
-| `vaulter.access.permission_drivers.spatie` | — | `SpatiePermissionDriver::class` | — |
-| `vaulter.access.permission_drivers.null` | — | `NullPermissionDriver::class` | — |
-| `vaulter.access.gate.abilities.previewer` | — | `'vaulter.preview'` | — |
-| `vaulter.access.gate.abilities.reader` | — | `'vaulter.view'` | — |
-| `vaulter.access.gate.abilities.commenter` | — | `'vaulter.comment'` | — |
-| `vaulter.access.gate.abilities.writer` | — | `'vaulter.edit'` | — |
-| `vaulter.access.gate.abilities.organizer` | — | `'vaulter.organize'` | — |
-| `vaulter.access.gate.abilities.owner` | — | `'vaulter.manage'` | — |
-| `vaulter.access.gate.super_ability` | `VAULTER_GATE_SUPER_ABILITY` | `'vaulter.super'` | — |
-| `vaulter.access.gate.create_ability` | `VAULTER_GATE_CREATE_ABILITY` | `'vaulter.create'` | — |
-| `vaulter.access.spatie.permissions.previewer` | — | `'vaulter.preview'` | — |
-| `vaulter.access.spatie.permissions.reader` | — | `'vaulter.view'` | — |
-| `vaulter.access.spatie.permissions.commenter` | — | `'vaulter.comment'` | — |
-| `vaulter.access.spatie.permissions.writer` | — | `'vaulter.edit'` | — |
-| `vaulter.access.spatie.permissions.organizer` | — | `'vaulter.organize'` | — |
-| `vaulter.access.spatie.permissions.owner` | — | `'vaulter.manage'` | — |
-| `vaulter.access.spatie.super_permission` | `VAULTER_SPATIE_SUPER_PERMISSION` | `'vaulter.super'` | — |
-| `vaulter.access.spatie.create_permission` | `VAULTER_SPATIE_CREATE_PERMISSION` | `'vaulter.create'` | — |
-| `vaulter.access.spatie.teams` | `VAULTER_SPATIE_TEAMS` | `false` | — |
-| `vaulter.access.spatie.role_subject_type` | — | `'role'` | — |
-| `vaulter.access.spatie.team_subject_type` | — | `'team'` | — |
 | `vaulter.routes.prefix` | `VAULTER_ROUTE_PREFIX` | `'api/vaulter'` | — |
 | `vaulter.routes.middleware.authenticated` | — | `['api', 'auth:sanctum']` | — |
 | `vaulter.routes.middleware.public` | — | `['api']` | — |
 | `vaulter.routes.middleware.hub` | — | `['api']` | — |
 | `vaulter.routes.rate_limits.public` | `VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE` | `60` | — |
 | `vaulter.routes.rate_limits.uploads` | `VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE` | `120` | — |
-| `vaulter.listing.scan_budget` | — | `1000` | — |
-| `vaulter.sharing.token_generator` | — | `RandomShareTokenGenerator::class` | — |
-| `vaulter.sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `'/share'` | — |
-| `vaulter.sharing.prefix_length` | — | `8` | — |
-| `vaulter.sharing.default_ttl_hours` | `VAULTER_SHARE_DEFAULT_TTL_HOURS` | `72` | — |
-| `vaulter.sharing.max_ttl_hours` | `VAULTER_SHARE_MAX_TTL_HOURS` | `720` | — |
-| `vaulter.downloads.delivery_mode` | — | `'strict'` | — |
-| `vaulter.downloads.direct_ttl_seconds` | — | `60` | — |
-| `vaulter.downloads.inline_mime_types` | — | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain']` | — |
-| `vaulter.webhooks.timeout` | — | `15` | — |
-| `vaulter.webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three days in total). Jitter is the +/- fraction applied to each delay. |
-| `vaulter.webhooks.retry_jitter` | — | `0.1` | — |
-| `vaulter.webhooks.disable_after_days` | — | `5` | Days of uninterrupted failure before an endpoint is disabled; 0 never disables. |
-| `vaulter.webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (max 604800). |
-| `vaulter.webhooks.retention_days` | — | `30` | — |
-| `vaulter.webhooks.retry_claim_seconds` | — | `60` | — |
-| `vaulter.webhooks.relay` | — | — | The outbox relay leases a row for claim_seconds while it materializes deliveries fanout_chunk endpoints at a time (1..1000); a crashed relay's row is picked up again once the lease lapses. |
-| `vaulter.webhooks.relay.claim_seconds` | — | `60` | — |
-| `vaulter.webhooks.relay.fanout_chunk` | — | `100` | — |
-| `vaulter.webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `'vaulter.webhooks.manage'` | — |
-| `vaulter.webhooks.delivery.url_guard` | — | `DefaultOutboundUrlGuard::class` | — |
-| `vaulter.webhooks.delivery.allowed_schemes` | — | `['http', 'https']` | — |
-| `vaulter.webhooks.delivery.blocked_ip_ranges` | — | `null` | — |
-| `vaulter.webhooks.delivery.allowed_ip_ranges` | — | `[]` | — |
-| `vaulter.webhooks.delivery.connect_timeout` | — | `2` | — |
-| `vaulter.webhooks.delivery.max_response_bytes` | — | `65536` | — |
-| `vaulter.changes.retention_days` | — | `30` | Days a journal entry stays readable; vaulter:changes:prune deletes older ones and a cursor behind them expires (410 cursor_expired). |
-| `vaulter.changes.max_page_size` | — | `1000` | The largest page DriveHandle::changes()->list() returns. |
+| `vaulter.outbox` | — | — | The transactional outbox (D29): every domain event is written to v_outbox in the transaction of its operation; vaulter:relay hands it to each outbox consumer (webhooks.fanout, …) at least once. settle_window_seconds must exceed the longest Vaulter transaction: reconciliation only trusts events older than it, so a long transaction committing a smaller seq later is not skipped. |
+| `vaulter.outbox.settle_window_seconds` | — | `300` | — |
+| `vaulter.outbox.retention_seconds` | — | `604800` | — |
+| `vaulter.outbox.max_consumer_hold_seconds` | — | `604800` | How long a paused consumer (switched off, missing from the module graph) holds retention before it is detached with an explicit gap. |
+| `vaulter.outbox.dead_retention_seconds` | — | `2592000` | — |
+| `vaulter.outbox.lease_seconds` | — | `60` | — |
+| `vaulter.outbox.batch` | — | `100` | — |
+| `vaulter.outbox.max_attempts` | — | `10` | — |
+| `vaulter.outbox.backoff_base_seconds` | — | `2` | — |
+| `vaulter.outbox.backoff_cap_seconds` | — | `3600` | — |
 | `vaulter.idempotency` | — | — | Idempotency-Key receipts (D25): how long a retry with the same key gets the stored outcome. vaulter:idempotency:prune deletes expired receipts. |
 | `vaulter.idempotency.ttl_seconds` | — | `86400` | — |
 | `vaulter.schedule` | — | — | Maintenance tasks put on the host scheduler. Value: null (off) \| everyMinute \| everyFiveMinutes hourly \| daily \| weekly \| 'dailyAt:HH:MM' \| 'hourlyAt:M' \| 'weeklyOn:D,HH:MM' \| a 5-field cron expression. Set enabled to false when the host schedules the commands itself. |
 | `vaulter.schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | — |
-| `vaulter.schedule.webhooks_relay` | — | `'everyMinute'` | — |
-| `vaulter.schedule.webhooks_retry` | — | `'everyMinute'` | — |
-| `vaulter.schedule.webhooks_prune` | — | `'dailyAt:03:10'` | — |
-| `vaulter.schedule.changes_prune` | — | `'dailyAt:03:20'` | — |
+| `vaulter.schedule.outbox_relay` | — | `'everyMinute'` | — |
+| `vaulter.schedule.outbox_prune` | — | `'hourly'` | — |
 | `vaulter.schedule.idempotency_prune` | — | `'dailyAt:03:30'` | — |
-| `vaulter.handlers` | — | `[]` | — |
 | `vaulter.observability.enabled` | `VAULTER_OBSERVABILITY_ENABLED` | `false` | — |
 | `vaulter.observability.recorder` | `VAULTER_OBSERVABILITY_RECORDER` | `null` | — |
 | `vaulter.observability.tracing.enabled` | `VAULTER_TRACING_ENABLED` | `false` | — |
 | `vaulter.observability.tracing.recorder` | `VAULTER_TRACING_RECORDER` | `null` | — |
-| `vaulter.models.drive` | — | `Drive::class` | — |
-| `vaulter.models.node` | — | `Node::class` | — |
-| `vaulter.models.file` | — | `File::class` | — |
-| `vaulter.models.scan_obligation` | — | `ScanObligation::class` | — |
-| `vaulter.models.scan_request` | — | `ScanRequest::class` | — |
-| `vaulter.models.scan_evidence` | — | `ScanEvidenceRecord::class` | — |
-| `vaulter.models.scan_policy_state` | — | `ScanPolicyState::class` | — |
-| `vaulter.models.scan_backfill_run` | — | `ScanBackfillRun::class` | — |
-| `vaulter.models.file_revision` | — | `FileRevision::class` | — |
-| `vaulter.models.blob` | — | `Blob::class` | — |
-| `vaulter.models.file_revision_blob` | — | `FileRevisionBlob::class` | — |
-| `vaulter.models.grant` | — | `NodeGrant::class` | — |
-| `vaulter.models.node_share` | — | `NodeShare::class` | — |
-| `vaulter.models.activity` | — | `Activity::class` | — |
-| `vaulter.models.outbox` | — | `Outbox::class` | — |
-| `vaulter.models.webhook_endpoint` | — | `WebhookEndpoint::class` | — |
-| `vaulter.models.webhook_delivery` | — | `WebhookDelivery::class` | — |
+| `vaulter.models.outbox` | — | `OutboxEvent::class` | — |
 
 ### `vaulter-documents`
 
@@ -620,6 +562,57 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 
 | Key | Env | Default | Description |
 |---|---|---|---|
+| `vaulter-drive.profiles.default` | — | `DefaultProfile::class` | — |
+| `vaulter-drive.profiles.providers` | — | `[]` | — |
+| `vaulter-drive.scan.mode` | — | `null` | — |
+| `vaulter-drive.scan.required` | — | `null` | — |
+| `vaulter-drive.scan.scanner` | — | `null` | — |
+| `vaulter-drive.scan.scanner_key` | — | `null` | — |
+| `vaulter-drive.scan.scanner_version` | — | `null` | — |
+| `vaulter-drive.scan.policy_version` | — | `null` | — |
+| `vaulter-drive.scan.rollout_key` | — | `null` | — |
+| `vaulter-drive.features.grants` | — | `true` | — |
+| `vaulter-drive.features.activity` | — | `true` | — |
+| `vaulter-drive.features.changes` | — | `true` | The drive change journal behind DriveHandle::changes() (PLAN2.D50). |
+| `vaulter-drive.features.share_links` | — | `false` | — |
+| `vaulter-drive.features.public_listing` | — | `false` | — |
+| `vaulter-drive.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | HasDrives: delete the drives of an owner when the owner is deleted. |
+| `vaulter-drive.access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `'database'` | — |
+| `vaulter-drive.access.permission_drivers.database` | — | `DatabasePermissionDriver::class` | — |
+| `vaulter-drive.access.permission_drivers.gate` | — | `GatePermissionDriver::class` | — |
+| `vaulter-drive.access.permission_drivers.spatie` | — | `SpatiePermissionDriver::class` | — |
+| `vaulter-drive.access.permission_drivers.null` | — | `NullPermissionDriver::class` | — |
+| `vaulter-drive.access.gate.abilities.previewer` | — | `'vaulter.preview'` | — |
+| `vaulter-drive.access.gate.abilities.reader` | — | `'vaulter.view'` | — |
+| `vaulter-drive.access.gate.abilities.commenter` | — | `'vaulter.comment'` | — |
+| `vaulter-drive.access.gate.abilities.writer` | — | `'vaulter.edit'` | — |
+| `vaulter-drive.access.gate.abilities.organizer` | — | `'vaulter.organize'` | — |
+| `vaulter-drive.access.gate.abilities.owner` | — | `'vaulter.manage'` | — |
+| `vaulter-drive.access.gate.super_ability` | `VAULTER_GATE_SUPER_ABILITY` | `'vaulter.super'` | — |
+| `vaulter-drive.access.gate.create_ability` | `VAULTER_GATE_CREATE_ABILITY` | `'vaulter.create'` | — |
+| `vaulter-drive.access.spatie.permissions.previewer` | — | `'vaulter.preview'` | — |
+| `vaulter-drive.access.spatie.permissions.reader` | — | `'vaulter.view'` | — |
+| `vaulter-drive.access.spatie.permissions.commenter` | — | `'vaulter.comment'` | — |
+| `vaulter-drive.access.spatie.permissions.writer` | — | `'vaulter.edit'` | — |
+| `vaulter-drive.access.spatie.permissions.organizer` | — | `'vaulter.organize'` | — |
+| `vaulter-drive.access.spatie.permissions.owner` | — | `'vaulter.manage'` | — |
+| `vaulter-drive.access.spatie.super_permission` | `VAULTER_SPATIE_SUPER_PERMISSION` | `'vaulter.super'` | — |
+| `vaulter-drive.access.spatie.create_permission` | `VAULTER_SPATIE_CREATE_PERMISSION` | `'vaulter.create'` | — |
+| `vaulter-drive.access.spatie.teams` | `VAULTER_SPATIE_TEAMS` | `false` | — |
+| `vaulter-drive.access.spatie.role_subject_type` | — | `'role'` | — |
+| `vaulter-drive.access.spatie.team_subject_type` | — | `'team'` | — |
+| `vaulter-drive.listing.scan_budget` | — | `1000` | — |
+| `vaulter-drive.sharing.token_generator` | — | `RandomShareTokenGenerator::class` | — |
+| `vaulter-drive.sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `'/share'` | — |
+| `vaulter-drive.sharing.prefix_length` | — | `8` | — |
+| `vaulter-drive.sharing.default_ttl_hours` | `VAULTER_SHARE_DEFAULT_TTL_HOURS` | `72` | — |
+| `vaulter-drive.sharing.max_ttl_hours` | `VAULTER_SHARE_MAX_TTL_HOURS` | `720` | — |
+| `vaulter-drive.downloads.delivery_mode` | — | `'strict'` | — |
+| `vaulter-drive.downloads.direct_ttl_seconds` | — | `60` | — |
+| `vaulter-drive.downloads.inline_mime_types` | — | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain']` | — |
+| `vaulter-drive.changes.retention_days` | — | `30` | Days a journal entry stays readable; vaulter:changes:prune deletes older ones and a cursor behind them expires (410 cursor_expired). |
+| `vaulter-drive.changes.max_page_size` | — | `1000` | The largest page DriveHandle::changes()->list() returns. |
+| `vaulter-drive.handlers` | — | `[]` | — |
 | `vaulter-drive.uploads.scan.required` | — | `null` | — |
 | `vaulter-drive.uploads.scan.mode` | — | `null` | — |
 | `vaulter-drive.uploads.scan.scanner` | — | `null` | — |
@@ -645,12 +638,26 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-drive.uploads.resumable.metadata.max_value_length` | — | `512` | — |
 | `vaulter-drive.trash.retention_days` | — | `30` | — |
 | `vaulter-drive.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
+| `vaulter-drive.schedule.changes_prune` | — | `'dailyAt:03:20'` | — |
 | `vaulter-drive.schedule.uploads_sweep` | — | `'hourlyAt:15'` | — |
 | `vaulter-drive.schedule.trash_purge` | — | `'dailyAt:03:30'` | — |
 | `vaulter-drive.schedule.drives_purge` | — | `'hourlyAt:25'` | — |
 | `vaulter-drive.schedule.revisions_prune` | — | `'dailyAt:03:40'` | — |
 | `vaulter-drive.schedule.scan_reconcile` | — | `'everyFiveMinutes'` | — |
 | `vaulter-drive.schedule.drives_recount` | — | `null` | Report-only drift check; off until an operator wants it. |
+| `vaulter-drive.models.drive` | — | `Drive::class` | — |
+| `vaulter-drive.models.node` | — | `Node::class` | — |
+| `vaulter-drive.models.file` | — | `File::class` | — |
+| `vaulter-drive.models.scan_obligation` | — | `ScanObligation::class` | — |
+| `vaulter-drive.models.scan_request` | — | `ScanRequest::class` | — |
+| `vaulter-drive.models.scan_evidence` | — | `ScanEvidenceRecord::class` | — |
+| `vaulter-drive.models.scan_policy_state` | — | `ScanPolicyState::class` | — |
+| `vaulter-drive.models.scan_backfill_run` | — | `ScanBackfillRun::class` | — |
+| `vaulter-drive.models.file_revision` | — | `FileRevision::class` | — |
+| `vaulter-drive.models.file_revision_blob` | — | `FileRevisionBlob::class` | — |
+| `vaulter-drive.models.grant` | — | `NodeGrant::class` | — |
+| `vaulter-drive.models.node_share` | — | `NodeShare::class` | — |
+| `vaulter-drive.models.activity` | — | `Activity::class` | — |
 | `vaulter-drive.models.upload_session` | — | `UploadSession::class` | — |
 | `vaulter-drive.models.upload_part` | — | `UploadPart::class` | — |
 
@@ -681,4 +688,32 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-media.content_store` | — | `Sha256ContentStore::class` | — |
 | `vaulter-media.storage_driver` | — | `FlysystemStorageDriver::class` | — |
 | `vaulter-media.blob_store` | — | `BlobStore::class` | — |
+| `vaulter-media.models` | — | — | Swappable Eloquent model of the blob table (must extend the package model). |
+| `vaulter-media.models.blob` | — | `Blob::class` | — |
+
+### `vaulter-webhooks`
+
+| Key | Env | Default | Description |
+|---|---|---|---|
+| `vaulter-webhooks.timeout` | — | `15` | — |
+| `vaulter-webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three days in total). Jitter is the +/- fraction applied to each delay. |
+| `vaulter-webhooks.retry_jitter` | — | `0.1` | — |
+| `vaulter-webhooks.disable_after_days` | — | `5` | Days of uninterrupted failure before an endpoint is disabled; 0 never disables. |
+| `vaulter-webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (max 604800). |
+| `vaulter-webhooks.retention_days` | — | `30` | — |
+| `vaulter-webhooks.retry_claim_seconds` | — | `60` | — |
+| `vaulter-webhooks.relay` | — | — | The webhooks.fanout outbox consumer materializes deliveries fanout_chunk endpoints at a time (1..1000), each chunk in its own transaction under the outbox delivery lease. |
+| `vaulter-webhooks.relay.fanout_chunk` | — | `100` | — |
+| `vaulter-webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `'vaulter.webhooks.manage'` | — |
+| `vaulter-webhooks.delivery.url_guard` | — | `DefaultOutboundUrlGuard::class` | — |
+| `vaulter-webhooks.delivery.allowed_schemes` | — | `['http', 'https']` | — |
+| `vaulter-webhooks.delivery.blocked_ip_ranges` | — | `null` | — |
+| `vaulter-webhooks.delivery.allowed_ip_ranges` | — | `[]` | — |
+| `vaulter-webhooks.delivery.connect_timeout` | — | `2` | — |
+| `vaulter-webhooks.delivery.max_response_bytes` | — | `65536` | — |
+| `vaulter-webhooks.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
+| `vaulter-webhooks.schedule.webhooks_retry` | — | `'everyMinute'` | — |
+| `vaulter-webhooks.schedule.webhooks_prune` | — | `'dailyAt:03:10'` | — |
+| `vaulter-webhooks.models.webhook_endpoint` | — | `WebhookEndpoint::class` | — |
+| `vaulter-webhooks.models.webhook_delivery` | — | `WebhookDelivery::class` | — |
 <!-- vaulter:config-reference:end -->

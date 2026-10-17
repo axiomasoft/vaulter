@@ -6,28 +6,29 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
+use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Events\Drives\DriveDeleted;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
@@ -65,7 +66,7 @@ it('purges every node, revision edge and the drive row, keeping activity as hist
     Event::fake([DriveDeleted::class]);
     [$drive, $id] = drivePurgeFixture();
     $blob = Blob::query()->firstOrFail();
-    expect($blob->versions()->count())->toBe(1);
+    expect(RevisionBlobPins::edges($blob))->toBe(1)->and(RevisionBlobPins::pins($blob))->toBe(1);
     $history = Activity::query()->where('drive_id', $id)->count();
     Queue::fake();
 
@@ -76,7 +77,7 @@ it('purges every node, revision edge and the drive row, keeping activity as hist
 
     expect(Drive::query()->whereKey($id)->exists())->toBeFalse()
         ->and(Node::query()->where('drive_id', $id)->count())->toBe(0)
-        ->and($blob->refresh()->versions()->count())->toBe(0)
+        ->and(RevisionBlobPins::edges($blob->refresh()))->toBe(0)->and(RevisionBlobPins::pins($blob->refresh()))->toBe(0)
         ->and(Activity::query()->where('drive_id', $id)->count())->toBeGreaterThanOrEqual($history);
     Event::assertDispatched(DriveDeleted::class, fn (DriveDeleted $event): bool => $event->driveId === (string) $id);
 });
@@ -167,7 +168,7 @@ it('purges a quarantined revision through the same path: edges, rows and quota, 
     }
 
     expect(Drive::query()->whereKey($id)->exists())->toBeFalse()
-        ->and($blob->refresh()->versions()->count())->toBe(0);
+        ->and(RevisionBlobPins::edges($blob->refresh()))->toBe(0)->and(RevisionBlobPins::pins($blob->refresh()))->toBe(0);
     // SQLite does not enforce the FK cascades that remove the revision rows with their node.
     if (DB::connection()->getDriverName() === 'pgsql') {
         expect(FileRevision::query()->whereKey($revision->getKey())->exists())->toBeFalse();

@@ -8,7 +8,7 @@ description: "Use when changing project skills, plugins, memory scopes, roles, o
 This project is an ecosystem node **academici**, connected to the hub **mAInd**. File is managed
 from maind (`templates/skills/ecosystem-setup/SKILL.md`) — edit there and `maind sync`, not in copy.
 
-**Project status:** type `php-package` · scope `project:vaulter` · namespaces `axioma`.
+**Project status:** type `php-package` · scope `project:vaulter` · namespaces `axioma, vaulter`.
 
 ## General rules (do not violate)
 
@@ -51,5 +51,5 @@ The complete tree of all layers is in the dock maind «Decision Tree: Project Se
 
 ## Project Communications
 
-- namespaces: `axioma` · scope: `project:vaulter` · linked to: azguard.
+- namespaces: `axioma, vaulter` · scope: `project:vaulter` · linked to: azguard.
 - current connections: `maind graph --project vaulter`.

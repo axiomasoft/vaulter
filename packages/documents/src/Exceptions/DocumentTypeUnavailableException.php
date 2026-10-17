@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * removed or not installed yet). The document stays readable as opaque JSON and can be
  * copied, trashed and purged; editing, exporting and collaborating need the type back.
  */
+#[Api]
 final class DocumentTypeUnavailableException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

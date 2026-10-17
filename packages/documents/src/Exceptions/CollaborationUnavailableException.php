@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * off, or the document's type cannot be edited by several clients at once. The
  * document itself stays readable and, with Edit, saves through the ordinary update.
  */
+#[Api]
 final class CollaborationUnavailableException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -12,7 +12,7 @@
             "id": "6",
             "node_id": "15",
             "subject": {
-                "type": "Vaulter\\Tests\\Fixtures\\TestUser",
+                "type": "Vaulter\\Testing\\Fixtures\\TestUser",
                 "id": "7"
             },
             "role": "reader",

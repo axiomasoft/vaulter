@@ -1,0 +1,24 @@
+{
+    "version": 1,
+    "zones": {
+        "core": {
+            "suite": "core",
+            "src": [
+                "packages/core/src"
+            ],
+            "tests": [
+                "packages/core/tests/Other",
+                "packages/core/tests/Roles"
+            ]
+        },
+        "drive": {
+            "suite": "drive",
+            "src": [
+                "packages/drive/src"
+            ],
+            "tests": [
+                "packages/drive/tests"
+            ]
+        }
+    }
+}

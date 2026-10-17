@@ -8,6 +8,7 @@ use Illuminate\Console\Application as Artisan;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\RoutesConfig;
@@ -20,13 +21,13 @@ use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\OffersModules;
 use Vaulter\Providers\HttpRegistrar;
-use Vaulter\Webhooks\WebhooksModule;
 
 /**
- * The core provider offers the core and the (logical) webhooks manifests and runs the module kernel:
+ * The core provider offers the core manifest and runs the module kernel:
  * it compiles every offered manifest once all providers registered, seals the result and applies the
  * declarations of the active modules (ADR-0027). It registers nothing else itself.
  */
+#[Api]
 final class VaulterServiceProvider extends PackageServiceProvider
 {
     use OffersModules;
@@ -41,7 +42,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         $this->offerModule(CoreModule::class);
-        $this->offerModule(WebhooksModule::class);
         $this->registerModuleKernel();
     }
 
@@ -102,9 +102,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
             $kernel->compiled(),
             function (array $paths, string $tag): void {
                 $this->publishes($paths, $tag);
-            },
-            function (array $paths, string $tag): void {
-                $this->publishesMigrations($paths, $tag);
             },
         );
     }

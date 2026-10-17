@@ -5,30 +5,31 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Content;
 
 use LogicException;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Data\Drive\CopyResult;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Data\CopyResult;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 
 /**
  * Content of a kind=document node for copy and purge. Both run inside the Vaulter
  * transaction of CopyNodeAction / PurgeNodeAction, which already hold the tree and
  * node locks, so this class only takes the document row lock the action's order
  * leaves for it.
- *
- * @internal
  */
+#[Internal]
 final readonly class DocumentContentLifecycle implements NodeContentLifecycle
 {
     /** Revisions deleted per statement, so a long history never becomes one huge delete. */
     private const int PURGE_BATCH = 500;
 
+    #[Internal]
     public function __construct(
         private DocumentStoreRepository $documents,
         private DocumentStateWriter $writer,

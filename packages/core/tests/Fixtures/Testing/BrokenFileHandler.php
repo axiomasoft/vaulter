@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Fixtures\Testing;
 
-use Vaulter\Handlers\AbstractFileHandler;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Handlers\AbstractFileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /** Breaks the routing contract: its capabilities depend on the node, which the registry cache does not key on. */
 final class BrokenFileHandler extends AbstractFileHandler

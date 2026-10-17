@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.11",
   "title": "Реестр problem codes: retryable и receipt-политика, вклады модулей; I5 владение идентичностей",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Problem codes объявляются `ModuleBuilder::problems()` с `ProblemSpec(status, exception, retryable, receipt)`; рендер добавляет `retryable` и `Retry-After`; `vaulter:errors`, docs/reference/errors.md, OpenAPI и `@vaulter/vue` errors.ts отражают поля; тест I5 сверяет владельцев команд/маршрутов/конфиг-корней/event types/problem codes с identities.",
   "why": "D25 (ревизия 3): `receipt: never` для auth/visibility/validation/428/5xx — предпосылка корректной идемпотентности; architecture#errors требует retryable. I5 строится в P3. Риски: неверная классификация кода → кэширование 403/404 на 24ч; дрейф OpenAPI.",
   "scope": {
@@ -233,12 +233,82 @@
   },
   "result": {
     "started_at": "2026-10-14T14:50:14Z",
+    "finished_at": "2026-10-14T17:29:05Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "effort": "high",
       "session": "6b735f69-a177-4dc2-91c8-fcb6efc9184a"
-    }
+    },
+    "notes": "Ревью grok (3 дорожки + ре-ревью), прогоны зелёные после одного раунда правок (d6273f63, 6acfc5a2). Подробности — artifacts/P3.11-P3.12/review-grok.md, runs/round2",
+    "deviations": [
+      "R1.4: upload_conflict/upload_offset_mismatch остаются receipt=never (комментарий вместо разделения кода)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-14T17:29:05Z"
+      }
+    ],
+    "commits": [
+      "46d06076"
+    ]
   },
-  "updated_at": "2026-10-14T14:50:14Z"
+  "updated_at": "2026-10-14T17:29:05Z"
 }

@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Acme;
+
+final class Perm
+{
+    public function sibling(): PermX
+    {
+        return new PermX;
+    }
+
+    public function names(): array
+    {
+        return ['Acme\Perm', "Acme\\Perm", 'Acme\PermX', 'Acme\Perm\Item'];
+    }
+}

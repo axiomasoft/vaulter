@@ -1,0 +1,208 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.12",
+  "title": "@vaulter/vue-collaboration (envelope, очередь, ack, статусы) и @vaulter/vue без yjs/@hocuspocus",
+  "status": "todo",
+  "summary": "Новый `packages/vue-collaboration` (`@vaulter/vue-collaboration`): перенос `packages/vue/src/collaboration/{session,transport}.ts` и `composables/useCollaboration.ts`, `src/envelope.ts` (UUID на локальное обновление, ограниченная очередь, ack/nack, resend с теми же id), `src/status.ts` (synchronized/pending/saved/error; sync не даёт saved), `src/adapter.ts` (`createCollaborationAdapter`). `@vaulter/vue`: `src/collaboration-adapter.ts` (типы, injection key, опция плагина), VaulterDocumentNode через адаптер (нет адаптера/404/409 → REST autosave), удалены зависимость `@hocuspocus/provider` и peer `yjs`, экспорты обновлены; arch-тест без collab-импортов; suites/zones/workspaces; baseline vue пересобран.",
+  "why": "D15, D1, D26 (клиентская часть протокола 2): `@vaulter/vue` не тянет yjs/@hocuspocus в бандл; saved — только по backend ack. Hard risks: UI показывает saved по sync-сообщению; новый update_id при reconnect (14, дубли); неограниченная очередь; редактор без коллаборации перестаёт сохранять через REST.",
+  "scope": {
+    "include": [
+      "packages/vue-collaboration/** (package.json, tsconfig, vite.config.ts, src, tests: envelope/status/adapter/use-collaboration)",
+      "packages/vue: collaboration-adapter.ts, index.ts, VaulterDocumentNode.vue, plugin.ts, package.json, тесты (exports snapshot, document-node, provider-contract, node-collaboration → перенос), tests/arch/no-collab-deps.test.ts",
+      "root package.json workspaces + package-lock.json; tests/suites.json + tests/zones.json (vue-collaboration); baseline vue и vue-collaboration"
+    ],
+    "exclude": [
+      "Публикация npm и `npm run build` (PLAN4/владелец); docs (P5.15)",
+      "Отложено в PLAN4: `npm --prefix packages/vue run build`, `npm --prefix packages/vue-collaboration run build`, Playwright e2e"
+    ]
+  },
+  "depends_on": [
+    "P5.11"
+  ],
+  "related": [],
+  "decisions": [
+    "D15",
+    "D1",
+    "D26",
+    "D41"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "protocol",
+      "why": "эндпоинты протокола 2, ошибки, retry-классы, envelope/ack",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "tests-map",
+      "why": "сценарии I17 этого пункта: линия и файл",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "frontend",
+      "why": "адаптер, состав пакета, статусы, очередь",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture",
+      "section": "frontend",
+      "why": "D15: границы npm-пакетов",
+      "required": true
+    },
+    {
+      "path": "packages/vue/src/composables/useCollaboration.ts",
+      "why": "текущий composable",
+      "required": true
+    },
+    {
+      "path": "packages/vue/src/collaboration/transport.ts",
+      "why": "текущий транспорт",
+      "required": true
+    },
+    {
+      "path": "packages/vue/src/components/VaulterDocumentNode.vue",
+      "why": "переключение collaborative/autosave (строки 1–60)",
+      "required": true
+    },
+    {
+      "path": "packages/vue/package.json",
+      "why": "зависимости и скрипты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/vue-collaboration/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/vue/src/collaboration/**",
+      "change": "delete"
+    },
+    {
+      "path": "packages/vue/src/composables/useCollaboration.ts",
+      "change": "delete"
+    },
+    {
+      "path": "packages/vue/src/collaboration-adapter.ts",
+      "change": "create"
+    },
+    {
+      "path": "packages/vue/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/vue/package.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/vue/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/vue/tests/arch/no-collab-deps.test.ts",
+      "change": "create"
+    },
+    {
+      "path": "package.json",
+      "change": "modify"
+    },
+    {
+      "path": "package-lock.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "vue.list, vue-collaboration.list, original/vue-collaboration.*"
+    }
+  ],
+  "rules": [
+    "packages/vue/src не импортирует `yjs`, `y-*`, `@hocuspocus/*`; packages/vue/package.json без dependency `@hocuspocus/provider` и peer `yjs`.",
+    "Статус saved выставляется только при пустой очереди и полученном ack последнего update_id; sync/synced provider-а даёт максимум synchronized.",
+    "Resend при reconnect использует исходные update_id; переполнение очереди → error и прекращение локальных правок.",
+    "Без адаптера VaulterDocumentNode работает REST-autosave с state_version как без коллаборации сегодня."
+  ],
+  "guidance": "envelope.test.ts (14): локальное обновление → envelope с UUID; разрыв до ack → reconnect → тот же UUID повторно; ack → saved; дубль ack игнорируется; nack retry:false → error. Перенос тестов vue: если тест проверял только транспорт — в vue-collaboration; document-node — на фейковый адаптер. Lock-файл: `npm install --package-lock-only --prefer-offline`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "npm --prefix packages/vue run typecheck && npm --prefix packages/vue run api:check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "npm --prefix packages/vue test -- tests/arch/no-collab-deps.test.ts tests/arch/api-no-vue.test.ts tests/exports.test.ts tests/document-node.test.ts",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "npm --prefix packages/vue-collaboration run typecheck && npm --prefix packages/vue-collaboration test",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "! grep -rnE \"from '(yjs|y-[a-z-]+|@hocuspocus/[a-z-]+)'\" packages/vue/src && jq -e '((.dependencies // {}) | has(\"@hocuspocus/provider\") | not) and ((.peerDependencies // {}) | has(\"yjs\") | not)' packages/vue/package.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ZonesMapTest.php tests/Repo/TestGroupsTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "@vaulter/vue-collaboration",
+    "@vaulter/vue без collab-зависимостей"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:04:32Z"
+}

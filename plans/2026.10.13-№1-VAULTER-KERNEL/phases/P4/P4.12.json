@@ -1,0 +1,319 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.12",
+  "title": "Точка входа Vaulter\\Drive\\Vaulter, фасад и алиас Vaulter в drive (D10)",
+  "status": "done",
+  "summary": "`Vaulter\\VaulterManager` заменяется `Vaulter\\Drive\\Vaulter` (final, #[Api]: drive(), findDrive(), profiles(), handlers(), permissions()), `Vaulter\\Facades\\Vaulter` — `Vaulter\\Drive\\Facades\\Vaulter` (+withoutTenancy делегирует core Tenancy::without); Laravel-алиас `Vaulter` объявляет drive composer; старые FQCN удаляются без class_alias; тесты/доки/Filament/load/e2e переведены.",
+  "why": "architecture#entry-point, D10. Риск: `VaulterManager::drive()` capability-резолв DriveHandleFactory (P3.5) — переносится как есть; документация публичного API (FacadeMethodDocblockTest) и surface-манифесты меняются.",
+  "scope": {
+    "include": [
+      "Создание Vaulter\\Drive\\Vaulter и фасада; удаление старых",
+      "composer extra.laravel.aliases core→drive",
+      "Все использования в репозитории",
+      "surface/I13 манифесты перегенерированы"
+    ],
+    "exclude": [
+      "Новые методы точки входа (кроме drives() — P4.15)",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.11"
+  ],
+  "decisions": [
+    "D10",
+    "D21",
+    "D27",
+    "D41",
+    "D43",
+    "D44",
+    "D42"
+  ],
+  "skills": [
+    "php:namespace-refactor-safety"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "селектор, тесты, ручные шаги пункта",
+      "required": true,
+      "section": "drive-moves"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "цель точки входа",
+      "required": true,
+      "section": "entry-point"
+    },
+    {
+      "path": "packages/core/src/VaulterManager.php",
+      "why": "текущая реализация",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Facades/Vaulter.php",
+      "why": "docblock методов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    },
+    {
+      "ref": "D42",
+      "why": "ревью-чекпоинт и карта ревью",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "карта ревью-чекпоинтов, запуск ревью",
+      "required": true,
+      "section": "review-map"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/**",
+      "change": "modify",
+      "note": "перенос инструментом"
+    },
+    {
+      "path": "packages/drive/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "packages/filament/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "packages/azgard/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "load/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "e2e/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    },
+    {
+      "path": "packages/drive/src/Vaulter.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Facades/Vaulter.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/VaulterManager.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Facades/Vaulter.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/composer.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/composer.json",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Без class_alias и без прокси в core (D21).",
+    "`Vaulter\\Kernel` остаётся в core.",
+    "Ledger: serialized/alias identities redefined D10.",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "Поиск всех использований: `grep -rn 'VaulterManager\\|Facades\\\\Vaulter' packages load e2e`. Биндинг контейнера (singleton имени `vaulter`?) — объявляет DriveModule (bindings), не core-провайдер.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test ! -e packages/core/src/VaulterManager.php && test ! -e packages/core/src/Facades && ! grep -rn 'Vaulter\\\\VaulterManager\\|Vaulter\\\\Facades\\\\Vaulter' packages load e2e && jq -e '.extra.laravel.aliases.Vaulter == \"Vaulter\\\\Drive\\\\Facades\\\\Vaulter\"' packages/drive/composer.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p drive,core,documents,media,filament,repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p azgard",
+      "expect": "exit 0 либо падают только 10 RealAzgard* (дрейф ../azguard, pre-existing)",
+      "kind": "impact"
+    },
+    {
+      "id": "V4",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/documents && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/filament && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/azgard && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Vaulter\\Drive\\Vaulter + фасад",
+    "алиас в drive"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "gpt-6.1-sol",
+      "note": "RC3: покрывает P4.8–P4.12 (git diff -M, нерениамные хунки). Фокус: пропущенные FQCN-строки, сплит конфига, route middleware, публичный API/фасад D10.",
+      "provider": "codex",
+      "effort": "high"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-17T02:30:16Z",
+    "finished_at": "2026-10-17T03:27:03Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "Vaulter + Facades\\Vaulter + алиас → drive; withoutTenancy через Tenancy::without; Fast-набор зелёный",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T03:27:03Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T03:27:03Z"
+}

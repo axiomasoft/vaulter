@@ -5,11 +5,8 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Files\RestoreFileRevisionAction;
@@ -29,24 +26,27 @@ use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Drive\Data\Nodes\SetNodePropertiesInput;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Events\Drives\DriveArchived;
 use Vaulter\Drive\Events\Drives\DriveUnarchived;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Drive\DriveArchivedException;
-use Vaulter\Exceptions\Drive\InvalidDriveStateException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\DriveArchivedException;
+use Vaulter\Drive\Exceptions\InvalidDriveStateException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
@@ -80,7 +80,7 @@ it('refuses an invalid transition with invalid_drive_state', function (): void {
 });
 
 it('an archived drive refuses mutations, purge and creation of non-system actors but still reads', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $folder = $system->folders()->create('Docs');
     $trashed = $system->folders()->create('Old');
@@ -106,8 +106,8 @@ it('an archived drive refuses mutations, purge and creation of non-system actors
 });
 
 it('an archived drive refuses grant and share changes', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.share_links', true);
     $system = DriveTestHelpers::drive();
     $folder = $system->folders()->create('Docs');
     $user = DriveTestHelpers::actor($system, 32);
@@ -118,7 +118,7 @@ it('an archived drive refuses grant and share changes', function (): void {
 });
 
 it('archive and unarchive need Manage on the root or the system actor', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $reader = new TestUser;
     $reader->forceFill(['id' => 33]);
@@ -135,7 +135,7 @@ it('archive and unarchive need Manage on the root or the system actor', function
 
 it('a drive being deleted is absent for users and the handle', function (): void {
     Queue::fake();
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $folder = $system->folders()->create('Docs');
     $user = DriveTestHelpers::actor($system, 35);

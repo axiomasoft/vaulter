@@ -14,22 +14,22 @@
         {
             "category": "explicit-adapter",
             "count": 1,
-            "file": "packages/core/src/Access/Drivers/SpatiePermissionDriver.php",
+            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
             "kind": "probe",
             "reason": "узкий Spatie-адаптер допустим по D20 при явном выборе; недоступный выбранный driver диагностируется fail-closed",
             "removed_in": "never",
-            "symbol": "Vaulter\\Access\\Drivers\\SpatiePermissionDriver::forgetCachedPermissions",
+            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::forgetCachedPermissions",
             "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
             "view": "current"
         },
         {
             "category": "explicit-adapter",
             "count": 1,
-            "file": "packages/core/src/Access/Drivers/SpatiePermissionDriver.php",
+            "file": "packages/drive/src/Access/Drivers/SpatiePermissionDriver.php",
             "kind": "probe",
             "reason": "узкий Spatie-адаптер допустим по D20 при явном выборе; недоступный выбранный driver диагностируется fail-closed",
             "removed_in": "never",
-            "symbol": "Vaulter\\Access\\Drivers\\SpatiePermissionDriver::isAvailable",
+            "symbol": "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver::isAvailable",
             "target": "\\Spatie\\Permission\\PermissionRegistrar::class",
             "view": "current"
         },
@@ -58,11 +58,11 @@
         {
             "category": "config-validation",
             "count": 1,
-            "file": "packages/core/src/Doctor/Checks/AccessDriverCheck.php",
+            "file": "packages/drive/src/Doctor/Checks/AccessDriverCheck.php",
             "kind": "probe",
             "reason": "doctor проверяет существование класса выбранного access driver: диагностика, не активация",
             "removed_in": "never",
-            "symbol": "Vaulter\\Doctor\\Checks\\AccessDriverCheck::run",
+            "symbol": "Vaulter\\Drive\\Doctor\\Checks\\AccessDriverCheck::run",
             "target": "$class",
             "view": "current"
         },
@@ -113,11 +113,11 @@
         {
             "category": "host-lifecycle",
             "count": 1,
-            "file": "packages/core/src/Support/NodeName.php",
+            "file": "packages/drive/src/Support/NodeName.php",
             "kind": "probe",
             "reason": "наличие ext-intl Normalizer — окружение рантайма, а не выбор модуля",
             "removed_in": "never",
-            "symbol": "Vaulter\\Support\\NodeName::nfc",
+            "symbol": "Vaulter\\Drive\\Support\\NodeName::nfc",
             "target": "\\Normalizer::class",
             "view": "current"
         },
@@ -130,6 +130,28 @@
             "removed_in": "never",
             "symbol": "Vaulter\\Support\\RequestContext::currentRequest",
             "target": "'request'",
+            "view": "current"
+        },
+        {
+            "category": "config-validation",
+            "count": 1,
+            "file": "packages/core/src/Testing/Concurrency/ForkRace.php",
+            "kind": "probe",
+            "reason": "the fork-based race harness of the test kit asks whether the process can fork and signal: a capability check of the test host, not an activation",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Testing\\Concurrency\\ForkRace::supported",
+            "target": "'pcntl_fork'",
+            "view": "current"
+        },
+        {
+            "category": "config-validation",
+            "count": 1,
+            "file": "packages/core/src/Testing/Concurrency/ForkRace.php",
+            "kind": "probe",
+            "reason": "the fork-based race harness of the test kit asks whether the process can fork and signal: a capability check of the test host, not an activation",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Testing\\Concurrency\\ForkRace::supported",
+            "target": "'posix_kill'",
             "view": "current"
         },
         {
@@ -246,23 +268,34 @@
         {
             "category": "host-lifecycle",
             "count": 1,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "file": "packages/drive/src/Configuration/DriveConfigValidator.php",
             "kind": "probe",
             "reason": "проверка resolved ProfileRegistry — состояние контейнера хоста, не выбор модуля",
             "removed_in": "never",
-            "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
-            "target": "\\Vaulter\\Profiles\\ProfileRegistry::class",
+            "symbol": "Vaulter\\Drive\\Configuration\\DriveConfigValidator::validate",
+            "target": "\\Vaulter\\Drive\\Profiles\\ProfileRegistry::class",
             "view": "current"
         },
         {
             "category": "config-validation",
             "count": 1,
-            "file": "packages/core/src/Providers/DriveSliceRegistrar.php",
+            "file": "packages/core/src/Modules/ModuleCompiler.php",
+            "kind": "probe",
+            "reason": "the compiler reads the cases of a declared event enum (D38): a constant table of the manifest, checked like the problem sources — no container, no I/O",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Modules\\ModuleCompiler::eventTypes",
+            "target": "$class",
+            "view": "current"
+        },
+        {
+            "category": "config-validation",
+            "count": 1,
+            "file": "packages/drive/src/Providers/DriveSliceRegistrar.php",
             "kind": "probe",
             "reason": "проверка явно выбранного DirectContentUrlSigner: переводится в typed required capability без удаления fail-closed проверки (code-facts)",
             "removed_in": "never",
-            "symbol": "Vaulter\\Providers\\DriveSliceRegistrar::boot",
-            "target": "\\Vaulter\\Contracts\\Cas\\DirectContentUrlSigner::class",
+            "symbol": "Vaulter\\Drive\\Providers\\DriveSliceRegistrar::boot",
+            "target": "\\Vaulter\\Media\\Contracts\\Cas\\DirectContentUrlSigner::class",
             "view": "current"
         }
     ],

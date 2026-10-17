@@ -30,24 +30,31 @@
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
         "pestphp/pest-plugin-type-coverage": "^4.0",
-        "phpstan/phpstan": "^2.0"
+        "phpstan/phpstan": "^2.0",
+        "spatie/laravel-permission": "^8.0"
+    },
+    "suggest": {
+        "spatie/laravel-permission": "Required only when using the 'spatie' host-role driver (^8.0)."
     },
     "autoload": {
         "psr-4": {
-            "Vaulter\\Drive\\": "src/"
+            "Vaulter\\Drive\\": "src/",
+            "Vaulter\\Drive\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Vaulter\\Drive\\Tests\\": "tests/",
-            "Vaulter\\Tests\\": "../core/tests/"
+            "Vaulter\\Drive\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
                 "Vaulter\\Drive\\VaulterDriveServiceProvider"
-            ]
+            ],
+            "aliases": {
+                "Vaulter": "Vaulter\\Drive\\Facades\\Vaulter"
+            }
         },
         "branch-alias": {
             "dev-main": "0.1.x-dev"

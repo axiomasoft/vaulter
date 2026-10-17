@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D8', 'D21', 'D22', 'D25', 'D29', 'D36', 'D39'];
+const ID_ACCEPTED_DECISIONS = ['D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -347,11 +347,12 @@ describe('committed fixtures', function (): void {
                 $tables[$item['table'] ?? substr($item['id'], 6)] = $item['owner'];
             }
         }
-        $migrations = array_map(static fn (string $p): string => basename($p), glob(Repo::discover()->path('packages/core/database/migrations').'/*.php') ?: []);
+        $migrations = array_map(static fn (string $p): string => basename($p), glob(Repo::discover()->path('packages/*/database/migrations').'/*.php') ?: []);
+        sort($migrations, SORT_STRING);
 
         expect($schema['presets'])->toBe(48)
             ->and($schema['engines'])->toBe(['pgsql', 'mysql', 'sqlite'])
-            ->and(count($tables))->toBe(25)
+            ->and(count($tables))->toBe(29)
             ->and(array_column(array_filter($schema['items'], static fn (array $i): bool => str_starts_with($i['id'], 'migration:')), 'id'))->toBe(array_map(static fn (string $b): string => 'migration:'.$b, $migrations));
         foreach ($schema['items'] as $item) {
             if (isset($item['table'])) {
@@ -380,7 +381,8 @@ describe('committed fixtures', function (): void {
             ->and($items['config:vaulter-media.dedup.scope']['owner'])->toBe('media')
             ->and($items['env:VAULTER_TABLE_PREFIX']['config_keys'])->toBe(['vaulter.database.table_prefix'])
             ->and($items['env:VAULTER_ORPHAN_GRACE_HOURS']['config_keys'])->toBe(['vaulter-media.gc.orphan_grace_hours'])
-            ->and($items['config:vaulter.models.blob']['owner'])->toBe('media')
+            ->and($items['config:vaulter-media.models.blob']['owner'])->toBe('media')
+            ->and($items)->not->toHaveKey('config:vaulter.models.blob')
             ->and($items['publish:vaulter-config'])->toMatchArray(['owner' => 'core', 'via' => 'module:config'])
             ->and($items['config:vaulter.modules'])->toMatchArray(['default' => [], 'owner' => 'core'])
             ->and($items)->not->toHaveKey('config:vaulter.features.webhooks')
@@ -391,21 +393,21 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(28)
+        expect(count($items))->toBe(31)
             ->and($doctor['parse'])->toBe('signature')
             ->and(array_column($doctor['options'], 'name'))->toBe(['production', 'json', 'check', 'sample', 'probe-storage'])
             ->and(array_column($doctor['options'], 'accepts_value', 'name')['sample'])->toBeTrue()
             ->and(array_column($doctor['options'], 'array', 'name')['check'])->toBeTrue()
             ->and($items['command:vaulter:changes:reset']['arguments'][0])->toMatchArray(['name' => 'drive', 'required' => true])
             ->and($items['command:vaulter:blobs:gc']['owner'])->toBe('media')
-            ->and($items['command:vaulter:webhooks:relay']['owner'])->toBe('webhooks');
+            ->and($items['command:vaulter:relay']['owner'])->toBe('core');
     });
 
     it('list the routes with the feature flag that mounts them and their place in the OpenAPI contract', function (): void {
         $http = id_fixture('http');
         $items = array_column($http['items'], null, 'id');
 
-        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter.features.share_links', 'vaulter-documents.collaboration.enabled'])
+        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter-drive.features.share_links', 'vaulter-documents.collaboration.enabled'])
             ->and($http['flags'])->not->toHaveKey('vaulter.features.webhooks')
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['requires'])->toBe(['vaulter.modules.webhooks'])
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['default_registered'] ?? false)->toBeFalse()
@@ -425,16 +427,17 @@ describe('committed fixtures', function (): void {
         $count = static fn (string $prefix): int => count(array_filter(array_keys($items), static fn (string $id): bool => str_starts_with($id, $prefix)));
 
         expect($count('event:'))->toBe(32)
-            ->and($count('problem:'))->toBe(77)
-            ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'journal' => 'upsert', 'webhook' => true])
+            ->and($count('problem:'))->toBe(78)
+            ->and($items['problem:blob_unavailable'])->toMatchArray(['status' => 409, 'owner' => 'media', 'retryable' => 'never', 'receipt' => 'never'])
+            ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'external' => true, 'journal' => 'upsert'])
             ->and($items['event:file.uploaded']['data'])->toHaveKey('revision_id')
             ->and($items['problem:node_not_found'])->toMatchArray(['status' => 404, 'owner' => 'drive', 'retryable' => 'never', 'receipt' => 'never'])
             ->and($items['problem:node_sequence_mismatch'])->toMatchArray(['status' => 412, 'retryable' => 'after_refetch', 'receipt' => 'cacheable'])
             ->and($items['problem:operation_in_progress'])->toMatchArray(['status' => 409, 'owner' => 'core', 'retryable' => 'with_backoff', 'receipt' => 'never'])
             ->and($items['problem:rate_limited']['owner'])->toBe('core')
             ->and($items['problem:permission_denied']['owner'])->toBe('core')
-            ->and($items['serialized:queue:Vaulter\Jobs\Webhooks\DeliverWebhook']['owner'])->toBe('webhooks')
-            ->and($items['serialized:config:vaulter.models.node']['fqcns'])->toBe(['Vaulter\Models\Drive\Node'])
+            ->and($items['serialized:queue:Vaulter\Webhooks\Jobs\DeliverWebhook']['owner'])->toBe('webhooks')
+            ->and($items['serialized:config:vaulter-drive.models.node']['fqcns'])->toBe(['Vaulter\Drive\Models\Node'])
             ->and($items['format:cas-key']['manual'])->toBeTrue()
             ->and($items['format:jwt-claims-room']['owner'])->toBe('collaboration');
     });

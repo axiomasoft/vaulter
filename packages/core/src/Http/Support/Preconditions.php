@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Http\Support;
 
 use Illuminate\Http\Request;
-use Throwable;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
-use Vaulter\Exceptions\Nodes\StaleNodeException;
 
 /**
  * Conditional requests of the versioned API (RFC 9110).
@@ -22,6 +20,7 @@ use Vaulter\Exceptions\Nodes\StaleNodeException;
  * returned sequence or state version to the operation, whose compare-and-set in the
  * writing transaction refuses a change that slipped in after the comparison.
  */
+#[Internal]
 final class Preconditions
 {
     private const string IF_MATCH = 'If-Match';
@@ -47,30 +46,13 @@ final class Preconditions
     }
 
     /**
-     * Compare If-Match with the caller's current node tag (strong comparison: a weak
-     * tag never matches) and return the sequence to expect in the mutation.
-     *
-     * @throws StaleNodeException when no listed tag is the current one (412)
+     * Whether a required If-Match holds the caller's current entity tag (strong comparison: a weak tag never
+     * matches). Missing → 428; `*` → 428 too. The owner raises its own 412 when this is false and passes the
+     * sequence or state version it read to the operation, whose compare-and-set refuses a change that slipped in.
      */
-    public static function matchNode(Request $request, string $currentEtag, NodeSnapshot $node): int
+    public static function matches(Request $request, string $currentEtag): bool
     {
-        if (!self::strongMatch(self::requireIfMatch($request), $currentEtag)) {
-            throw StaleNodeException::forNode($node->id);
-        }
-
-        return $node->sequence;
-    }
-
-    /**
-     * The same for document content; the owning package supplies its own 412.
-     */
-    public static function matchDocument(Request $request, string $currentEtag, int $stateVersion, Throwable $mismatch): int
-    {
-        if (!self::strongMatch(self::requireIfMatch($request), $currentEtag)) {
-            throw $mismatch;
-        }
-
-        return $stateVersion;
+        return self::strongMatch(self::requireIfMatch($request), $currentEtag);
     }
 
     /** Whether If-None-Match lets the server answer 304 (weak comparison). */

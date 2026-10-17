@@ -27,5 +27,5 @@ it('README describes canonical feature ownership (P2.5)', function (): void {
     $readme = (string) file_get_contents(dirname(__DIR__, 4).'/README.md');
 
     expect($readme)->toContain('vaulter-documents')
-        ->and($readme)->not->toContain("config('vaulter.features.document_versions')", "config('vaulter.features.comments')");
+        ->and($readme)->not->toContain("config('vaulter-drive.features.document_versions')", "config('vaulter-drive.features.comments')");
 });

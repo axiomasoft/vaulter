@@ -1,0 +1,3 @@
+04-inventory(rerun) EXIT=0
+05-repo(rerun) EXIT=0
+06-core-sqlite(rerun) EXIT=0

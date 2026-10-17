@@ -82,10 +82,6 @@ return [
         'title' => 'Invalid properties',
         'detail' => 'The properties patch breaks the contract.',
     ],
-    'invalid_webhook_signature' => [
-        'title' => 'Invalid webhook signature',
-        'detail' => 'The webhook signature did not verify.',
-    ],
     'method_not_allowed' => [
         'title' => 'Method not allowed',
         'detail' => 'The endpoint does not support this HTTP method; see the Allow header.',
@@ -217,18 +213,6 @@ return [
     'validation_failed' => [
         'title' => 'Validation failed',
         'detail' => 'The request data is invalid; see the errors field.',
-    ],
-    'webhook_delivery_not_found' => [
-        'title' => 'Webhook delivery not found',
-        'detail' => 'The delivery does not exist for this endpoint.',
-    ],
-    'webhook_delivery_not_redeliverable' => [
-        'title' => 'Delivery cannot be redelivered',
-        'detail' => 'The delivery is still being retried or its endpoint is inactive.',
-    ],
-    'webhook_endpoint_not_found' => [
-        'title' => 'Webhook endpoint not found',
-        'detail' => 'The webhook endpoint does not exist.',
     ],
     'write_outside_operation' => [
         'title' => 'Write outside an operation',

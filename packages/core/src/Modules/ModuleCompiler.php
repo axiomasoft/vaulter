@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Throwable;
+use Vaulter\Attributes\Internal;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Http\Problems\ProblemSpec;
 
@@ -16,9 +18,8 @@ use Vaulter\Http\Problems\ProblemSpec;
  *
  * The only probes are `is_a()` checks of declared class-strings and the constant code tables of the declared
  * problem sources: config validation, never activation.
- *
- * @internal
  */
+#[Internal]
 final class ModuleCompiler
 {
     private const string CONSTRAINT = '/^\^(\d+)\.(\d+)$/';
@@ -28,6 +29,8 @@ final class ModuleCompiler
     private const string CONTRIBUTION_ID = '/^[a-z0-9][a-z0-9._-]*$/';
 
     private const string PROBLEM_CODE = '/^[a-z][a-z0-9_]*$/';
+
+    private const string EVENT_TYPE = '/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/';
 
     /**
      * Instantiates the offered manifest classes, then compiles them.
@@ -151,6 +154,8 @@ final class ModuleCompiler
         $this->unique($builders, static fn (ModuleBuilder $b): array => $b->bindingClasses(), 'bindings class', $reasons);
         $problemCodes = $this->problemCodes($builders, $reasons);
         $this->unique($builders, static fn (ModuleBuilder $b): array => $problemCodes[$b->module()->value] ?? [], 'problem code', $reasons);
+        $eventTypes = $this->eventTypes($builders, $reasons);
+        $this->unique($builders, static fn (ModuleBuilder $b): array => $eventTypes[$b->module()->value] ?? [], 'event type', $reasons);
         foreach ($builders as $id => $builder) {
             foreach ($builder->bindingClasses() as $class) {
                 if (!is_a($class, ModuleBindings::class, true)) {
@@ -316,7 +321,9 @@ final class ModuleCompiler
                     $bindings[] = $class;
                 }
             }
-            array_push($events, ...$builder->eventSources());
+            if ($builder->eventSources() !== []) {
+                $events[$id] = array_values(array_unique($builder->eventSources()));
+            }
             if ($builder->problemSources() !== []) {
                 $problems[$id] = $builder->problemSources();
             }
@@ -504,7 +511,7 @@ final class ModuleCompiler
                     continue;
                 }
                 try {
-                    $table = (new $class)->codes();
+                    $table = self::declaredCodes(new $class);
                 } catch (Throwable $e) {
                     $reasons[] = sprintf('module "%s" declares the problem source %s, which cannot be read: %s', $id, $class, $e->getMessage());
 
@@ -521,12 +528,67 @@ final class ModuleCompiler
 
                         continue;
                     }
+                    if (in_array($code, $codes[$id] ?? [], true)) {
+                        $reasons[] = sprintf('module "%s" declares the problem code "%s" twice (%s)', $id, $code, $class);
+
+                        continue;
+                    }
                     $codes[$id][] = $code;
                 }
             }
         }
 
         return $codes;
+    }
+
+    /**
+     * The event type values each module declares (D38): every declared class is a backed string enum
+     * implementing {@see EventTypeContract}; reading its cases keeps the compiler free of container and I/O.
+     *
+     * @param  array<string, ModuleBuilder> $builders
+     * @param  list<string>                 $reasons
+     * @return array<string, list<string>>  module id => values
+     */
+    private function eventTypes(array $builders, array &$reasons): array
+    {
+        $values = [];
+        foreach ($builders as $id => $builder) {
+            foreach (array_unique($builder->eventSources()) as $class) {
+                if (!enum_exists($class) || !is_subclass_of($class, EventTypeContract::class)) {
+                    $reasons[] = sprintf('module "%s" declares the event types %s, which is not an enum implementing %s', $id, $class, EventTypeContract::class);
+
+                    continue;
+                }
+                foreach ($class::cases() as $case) {
+                    // A non-string backing value (an int enum) is a malformed type, not a TypeError.
+                    $value = (string) $case->value;
+                    if (preg_match(self::EVENT_TYPE, $value) !== 1) {
+                        $reasons[] = sprintf('event types %s declare the malformed type "%s"', $class, $value);
+
+                        continue;
+                    }
+                    if (in_array($value, $values[$id] ?? [], true)) {
+                        $reasons[] = sprintf('module "%s" declares the event type "%s" twice (%s)', $id, $value, $class);
+
+                        continue;
+                    }
+                    $values[$id][] = $value;
+                }
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * What a source returns, read without trusting its declared shape: the compiler is the one that rejects a
+     * malformed table.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function declaredCodes(ProblemCodeSource $source): array
+    {
+        return $source->codes();
     }
 
     /**

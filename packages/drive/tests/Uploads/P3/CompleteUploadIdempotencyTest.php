@@ -3,27 +3,27 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Contracts\Drive\DriveHandleFactory;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Content\UploadCleanupReconciler;
+use Vaulter\Drive\Contracts\DriveHandleFactory;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
@@ -143,9 +143,9 @@ it('SEC-CLEANUP-revoked-result requires fresh View and rejects another actor and
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $other, session: $session->refresh()))->toThrow(PermissionDeniedException::class);
     $foreign = DriveContext::system(UploadTestHelpers::storage(), 'foreign upload');
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $foreign, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
-    config()->set('vaulter.access.permission_driver', 'null');
+    config()->set('vaulter-drive.access.permission_driver', 'null');
     $node->forceFill(['trashed_at' => now(), 'trash_root_id' => $node->getKey()])->save();
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
     expect(FileRevision::query()->count())->toBe(1);
@@ -182,7 +182,7 @@ it('SEC-CLEANUP-backoff follows the bounded retry schedule without re-ingest', f
 });
 
 it('SEC-C03-replay-ability replays a committed completion only while the actor still holds the mutation right', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $session = assembledIdempotencyUpload();
     $user = AccessTestHelpers::user(993);
     $session->forceFill(['created_by' => $user->getKey(), 'metadata' => ['actor_type' => $user->getMorphClass()]])->save();

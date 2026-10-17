@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Tests\Http\DriveV1;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
 
 /** Personal stars and namespaced properties over v1. */
 uses(RefreshDatabase::class);

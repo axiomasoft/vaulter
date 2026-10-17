@@ -47,7 +47,7 @@ These are the nouns you will meet throughout the docs and the code.
 | Concept | What it is |
 |---|---|
 | **Drive Profile** | A named drive policy for a host entity: feature flags and grants over one shared schema. |
-| **Storage** | The concrete drive row (`v_storages`) for one host entity within a panel. `Vaulter::drive($entity)` get-or-creates it and provisions its root folder. |
+| **Storage** | The concrete drive row (`v_drives`) for one host entity within a panel. `Vaulter::drive($entity)` get-or-creates it and provisions its root folder. |
 | **Node** | An entry in the unified tree (`v_nodes`): a **folder**, **file**, **document** or **shortcut**. One tree per storage, rooted at the storage's root folder. |
 | **Blob** | The content-addressed bytes behind a file (`v_blobs`). Keyed by `sha256`, deduplicated within a configurable scope, and reclaimed by a two-phase garbage collector. |
 | **ACL / AccessResolver** | The Vaulter-owned effective-permission engine. It folds per-node grants (`v_node_grants`) with a swappable **host-role driver** to answer "may this actor do this?". |
@@ -60,7 +60,7 @@ The data model nests cleanly:
 ```
 Host entity  (App\Models\Project, Organization, User …)
    └── Storage Panel        config envelope, chosen by name
-        └── Storage          v_storages — one drive for this entity
+        └── Storage          v_drives — one drive for this entity
              └── Node tree   v_nodes — folders / files / documents / shortcuts
                   └── File   v_files → File version → Blob (v_blobs, sha256 bytes)
 ```
@@ -85,14 +85,14 @@ and the resolver combines them with node grants. The design is recorded in
 
 ## The `Vaulter` facade at a glance
 
-Everything host-facing goes through the `Vaulter` facade (`Vaulter\Facades\Vaulter`,
+Everything host-facing goes through the `Vaulter` facade (`Vaulter\Drive\Facades\Vaulter`,
 auto-aliased as `Vaulter`). The methods you will use most:
 
 <!-- snippet: host -->
 
 ```php
 use Vaulter\Documents\Facades\Documents;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 // Open a Drive handle for a host entity (get-or-creates its drive + root folder).
 $drive = Vaulter::drive($project);                  // DriveHandle

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Types;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapSchema;
@@ -11,10 +12,11 @@ use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 /** Rich text edited in the TipTap editor, collaboratively over Yjs. */
+#[Api]
 final readonly class RichTextDocumentType implements DocumentType, SupportsCollaboration
 {
     public const string KEY = 'vaulter/rich-text';

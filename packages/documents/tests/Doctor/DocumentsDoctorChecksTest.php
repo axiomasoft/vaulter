@@ -13,7 +13,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

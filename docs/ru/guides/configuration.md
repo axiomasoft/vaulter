@@ -18,22 +18,25 @@ php artisan vendor:publish --tag=vaulter-documents-config
 
 | Пакет | Файл | Тег публикации | Класс конфигурации |
 |---|---|---|---|
-| Core | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterConfig` |
+| Core (ядро) | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterConfig` |
 | Media | `config/vaulter-media.php` | `vaulter-media-config` | `Vaulter\Media\Configuration\MediaConfig` |
 | Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveConfig` |
 | Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsConfig` |
+| Webhooks | `config/vaulter-webhooks.php` | `vaulter-webhooks-config` | `Vaulter\Webhooks\Configuration\WebhooksConfig` |
 | AzGuard | `config/vaulter-azgard.php` | `vaulter-azgard-config` | `Vaulter\Azgard\Configuration\AzgardConfig` |
 | Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentConfig` |
 
 Привязки задаются строками FQCN. Замыкания отклоняются при boot, поэтому
 `php artisan config:cache` безопасен. Значения по умолчанию — в [справочнике ключей](/ru/reference/config).
 
-## Core: база данных, ID, профили и доступ
+## Ядро: база данных, ID, тенантность, маршруты и outbox
 
 Только core владеет настройками схемы: `database.connection`, `database.table_prefix`,
 `ids.strategy`, `ids.host_keys` и `tenancy.enabled`. Соединение `null` использует соединение
 Laravel по умолчанию. Имя таблицы состоит из префикса и канонического имени сущности:
-`DatabaseConfig::table('drives')` по умолчанию возвращает `v_drives`.
+`DatabaseConfig::table('drives')` по умолчанию возвращает `v_drives`. Остальные корни принадлежат пакету,
+чьё понятие они настраивают (см. таблицу выше и [ADR-0030](/adr/0030-package-ownership-and-schema)): ключ никогда
+не живёт в двух файлах.
 
 <!-- snippet: config -->
 
@@ -52,29 +55,11 @@ Laravel по умолчанию. Имя таблицы состоит из пр�
         'uuid7' => \Vaulter\Schema\Uuid7Ids::class,
     ],
 ],
-'profiles' => [
-    'default' => \Vaulter\Profiles\DefaultProfile::class,
-    'providers' => [\App\Vaulter\Profiles\ProjectProfile::class],
-],
-'features' => [
-    'grants' => true,
-    'activity' => true,
-    'webhooks' => true,
-    'share_links' => false,
-    'public_listing' => false,
-],
-'access' => [
-    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
-    'permission_drivers' => [
-        'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-        'gate' => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-        'spatie' => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-        'null' => \Vaulter\Testing\NullPermissionDriver::class,
-    ],
-    // Здесь сохраняются карты abilities/permissions в gate.* и spatie.*.
-],
-'handlers' => [],
+'modules' => [],
+'outbox' => ['batch' => 100, 'max_attempts' => 10],
 ```
+
+### Ключи хоста (`ids.host_keys`) {#host-keys-ids-host-keys}
 
 `ids.host_keys = string` создаёт `varchar(64)` независимо от ID сущностей Vaulter.
 Выбирайте bigint/uuid/ulid только если все ключи хоста соответствуют этому типу.
@@ -82,30 +67,61 @@ Laravel по умолчанию. Имя таблицы состоит из пр�
 
 `tenancy.enabled` включает интеграцию с тенантностью хоста. Колонка всегда называется
 `tenant_id`; скоуп тенанта реализуйте в своих подклассах моделей.
-См. [Мультитенантность](/ru/concepts/tenancy).
+См. [Мультитенантность](/ru/concepts/tenancy). `modules` включает и выключает модули
+([Модули](/ru/concepts/modules)); `outbox.*` настраивает relay ([Outbox](/ru/concepts/events-outbox)).
 
-В `profiles.providers` и `profiles.default` укажите FQCN `ProfileProvider`.
+## Drive: профили, фичи, доступ, обработчики и модели {#drive}
+
+<!-- snippet: config -->
+
+```php
+// config/vaulter-drive.php
+'profiles' => [
+    'default' => \Vaulter\Drive\Profiles\DefaultProfile::class,
+    'providers' => [\App\Vaulter\Profiles\ProjectProfile::class],
+],
+'features' => [
+    'grants' => true,
+    'activity' => true,
+    'share_links' => false,
+    'public_listing' => false,
+],
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+    'permission_drivers' => [
+        'database' => \Vaulter\Drive\Access\Drivers\DatabasePermissionDriver::class,
+        'gate' => \Vaulter\Drive\Access\Drivers\GatePermissionDriver::class,
+        'spatie' => \Vaulter\Drive\Access\Drivers\SpatiePermissionDriver::class,
+        'null' => \Vaulter\Drive\Testing\NullPermissionDriver::class,
+    ],
+    // Здесь сохраняются карты abilities/permissions в gate.* и spatie.*.
+],
+'handlers' => [],
+```
+
+В `vaulter-drive.profiles.providers` и `vaulter-drive.profiles.default` укажите FQCN `ProfileProvider`.
 Сгенерируйте провайдер командой `php artisan vaulter:make:profile project`.
 Ключи профилей должны быть уникальны, а профиль по умолчанию — зарегистрирован.
 См. [Профили Drive](/ru/concepts/drives-and-profiles).
 
 ### Модели {#models}
 
-Подмены моделей core: `models.drive`, `node`, `file`, `file_revision`,
-`file_revision_blob`, `blob`, `grant`, `node_share`, `activity`, `outbox`,
-`webhook_endpoint` и `webhook_delivery`. Каждая модель наследует соответствующую базовую.
-Модели Drive и Documents находятся в собственных корнях конфигурации.
+Каждый пакет держит подмены своих моделей под собственным корнем, и каждая модель наследует
+соответствующую базовую: `vaulter-drive.models.drive`, `node`, `file`, `file_revision`,
+`file_revision_blob`, `grant`, `node_share`, `activity` и модели сканирования и загрузок;
+`vaulter-media.models.blob`; `vaulter-documents.models.*`; `vaulter-webhooks.models.webhook_endpoint` и
+`webhook_delivery`; а для ядра — `vaulter.models.outbox`.
 
 Драйвер по умолчанию — автономный `database`. Карты Gate и Spatie находятся в
-`access.gate.*` и `access.spatie.*`. Установленный мост AzGuard регистрирует
-`access.permission_drivers.azgard`; настройки моста остаются в `vaulter-azgard.*`.
+`vaulter-drive.access.gate.*` и `vaulter-drive.access.spatie.*`. Установленный мост AzGuard регистрирует
+`vaulter-drive.access.permission_drivers.azgard`; настройки моста остаются в `vaulter-azgard.*`.
 Открытый драйвер `null` запрещён в production. См. [Драйверы прав](/ru/extending/permission-drivers).
 
-`handlers` содержит дополнительные FQCN `FileHandler`. Провайдеры регистрируют встроенные
+`vaulter-drive.handlers` содержит дополнительные FQCN `FileHandler`. Провайдеры регистрируют встроенные
 обработчики через тег контейнера `vaulter.file_handlers`: пустой список сохраняет
 preview/download и обработчики установленного Documents.
 
-## Маршруты и публичные ссылки
+## Маршруты и публичные ссылки {#routes}
 
 <!-- snippet: config -->
 
@@ -120,8 +136,14 @@ preview/download и обработчики установленного Document
     ],
     'rate_limits' => ['public' => 60, 'uploads' => 120],
 ],
+```
+
+<!-- snippet: config -->
+
+```php
+// config/vaulter-drive.php
 'sharing' => [
-    'token_generator' => \Vaulter\Support\RandomShareTokenGenerator::class,
+    'token_generator' => \Vaulter\Drive\Support\RandomShareTokenGenerator::class,
     'url_base' => '/share',
     'prefix_length' => 8,
 ],
@@ -129,13 +151,17 @@ preview/download и обработчики установленного Document
 
 Стек `authenticated` защищает маршруты акторов; публичные ссылки используют `public`,
 подписанные callback-запросы коллаборации — `hub`. Метрики запросов добавляются автоматически.
-Старый `middleware` влияет только на `authenticated`; публичный стек настройте отдельно.
+`middleware` влияет только на `authenticated`; публичный стек настройте отдельно.
 Установите Sanctum или замените `auth:sanctum` аутентификацией хоста.
 
-Вебхуки — opt-in модуль: `vaulter.modules.webhooks` (по умолчанию `false`) подключает их маршруты,
-команды, расписания и проверки doctor (см. [Модули](/ru/concepts/modules)). Настройки доставки сохраняются в
-`webhooks.*`: URL guard, таймауты, повторы и сроки хранения. `listing.scan_budget`,
-`downloads.inline_mime_types` и `observability.*` также принадлежат core.
+## Вебхуки {#webhooks}
+
+Вебхуки — отдельный пакет (`composer require axioma-studio/vaulter-webhooks`) и opt-in модуль:
+`vaulter.modules.webhooks` (по умолчанию `false`) подключает их маршруты, команды, расписания и проверки doctor
+(см. [Модули](/ru/concepts/modules)). Настройки доставки лежат в `config/vaulter-webhooks.php` (тег публикации
+`vaulter-webhooks-config`): URL guard, таймауты, расписание повторов и сроки хранения. См.
+[Вебхуки](/ru/guides/webhooks). `vaulter-drive.listing.scan_budget` и `vaulter-drive.downloads.inline_mime_types`
+принадлежат drive; `observability.*` — core.
 
 ## Media: контент-адресуемое хранилище
 
@@ -265,10 +291,11 @@ $table = $database->table('drives');
 $connection = $database->connection();
 ```
 
-`VaulterConfig` даёт секции `database()`, `ids()`, `tenancy()`, `access()`, `routes()`,
-`listing()`, `sharing()`, `downloads()`, `webhooks()`, `observability()` и методы
-`model(string)`, `featureEnabled(string)`, `profileProviders()`, `defaultProfile()`,
-`handlers()`, `extraDataEnabled()`. Классы модулей дают собственные модели и настройки.
+`VaulterConfig` (ядро) даёт секции `database()`, `ids()`, `tenancy()`, `routes()`, `outbox()`,
+`observability()` и `outboxModel()`. Остальное читает класс владельца: `DriveConfig` — `access()`, `sharing()`,
+`listing()`, `downloads()`, `changes()`, `scan()`, `model(string)`, `featureEnabled(string)`,
+`profileProviders()`, `defaultProfile()`, `handlers()`; `MediaConfig` — диск, дедупликацию и GC;
+`WebhooksConfig` — таймауты, повторы и URL guard; `DocumentsConfig` — документы.
 Каждый вызов заново читает репозиторий: `config()->set()` в тестах сразу меняет результат.
 Код пакетов читает ключи Vaulter только в `Configuration`; границу проверяют arch-тесты.
 

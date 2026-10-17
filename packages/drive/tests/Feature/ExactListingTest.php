@@ -5,28 +5,28 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Access\ExactListing;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Access\ExactListing;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Exceptions\Nodes\InvalidCursorException;
+use Vaulter\Drive\Http\Resources\Drive\NodeResource;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Queries\SharedWithActorQuery;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Exceptions\Nodes\InvalidCursorException;
-use Vaulter\Http\Resources\Drive\NodeResource;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Fixtures\Access\ProfileDenyDriver;
+use Vaulter\Drive\Vaulter;
 use Vaulter\ValueObjects\Access\Actor;
-use Vaulter\VaulterManager;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->actor = AccessTestHelpers::user();
     $this->actingAs($this->actor);
     $this->storage = AccessTestHelpers::storage();
@@ -36,7 +36,7 @@ beforeEach(function (): void {
 });
 
 it('V09 reaches the 301st candidate across empty pages and hides walled-off nodes everywhere', function (): void {
-    config()->set('vaulter.listing.scan_budget', 100);
+    config()->set('vaulter-drive.listing.scan_budget', 100);
     $hidden = [];
     for ($i = 0; $i < 300; $i++) {
         // Each candidate restricts inheritance, so the parent's subtree grant stops there.
@@ -64,7 +64,7 @@ it('V09 reaches the 301st candidate across empty pages and hides walled-off node
     $children = $this->getJson('api/vaulter/v1/nodes/'.$this->folder->id.'?include=children')->assertOk()->json('data.children');
     expect(array_intersect(array_column($children['data'], 'id'), array_map('strval', $hidden)))->toBe([])
         ->and($children['meta']['next_cursor'])->not->toBeNull();
-    config()->set('vaulter.listing.scan_budget', 1000);
+    config()->set('vaulter-drive.listing.scan_budget', 1000);
     $this->getJson($this->base.'/search?q=candidate')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
     Node::query()->whereIn('id', [...$hidden, $visible->id])->update(['trashed_at' => now(), 'trash_root_id' => DB::raw('id')]);
     $this->getJson($this->base.'/trash')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
@@ -77,14 +77,14 @@ it('V22 keeps a drive-wide Gate role through an inheritance boundary, which only
     $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'visible');
     $this->getJson($this->base.'/nodes?parent='.$this->folder->id)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id);
 
-    config()->set('vaulter.access.permission_driver', 'gate');
+    config()->set('vaulter-drive.access.permission_driver', 'gate');
     Gate::define('vaulter.view', fn (): bool => true);
     $ids = array_column($this->getJson($this->base.'/nodes?parent='.$this->folder->id)->assertOk()->json('data'), 'id');
     expect($ids)->toContain((string) $walled->id)->toContain((string) $visible->id);
 
     Gate::define('vaulter.super', fn (): bool => false);
-    config()->set('vaulter.access.permission_drivers.blocked', ProfileDenyDriver::class);
-    config()->set('vaulter.access.permission_driver', 'blocked');
+    config()->set('vaulter-drive.access.permission_drivers.blocked', ProfileDenyDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'blocked');
     app()->forgetInstance(PermissionDriverManager::class);
     $this->getJson('api/vaulter/v1/nodes/'.$walled->id)->assertNotFound();
 });
@@ -111,7 +111,7 @@ it('uses at most five Vaulter queries for 50 visible nodes and gives each one it
     // pinned by AbilitiesManyTest), not from a lookup per node.
     $request = Request::create('/');
     $request->setUserResolver(fn () => $this->actor);
-    $handle = app(VaulterManager::class)->drive($this->storage)->actingAs($this->actor);
+    $handle = app(Vaulter::class)->drive($this->storage)->actingAs($this->actor);
     $resources = NodeResource::many($snapshots, $handle->nodes()->abilitiesMany($snapshots));
     expect($resources)->toHaveCount(50);
     foreach ($resources as $resource) {
@@ -161,10 +161,10 @@ it('paginates trash in canonical default position name and id order without skip
 });
 
 it('scans shared candidates across storages without totals or blocked rows', function (): void {
-    config()->set('vaulter.listing.scan_budget', 1);
+    config()->set('vaulter-drive.listing.scan_budget', 1);
     // The hidden candidate's drive belongs to a profile whose driver blocks it
     // administratively: a candidate by its grant, refused by the exact check.
-    config()->set('vaulter.access.permission_drivers.blocked', ProfileDenyDriver::class);
+    config()->set('vaulter-drive.access.permission_drivers.blocked', ProfileDenyDriver::class);
     $registry = new ProfileRegistry;
     $registry->register((new Profile)->key('default'));
     $registry->register((new Profile)->key('blocked')->permissionDriver('blocked'));

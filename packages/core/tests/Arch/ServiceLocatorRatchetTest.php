@@ -29,7 +29,7 @@ function serviceLocatorCounts(string $packages): array
     }
     foreach ((new Finder)->files()->in($directories)->name('*.php') as $file) {
         $path = substr($file->getPathname(), strlen($packages) + 1);
-        if (str_contains($path, 'Provider') || str_contains($path, '/Facades/')) {
+        if (str_contains($path, 'Provider') || str_contains($path, '/Facades/') || str_contains($path, '/src/Testing/')) {
             continue;
         }
         $calls = (new NodeFinder)->find($parser->parse($file->getContents()) ?? [], static fn ($node): bool => $node instanceof FuncCall

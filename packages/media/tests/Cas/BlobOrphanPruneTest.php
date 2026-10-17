@@ -6,13 +6,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Console\Command\Command;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobReconciler;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\PhantomListingContentStore;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * The DESTRUCTIVE orphan prune (master plan P4 #11 / H.3): physically deleting true
@@ -75,7 +75,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
     $winningBlob = new Blob;
     $winningBlob->forceFill([
         'tenant_id' => 1,
-        'drive_id' => null,
+        'storage_id' => null,
         'hash_algo' => 'sha256',
         'sha256' => hash('sha256', 'commit won'),
         'size_bytes' => strlen('commit won'),
@@ -106,7 +106,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
 //     that lists a PHANTOM key (old mtime, no bytes): detection classifies it as an
 //     orphan, then the prune's delete no-ops over the absent object.
 it('prune на pgsql идемпотентен: исчезнувший до удаления объект не бросает (phantom listing)', function (): void {
-    $phantomKey = app(ContentStore::class)->keyFor(scope: BlobScope::fromSegment('t1'), sha256: hash('sha256', 'phantom'));
+    $phantomKey = app(ContentStore::class)->keyFor(scope: BlobScope::fromSegment('t-1'), sha256: hash('sha256', 'phantom'));
 
     app()->instance(ContentStore::class, new PhantomListingContentStore(
         phantomKey: $phantomKey,

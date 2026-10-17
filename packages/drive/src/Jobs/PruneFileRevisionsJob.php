@@ -11,20 +11,21 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use LogicException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
-use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
-use Vaulter\Exceptions\Drive\RevisionPinnedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Profiles\RevisionRetentionPolicy;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\RevisionPinnedException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Profiles\RevisionRetentionPolicy;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Apply the drive profile's RevisionRetentionPolicy to every file of one drive,
@@ -39,6 +40,7 @@ use Vaulter\VaulterManager;
  * the head or was pinned after the choice is skipped, not an error. Re-running
  * converges: a revision is either still a candidate or gone.
  */
+#[Internal]
 final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable;
@@ -58,15 +60,15 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
         return 'vaulter-revisions-prune:'.Identity::stringify($this->driveId);
     }
 
-    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, VaulterConfig $config): void
+    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, DriveConfig $config): void
     {
         $database->write(fn (): array => $this->run($delete, $profiles, $database, $tables, $config));
     }
 
     /** @return array{candidates: int, deleted: int, skipped: int, freed_bytes: int} */
-    public function run(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, VaulterConfig $config): array
+    public function run(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, DriveConfig $config): array
     {
-        return app(VaulterManager::class)->withoutTenancy(function () use ($delete, $profiles, $database, $tables, $config): array {
+        return Tenancy::without(function () use ($delete, $profiles, $database, $tables, $config): array {
             $report = ['candidates' => 0, 'deleted' => 0, 'skipped' => 0, 'freed_bytes' => 0];
             $drive = $config->model('drive')::query()->whereKey($this->driveId)->first();
             if (!$drive instanceof Drive) {

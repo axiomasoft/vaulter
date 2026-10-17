@@ -5,23 +5,20 @@ declare(strict_types=1);
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
-
-uses(EnablesWebhooksModule::class);
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -99,7 +96,7 @@ it('stores detected MIME separately when the upload source provides no declared 
 
     expect($node->mimeType)->toBe('text/plain')->and(DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail()->declared_mime_type)->toBeNull();
 
-    $activity = Activity::query()->where('verb', EventType::FileUploaded->value)->sole();
+    $activity = Activity::query()->where('verb', DriveEventType::FileUploaded->value)->sole();
 
     expect($activity->context['mime_type'])->toBe('text/plain')
         ->and($activity->context['size_bytes'])->toBe(5);
@@ -177,17 +174,17 @@ it('rename to the same name emits no rename activity or outbox row', function ()
     $folder = $drive->folders()->create('Stable');
 
     Activity::query()->delete();
-    Outbox::query()->delete();
+    OutboxEvent::query()->delete();
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($folder, 'Stable');
 
-    expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->count())->toBe(0)
-        ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(0);
+    expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->count())->toBe(0)
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->count())->toBe(0);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($folder, 'Renamed');
 
-    expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->count())->toBe(1)
-        ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(1);
+    expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->count())->toBe(1)
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodeRenamed->value)->count())->toBe(1);
 });
 
 it('refuses per_page outside 1..200 and serves both bounds', function (): void {

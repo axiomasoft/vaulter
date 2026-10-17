@@ -1,0 +1,291 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.16",
+  "title": "Очистка core до #kernel и блокирующие I1, I2, I5, I9",
+  "status": "done_with_deviations",
+  "summary": "Остатки доменного в core устраняются по списку файлов (config/vaulter.php, ConfigValidator, VaulterConfig, InstallCommand, CoreModule, VaulterDatabase, DomainEvent, CoreProblemCodes, PageResponse, DownloadHeaders, Preconditions::matchNode, RestoreTenantContext, BindingsRegistrar, KeyColumnInspector, TenancyBoundary, InteractsWithVaulter, VaulterServiceProvider; split Http\\Support VaulterHttpOperationMap/VaulterThrottledRouteMap); I1 и I2 (кроме D32-остатка) переходят в block с пустыми allowlist; I5 строгий; I9 — OperationsBoundaryTest для HTTP-контроллеров drive/documents/webhooks + Filament.",
+  "why": "Фаза: после P4 core = только kernel; I1/I2/I5/I9 блокирующие (architecture#invariants). Риск: «нейтрализация» через новые понятия — любое новое ядро-понятие требует D# и ADR-записи (architecture#cost).",
+  "scope": {
+    "include": [
+      "Каждая запись allowlists/i1.json и i2.json — устранена переносом владельцу или заменой на нейтральный контракт/значение ядра",
+      "config/vaulter.php: только kernel-секции (p4-design#base «Пути после P4»)",
+      "Доменные части Preconditions → drive (node), documents (document); core — разбор заголовков",
+      "core-тесты, ставшие drive/documents/webhooks-понятиями, → пакеты",
+      "allowlists mode block для I1, I2; OwnershipRegistryTest I5 без исключений; OperationsBoundaryTest I9"
+    ],
+    "exclude": [
+      "Новые механизмы ядра без D#",
+      "collaboration-остаток (P5)",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.15"
+  ],
+  "decisions": [
+    "D5",
+    "D10",
+    "D32",
+    "D35",
+    "D39",
+    "D41",
+    "D43",
+    "D44"
+  ],
+  "skills": [
+    "php:namespace-refactor-safety"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "CLI и поведение инструмента переноса",
+      "required": true,
+      "section": "move-tool"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "что остаётся в core, критерий, исключение D35",
+      "required": true,
+      "section": "kernel"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "I1/I2/I5/I9 формулировки",
+      "required": true,
+      "section": "invariants"
+    },
+    {
+      "path": "packages/core/tests/Modules/OwnershipRegistryTest.php",
+      "why": "I5",
+      "required": true
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "why": "секции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/webhooks/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/media/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/filament/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/inventory/**",
+      "change": "modify",
+      "note": "режим block/генераторы"
+    },
+    {
+      "path": "load/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "e2e/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Перенос типа — инструментом (обновив правило target-map), не вручную.",
+    "Новый kernel-контракт только с D# (architecture#kernel критерий) — остановиться и добавить решение, если нужен.",
+    "После пункта allowlists i1 пуст, i2 содержит только D32-записи removed_in P5; режим block.",
+    "Ожидания тестов поведения не меняются.",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "Работать по `scripts/php84 php scripts/inventory/inventory.php scan-i1 --report` / `scan-i2 --report`: каждую запись — в один из исходов (перенос, нейтральный контракт уже существующий в ядре, удаление мёртвого кода). VaulterConfig: методы drive-моделей/таблиц уходят в drive-конфиг класс; `model('outbox')`-подобные ядра остаются. TenancyBoundary/InteractsWithVaulter: доменные типы заменяются на ActorRef/OwnerRef нейтральных значений ядра или переезжают в drive-кит. Остаток I1 на 2a657840 вне переносимых файлов (для оценки): config/vaulter.php 46, VaulterConfig 54, SchemaBuilder 61 (уходит в P4.3), DomainEvent 11, TenancyBoundary 17, ConfigValidator 15, KeyColumnInspector 14, InteractsWithVaulter 14, VaulterFactory 5 (уходит в P4.10), CoreProblemCodes 4, Preconditions 4, прочие ≤2. Фикстуры allowlists (i2 ~1 МБ) целиком не читать: `jq` по полям file/category/target.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "jq -e '.mode == \"block\" and (.entries | length == 0)' tests/Repo/Arch/Fixtures/allowlists/i1.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "jq -e '.mode == \"block\" and ([.entries[] | select(.removed_in != \"P5\")] | length == 0)' tests/Repo/Arch/Fixtures/allowlists/i2.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p core,drive,documents,webhooks,media,filament,repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/documents && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/webhooks && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/media && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "core = kernel",
+    "I1/I2/I5/I9 блокирующие"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-17T05:40:10Z",
+    "finished_at": "2026-10-17T06:40:26Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "Попутно: LoadStateMetrics::observeOutboxBacklog читал мёртвый флаг features.webhooks; дрейф baseline service-locator исправлен.",
+    "deviations": [
+      "Пакетный прогон V3 не выполнен по указанию владельца (D45), отложен в PLAN4; проверено F1 по затронутым файлам и repo целиком (222 теста).",
+      "Новый kernel-контракт RouteLabelSource (слот Contributor) для route-map метрик вместо ссылок core на drive/documents.",
+      "VaulterDatabase::lockTree заменён на lockAggregate(entity,id); имя pg-advisory ключа изменилось (vaulter:drives:ID), pg не проверялся — PLAN4.",
+      "ModuleSchema::keyColumns() добавлен в интерфейс; опция vaulter:install --driver удалена (D10); VaulterConfig→DriveConfig без шима (D21); DriveEvent — новая база событий drive.",
+      "Хвосты строковых ссылок в core (ConfigNormalizer, PUBLIC_SHARE_ROUTES, RepresentationTag, ScopeRef::DRIVE и др.) — в nits; InteractsWithVaulterTest остался в core; 107/230 тестов core упоминают типы других пакетов."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T06:40:26Z"
+}

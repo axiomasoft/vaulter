@@ -60,7 +60,7 @@ algorithm; they align the code's documented guarantees and add a fail-loud guard
 - **The `gate` and `azgard` lanes narrow `subjectsFor()` to `[actor]` (F-P1.2-01).**
   The `subjectsFor(actor) → users + roles + teams` contract is fully honoured only by
   the `spatie` lane (and any host driver marked
-  `Vaulter\Contracts\Access\EnumeratesRoleSubjects`). The `gate` lane (abilities are
+  `Vaulter\Drive\Contracts\Access\EnumeratesRoleSubjects`). The `gate` lane (abilities are
   evaluated per-user, not enumerable) and the `azgard` lane (per-resource checks, no
   role enumeration) — like the standalone `database` base and the `null` lane —
   contribute only the actor itself. A `v_node_grants` row addressed to a role/team is

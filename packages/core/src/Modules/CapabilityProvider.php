@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Internal;
+
 /**
  * One provider of a capability: an implementation class, or a host config key naming the class
  * ({@see ModuleBuilder::providesFromConfig()}).
- *
- * @internal
  */
+#[Internal]
 final readonly class CapabilityProvider
 {
     /**

@@ -8,9 +8,9 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 use Vaulter\Http\Middleware\VaulterThrottledRouteMap;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 /**
  * The hub's server-to-server calls on their own stack: a room JWT and a body signature
@@ -83,7 +83,7 @@ it('does not take a user session for a hub call, and the session routes are not 
 });
 
 it('rate-limits the hub like the other public surface and names it for the metrics', function (): void {
-    expect(VaulterThrottledRouteMap::routeFor('vaulter.v1.collaboration.hub.store'))->toBe('collab.store')
-        ->and(VaulterThrottledRouteMap::routeFor('vaulter.v1.collaboration.hub.authenticate'))->toBe('collab.authenticate')
-        ->and(VaulterHttpOperationMap::operationFor('vaulter.v1.collaboration.hub.store'))->toBe('collab_persist');
+    expect(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.store'))->toBe('collab.store')
+        ->and(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.authenticate'))->toBe('collab.authenticate')
+        ->and(app(VaulterHttpOperationMap::class)->operationFor('vaulter.v1.collaboration.hub.store'))->toBe('collab_persist');
 });

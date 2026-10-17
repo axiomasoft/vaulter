@@ -9,37 +9,37 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Access\Roles\Role;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Access\Roles\Role;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Access\Permission;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadPart;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -157,8 +157,8 @@ function r07dInstall(int $bits, bool $workspaceCreate): void
         bits: $bits,
         workspaceCreate: $workspaceCreate,
     ));
-    config()->set('vaulter.access.permission_drivers.r07d', R07dBitsDriver::class);
-    config()->set('vaulter.access.permission_driver', 'r07d');
+    config()->set('vaulter-drive.access.permission_drivers.r07d', R07dBitsDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'r07d');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }
@@ -351,7 +351,7 @@ it('authorizes the requested parent, not the storage root', function (): void {
 
     // Writer on the folder and the file only; nothing on the root. The driver lane is
     // node-blind, so this case runs on the database driver's stored grants.
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     AccessTestHelpers::grant(Node::query()->findOrFail($folderId), RoleRegistry::WRITER, subjectId: 41);

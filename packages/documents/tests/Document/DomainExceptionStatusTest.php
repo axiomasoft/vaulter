@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
@@ -12,24 +11,24 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Drive\Exceptions\Profiles\UnknownProfileException;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
-use Vaulter\Exceptions\Profiles\UnknownProfileException;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\VaulterException;
-use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Http\Problems\ProblemCatalog;
-use Vaulter\Testing\NullPermissionDriver;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 it('renders each domain exception with its stable code and HTTP status', function (
     VaulterException $exception,
@@ -78,7 +77,6 @@ it('renders each domain exception with its stable code and HTTP status', functio
     'comment missing' => [CommentNotFoundException::forNode(1, 2), 'comment_not_found', 404],
     'unknown export format' => [UnknownExportFormatException::forFormat('unknown', ['html']), 'unknown_export_format', 422, ['allowed' => ['html']]],
     'unsupported content' => [UnsupportedDocumentContentException::forExporter('html', 'tiptap', 'other'), 'invalid_document_content', 422, ['reason' => 'unsupported_content']],
-    'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],
     'unenumerable subject' => [$subject = UnenumerableGrantSubjectException::for(Subject::make('role', 1), NullPermissionDriver::class), 'validation_failed', 422, ['errors' => ['subject_type' => [$subject->getMessage()]]]],
     'unknown panel' => [UnknownProfileException::forName('unknown', ['default']), 'unknown_profile', 422],
     'node missing' => [fn (): VaulterException => NodeNotFoundException::forId(1), 'node_not_found', 404],

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
+use Vaulter\Attributes\Api;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -21,7 +22,8 @@ use Vaulter\ValueObjects\Events\EventSubject;
  *
  * @property list<int|string> $nodeIds
  */
-final readonly class NodePurged extends DomainEvent
+#[Api]
+final readonly class NodePurged extends DriveEvent
 {
     public const int LISTED_NODE_IDS = 1000;
 
@@ -40,9 +42,9 @@ final readonly class NodePurged extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::NodePurged;
+        return DriveEventType::NodePurged;
     }
 
     public function scope(): EventScope

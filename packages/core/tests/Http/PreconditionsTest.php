@@ -2,77 +2,55 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Tests\Http\V1;
-use Vaulter\Tests\Support\NodeProbeRoutes;
+use Illuminate\Http\Request;
+use Vaulter\Exceptions\Http\PreconditionRequiredException;
+use Vaulter\Http\Resources\PageResponse;
+use Vaulter\Http\Support\Preconditions;
 
-/**
- * If-Match on a mutating route (the test probe renames through the real
- * NodeOperations): required, never `*`, strong comparison against the caller's current
- * representation, and the expected sequence handed to the operation.
- */
-uses(RefreshDatabase::class);
+// The kernel keeps the header parsing of the conditional requests (RFC 9110); the owner of a resource raises its own 412
+// (drive: node_sequence_mismatch, documents: document_state_mismatch) when `matches()` says no.
 
-beforeEach(function (): void {
-    NodeProbeRoutes::register();
-    $this->drive = V1::drive();
-    $this->node = V1::folder($this->drive, 'before');
-    $this->actingAs(V1::user());
-    $this->etag = $this->getJson(NodeProbeRoutes::path($this->node->id))->assertOk()->headers->get('ETag');
-});
+function ifMatchRequest(?string $header): Request
+{
+    $request = Request::create('/');
+    if ($header !== null) {
+        $request->headers->set('If-Match', $header);
+    }
 
-it('answers 428 precondition_required without If-Match and changes nothing', function (): void {
-    $this->patchJson(NodeProbeRoutes::path($this->node->id), ['name' => 'after'])
-        ->assertStatus(428)
-        ->assertJsonPath('code', 'precondition_required')
-        ->assertJsonPath('meta.header', 'If-Match');
+    return $request;
+}
 
-    expect($this->drive->nodes()->find($this->node->id)->name)->toBe('before');
-});
+it('matches a strong If-Match tag and refuses a weak or another one', function (string $header, bool $expected): void {
+    expect(Preconditions::matches(ifMatchRequest($header), '"abc"'))->toBe($expected);
+})->with([
+    'the current tag' => ['"abc"', true],
+    'one of a list' => ['"zzz", "abc"', true],
+    'another tag' => ['"zzz"', false],
+    'a weak tag of the current one' => ['W/"abc"', false],
+    'a comma inside quotes stays in its tag' => ['"a,b", "abc"', true],
+]);
 
-it('refuses If-Match: * with 428 wildcard_not_allowed', function (): void {
-    $this->patchJson(NodeProbeRoutes::path($this->node->id), ['name' => 'after'], ['If-Match' => '*'])
-        ->assertStatus(428)
-        ->assertJsonPath('meta.reason', 'wildcard_not_allowed');
-});
+it('requires the header: missing is 428, and so is the wildcard', function (?string $header): void {
+    expect(fn () => Preconditions::matches(ifMatchRequest($header), '"abc"'))->toThrow(PreconditionRequiredException::class);
+})->with(['missing' => [null], 'blank' => ['  '], 'wildcard' => ['*']]);
 
-it('never matches a weak tag (strong comparison) → 412', function (): void {
-    $this->patchJson(NodeProbeRoutes::path($this->node->id), ['name' => 'after'], ['If-Match' => 'W/'.$this->etag])
-        ->assertStatus(412)
-        ->assertJsonPath('code', 'node_sequence_mismatch')
-        ->assertJsonPath('meta.node_id', $this->node->id);
-});
+it('answers 304 for a weak match of If-None-Match, the wildcard included', function (?string $header, bool $expected): void {
+    $request = Request::create('/');
+    if ($header !== null) {
+        $request->headers->set('If-None-Match', $header);
+    }
 
-it('applies the change with the current tag and returns a new one', function (): void {
-    $response = $this->patchJson(NodeProbeRoutes::path($this->node->id), ['name' => 'after'], ['If-Match' => $this->etag])
-        ->assertOk()
-        ->assertJsonPath('data.name', 'after');
+    expect(Preconditions::notModified($request, '"abc"'))->toBe($expected);
+})->with([
+    'the current tag' => ['"abc"', true],
+    'its weak form' => ['W/"abc"', true],
+    'the wildcard' => ['*', true],
+    'another tag' => ['"zzz"', false],
+    'no header' => [null, false],
+]);
 
-    expect($response->headers->get('ETag'))->not->toBe($this->etag)
-        ->toBe($response->json('data.etag'))
-        ->and($response->headers->get('Cache-Control'))->toContain('no-store');
-});
-
-it('matches any tag of a list', function (): void {
-    $this->patchJson(NodeProbeRoutes::path($this->node->id), ['name' => 'after'], ['If-Match' => '"x", '.$this->etag])
-        ->assertOk();
-});
-
-it('refuses a stale tag after a change the caller did not see, without revealing the current tag', function (): void {
-    $this->drive->nodes()->rename($this->node->id, 'renamed elsewhere');
-
-    $response = $this->patchJson(NodeProbeRoutes::path($this->node->id), ['name' => 'after'], ['If-Match' => $this->etag])
-        ->assertStatus(412)
-        ->assertJsonPath('code', 'node_sequence_mismatch');
-
-    expect($response->headers->has('ETag'))->toBeFalse()
-        ->and($response->getContent())->not->toContain('"etag"')
-        ->and($this->drive->nodes()->find($this->node->id)->name)->toBe('renamed elsewhere');
-});
-
-it('answers 404 before any precondition for a caller who cannot see the node', function (): void {
-    $this->actingAs(V1::user(9))
-        ->patchJson(NodeProbeRoutes::path($this->node->id), ['name' => 'after'])
-        ->assertNotFound()
-        ->assertJsonPath('code', 'node_not_found');
+it('no longer knows a node or a document: the owners raise their own refusal', function (): void {
+    expect(method_exists(Preconditions::class, 'matchNode'))->toBeFalse()
+        ->and(method_exists(Preconditions::class, 'matchDocument'))->toBeFalse()
+        ->and(method_exists(PageResponse::class, 'listOptions'))->toBeFalse();
 });

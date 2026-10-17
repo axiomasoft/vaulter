@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D46",
+  "title": "permissions_version коллаборации: собственная таблица версий по drive/global",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "question": "Где collaboration хранит permissions_version для JWT и control-сообщений, если D26 запрещает один per-document счётчик и колонки в drive, а architecture#packages перечисляет только три таблицы collaboration (heads, updates, receipts)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Четвёртая таблица collaboration `v_collaboration_permission_versions` (scope_key `drive:<id>`|`global`, version counter, updated_at), миграция 0001_01_01_000504; EventSink collaboration инкрементирует её в транзакции события drive `drive.access.effective_permissions_changed`; JWT несёт пару (drive, global) версий; append/renew при устаревшей версии делают полную перепроверку прав (append проверяет права всегда)"
+    },
+    {
+      "id": "B",
+      "text": "Без хранения: permissions_version = head журнала изменений drive (`v_drive_change_heads`), без новой таблицы"
+    },
+    {
+      "id": "C",
+      "text": "Счётчик в cache store (Redis), без схемы"
+    }
+  ],
+  "context": "D26: инвалидация включает inherited ancestor grant, share, drive policy/tenant deactivation и host PermissionDriver; collaboration сохраняет version/control данные у себя, колонки в drive не добавляет. knowledge/architecture#packages: collaboration владеет v_collaboration_updates/receipts/heads. knowledge/p5-design#revocation. B смешивает версии прав с любыми изменениями содержимого (head меняется на каждую запись) и читает таблицу drive как контракт версии прав; C теряет версию при сбросе кэша и даёт откат версии (старый токен снова «актуален»).",
+  "decision": "A — Четвёртая таблица collaboration `v_collaboration_permission_versions` (scope_key `drive:<id>`|`global`, version counter, updated_at), миграция 0001_01_01_000504; EventSink collaboration инкрементирует её в транзакции события drive `drive.access.effective_permissions_changed`; JWT несёт пару (drive, global) версий; append/renew при устаревшей версии делают полную перепроверку прав (append проверяет права всегда)",
+  "rationale": "Детализация P5 (D44, лестница: план → код). D26 требует инвалидации по inherited/share/policy/host-driver и хранения версий у collaboration без колонок drive; architecture#packages перечисляет три таблицы, поэтому четвёртая — явное дополнение. A атомарна (EventSink в транзакции события drive), монотонна и не зависит от кэша; B связывает версию прав с журналом содержимого чужого владельца, C допускает откат версии. Perplexity не требовался: вопрос о владении схемой, ответ выводится из D26/D29/D6.",
+  "consequences": [
+    "architecture#packages: collaboration владеет также v_collaboration_permission_versions (дополнение D26, не замена)",
+    "Совместимость: установок нет (D21); новая create-таблица до freeze P7; ledger identities-schema added D46",
+    "Гранулярность drive/global даёт лишние перепроверки внутри drive, но не пропуски; точность не ниже append-проверки прав"
+  ],
+  "applies_to": [
+    "P5"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

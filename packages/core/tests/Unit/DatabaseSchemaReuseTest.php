@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\DatabaseSchemaProbe;
 
 beforeEach(function (): void {

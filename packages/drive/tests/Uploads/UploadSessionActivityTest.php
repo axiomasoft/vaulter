@@ -5,14 +5,14 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Activity\ActivityTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Testing\Activity\ActivityTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
@@ -33,7 +33,7 @@ it('initiate пишет activity-строку upload.initiated с актором
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
-    $row = ActivityTestHelpers::only(EventType::UploadInitiated->value);
+    $row = ActivityTestHelpers::only(DriveEventType::UploadInitiated->value);
 
     expect($row->actor_id)->toEqual(3)
         ->and($row->drive_id)->toEqual($storage->getKey())
@@ -51,7 +51,7 @@ it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before
 
     $this->delete('api/vaulter/v1/uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])->assertNoContent();
 
-    $row = ActivityTestHelpers::only(EventType::UploadAborted->value);
+    $row = ActivityTestHelpers::only(DriveEventType::UploadAborted->value);
 
     expect($row->actor_id)->toEqual(3)
         ->and($row->context['upload_id'])->toBe($uploadId);
@@ -76,7 +76,7 @@ it('sweep-expire пишет activity-строку upload.expired без акто
 
     $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
-    $row = ActivityTestHelpers::only(EventType::UploadExpired->value);
+    $row = ActivityTestHelpers::only(DriveEventType::UploadExpired->value);
 
     expect($row->actor_id)->toBeNull()
         ->and($row->actor_type)->toBe(ActorRef::SYSTEM_TYPE)
@@ -91,8 +91,8 @@ it('sweep-expire пишет activity-строку upload.expired без акто
  * upload models are never persisted as a morph-type string. The upload lifecycle records
  * activity without an activity target, so no `v_activity` row ever holds
  * `UploadSession`'s FQCN — the move cannot orphan a row. The Vaulter models persisted as
- * `target_type` are `Node` and `Drive`, and neither moved, so historical rows stay
- * resolvable. A future regression that made an
+ * `target_type` are `Node` and `Drive`, stored under constant aliases (D34), so a move of
+ * either class cannot orphan a historical row. A future regression that made an
  * upload a morph target (or moved `Node`) trips this.
  */
 it('переезд Uploads morph-безопасен: upload-session activity не пишет target_type/target_id, единственный morph-таргет Node не переезжал (P4.10)', function (): void {
@@ -103,10 +103,10 @@ it('переезд Uploads morph-безопасен: upload-session activity н�
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
-    $row = ActivityTestHelpers::only(EventType::UploadInitiated->value);
+    $row = ActivityTestHelpers::only(DriveEventType::UploadInitiated->value);
 
     expect(UploadSession::class)->toBe(UploadSession::class)
         ->and($row->target_type)->toBeNull()
         ->and($row->target_id)->toBeNull()
-        ->and((new Node)->getMorphClass())->toBe(Node::class);
+        ->and((new Node)->getMorphClass())->toBe(Node::MORPH_ALIAS);
 });

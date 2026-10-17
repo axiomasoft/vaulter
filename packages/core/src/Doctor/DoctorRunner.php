@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Doctor;
 
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 
 /**
@@ -12,6 +13,7 @@ use Vaulter\Contracts\Doctor\DoctorCheck;
  * becomes an error finding that names the exception class only, because its message can
  * carry a connection string or a secret.
  */
+#[Internal]
 final readonly class DoctorRunner
 {
     public const int MAX_EVIDENCE_ENTRIES = 20;

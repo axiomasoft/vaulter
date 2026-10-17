@@ -1,0 +1,17 @@
+# Surface manifest of the package `filament` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
+# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
+
+Vaulter\Filament\Configuration\FilamentConfig api since 1.0 final readonly class
+  public function navigationGroup(): string
+  public function resourceEnabled(string $key): bool
+
+Vaulter\Filament\VaulterFilamentServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
+  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
+  public function packageRegistered(): void
+
+Vaulter\Filament\VaulterPlugin api since 1.0 final class implements Filament\Contracts\Plugin
+  public function boot(Filament\Panel $panel): void
+  public static function current(Filament\Panel $panel): self
+  public function getId(): string
+  public static function make(): static
+  public function register(Filament\Panel $panel): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Collaboration;
 
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -26,15 +27,15 @@ use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\DriveArchivedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Drive\DriveArchivedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
-use Vaulter\Support\TreeGuard;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 
@@ -58,6 +59,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * only partly refuses the whole store. An identical state is a no-op. One transaction
  * under T → N → D locks; one after-commit DocumentContentUpdated event.
  */
+#[Internal]
 final readonly class PersistCollaborationStateAction
 {
     public function __construct(
@@ -101,7 +103,7 @@ final readonly class PersistCollaborationStateAction
                     throw NodeNotFoundException::forId('unpersisted');
                 }
 
-                $this->database->lockTreeShared($driveId);
+                $this->database->lockAggregateShared('drives', $driveId);
                 try {
                     $this->lifecycle->assertUserWritable($driveId);
                 } catch (DriveArchivedException) {

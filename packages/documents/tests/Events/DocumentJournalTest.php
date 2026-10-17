@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
-use Vaulter\Enums\Changes\ChangeOperation;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
+use Vaulter\Drive\Enums\Changes\ChangeOperation;
+use Vaulter\Events\EventTypeContract;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 
 /**
  * Document events in the drive change journal (PLAN2.D59, D35): every content save is
  * an upsert, compacted to one entry per document, whether or not it took a checkpoint;
  * content events carry no node sequence, a restore is the newest state.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(OperationsTestCase::class, RefreshDatabase::class);
 
 /** @return list<array{seq: int, event_type: string, operation: string, node_sequence: ?int}> */
 function documentJournal(int|string $nodeId): array
@@ -43,10 +43,10 @@ it('compacts every content save of a document into its latest upsert', function 
     $documents->update($node, DocumentTestHelpers::content('three')->toArray());
 
     expect($created)->toHaveCount(1)
-        ->and($created[0]['event_type'])->toBe(EventType::DocumentCreated->value)
+        ->and($created[0]['event_type'])->toBe(DocumentEventType::DocumentCreated->value)
         ->and($created[0]['node_sequence'])->not->toBeNull()
         ->and(documentJournal($node->id))->toBe([
-            ['seq' => $created[0]['seq'] + 2, 'event_type' => EventType::DocumentUpdated->value, 'operation' => 'upsert', 'node_sequence' => null],
+            ['seq' => $created[0]['seq'] + 2, 'event_type' => DocumentEventType::DocumentUpdated->value, 'operation' => 'upsert', 'node_sequence' => null],
         ]);
 });
 
@@ -56,7 +56,7 @@ it('stamps the checkpoint webhook with the seq of its journal entry', function (
     $node = $documents->create('Spec', content: DocumentTestHelpers::content('one')->toArray());
     $documents->update($node, DocumentTestHelpers::content('two')->toArray());
 
-    $updated = Outbox::query()->where('event', EventType::DocumentUpdated->value)->sole();
+    $updated = OutboxEvent::query()->where('type', DocumentEventType::DocumentUpdated->value)->sole();
 
     expect($updated->payload['changes'])->toBe(['seq' => documentJournal($node->id)[0]['seq']]);
 });
@@ -74,8 +74,15 @@ it('journals a restore as the newest upsert of the document', function (): void 
     $entries = documentJournal($node->id);
     $page = $drive->changes()->list($cursor);
 
-    expect(array_column($entries, 'event_type'))->toBe([EventType::DocumentRestored->value])
+    expect(array_column($entries, 'event_type'))->toBe([DocumentEventType::DocumentRestored->value])
         ->and($page->changes)->toHaveCount(1)
         ->and($page->changes[0]->operation)->toBe(ChangeOperation::Upsert)
         ->and($page->changes[0]->node?->id)->toBe((string) $node->id);
+});
+
+it('journals exactly the created, updated and restored document types of the catalogue', function (): void {
+    $journalled = array_values(array_filter(DocumentEventType::cases(), static fn (EventTypeContract $type): bool => $type->spec()->journal !== null));
+
+    expect(array_map(static fn (EventTypeContract $type): string => (string) $type->value, $journalled))
+        ->toEqualCanonicalizing(['document.created', 'document.updated', 'document.restored']);
 });

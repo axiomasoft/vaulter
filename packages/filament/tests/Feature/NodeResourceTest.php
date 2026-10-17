@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
+use Vaulter\Filament\Support\PanelRecord;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Drive\Node;
 
 /*
  * NOTE on test level. Full Livewire page rendering of a Filament 5 resource under
@@ -20,8 +20,10 @@ use Vaulter\Models\Drive\Node;
  * DriveContext call the closures make), and authorization is the core AccessResolver.
  */
 
-it('resolves the configured node model (swappable)', function (): void {
-    expect(NodeResource::getModel())->toBe(Node::class);
+it('declares the panel record class, not the drive node model', function (): void {
+    expect(NodeResource::getModel())->toBe(PanelRecord::class)
+        ->and(NodeResource::getModelLabel())->toBe('node')
+        ->and(NodeResource::canGloballySearch())->toBeFalse();
 });
 
 it('is not creatable from a flat form (folders come from the Drive Actions)', function (): void {

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads\Inspection;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
 use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\UploadPolicy;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\UploadPolicy;
 
+#[Internal]
 final readonly class MimeConsistencyInspector implements UploadInspector
 {
     public function key(): string

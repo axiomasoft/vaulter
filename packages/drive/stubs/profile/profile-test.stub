@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+use {{ fqcn }};
+use Vaulter\Drive\Profiles\ProfileRegistry;
+
+it('registers the profile and resolves its frozen policy', function (): void {
+    $registry = new ProfileRegistry;
+    $registry->register(new {{ class }});
+    $registry->freeze();
+
+    expect($registry->has('{{ id }}'))->toBeTrue();
+    expect($registry->get('{{ id }}')->getDrivePolicy())->not->toBeNull();
+});

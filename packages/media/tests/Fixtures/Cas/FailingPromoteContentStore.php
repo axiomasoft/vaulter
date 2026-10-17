@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Media\Tests\Fixtures\Cas;
 
 use RuntimeException;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StagedObject;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 final class FailingPromoteContentStore implements ContentStore
 {

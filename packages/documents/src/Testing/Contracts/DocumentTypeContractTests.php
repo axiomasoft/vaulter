@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Testing\Contracts;
 
 use PHPUnit\Framework\Assert;
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\UpgradesSchema;
 
@@ -23,6 +24,7 @@ use Vaulter\Documents\Contracts\UpgradesSchema;
  * Run it inside the application (Testbench or the host's TestCase): codecs may read
  * configuration.
  */
+#[Api]
 trait DocumentTypeContractTests
 {
     public function assertDocumentTypeContract(DocumentType $type): void

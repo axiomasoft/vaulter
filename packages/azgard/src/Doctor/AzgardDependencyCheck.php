@@ -8,12 +8,14 @@ use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Kernel;
 
+#[Internal]
 final readonly class AzgardDependencyCheck implements DoctorCheck
 {
     public function __construct(private Container $container, private Repository $config) {}
@@ -30,7 +32,7 @@ final readonly class AzgardDependencyCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        $selected = $this->config->get('vaulter.access.permission_driver') === 'azgard';
+        $selected = $this->config->get('vaulter-drive.access.permission_driver') === 'azgard';
         $evidence = ['driver_selected' => $selected];
 
         if (!class_exists(AssignmentScopeRef::class)) {

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * The export filename scheme for {@see ExportDocumentAction}.
@@ -15,6 +17,7 @@ use Vaulter\Models\Drive\Node;
  * {@see DefaultExportFilenameResolver}, is the node basename
  * plus the exporter's extension.
  */
+#[Spi(SpiKind::Implement)]
 interface ExportFilenameResolver
 {
     public function resolve(Node $node, string $extension): string;

@@ -8,22 +8,22 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Http\DriveV1;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Nodes\InvalidDestinationException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -286,7 +286,8 @@ it('takes the tree lock before any node row lock', function (string $operation):
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {
-        $queries[] = $query->sql;
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        $queries[] = str_replace('`', '"', $query->sql);
     });
 
     match ($operation) {
@@ -311,7 +312,8 @@ it("locks a new version's target before the CAS lock", function (): void {
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {
-        $queries[] = $query->sql;
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        $queries[] = str_replace('`', '"', $query->sql);
     });
 
     $drive->files()->addRevision($file, UploadSource::fromStream(DriveTestHelpers::streamFor('v2 bytes'), $file->name));
@@ -343,7 +345,8 @@ it('purges trash under the tree lock taken before the trashed root row', functio
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {
-        $queries[] = $query->sql;
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        $queries[] = str_replace('`', '"', $query->sql);
     });
 
     $this->artisan('vaulter:trash:purge', ['--days' => 1])->assertSuccessful();

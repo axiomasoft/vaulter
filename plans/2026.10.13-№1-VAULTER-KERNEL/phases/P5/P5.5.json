@@ -1,0 +1,236 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.5",
+  "title": "Компактация и checkpoint (CAS, lease), restore/REST replace через drain, закрытие и prune поколений",
+  "status": "todo",
+  "summary": "`Persistence\\CompactionLeases` и `POST /v1/collaboration/hub/compaction/lease` (C12); `Persistence\\Checkpoint::publish()` и `POST /v1/collaboration/hub/checkpoint` (C6, C7: CAS CS/CV/lease_token под L3+L4 через `CollaborativeState::publishCheckpoint`, удаление updates ≤H этой G, marker снимается только при PT ≤ H); `HubDrainer` реализует `PendingStateDrainer` (drain_requested_at + ожидание marker с deadline `drain.restore_deadline` 10 с, вне транзакции); закрытие generation при restore/REST replace (heads.retired_at, EventSink на событие restore documents); `vaulter:collaboration:prune` (C11); пороги `compaction.trigger_updates` 500, `trigger_bytes` 1 MiB, `trigger_age` 600 с; problem `collaboration_checkpoint_conflict` (409).",
+  "why": "D26 ревизия 3 п.1–3: PHP не мержит Yjs — компактацию исполняет хаб по lease, backend публикует CAS; restore/REST replace при pending включают saved-хвост в revision-снимок либо отказывают 409. Hard risks: проигравшая компактация удаляет непокрытый payload (5); снятие marker при PT > H (20); закрытие generation с непокрытыми receipts (18); prune активной generation; удержание locks во время ожидания drain; публикация по чужому/истёкшему lease.",
+  "scope": {
+    "include": [
+      "Lease/checkpoint эндпоинты и сервисы; HubDrainer + Internal `DrainWaiter` (подменяемый в тестах фейковым хабом)",
+      "Генерация: retired_at при restore/REST replace; отказ append/lease/checkpoint retired G",
+      "Команда vaulter:collaboration:prune и её расписание в манифесте (ModuleSchedule)",
+      "Тесты: tests/Persistence/{CompactionCasTest,ReceiptRetentionTest,CompactionLeaseTest}.php, tests/Restore/{RestorePendingTest,RestoreFenceTest}.php, tests/Console/PruneGenerationsTest.php, tests/Concurrency/CompactionRaceTest.php (serial+database, пишется)",
+      "openapi lease/checkpoint; ledger: маршруты, команда, конфиг-ключи, problem added D26"
+    ],
+    "exclude": [
+      "Исполнитель компактации в хабе (P5.8); managed disable/uninstall (P5.6)",
+      "Отложено в PLAN4: `scripts/t pgsql -p collaboration --group=database`, `scripts/t pgsql -p collaboration --group=serial tests/Concurrency/CompactionRaceTest.php`"
+    ]
+  },
+  "depends_on": [
+    "P5.4"
+  ],
+  "related": [],
+  "decisions": [
+    "D26",
+    "D41"
+  ],
+  "skills": [
+    "php:production-readiness-checklist",
+    "php:database"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "invariants",
+      "why": "модель инвариантов C1–C12, порядок lock, пары операций, bypass",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "protocol",
+      "why": "эндпоинты протокола 2, ошибки, retry-классы, envelope/ack",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "tests-map",
+      "why": "сценарии I17 этого пункта: линия и файл",
+      "required": true
+    },
+    {
+      "ref": "knowledge/collaboration",
+      "section": "durability",
+      "why": "компактация, restore при pending, retired generation (ревизия 3)",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/State/CollaborativeState.php",
+      "why": "publishCheckpoint/lock/pendingDocuments (после P5.3)",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/src/Persistence/UpdateLog.php",
+      "why": "append и схема heads (после P5.4)",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Actions/Revisions/RestoreDocumentRevisionAction.php",
+      "why": "restore и guard drain-or-409 (после P5.3)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/collaboration/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/routes/collaboration.php",
+      "change": "any",
+      "note": "создаётся P5.1"
+    },
+    {
+      "path": "packages/collaboration/config/vaulter-collaboration.php",
+      "change": "any",
+      "note": "создаётся P5.1"
+    },
+    {
+      "path": "packages/collaboration/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+      "change": "any",
+      "note": "только если колонкам heads нужна правка; создаётся P5.4"
+    },
+    {
+      "path": "packages/collaboration/src/Schema/CollaborationSchema.php",
+      "change": "any",
+      "note": "создаётся P5.4"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/expected/**",
+      "change": "modify",
+      "note": "только при правке DDL"
+    },
+    {
+      "path": "packages/documents/src/**",
+      "change": "modify",
+      "note": "только вызов drainer/событие restore, если P5.3 не дал точки"
+    },
+    {
+      "path": "openapi/vaulter-v1.yaml",
+      "change": "modify"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md и текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Публикация checkpoint: CS == C, CV == state_version документа, H ≤ HS, lease_token действителен, G текущая — иначе 409 без изменений и без удаления.",
+    "Удаляются только `v_collaboration_updates` (document, G, seq ≤ H) в транзакции успешной публикации; receipts удаляет только prune retired G по C11.",
+    "Drain: drain_requested_at ставится отдельной короткой транзакцией; ожидание marker — вне транзакции, опрос с backoff до deadline; затем restore повторно берёт locks и проверяет marker.",
+    "Lease выдаётся только документам с marker или drain_requested_at текущей G; lease не даёт права append."
+  ],
+  "guidance": "Фейковый хаб для тестов: реализация `DrainWaiter`, которая на первом опросе берёт lease через HTTP (`compaction/lease`), склеивает checkpoint+tail конкатенацией фиктивных бинарей (Yjs-мерж в PHP не делается — тест проверяет покрытие C..H и CAS, не содержимое Yjs) и публикует `checkpoint`. CompactionCasTest: (4) читать (C,H) → append seq H+1 → publish(H) → marker (G, H+1) остаётся, update H+1 жив; (5) два publish одного (C,H): второй 409, количество updates после первого = HS−H; (20) после (4) REST PUT documents → 409 document_state_pending. RestorePendingTest (18): marker + фейковый хаб → revision содержит все saved receipts (checkpoint_seq ≥ PT) и G+1; хаб не отвечает → 409, G не изменилась, receipts на месте.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p collaboration tests/Persistence tests/Restore tests/Console/PruneGenerationsTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p documents tests/State tests/Http/DocumentRevisionsV1Test.php tests/Http/DocumentContentV1Test.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/schema-snapshot.sh --driver=sqlite --all-presets --rollback --compare=packages/core/tests/Fixtures/Schema/expected",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "git diff --quiet 2a657840 -- packages/core/tests/Fixtures/Schema/original",
+      "expect": "exit 0: original P1.10 неизменен",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "(cd packages/collaboration && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/documents && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ZonesMapTest.php tests/Repo/TestGroupsTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "checkpoint CAS + lease",
+    "HubDrainer",
+    "закрытие/prune поколений"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "xhigh"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:05:06Z"
+}

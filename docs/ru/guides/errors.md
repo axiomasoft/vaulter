@@ -66,6 +66,13 @@
 приложения. Регистрируйте типы из сервис-провайдера (конфиг, тег контейнера или `register()` до
 окончания загрузки).
 
+## blob-unavailable
+
+`BlobUnavailableException` (409 `blob_unavailable`) — сохранённые байты файла больше недоступны, либо владелец
+попытался запинить блоб в состоянии deleting или deleted (`BlobPins::pin()`,
+[Хранилище и блобы](/ru/concepts/storage-and-blobs#пины-и-чтение)). Ничего не записано. Загрузите содержимое
+заново: коммит байтов воскрешает затомбстоненный блоб, пока они ещё существуют, и возвращённый блоб можно пинить.
+
 ## module-graph-invalid
 
 `ModuleGraphException` (503 `module_graph_invalid`) — манифесты установленных модулей не
@@ -303,15 +310,15 @@ URL не существует (возможно, удалён). Получите
 
 ## invalid-change-cursor
 
-`Vaulter\Exceptions\Changes\InvalidCursorException` (`invalid_cursor`, 400) — [курсор журнала
+`Vaulter\Drive\Exceptions\Changes\InvalidCursorException` (`invalid_cursor`, 400) — [курсор журнала
 изменений](/concepts/events), который это приложение не подписывало, который изменён или принадлежит
 другому drive либо тенанту. Курсоры непрозрачны: храните их как есть. Начните заново со
 `startCursor()` после полного листинга.
 
 ## cursor-expired
 
-`Vaulter\Exceptions\Changes\CursorExpiredException` (`cursor_expired`, 410) — записи после курсора
-удалены `vaulter:changes:prune` (старше `changes.retention_days`) либо журнал drive сброшен
+`Vaulter\Drive\Exceptions\Changes\CursorExpiredException` (`cursor_expired`, 410) — записи после курсора
+удалены `vaulter:changes:prune` (старше `vaulter-drive.changes.retention_days`) либо журнал drive сброшен
 `vaulter:changes:reset`. Пересинхронизируйтесь: возьмите новый `startCursor()`, заново получите
 листинг drive и замените локальную копию.
 

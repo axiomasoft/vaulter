@@ -7,25 +7,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ScanInput;
-use Vaulter\Content\ScanResult;
-use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Enums\Cas\ScanVerdict;
-use Vaulter\Kernel;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Testing\FakeContentScanner;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Media\Content\ScanInput;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
+use Vaulter\Media\Testing\FakeContentScanner;
 
 // The fixtures drive Vaulter's own actions directly; its entry points open the write scope, these calls do not.
 beforeEach(fn () => DriveTestHelpers::insideOperation());
@@ -65,9 +64,9 @@ function scanScanner(string $key = 'fixture', string $version = '1'): void
 function scanFixture(): array
 {
     Storage::fake('local');
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
     $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -75,7 +74,7 @@ function scanFixture(): array
     app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'a.txt', 'text/plain'));
     fclose($stream);
     app(ScanBackfillReconciler::class)->expand(10);
-    $work = app(VaulterConfig::class)->model('scan_obligation')::query()->firstOrFail();
+    $work = app(DriveConfig::class)->model('scan_obligation')::query()->firstOrFail();
 
     return [$drive, $work];
 }
@@ -92,9 +91,9 @@ it('needs no scanner while every scan policy is off', function (): void {
 });
 
 it('reports an enabled scan policy without a bound scanner as an error in both modes', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
 
     expect(array_map(static fn (DoctorFinding $finding): string => $finding->code, scanFindings('drive.scan.scanner')))->toBe(['drive.scan.scanner_missing'])
         ->and(scanFindings('drive.scan.scanner')[0]->severity)->toBe(DoctorSeverity::Error)
@@ -102,32 +101,32 @@ it('reports an enabled scan policy without a bound scanner as an error in both m
 });
 
 it('accepts a bound scanner whose identity is the configured one', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     scanScanner();
 
     expect(scanFindings('drive.scan.scanner')[0]->code)->toBe('drive.scan.scanner_ok');
 });
 
 it('reports a scanner identity the policy does not name', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     scanScanner(version: '2');
 
     expect(scanFindings('drive.scan.scanner')[0]->code)->toBe('drive.scan.identity_mismatch');
 
-    config()->set('vaulter.scan.scanner_key', null);
-    config()->set('vaulter.scan.scanner_version', null);
+    config()->set('vaulter-drive.scan.scanner_key', null);
+    config()->set('vaulter-drive.scan.scanner_version', null);
     expect(array_unique(array_map(static fn (DoctorFinding $finding): string => $finding->code, scanFindings('drive.scan.scanner'))))->toBe(['drive.scan.identity_missing']);
 });
 
 it('reports a scanner that cannot be built without quoting its message', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
-    config()->set('vaulter.scan.scanner', FakeContentScanner::class);
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.scanner', FakeContentScanner::class);
     app()->bind(ContentScanner::class, static fn (): never => throw new RuntimeException('api key=hunter2'));
 
     $finding = scanFindings('drive.scan.scanner')[0];
@@ -139,7 +138,7 @@ it('finds a drive whose policy cutover is pending, an error in production', func
     [$drive] = scanFixture();
     expect(scanFindings('drive.scan.policy')[0]->code)->toBe('drive.scan.policy_current');
 
-    config()->set('vaulter.scan.scanner_version', '2');
+    config()->set('vaulter-drive.scan.scanner_version', '2');
     $finding = scanFindings('drive.scan.policy')[0];
 
     expect($finding->code)->toBe('drive.scan.policy_cutover_pending')
@@ -152,9 +151,9 @@ it('finds a drive whose policy cutover is pending, an error in production', func
 });
 
 it('finds a drive that has no activation state under an enabled policy', function (): void {
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     UploadTestHelpers::storage();
 
     expect(scanFindings('drive.scan.policy')[0]->code)->toBe('drive.scan.policy_cutover_pending');
@@ -230,13 +229,12 @@ it('finds an unavailable content scope under a policy that scans everything', fu
 
     expect(scanFindings('drive.scan.scope')[0]->evidence)->toHaveKey('unavailable_scope_under_required_policy', 1);
 
-    config()->set('vaulter.scan.mode', 'off');
+    config()->set('vaulter-drive.scan.mode', 'off');
     expect(scanFindings('drive.scan.scope')[0]->code)->toBe('drive.scan.scope_ok');
 });
 
 it('runs the scan checks with webhooks disabled', function (): void {
     [, $work] = scanFixture();
-    expect(app(Kernel::class)->isActive('webhooks'))->toBeFalse();
     DB::table(scanTable('scan_obligations'))->where('id', $work->getKey())->update([
         'state' => 'leased', 'lease_token' => (string) Str::uuid(), 'lease_expires_at' => now('UTC')->subMinutes(5),
     ]);

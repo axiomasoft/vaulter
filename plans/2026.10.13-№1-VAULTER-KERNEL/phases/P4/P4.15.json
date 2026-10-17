@@ -1,0 +1,262 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.15",
+  "title": "Filament на authorized listing/lookup Operations drive и snapshots (подготовка I9)",
+  "status": "done_with_deviations",
+  "summary": "Drive получает авторизованный листинг дисков `Vaulter\\Drive\\Vaulter::drives()` и lookup/Page-методы Operations там, где их нет (p4-design#filament); Filament-ресурсы и Support переходят с Eloquent-моделей на snapshots через `Table::records()`; FilamentBoundaryArchTest запрещает модели/репозитории/actions drive и Eloquent Builder; `consumers.filament_model_reads` пуст.",
+  "why": "I9: Filament — внешний вход, обязан идти через авторизованные Operations (source-review#code-facts «Точка входа/ORM»). Hard risk: ослабление exact-visibility (листинг без текущей авторизации до пагинации) — существующие visibility/authorization тесты Filament не меняют ожиданий.",
+  "scope": {
+    "include": [
+      "Новые/дополненные публичные методы drive (Api) + тесты drive",
+      "5 ресурсов и Support Filament",
+      "Filament тесты (ожидания видимости неизменны)",
+      "FilamentBoundaryArchTest"
+    ],
+    "exclude": [
+      "documents UI в Filament",
+      "Изменение прав/ролей",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.14"
+  ],
+  "decisions": [
+    "D10",
+    "D27",
+    "D41",
+    "D43",
+    "D44"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "API и перевод таблиц",
+      "required": true,
+      "section": "filament"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "чтение: авторизация до пагинации, без N+1",
+      "required": true,
+      "section": "operation-chains"
+    },
+    {
+      "path": "packages/filament/src/Resources/NodeResource.php",
+      "why": "самый большой ресурс",
+      "required": true
+    },
+    {
+      "path": "packages/filament/src/Support/PanelDriveAccess.php",
+      "why": "фасад и Drive model",
+      "required": true
+    },
+    {
+      "path": "packages/filament/tests/Arch/FilamentBoundaryArchTest.php",
+      "why": "текущий запрет",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/filament/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/filament/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Vaulter.php",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом P4 (P4.5 / P4.12)"
+    },
+    {
+      "path": "packages/drive/src/Operations/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Новые методы drive — только если эквивалента нет; без новых понятий/слотов.",
+    "Текущая авторизация и tenancy до пагинации; без N+1 (тест счётчика запросов на странице 50 записей).",
+    "Ledger не нужен (PHP API фиксируется surface-манифестом: `inventory.php surface --write`).",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "Filament ^5 custom data: `->records(fn (int $page, int $recordsPerPage, ?string $sortColumn, ?string $sortDirection): LengthAwarePaginator => …)` — построить LengthAwarePaginator из Page (opaque cursor → page-навигация: использовать offset-вариант Operations только если cursor невозможен; иначе simple pagination). Проверить документацию Filament 5 через context7 перед реализацией.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "jq -e '.consumers.filament_model_reads | length == 0' tests/Repo/Arch/Fixtures/target-map.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "! grep -rnE 'Vaulter\\\\\\\\Drive\\\\\\\\(Models|Repositories|Actions)\\\\\\\\|Eloquent\\\\\\\\Builder' packages/filament/src",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p filament,drive,repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "(cd packages/filament && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "drives()/lookup API drive",
+    "Filament на snapshots",
+    "I9-готовый arch-тест"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-17T05:11:25Z",
+    "finished_at": "2026-10-17T05:40:08Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "Vaulter::drives()/findDriveById, Filament на публичном API (Table::records), target-map filament_model_reads=0",
+    "deviations": [
+      "Filament: grants/shares/activity требуют root View (строже); скрытый узел отвечает как отсутствующий; drives() ~10 запросов на диск; ViewDrive/ViewActivity удалены (модальные действия); V3 пакетный прогон оркестратором не выполнен по указанию владельца (исполнитель прогнал filament,drive,azgard,repo зелёные)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T05:40:08Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T05:40:08Z"
+}

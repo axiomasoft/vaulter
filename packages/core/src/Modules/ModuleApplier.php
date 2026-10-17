@@ -12,6 +12,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Routing\Router;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -21,9 +22,8 @@ use Vaulter\Http\Middleware\EnsureModuleActive;
  * Applies the sealed declarations of the active modules to the application (architecture#module-system,
  * lifecycle). `register()` runs in the core provider's booting callback, after compilation and before any
  * provider boots; `boot()` runs while the core provider boots. Nothing here reads the database or the network.
- *
- * @internal
  */
+#[Internal]
 final class ModuleApplier
 {
     /** The route default that carries the module fingerprint into a route cache. */
@@ -81,12 +81,12 @@ final class ModuleApplier
 
     /**
      * Routes (each group behind `vaulter.module:<id>`, carrying the fingerprint), translations and the
-     * publishable files of the active modules, then the boot of their container wiring.
+     * publishable config of the active modules, then the boot of their container wiring. Migrations are not
+     * published: the kernel runs them from the package of the module that owns them (D40).
      *
-     * @param Closure(array<string, string>, string): void $publishes  registers publishable paths under a tag
-     * @param Closure(array<string, string>, string): void $migrations registers publishable migrations under a tag
+     * @param Closure(array<string, string>, string): void $publishes registers publishable paths under a tag
      */
-    public function boot(CompiledModules $modules, Closure $publishes, Closure $migrations): void
+    public function boot(CompiledModules $modules, Closure $publishes): void
     {
         foreach ($modules->routes as $route) {
             $this->routes($route['module'], $route['file'], $modules->fingerprint);
@@ -100,22 +100,11 @@ final class ModuleApplier
             foreach ($modules->configs as $root => $file) {
                 $publishes([$file => $this->app->configPath($root.'.php')], $root.'-config');
             }
-            foreach ($modules->modules as $module) {
-                foreach ($module->schemaPaths as $path) {
-                    $migrations([$path => $this->app->databasePath('migrations')], self::migrationsTag($module->id->value));
-                }
-            }
         }
 
         foreach ($this->bindings as $bindings) {
             $bindings->boot($this->app);
         }
-    }
-
-    /** The publish tag of a module's migrations: `vaulter-migrations` for the core, `vaulter-<id>-migrations` otherwise. */
-    public static function migrationsTag(string $module): string
-    {
-        return $module === 'core' ? 'vaulter-migrations' : 'vaulter-'.$module.'-migrations';
     }
 
     /**

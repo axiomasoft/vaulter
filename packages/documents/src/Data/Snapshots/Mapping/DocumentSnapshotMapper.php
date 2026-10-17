@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Snapshots\Mapping;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
@@ -13,7 +14,8 @@ use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
-/** @internal Builds the documents snapshots from already-loaded rows; it never queries. */
+/** Builds the documents snapshots from already-loaded rows; it never queries. */
+#[Internal]
 final readonly class DocumentSnapshotMapper
 {
     public function __construct(private ContentDecoder $decoder) {}

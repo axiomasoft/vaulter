@@ -6,18 +6,20 @@ namespace Vaulter\Azgard;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Access\Roles\Role;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Configuration\AzgardConfig;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Azgard\Contracts\AzgardGuard;
-use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Drive\Access\Roles\Role;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Contracts\Access\NonEnumeratingPermissionDriver;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Kernel;
 
 /**
@@ -74,8 +76,10 @@ use Vaulter\Kernel;
  * workspace (drive owner) morph alias is an assignment scope type of the panel, and the
  * mapped permissions are permissions of the panel.
  */
+#[Api]
 final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, PermissionDriver
 {
+    #[Internal]
     public function __construct(
         private readonly Kernel $kernel,
         private readonly AzgardConfig $config,

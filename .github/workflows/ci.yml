@@ -18,7 +18,8 @@ name: CI
 #   static-analysis.yml (Larastan) ......................... quality
 #   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub
 #   openapi.yml oasdiff breaking ........................... openapi.yml (unchanged, informative, D21)
-#   new: mysql 8.4 lane (db), repo harness + policy + actionlint (repo), spec validation (openapi)
+#   new: mysql 8.4 lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
+#        clean-consumer isolation of the split packages (consumer-isolation, I14)
 on:
   push:
     branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
@@ -36,7 +37,7 @@ permissions:
 env:
   # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
   # Laravel 12 pairs with Testbench ^10, Laravel 13 with ^11; filament is Laravel 13 only.
-  PHP_SUPPORT: '{"core":{"dir":".","lines":["12","13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["12","13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["12","13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["12","13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
 
 jobs:
   changes:
@@ -50,6 +51,7 @@ jobs:
       has_fast: ${{ steps.plan.outputs.has_fast }}
       has_db: ${{ steps.plan.outputs.has_db }}
       has_serial: ${{ steps.plan.outputs.has_serial }}
+      has_consumer: ${{ steps.plan.outputs.has_consumer }}
       has_vue: ${{ steps.plan.outputs.has_vue }}
       has_hub: ${{ steps.plan.outputs.has_hub }}
       has_repo: ${{ steps.plan.outputs.has_repo }}
@@ -58,6 +60,7 @@ jobs:
       fast_matrix: ${{ steps.plan.outputs.fast_matrix }}
       db_matrix: ${{ steps.plan.outputs.db_matrix }}
       serial_matrix: ${{ steps.plan.outputs.serial_matrix }}
+      consumer_matrix: ${{ steps.plan.outputs.consumer_matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -274,8 +277,12 @@ jobs:
 
   db:
     name: DB / ${{ matrix.engine }} / ${{ matrix.package }}
-    needs: changes
-    if: needs.changes.outputs.has_db == 'true'
+    # Fast gate first: the server lanes start once the SQLite lane is green (or not needed), so a change that is
+    # already red on SQLite does not also spend the database matrix. A skip caused by a red gate stays red in ci-gate.
+    needs: [changes, fast]
+    if: >-
+      !cancelled() && needs.changes.outputs.has_db == 'true'
+      && (needs.fast.result == 'success' || needs.fast.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -372,8 +379,12 @@ jobs:
 
   serial:
     name: Serial / pgsql / ${{ matrix.package }}
-    needs: changes
-    if: needs.changes.outputs.has_serial == 'true'
+    # Fast gate first: the server lanes start once the SQLite lane is green (or not needed), so a change that is
+    # already red on SQLite does not also spend the database matrix. A skip caused by a red gate stays red in ci-gate.
+    needs: [changes, fast]
+    if: >-
+      !cancelled() && needs.changes.outputs.has_serial == 'true'
+      && (needs.fast.result == 'success' || needs.fast.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -440,6 +451,53 @@ jobs:
           export PHP84_BIN
           scripts/t pgsql -p "$PACKAGE" --group=serial -j1 --no-skips
 
+  # I14 (PLAN3 P4.19): each consumer package is built in an empty directory with path repositories ONLY on the siblings
+  # it declares (scripts/release/consumer-check.sh), then its fast sqlite set runs there. The repository vendor/ and
+  # packages/core/tests are not on the path, so an undeclared dependency or a `../core/tests` reach fails the job.
+  # Blocking: ci-gate needs it. The lane follows `changes`: a consumer package that changed (or its dependants), and
+  # every consumer package when the manifest, scripts/ or the workflows changed. Zip-archive qualification is PLAN4.
+  consumer-isolation:
+    name: Consumer isolation / ${{ matrix.package }}
+    needs: changes
+    if: needs.changes.outputs.has_consumer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.consumer_matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-consumer-${{ matrix.package }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-consumer-${{ matrix.package }}-
+            ${{ runner.os }}-composer-
+
+      - name: Clean consumer (${{ matrix.package }})
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/release/consumer-check.sh "$PACKAGE"
+
   vue:
     name: "@vaulter/vue (Node ${{ matrix.node }})"
     needs: changes
@@ -449,7 +507,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['20', '22']
+        # Node 20 is end-of-life (2026-04-30). A PR checks the oldest supported LTS; weekly-full.yml adds Node 24.
+        node: ['22']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -636,7 +695,7 @@ jobs:
   ci-gate:
     name: CI gate
     if: always()
-    needs: [changes, quality, fast, db, serial, vue, hub, repo, openapi]
+    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, hub, repo, openapi]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

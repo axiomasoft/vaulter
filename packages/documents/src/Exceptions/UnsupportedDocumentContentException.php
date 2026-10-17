@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * An exporter was handed content of a shape it does not render. Thrown by the exporter
  * itself, so a custom exporter can narrow the same way the built-in ones do.
  */
+#[Api]
 final class UnsupportedDocumentContentException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

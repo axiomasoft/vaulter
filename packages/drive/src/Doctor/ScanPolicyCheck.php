@@ -6,24 +6,26 @@ namespace Vaulter\Drive\Doctor;
 
 use Carbon\CarbonImmutable;
 use Throwable;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
-use Vaulter\Enums\Cas\ScanMode;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Support\Identity;
 
 /**
  * A changed scan policy takes effect per drive only once it is activated and its backfill ran:
  * until then the drive still enforces the old policy while the config names the new one.
  */
+#[Internal]
 final readonly class ScanPolicyCheck implements DoctorCheck
 {
     /** Hours a backfill may go without progress before it counts as stalled. */
     private const int STALLED_HOURS = 24;
 
-    public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies) {}
+    public function __construct(private DriveConfig $config, private ScanPolicyResolver $policies) {}
 
     public function key(): string
     {

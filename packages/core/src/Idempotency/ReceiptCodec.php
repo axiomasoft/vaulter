@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Idempotency;
 
 use LogicException;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * How the owner of an idempotent operation stores its result in a receipt and restores it on a replay (D25,
  * ADR-0029). Versioned: a stored body is decoded with the version it was written with, and an unknown version
  * throws instead of guessing. A receipt of a destructive operation keeps only ids and status, never content.
  */
+#[Spi(SpiKind::Implement)]
 interface ReceiptCodec
 {
     /** The stable name of the receipt format (an identity: `drive.node-snapshot`). */

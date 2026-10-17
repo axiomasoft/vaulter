@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Doctor;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Drive\Configuration\DriveConfig;
 
+#[Internal]
 final readonly class UploadsTmpCheck implements DoctorCheck
 {
     public function __construct(private DriveConfig $config) {}

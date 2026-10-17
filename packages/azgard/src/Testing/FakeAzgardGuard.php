@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard\Testing;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 
 /**
@@ -21,6 +22,7 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
  * Grant a permission "globally" by passing it to a workspace check the resolver runs;
  * grant SuperAdmin to allow every check.
  */
+#[Api]
 final class FakeAzgardGuard implements AzgardGuard
 {
     /**

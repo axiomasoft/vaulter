@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
 
 /*
  * F-P1.2-02 (Nit, D19 green guard — docblock-alignment fix, no behaviour delta):

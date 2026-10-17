@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Modules;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -12,6 +13,7 @@ use Vaulter\Exceptions\VaulterException;
  * A write of an active module ran before the module's schema was installed: no transaction was
  * opened. Retry after `php artisan migrate`.
  */
+#[Api]
 final class ModuleNotReadyException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

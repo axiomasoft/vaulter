@@ -7,10 +7,11 @@ namespace Vaulter\Documents\Http\Controllers\Documents;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Resources\DocumentContentResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Http\Support\Preconditions;
 
 /**
@@ -19,6 +20,7 @@ use Vaulter\Http\Support\Preconditions;
  * access gets 404, never a cached "not modified". The body does not depend on the caller
  * (a reader and an editor get the same one).
  */
+#[Internal]
 final readonly class ShowDocumentContentController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}

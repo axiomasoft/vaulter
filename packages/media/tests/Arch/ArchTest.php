@@ -13,8 +13,8 @@ arch('strict types')
 arch('media never touches the access layer')
     ->expect('Vaulter\Media')
     ->not->toUse([
-        'Vaulter\Access\AccessResolver',
-        'Vaulter\Contracts\Access\GrantAuthoritativeDriver',
+        'Vaulter\Drive\Access\AccessResolver',
+        'Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver',
     ]);
 
 // E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`);
@@ -72,23 +72,29 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
  * per AMEND) reddens the build instead of slipping into the tag unfrozen. The sibling
  * packages with real contracts (core/drive/documents/azgard) carry PublicApiSnapshotTest.
  */
-test('the package exposes no public contract surface (VLT-REL P2.2)', function (): void {
-    $contractsDir = __DIR__.'/../../src/Contracts';
-    $found = [];
+test('the contracts of the package are the CAS seams under Contracts/Cas and nothing else (D6)', function (): void {
+    $contractsDir = realpath(__DIR__.'/../../src/Contracts');
+    $outside = [];
+    $notInterfaces = [];
 
-    if (is_dir($contractsDir)) {
-        /** @var Iterator<SplFileInfo> $files */
-        $files = new RegexIterator(
-            new RecursiveIteratorIterator(new RecursiveDirectoryIterator($contractsDir, FilesystemIterator::SKIP_DOTS)),
-            '/\.php$/',
-        );
+    /** @var Iterator<SplFileInfo> $files */
+    $files = new RegexIterator(
+        new RecursiveIteratorIterator(new RecursiveDirectoryIterator($contractsDir, FilesystemIterator::SKIP_DOTS)),
+        '/\.php$/',
+    );
 
-        foreach ($files as $file) {
-            $found[] = $file->getPathname();
+    foreach ($files as $file) {
+        if (!str_starts_with($file->getPathname(), $contractsDir.DIRECTORY_SEPARATOR.'Cas'.DIRECTORY_SEPARATOR)) {
+            $outside[] = $file->getPathname();
+        }
+        if (preg_match('/^interface\s/m', (string) file_get_contents($file->getPathname())) !== 1) {
+            $notInterfaces[] = $file->getPathname();
         }
     }
 
-    expect($found)->toBe([]);
+    expect($contractsDir)->not->toBeFalse()
+        ->and($outside)->toBe([])
+        ->and($notInterfaces)->toBe([]);
 });
 
 arch('DB facade is routed through VaulterDatabase (AD25)')

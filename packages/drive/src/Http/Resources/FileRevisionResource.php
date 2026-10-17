@@ -6,13 +6,15 @@ namespace Vaulter\Drive\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 
 /**
  * An immutable revision of a file: its number, content digest, the scan verdict that
  * decides whether it may be downloaded, and whether retention keeps it forever.
  */
+#[Internal]
 final class FileRevisionResource extends JsonResource
 {
     public function __construct(FileRevisionSnapshot $revision)

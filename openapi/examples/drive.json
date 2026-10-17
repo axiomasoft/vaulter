@@ -11,7 +11,7 @@
         "data": {
             "id": "2",
             "owner": {
-                "type": "Vaulter\\Tests\\Fixtures\\Panels\\FakeProject",
+                "type": "Vaulter\\Testing\\Fixtures\\Panels\\FakeProject",
                 "id": "2"
             },
             "profile": "default",

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Http\Problems\ProblemCodeSource;
 
@@ -16,6 +18,7 @@ use Vaulter\Http\Problems\ProblemCodeSource;
  * The kernel applies the declarations of active modules after compilation; the schema of every
  * offered module, active or not, is installed.
  */
+#[Api]
 final class ModuleBuilder
 {
     private bool $sealed = false;
@@ -231,7 +234,9 @@ final class ModuleBuilder
     }
 
     /**
-     * The module's event types (consumed by the event catalogue).
+     * The module's event types (D38): a backed string enum implementing `EventTypeContract`, one case per type.
+     * The event catalogue lists them while the module is active, and a value declared by two installed modules
+     * makes the graph invalid.
      *
      * @param class-string $enum
      */
@@ -257,7 +262,8 @@ final class ModuleBuilder
         return $this;
     }
 
-    /** @internal Called by the compiler once every manifest registered. */
+    /** Called by the compiler once every manifest registered. */
+    #[Internal]
     public function seal(): void
     {
         $this->sealed = true;
@@ -347,7 +353,7 @@ final class ModuleBuilder
         return $this->events;
     }
 
-    /** @return list<class-string<ProblemCodeSource>> */
+    /** @return list<string> the declared classes; the compiler checks that each one is a {@see ProblemCodeSource} */
     public function problemSources(): array
     {
         return $this->problems;

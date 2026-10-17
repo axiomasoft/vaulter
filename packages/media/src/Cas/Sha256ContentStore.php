@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Media\Cas;
 
 use RuntimeException;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\ListableContentStore;
-use Vaulter\Contracts\Cas\ListableStorageDriver;
-use Vaulter\Contracts\Cas\StagedObject;
-use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Attributes\Internal;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\ListableContentStore;
+use Vaulter\Media\Contracts\Cas\ListableStorageDriver;
+use Vaulter\Media\Contracts\Cas\StagedObject;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * The default ContentStore: hash the LOCAL staged temp file, never the live
@@ -21,6 +22,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  * cannot clobber, and on S3 attaches x-amz-checksum-sha256 for server-side
  * verification (config-aware; ignored by the local/sqlite test disk).
  */
+#[Internal]
 final readonly class Sha256ContentStore implements ContentStore, ListableContentStore
 {
     /**

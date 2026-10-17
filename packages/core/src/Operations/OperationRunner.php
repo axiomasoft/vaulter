@@ -7,6 +7,8 @@ namespace Vaulter\Operations;
 use Closure;
 use stdClass;
 use Throwable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
 use Vaulter\Idempotency\CachedRefusal;
@@ -33,11 +35,13 @@ use Vaulter\Kernel;
  * Anything with an external effect (content bytes, network) happens before write() or after commit:
  * a repeated attempt repeats only database work.
  */
+#[Api]
 final class OperationRunner
 {
     /** The writes now inside a root transaction of this runner. */
     private int $depth = 0;
 
+    #[Internal]
     public function __construct(
         private readonly Kernel $kernel,
         private readonly ModuleReadiness $readiness,

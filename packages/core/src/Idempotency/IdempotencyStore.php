@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 use LogicException;
 use stdClass;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Idempotency\OperationInProgressException;
@@ -25,9 +26,8 @@ use Vaulter\Schema\IdStrategyResolver;
  *
  * A wait that times out leaves no transaction to continue (Postgres aborts it): the operation is refused with
  * `operation_in_progress` and rolled back as a whole.
- *
- * @internal
  */
+#[Internal]
 final class IdempotencyStore
 {
     public const string ENTITY = 'idempotency_keys';
@@ -51,7 +51,7 @@ final class IdempotencyStore
      *
      * @param array<string, string|null> $tuple {@see IdempotencyDigest::tuple()}
      */
-    public function claim(array $tuple, string $digest, string $requestHash, int $ttlSeconds): ?stdClass
+    public function claim(array $tuple, string $digest, string $requestHash, int $ttlSeconds): ?StoredReceipt
     {
         $now = Carbon::now();
         $row = [
@@ -81,8 +81,9 @@ final class IdempotencyStore
             if ($existing->status !== self::COMPLETED) {
                 throw new OperationInProgressException(1);
             }
-            if (Carbon::parse((string) $existing->expires_at)->lessThanOrEqualTo($now)) {
-                $this->query()->where('scope_digest', $digest)->where('status', self::COMPLETED)->delete();
+            if (Carbon::parse($existing->expiresAt)->lessThanOrEqualTo($now)) {
+                // Still expired: a retry that committed a fresh receipt for this digest meanwhile has a later expiry.
+                $this->query()->where('scope_digest', $digest)->where('status', self::COMPLETED)->where('expires_at', '<=', $now)->delete();
 
                 continue;
             }
@@ -143,7 +144,8 @@ final class IdempotencyStore
             return 0;
         }
 
-        return $this->database->write(fn (): int => $this->query()->whereIn('scope_digest', $ids)->where('status', self::COMPLETED)->delete());
+        // Expired again at delete time: a receipt a retry committed after the read above is not this one.
+        return $this->database->write(fn (): int => $this->query()->whereIn('scope_digest', $ids)->where('status', self::COMPLETED)->where('expires_at', '<=', Carbon::now())->delete());
     }
 
     public function table(): string
@@ -162,16 +164,15 @@ final class IdempotencyStore
     }
 
     /** The committed receipt under a shared lock (read past any snapshot), or null. */
-    private function lockedReceipt(string $digest): ?stdClass
+    private function lockedReceipt(string $digest): ?StoredReceipt
     {
         $query = $this->query()->where('scope_digest', $digest);
         if ($this->connection()->getDriverName() !== 'sqlite') {
             $query->sharedLock();
         }
-        /** @var stdClass|null $row */
         $row = $query->first();
 
-        return $row;
+        return $row instanceof stdClass ? StoredReceipt::fromRow($row) : null;
     }
 
     /**
@@ -187,22 +188,29 @@ final class IdempotencyStore
         $driver = $connection->getDriverName();
         $restore = null;
         if ($driver === 'pgsql') {
-            $previous = (string) $connection->selectOne("select current_setting('lock_timeout') as v")->v;
+            $previous = self::setting($connection->selectOne("select current_setting('lock_timeout') as v"));
             $connection->select("select set_config('lock_timeout', ?, true)", [self::WAIT_SECONDS.'s']);
             $restore = static fn () => $connection->select("select set_config('lock_timeout', ?, true)", [$previous]);
         } elseif ($driver === 'mysql' || $driver === 'mariadb') {
-            $previous = (int) $connection->selectOne('select @@session.innodb_lock_wait_timeout as v')->v;
+            $previous = (int) self::setting($connection->selectOne('select @@session.innodb_lock_wait_timeout as v'));
             $connection->statement('set session innodb_lock_wait_timeout = '.self::WAIT_SECONDS);
             $restore = static fn () => $connection->statement('set session innodb_lock_wait_timeout = '.$previous);
+        } elseif ($driver === 'sqlite') {
+            $previous = (int) self::setting($connection->selectOne('select timeout as v from pragma_busy_timeout'));
+            $connection->statement('pragma busy_timeout = '.(self::WAIT_SECONDS * 1000));
+            $restore = static fn () => $connection->statement('pragma busy_timeout = '.$previous);
         }
 
         try {
             return $insert();
         } catch (QueryException $exception) {
             if (self::isLockTimeout($exception)) {
-                // Postgres aborted the transaction: nothing more runs in it, the exception rolls it back. No previous:
-                // a lock-wait timeout in the chain would read as a concurrency failure and repeat the whole attempt.
-                $restore = null;
+                // Postgres aborted the transaction: nothing more runs in it, the exception rolls it back (and the
+                // transaction-local setting with it); MySQL and SQLite keep the connection, so their setting is restored.
+                // No previous: a lock-wait timeout in the chain would read as a concurrency failure and repeat the attempt.
+                if ($driver === 'pgsql') {
+                    $restore = null;
+                }
                 throw new OperationInProgressException(1);
             }
 
@@ -221,10 +229,19 @@ final class IdempotencyStore
     private static function isLockTimeout(QueryException $exception): bool
     {
         $info = $exception->errorInfo ?? [];
-        $state = (string) ($info[0] ?? $exception->getCode());
-        $driverCode = (int) ($info[1] ?? 0);
+        $first = $info[0] ?? $exception->getCode();
+        $second = $info[1] ?? 0;
+        $state = is_scalar($first) ? (string) $first : '';
+        $driverCode = is_numeric($second) ? (int) $second : 0;
 
-        // 55P03 lock_not_available (Postgres lock_timeout), 1205 ER_LOCK_WAIT_TIMEOUT (MySQL/MariaDB).
-        return $state === '55P03' || $driverCode === 1205;
+        // 55P03 lock_not_available (Postgres lock_timeout), 1205 ER_LOCK_WAIT_TIMEOUT (MySQL/MariaDB), 5 SQLITE_BUSY.
+        return $state === '55P03' || $driverCode === 1205 || ($driverCode === 5 && str_contains($exception->getMessage(), 'database is locked'));
+    }
+
+    private static function setting(mixed $row): string
+    {
+        $value = $row instanceof stdClass ? ($row->v ?? null) : null;
+
+        return is_scalar($value) ? (string) $value : '';
     }
 }

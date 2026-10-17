@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Filament;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Filament\Providers\BindingsRegistrar;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\ModuleBuilder;
@@ -14,6 +15,7 @@ use Vaulter\Modules\VaulterModule;
  * The Filament admin module (D22): its config and config reader. The panel plugin ({@see VaulterPlugin}) is
  * never registered by the manifest — the host adds it to its panel explicitly.
  */
+#[Internal]
 final class FilamentModule implements VaulterModule
 {
     public function id(): ModuleId

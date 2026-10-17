@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Drive\Operations\AccessOperations;
+use Vaulter\Drive\Operations\ActivityOperations;
+use Vaulter\Drive\Operations\ChangeOperations;
 use Vaulter\Drive\Operations\FileOperations;
 use Vaulter\Drive\Operations\FolderOperations;
 use Vaulter\Drive\Operations\NodeOperations;
+use Vaulter\Drive\Operations\ShareOperations;
 use Vaulter\Drive\Operations\TrashOperations;
 use Vaulter\Drive\Operations\UploadOperations;
-use Vaulter\Http\Controllers\Webhooks\DeactivateWebhookEndpointController;
-use Vaulter\Http\Controllers\Webhooks\DeleteWebhookEndpointController;
-use Vaulter\Http\Controllers\Webhooks\RedeliverWebhookController;
-use Vaulter\Http\Controllers\Webhooks\RegisterWebhookEndpointController;
-use Vaulter\Http\Controllers\Webhooks\RotateWebhookSecretController;
-use Vaulter\Http\Controllers\Webhooks\UpdateWebhookEndpointController;
-use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\ShareOperations;
 
 /**
  * R1 of the operation pipeline (ADR-0028): every public mutating method of an `*Operations` class runs
@@ -35,18 +31,10 @@ const OPERATIONS_READS = [
     UploadOperations::class => ['status', 'patch', 'putPart'],
     AccessOperations::class => ['grants', 'explain', 'paginate'],
     ShareOperations::class => ['list', 'paginate'],
+    ActivityOperations::class => ['forDrive', 'forNode', 'filtered'],
+    ChangeOperations::class => ['startCursor', 'list'],
     DocumentOperations::class => ['content', 'revisions', 'revisionPage', 'export', 'collaborationSession'],
     CommentOperations::class => ['list'],
-];
-
-/** The webhook endpoint management writes, run through WebhookEndpointWrites. */
-const WEBHOOK_ENDPOINT_WRITES = [
-    RegisterWebhookEndpointController::class,
-    UpdateWebhookEndpointController::class,
-    DeleteWebhookEndpointController::class,
-    DeactivateWebhookEndpointController::class,
-    RotateWebhookSecretController::class,
-    RedeliverWebhookController::class,
 ];
 
 function operationsRunnerBody(ReflectionMethod $method): string
@@ -126,11 +114,5 @@ it('covers every Operations class of drive, documents and the core-located ones'
 
     foreach ($files as $file) {
         expect($listed)->toContain(basename($file, '.php'));
-    }
-});
-
-it('runs the webhook endpoint management writes as operations', function (): void {
-    foreach (WEBHOOK_ENDPOINT_WRITES as $controller) {
-        expect(operationsRunnerBody(new ReflectionMethod($controller, '__invoke')))->toContain('$this->writes->write(');
     }
 });

@@ -5,39 +5,39 @@ declare(strict_types=1);
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Access\Roles\Role;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Access\Roles\Role;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 // D30 (variant A): COPY needs View and Copy on EVERY active descendant, not only on the root.
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->owner = DriveTestHelpers::host();
     $this->system = Vaulter::drive($this->owner)->asSystem('copy subtree fixture');
     $this->user = AccessTestHelpers::user(72);
@@ -87,7 +87,9 @@ it('SEC-D30-copy-subtree refuses a hidden document descendant before any documen
     $hidden = AccessTestHelpers::folder($this->system->model(), $folder, 'hidden document', inheritGrants: false);
     app(VaulterDatabase::class)->write(fn () => $hidden->forceFill(['kind' => NodeKind::Document])->save());
     $db = app(VaulterDatabase::class)->connection();
-    $rows = static fn (): array => [Node::query()->count(), $db->table('v_documents')->count(), $db->table('v_document_revisions')->count()];
+    // The document tables belong to the documents package: a host without it has none, and then there is nothing to leak.
+    $count = static fn (string $table): int => $db->getSchemaBuilder()->hasTable($table) ? $db->table($table)->count() : 0;
+    $rows = static fn (): array => [Node::query()->count(), $count('v_documents'), $count('v_document_revisions')];
     $before = $rows();
 
     expect(fn () => $this->actor->nodes()->copy($folder, $destination))
@@ -159,8 +161,8 @@ it('SEC-D30-copy-subtree refuses a copy of nodes the actor may view and copy but
     $this->system->files()->upload(UploadSource::fromString('visible', 'visible.txt'), new UploadOptions(parent: $folder));
     $destination = $this->system->folders()->create('destination');
     app()->instance(CopyWithoutDownloadDriver::class, new CopyWithoutDownloadDriver);
-    config()->set('vaulter.access.permission_drivers.d30', CopyWithoutDownloadDriver::class);
-    config()->set('vaulter.access.permission_driver', 'd30');
+    config()->set('vaulter-drive.access.permission_drivers.d30', CopyWithoutDownloadDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'd30');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     $nodes = Node::query()->count();

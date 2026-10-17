@@ -3,26 +3,26 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Profiles\UploadPolicy;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Profiles\UploadPolicy;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Tests\TestCase;
 use Vaulter\ValueObjects\Access\Actor;
 
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.share_links', true);
     config()->set('vaulter-documents.comments.enabled', true);
 });
 
@@ -101,7 +101,7 @@ it('SEC-R14 disabling grants removes scalar and batch ACL contributions without 
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorize($user, Ability::View, $node))->toThrow(NodeNotFoundException::class)
         ->and($guard->visible($user, [$node]))->toBe([]);
-    config()->set('vaulter.access.permission_driver', 'null');
+    config()->set('vaulter-drive.access.permission_driver', 'null');
     // A host-role override remains independent from the disabled grant lane.
     $guard = app(OperationGuard::class);
     $guard->authorize($user, Ability::View, $node);

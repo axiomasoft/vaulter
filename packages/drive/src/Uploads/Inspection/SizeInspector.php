@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads\Inspection;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
-use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\UploadPolicy;
+use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\UploadPolicy;
 
+#[Internal]
 final readonly class SizeInspector implements UploadInspector
 {
     public function key(): string

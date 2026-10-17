@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Events\Files\FileUploaded;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
+use Vaulter\Media\Models\Cas\Blob;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -49,7 +50,7 @@ it('дедуп: два одинаковых файла → один блоб, д
 
     $blob = Blob::query()->first();
 
-    expect($blob->versions()->count())->toBe(2)
+    expect(RevisionBlobPins::edges($blob))->toBe(2)->and(RevisionBlobPins::pins($blob))->toBe(2)
         ->and($a->id)->not->toEqual($b->id);
 });
 

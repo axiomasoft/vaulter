@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Export;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Exceptions\DuplicateDocumentExporterException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
@@ -18,6 +20,7 @@ use Vaulter\Exceptions\Registry\RegistryFrozenException;
  * Two exporters for one pair are an error whatever the provider order; a host swaps
  * an exporter only through replace().
  */
+#[Api]
 final class DocumentExporterRegistry
 {
     private const string KEY_PATTERN = '/^[a-z0-9-]+\/[a-z0-9-]+$/';
@@ -27,6 +30,7 @@ final class DocumentExporterRegistry
 
     private bool $frozen = false;
 
+    #[Internal]
     public function __construct(private readonly Container $container) {}
 
     /**
@@ -111,13 +115,14 @@ final class DocumentExporterRegistry
         return $exporters;
     }
 
-    /** @internal Called once the application has booted. */
+    /** Called once the application has booted. */
+    #[Internal]
     public function freeze(): void
     {
         $this->frozen = true;
     }
 
-    /** @internal */
+    #[Internal]
     public function isFrozen(): bool
     {
         return $this->frozen;

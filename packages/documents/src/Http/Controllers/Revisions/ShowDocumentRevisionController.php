@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Controllers\Revisions;
 
 use Illuminate\Http\Request;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** One checkpoint with its content (View). */
+#[Internal]
 final readonly class ShowDocumentRevisionController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}

@@ -6,15 +6,16 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Drive\DriveArchivedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\DriveArchivedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Support\Preconditions;
 use Vaulter\Support\Identity;
 
@@ -29,6 +30,7 @@ use Vaulter\Support\Identity;
  * writes — the hub storing a new state in between makes that write fail with the same
  * 412.
  */
+#[Internal]
 final readonly class DocumentResponses
 {
     public function __construct(private DocumentsManager $documents) {}
@@ -61,11 +63,10 @@ final readonly class DocumentResponses
             throw DriveArchivedException::forDrive(Identity::stringify($model->getKey()));
         }
 
-        return Preconditions::matchDocument(
-            $request,
-            (new DocumentContentResource($document))->etag(),
-            $document->stateVersion,
-            new StaleDocumentStateException(expected: $document->stateVersion, actual: $document->stateVersion, nodeId: $nodeId),
-        );
+        if (!Preconditions::matches($request, (new DocumentContentResource($document))->etag())) {
+            throw new StaleDocumentStateException(expected: $document->stateVersion, actual: $document->stateVersion, nodeId: $nodeId);
+        }
+
+        return $document->stateVersion;
     }
 }

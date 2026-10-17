@@ -8,28 +8,30 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Access\ValueObjects\GrantSet;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Repositories\Drive\DriveReadRepository;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\ValueObjects\GrantSet;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Repositories\DriveReadRepository;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Support\Identity;
 
 /** @internal Read adapters for the existing browser and panel representations. */
+#[Internal]
 final readonly class NodeBrowserQuery
 {
     public function __construct(
@@ -38,7 +40,7 @@ final readonly class NodeBrowserQuery
         private NodeLocator $locator,
         private OperationGuard $guard,
         private AccessResolver $access,
-        private VaulterConfig $config,
+        private DriveConfig $config,
         private NodeSnapshotMapper $mapper,
     ) {}
 

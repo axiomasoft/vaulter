@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Models\Uploads;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -28,6 +29,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property int|string|null $temp_blob_id
  * @property Carbon|null     $received_at
  */
+#[Internal]
 class UploadPart extends Pivot
 {
     use GuardsWrites;

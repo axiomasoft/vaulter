@@ -5,16 +5,21 @@ declare(strict_types=1);
 namespace Vaulter\Media\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Contracts\Cas\ContentStore;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\Models\Cas\Blob;
 
+#[Api]
 final readonly class MediaConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function disk(): string
@@ -99,6 +104,24 @@ final readonly class MediaConfig
         }
 
         ConfigValidator::assertImplements(key: 'vaulter-media.blob_store', class: $class, base: BlobStore::class);
+
+        return $class;
+    }
+
+    /**
+     * The blob model, swappable in vaulter-media.models.blob (D6: the key moved from vaulter.models.blob with the model).
+     *
+     * @return class-string<Blob>
+     */
+    public function blobModel(): string
+    {
+        $class = $this->config->get(key: 'vaulter-media.models.blob', default: Blob::class);
+
+        if (!is_string($class)) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-media.models.blob must be a class name.');
+        }
+
+        ConfigValidator::assertModel(key: 'vaulter-media.models.blob', class: $class, base: Blob::class);
 
         return $class;
     }

@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
@@ -12,8 +10,10 @@ use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
  * Purge deletes the document's revisions itself and then its row, before the node goes.

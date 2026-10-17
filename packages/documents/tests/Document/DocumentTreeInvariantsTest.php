@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\DriveHandle;
-use Vaulter\Exceptions\Nodes\InvalidDestinationException;
-use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
+use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * A document node is placed like any other node: no parent means the drive root
@@ -81,7 +81,8 @@ it('takes the storage row before the parent row, as every node insert does', fun
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {
-        $queries[] = $query->sql;
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        $queries[] = str_replace('`', '"', $query->sql);
     });
 
     createDocumentUnder($drive, 'Ordered', $folder);

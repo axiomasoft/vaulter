@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 
@@ -13,6 +14,7 @@ use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
  * A comment on a node: the thread pointer (parent_id), the author, the body, the
  * optional anchor and the resolution. Built from a {@see CommentSnapshot}, never queries.
  */
+#[Internal]
 final class CommentResource extends JsonResource
 {
     public function __construct(CommentSnapshot $comment)

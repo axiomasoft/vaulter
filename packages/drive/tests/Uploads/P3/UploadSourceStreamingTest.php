@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use GuzzleHttp\Psr7\Stream;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
-use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 
 it('V30 consumes a borrowed PSR stream from its current position and never closes it', function (): void {
     $resource = UploadTestHelpers::streamFor('prefixpayload');

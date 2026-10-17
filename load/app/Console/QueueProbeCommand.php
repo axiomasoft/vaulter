@@ -12,12 +12,12 @@ use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Throwable;
-use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
+use Vaulter\Webhooks\Jobs\DeliverWebhook;
+use Vaulter\Webhooks\Models\WebhookDelivery;
+use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 

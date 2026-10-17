@@ -1,5 +1,136 @@
+Vaulter\Drive\Contracts\Access\AccessOperations
+  explain(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Drive\Access\ValueObjects\AccessExplanation
+  grant(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Access\GrantInput $grant): \Vaulter\Drive\Data\Snapshots\GrantSnapshot
+  grants(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
+  restoreInheritance(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  restrictInheritance(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Enums\Access\InheritanceRestriction $mode = Vaulter\Drive\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  revoke(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\GrantSnapshot|int|string $grant): void
+
+Vaulter\Drive\Contracts\Access\EnumeratesRoleSubjects
+
+
+Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver
+  isGrantAuthoritative(): bool
+
+Vaulter\Drive\Contracts\Access\PermissionDriver
+  canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): bool
+  override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Drive\Enums\Access\Effect
+  resolve(\Vaulter\Drive\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Drive\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Drive\Access\ValueObjects\Decision
+  subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
+
+Vaulter\Drive\Contracts\Activity\ActivityOperations
+  forDrive(?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
+  forNode(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
+
+Vaulter\Drive\Contracts\DownloadGuard
+  check(\Vaulter\Drive\Operations\DriveContext|\Vaulter\Drive\Sharing\ShareContext $context, \Vaulter\Drive\Models\Node $node, \Vaulter\Drive\Models\FileRevision $revision): void
+
+Vaulter\Drive\Contracts\DriveExtension
+
+
+Vaulter\Drive\Contracts\DriveHandle
+  access(): \Vaulter\Drive\Contracts\Access\AccessOperations
+  actingAs(\Illuminate\Contracts\Auth\Access\Authorizable $user): \static
+  activity(): \Vaulter\Drive\Contracts\Activity\ActivityOperations
+  actor(): \Vaulter\ValueObjects\Access\Actor
+  archive(): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  asSystem(string $reason): \static
+  changes(): \Vaulter\Drive\Operations\ChangeOperations
+  delete(): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  extension(string $operations): object
+  files(): \Vaulter\Drive\Contracts\FileOperations
+  folders(): \Vaulter\Drive\Contracts\FolderOperations
+  nodes(): \Vaulter\Drive\Contracts\NodeOperations
+  profile(): \Vaulter\Drive\Profiles\Profile
+  quota(): \Vaulter\Drive\Data\Snapshots\QuotaSnapshot
+  root(): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  shares(): \Vaulter\Drive\Contracts\Sharing\ShareOperations
+  snapshot(): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  trash(): \Vaulter\Drive\Contracts\TrashOperations
+  unarchive(): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  withCorrelationId(string $correlationId): \static
+  withIdempotencyKey(string $key, ?string $requestFingerprint = null): \static
+
+Vaulter\Drive\Contracts\FileOperations
+  addRevision(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Drive\Data\UploadSource $source, ?\Vaulter\Drive\Data\RevisionOptions $options = null): \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot
+  deleteRevision(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot|int|string $revision): void
+  read(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot|int|null|string $revision = null): \Vaulter\Drive\Data\FileStream
+  restoreRevision(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot|int|string $revision, ?int $expectedSequence = null): \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot
+  revisions(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $file, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
+  setRevisionRetention(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot|int|string $revision, bool $keepForever): \Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot
+  upload(\Vaulter\Drive\Data\UploadSource $source, ?\Vaulter\Drive\Data\UploadOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+
+Vaulter\Drive\Contracts\FolderOperations
+  create(string $name, \Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Drive\Data\CreateFolderOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+
+Vaulter\Drive\Contracts\Handlers\FileHandler
+  capabilities(\Vaulter\Drive\ValueObjects\Handlers\FileDescriptor $file): \Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
+  extensions(): array
+  key(): string
+  mimeTypes(): array
+  priority(): int
+  viewer(\Vaulter\Drive\ValueObjects\Handlers\FileDescriptor $file): \Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
+  all(): array
+  register(\Vaulter\Drive\Contracts\Handlers\FileHandler|string $handler): void
+  resolve(\Vaulter\Drive\ValueObjects\Handlers\FileDescriptor $file, \Vaulter\Drive\Enums\Handlers\Capability $capability = Vaulter\Drive\Enums\Handlers\Capability::Download): \Vaulter\Drive\Contracts\Handlers\FileHandler
+
+Vaulter\Drive\Contracts\Handlers\NodePresenter
+  present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|\Vaulter\Drive\Models\Node $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Drive\Contracts\NodeContentLifecycle
+  copy(\Vaulter\Drive\Operations\DriveContext $context, \Vaulter\Drive\Models\Node $source, \Vaulter\Drive\Models\Node $copy): \Vaulter\Drive\Data\CopyResult
+  kind(): \Vaulter\Drive\Enums\NodeKind
+  purge(\Vaulter\Drive\Operations\DriveContext $context, \Vaulter\Drive\Models\Node $node): void
+
+Vaulter\Drive\Contracts\NodeOperations
+  abilities(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Drive\Access\ValueObjects\NodeAbilities
+  abilitiesMany(array $nodes): array
+  children(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $folder = null, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
+  copy(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, ?\Vaulter\Drive\Data\CopyOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  find(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  move(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $destination, ?\Vaulter\Drive\Data\MoveOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  properties(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
+  rename(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, string $name, ?int $expectedSequence = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  search(string $term, ?\Vaulter\Drive\Data\SearchOptions $options = null): \Vaulter\Data\Page
+  setProperties(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  star(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  starred(?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
+  trash(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  unstar(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+
+Vaulter\Drive\Contracts\NodeSnapshotContributor
+  contribute(array $nodes): array
+  key(): string
+
+Vaulter\Drive\Contracts\Presentation\KindPresenter
+  kind(): \Vaulter\Drive\Enums\NodeKind
+  present(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|\Vaulter\Drive\Models\Node $node): \Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Drive\Contracts\Profiles\ProfileOption
+  enabled(): bool
+  name(): string
+  validate(\Vaulter\Drive\Profiles\Profile $profile): void
+
+Vaulter\Drive\Contracts\Sharing\ShareOperations
+  create(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Sharing\ShareLinkInput $input): \Vaulter\Drive\Data\Snapshots\MintedShareLink
+  list(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
+  revoke(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
+  rotate(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share): \Vaulter\Drive\Data\Snapshots\MintedShareLink
+  update(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, \Vaulter\Drive\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot
+
+Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator
+  generate(): string
+
+Vaulter\Drive\Contracts\TrashOperations
+  empty(): int
+  list(?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
+  purge(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): void
+  restore(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Drive\Data\RestoreOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+
 Vaulter\Drive\Contracts\Uploads\UploadInspector
-  inspect(\Vaulter\Drive\Data\Files\UploadFacts $facts, \Vaulter\Profiles\UploadPolicy $policy, \Vaulter\Operations\DriveContext $context): void
+  inspect(\Vaulter\Drive\Data\Files\UploadFacts $facts, \Vaulter\Drive\Profiles\UploadPolicy $policy, \Vaulter\Drive\Operations\DriveContext $context): void
   key(): string
   priority(): int
 
@@ -9,8 +140,29 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
   isComplete(\Vaulter\Drive\Models\Uploads\UploadSession $session): bool
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
 
+Vaulter\Drive\Configuration\AccessConfig
+  gateAbilityMap(): array
+  gateCreateAbility(): string
+  gateSuperAbility(): string
+  permissionDriver(): string
+  permissionDrivers(): array
+  spatieCreatePermission(): string
+  spatiePermissionMap(): array
+  spatieRoleSubjectType(): string
+  spatieSuperPermission(): string
+  spatieTeamSubjectType(): string
+  spatieTeamsEnabled(): bool
+
+Vaulter\Drive\Configuration\ChangesConfig
+  maxPageSize(): int
+  retentionDays(): int
+
+Vaulter\Drive\Configuration\DownloadsConfig
+  deliveryMode(): string
+  directTtlSeconds(): int
+  inlineMimeTypes(): array
+
 Vaulter\Drive\Configuration\DriveConfig
-  __construct(\Illuminate\Contracts\Config\Repository $config)
   allowedMimeTypes(): array
   blockedExtensions(): array
   chunkSize(): int
@@ -31,37 +183,101 @@ Vaulter\Drive\Configuration\DriveConfig
   trashRetentionDays(): int
   validateScanWork(bool $requireBroker = false): void
 
-Vaulter\Drive\Events\Drives\DriveArchived
-  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+Vaulter\Drive\Configuration\ListingConfig
+  scanBudget(): int
+
+Vaulter\Drive\Configuration\ScanConfig
+  globalSpec(): \Vaulter\Drive\Content\ScanPolicySpec
+  mode(): \Vaulter\Media\Enums\Cas\ScanMode
+  scanner(): ?string
+
+Vaulter\Drive\Configuration\SharingConfig
+  defaultTtlHours(): int
+  maxTtlHours(): int
+  prefixLength(): int
+  tokenGenerator(): string
+  urlBase(): string
+
+Vaulter\Drive\Events\Access\NodeGrantCreated
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Drive $drive
+  readonly \Vaulter\Drive\Models\Access\NodeGrant $grant
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Access\NodeGrantRevoked
+  activityContext(): array
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Access\ValueObjects\Subject $subject
+  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly int $revoked
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Access\NodeInheritanceChanged
+  activityContext(): array
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly bool $inherits
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Drives\DriveArchived
+  activityContext(): array
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Drive $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Drives\DriveCreated
-  __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Drive $storage
-  readonly \Vaulter\Models\Drive\Node $root
+  readonly \Vaulter\Drive\Models\Drive $storage
+  readonly \Vaulter\Drive\Models\Node $root
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -69,14 +285,14 @@ Vaulter\Drive\Events\Drives\DriveCreated
 Vaulter\Drive\Events\Drives\DriveDeleted
   __construct(string $driveId, string $ownerType, string $ownerId, int|null|string $tenantId, string $profile, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int|null|string $tenantId
@@ -88,56 +304,53 @@ Vaulter\Drive\Events\Drives\DriveDeleted
   readonly string $profile
 
 Vaulter\Drive\Events\Drives\DriveUnarchived
-  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Drive $drive
+  readonly \Vaulter\Drive\Models\Drive $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileRevisionAdded
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int $versionNo, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\File $file
-  readonly \Vaulter\Models\Drive\FileRevision $version
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\File $file
+  readonly \Vaulter\Drive\Models\FileRevision $version
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $versionNo
   readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileRevisionDeleted
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, int|string $revisionId, int $revisionNo, int $sizeBytes, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\File $file
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\File $file
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $revisionNo
   readonly int $sizeBytes
@@ -146,72 +359,68 @@ Vaulter\Drive\Events\Files\FileRevisionDeleted
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileUploaded
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\File $file
-  readonly \Vaulter\Models\Drive\FileRevision $version
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\File $file
+  readonly \Vaulter\Drive\Models\FileRevision $version
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\FolderCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeCopied
-  __construct(\Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Node $copy
-  readonly \Vaulter\Models\Drive\Node $source
+  readonly \Vaulter\Drive\Models\Node $copy
+  readonly \Vaulter\Drive\Models\Node $source
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeMoved
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $fromParentId, int|null|string $toParentId, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int|null|string $fromParentId
   readonly int|null|string $toParentId
@@ -221,14 +430,14 @@ Vaulter\Drive\Events\Nodes\NodeMoved
 Vaulter\Drive\Events\Nodes\NodePurged
   __construct(int|string $storageId, array $nodeIds, int $freedBytes, int|null|string $tenantId, string $profile, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly array $nodeIds
@@ -240,18 +449,17 @@ Vaulter\Drive\Events\Nodes\NodePurged
   readonly string $profile
 
 Vaulter\Drive\Events\Nodes\NodeRenamed
-  __construct(\Vaulter\Models\Drive\Node $node, string $fromName, string $toName, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
@@ -259,67 +467,128 @@ Vaulter\Drive\Events\Nodes\NodeRenamed
   readonly string $toName
 
 Vaulter\Drive\Events\Nodes\NodeRestored
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeTrashed
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeUpdated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): \Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): \Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
-  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
-Vaulter\Drive\Events\Uploads\UploadAborted
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+Vaulter\Drive\Events\Sharing\NodeShareCreated
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Sharing\NodeShareRevoked
+  activityContext(): array
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Sharing\NodeShareRotated
+  activityContext(): array
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Sharing\NodeShareUpdated
+  activityContext(): array
+  activityTarget(): \Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly array $changed
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Uploads\UploadAborted
+  activityContext(): array
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -327,16 +596,15 @@ Vaulter\Drive\Events\Uploads\UploadAborted
   readonly string $eventId
 
 Vaulter\Drive\Events\Uploads\UploadExpired
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -344,16 +612,15 @@ Vaulter\Drive\Events\Uploads\UploadExpired
   readonly string $eventId
 
 Vaulter\Drive\Events\Uploads\UploadInitiated
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
-  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
   data(): array
-  isWebhookEligible(): bool
-  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -362,3 +629,21 @@ Vaulter\Drive\Events\Uploads\UploadInitiated
 
 Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests
   assertScanLifecycleContract(callable $configureHost, \Illuminate\Contracts\Auth\Authenticatable $actor): void
+
+FACADE Vaulter\Drive\Facades\Vaulter
+  static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
+  static DriveHandle|null findDrive(Model $owner, ?string $profile = null)
+  static DriveHandle|null findDriveById(string|int $id)
+  static FileHandlerRegistry handlers()
+  static Page<DriveSnapshot> drives(Authorizable $actor, ?ListOptions $options = null)
+  static PermissionDriverManager permissions()
+  static ProfileRegistry profiles()
+
+Vaulter\Drive\Vaulter
+  drive(\Illuminate\Database\Eloquent\Model $ownerOrDrive, ?string $profile = null): \Vaulter\Drive\Contracts\DriveHandle
+  drives(\Illuminate\Contracts\Auth\Access\Authorizable $actor, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
+  findDrive(\Illuminate\Database\Eloquent\Model $owner, ?string $profile = null): ?\Vaulter\Drive\Contracts\DriveHandle
+  findDriveById(int|string $id): ?\Vaulter\Drive\Contracts\DriveHandle
+  handlers(): \Vaulter\Drive\Contracts\Handlers\FileHandlerRegistry
+  permissions(): \Vaulter\Drive\Access\PermissionDriverManager
+  profiles(): \Vaulter\Drive\Profiles\ProfileRegistry

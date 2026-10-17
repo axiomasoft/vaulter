@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 // The fragments below are copied into the guides byte for byte; the guides' own `use` lines are
 // the imports of this file.
@@ -114,7 +114,7 @@ it('uploads under the open driver in a host test (recipes guide)', function (): 
 
     // [recipe:testing-open-driver]
     // In a Pest test, force the open driver for the duration of the test.
-    config()->set('vaulter.access.permission_driver', 'null'); // non-production only
+    config()->set('vaulter-drive.access.permission_driver', 'null'); // non-production only
 
     $drive = Vaulter::drive($task)->actingAs($user);
     $node = $drive->files()->upload(UploadSource::fromString('hello', 'note.txt'));

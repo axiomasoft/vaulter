@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Documents;
 
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentContent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Command for UpdateDocumentContentAction — the autosave path: write
@@ -15,8 +17,10 @@ use Vaulter\Models\Drive\Node;
  * truth). content is already decoded by the document's type; it is written in that
  * type's schema version.
  */
+#[Api]
 final readonly class UpdateDocumentContentInput
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public DocumentContent $content,

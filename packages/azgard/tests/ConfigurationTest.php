@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Config\Repository;
 use Vaulter\Azgard\AzgardPermissionMap;
 use Vaulter\Azgard\Configuration\AzgardConfig;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\Ability;
 
 it('reads each typed setting and the permission map live from the repository', function (): void {
     $repository = new Repository;

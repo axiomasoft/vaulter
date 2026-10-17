@@ -8,46 +8,51 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Contracts\Access\AccessOperations;
-use Vaulter\Contracts\Activity\ActivityOperations;
-use Vaulter\Contracts\Drive\DriveExtension;
-use Vaulter\Contracts\Drive\DriveHandle as Contract;
-use Vaulter\Contracts\Drive\FileOperations;
-use Vaulter\Contracts\Drive\FolderOperations;
-use Vaulter\Contracts\Drive\NodeOperations;
-use Vaulter\Contracts\Drive\TrashOperations;
-use Vaulter\Contracts\Sharing\ShareOperations;
-use Vaulter\Data\Snapshots\DriveSnapshot;
-use Vaulter\Data\Snapshots\Mapping\DriveSnapshotMapper;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Data\Snapshots\QuotaSnapshot;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
 use Vaulter\Drive\Actions\Drives\UnarchiveDriveAction;
+use Vaulter\Drive\Contracts\Access\AccessOperations;
+use Vaulter\Drive\Contracts\Activity\ActivityOperations;
+use Vaulter\Drive\Contracts\DriveExtension;
+use Vaulter\Drive\Contracts\DriveHandle as Contract;
+use Vaulter\Drive\Contracts\FileOperations;
+use Vaulter\Drive\Contracts\FolderOperations;
+use Vaulter\Drive\Contracts\NodeOperations;
+use Vaulter\Drive\Contracts\Sharing\ShareOperations;
+use Vaulter\Drive\Contracts\TrashOperations;
+use Vaulter\Drive\Data\Snapshots\DriveSnapshot;
+use Vaulter\Drive\Data\Snapshots\Mapping\DriveSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\QuotaSnapshot;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\ChangeOperations;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Operations\UploadOperations;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Kernel;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\Modules\MissingExtensionException;
-use Vaulter\Operations\ChangeOperations;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
+#[Api]
 final readonly class DriveHandle implements Contract
 {
+    #[Internal]
     public function __construct(private Drive $drive, private Container $container, private ?Actor $explicitActor = null, private ?string $correlationId = null, private ?string $idempotencyKey = null, private ?string $requestFingerprint = null) {}
 
-    /** @internal The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
+    /** The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
+    #[Internal]
     public function model(): Drive
     {
         $drive = $this->container->make(TenancyBoundary::class)->assertDrive($this->drive);
@@ -148,7 +153,8 @@ final readonly class DriveHandle implements Contract
         return new self($this->drive, $this->container, $this->explicitActor, $this->correlationId, $key, $requestFingerprint);
     }
 
-    /** @internal One context and correlation per operation, no cached ACL result. */
+    /** One context and correlation per operation, no cached ACL result. */
+    #[Internal]
     private function context(): DriveContext
     {
         return DriveContext::for(
@@ -192,17 +198,17 @@ final readonly class DriveHandle implements Contract
 
     public function access(): AccessOperations
     {
-        return $this->operations(\Vaulter\Operations\AccessOperations::class);
+        return $this->operations(Operations\AccessOperations::class);
     }
 
     public function shares(): ShareOperations
     {
-        return $this->operations(\Vaulter\Operations\ShareOperations::class);
+        return $this->operations(Operations\ShareOperations::class);
     }
 
     public function activity(): ActivityOperations
     {
-        return $this->operations(\Vaulter\Operations\ActivityOperations::class);
+        return $this->operations(Operations\ActivityOperations::class);
     }
 
     public function changes(): ChangeOperations

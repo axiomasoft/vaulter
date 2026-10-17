@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 
 /**
@@ -13,6 +14,7 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
  * false, so the {@see AzgardPermissionDriver} raises NO
  * access — a SAFE pass-through, never a fatal, exactly as when no guard is bound at all.
  */
+#[Internal]
 final class NullAzgardGuard implements AzgardGuard
 {
     public function hasScopedPermission(string $permission, object $entity): bool

@@ -8,35 +8,37 @@ use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Contracts\Drive\TrashOperations as Contract;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\RestoreOptions;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Actions\Trash\RestoreNodeAction;
+use Vaulter\Drive\Contracts\TrashOperations as Contract;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\RestoreDestinationChangedException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Queries\ListTrashQuery;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\RestoreDestinationChangedException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 
+#[Api]
 final readonly class TrashOperations implements Contract
 {
+    #[Internal]
     public function __construct(
         private DriveContext $context,
         private NodeLocator $locator,
@@ -106,7 +108,10 @@ final readonly class TrashOperations implements Contract
     public function empty(): int
     {
         // Materialize before commits remove rows; every root owns one atomic operation.
-        $roots = $this->nodes->trashedBefore(Carbon::now())->where('drive_id', $this->context->driveId())->get();
+        // Newest root first: a folder trashed after its already-trashed child comes before that child, so purging it takes the
+        // child along and the child is skipped as gone, whatever the clock resolution (microseconds on PostgreSQL, seconds on MySQL).
+        $roots = $this->nodes->trashedBefore(Carbon::now())->where('drive_id', $this->context->driveId())
+            ->reorder()->orderByDesc('trashed_at')->orderBy('id')->get();
         $count = 0;
         $firstFailure = null;
         foreach ($roots as $root) {

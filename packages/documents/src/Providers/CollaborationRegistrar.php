@@ -8,16 +8,18 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Broadcast;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Collaboration\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Modules\ModuleBindings;
 
 /** The collaboration wiring of the documents module until collaboration becomes its own module (P5, D32). */
+#[Internal]
 final class CollaborationRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
@@ -62,7 +64,7 @@ final class CollaborationRegistrar implements ModuleBindings
             return false;
         }
 
-        $model = app(VaulterConfig::class)->model('node');
+        $model = app(DriveConfig::class)->model('node');
         $node = $model::query()->find($roomId);
 
         if (!$node instanceof Node || !$node->kind->isDocument()) {

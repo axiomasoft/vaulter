@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Events\EventConformance;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Events\EventConformance;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
+use Vaulter\Testing\Support\CanonicalJson;
 
 /**
  * Deleting a non-current revision is audited and staged for webhooks like every other
  * lifecycle event (PLAN2.D48).
  */
-uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(TestCase::class, RefreshDatabase::class);
 
 it('records file.revision_deleted in the activity feed and the outbox', function (): void {
     Storage::fake('local');
@@ -29,12 +29,12 @@ it('records file.revision_deleted in the activity feed and the outbox', function
 
     $actor->files()->deleteRevision($file, $first->getKey());
 
-    $outbox = Outbox::query()->where('event', EventType::FileRevisionDeleted->value)->sole();
-    $activity = Activity::query()->where('verb', EventType::FileRevisionDeleted->value)->sole();
+    $outbox = OutboxEvent::query()->where('type', DriveEventType::FileRevisionDeleted->value)->sole();
+    $activity = Activity::query()->where('verb', DriveEventType::FileRevisionDeleted->value)->sole();
 
-    expect($outbox->payload['data'])->toBe(['revision_id' => (string) $first->getKey(), 'number' => 1])
+    expect(CanonicalJson::of($outbox->payload['data']))->toBe(CanonicalJson::of(['revision_id' => (string) $first->getKey(), 'number' => 1]))
         ->and($activity->event_id)->toBe($outbox->event_id)
         ->and($activity->context['size_bytes'])->toBe(2)
         ->and($outbox->payload['sequence'])->toBeInt();
-    EventConformance::assertEnvelope(EventType::FileRevisionDeleted, $outbox->payload);
+    EventConformance::assertEnvelope(DriveEventType::FileRevisionDeleted, $outbox->payload);
 });

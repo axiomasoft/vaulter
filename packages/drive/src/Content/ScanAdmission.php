@@ -6,14 +6,16 @@ namespace Vaulter\Drive\Content;
 
 use Illuminate\Support\Str;
 use LogicException;
-use Vaulter\Actions\Content\RequestScanWorkAction;
-use Vaulter\Actions\Content\ReuseScanEvidenceAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Exceptions\Content\ContentQuarantinedException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Content\ScanEvidenceRepository;
+use Vaulter\Drive\Actions\Content\RequestScanWorkAction;
+use Vaulter\Drive\Actions\Content\ReuseScanEvidenceAction;
+use Vaulter\Drive\Exceptions\Content\ContentQuarantinedException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 
+#[Internal]
 final readonly class ScanAdmission
 {
     public function __construct(private VaulterDatabase $database, private ScanPolicyResolver $policies,

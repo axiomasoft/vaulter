@@ -6,14 +6,16 @@ namespace Vaulter\Drive\Http\Controllers\Files;
 
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Http\Support\ContentResponder;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Http\Support\ContentResponder;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * The bytes of a file's head revision (Download). A caller who may only view the file
  * gets 403 and a revision that is not scanned clean 423, both before any byte.
  */
+#[Internal]
 final readonly class DownloadFileController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private ContentResponder $content) {}

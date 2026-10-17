@@ -16,8 +16,8 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Trash\TrashNodeAction;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 /**
  * PLAN2.F05/F06: comment writers take T (shared) → N → the comment row, so a trash or

@@ -6,6 +6,7 @@ namespace Vaulter\Providers;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\DatabaseConfig;
@@ -14,7 +15,6 @@ use Vaulter\Configuration\ObservabilityConfig;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Tenancy\TenantResolver;
@@ -22,6 +22,8 @@ use Vaulter\CoreModule;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
+use Vaulter\Http\Middleware\VaulterHttpOperationMap;
+use Vaulter\Http\Middleware\VaulterThrottledRouteMap;
 use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotencyOutcome;
 use Vaulter\Idempotency\IdempotencyStore;
@@ -33,13 +35,13 @@ use Vaulter\Operations\OperationClaim;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\EnumCaseAttributeResolver;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Tenancy\TenancyBypass;
 
 /**
  * The container wiring of the core module ({@see CoreModule}): config, database, ids, tenancy and
- * observability. The drive slices located in core are wired by {@see DriveSliceRegistrar} (D39).
+ * observability. The drive slices are wired by the drive's own registrars.
  */
+#[Internal]
 final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
@@ -49,7 +51,6 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(IdsConfig::class);
         $app->singleton(TenancyConfig::class);
         $app->scoped(TenancyBypass::class);
-        $app->bind(TenancyBoundary::class);
         $app->scoped(TenantResolver::class, static function (Application $app): TenantResolver {
             $resolver = $app->make($app->make(TenancyConfig::class)->resolver());
             if (!$resolver instanceof TenantResolver) {
@@ -59,7 +60,8 @@ final class BindingsRegistrar implements ModuleBindings
             return $resolver;
         });
         $app->singleton(RoutesConfig::class);
-        $app->singleton(WebhooksConfig::class);
+        $app->singleton(VaulterHttpOperationMap::class);
+        $app->singleton(VaulterThrottledRouteMap::class);
         $app->singleton(ObservabilityConfig::class);
         $app->singletonIf(ConfigNormalizer::class);
         $app->singleton(ConfigValidator::class);

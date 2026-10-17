@@ -1,0 +1,263 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.7",
+  "title": "Хаб, протокол 2: envelope/ack, собственный pending ledger, retry full jitter, режимы buffered/durable, источники server/direct/Redis; v1 store удалён",
+  "status": "todo",
+  "summary": "Хаб: `src/backend.js` (клиент v2: authenticate/load/append, HMAC, `X-Vaulter-Collab-Protocol: 2`), `src/retry.js` (full jitter base 100 мс/cap 2 с, ≤5 попыток, дедлайн 10 с, таймаут попытки 2 с, Retry-After в остатке дедлайна; retry только network/5xx/429), `src/ledger.js` (очередь на документ, независимая от onStoreDocument/debounce/destroy), `src/persistence.js` (stateless envelope → append → ack/nack; direct/server-origin → update_id хаба; Redis-origin не append-ится; load: replay checkpoint+tail), режимы buffered/durable и бюджет pending (stop writes всех rooms), status-сообщения; full-state `onStoreDocument` удалён. PHP: удалены маршрут `vaulter.v1.collaboration.hub.store`, `HubStoreController`, `PersistCollaborationStateAction`, `PersistCollaborationStateInput`; v2-маршруты требуют протокол 2.",
+  "why": "D26: обычный Yjs sync не application ack; Hocuspocus 4.3.0 не повторяет failed store, destroy ждёт без дедлайна (закреплено P5.2). Hard risks: ack до backend commit; потеря server/direct-изменений (11); двойной append Redis-origin; новый update_id при повторе (1, 14); retry auth/validation/generation-ошибок; неограниченная очередь в buffered; failed append без нового изменения не повторяется (16).",
+  "scope": {
+    "include": [
+      "src/{backend,retry,ledger,persistence}.js, правки src/index.js и src/config.js (MODE, PENDING_BUDGET_BYTES, RETRY_*)",
+      "Node-тесты: test/{retry,ledger,envelope,origins,modes}.test.js; правка существующих тестов, завязанных на onStoreDocument/collab/store (epoch-fence, load-seed, readonly, v1-paths)",
+      "PHP: удаление v1 store; packages/collaboration/tests/Http/ProtocolVersionTest.php; HubV1RoutesTest/HubProtocolTest переписаны на append (baseline-ledger для удалённых кейсов store с replacement)",
+      "openapi: удалён /collaboration/hub/store; ledger: маршрут removed D26"
+    ],
+    "exclude": [
+      "Компактация/CLI (P5.8); management/shutdown/лимиты (P5.9); ревокация (P5.11); клиент vue (P5.12)",
+      "Отложено в PLAN4: реальный Redis (`hub/test/stand/two-hubs.stand.js`), `npm --prefix packages/collaboration/hub run test:e2e`, `bash scripts/collab-e2e.sh`"
+    ]
+  },
+  "depends_on": [
+    "P5.6"
+  ],
+  "related": [],
+  "decisions": [
+    "D26",
+    "D41"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "invariants",
+      "why": "модель инвариантов C1–C12, порядок lock, пары операций, bypass",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "protocol",
+      "why": "эндпоинты протокола 2, ошибки, retry-классы, envelope/ack",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "hub-runtime",
+      "why": "факты Hocuspocus 4.3.0, ledger, режимы, компактация, shutdown, management, лимиты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "tests-map",
+      "why": "сценарии I17 этого пункта: линия и файл",
+      "required": true
+    },
+    {
+      "ref": "knowledge/collaboration",
+      "section": "durability",
+      "why": "transport protocol 2, режимы, retry (нормативно)",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/src/index.js",
+      "why": "createHooks: onAuthenticate/onLoadDocument/onStoreDocument (строки ~256–500)",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/src/webhook.js",
+      "why": "HMAC-подпись и таймаут backend-вызовов",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/src/config.js",
+      "why": "строгая валидация конфига",
+      "required": true
+    },
+    {
+      "path": "packages/collaboration/hub/test/hocuspocus-v4.test.js",
+      "why": "закреплённые факты 4.3.0",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/collaboration/hub/src/backend.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/retry.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/ledger.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/persistence.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/hub/test/retry.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/ledger.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/envelope.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/origins.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/modes.test.js",
+      "change": "create"
+    },
+    {
+      "path": "packages/collaboration/hub/test/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/routes/collaboration.php",
+      "change": "any",
+      "note": "создаётся P5.1"
+    },
+    {
+      "path": "packages/collaboration/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "openapi/vaulter-v1.yaml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/vue/src/api/schema.d.ts",
+      "change": "modify",
+      "note": "api:generate"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md и текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Ack клиенту — только после 200 append; ack содержит update_id клиента без изменения.",
+    "Повтор append — тот же update_id/sha256/payload; новых id при retry нет.",
+    "Retry только network/5xx/429; 4xx (кроме 429) и 409 epoch — без повтора; 409 epoch закрывает room 4409 и отбрасывает записи старой G.",
+    "Обновление с transaction origin Redis-расширения не попадает в ledger; direct/server-изменение — попадает ровно один раз.",
+    "sync step 1/2 и y-protocols update не дают ack и не переводят клиента в saved."
+  ],
+  "guidance": "Мок backend — `http.createServer` на loopback-порту 0 в тесте, с программируемыми ответами (timeout, 500, 429+Retry-After, 409, 422). Время — инъекцией clock/sleep в retry.js (без реальных 10 с). origins.test.js: (a) `openDirectConnection().transact(...)` → один append origin=server; (b) `Y.applyUpdate(doc, u, redisExtensionOrigin)` → 0 append; (c) envelope клиента → один append с его id. ledger.test.js (16): append падает 500 до исчерпания дедлайна → nack retry:true, запись в ledger; без нового изменения следующий flush-цикл повторяет тот же id и получает ack.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "(cd packages/collaboration/hub && npm run check && node --test test/retry.test.js test/ledger.test.js test/envelope.test.js test/origins.test.js test/modes.test.js test/hocuspocus-v4.test.js)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "(cd packages/collaboration/hub && npm test)",
+      "expect": "exit 0: весь unit-набор хаба (test/*.test.js), без e2e/stand",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "test ! -e packages/collaboration/src/Http/Controllers/Collaboration/HubStoreController.php && ! grep -rn 'hub/store' packages/collaboration/hub/src packages/collaboration/routes",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p collaboration tests/Http tests/Collaboration tests/Persistence",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "(cd packages/collaboration && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "протокол 2 в хабе",
+    "pending ledger + retry",
+    "режимы buffered/durable",
+    "v1 store удалён"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "xhigh"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:05:06Z"
+}

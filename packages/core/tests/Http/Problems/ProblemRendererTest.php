@@ -8,15 +8,15 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
 use Vaulter\Exceptions\Idempotency\OperationInProgressException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Http\Problems\ProblemRenderer;
-use Vaulter\Tests\Support\ProblemProbeRoutes;
+use Vaulter\Testing\Support\ProblemProbeRoutes;
 
 const PROBLEM_TYPE_BASE = 'https://github.com/axiomasoft/vaulter/blob/main/docs/reference/errors.md#';
 

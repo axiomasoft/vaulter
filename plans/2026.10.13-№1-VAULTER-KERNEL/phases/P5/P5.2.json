@@ -1,0 +1,233 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.2",
+  "title": "Хаб → packages/collaboration/hub (@vaulter/collaboration-hub) и тест-закрепление поведения Hocuspocus 4.3.0",
+  "status": "todo",
+  "summary": "`git mv hocuspocus-server packages/collaboration/hub`, npm name `@vaulter/collaboration-hub`; root `package.json` workspaces и `package-lock.json`; suite/zone `hub` (cwd, list_glob); пути в Makefile, scripts/collab-e2e.sh, load/docker-compose.load.yml, load/scripts/p8-collab-join.mjs, testbench.yaml, .gitignore, release/packages.json (`images[].path`), ci.yml/weekly-full.yml/hocuspocus-image.yml (working-directory/context), PHP-тестах collaboration, читающих файлы хаба, и комментарии TipTapSchema.php; новый `test/hocuspocus-v4.test.js` закрепляет 4 факта 4.3.0 (failed store оставляет документ без повтора; flushPendingStores исполняет только debounced; Server.destroy после failed store не завершается; установленная версия 4.3.0). Поведение хаба не меняется.",
+  "why": "D1, architecture#frontend; контекст фазы: перед изменением хаба поведение Hocuspocus v4 проверяется тестом, а не документацией — на нём стоят ledger (P5.7) и shutdown coordinator (P5.9). Hard risks: тихая смена семантики failed store/destroy при обновлении Hocuspocus; битые пути CI/стенда/нагрузки к hocuspocus-server.",
+  "scope": {
+    "include": [
+      "git mv каталога (node_modules переносится обычным mv, он не в git)",
+      "package.json хаба: name, description; root workspaces; package-lock.json (`npm install --package-lock-only --prefer-offline`)",
+      "tests/suites.json hub (cwd packages/collaboration/hub, list_glob), tests/zones.json зона hub, baseline hub",
+      "Пути в Makefile, scripts/collab-e2e.sh, load/**, testbench.yaml, .gitignore, release/packages.json, .github/workflows/{ci,weekly-full,hocuspocus-image}.yml",
+      "packages/collaboration/tests/Collaboration/{TipTapSchemaFixtureTest,HubProtocolTest,HubTestHelpers}.php и packages/documents/src/Content/TipTap/TipTapSchema.php (путь к schema.js хаба)",
+      "test/hocuspocus-v4.test.js (in-process Hocuspocus + openDirectConnection; Server на порту 0 loopback; без docker)"
+    ],
+    "exclude": [
+      "Изменение протокола/persistence хаба (P5.7+); переименование workflow образа и новые CI-джобы (P5.14); README/docs (P5.15)",
+      "Отложено в PLAN4: `npm --prefix packages/collaboration/hub run test:e2e`, `bash scripts/collab-e2e.sh`, `docker build packages/collaboration/hub`"
+    ]
+  },
+  "depends_on": [
+    "P5.1"
+  ],
+  "related": [],
+  "decisions": [
+    "D1",
+    "D15",
+    "D41"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/p5-design",
+      "section": "base",
+      "why": "границы P5, точные команды качества, размещение тестов, схема, ledger, прогрессия инвариантов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-design",
+      "section": "hub-runtime",
+      "why": "факты Hocuspocus 4.3.0, ledger, режимы, компактация, shutdown, management, лимиты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/collaboration",
+      "section": "current",
+      "why": "сильные стороны хаба, которые сохраняются, и пробелы 4.3.0",
+      "required": true
+    },
+    {
+      "path": "hocuspocus-server/package.json",
+      "why": "скрипты check/test/test:e2e, зависимости ^4.3",
+      "required": true
+    },
+    {
+      "path": "hocuspocus-server/src/index.js",
+      "why": "createHooks/buildServer/startHealthEndpoint/boot (строки ~250–628)",
+      "required": true
+    },
+    {
+      "path": "node_modules/@hocuspocus/server/dist/hocuspocus-server.esm.js",
+      "why": "storeDocumentHooks ~1414–1433, flushPendingStores ~1233–1238, listen ~1565–1575, destroy ~1603–1617",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "section": "run-set",
+      "why": "Fast-набор D41: что исполняется в пункте",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "hocuspocus-server/**",
+      "change": "delete",
+      "note": "git mv"
+    },
+    {
+      "path": "packages/collaboration/hub/**",
+      "change": "create",
+      "note": "git mv"
+    },
+    {
+      "path": "packages/collaboration/hub/test/hocuspocus-v4.test.js",
+      "change": "create"
+    },
+    {
+      "path": "package.json",
+      "change": "modify"
+    },
+    {
+      "path": "package-lock.json",
+      "change": "modify"
+    },
+    {
+      "path": "Makefile",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/collab-e2e.sh",
+      "change": "modify"
+    },
+    {
+      "path": "load/docker-compose.load.yml",
+      "change": "modify"
+    },
+    {
+      "path": "load/scripts/p8-collab-join.mjs",
+      "change": "modify"
+    },
+    {
+      "path": "testbench.yaml",
+      "change": "modify"
+    },
+    {
+      "path": ".gitignore",
+      "change": "modify"
+    },
+    {
+      "path": "release/packages.json",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/weekly-full.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/hocuspocus-image.yml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/collaboration/tests/Collaboration/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/Content/TipTap/TipTapSchema.php",
+      "change": "modify"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "hub.list/CHANGES.json; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Код хаба (src/*.js) меняется только в путях/именах; семантика hooks, Origin allowlist, read-only, expiry, epoch fence, лимит фрейма, perMessageDeflate off, Redis — неизменны (collaboration#current).",
+    "hocuspocus-v4.test.js утверждает поведение по факту исполнения: документ в `hocuspocus.documents` после failed onStoreDocument; повторного вызова onStoreDocument нет в окне 3×debounce; `flushPendingStores()` не вызывает store для failed документа; `server.destroy()` не резолвится за 1 000 мс при оставшемся документе (race с таймером); `version === '4.3.0'` из node_modules/@hocuspocus/server/package.json."
+  ],
+  "guidance": "Тест не использует сеть, кроме loopback-порта 0 для `Server`; backend не нужен — onStoreDocument в конфигурации теста бросает ошибку. Таймауты теста ≤5 с. После git mv: `mv hocuspocus-server/node_modules packages/collaboration/hub/` (если каталог остался), затем `npm install --package-lock-only --prefer-offline` в корне; при отсутствии сети — `plan.py log --type difficulty` и правка путей lock-файла без смены версий. Секции suites.json читать через jq: `jq '.suites.hub, .stand' tests/suites.json`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test ! -e hocuspocus-server && jq -e '.name == \"@vaulter/collaboration-hub\"' packages/collaboration/hub/package.json && jq -e '.workspaces | index(\"packages/collaboration/hub\") != null' package.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "! grep -rln --exclude-dir=node_modules --exclude-dir=vendor --exclude=README.md 'hocuspocus-server' .github Makefile scripts load release testbench.yaml package.json package-lock.json tests/suites.json tests/zones.json packages/collaboration packages/documents",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "(cd packages/collaboration/hub && npm run check && node --test test/hocuspocus-v4.test.js)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "(cd packages/collaboration/hub && npm test)",
+      "expect": "exit 0: весь unit-набор хаба (test/*.test.js), без e2e/stand",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t sqlite -p collaboration tests/Collaboration/TipTapSchemaFixtureTest.php tests/Collaboration/HubProtocolTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ZonesMapTest.php tests/Repo/TestGroupsTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "bash -n scripts/collab-e2e.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "packages/collaboration/hub",
+    "test/hocuspocus-v4.test.js"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T09:08:12Z"
+}

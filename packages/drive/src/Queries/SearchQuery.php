@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Queries;
 
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\NodePage;
-use Vaulter\Data\Drive\SearchOptions;
-use Vaulter\Enums\Drive\NodeSort;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\NodePage;
+use Vaulter\Drive\Data\SearchOptions;
+use Vaulter\Drive\Enums\NodeSort;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 
+#[Internal]
 final readonly class SearchQuery
 {
     public function __construct(private NodePageQuery $pages, private NodeReadRepository $nodes) {}

@@ -6,10 +6,10 @@ namespace Vaulter\Load\Observability;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Kernel;
 
 /**
  * Host-side absolute gauges for load SUT state snapshots (P8.3).
@@ -18,7 +18,7 @@ final class LoadStateMetrics
 {
     public function __construct(
         private readonly DatabaseConfig $databaseConfig,
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly Kernel $kernel,
         private readonly MetricsRecorder $metrics,
     ) {}
 
@@ -65,14 +65,15 @@ final class LoadStateMetrics
 
     public function observeOutboxBacklog(): void
     {
-        if (!$this->vaulterConfig->featureEnabled('webhooks')) {
+        // The pending work of the outbox is the delivery rows of its consumers (D29), and they exist only while the
+        // webhooks module is active.
+        if (!$this->kernel->isActive('webhooks')) {
             $this->metrics->gauge(name: 'vaulter_outbox_backlog', value: 0);
 
             return;
         }
 
-        $table = $this->databaseConfig->table('outbox');
-        $pending = (int) DB::table($table)->where('status', 'pending')->count();
+        $pending = (int) DB::table($this->databaseConfig->table('outbox_deliveries'))->where('state', 'pending')->count();
 
         $this->metrics->gauge(name: 'vaulter_outbox_backlog', value: $pending);
     }

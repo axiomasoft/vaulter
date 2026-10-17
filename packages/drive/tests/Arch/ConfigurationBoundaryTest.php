@@ -5,7 +5,7 @@ declare(strict_types=1);
 arch('drive reads configuration through typed package accessors (P2.5)')
     ->expect('Vaulter\Drive')
     ->not->toUse(['config'])
-    ->ignoring(['Vaulter\Drive\Configuration']);
+    ->ignoring(['Vaulter\Drive\Configuration', 'Vaulter\Drive\Testing']);
 
 test('drive source has no direct Vaulter configuration reads (P2.5)', function (): void {
     $package = dirname(__DIR__, 2);
@@ -25,7 +25,7 @@ test('drive source has no direct Vaulter configuration reads (P2.5)', function (
             );
 
             foreach ($files as $file) {
-                if (str_contains($file->getPathname(), '/Configuration/')) {
+                if (str_contains($file->getPathname(), '/Configuration/') || str_contains($file->getPathname(), '/src/Testing/')) {
                     continue;
                 }
 

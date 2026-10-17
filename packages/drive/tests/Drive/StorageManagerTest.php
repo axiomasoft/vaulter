@@ -3,15 +3,15 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Drives\DriveCreated;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Profiles\UnknownProfileException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Exceptions\Profiles\UnknownProfileException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
  * Vaulter::drive($entity) get-or-creates the storage idempotently and provisions a

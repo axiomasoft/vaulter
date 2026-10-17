@@ -7,22 +7,24 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Jobs\PruneFileRevisionsJob;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Apply the revision retention policy of each drive's profile, drive by
  * drive, in this process. Schedule it daily, like vaulter:trash:purge; a drive that
  * fails is logged and the others still run.
  */
+#[Internal]
 final class PruneRevisionsCommand extends Command
 {
     use OpensWriteScope;
@@ -31,14 +33,14 @@ final class PruneRevisionsCommand extends Command
 
     protected $description = 'Delete non-current file revisions past their profile retention policy.';
 
-    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, VaulterConfig $config): int
+    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, DriveConfig $config): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $only = array_values(array_filter(array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', (array) $this->option('drive')), static fn (string $id): bool => $id !== ''));
         $totals = ['candidates' => 0, 'deleted' => 0, 'skipped' => 0, 'freed_bytes' => 0];
         $failed = false;
 
-        $ids = app(VaulterManager::class)->withoutTenancy(fn (): array => $config->model('drive')::query()
+        $ids = Tenancy::without(fn (): array => $config->model('drive')::query()
             ->when($only !== [], static fn ($query) => $query->whereKey($only))
             ->orderBy('id')->pluck('id')->all());
         foreach ($ids as $id) {

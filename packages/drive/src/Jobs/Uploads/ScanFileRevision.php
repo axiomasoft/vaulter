@@ -7,25 +7,27 @@ namespace Vaulter\Drive\Jobs\Uploads;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Vaulter\Actions\Content\ClaimScanWorkAction;
-use Vaulter\Actions\Content\FailScanAttemptAction;
-use Vaulter\Actions\Content\FenceScanAttemptAction;
-use Vaulter\Actions\Content\SettleScanWorkAction;
-use Vaulter\Configuration\ScanConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Content\ScanInput;
-use Vaulter\Content\ScanResult;
-use Vaulter\Content\ScanSnapshot;
-use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Drive\Actions\Content\FailScanAttemptAction;
+use Vaulter\Drive\Actions\Content\FenceScanAttemptAction;
+use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
+use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\PrivateScanReader;
-use Vaulter\Enums\Cas\ScanVerdict;
+use Vaulter\Drive\Content\ScanSnapshot;
+use Vaulter\Drive\Jobs\Middleware\RestoreTenantContext;
+use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Jobs\Middleware\RestoreTenantContext;
-use Vaulter\Repositories\Content\ScanObligationRepository;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Media\Content\ScanInput;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Tenancy\TenancyBypass;
 
+#[Internal]
 final class ScanFileRevision implements ShouldQueue
 {
     use InteractsWithQueue;

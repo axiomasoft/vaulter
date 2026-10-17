@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Documents;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A document node's content was written — the autosave path. $created
@@ -25,8 +27,10 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * Every save would flood the activity feed, so it is not audited; webhooks receive
  * the saves that took a checkpoint.
  */
-final readonly class DocumentContentUpdated extends DomainEvent
+#[Api]
+final readonly class DocumentContentUpdated extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         public DocumentRevision $version,
@@ -41,9 +45,9 @@ final readonly class DocumentContentUpdated extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DocumentEventType
     {
-        return EventType::DocumentUpdated;
+        return DocumentEventType::DocumentUpdated;
     }
 
     public function scope(): EventScope
@@ -76,7 +80,8 @@ final readonly class DocumentContentUpdated extends DomainEvent
         return ActivityTarget::of($this->node);
     }
 
-    public function isWebhookEligible(): bool
+    #[\Override]
+    public function isExternal(): bool
     {
         return $this->created;
     }

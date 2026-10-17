@@ -7,7 +7,7 @@ title: Scheduler and locks
 Vaulter puts its maintenance commands on your Laravel scheduler. Two switches matter:
 
 - `vaulter.schedule.enabled` — set it to `false` when your host schedules the commands itself;
-- each task key (`webhooks_relay`, `uploads_sweep`, …) — `null` switches that task off.
+- each task key (`outbox_relay`, `uploads_sweep`, …) — `null` switches that task off.
 
 Your server must run `php artisan schedule:run` every minute. With several app servers,
 `onOneServer` only works when the cache store is shared and supports atomic locks (redis, database,

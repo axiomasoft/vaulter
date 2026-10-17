@@ -8,15 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Livewire\Mechanisms\DataStore;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Contracts\Drive\DriveHandleFactory;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Contracts\DriveHandleFactory;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Filament\Tests\Fixtures\SpyDriveHandle;
-use Vaulter\Models\Drive\Drive;
 
 uses(RefreshDatabase::class);
 
@@ -44,6 +44,13 @@ beforeEach(function (): void {
         public function forDrive(Drive $drive): DriveHandle
         {
             return new SpyDriveHandle($this->inner->forDrive($drive), $this->calls);
+        }
+
+        public function findById(int|string $id): ?DriveHandle
+        {
+            $handle = $this->inner->findById($id);
+
+            return $handle === null ? null : new SpyDriveHandle($handle, $this->calls);
         }
 
         public function findForOwner(Model $owner, string $profile): ?DriveHandle

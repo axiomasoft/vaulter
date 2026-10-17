@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\AzgardPermissionMap;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 use Vaulter\Azgard\Tests\Access\AccessTestHelpers;
 use Vaulter\Azgard\Tests\Stubs\HostGuard;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
@@ -29,7 +29,7 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  * still vetoes through the AccessResolver, since the driver only RAISES access).
  */
 beforeEach(function (): void {
-    config()->set('vaulter.access.permission_driver', 'azgard');
+    config()->set('vaulter-drive.access.permission_driver', 'azgard');
 });
 
 /**

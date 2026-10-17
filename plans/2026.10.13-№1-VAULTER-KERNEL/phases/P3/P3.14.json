@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.14",
   "title": "Outbox D29: нейтральная схема, запись всегда, реестр consumer'ов и строки доставки",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Outbox переезжает в `Vaulter\\Events\\Outbox`, `v_outbox` получает нейтральный envelope и `outbox_seq`, добавлены `v_outbox_consumers`/`v_outbox_deliveries`; EventRecorder пишет событие всегда (без features/webhook-eligibility) и delivery-строки для подписанных consumers sealed registry; слот OutboxConsumer определён; I10 (запись) зелёный на sqlite и pgsql.",
   "why": "D29: сегодня outbox пишется только при включённых вебхуках (C28) — окно отключения теряет события; нейтральное ядро не знает drive_id/fanout. Риски (hard): атомарность события и delivery-строк с мутацией, replay occurrence, изменение create-DDL (snapshot на 3 engines).",
   "scope": {
@@ -288,6 +288,94 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:47:50Z"
+  "result": {
+    "started_at": "2026-10-14T18:21:39Z",
+    "finished_at": "2026-10-15T06:39:52Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "4d58b15b-bba9-4c93-b6d2-3049eaea3533"
+    },
+    "notes": "Ревью grok-4.7 (дорожка O approve)",
+    "deviations": [
+      "Единый коммит с P3.15 (общие файлы Outbox)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      },
+      {
+        "id": "V14",
+        "exit": 0,
+        "at": "2026-10-15T06:39:52Z"
+      }
+    ],
+    "commits": [
+      "05656b11"
+    ]
+  },
+  "updated_at": "2026-10-15T06:39:52Z"
 }

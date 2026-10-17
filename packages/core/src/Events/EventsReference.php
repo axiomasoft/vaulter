@@ -5,26 +5,29 @@ declare(strict_types=1);
 namespace Vaulter\Events;
 
 use Vaulter\Attributes\EventSpec;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Attributes\Internal;
 
 /**
- * Renders the event catalogue table of the reference docs from the {@see EventSpec}
- * of every {@see EventType}, so the docs cannot drift from the code.
+ * Renders the event catalogue table of the reference docs from the {@see EventSpec} of every type in the
+ * {@see EventCatalog} of the installed modules, so the docs cannot drift from the code.
  */
+#[Internal]
 final readonly class EventsReference
 {
     public const START = '<!-- events:start -->';
 
     public const END = '<!-- events:end -->';
 
+    public function __construct(private EventCatalog $catalog) {}
+
     /** The markdown table, without the markers. */
-    public static function render(): string
+    public function render(): string
     {
         $lines = [
-            '| Type | Subject | Data | Activity | Webhook | Journal | Description |',
-            '|---|---|---|---|---|---|---|',
+            '| Type | Module | Subject | Data | Activity | External | Journal | Description |',
+            '|---|---|---|---|---|---|---|---|',
         ];
-        foreach (EventType::cases() as $type) {
+        foreach ($this->catalog->all() as $type) {
             $spec = $type->spec();
             $data = $spec->data === []
                 ? '—'
@@ -34,12 +37,13 @@ final readonly class EventsReference
                     array_values($spec->data),
                 ));
             $lines[] = sprintf(
-                '| `%s` | %s | %s | %s | %s | %s | %s |',
+                '| `%s` | %s | %s | %s | %s | %s | %s | %s |',
                 $type->value,
+                $this->catalog->owner($type->value)->value,
                 $spec->subject,
                 $data,
                 $spec->activity ? '✓' : '—',
-                $spec->webhook ? '✓' : '—',
+                $spec->external ? '✓' : '—',
                 $spec->journal ?? '—',
                 $spec->description,
             );
@@ -49,15 +53,15 @@ final readonly class EventsReference
     }
 
     /** The block between the markers, markers included. */
-    public static function block(): string
+    public function block(): string
     {
-        return self::START."\n".self::render()."\n".self::END;
+        return self::START."\n".$this->render()."\n".self::END;
     }
 
     /**
      * The page with its generated block replaced; null when the markers are missing.
      */
-    public static function apply(string $page): ?string
+    public function apply(string $page): ?string
     {
         $start = strpos($page, self::START);
         $end = strpos($page, self::END);
@@ -65,6 +69,6 @@ final readonly class EventsReference
             return null;
         }
 
-        return substr($page, 0, $start).self::block().substr($page, $end + strlen(self::END));
+        return substr($page, 0, $start).$this->block().substr($page, $end + strlen(self::END));
     }
 }

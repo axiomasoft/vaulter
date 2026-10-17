@@ -19,9 +19,9 @@ Core поставляет `database`, `gate` и `spatie`; отдельный м�
 
 ## Контракт PermissionDriver
 
-`Vaulter\Contracts\Access\PermissionDriver`:
+`Vaulter\Drive\Contracts\Access\PermissionDriver`:
 
-<!-- snippet: signature Vaulter\Contracts\Access\PermissionDriver -->
+<!-- snippet: signature Vaulter\Drive\Contracts\Access\PermissionDriver -->
 
 ```php
 interface PermissionDriver
@@ -70,16 +70,16 @@ interface PermissionDriver
 VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 ```
 
-Карта ключ → FQCN лежит в `access.permission_drivers`. Зарегистрируйте свой драйвер, добавив FQCN,
+Карта ключ → FQCN лежит в `vaulter-drive.access.permission_drivers`. Зарегистрируйте свой драйвер, добавив FQCN,
 реализующий `PermissionDriver` (безопасно для кэша конфига — только FQCN, без замыканий):
 
 <!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
 
 ```php
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
-use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 
 // config/vaulter.php
 'access' => ['permission_drivers' => [
@@ -97,7 +97,7 @@ use Vaulter\Testing\NullPermissionDriver;
 
 ## Database — полоса по умолчанию, автономная
 
-`Vaulter\Access\Drivers\DatabasePermissionDriver` **не** вводит никакой внешней системы
+`Vaulter\Drive\Access\Drivers\DatabasePermissionDriver` **не** вводит никакой внешней системы
 ролей. Каждое решение — это строка `v_node_grants`, разрешаемая `AccessResolver`; сам драйвер
 лишь добавляет собственную идентичность актора в набор субъектов.
 
@@ -132,7 +132,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 
 ## Gate — встроенная полоса Laravel
 
-`Vaulter\Access\Drivers\GatePermissionDriver` мостит хост, который уже авторизует через
+`Vaulter\Drive\Access\Drivers\GatePermissionDriver` мостит хост, который уже авторизует через
 права (abilities) / политики Gate. Он идёт вместе с фреймворком — ноль дополнительных
 зависимостей.
 
@@ -191,7 +191,7 @@ Gate::define('vaulter.create', fn ($user, array $context) =>
 
 ## Spatie — роли, разрешения и v8 teams
 
-`Vaulter\Access\Drivers\SpatiePermissionDriver` мостит хост на
+`Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` мостит хост на
 `spatie/laravel-permission`, включая фичу **v8 teams**. Он инкапсулирует весь танец переключения
 команд v8, так что тот никогда не протекает в resolver.
 
@@ -249,7 +249,7 @@ Gate::define('vaulter.create', fn ($user, array $context) =>
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 
 SpatiePermissionDriver::forgetCachedPermissions($actor);
 ```
@@ -270,7 +270,7 @@ composer require axioma-studio/vaulter-azgard
 ```
 
 Обнаруживаемый Laravel provider предлагает модуль `azgard`, который регистрирует ключ `azgard` в
-`vaulter.access.permission_drivers`, сохраняя явное переопределение хоста. Затем выберите
+`vaulter-drive.access.permission_drivers`, сохраняя явное переопределение хоста. Затем выберите
 `VAULTER_PERMISSION_DRIVER=azgard`. Без установленного моста этот ключ неизвестен
 и вызывает `MissingPermissionDriverException`.
 
@@ -496,11 +496,11 @@ php artisan vaulter:make:permission-driver Workspace
 ```
 
 Создаёт драйвер-проход в `app/Vaulter/PermissionDrivers/Workspace.php` и Pest-тест в `tests/Unit/Vaulter/`, который запускает `PermissionDriverContractTests`. Команда печатает строку для
-`vaulter.access.permission_drivers` и не меняет ваш конфиг. Существующий файл не перезаписывается без `--force`.
+`vaulter-drive.access.permission_drivers` и не меняет ваш конфиг. Существующий файл не перезаписывается без `--force`.
 
 ## Тесты вашего расширения
 
-`Vaulter\Testing\Contracts\PermissionDriverContractTests` проверяет драйвер так же, как
+`Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests` проверяет драйвер так же, как
 встроенные. Общий фикстур (`PermissionFixture`) строится через Operations: грант writer на
 поддерево для актора на родительской папке и дочерняя папка с ограниченным наследованием и без
 собственного гранта.
@@ -508,7 +508,7 @@ php artisan vaulter:make:permission-driver Workspace
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Testing\Contracts\PermissionDriverContractTests;
+use Vaulter\Drive\Testing\Contracts\PermissionDriverContractTests;
 
 it('decides like the reference driver', function (): void {
     (new PermissionDriverContractTests)->assertSameDecisionsAsReference(new AcmeRoleDriver);

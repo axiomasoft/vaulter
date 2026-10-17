@@ -1,0 +1,9 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'role' => \Acme\Roles\Role::class,
+    'perm' => 'Acme\Perm',
+    'other' => 'Acme\PermX',
+];

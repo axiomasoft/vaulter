@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor;
 
 use Illuminate\Database\Query\Builder;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
-use Vaulter\Enums\Cas\ScanMode;
+use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Support\Identity;
 
 /** Scan work is scoped by drive and tenant; work outside its drive's scope is never completed correctly. */
+#[Internal]
 final readonly class ScanScopeCheck implements DoctorCheck
 {
-    public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies) {}
+    public function __construct(private DriveConfig $config, private ScanPolicyResolver $policies) {}
 
     public function key(): string
     {

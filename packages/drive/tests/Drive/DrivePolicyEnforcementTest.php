@@ -3,31 +3,31 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\MoveOptions;
-use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\InitiateUploadAction;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\MoveOptions;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\DriveProvisioner;
+use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
-use Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException;
-use Vaulter\Exceptions\Policy\TreeDepthLimitExceededException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Naming\PermissiveNamePolicy;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\DrivePolicyBuilder;
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
+use Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException;
+use Vaulter\Drive\Exceptions\Policy\TreeDepthLimitExceededException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Naming\PermissiveNamePolicy;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\DrivePolicyBuilder;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /** P4-I25 and P4-I17: the drive policy and name policy hold on every write path. */
 function policyDrive(?callable $configure = null): DriveHandle

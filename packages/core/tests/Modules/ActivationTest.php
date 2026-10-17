@@ -21,8 +21,8 @@ use Vaulter\Media\MediaModule;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleGraphException;
-use Vaulter\Tests\Concerns\FreshApplication;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Concerns\FreshApplication;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\Modules\Fixtures\FixtureModulesProvider;
 use Vaulter\Tests\TestCase;
 use Vaulter\Webhooks\WebhooksModule;
@@ -56,7 +56,8 @@ it('keeps the opt-in webhooks module off by default: no route, command or doctor
         ->and($kernel->isActive('webhooks'))->toBeFalse()
         ->and(routesOfModule($this->app, 'webhooks'))->toBe([])
         ->and($this->app['router']->has('vaulter.v1.webhook-endpoints.index'))->toBeFalse()
-        ->and(Artisan::all())->not->toHaveKey('vaulter:webhooks:relay')
+        ->and(Artisan::all())->not->toHaveKey('vaulter:webhooks:retry')
+        ->and(Artisan::all())->toHaveKey('vaulter:relay')
         ->and(Artisan::all())->toHaveKeys(['vaulter:modules', 'vaulter:module:uninstall', 'vaulter:doctor'])
         ->and(app(DoctorRegistry::class)->unmatched(['core.webhooks', 'core.modules.cache']))->toBe(['core.webhooks']);
 });
@@ -77,7 +78,7 @@ it('activates the webhooks module with vaulter.modules.webhooks and stamps its r
 
     expect($kernel->isActive('webhooks'))->toBeTrue()
         ->and(count($routes))->toBe(9)
-        ->and($app[ConsoleKernel::class]->all())->toHaveKeys(['vaulter:webhooks:relay', 'vaulter:webhooks:retry', 'vaulter:webhooks:prune', 'vaulter:webhooks:redeliver'])
+        ->and($app[ConsoleKernel::class]->all())->toHaveKeys(['vaulter:webhooks:retry', 'vaulter:webhooks:prune', 'vaulter:webhooks:redeliver'])
         ->and($app->make(DoctorRegistry::class)->unmatched(['core.webhooks']))->toBe([]);
     foreach ($routes as $route) {
         expect($route->defaults[ModuleApplier::FINGERPRINT_DEFAULT] ?? null)->toBe($kernel->fingerprint());

@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Repositories\Revisions;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -16,6 +17,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
  * general update — a checkpoint's payload never changes after INSERT. Opens NO
  * transactions and dispatches NO events.
  */
+#[Internal]
 final class DocumentRevisionStoreRepository
 {
     public function __construct(

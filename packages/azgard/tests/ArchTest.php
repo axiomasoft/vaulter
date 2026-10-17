@@ -11,7 +11,6 @@ arch('bridge source depends only on core and itself (P2.4)')
     ->expect('Vaulter\Azgard')
     ->not->toUse([
         'Vaulter\Media',
-        'Vaulter\Drive',
         'Vaulter\Documents',
         'Vaulter\Filament',
         'Vaulter\Load',
@@ -41,7 +40,9 @@ test('every Vaulter source reference belongs to this bridge or core', function (
 
             $coreFile = dirname(__DIR__, 2).'/core/src/'.str_replace('\\', '/', substr($name, strlen('Vaulter\\'))).'.php';
 
-            if (!is_file($coreFile)) {
+            $driveFile = dirname(__DIR__, 2).'/drive/src/'.str_replace('\\', '/', substr($name, strlen('Vaulter\\Drive\\'))).'.php';
+
+            if (!is_file($coreFile) && !(str_starts_with($name, 'Vaulter\\Drive\\') && is_file($driveFile))) {
                 $offenders[] = $file->getPathname().': '.$name;
             }
         }

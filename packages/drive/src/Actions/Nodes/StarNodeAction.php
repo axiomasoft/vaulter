@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Nodes;
 
 use InvalidArgumentException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\NodeUserStateRepository;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\NodeUserStateRepository;
 
 /**
  * Star or unstar a node for the acting user. A star is personal: it
@@ -16,6 +17,7 @@ use Vaulter\Repositories\Drive\NodeUserStateRepository;
  *
  * Operations authorize (View) before this command.
  */
+#[Internal]
 final readonly class StarNodeAction
 {
     public function __construct(private NodeUserStateRepository $states, private VaulterDatabase $database) {}

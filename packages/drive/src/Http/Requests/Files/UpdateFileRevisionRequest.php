@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Files;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /** PATCH files/{node}/revisions/{revision}: whether retention keeps the revision forever. */
+#[Internal]
 final class UpdateFileRevisionRequest extends VaulterFormRequest
 {
     /**

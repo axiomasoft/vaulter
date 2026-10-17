@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Roles;
+
+use Acme\Support\Clock;
+
+/**
+ * A role.
+ *
+ * @param \Acme\Roles\Policy $policy
+ * @see Policy
+ */
+final class Role
+{
+    public const CLASS_NAME = 'Acme\\Roles\\Role';
+
+    public function __construct(public Neighbor $neighbor, public Policy $policy, public Clock $clock) {}
+
+    public function folder(): \Acme\Folders\Folder
+    {
+        return new \Acme\Folders\Folder;
+    }
+}

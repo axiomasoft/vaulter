@@ -5,20 +5,17 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Load\Tests\LoadTestCase;
-use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Support\TestGroups;
 use Vaulter\Tests\Fixtures\HostKeyMysqlTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
 use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
 use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
-use Vaulter\Tests\SpatieTestCase;
 use Vaulter\Tests\Support\OpenApi\OpenApiTestCase;
-use Vaulter\Tests\Support\TestGroups;
 use Vaulter\Tests\TablePrefixTestCase;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\UlidTestCase;
-use Vaulter\Tests\Webhooks\WebhooksTestCase;
 
 $core = dirname(__DIR__).'/packages/core/tests';
 
@@ -82,13 +79,8 @@ uses(P83DocumentsTestCase::class, RefreshDatabase::class)->in(
 );
 
 uses(TestCase::class, RefreshDatabase::class)->in(
-    $core.'/Access',
-    $core.'/Activity',
     $core.'/Feature',
     $core.'/Providers',
-    $core.'/Profiles',
-    $core.'/Content',
-    $core.'/Sharing',
     $core.'/Support',
     $core.'/Testing',
     $core.'/Configuration',
@@ -98,28 +90,7 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/WriteGuard',
 );
 
-// The webhook suites boot the opt-in webhooks module switched on (D22); the default boot keeps it off.
-uses(WebhooksTestCase::class, RefreshDatabase::class)->in(
-    $core.'/Webhooks',
-);
-
-// The additive sequence carrier owns only its shadow schema and real FK enforcement.
-$ordinarySchemaTests = array_values(array_filter(glob($core.'/Schema/*Test.php'), static fn (string $path): bool => !in_array(basename($path), ['NodeSequenceSchemaTest.php', 'ScanEvidenceSchemaTest.php'], true)));
-uses(TestCase::class, RefreshDatabase::class)->in(...$ordinarySchemaTests);
-
-// The spatie-driver tests boot the package alongside spatie/laravel-permission with
-// the v8 teams feature; kept in their own top-level folder so the Access binding
-// above does not also claim them (Pest forbids two test cases for one path).
-uses(SpatieTestCase::class, RefreshDatabase::class)->in(
-    $core.'/Spatie',
-);
-
-// The activity-feature-OFF tests boot the package with 'activity' disabled so the
-// subscriber is never registered; kept in their own top-level folder so the Activity
-// binding above does not also claim them (Pest forbids two test cases for one path).
-uses(ActivityDisabledTestCase::class, RefreshDatabase::class)->in(
-    $core.'/ActivityGate',
-);
+uses(TestCase::class, RefreshDatabase::class)->in(...glob($core.'/Schema/*Test.php'));
 
 // Document + Comment (+ the NodeCommentSchemaTest schema check and the TipTap unit
 // tests) moved to the vaulter-documents package (P2 #5 / ADR-0015, D2); they run under

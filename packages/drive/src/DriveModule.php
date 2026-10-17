@@ -4,40 +4,46 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive;
 
-use ReflectionClass;
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
-use Vaulter\Console\MakeFileHandlerCommand;
-use Vaulter\Console\MakePermissionDriverCommand;
-use Vaulter\Console\MakeProfileCommand;
-use Vaulter\Console\PruneChangesCommand;
-use Vaulter\Console\ResetChangesCommand;
-use Vaulter\Content\ContentAvailabilityGuard;
-use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Contracts\Drive\DownloadGuard;
-use Vaulter\Contracts\Drive\DriveExtension;
-use Vaulter\Contracts\Drive\DriveHandleFactory as DriveHandleFactoryContract;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Contracts\Drive\NodeSnapshotContributor;
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Contracts\Handlers\NodePresenter;
-use Vaulter\Contracts\Presentation\KindPresenter;
-use Vaulter\Contracts\Profiles\ProfileOption;
-use Vaulter\Doctor\Checks\AccessDriverCheck;
+use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Doctor\Checks\RoutesAuthCheck;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Activity\ActivitySink;
+use Vaulter\Drive\Changes\ChangeJournalSink;
+use Vaulter\Drive\Console\MakeFileHandlerCommand;
+use Vaulter\Drive\Console\MakePermissionDriverCommand;
+use Vaulter\Drive\Console\MakeProfileCommand;
+use Vaulter\Drive\Console\PruneChangesCommand;
 use Vaulter\Drive\Console\PruneRevisionsCommand;
 use Vaulter\Drive\Console\PurgeDrivesCommand;
 use Vaulter\Drive\Console\PurgeTrashCommand;
 use Vaulter\Drive\Console\ReconcileScanWorkCommand;
 use Vaulter\Drive\Console\RecountDrivesCommand;
 use Vaulter\Drive\Console\RescanFileRevisionsCommand;
+use Vaulter\Drive\Console\ResetChangesCommand;
 use Vaulter\Drive\Console\SweepUploadsCommand;
+use Vaulter\Drive\Content\ContentAvailabilityGuard;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\ShortcutPurgeLifecycle;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Contracts\DownloadGuard;
+use Vaulter\Drive\Contracts\DriveExtension;
+use Vaulter\Drive\Contracts\DriveHandleFactory as DriveHandleFactoryContract;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\Contracts\Handlers\NodePresenter;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Contracts\NodeSnapshotContributor;
+use Vaulter\Drive\Contracts\Presentation\KindPresenter;
+use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Doctor\Checks\AccessDriverCheck;
+use Vaulter\Drive\Doctor\Checks\SchemaIntegrityCheck;
+use Vaulter\Drive\Doctor\DedupScopeCheck;
+use Vaulter\Drive\Doctor\DiskProbeCheck;
 use Vaulter\Drive\Doctor\DrivesDeletingCheck;
 use Vaulter\Drive\Doctor\DrivesUsageCheck;
 use Vaulter\Drive\Doctor\IntlCheck;
@@ -46,38 +52,43 @@ use Vaulter\Drive\Doctor\ScanPolicyCheck;
 use Vaulter\Drive\Doctor\ScanScannerCheck;
 use Vaulter\Drive\Doctor\ScanScopeCheck;
 use Vaulter\Drive\Doctor\UploadsTmpCheck;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
+use Vaulter\Drive\Handlers\NodePresenter as CoreNodePresenter;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
+use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
+use Vaulter\Drive\Http\Support\DriveRouteLabels;
+use Vaulter\Drive\Providers\AccessRegistrar;
 use Vaulter\Drive\Providers\BindingsRegistrar;
+use Vaulter\Drive\Providers\DriveSliceRegistrar;
 use Vaulter\Drive\Providers\SchedulingRegistrar;
+use Vaulter\Drive\Schema\DriveSchema;
 use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
 use Vaulter\Drive\Uploads\Inspection\MimeConsistencyInspector;
 use Vaulter\Drive\Uploads\Inspection\ScanDispatchInspector;
 use Vaulter\Drive\Uploads\Inspection\SizeInspector;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
-use Vaulter\Handlers\Builtin\PreviewHandler;
-use Vaulter\Handlers\NodePresenter as CoreNodePresenter;
-use Vaulter\Http\Problems\DriveSliceProblemCodes;
+use Vaulter\Events\EventSink;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
-use Vaulter\Providers\AccessRegistrar;
-use Vaulter\Providers\DriveSliceRegistrar;
-use Vaulter\VaulterServiceProvider;
 
 /**
- * The drive module (D22, D39): everything of the drive package, and the drive slices still located in core
- * until P4 moves them — access (grants, permission drivers, policies), the core routes file of grants,
- * shares, activity and the change feed, the change-journal and scaffolding commands, two doctor checks and
- * the drive part of the core bindings. `vaulter.modules.drive = false` removes all of it.
+ * The drive module (D22): everything of the drive package — the REST routes (nodes, files, uploads, grants,
+ * shares, activity and the change feed), access, the change journal, the scaffolding commands, the doctor
+ * checks, the event types with the activity and change-journal event sinks, and the bindings.
+ * `vaulter.modules.drive = false` removes all of it.
  */
-final class DriveModule implements VaulterModule
+#[Internal]
+final class DriveModule implements OwnsSchema, VaulterModule
 {
     /** @var array<string, class-string<DoctorCheck>> doctor key => check */
     private const array DOCTOR_CHECKS = [
@@ -89,10 +100,20 @@ final class DriveModule implements VaulterModule
         'drive.scan.scope' => ScanScopeCheck::class,
         'drive.drives.deleting' => DrivesDeletingCheck::class,
         'drive.drives.usage' => DrivesUsageCheck::class,
-        // Located in core until P4 (D39).
+        // The checks of the disks of the profiles (D33): the profiles are the drive's, the keys keep the media.* identity.
+        'media.disk.probe' => DiskProbeCheck::class,
+        'media.dedup.scope' => DedupScopeCheck::class,
+        // The kernel's own check of the route stack, run while the drive routes are mounted.
         'core.routes.auth' => RoutesAuthCheck::class,
         'core.access.driver' => AccessDriverCheck::class,
+        // The invariants of the tree and its aggregates: the check reads the drive, node, file and document tables.
+        'core.schema.integrity' => SchemaIntegrityCheck::class,
     ];
+
+    public static function ownedSchema(): string
+    {
+        return DriveSchema::class;
+    }
 
     public function id(): ModuleId
     {
@@ -118,11 +139,15 @@ final class DriveModule implements VaulterModule
     {
         $module
             ->config('vaulter-drive', dirname(__DIR__).'/config/vaulter-drive.php')
+            ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/drive.php')
-            ->routes(self::coreRoutes())
             ->problems(DriveProblemCodes::class)
-            // Located in core until P4 (D39).
             ->problems(DriveSliceProblemCodes::class)
+            // The drive's event types and its two event sinks.
+            ->events(DriveEventType::class)
+            ->slot(EventSink::class, ActivitySink::class, 'drive.activity')
+            ->slot(EventSink::class, ChangeJournalSink::class, 'drive.changes')
+            ->slot(RouteLabelSource::class, DriveRouteLabels::class, 'drive.routes')
             ->bindings(DriveSliceRegistrar::class)
             ->bindings(AccessRegistrar::class)
             ->bindings(BindingsRegistrar::class)
@@ -164,8 +189,7 @@ final class DriveModule implements VaulterModule
 
     /**
      * The slots the drive defines (D8) and its own contributions, in the order the drive ran them before the
-     * slots existed. The permission drivers, file handlers, presenter and lifecycle classes are located in
-     * core until P4 (D39).
+     * slots existed.
      */
     private function slots(ModuleBuilder $module): void
     {
@@ -200,11 +224,5 @@ final class DriveModule implements VaulterModule
             ->slot(UploadInspector::class, MimeConsistencyInspector::class, 'drive.inspector.mime-consistency', priority: -80)
             ->slot(UploadInspector::class, ScanDispatchInspector::class, 'drive.inspector.scan-dispatch', priority: 0)
             ->slot(DownloadGuard::class, ContentAvailabilityGuard::class, 'drive.content-availability');
-    }
-
-    /** The drive routes file located in core (D39), found from the core provider's class: no Composer lookup, no I/O. */
-    private static function coreRoutes(): string
-    {
-        return dirname((string) (new ReflectionClass(VaulterServiceProvider::class))->getFileName(), 2).'/routes/drive.php';
     }
 }

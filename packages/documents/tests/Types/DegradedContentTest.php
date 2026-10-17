@@ -15,8 +15,8 @@ use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * PLAN2.P4.3: the lenient read must not become a lossy save. Content that reads only

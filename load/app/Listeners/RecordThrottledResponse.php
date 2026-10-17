@@ -23,7 +23,7 @@ final class RecordThrottledResponse
             return;
         }
 
-        $route = VaulterThrottledRouteMap::resolve($event->request);
+        $route = app(VaulterThrottledRouteMap::class)->resolve($event->request);
 
         if ($route === null) {
             return;

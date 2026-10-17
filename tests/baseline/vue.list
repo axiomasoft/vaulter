@@ -49,6 +49,10 @@ tests/api/uploads.test.ts > resumable uploads — s3-multipart > uploads numbere
 tests/api/uploads.test.ts > resumable uploads — tus > aborts the session on the server and stops the loop
 tests/api/uploads.test.ts > resumable uploads — tus > creates the session, resumes from the server offset and PATCHes until the node is created
 tests/api/uploads.test.ts > resumable uploads — tus > sends If-Match when replacing the content of an existing file
+tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > detects the forbidden shapes
+tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > finds every import shape in a source text
+tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > imports only itself and framework-neutral packages
+tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > scans the api folder
 tests/components.test.ts > VaulterCommentsPanel > announces a failed load and offers the next page
 tests/components.test.ts > VaulterCommentsPanel > does not auto-load when autoLoad is false
 tests/components.test.ts > VaulterCommentsPanel > mounts and loads the node's comments on mount

@@ -18,7 +18,7 @@ require_once __DIR__.'/Config.php';
 /**
  * identities/http.json: the routes a booted host registers (name, methods, uri, middleware, action), and their
  * match with the OpenAPI contract. The routes come from `scripts/inventory/boot/routes.php`, one separate PHP process
- * per run: the defaults, then once per feature flag (`vaulter.features.*` and the collaboration switch) with the flag
+ * per run: the defaults, then once per feature flag (`vaulter-drive.features.*` and the collaboration switch) with the flag
  * flipped. A route that appears or disappears with a flag gets `requires: [flag]`, which is finer than one run with
  * every opt-in flag on. The inventory itself never boots Laravel.
  *
@@ -31,7 +31,7 @@ final class Http
 
     public const OPENAPI = 'openapi/vaulter-v1.yaml';
 
-    /** Switches besides `vaulter.features.*` that mount routes; their default is read from the package config. */
+    /** Switches besides `vaulter-drive.features.*` that mount routes; their default is read from the package config. */
     public const EXTRA_FLAGS = ['vaulter.modules.webhooks' => false, 'vaulter-documents.collaboration.enabled' => false];
 
     private const OPENAPI_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];

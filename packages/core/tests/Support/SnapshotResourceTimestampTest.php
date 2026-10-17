@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use Vaulter\Access\ValueObjects\NodeAbilities;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
-use Vaulter\Data\Snapshots\GrantSnapshot;
-use Vaulter\Data\Snapshots\ShareLinkSnapshot;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Sharing\ShareAudience;
-use Vaulter\Http\Resources\Access\GrantResource;
-use Vaulter\Http\Resources\Activity\ActivityResource;
-use Vaulter\Http\Resources\Drive\NodeResource;
-use Vaulter\Http\Resources\Sharing\ShareResource;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
+use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Http\Resources\Access\GrantResource;
+use Vaulter\Drive\Http\Resources\Activity\ActivityResource;
+use Vaulter\Drive\Http\Resources\Drive\NodeResource;
+use Vaulter\Drive\Http\Resources\Sharing\ShareResource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 it('serializes snapshot timestamps as UTC strings and keeps absent timestamps null', function (): void {
     $time = new DateTimeImmutable('2026-10-08T12:34:56.123456+03:00');

@@ -15,7 +15,7 @@ and [Configuration](/guides/configuration) for every key in full.
 ## Attach a Drive to a CRM task or project {#attach-drive}
 
 The headline use case: give any host entity its own file/folder Drive with **zero migrations**.
-`Vaulter::drive($entity)` get-or-creates a `v_storages` row keyed by the polymorphic
+`Vaulter::drive($entity)` get-or-creates a `v_drives` row keyed by the polymorphic
 `(owner_type, owner_id, panel)` triple and provisions a root folder — idempotent, so calling it
 twice returns the same storage.
 
@@ -24,8 +24,8 @@ twice returns the same storage.
 <!-- snippet: host -->
 
 ```php [Controller]
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 
 final class TaskDriveController
 {
@@ -93,8 +93,8 @@ register the provider FQCN in `config/vaulter.php`:
 
 ```php
 // app/Vaulter/Profiles/TaskDriveStoragePanel.php
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileProvider;
 
 final class TaskDriveStoragePanel extends ProfileProvider
 {
@@ -150,7 +150,7 @@ own subclass that applies your tenant scope — Vaulter never scopes by `tenant_
 // app/Models/Vaulter/Node.php
 namespace App\Models\Vaulter;
 
-use Vaulter\Models\Drive\Node as BaseNode;
+use Vaulter\Drive\Models\Node as BaseNode;
 use App\Models\Concerns\BelongsToTenant; // your existing global-scope trait
 
 final class Node extends BaseNode
@@ -195,7 +195,7 @@ in a tenant-aware model, that model — not Vaulter — must apply the scope on 
 
 The Drive ACL combines `v_node_grants` with a swappable `PermissionDriver` lane. To bridge your
 app's role system, implement
-[`Vaulter\Contracts\Access\PermissionDriver`](/concepts/architecture#authorization). It is
+[`Vaulter\Drive\Contracts\Access\PermissionDriver`](/concepts/architecture#authorization). It is
 **node-blind**: it never receives a `Node` — only an `Authorizable` actor and an `AccessScope`
 (profile + the drive's owner and id + tenant).
 
@@ -207,8 +207,8 @@ subject-set with the actor's roles/teams (so `v_node_grants` rows addressed to a
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
 final class TeamRoleDriver extends DatabasePermissionDriver
@@ -232,12 +232,12 @@ A fuller driver also answers the role lane and the super-admin override:
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 
 final class AppRoleDriver implements PermissionDriver
 {
@@ -283,9 +283,9 @@ Register it as a named driver and select it:
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'app'),
 
     'permission_drivers' => [
-    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'database' => \Vaulter\Drive\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Drive\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Drive\Access\Drivers\SpatiePermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
     ],
 ],
@@ -293,8 +293,8 @@ Register it as a named driver and select it:
 
 ::: tip Use a shipped lane first
 For Laravel Gate, Spatie Permission v8, or AzGuard you do **not** need a custom class — set
-`access.permission_driver` to `gate` / `spatie` / `azgard` and fill the matching config block
-(`vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*`). For AzGuard install
+`vaulter-drive.access.permission_driver` to `gate` / `spatie` / `azgard` and fill the matching config block
+(`vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*`). For AzGuard install
 `composer require axioma-studio/vaulter-azgard`: its provider registers the driver
 and adapter automatically. The user model must implement `AzgardBackedUser` — see
 [Permission drivers](/extending/permission-drivers).
@@ -303,7 +303,7 @@ and adapter automatically. The user model must implement `AzgardBackedUser` — 
 ## Write a custom format handler {#format-handler}
 
 A `FileHandler` claims mime types / extensions and tells the client how to mount a node
-(editor, preview, or download). The core-owned `Vaulter\Handlers\FileHandlerRegistry` resolves
+(editor, preview, or download). The drive-owned `Vaulter\Drive\Handlers\FileHandlerRegistry` resolves
 the best one by mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`.
 Adding a
 format is **one class + one register call — no migration, no core change**
@@ -314,10 +314,10 @@ format is **one class + one register call — no migration, no core change**
 ```php
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 final class CadHandler implements FileHandler
 {
@@ -373,7 +373,7 @@ Register it any of three ways — config FQCN (cache-safe), a runtime call, or a
 
 ```php [runtime]
 // A service provider's boot()
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 Vaulter::handlers()->register(\App\Vaulter\Handlers\CadHandler::class);
 ```
@@ -435,7 +435,7 @@ uploads ([ADR-0006](/adr/0006-content-addressed-blobs-gc)).
 ### Swap a CAS service for object-store specifics
 
 If you need behaviour the default driver doesn't cover, implement
-`Vaulter\Contracts\Cas\StorageDriver` (or `ContentStore` / `BlobStore`) and bind it:
+`Vaulter\Media\Contracts\Cas\StorageDriver` (or `ContentStore` / `BlobStore`) and bind it:
 
 <!-- snippet: config -->
 
@@ -521,7 +521,7 @@ It is then reachable at `GET v1/documents/{node}/export/pdf` and via the Vue
 ## Custom share-token shape {#share-token}
 
 By default share tokens are random strings. To mint short, hashed, or prefixed tokens, implement
-`Vaulter\Contracts\Sharing\ShareTokenGenerator` (a token must be unique and fit the token
+`Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator` (a token must be unique and fit the token
 column, ≤ 64 chars):
 
 <!-- snippet: host -->
@@ -529,7 +529,7 @@ column, ≤ 64 chars):
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
 
 final class ShortTokenGenerator implements ShareTokenGenerator
 {
@@ -602,8 +602,9 @@ blob a slow multipart commit was about to reference.
 
 ## Reliability — outbox & webhooks {#webhooks}
 
-The `reliability` feature stages each Drive domain event in `v_outbox` (after-commit), then a
-relay fans it out into signed `v_webhook_deliveries` rows per active subscribed endpoint:
+Every domain event is written to `v_outbox` in the transaction of its operation; the core relay
+hands it to the outbox consumers, and the webhooks module's consumer fans it out into signed
+`v_webhook_deliveries` rows per active subscribed endpoint (see [The outbox](/concepts/events-outbox)):
 
 <!-- snippet: host -->
 
@@ -611,48 +612,42 @@ relay fans it out into signed `v_webhook_deliveries` rows per active subscribed 
 // Only needed with vaulter.schedule.enabled=false; otherwise the packages schedule these already.
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:webhooks:relay')->everyMinute();    // outbox → deliveries → queue
+Schedule::command('vaulter:relay')->everyMinute()->withoutOverlapping(); // outbox → consumers → deliveries → queue
+Schedule::command('vaulter:outbox:prune')->hourly();              // outbox retention without loss
 Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes(); // retry failed deliveries
-Schedule::command('vaulter:webhooks:prune')->daily();        // reclaim settled audit history
+Schedule::command('vaulter:webhooks:prune')->daily();        // reclaim terminal delivery history
 ```
 
 Subscriber endpoints are managed through the `webhook-endpoints` routes (gated by the
 `WebhookEndpointPolicy` manage ability). Each delivery POST is signed per
 [Standard Webhooks](/guides/webhooks#headers-and-signature) (`webhook-id`, `webhook-timestamp`,
 `webhook-signature`); consumers **dedupe on `webhook-id`** (the envelope `id`), since delivery is
-at-least-once. Tune `config('vaulter.webhooks.*')` (`retry_schedule`, `retry_jitter`,
-`disable_after_days`).
+at-least-once. Tune `config('vaulter-webhooks.*')` (`retry_schedule`, `retry_jitter`,
+`disable_after_days`) and `config('vaulter.outbox.*')`.
 
 ### Pruning settled outbox & webhook history
 
-The relayed outbox rows and terminal webhook deliveries are an append-only audit trail that
-otherwise grows forever. `vaulter:webhooks:prune` reclaims the **settled** rows past a
-retention window — and *only* the settled ones:
+`vaulter:outbox:prune` deletes outbox events past `outbox.retention_seconds` once no delivery of
+them is open and every durable consumer has reconciled past them; dead outbox deliveries stay
+`outbox.dead_retention_seconds`. `vaulter:webhooks:prune` reclaims the terminal webhook deliveries
+past a retention window — and *only* those:
 
 <!-- snippet: shell -->
 
 ```bash
-# Prune settled rows older than config('vaulter.webhooks.retention_days') (default 30):
+# Prune terminal deliveries older than config('vaulter-webhooks.retention_days') (default 30):
 php artisan vaulter:webhooks:prune
 
-# Override the window, or preview the exact counts without deleting anything:
+# Override the window, or preview the exact count without deleting anything:
 php artisan vaulter:webhooks:prune --days=7
 php artisan vaulter:webhooks:prune --dry-run
 ```
 
-It deletes exactly two kinds of row that never change again:
-
-- **dispatched outbox rows** — status `dispatched`, by `dispatched_at`;
-- **terminal deliveries** — status `delivered` or `dead` (DLQ), by `updated_at` (the
-  terminalisation time).
-
-In-flight rows are **never** touched: a `pending` outbox row (the relay still owns it) and a
-`pending`/`failed` delivery (the due-retry sweep still owns it) are left alone regardless of
-age. `--dry-run` reports the counts it *would* remove without deleting a row. The command is
-gated on the `reliability` feature — with the feature off it no-ops with a notice (the
-`v_outbox` / `v_webhook_*` tables may not exist). The retention default lives at
-`config('vaulter.webhooks.retention_days')` (30, floored at 0). Schedule it alongside the
-relay/retry commands above.
+It deletes **terminal deliveries** — status `delivered` or `dead` (DLQ), by `updated_at` (the
+terminalisation time). A `pending`/`failed` delivery (the due-retry sweep still owns it) is left
+alone regardless of age. `--dry-run` reports the count it *would* remove without deleting a row.
+While the webhooks module is inactive the command no-ops with a notice. The retention default lives
+at `config('vaulter-webhooks.retention_days')` (30, floored at 0).
 
 ## Testing with the shipped doubles {#testing}
 
@@ -668,7 +663,7 @@ real role system:
 
 ```php
 // In a Pest test, force the open driver for the duration of the test.
-config()->set('vaulter.access.permission_driver', 'null'); // non-production only
+config()->set('vaulter-drive.access.permission_driver', 'null'); // non-production only
 
 $drive = Vaulter::drive($task)->actingAs($user);
 $node = $drive->files()->upload(UploadSource::fromString('hello', 'note.txt'));

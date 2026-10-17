@@ -574,6 +574,664 @@
             "id": "format:receipt-problem",
             "kind": "protocol",
             "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:access.inheritance_changed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.added",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.resolved",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.restored",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.revision_created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.archived",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.unarchived",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.revision_added",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.revision_deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.uploaded",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:folder.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:grant.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:grant.revoked",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.copied",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.moved",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.purged",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.renamed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.restored",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.trashed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.revoked",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.rotated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.aborted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.expired",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.initiated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "format:webhook-envelope",
+            "kind": "protocol",
+            "reason": "P3.14: built by Vaulter\\Events\\Outbox\\OutboxEnvelope::body (was EventEnvelope::fromEvent); the bytes are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D29",
+            "id": "serialized:config:vaulter.models.outbox",
+            "kind": "protocol",
+            "reason": "P3.14: the serialized default model class is Vaulter\\Events\\Outbox\\Models\\OutboxEvent"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "morph:Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers::grant#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "added",
+            "decision": "D14",
+            "id": "morph:Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.2: the shared test helpers moved into the Testing kit (src), which the identity scan reads"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "redefined",
+            "decision": "D34",
+            "id": "morph:Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.4: the type of a node or a drive stored in a polymorphic column is the constant alias vaulter.node / vaulter.drive, not the class name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.models.blob",
+            "id": "serialized:config:vaulter-media.models.blob",
+            "kind": "protocol",
+            "reason": "P4.6: the blob model moved to vaulter-media with the CAS slice, so its swap key lives in the media config root; the serialized default is Vaulter\\Media\\Models\\Cas\\Blob"
+        },
+        {
+            "change": "renamed",
+            "decision": "D33",
+            "from": "serialized:cast:Vaulter\\Models\\Cas\\Blob.quarantined_at",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.quarantined_at",
+            "kind": "protocol",
+            "reason": "P4.6: the model moved to media (Vaulter\\Media\\Models\\Cas\\Blob) and casts the timestamp with the media UTC cast Vaulter\\Media\\Support\\UtcDateTimeCast, not the drive scan cast"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:cast:Vaulter\\Models\\Cas\\Blob.status",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.status",
+            "kind": "protocol",
+            "reason": "P4.6: the model and the BlobStatus enum moved to media (Vaulter\\Media\\Enums\\Cas\\BlobStatus)"
+        },
+        {
+            "change": "added",
+            "decision": "D23",
+            "id": "problem:blob_unavailable",
+            "kind": "protocol",
+            "reason": "P4.7: a pin is refused because the blob's bytes are gone (deleting/deleted, or tombstoned without its object) — 409, never retried or cached; the owner holding the bytes commits them again"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:file_size_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:folder_children_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:permission_denied",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_link_ttl_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_not_found",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_password_required",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:share_role_not_allowed",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:tree_depth_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "problem:unknown_role",
+            "kind": "protocol",
+            "reason": "P4.8: the exception class of the problem code moved to vaulter-drive (Vaulter\\Drive\\Exceptions); the code, status and title are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.database",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.gate",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.spatie",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.models.grant",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.models.node_share",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "serialized:config:vaulter-drive.sharing.token_generator",
+            "kind": "protocol",
+            "reason": "P4.8: the serialized FQCN of the default/cast names the class in its new owner namespace (Vaulter\\Drive\\...); the config key is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.created_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.created_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.available_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.available_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.created_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.created_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.last_published_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.last_published_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.lease_expires_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.lease_expires_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.activated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.activated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.updated_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.updated_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D28",
+            "from": "serialized:cast:Vaulter\\Models\\Content\\ScanRequest.requested_at",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanRequest.requested_at",
+            "kind": "protocol",
+            "reason": "P4.9: the scan model moved to drive (Vaulter\\Drive\\Models\\Content\\...) with its timestamp casts (D28: all scan_* are drive)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_backfill_run",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_evidence",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_obligation",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_policy_state",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D28",
+            "id": "serialized:config:vaulter-drive.models.scan_request",
+            "kind": "protocol",
+            "reason": "P4.9: the serialized FQCN of the default names the scan model in its new owner namespace (Vaulter\\Drive\\Models\\Content\\...); the config key is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.models.webhook_delivery",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_delivery",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.models.webhook_endpoint",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_endpoint",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:config:vaulter.webhooks.delivery.url_guard",
+            "id": "serialized:config:vaulter-webhooks.delivery.url_guard",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)"
+        },
+        {
+            "change": "renamed",
+            "decision": "D6",
+            "from": "serialized:queue:Vaulter\\Jobs\\Webhooks\\DeliverWebhook",
+            "id": "serialized:queue:Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
+            "kind": "protocol",
+            "reason": "P4.13: the serialized class or config key follows the webhooks package (FQCN Vaulter\\Webhooks\\Jobs\\DeliverWebhook, config root vaulter-webhooks)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "format:webhook-signature",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:invalid_webhook_signature",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_delivery_not_found",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_delivery_not_redeliverable",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D6",
+            "id": "problem:webhook_endpoint_not_found",
+            "kind": "protocol",
+            "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "morph:Vaulter\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.16: the drive/node tenant boundary moved from the kernel to the drive; the read of the owner's morph class is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "morph:Vaulter\\VaulterServiceProvider::bootModuleKernel#morphMap",
+            "id": "morph:Vaulter\\Drive\\Providers\\BindingsRegistrar::boot#morphMap",
+            "kind": "protocol",
+            "reason": "P4.16: the drive registers the stable morph aliases of its drive and node models (vaulter.drive, vaulter.node) when it boots; the kernel no longer knows them"
         }
     ],
     "items": [
@@ -586,12 +1244,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::InheritanceChanged"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::InheritanceChanged"
             },
             "subject": "node"
         },
@@ -605,12 +1263,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::CommentAdded"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::CommentAdded"
             },
             "subject": "comment"
         },
@@ -624,12 +1282,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::CommentDeleted"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::CommentDeleted"
             },
             "subject": "comment"
         },
@@ -643,12 +1301,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::CommentResolved"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::CommentResolved"
             },
             "subject": "comment"
         },
@@ -664,12 +1322,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DocumentCreated"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentCreated"
             },
             "subject": "node"
         },
@@ -685,12 +1343,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DocumentRestored"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentRestored"
             },
             "subject": "node"
         },
@@ -706,12 +1364,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DocumentRevisionCreated"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentRevisionCreated"
             },
             "subject": "node"
         },
@@ -727,12 +1385,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": false,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DocumentUpdated"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentUpdated"
             },
             "subject": "node"
         },
@@ -743,12 +1401,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DriveArchived"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::DriveArchived"
             },
             "subject": "drive"
         },
@@ -762,12 +1420,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DriveCreated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::DriveCreated"
             },
             "subject": "drive"
         },
@@ -778,12 +1436,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DriveDeleted"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::DriveDeleted"
             },
             "subject": "drive"
         },
@@ -794,12 +1452,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DriveUnarchived"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::DriveUnarchived"
             },
             "subject": "drive"
         },
@@ -814,12 +1472,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::FileRevisionAdded"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::FileRevisionAdded"
             },
             "subject": "node"
         },
@@ -833,12 +1491,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::FileRevisionDeleted"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::FileRevisionDeleted"
             },
             "subject": "node"
         },
@@ -853,12 +1511,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::FileUploaded"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::FileUploaded"
             },
             "subject": "node"
         },
@@ -871,12 +1529,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::FolderCreated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::FolderCreated"
             },
             "subject": "node"
         },
@@ -893,12 +1551,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::GrantCreated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::GrantCreated"
             },
             "subject": "node"
         },
@@ -912,12 +1570,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::GrantRevoked"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::GrantRevoked"
             },
             "subject": "node"
         },
@@ -931,12 +1589,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeCopied"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeCopied"
             },
             "subject": "node"
         },
@@ -950,12 +1608,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeMoved"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeMoved"
             },
             "subject": "node"
         },
@@ -970,12 +1628,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodePurged"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodePurged"
             },
             "subject": "drive"
         },
@@ -986,12 +1644,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeRenamed"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeRenamed"
             },
             "subject": "node"
         },
@@ -1004,12 +1662,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeRestored"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeRestored"
             },
             "subject": "node"
         },
@@ -1020,12 +1678,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "remove",
-                "webhook": true
+                "external": true,
+                "journal": "remove"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeTrashed"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeTrashed"
             },
             "subject": "node"
         },
@@ -1038,12 +1696,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeUpdated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::NodeUpdated"
             },
             "subject": "node"
         },
@@ -1061,12 +1719,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::ShareCreated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::ShareCreated"
             },
             "subject": "share"
         },
@@ -1079,12 +1737,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::ShareRevoked"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::ShareRevoked"
             },
             "subject": "share"
         },
@@ -1097,12 +1755,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::ShareRotated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::ShareRotated"
             },
             "subject": "share"
         },
@@ -1116,12 +1774,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::ShareUpdated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::ShareUpdated"
             },
             "subject": "share"
         },
@@ -1135,12 +1793,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": false
+                "external": false,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::UploadAborted"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::UploadAborted"
             },
             "subject": "upload"
         },
@@ -1154,12 +1812,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": false
+                "external": false,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::UploadExpired"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::UploadExpired"
             },
             "subject": "upload"
         },
@@ -1173,12 +1831,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": false
+                "external": false,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::UploadInitiated"
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::UploadInitiated"
             },
             "subject": "upload"
         },
@@ -1198,8 +1856,8 @@
             "manual": true,
             "owner": "drive",
             "source": {
-                "file": "packages/core/src/Changes/ChangeCursor.php",
-                "symbol": "Vaulter\\Changes\\ChangeCursor::encode"
+                "file": "packages/drive/src/Changes/ChangeCursor.php",
+                "symbol": "Vaulter\\Drive\\Changes\\ChangeCursor::encode"
             }
         },
         {
@@ -1348,8 +2006,8 @@
             "manual": true,
             "owner": "webhooks",
             "source": {
-                "file": "packages/core/src/Webhooks/EventEnvelope.php",
-                "symbol": "Vaulter\\Webhooks\\EventEnvelope::fromEvent"
+                "file": "packages/core/src/Events/Outbox/OutboxEnvelope.php",
+                "symbol": "Vaulter\\Events\\Outbox\\OutboxEnvelope::body"
             }
         },
         {
@@ -1358,28 +2016,8 @@
             "manual": true,
             "owner": "webhooks",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhookSigner.php",
+                "file": "packages/webhooks/src/WebhookSigner.php",
                 "symbol": "Vaulter\\Webhooks\\WebhookSigner::signatureHeader"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Access\\ExactListing::page#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Access/ExactListing.php",
-                "symbol": "Vaulter\\Access\\ExactListing::page"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Access\\ValueObjects\\Subject::ofModel#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Access/ValueObjects/Subject.php",
-                "symbol": "Vaulter\\Access\\ValueObjects\\Subject::ofModel"
             }
         },
         {
@@ -1390,26 +2028,6 @@
             "source": {
                 "file": "packages/azgard/src/Testing/FakeAzgardGuard.php",
                 "symbol": "Vaulter\\Azgard\\Testing\\FakeAzgardGuard::entityKey"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Concerns\\HasDrives::bootHasDrives#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Concerns/HasDrives.php",
-                "symbol": "Vaulter\\Concerns\\HasDrives::bootHasDrives"
-            }
-        },
-        {
-            "call": "morphMany",
-            "calls": 1,
-            "id": "morph:Vaulter\\Concerns\\HasDrives::drives#morphMany",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Concerns/HasDrives.php",
-                "symbol": "Vaulter\\Concerns\\HasDrives::drives"
             }
         },
         {
@@ -1425,11 +2043,191 @@
         {
             "call": "getMorphClass",
             "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Access\\ExactListing::page#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Access/ExactListing.php",
+                "symbol": "Vaulter\\Drive\\Access\\ExactListing::page"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Access\\ValueObjects\\Subject::ofModel#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Access/ValueObjects/Subject.php",
+                "symbol": "Vaulter\\Drive\\Access\\ValueObjects\\Subject::ofModel"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Concerns\\HasDrives::bootHasDrives#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Concerns/HasDrives.php",
+                "symbol": "Vaulter\\Drive\\Concerns\\HasDrives::bootHasDrives"
+            }
+        },
+        {
+            "call": "morphMany",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Concerns\\HasDrives::drives#morphMany",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Concerns/HasDrives.php",
+                "symbol": "Vaulter\\Drive\\Concerns\\HasDrives::drives"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
             "id": "morph:Vaulter\\Drive\\DriveProvisioner::provision#getMorphClass",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/src/DriveProvisioner.php",
                 "symbol": "Vaulter\\Drive\\DriveProvisioner::provision"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Activity/ListDriveActivityController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Activity/ListNodeActivityController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType"
+            }
+        },
+        {
+            "call": "morphTo",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Models\\Drive::owner#morphTo",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Drive.php",
+                "symbol": "Vaulter\\Drive\\Models\\Drive::owner"
+            }
+        },
+        {
+            "call": "morphMap",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Providers\\BindingsRegistrar::boot#morphMap",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Providers/BindingsRegistrar.php",
+                "symbol": "Vaulter\\Drive\\Providers\\BindingsRegistrar::boot"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Queries/Activity/VisibleActivityQuery.php",
+                "symbol": "Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::base"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Queries/Activity/VisibleActivityQuery.php",
+                "symbol": "Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::execute"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Queries/Activity/VisibleActivityQuery.php",
+                "symbol": "Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::project"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 2,
+            "id": "morph:Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Queries/Activity/VisibleActivityQuery.php",
+                "symbol": "Vaulter\\Drive\\Queries\\Activity\\VisibleActivityQuery::visible"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Repositories/Activity/ActivityReadRepository.php",
+                "symbol": "Vaulter\\Drive\\Repositories\\Activity\\ActivityReadRepository::forTarget"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Repositories\\DriveReadRepository::forOwner#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Repositories/DriveReadRepository.php",
+                "symbol": "Vaulter\\Drive\\Repositories\\DriveReadRepository::forOwner"
+            }
+        },
+        {
+            "call": "requiresMorphMap",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Rules\\Access\\RegisteredSubjectType::resolvesToModel#requiresMorphMap",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Rules/Access/RegisteredSubjectType.php",
+                "symbol": "Vaulter\\Drive\\Rules\\Access\\RegisteredSubjectType::resolvesToModel"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 2,
+            "id": "morph:Vaulter\\Drive\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Tenancy/TenancyBoundary.php",
+                "symbol": "Vaulter\\Drive\\Tenancy\\TenancyBoundary::assertOwner"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers::grant#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Testing/Access/AccessTestHelpers.php",
+                "symbol": "Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers::grant"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Drive\\Testing\\Contracts\\PermissionFixture::build#getMorphClass",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Testing/Contracts/PermissionFixture.php",
+                "symbol": "Vaulter\\Drive\\Testing\\Contracts\\PermissionFixture::build"
             }
         },
         {
@@ -1444,122 +2242,22 @@
         },
         {
             "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Http/Controllers/Activity/ListDriveActivityController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController::nodeType"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Http/Controllers/Activity/ListNodeActivityController.php",
-                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController::nodeType"
-            }
-        },
-        {
-            "call": "morphTo",
-            "calls": 1,
-            "id": "morph:Vaulter\\Models\\Drive\\Drive::owner#morphTo",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Drive/Drive.php",
-                "symbol": "Vaulter\\Models\\Drive\\Drive::owner"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::base#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
-                "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::base"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::execute#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
-                "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::execute"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::project#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
-                "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::project"
-            }
-        },
-        {
-            "call": "getMorphClass",
             "calls": 2,
-            "id": "morph:Vaulter\\Queries\\Activity\\VisibleActivityQuery::visible#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor#getMorphClass",
             "owner": "drive",
             "source": {
-                "file": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
-                "symbol": "Vaulter\\Queries\\Activity\\VisibleActivityQuery::visible"
+                "file": "packages/drive/src/Testing/Drive/DriveTestHelpers.php",
+                "symbol": "Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers::actor"
             }
         },
         {
             "call": "getMorphClass",
             "calls": 1,
-            "id": "morph:Vaulter\\Repositories\\Activity\\ActivityReadRepository::forTarget#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
             "owner": "drive",
             "source": {
-                "file": "packages/core/src/Repositories/Activity/ActivityReadRepository.php",
-                "symbol": "Vaulter\\Repositories\\Activity\\ActivityReadRepository::forTarget"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Repositories\\Drive\\DriveReadRepository::forOwner#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Repositories/Drive/DriveReadRepository.php",
-                "symbol": "Vaulter\\Repositories\\Drive\\DriveReadRepository::forOwner"
-            }
-        },
-        {
-            "call": "requiresMorphMap",
-            "calls": 1,
-            "id": "morph:Vaulter\\Rules\\Access\\RegisteredSubjectType::resolvesToModel#requiresMorphMap",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Rules/Access/RegisteredSubjectType.php",
-                "symbol": "Vaulter\\Rules\\Access\\RegisteredSubjectType::resolvesToModel"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 2,
-            "id": "morph:Vaulter\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
-            "owner": "core",
-            "source": {
-                "file": "packages/core/src/Tenancy/TenancyBoundary.php",
-                "symbol": "Vaulter\\Tenancy\\TenancyBoundary::assertOwner"
-            }
-        },
-        {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\Testing\\Contracts\\PermissionFixture::build#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Testing/Contracts/PermissionFixture.php",
-                "symbol": "Vaulter\\Testing\\Contracts\\PermissionFixture::build"
+                "file": "packages/drive/src/ValueObjects/Events/ActivityTarget.php",
+                "symbol": "Vaulter\\Drive\\ValueObjects\\Events\\ActivityTarget::of"
             }
         },
         {
@@ -1593,16 +2291,6 @@
             }
         },
         {
-            "call": "getMorphClass",
-            "calls": 1,
-            "id": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget::of#getMorphClass",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/ValueObjects/Events/ActivityTarget.php",
-                "symbol": "Vaulter\\ValueObjects\\Events\\ActivityTarget::of"
-            }
-        },
-        {
             "exception": "Vaulter\\Exceptions\\Access\\MissingActorException",
             "id": "problem:actor_required",
             "owner": "core",
@@ -1615,14 +2303,26 @@
             "status": 401
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\CannotDeleteHeadRevisionException",
+            "exception": "Vaulter\\Media\\Exceptions\\Cas\\BlobUnavailableException",
+            "id": "problem:blob_unavailable",
+            "owner": "media",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/media/src/Http/Problems/MediaProblemCodes.php",
+                "symbol": "Vaulter\\Media\\Http\\Problems\\MediaProblemCodes::codes"
+            },
+            "status": 409
+        },
+        {
+            "exception": "Vaulter\\Drive\\Exceptions\\CannotDeleteHeadRevisionException",
             "id": "problem:cannot_delete_head_revision",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1655,7 +2355,7 @@
             "id": "problem:collaboration_unavailable",
             "owner": "collaboration",
             "receipt": "never",
-            "retryable": "with_backoff",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1687,14 +2387,14 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Files\\ContentUnavailableException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Files\\ContentUnavailableException",
             "id": "problem:content_unavailable",
             "owner": "drive",
             "receipt": "never",
             "retryable": "with_backoff",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 423
         },
@@ -1711,14 +2411,14 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Changes\\CursorExpiredException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Changes\\CursorExpiredException",
             "id": "problem:cursor_expired",
             "owner": "drive",
             "receipt": "never",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 410
         },
@@ -1795,31 +2495,31 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\DriveArchivedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\DriveArchivedException",
             "id": "problem:drive_archived",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\StorageNotFoundException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\StorageNotFoundException",
             "id": "problem:drive_not_found",
             "owner": "drive",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Registry\\DuplicateNodeContentLifecycleException",
+            "exception": null,
             "id": "problem:duplicate_registration",
             "owner": "core",
             "receipt": "never",
@@ -1843,26 +2543,26 @@
             "status": 500
         },
         {
-            "exception": "Vaulter\\Exceptions\\Policy\\FileSizeLimitExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Policy\\FileSizeLimitExceededException",
             "id": "problem:file_size_limit_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 413
         },
         {
-            "exception": "Vaulter\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
             "id": "problem:folder_children_limit_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1873,8 +2573,8 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -1903,26 +2603,26 @@
             "status": 500
         },
         {
-            "exception": "Vaulter\\Exceptions\\Changes\\InvalidCursorException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Changes\\InvalidCursorException",
             "id": "problem:invalid_cursor",
             "owner": "drive",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 400
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\InvalidDestinationException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidDestinationException",
             "id": "problem:invalid_destination",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1939,49 +2639,49 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\InvalidDriveStateException",
+            "exception": "Vaulter\\Drive\\Exceptions\\InvalidDriveStateException",
             "id": "problem:invalid_drive_state",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\InvalidNodeNameException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidNodeNameException",
             "id": "problem:invalid_node_name",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\InvalidPropertiesException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\InvalidPropertiesException",
             "id": "problem:invalid_properties",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Webhooks\\InvalidWebhookSignatureException",
+            "exception": "Vaulter\\Webhooks\\Exceptions\\InvalidWebhookSignatureException",
             "id": "problem:invalid_webhook_signature",
             "owner": "webhooks",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "file": "packages/webhooks/src/WebhooksProblemCodes.php",
                 "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 400
@@ -2035,38 +2735,38 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NodeNameConflictException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNameConflictException",
             "id": "problem:node_name_conflict",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NodeNotFoundException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotFoundException",
             "id": "problem:node_not_found",
             "owner": "drive",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NodeNotTrashedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeNotTrashedException",
             "id": "problem:node_not_trashed",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2077,32 +2777,32 @@
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\StaleNodeException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\StaleNodeException",
             "id": "problem:node_sequence_mismatch",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 412
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NodeTrashedByAncestorException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeTrashedByAncestorException",
             "id": "problem:node_trashed_by_ancestor",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2119,14 +2819,14 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\NotAFileException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NotAFileException",
             "id": "problem:not_a_file",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -2155,7 +2855,7 @@
             "status": 413
         },
         {
-            "exception": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
+            "exception": "Illuminate\\Auth\\Access\\AuthorizationException",
             "id": "problem:permission_denied",
             "owner": "core",
             "receipt": "never",
@@ -2179,26 +2879,26 @@
             "status": 428
         },
         {
-            "exception": "Vaulter\\Exceptions\\Profiles\\ProfileRestrictionException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Profiles\\ProfileRestrictionException",
             "id": "problem:profile_restriction",
             "owner": "drive",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 403
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\QuotaExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\QuotaExceededException",
             "id": "problem:quota_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 413
         },
@@ -2227,26 +2927,26 @@
             "status": 500
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\RestoreDestinationChangedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\RestoreDestinationChangedException",
             "id": "problem:restore_destination_changed",
             "owner": "drive",
-            "receipt": "cacheable",
+            "receipt": "never",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\RestoreDestinationRequiredException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\RestoreDestinationRequiredException",
             "id": "problem:restore_destination_required",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2257,20 +2957,20 @@
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Drive\\RevisionPinnedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\RevisionPinnedException",
             "id": "problem:revision_pinned",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2287,74 +2987,74 @@
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Sharing\\ShareLinkTtlExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareLinkTtlExceededException",
             "id": "problem:share_link_ttl_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Sharing\\ShareNotFoundException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareNotFoundException",
             "id": "problem:share_not_found",
             "owner": "drive",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Sharing\\SharePasswordRequiredException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Sharing\\SharePasswordRequiredException",
             "id": "problem:share_password_required",
             "owner": "drive",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 401
         },
         {
-            "exception": "Vaulter\\Exceptions\\Sharing\\ShareRoleNotAllowedException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareRoleNotAllowedException",
             "id": "problem:share_role_not_allowed",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Policy\\TreeDepthLimitExceededException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Policy\\TreeDepthLimitExceededException",
             "id": "problem:tree_depth_limit_exceeded",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\TreeTraversalIncompleteException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\TreeTraversalIncompleteException",
             "id": "problem:tree_traversal_incomplete",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2383,38 +3083,38 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Profiles\\UnknownProfileException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Profiles\\UnknownProfileException",
             "id": "problem:unknown_profile",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Access\\UnknownRoleException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Access\\UnknownRoleException",
             "id": "problem:unknown_role",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Nodes\\UnsupportedNodeKindException",
+            "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\UnsupportedNodeKindException",
             "id": "problem:unsupported_node_kind",
             "owner": "drive",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+                "file": "packages/drive/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -2479,37 +3179,37 @@
             "status": 422
         },
         {
-            "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookDeliveryNotFoundException",
+            "exception": "Vaulter\\Webhooks\\Exceptions\\WebhookDeliveryNotFoundException",
             "id": "problem:webhook_delivery_not_found",
             "owner": "webhooks",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "file": "packages/webhooks/src/WebhooksProblemCodes.php",
                 "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 404
         },
         {
-            "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookDeliveryNotRedeliverableException",
+            "exception": "Vaulter\\Webhooks\\Exceptions\\WebhookDeliveryNotRedeliverableException",
             "id": "problem:webhook_delivery_not_redeliverable",
             "owner": "webhooks",
             "receipt": "cacheable",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "file": "packages/webhooks/src/WebhooksProblemCodes.php",
                 "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookEndpointNotFoundException",
+            "exception": "Vaulter\\Webhooks\\Exceptions\\WebhookEndpointNotFoundException",
             "id": "problem:webhook_endpoint_not_found",
             "owner": "webhooks",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "file": "packages/webhooks/src/WebhooksProblemCodes.php",
                 "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 404
@@ -2549,6 +3249,215 @@
             }
         },
         {
+            "attribute": "scope",
+            "cast": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Access\\NodeGrant.scope",
+            "model": "Vaulter\\Drive\\Models\\Access\\NodeGrant",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Access/NodeGrant.php",
+                "symbol": "Vaulter\\Drive\\Models\\Access\\NodeGrant::casts"
+            }
+        },
+        {
+            "attribute": "verb",
+            "cast": "Vaulter\\Events\\EventTypeCast",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Activity\\Activity.verb",
+            "model": "Vaulter\\Drive\\Models\\Activity\\Activity",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Activity/Activity.php",
+                "symbol": "Vaulter\\Drive\\Models\\Activity\\Activity::casts"
+            }
+        },
+        {
+            "attribute": "created_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.created_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanBackfillRun.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun::casts"
+            }
+        },
+        {
+            "attribute": "updated_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanBackfillRun.updated_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanBackfillRun.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun::casts"
+            }
+        },
+        {
+            "attribute": "observed_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.observed_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanEvidenceRecord.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord::casts"
+            }
+        },
+        {
+            "attribute": "revoked_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord.revoked_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanEvidenceRecord.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord::casts"
+            }
+        },
+        {
+            "attribute": "available_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.available_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "created_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.created_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "last_published_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.last_published_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "lease_expires_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.lease_expires_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "updated_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanObligation.updated_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanObligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanObligation.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanObligation::casts"
+            }
+        },
+        {
+            "attribute": "activated_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.activated_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanPolicyState.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState::casts"
+            }
+        },
+        {
+            "attribute": "updated_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanPolicyState.updated_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanPolicyState.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanPolicyState::casts"
+            }
+        },
+        {
+            "attribute": "requested_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Content\\ScanRequest.requested_at",
+            "model": "Vaulter\\Drive\\Models\\Content\\ScanRequest",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Content/ScanRequest.php",
+                "symbol": "Vaulter\\Drive\\Models\\Content\\ScanRequest::casts"
+            }
+        },
+        {
+            "attribute": "status",
+            "cast": "Vaulter\\Drive\\Enums\\DriveStatus",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Drive.status",
+            "model": "Vaulter\\Drive\\Models\\Drive",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Drive.php",
+                "symbol": "Vaulter\\Drive\\Models\\Drive::casts"
+            }
+        },
+        {
+            "attribute": "quarantined_at",
+            "cast": "Vaulter\\Drive\\Models\\Content\\ScanUtcDateTime",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\FileRevision.quarantined_at",
+            "model": "Vaulter\\Drive\\Models\\FileRevision",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/FileRevision.php",
+                "symbol": "Vaulter\\Drive\\Models\\FileRevision::casts"
+            }
+        },
+        {
+            "attribute": "kind",
+            "cast": "Vaulter\\Drive\\Enums\\NodeKind",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Node.kind",
+            "model": "Vaulter\\Drive\\Models\\Node",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Node.php",
+                "symbol": "Vaulter\\Drive\\Models\\Node::casts"
+            }
+        },
+        {
+            "attribute": "audience",
+            "cast": "Vaulter\\Drive\\Enums\\Sharing\\ShareAudience",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Sharing\\NodeShare.audience",
+            "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Sharing/NodeShare.php",
+                "symbol": "Vaulter\\Drive\\Models\\Sharing\\NodeShare::casts"
+            }
+        },
+        {
+            "attribute": "scope",
+            "cast": "Vaulter\\Drive\\Enums\\Access\\GrantScope",
+            "id": "serialized:cast:Vaulter\\Drive\\Models\\Sharing\\NodeShare.scope",
+            "model": "Vaulter\\Drive\\Models\\Sharing\\NodeShare",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Models/Sharing/NodeShare.php",
+                "symbol": "Vaulter\\Drive\\Models\\Sharing\\NodeShare::casts"
+            }
+        },
+        {
             "attribute": "protocol",
             "cast": "Vaulter\\Drive\\Enums\\Uploads\\UploadProtocol",
             "id": "serialized:cast:Vaulter\\Drive\\Models\\Uploads\\UploadSession.protocol",
@@ -2571,234 +3480,25 @@
             }
         },
         {
-            "attribute": "scope",
-            "cast": "Vaulter\\Enums\\Access\\GrantScope",
-            "id": "serialized:cast:Vaulter\\Models\\Access\\NodeGrant.scope",
-            "model": "Vaulter\\Models\\Access\\NodeGrant",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Access/NodeGrant.php",
-                "symbol": "Vaulter\\Models\\Access\\NodeGrant::casts"
-            }
-        },
-        {
-            "attribute": "verb",
-            "cast": "Vaulter\\Enums\\Events\\EventType",
-            "id": "serialized:cast:Vaulter\\Models\\Activity\\Activity.verb",
-            "model": "Vaulter\\Models\\Activity\\Activity",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Activity/Activity.php",
-                "symbol": "Vaulter\\Models\\Activity\\Activity::casts"
-            }
-        },
-        {
             "attribute": "quarantined_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Cas\\Blob.quarantined_at",
-            "model": "Vaulter\\Models\\Cas\\Blob",
+            "cast": "Vaulter\\Media\\Support\\UtcDateTimeCast",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.quarantined_at",
+            "model": "Vaulter\\Media\\Models\\Cas\\Blob",
             "owner": "media",
             "source": {
-                "file": "packages/core/src/Models/Cas/Blob.php",
-                "symbol": "Vaulter\\Models\\Cas\\Blob::casts"
+                "file": "packages/media/src/Models/Cas/Blob.php",
+                "symbol": "Vaulter\\Media\\Models\\Cas\\Blob::casts"
             }
         },
         {
             "attribute": "status",
-            "cast": "Vaulter\\Enums\\Cas\\BlobStatus",
-            "id": "serialized:cast:Vaulter\\Models\\Cas\\Blob.status",
-            "model": "Vaulter\\Models\\Cas\\Blob",
+            "cast": "Vaulter\\Media\\Enums\\Cas\\BlobStatus",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.status",
+            "model": "Vaulter\\Media\\Models\\Cas\\Blob",
             "owner": "media",
             "source": {
-                "file": "packages/core/src/Models/Cas/Blob.php",
-                "symbol": "Vaulter\\Models\\Cas\\Blob::casts"
-            }
-        },
-        {
-            "attribute": "created_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.created_at",
-            "model": "Vaulter\\Models\\Content\\ScanBackfillRun",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanBackfillRun.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanBackfillRun::casts"
-            }
-        },
-        {
-            "attribute": "updated_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanBackfillRun.updated_at",
-            "model": "Vaulter\\Models\\Content\\ScanBackfillRun",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanBackfillRun.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanBackfillRun::casts"
-            }
-        },
-        {
-            "attribute": "observed_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.observed_at",
-            "model": "Vaulter\\Models\\Content\\ScanEvidenceRecord",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanEvidenceRecord.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanEvidenceRecord::casts"
-            }
-        },
-        {
-            "attribute": "revoked_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanEvidenceRecord.revoked_at",
-            "model": "Vaulter\\Models\\Content\\ScanEvidenceRecord",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanEvidenceRecord.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanEvidenceRecord::casts"
-            }
-        },
-        {
-            "attribute": "available_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.available_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "created_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.created_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "last_published_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.last_published_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "lease_expires_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.lease_expires_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "updated_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanObligation.updated_at",
-            "model": "Vaulter\\Models\\Content\\ScanObligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanObligation.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanObligation::casts"
-            }
-        },
-        {
-            "attribute": "activated_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.activated_at",
-            "model": "Vaulter\\Models\\Content\\ScanPolicyState",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanPolicyState.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanPolicyState::casts"
-            }
-        },
-        {
-            "attribute": "updated_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanPolicyState.updated_at",
-            "model": "Vaulter\\Models\\Content\\ScanPolicyState",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanPolicyState.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanPolicyState::casts"
-            }
-        },
-        {
-            "attribute": "requested_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Content\\ScanRequest.requested_at",
-            "model": "Vaulter\\Models\\Content\\ScanRequest",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Content/ScanRequest.php",
-                "symbol": "Vaulter\\Models\\Content\\ScanRequest::casts"
-            }
-        },
-        {
-            "attribute": "status",
-            "cast": "Vaulter\\Enums\\Drive\\DriveStatus",
-            "id": "serialized:cast:Vaulter\\Models\\Drive\\Drive.status",
-            "model": "Vaulter\\Models\\Drive\\Drive",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Drive/Drive.php",
-                "symbol": "Vaulter\\Models\\Drive\\Drive::casts"
-            }
-        },
-        {
-            "attribute": "quarantined_at",
-            "cast": "Vaulter\\Models\\Content\\ScanUtcDateTime",
-            "id": "serialized:cast:Vaulter\\Models\\Drive\\FileRevision.quarantined_at",
-            "model": "Vaulter\\Models\\Drive\\FileRevision",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Drive/FileRevision.php",
-                "symbol": "Vaulter\\Models\\Drive\\FileRevision::casts"
-            }
-        },
-        {
-            "attribute": "kind",
-            "cast": "Vaulter\\Enums\\Drive\\NodeKind",
-            "id": "serialized:cast:Vaulter\\Models\\Drive\\Node.kind",
-            "model": "Vaulter\\Models\\Drive\\Node",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Drive/Node.php",
-                "symbol": "Vaulter\\Models\\Drive\\Node::casts"
-            }
-        },
-        {
-            "attribute": "audience",
-            "cast": "Vaulter\\Enums\\Sharing\\ShareAudience",
-            "id": "serialized:cast:Vaulter\\Models\\Sharing\\NodeShare.audience",
-            "model": "Vaulter\\Models\\Sharing\\NodeShare",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Sharing/NodeShare.php",
-                "symbol": "Vaulter\\Models\\Sharing\\NodeShare::casts"
-            }
-        },
-        {
-            "attribute": "scope",
-            "cast": "Vaulter\\Enums\\Access\\GrantScope",
-            "id": "serialized:cast:Vaulter\\Models\\Sharing\\NodeShare.scope",
-            "model": "Vaulter\\Models\\Sharing\\NodeShare",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/src/Models/Sharing/NodeShare.php",
-                "symbol": "Vaulter\\Models\\Sharing\\NodeShare::casts"
+                "file": "packages/media/src/Models/Cas/Blob.php",
+                "symbol": "Vaulter\\Media\\Models\\Cas\\Blob::casts"
             }
         },
         {
@@ -2852,6 +3552,210 @@
             }
         },
         {
+            "config_key": "vaulter-drive.access.permission_drivers.database",
+            "fqcns": [
+                "Vaulter\\Drive\\Access\\Drivers\\DatabasePermissionDriver"
+            ],
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.database",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.access.permission_drivers.gate",
+            "fqcns": [
+                "Vaulter\\Drive\\Access\\Drivers\\GatePermissionDriver"
+            ],
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.gate",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.access.permission_drivers.null",
+            "fqcns": [
+                "Vaulter\\Drive\\Testing\\NullPermissionDriver"
+            ],
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.null",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.access.permission_drivers.spatie",
+            "fqcns": [
+                "Vaulter\\Drive\\Access\\Drivers\\SpatiePermissionDriver"
+            ],
+            "id": "serialized:config:vaulter-drive.access.permission_drivers.spatie",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.activity",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Activity\\Activity"
+            ],
+            "id": "serialized:config:vaulter-drive.models.activity",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.drive",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Drive"
+            ],
+            "id": "serialized:config:vaulter-drive.models.drive",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.file",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\File"
+            ],
+            "id": "serialized:config:vaulter-drive.models.file",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.file_revision",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\FileRevision"
+            ],
+            "id": "serialized:config:vaulter-drive.models.file_revision",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.file_revision_blob",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\FileRevisionBlob"
+            ],
+            "id": "serialized:config:vaulter-drive.models.file_revision_blob",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.grant",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Access\\NodeGrant"
+            ],
+            "id": "serialized:config:vaulter-drive.models.grant",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.node",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Node"
+            ],
+            "id": "serialized:config:vaulter-drive.models.node",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.node_share",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Sharing\\NodeShare"
+            ],
+            "id": "serialized:config:vaulter-drive.models.node_share",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_backfill_run",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanBackfillRun"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_backfill_run",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_evidence",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanEvidenceRecord"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_evidence",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_obligation",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanObligation"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_obligation",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_policy_state",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanPolicyState"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_policy_state",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.models.scan_request",
+            "fqcns": [
+                "Vaulter\\Drive\\Models\\Content\\ScanRequest"
+            ],
+            "id": "serialized:config:vaulter-drive.models.scan_request",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "config_key": "vaulter-drive.models.upload_part",
             "fqcns": [
                 "Vaulter\\Drive\\Models\\Uploads\\UploadPart"
@@ -2869,6 +3773,30 @@
                 "Vaulter\\Drive\\Models\\Uploads\\UploadSession"
             ],
             "id": "serialized:config:vaulter-drive.models.upload_session",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.profiles.default",
+            "fqcns": [
+                "Vaulter\\Drive\\Profiles\\DefaultProfile"
+            ],
+            "id": "serialized:config:vaulter-drive.profiles.default",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_key": "vaulter-drive.sharing.token_generator",
+            "fqcns": [
+                "Vaulter\\Drive\\Support\\RandomShareTokenGenerator"
+            ],
+            "id": "serialized:config:vaulter-drive.sharing.token_generator",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/config/vaulter-drive.php",
@@ -2900,6 +3828,18 @@
             }
         },
         {
+            "config_key": "vaulter-media.models.blob",
+            "fqcns": [
+                "Vaulter\\Media\\Models\\Cas\\Blob"
+            ],
+            "id": "serialized:config:vaulter-media.models.blob",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "config_key": "vaulter-media.storage_driver",
             "fqcns": [
                 "Vaulter\\Media\\Cas\\FlysystemStorageDriver"
@@ -2912,50 +3852,38 @@
             }
         },
         {
-            "config_key": "vaulter.access.permission_drivers.database",
+            "config_key": "vaulter-webhooks.delivery.url_guard",
             "fqcns": [
-                "Vaulter\\Access\\Drivers\\DatabasePermissionDriver"
+                "Vaulter\\Webhooks\\DefaultOutboundUrlGuard"
             ],
-            "id": "serialized:config:vaulter.access.permission_drivers.database",
-            "owner": "drive",
+            "id": "serialized:config:vaulter-webhooks.delivery.url_guard",
+            "owner": "webhooks",
             "source": {
-                "file": "packages/core/config/vaulter.php",
+                "file": "packages/webhooks/config/vaulter-webhooks.php",
                 "symbol": "<file>"
             }
         },
         {
-            "config_key": "vaulter.access.permission_drivers.gate",
+            "config_key": "vaulter-webhooks.models.webhook_delivery",
             "fqcns": [
-                "Vaulter\\Access\\Drivers\\GatePermissionDriver"
+                "Vaulter\\Webhooks\\Models\\WebhookDelivery"
             ],
-            "id": "serialized:config:vaulter.access.permission_drivers.gate",
-            "owner": "drive",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_delivery",
+            "owner": "webhooks",
             "source": {
-                "file": "packages/core/config/vaulter.php",
+                "file": "packages/webhooks/config/vaulter-webhooks.php",
                 "symbol": "<file>"
             }
         },
         {
-            "config_key": "vaulter.access.permission_drivers.null",
+            "config_key": "vaulter-webhooks.models.webhook_endpoint",
             "fqcns": [
-                "Vaulter\\Testing\\NullPermissionDriver"
+                "Vaulter\\Webhooks\\Models\\WebhookEndpoint"
             ],
-            "id": "serialized:config:vaulter.access.permission_drivers.null",
-            "owner": "drive",
+            "id": "serialized:config:vaulter-webhooks.models.webhook_endpoint",
+            "owner": "webhooks",
             "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.access.permission_drivers.spatie",
-            "fqcns": [
-                "Vaulter\\Access\\Drivers\\SpatiePermissionDriver"
-            ],
-            "id": "serialized:config:vaulter.access.permission_drivers.spatie",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
+                "file": "packages/webhooks/config/vaulter-webhooks.php",
                 "symbol": "<file>"
             }
         },
@@ -2996,240 +3924,12 @@
             }
         },
         {
-            "config_key": "vaulter.models.activity",
-            "fqcns": [
-                "Vaulter\\Models\\Activity\\Activity"
-            ],
-            "id": "serialized:config:vaulter.models.activity",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.blob",
-            "fqcns": [
-                "Vaulter\\Models\\Cas\\Blob"
-            ],
-            "id": "serialized:config:vaulter.models.blob",
-            "owner": "media",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.drive",
-            "fqcns": [
-                "Vaulter\\Models\\Drive\\Drive"
-            ],
-            "id": "serialized:config:vaulter.models.drive",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.file",
-            "fqcns": [
-                "Vaulter\\Models\\Drive\\File"
-            ],
-            "id": "serialized:config:vaulter.models.file",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.file_revision",
-            "fqcns": [
-                "Vaulter\\Models\\Drive\\FileRevision"
-            ],
-            "id": "serialized:config:vaulter.models.file_revision",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.file_revision_blob",
-            "fqcns": [
-                "Vaulter\\Models\\Drive\\FileRevisionBlob"
-            ],
-            "id": "serialized:config:vaulter.models.file_revision_blob",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.grant",
-            "fqcns": [
-                "Vaulter\\Models\\Access\\NodeGrant"
-            ],
-            "id": "serialized:config:vaulter.models.grant",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.node",
-            "fqcns": [
-                "Vaulter\\Models\\Drive\\Node"
-            ],
-            "id": "serialized:config:vaulter.models.node",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.node_share",
-            "fqcns": [
-                "Vaulter\\Models\\Sharing\\NodeShare"
-            ],
-            "id": "serialized:config:vaulter.models.node_share",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
             "config_key": "vaulter.models.outbox",
             "fqcns": [
-                "Vaulter\\Models\\Webhooks\\Outbox"
+                "Vaulter\\Events\\Outbox\\Models\\OutboxEvent"
             ],
             "id": "serialized:config:vaulter.models.outbox",
             "owner": "core",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_backfill_run",
-            "fqcns": [
-                "Vaulter\\Models\\Content\\ScanBackfillRun"
-            ],
-            "id": "serialized:config:vaulter.models.scan_backfill_run",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_evidence",
-            "fqcns": [
-                "Vaulter\\Models\\Content\\ScanEvidenceRecord"
-            ],
-            "id": "serialized:config:vaulter.models.scan_evidence",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_obligation",
-            "fqcns": [
-                "Vaulter\\Models\\Content\\ScanObligation"
-            ],
-            "id": "serialized:config:vaulter.models.scan_obligation",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_policy_state",
-            "fqcns": [
-                "Vaulter\\Models\\Content\\ScanPolicyState"
-            ],
-            "id": "serialized:config:vaulter.models.scan_policy_state",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.scan_request",
-            "fqcns": [
-                "Vaulter\\Models\\Content\\ScanRequest"
-            ],
-            "id": "serialized:config:vaulter.models.scan_request",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.webhook_delivery",
-            "fqcns": [
-                "Vaulter\\Models\\Webhooks\\WebhookDelivery"
-            ],
-            "id": "serialized:config:vaulter.models.webhook_delivery",
-            "owner": "webhooks",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.models.webhook_endpoint",
-            "fqcns": [
-                "Vaulter\\Models\\Webhooks\\WebhookEndpoint"
-            ],
-            "id": "serialized:config:vaulter.models.webhook_endpoint",
-            "owner": "webhooks",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.profiles.default",
-            "fqcns": [
-                "Vaulter\\Profiles\\DefaultProfile"
-            ],
-            "id": "serialized:config:vaulter.profiles.default",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.sharing.token_generator",
-            "fqcns": [
-                "Vaulter\\Support\\RandomShareTokenGenerator"
-            ],
-            "id": "serialized:config:vaulter.sharing.token_generator",
-            "owner": "drive",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "config_key": "vaulter.webhooks.delivery.url_guard",
-            "fqcns": [
-                "Vaulter\\Webhooks\\DefaultOutboundUrlGuard"
-            ],
-            "id": "serialized:config:vaulter.webhooks.delivery.url_guard",
-            "owner": "webhooks",
             "source": {
                 "file": "packages/core/config/vaulter.php",
                 "symbol": "<file>"
@@ -3266,12 +3966,12 @@
             "via": "ShouldQueue"
         },
         {
-            "class": "Vaulter\\Jobs\\Webhooks\\DeliverWebhook",
-            "id": "serialized:queue:Vaulter\\Jobs\\Webhooks\\DeliverWebhook",
+            "class": "Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
+            "id": "serialized:queue:Vaulter\\Webhooks\\Jobs\\DeliverWebhook",
             "owner": "webhooks",
             "source": {
-                "file": "packages/core/src/Jobs/Webhooks/DeliverWebhook.php",
-                "symbol": "Vaulter\\Jobs\\Webhooks\\DeliverWebhook"
+                "file": "packages/webhooks/src/Jobs/DeliverWebhook.php",
+                "symbol": "Vaulter\\Webhooks\\Jobs\\DeliverWebhook"
             },
             "via": "ShouldQueue"
         }

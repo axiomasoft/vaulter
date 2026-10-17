@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Filesystem\Filesystem;
+use Symfony\Component\Console\Exception\InvalidOptionException;
 
 beforeEach(function (): void {
     $this->files = new Filesystem;
@@ -38,8 +39,7 @@ it('skips a config that is already published unless forced', function (): void {
 });
 
 it('prints the host settings without editing the host config', function (): void {
-    $this->artisan('vaulter:install', ['--no-interaction' => true, '--driver' => 'gate', '--middleware' => 'auth:api'])
-        ->expectsOutputToContain('VAULTER_PERMISSION_DRIVER=gate')
+    $this->artisan('vaulter:install', ['--no-interaction' => true, '--middleware' => 'auth:api'])
         ->expectsOutputToContain("'auth:api'")
         ->assertExitCode(0);
 
@@ -48,13 +48,13 @@ it('prints the host settings without editing the host config', function (): void
 
 it('falls back to the defaults non-interactively', function (): void {
     $this->artisan('vaulter:install', ['--no-interaction' => true])
-        ->expectsOutputToContain('VAULTER_PERMISSION_DRIVER=database')
         ->expectsOutputToContain("'auth:sanctum'")
         ->assertExitCode(0);
 });
 
-it('rejects an unknown driver', function (): void {
-    $this->artisan('vaulter:install', ['--no-interaction' => true, '--driver' => 'nope'])->assertExitCode(1);
+it('rejects a malformed middleware and no longer knows a permission driver option (the drive owns it)', function (): void {
+    $this->artisan('vaulter:install', ['--no-interaction' => true, '--middleware' => 'auth sanctum'])->assertExitCode(1);
+    expect(fn () => $this->artisan('vaulter:install', ['--no-interaction' => true, '--driver' => 'gate'])->run())->toThrow(InvalidOptionException::class, '--driver');
 });
 
 it('does not migrate without the flag', function (): void {

@@ -4,25 +4,27 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Operations;
 
-use Vaulter\Access\OperationGuard;
-use Vaulter\Contracts\Drive\FolderOperations as Contract;
-use Vaulter\Data\Drive\CreateFolderOptions;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
+use Vaulter\Drive\Contracts\FolderOperations as Contract;
+use Vaulter\Drive\Data\CreateFolderOptions;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;
 use Vaulter\Drive\Idempotency\NodeSnapshotCodec;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
 
+#[Api]
 final readonly class FolderOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private CreateFolderAction $createAction, private NodeSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     public function create(string $name, NodeSnapshot|string|int|null $parent = null, ?CreateFolderOptions $options = null): NodeSnapshot
@@ -33,7 +35,7 @@ final readonly class FolderOperations implements Contract
         $idempotency = new IdempotentWrite(
             codec: new NodeSnapshotCodec,
             authorizer: NodeReplayAuthorizer::forCreate($this->context, $this->locator, $this->guard, $parentId),
-            fingerprint: ['parent' => $parentId, 'name' => $name, 'on_conflict' => $options->onConflict->value],
+            fingerprint: ['parent' => $parentId ?? (string) $this->context->drive->root_node_id, 'name' => $name, 'on_conflict' => $options->onConflict->value],
         );
 
         return $this->runner->write(new OperationSpec('drive.folders.create', new ModuleId('drive')), $this->context->operation, function () use ($name, $parent, $options): NodeSnapshot {

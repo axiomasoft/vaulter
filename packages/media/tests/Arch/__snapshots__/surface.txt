@@ -1,0 +1,167 @@
+# Surface manifest of the package `media` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
+# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
+
+Vaulter\Media\Cas\BlobStore api since 1.0 final readonly class implements Vaulter\Media\Contracts\Cas\BlobStore
+  public function commit(mixed $stream, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
+  public function commitStaged(Vaulter\Media\Contracts\Cas\StagedObject $staged, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
+  public function read(Vaulter\Media\Models\Cas\Blob $blob): mixed
+
+Vaulter\Media\Configuration\DedupScope api since 1.0 enum: string
+  case Drive = 'drive'
+  case Off = 'off'
+  case Tenant = 'tenant'
+
+Vaulter\Media\Configuration\MediaConfig api since 1.0 final readonly class
+  public function blobModel(): string
+  public function blobStore(): string
+  public function contentStore(): string
+  public function dedupScope(): Vaulter\Media\Configuration\DedupScope
+  public function disk(): string
+  public function gcGraceHours(int $override = 0): int
+  public function orphanGraceHours(int $override = 0): int
+  public function storageDriver(): string
+
+Vaulter\Media\Content\ImmutableContentIdentity api since 1.0 final readonly class
+  public int|string $blobId
+  public string $disk
+  public string $scopeKey
+  public string $sha256
+  public int $size
+  public string $storageKey
+  public ?string $storageVersion
+  public function __construct(int|string $blobId, string $scopeKey, string $disk, string $storageKey, ?string $storageVersion, string $sha256, int $size)
+  public function fingerprint(): string
+
+Vaulter\Media\Content\ScanInput api since 1.0 final readonly class
+  public int|string $blobId
+  public DateTimeImmutable $deadline
+  public ?string $detectedMime
+  public int|string $driveId
+  public string $policyVersion
+  public int|string $revisionId
+  public string $scannerVersion
+  public string $scopeKey
+  public string $sha256
+  public int $size
+  public mixed $stream
+  public int|null|string $tenantId
+  public function __construct(mixed $stream, int|string $revisionId, int|string $blobId, int|string $driveId, int|null|string $tenantId, string $scopeKey, string $sha256, int $size, ?string $detectedMime, string $scannerVersion, string $policyVersion, DateTimeImmutable $deadline)
+
+Vaulter\Media\Content\ScanResult api since 1.0 final readonly class
+  public const array REASONS = ['scanner_timeout', 'scanner_unavailable', 'transient_io', 'unsupported', 'too_large', 'password_protected', 'access_denied', 'unknown', 'content_identity_mismatch', 'attempts_exhausted', 'superseded_policy']
+  public ?string $reason
+  public bool $retryable
+  public Vaulter\Media\Enums\Cas\ScanVerdict $verdict
+  public function __construct(Vaulter\Media\Enums\Cas\ScanVerdict $verdict, ?string $reason = null, bool $retryable = false)
+
+Vaulter\Media\Content\SignedContentUrl api since 1.0 final readonly class
+  public string $contentIdentity
+  public DateTimeImmutable $expiresAt
+  public ?string $storageVersion
+  public string $url
+  public function __construct(string $url, DateTimeImmutable $expiresAt, string $contentIdentity, ?string $storageVersion)
+
+Vaulter\Media\Contracts\Cas\BlobPins api since 1.0 interface
+  public function countByOwner(): array
+  public function pin(Vaulter\Media\Models\Cas\Blob $blob, string $ownerType, string $referenceKey): void
+  public function releaseOwner(string $ownerType, ?Closure $keys = null): int
+  public function unpin(Vaulter\Media\Models\Cas\Blob|int|string $blob, string $ownerType, string $referenceKey): void
+
+Vaulter\Media\Contracts\Cas\BlobStore api since 1.0 interface
+  public function commit(mixed $stream, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
+  public function commitStaged(Vaulter\Media\Contracts\Cas\StagedObject $staged, Vaulter\Media\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): Vaulter\Media\Models\Cas\Blob
+  public function read(Vaulter\Media\Models\Cas\Blob $blob): mixed
+
+Vaulter\Media\Contracts\Cas\ContentScanner spi:implement since 1.0 interface
+  public function key(): string
+  public function scan(Vaulter\Media\Content\ScanInput $input): Vaulter\Media\Content\ScanResult
+  public function version(): string
+
+Vaulter\Media\Contracts\Cas\ContentStore spi:implement since 1.0 interface
+  public function delete(string $key, ?string $disk = null): void
+  public function exists(string $key, ?string $disk = null): bool
+  public function get(string $key, ?string $disk = null): mixed
+  public function keyFor(Vaulter\Media\ValueObjects\Cas\BlobScope $scope, string $sha256): string
+  public function promote(Vaulter\Media\Contracts\Cas\StagedObject $staged, string $key, ?string $disk = null): void
+  public function stage(mixed $stream): Vaulter\Media\Contracts\Cas\StagedObject
+
+Vaulter\Media\Contracts\Cas\DirectContentUrlSigner spi:implement since 1.0 interface
+  public function sign(Vaulter\Media\Content\ImmutableContentIdentity $content, DateTimeImmutable $expiresAt): Vaulter\Media\Content\SignedContentUrl
+
+Vaulter\Media\Contracts\Cas\ListableContentStore spi:implement since 1.0 interface
+  public function lastModified(string $key, ?string $disk = null): ?int
+  public function listKeys(?string $disk = null): iterable
+
+Vaulter\Media\Contracts\Cas\ListableStorageDriver spi:implement since 1.0 interface
+  public function lastModified(string $key, ?string $disk = null): ?int
+  public function listContents(?string $disk = null): iterable
+
+Vaulter\Media\Contracts\Cas\StagedObject api since 1.0 interface
+  public function discard(): void
+  public function path(): string
+  public function readStream(): mixed
+  public function sha256(): string
+  public function sizeBytes(): int
+
+Vaulter\Media\Contracts\Cas\StorageDriver spi:implement since 1.0 interface
+  public function delete(string $key, ?string $disk = null): void
+  public function disk(?string $disk = null): Illuminate\Contracts\Filesystem\Filesystem
+  public function exists(string $key, ?string $disk = null): bool
+  public function get(string $key, ?string $disk = null): mixed
+  public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
+  public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string
+
+Vaulter\Media\Enums\Cas\BlobStatus api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Committed = 'committed'
+  case Deleted = 'deleted'
+  case Deleting = 'deleting'
+  case Pending = 'pending'
+  case Tombstoned = 'tombstoned'
+  public function allowedTransitions(): array
+  public function canTransitionTo(self $target): bool
+  public function isLive(): bool
+  public static function values(): array
+
+Vaulter\Media\Enums\Cas\ScanMode api since 1.0 enum: string
+  case AllContent = 'all_content'
+  case NewContentOnly = 'new_content_only'
+  case Off = 'off'
+
+Vaulter\Media\Enums\Cas\ScanVerdict api since 1.0 enum: string
+  case Clean = 'clean'
+  case Failed = 'failed'
+  case Infected = 'infected'
+
+Vaulter\Media\Exceptions\Cas\BlobUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public static function forBlob(int|string $blobId, Vaulter\Media\Enums\Cas\BlobStatus $status): self
+  public function httpStatus(): int
+  public function problemCode(): string
+
+Vaulter\Media\Testing\Contracts\ContentScannerContractTests api since 1.0 final class
+  public function assertContentScannerContract(Vaulter\Media\Contracts\Cas\ContentScanner $scanner, array $samples): void
+  public function assertUnreadableBytesAreNeverClean(Vaulter\Media\Contracts\Cas\ContentScanner $scanner): void
+
+Vaulter\Media\Testing\FakeContentScanner api since 1.0 final class implements Vaulter\Media\Contracts\Cas\ContentScanner
+  public array $scans = []
+  public function __construct(string $key = 'fake', string $version = '1')
+  public function alwaysReturns(Throwable|Vaulter\Media\Content\ScanResult $outcome): self
+  public function key(): string
+  public function returnsFor(string $bytes, Throwable|Vaulter\Media\Content\ScanResult $outcome): self
+  public function scan(Vaulter\Media\Content\ScanInput $input): Vaulter\Media\Content\ScanResult
+  public function version(): string
+
+Vaulter\Media\ValueObjects\Cas\BlobScope api since 1.0 final readonly class
+  public function dedupScope(): string
+  public static function forUpload(string $dedupScope, ?string $tenantId, string $storageId): self
+  public static function fromSegment(string $segment): self
+  public function key(): string
+  public function segment(): string
+  public static function storage(string $id): self
+  public function storageId(): ?string
+  public static function tenant(string $id): self
+  public function tenantId(): ?string
+  public static function unshared(): self
+
+Vaulter\Media\VaulterMediaServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
+  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
+  public function packageRegistered(): void

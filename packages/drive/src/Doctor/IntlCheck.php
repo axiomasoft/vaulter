@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Doctor;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
+#[Internal]
 final readonly class IntlCheck implements DoctorCheck
 {
     public function key(): string

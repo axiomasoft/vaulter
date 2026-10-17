@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
-use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -16,7 +16,8 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Support\AssembleSizeBucket;
+use Vaulter\Drive\Support\AssembleSizeBucket;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
 use Vaulter\Support\LoadTier;
 
 /**
@@ -39,6 +40,7 @@ use Vaulter\Support\LoadTier;
  * production. A host wanting true presigned-PUT parts swaps this handler for one that
  * mints presigned URLs in initialise(); the record/complete contract is unchanged.
  */
+#[Internal]
 final readonly class S3MultipartHandler implements UploadProtocolHandler
 {
     public function __construct(

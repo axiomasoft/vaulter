@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Uploads;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -18,8 +20,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * protocol-side state (S3 multipart) were already reclaimed by
  * {@see UploadSessionManager::abort()} in the same transaction.
  */
-final readonly class UploadAborted extends DomainEvent
+#[Api]
+final readonly class UploadAborted extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public UploadSession $session,
         ActorRef $actor,
@@ -30,9 +34,9 @@ final readonly class UploadAborted extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::UploadAborted;
+        return DriveEventType::UploadAborted;
     }
 
     public function scope(): EventScope

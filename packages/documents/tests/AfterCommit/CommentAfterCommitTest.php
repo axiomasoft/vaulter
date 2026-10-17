@@ -6,7 +6,6 @@ use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Events\Comments\CommentAdded;
@@ -15,12 +14,10 @@ use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-
-uses(EnablesWebhooksModule::class);
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 
 /**
  * PLAN2.F15: comment events leave an Action as part of its unit of work — their
@@ -71,7 +68,7 @@ it('delivers nothing before the outer commit and exactly one event after it, wit
         ->and(count(array_unique($eventIds)))->toBe(3)
         // The delivered occurrences are the ones the activity and outbox rows committed.
         ->and(Activity::query()->whereIn('event_id', $eventIds)->count())->toBe(3)
-        ->and(Outbox::query()->whereIn('event_id', $eventIds)->count())->toBe(3);
+        ->and(OutboxEvent::query()->whereIn('event_id', $eventIds)->count())->toBe(3);
 });
 
 it('a rolled back outer transaction broadcasts nothing and leaves no comment', function (): void {
@@ -91,7 +88,7 @@ it('a rolled back outer transaction broadcasts nothing and leaves no comment', f
     expect(count($seen))->toBe(0)
         ->and(NodeComment::query()->where('node_id', $node->id)->count())->toBe(0)
         ->and(Activity::query()->where('verb', 'comment.added')->exists())->toBeFalse()
-        ->and(Outbox::query()->where('event', 'comment.added')->exists())->toBeFalse();
+        ->and(OutboxEvent::query()->where('type', 'comment.added')->exists())->toBeFalse();
 });
 
 it('outside any outer transaction one add raises exactly one event', function (): void {

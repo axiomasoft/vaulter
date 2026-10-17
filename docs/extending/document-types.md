@@ -189,7 +189,7 @@ A document node is presented by its type, not by a file handler:
 ```
 
 `id` (the file handler key) is `null` for documents. Core knows nothing about document types:
-`vaulter-documents` tags a `Vaulter\Contracts\Presentation\KindPresenter` for the `document`
+`vaulter-documents` tags a `Vaulter\Drive\Contracts\Presentation\KindPresenter` for the `document`
 kind and core's `NodePresenter` defers to it.
 
 ## Profiles

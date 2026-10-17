@@ -4100,6 +4100,7 @@ components:
           description: Stable machine readable code (SemVer). A status without a Vaulter code answers http_<status>.
           examples:
           - actor_required
+          - blob_unavailable
           - cannot_delete_head_revision
           - collaboration_epoch_mismatch
           - collaboration_seed_conflict

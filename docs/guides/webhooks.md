@@ -4,43 +4,79 @@ title: Webhooks
 
 # Webhooks
 
+## Install and switch on
+
+Webhooks are the separate package `axioma-studio/vaulter-webhooks`. It requires `vaulter-core` and
+`vaulter-drive` (endpoints are scoped to drives) and is not part of the `axioma-studio/vaulter` metapackage,
+because it opens outbound network traffic:
+
+<!-- snippet: shell -->
+
+```bash
+composer require axioma-studio/vaulter-webhooks
+```
+
+The module is **opt-in**: installing the package creates its tables (`v_webhook_endpoints`,
+`v_webhook_deliveries`) with `php artisan migrate`, but nothing is mounted until you switch it on:
+
+<!-- snippet: host -->
+
+```php
+// config/vaulter.php
+'modules' => ['webhooks' => true],
+```
+
+Its settings live in `config/vaulter-webhooks.php` (publish tag `vaulter-webhooks-config`; reference:
+[Configuration](/reference/config)). Removing the module later is `php artisan vaulter:module:uninstall webhooks`
+([Modules](/concepts/modules#uninstalling-a-module)).
+
 ## How an event reaches the outbox
 
 Every Vaulter change records its event through the `EventRecorder` as the last step of
-its own database transaction (see [Events](/reference/events)). With the opt-in webhooks module
-active (`vaulter.modules.webhooks` = `true`, off by default), the recorder writes one `v_outbox` row for the occurrence **in that transaction**:
+its own database transaction (see [Events](/reference/events)). The recorder writes one
+`v_outbox` row for the occurrence **in that transaction**, whatever modules are active
+(see [The outbox](/concepts/events-outbox)); with the opt-in webhooks module active
+(`vaulter.modules.webhooks` = `true`, off by default) it also writes the pending delivery
+row of the `webhooks.fanout` outbox consumer for every external event type:
 
-- the change and its outbox row commit together, so a committed change is never
+- the change and its outbox rows commit together, so a committed change is never
   missing its webhook, even if the process dies right after the commit;
 - if the outbox row cannot be written, the change is rolled back and the operation
   fails — Vaulter does not commit a change it cannot announce;
 - your Laravel listeners run only after the commit; a failing listener is reported and
   never undoes the change.
 
-The `vaulter:webhooks:relay` command then fans each pending row out into deliveries.
+The core relay, `vaulter:relay`, then hands each event to `webhooks.fanout`, which fans it
+out into webhook deliveries.
 
 ## Delivery guarantees
 
-The relay turns each `pending` outbox row into one `v_webhook_deliveries` row per
-eligible endpoint and queues a job per delivery:
+The `webhooks.fanout` consumer turns each external event into one `v_webhook_deliveries`
+row per eligible endpoint and queues a job per delivery:
 
 - **Every eligible endpoint gets exactly one delivery row per event.** The relay leases
-  the outbox row (`webhooks.relay.claim_seconds`, default 60) and writes
-  `webhooks.relay.fanout_chunk` endpoints (default 100) per transaction, remembering the
-  last one in `fanout_cursor`. The row turns `completed` in the same transaction as its
-  last deliveries. If the relay dies, the next run takes the row over once the lease
-  lapses and continues after the cursor; a relay that lost its lease writes nothing, and
-  `UNIQUE(event_id, endpoint_id)` backs this up. You may run several relays at once.
+  the event's outbox delivery (`outbox.lease_seconds`, default 60); the consumer writes
+  `vaulter-webhooks.relay.fanout_chunk` endpoints (default 100) per transaction and saves the last
+  one as the delivery's continuation, fenced by the lease. The outbox delivery is done only
+  after the last chunk. If the relay dies, the next run takes the delivery over once the
+  lease lapses and continues after the continuation; a worker that lost its lease writes
+  nothing, and `UNIQUE(event_id, endpoint_id)` backs this up. You may run several relays
+  at once.
 - **Jobs are queued after the rows commit.** A job lost after that is re-queued by the
-  retry sweep (`vaulter:webhooks:retry`, also run by `vaulter:webhooks:relay`) once the
-  delivery has waited `webhooks.relay.claim_seconds` without being picked up.
+  retry sweep (`vaulter:webhooks:retry`) once the delivery has waited
+  `vaulter-webhooks.retry_claim_seconds` without being picked up.
 - **HTTP is at-least-once.** A delivery is retried on failure and can arrive twice if
   your acknowledgement is lost: deduplicate on the envelope `id`. Deliveries are not
   ordered.
-- **Prune deletes only finished work.** `vaulter:webhooks:prune` removes `completed`
-  outbox rows and `delivered`/`dead` deliveries older than `webhooks.retention_days`; a
-  `pending` row or a `pending`/`failed` delivery stays however old it is. Pruned rows are
-  gone for good — nothing can replay them.
+- **A switched-off module loses nothing silently.** While `vaulter.modules.webhooks` is
+  off, `webhooks.fanout` is paused: its pending deliveries wait and it holds the outbox
+  retention for up to `outbox.max_consumer_hold_seconds`. After that it is detached with an
+  explicit gap that `vaulter:doctor` reports until `vaulter:relay:replay` replays or
+  acknowledges it.
+- **Prune deletes only finished work.** `vaulter:webhooks:prune` removes
+  `delivered`/`dead` deliveries older than `vaulter-webhooks.retention_days`; a `pending`/`failed`
+  delivery stays however old it is. The outbox has its own retention,
+  `vaulter:outbox:prune`. Pruned rows are gone for good — nothing can replay them.
 
 ## Who receives an event
 
@@ -94,7 +130,7 @@ into every delivery:
 - `version` is the schema version of `data` for this `type`.
 - `changes.seq` is the position of this occurrence in the drive's
   [change journal](/concepts/events) (`null` for an event that is not journalled, or when
-  `features.changes` is off). It is a hint, not a cursor: a client that syncs a drive treats the
+  `vaulter-drive.features.changes` is off). It is a hint, not a cursor: a client that syncs a drive treats the
   webhook as a signal to call `changes()->list()` with its stored cursor, and may skip the call
   when its cursor is already past `seq`.
 
@@ -125,7 +161,7 @@ In PHP, `Vaulter\Webhooks\StandardWebhookVerifier` does it without extra depende
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
+use Vaulter\Webhooks\Exceptions\InvalidWebhookSignatureException;
 use Vaulter\Webhooks\StandardWebhookVerifier;
 
 // $request->getContent() is the RAW body: verify it before decoding or re-encoding.
@@ -150,7 +186,7 @@ timeout; anything else — a redirect included — counts as a failed attempt.
 
 `RotateWebhookSecretAction::execute($endpoint, ?int $overlapSeconds = null)` returns a
 `RotatedWebhookSecret` (`endpointId`, `secret`) — the new secret, once. The old secret keeps
-signing for `webhooks.secret_rotation_overlap` seconds (default 86400, at most 604800), so
+signing for `vaulter-webhooks.secret_rotation_overlap` seconds (default 86400, at most 604800), so
 `webhook-signature` carries two signatures and a receiver holding either secret verifies the
 delivery. Deploy the new secret to the receiver during that window. An overlap of `0` drops the
 old secret at once — use it when a secret leaked.
@@ -158,13 +194,13 @@ old secret at once — use it when a secret leaked.
 ## Retries and automatic disabling
 
 A failed attempt (non-2xx, redirect, timeout, connection error) is retried after
-`webhooks.retry_schedule` seconds (default `5, 300, 1800, 7200, 18000, 36000, 50400, 72000,
-86400`, each ±`webhooks.retry_jitter`, default 10 %). That is ten attempts over about three
+`vaulter-webhooks.retry_schedule` seconds (default `5, 300, 1800, 7200, 18000, 36000, 50400, 72000,
+86400`, each ±`vaulter-webhooks.retry_jitter`, default 10 %). That is ten attempts over about three
 days; the failure after the last one makes the delivery `dead`. The HTTP timeout is
-`webhooks.timeout` (default 15 s).
+`vaulter-webhooks.timeout` (default 15 s).
 
 The first failed attempt of an endpoint starts a *failing run* (`failing_since`); any
-successful delivery ends it. When the run is `webhooks.disable_after_days` old (default 5; `0`
+successful delivery ends it. When the run is `vaulter-webhooks.disable_after_days` old (default 5; `0`
 never disables) the endpoint is switched off (`is_active = false`, `disabled_reason = 'failing'`)
 and its pending and failed deliveries become `dead` with `last_error = 'endpoint_disabled'`.
 After the commit Laravel dispatches `Vaulter\Webhooks\Events\WebhookEndpointDisabled`
@@ -180,14 +216,14 @@ same row goes back to `pending` with `attempts = 0`, so the receiver sees the **
 is refused — `WebhookDeliveryNotRedeliverableException`
 ([`webhook_delivery_not_redeliverable`](/guides/errors#webhook-delivery-not-redeliverable), 409).
 In bulk: [`vaulter:webhooks:redeliver`](/reference/commands#vaulter-webhooks-redeliver).
-Only deliveries still inside `webhooks.retention_days` can be redelivered.
+Only deliveries still inside `vaulter-webhooks.retention_days` can be redelivered.
 
 ## Managing endpoints over HTTP
 
 The admin routes of the [REST API v1](/reference/rest-api#webhook-endpoints) are mounted when
 `vaulter.modules.webhooks` is on. They are a global surface, not a drive resource: every route —
 reads included — is authorized by the `WebhookEndpointPolicy` against
-`webhooks.manage_ability` before the id is even looked up, so a caller who may not manage
+`vaulter-webhooks.manage_ability` before the id is even looked up, so a caller who may not manage
 webhooks learns nothing about which endpoints exist.
 
 | Route | What it does |
@@ -218,7 +254,7 @@ reads the [change journal](/concepts/events) and uses webhooks only to wake up.
 
 ## Event names
 
-`Vaulter\Enums\Events\EventType` uses the canonical 0.3 names. Upgrade migration
+The event catalogue (`DriveEventType`, `DocumentEventType`) uses the canonical 0.3 names. Upgrade migration
 №9 converts `v_activity.verb`, `v_outbox.event`, `v_webhook_deliveries.event` and
 `v_webhook_endpoints.events` together. Endpoint lists are processed in chunks of
 500; list order, duplicates, `*` and unrecognized third-party names are preserved.

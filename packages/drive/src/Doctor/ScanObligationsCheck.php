@@ -6,15 +6,17 @@ namespace Vaulter\Drive\Doctor;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Configuration\DriveConfig;
 
 /**
  * The durable scan obligations of uploaded content. A lease nobody renews, work that never became due
  * and work that settled as failed all leave a revision unscanned, whether the webhooks module is active or not.
  */
+#[Internal]
 final readonly class ScanObligationsCheck implements DoctorCheck
 {
     /** Minutes pending or retry-waiting work may be overdue before it is reported. */
@@ -23,7 +25,7 @@ final readonly class ScanObligationsCheck implements DoctorCheck
     /** Outcomes and reasons of work that settled without a verdict. */
     private const array UNSCANNED = ['failed', 'unsupported', 'too_large', 'password_protected', 'access_denied', 'unknown'];
 
-    public function __construct(private VaulterConfig $config) {}
+    public function __construct(private DriveConfig $config) {}
 
     public function key(): string
     {

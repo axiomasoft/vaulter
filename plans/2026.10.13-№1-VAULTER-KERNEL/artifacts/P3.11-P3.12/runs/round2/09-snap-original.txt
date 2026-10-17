@@ -1,0 +1,2 @@
+### git diff --quiet 83b7169e -- packages/core/tests/Fixtures/Schema/original
+EXIT=0

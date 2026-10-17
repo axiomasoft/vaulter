@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
-use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Exceptions\QuotaExceededException as CoreQuotaExceededException;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Media\Models\Cas\Blob;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

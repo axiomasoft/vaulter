@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Drive\Node;
 
 /**
  * A comment on a NODE (docs/adr/0014-legacy-docvault-strangler.md шаг 1) — the additive parity twin of the legacy
@@ -42,6 +43,7 @@ use Vaulter\Models\Drive\Node;
  * @property Carbon|null               $updated_at
  * @property-read Node $node
  */
+#[Internal]
 class NodeComment extends Model
 {
     use GuardsWrites;
@@ -73,7 +75,7 @@ class NodeComment extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'node_id');
     }
 
     /**

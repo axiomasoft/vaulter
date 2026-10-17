@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Concerns;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Contracts\ProblemException;
 
 /**
  * Default {@see ProblemException} behaviour for an
  * exception that has no fields of its own beyond the code and status.
  */
+#[Api]
 trait ProvidesProblemDetails
 {
     /**

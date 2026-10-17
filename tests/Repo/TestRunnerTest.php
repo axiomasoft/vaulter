@@ -96,6 +96,12 @@ function t_fake_pest(): string
             'cwd' => getcwd(),
             'args' => $args,
             'files' => $m[1],
+            'excluded' => (function () use ($config): array {
+                preg_match('#<exclude>(.*?)</exclude>#s', (string) file_get_contents($config), $e);
+                preg_match_all('#<group>([^<]+)</group>#', $e[1] ?? '', $g);
+
+                return $g[1];
+            })(),
             'config' => $config,
             'env' => [
                 'DB_CONNECTION' => getenv('DB_CONNECTION'),
@@ -155,7 +161,7 @@ function t_fixture(): array
     t_write($root.'/packages/alpha/vendor/bin/pest', t_fake_pest());
     t_write($root.'/scripts/php84', "#!/usr/bin/env bash\nexec \"\$@\"\n", true);
     t_write($root.'/fake-node.sh', "#!/usr/bin/env bash\necho \"node \$* in \$(pwd)\" >> \"\$T_LOG.node\"\n", true);
-    foreach (['test-db.sh', 'db-test-env.sh'] as $script) {
+    foreach (['test-db.sh', 'db-test-env.sh', 'db-reap.sh'] as $script) {
         t_write($root.'/scripts/'.$script, (string) file_get_contents(t_real_root().'/scripts/'.$script), true);
     }
     t_write($root.'/skeleton-src/config/app.php', "<?php return [];\n");
@@ -216,7 +222,7 @@ it('selects the repo suite and keeps the default suites free of load', function 
     expect($plan['suites'])->toBe(['repo'])->and($plan['steps'][0]['files'])->toBe($inventory['suites']['repo']['partitions'][0]['files']);
 
     $default = t_plan(['sqlite']);
-    expect($default['suites'])->toBe(['core', 'media', 'drive', 'documents', 'azgard', 'filament', 'repo', 'hub', 'vue']);
+    expect($default['suites'])->toBe(['core', 'media', 'drive', 'webhooks', 'documents', 'azgard', 'filament', 'repo', 'hub', 'vue']);
 });
 
 it('runs a package path from the package cwd with a generated config holding only the selected files', function (): void {
@@ -284,8 +290,10 @@ it('excludes nofast by default, nofull+serial then one serial pass for --full, a
     expect($merged['steps'][0]['exclude'])->toBe(['nofast', 'slow', 'flaky']);
 
     t_run(['sqlite', '-p', 'beta', '-j4', '--exclude-group=slow', '--exclude-group=flaky'], t_env($fx), $fx['root']);
-    $excludes = array_values(array_filter(t_calls($fx['log'])[0]['args'], static fn (string $a): bool => str_starts_with($a, '--exclude-group')));
-    expect($excludes)->toBe(['--exclude-group=nofast,slow,flaky']);
+    // the groups travel in the generated configuration: in --parallel mode ParaTest forwards at most one --exclude-group flag
+    $call = t_calls($fx['log'])[0];
+    $flags = array_values(array_filter($call['args'], static fn (string $a): bool => str_starts_with($a, '--exclude-group')));
+    expect($flags)->toBe([])->and($call['excluded'])->toBe(['nofast', 'slow', 'flaky']);
 });
 
 it('runs serial exactly once: --group=serial is one pass, -j1 never adds a second', function (): void {
@@ -307,6 +315,20 @@ it('forwards a group as the selector of every pass (intersection with the select
 
     expect($calls)->toHaveCount(1)->and($calls[0]['args'])->toContain('--group=database')
         ->and($calls[0]['files'])->toBe([$fx['root'].'/packages/alpha/tests/A1Test.php', $fx['root'].'/packages/alpha/tests/A2Test.php']);
+});
+
+it('narrows --group=database to the classified files and leaves Node suites out of a group selection', function (): void {
+    $fx = t_fixture();
+    t_write($fx['root'].'/tests/zones.json', json_encode(['database' => ['packages/alpha/tests/A1Test.php']], JSON_THROW_ON_ERROR));
+    $plan = t_plan(['pgsql', '--group=database'], root: $fx['root']);
+
+    // beta has no classified file and the skeleton partition of alpha neither: no step, so no "zero tests" failure
+    expect(array_map(static fn (array $s): string => $s['suite'].' '.$s['partition'], $plan['steps']))->toBe(['alpha RefreshDatabase+TestCase'])
+        ->and($plan['steps'][0]['files'])->toBe(['packages/alpha/tests/A1Test.php'])
+        ->and($plan['suites'])->not->toContain('noded');
+
+    // other groups are not narrowed
+    expect(t_plan(['pgsql', '-p', 'beta', '--group=serial'], root: $fx['root'])['steps'][0]['files'])->toHaveCount(2);
 });
 
 it('treats zero tests as an error except an empty serial pass the inventory allows', function (): void {
@@ -367,7 +389,7 @@ it('skips database-free partitions on a server engine and names the skip', funct
 
 it('provisions per-worker databases explicitly for an external server and flags per-process databases', function (): void {
     $fx = t_fixture();
-    $env = t_env($fx, ['DB_EXTERNAL' => '1', 'DB_CONNECTION' => 'pgsql', 'DB_DATABASE' => 'fx_test', 'DB_PORT' => '5432']);
+    $env = t_env($fx, ['DB_EXTERNAL' => '1', 'DB_CONNECTION' => 'pgsql', 'DB_DATABASE' => 'fx_test', 'DB_PORT' => '5432', 'T_PARTITION_JOBS' => '1']);
     [$code, , $err] = t_run(['pgsql', '-p', 'alpha', '-j3', '--', 'tests/A1Test.php', 'tests/A2Test.php', 'tests/Unit/A3Test.php', 'tests/ArchTest.php'], $env, $fx['root']);
 
     $calls = t_calls($fx['log']);
@@ -380,6 +402,20 @@ it('provisions per-worker databases explicitly for an external server and flags 
         expect($created)->toContain('CREATE DATABASE "'.$name.'"');
     }
     expect($created)->not->toContain('fx_w4_test');
+});
+
+it('gives every concurrently running partition databases of its own, named after the base database', function (): void {
+    $fx = t_fixture();
+    $env = t_env($fx, ['DB_EXTERNAL' => '1', 'DB_CONNECTION' => 'pgsql', 'DB_DATABASE' => 'fx_test', 'DB_PORT' => '5432']);
+    [$code, , $err] = t_run(['pgsql', '-p', 'alpha', '-j3', '--', 'tests/A1Test.php', 'tests/A2Test.php', 'tests/Unit/A3Test.php', 'tests/ArchTest.php'], $env, $fx['root']);
+
+    $calls = t_calls($fx['log']);
+    expect($code)->toBe(0, $err)->and($calls)->toHaveCount(1)
+        ->and($calls[0]['env']['DB_DATABASE'])->toBe('fx_p1_test');
+    $created = (string) file_get_contents($fx['log'].'.psql');
+    foreach (['fx_p1_test', 'fx_p1_w1_test', 'fx_p1_w2_test', 'fx_p1_w3_test'] as $name) {
+        expect($created)->toContain('CREATE DATABASE "'.$name.'"');
+    }
 });
 
 it('clears partial-seed variables for --full and discovery, and refuses a contradicting full-seed flag', function (): void {
@@ -449,6 +485,51 @@ it('rejects a stale ledger entry and one that names a test the original never ha
     t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::ghost', 'new' => 'P\\A::one', 'reason' => 'x', 'decision' => 'D4']]);
     [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
     expect($code)->toBe(1)->and($out)->toContain('not in the original');
+});
+
+it('accepts a test that moved to another suite: the ledger entry names new_suite and the replacement is looked up there', function (): void {
+    $fx = t_baseline_fixture(['alpha' => ['P\\A::one', 'P\\A::two'], 'beta' => ['P\\B::one']], ['alpha' => ['P\\A::one'], 'beta' => ['P\\B::one', 'P\\B::two']]);
+
+    // without new_suite the replacement is searched in the own suite only
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::two', 'new' => 'P\\B::two', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
+    expect($code)->toBe(1)->and($out)->toContain('replacement not in the current list for: P\\A::two');
+
+    // the other suite is discovered on demand, even when it is not among the compared ones
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::two', 'new' => 'P\\B::two', 'new_suite' => 'beta', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
+    expect($code)->toBe(0)->and($out)->toContain('ok   alpha');
+
+    // the replacement is absent from new_suite although it exists in the own suite
+    t_write($fx['root'].'/fake-tests.txt', "P\\B::one\n");
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha,beta'], t_env($fx), $fx['root']);
+    expect($code)->toBe(1)->and($out)->toContain('replacement not in the current list of [beta] for: P\\A::two');
+});
+
+it('rejects a cross-suite entry whose test is still in its old suite, and an unknown new_suite', function (): void {
+    $fx = t_baseline_fixture(['alpha' => ['P\\A::one']], ['alpha' => ['P\\A::one'], 'beta' => ['P\\A::one']]);
+
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::one', 'new' => 'P\\A::one', 'new_suite' => 'beta', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
+    expect($code)->toBe(1)->and($out)->toContain('stale ledger entry');
+
+    t_write($fx['root'].'/packages/alpha/fake-tests.txt', "P\\A::two\n");
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::one', 'new' => 'P\\A::one', 'new_suite' => 'nowhere', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code, $out] = t_run(['baseline', '--compare', '-p', 'alpha'], t_env($fx), $fx['root']);
+    expect($code)->toBe(1)->and($out)->toContain('unknown new_suite [nowhere]')->and($out)->toContain('replacement not in the current list of [nowhere]');
+});
+
+it('does not count a test that moved in from another suite as an addition, and shows new_suite in the view', function (): void {
+    $fx = t_baseline_fixture(['alpha' => ['P\\A::one', 'P\\A::two'], 'beta' => ['P\\B::one']], ['alpha' => ['P\\A::one'], 'beta' => ['P\\B::one', 'P\\B::two', 'P\\B::fresh']]);
+    t_ledger($fx, [['suite' => 'alpha', 'old' => 'P\\A::two', 'new' => 'P\\B::two', 'new_suite' => 'beta', 'reason' => 'moved', 'decision' => 'D40']]);
+    [$code] = t_run(['baseline', '--write', '-p', 'alpha,beta'], t_env($fx), $fx['root']);
+    $ledger = json_decode((string) file_get_contents($fx['root'].'/tests/baseline/CHANGES.json'), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($code)->toBe(0)
+        ->and($ledger['additions']['beta']['names'])->toBe(['P\\B::fresh'])
+        ->and($ledger['additions']['beta']['count'])->toBe(1)
+        ->and($ledger['entries'][0]['new_suite'])->toBe('beta')
+        ->and(file_get_contents($fx['root'].'/tests/baseline/CHANGES.md'))->toContain('[`beta`] `P\\B::two`');
 });
 
 it('writes current lists and ledger additions without ever rewriting an original', function (): void {

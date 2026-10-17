@@ -7,6 +7,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Configuration\DedupScope;
 use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Models\Cas\Blob;
 
 it('reads canonical media settings live and uses drive dedup scope', function (): void {
     $repository = new Repository(['vaulter-media' => require __DIR__.'/../../config/vaulter-media.php']);
@@ -78,4 +79,21 @@ it('refuses the global scope and unknown scopes', function (mixed $value, string
 
 it('accepts off', function (): void {
     expect((new MediaConfig(new Repository(['vaulter-media' => ['dedup' => ['scope' => 'off']]])))->dedupScope())->toBe(DedupScope::Off);
+});
+
+it('reads the swappable blob model from vaulter-media.models.blob and refuses a class that is not a blob (D6)', function (): void {
+    $repository = new Repository(['vaulter-media' => require __DIR__.'/../../config/vaulter-media.php']);
+    $config = new MediaConfig($repository);
+
+    expect($config->blobModel())->toBe(Blob::class);
+
+    $custom = new class extends Blob {};
+    $repository->set('vaulter-media.models.blob', $custom::class);
+    expect($config->blobModel())->toBe($custom::class);
+
+    $repository->set('vaulter-media.models.blob', stdClass::class);
+    expect(fn () => $config->blobModel())->toThrow(InvalidConfigurationException::class, 'vaulter-media.models.blob');
+
+    $repository->set('vaulter-media.models.blob', 42);
+    expect(fn () => $config->blobModel())->toThrow(InvalidConfigurationException::class, 'must be a class name');
 });

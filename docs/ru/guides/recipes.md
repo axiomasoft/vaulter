@@ -15,7 +15,7 @@ outline: deep
 ## Привязать Drive к CRM-задаче или проекту {#attach-drive}
 
 Главный сценарий: дать любой сущности хоста собственный файлово-папочный Drive **без миграций**.
-`Vaulter::drive($entity)` находит-или-создаёт строку `v_storages` по полиморфной тройке
+`Vaulter::drive($entity)` находит-или-создаёт строку `v_drives` по полиморфной тройке
 `(owner_type, owner_id, panel)` и подготавливает корневую папку — идемпотентно, поэтому двойной
 вызов возвращает то же хранилище.
 
@@ -24,8 +24,8 @@ outline: deep
 <!-- snippet: host -->
 
 ```php [Controller]
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Facades\Vaulter;
 
 final class TaskDriveController
 {
@@ -93,8 +93,8 @@ php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 
 ```php
 // app/Vaulter/Profiles/TaskDriveStoragePanel.php
-use Vaulter\Profiles\Profile;
-use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Drive\Profiles\Profile;
+use Vaulter\Drive\Profiles\ProfileProvider;
 
 final class TaskDriveStoragePanel extends ProfileProvider
 {
@@ -152,7 +152,7 @@ Vaulter резолвит каждую модель через `config('vaulter.m
 // app/Models/Vaulter/Node.php
 namespace App\Models\Vaulter;
 
-use Vaulter\Models\Drive\Node as BaseNode;
+use Vaulter\Drive\Models\Node as BaseNode;
 use App\Models\Concerns\BelongsToTenant; // your existing global-scope trait
 
 final class Node extends BaseNode
@@ -198,7 +198,7 @@ final class Node extends BaseNode
 
 ACL для Drive комбинирует `v_node_grants` со сменной полосой `PermissionDriver`. Чтобы связать
 систему ролей вашего приложения, реализуйте
-[`Vaulter\Contracts\Access\PermissionDriver`](/ru/concepts/architecture#авторизация). Он
+[`Vaulter\Drive\Contracts\Access\PermissionDriver`](/ru/concepts/architecture#авторизация). Он
 **слеп к узлам**: никогда не получает `Node` — только актора `Authorizable` и `AccessScope`
 (профиль + владелец и id диска + тенант).
 
@@ -211,8 +211,8 @@ ACL для Drive комбинирует `v_node_grants` со сменной по
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
 final class TeamRoleDriver extends DatabasePermissionDriver
@@ -236,12 +236,12 @@ final class TeamRoleDriver extends DatabasePermissionDriver
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 
 final class AppRoleDriver implements PermissionDriver
 {
@@ -287,9 +287,9 @@ final class AppRoleDriver implements PermissionDriver
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'app'),
 
     'permission_drivers' => [
-    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'database' => \Vaulter\Drive\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Drive\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Drive\Access\Drivers\SpatiePermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
     ],
 ],
@@ -297,8 +297,8 @@ final class AppRoleDriver implements PermissionDriver
 
 ::: tip Сначала возьмите готовую полосу
 Для Laravel Gate, Spatie Permission v8 или AzGuard свой класс **не** нужен — выставьте
-`access.permission_driver` в `gate` / `spatie` / `azgard` и заполните соответствующий блок конфига
-(`vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*`). Для AzGuard установите
+`vaulter-drive.access.permission_driver` в `gate` / `spatie` / `azgard` и заполните соответствующий блок конфига
+(`vaulter-drive.access.gate.*` / `vaulter-drive.access.spatie.*` / `vaulter-azgard.*`). Для AzGuard установите
 `composer require axioma-studio/vaulter-azgard`: provider сам регистрирует драйвер
 и адаптер. Модель пользователя должна реализовать `AzgardBackedUser` — см.
 [Драйверы прав](/ru/extending/permission-drivers).
@@ -307,7 +307,7 @@ final class AppRoleDriver implements PermissionDriver
 ## Написать свой обработчик формата {#format-handler}
 
 `FileHandler` заявляет права на mime-типы / расширения и говорит клиенту, как смонтировать
-узел (редактор, превью или скачивание). Принадлежащий core `Vaulter\Handlers\FileHandlerRegistry`
+узел (редактор, превью или скачивание). Принадлежащий core `Vaulter\Drive\Handlers\FileHandlerRegistry`
 подбирает лучший по mime → расширение → возможность → приоритет, откатываясь к `DownloadOnlyHandler`.
 Добавить
 формат — это **один класс + один вызов регистрации — без миграции, без правки ядра**
@@ -318,10 +318,10 @@ final class AppRoleDriver implements PermissionDriver
 ```php
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 final class CadHandler implements FileHandler
 {
@@ -378,7 +378,7 @@ final class CadHandler implements FileHandler
 
 ```php [runtime]
 // A service provider's boot()
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 Vaulter::handlers()->register(\App\Vaulter\Handlers\CadHandler::class);
 ```
@@ -440,7 +440,7 @@ CAS-бакет должен быть **без версионирования**. 
 ### Подмените CAS-сервис под особенности объектного хранилища
 
 Если нужно поведение, которого штатный драйвер не покрывает, реализуйте
-`Vaulter\Contracts\Cas\StorageDriver` (или `ContentStore` / `BlobStore`) и привяжите:
+`Vaulter\Media\Contracts\Cas\StorageDriver` (или `ContentStore` / `BlobStore`) и привяжите:
 
 <!-- snippet: config -->
 
@@ -526,7 +526,7 @@ Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 ## Своя форма share-токена {#share-token}
 
 По умолчанию share-токены — случайные строки. Чтобы выпускать короткие, хешированные или
-префиксованные токены, реализуйте `Vaulter\Contracts\Sharing\ShareTokenGenerator` (токен должен
+префиксованные токены, реализуйте `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator` (токен должен
 быть уникальным и умещаться в колонку токена, ≤ 64 символов):
 
 <!-- snippet: host -->
@@ -534,7 +534,7 @@ Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
 
 final class ShortTokenGenerator implements ShareTokenGenerator
 {
@@ -609,57 +609,52 @@ php artisan vaulter:blobs:gc --grace=48 --pending
 
 ## Надёжность — outbox и вебхуки {#webhooks}
 
-Фича `reliability` стейджит каждое доменное событие Drive в `v_outbox` (после коммита), затем
-relay разносит его в подписанные строки `v_webhook_deliveries` по каждому активному подписанному
-эндпоинту:
+Каждое доменное событие пишется в `v_outbox` в транзакции своей операции; relay ядра передаёт
+его consumer'ам outbox, а consumer модуля вебхуков разворачивает его в подписанные строки
+`v_webhook_deliveries` для каждого активного подписанного эндпоинта (см. [Outbox](/ru/concepts/events-outbox)):
 
 <!-- snippet: host -->
 
 ```php
-// Нужно только при vaulter.schedule.enabled=false; иначе пакеты планируют это сами.
+// Нужно только при vaulter.schedule.enabled=false; иначе пакеты уже ставят эти задачи сами.
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:webhooks:relay')->everyMinute();    // outbox → deliveries → queue
-Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes(); // retry failed deliveries
-Schedule::command('vaulter:webhooks:prune')->daily();        // reclaim settled audit history
+Schedule::command('vaulter:relay')->everyMinute()->withoutOverlapping(); // outbox → consumer'ы → доставки → очередь
+Schedule::command('vaulter:outbox:prune')->hourly();              // хранение outbox без потерь
+Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes(); // повтор неудачных доставок
+Schedule::command('vaulter:webhooks:prune')->daily();        // обрезка истории терминальных доставок
 ```
 
-Эндпоинтами подписчиков управляют через маршруты `webhook-endpoints` (завязаны на право manage
-из `WebhookEndpointPolicy`). Каждый POST доставки подписан по Standard Webhooks (`webhook-id`,
-`webhook-timestamp`, `webhook-signature`); потребители **дедуплицируют по `webhook-id`**
-(это `id` конверта), поскольку доставка «хотя бы один раз». Настройте `config('vaulter.webhooks.*')`
-(`retry_schedule`, `retry_jitter`, `disable_after_days`).
+Эндпоинты-подписчики управляются через маршруты `webhook-endpoints` (под правом manage политики
+`WebhookEndpointPolicy`). Каждый POST доставки подписан по
+[Standard Webhooks](/ru/guides/webhooks#заголовки-и-подпись) (`webhook-id`, `webhook-timestamp`,
+`webhook-signature`); потребители **дедуплицируют по `webhook-id`** (`id` конверта), так как
+доставка — at-least-once. Настраивайте `config('vaulter-webhooks.*')` (`retry_schedule`,
+`retry_jitter`, `disable_after_days`) и `config('vaulter.outbox.*')`.
 
 ### Обрезка урегулированной истории outbox и вебхуков
 
-Разнесённые строки outbox и терминальные доставки вебхуков — это append-only аудит-след, который
-иначе растёт бесконечно. `vaulter:webhooks:prune` освобождает **урегулированные** строки за
-пределами окна хранения — и *только* урегулированные:
+`vaulter:outbox:prune` удаляет события outbox старше `outbox.retention_seconds`, когда ни одна их
+доставка не открыта и каждый durable consumer сверился дальше них; мёртвые доставки outbox живут
+`outbox.dead_retention_seconds`. `vaulter:webhooks:prune` вычищает терминальные доставки вебхуков
+старше срока хранения — и *только* их:
 
 <!-- snippet: shell -->
 
 ```bash
-# Prune settled rows older than config('vaulter.webhooks.retention_days') (default 30):
+# Удалить терминальные доставки старше config('vaulter-webhooks.retention_days') (по умолчанию 30):
 php artisan vaulter:webhooks:prune
 
-# Override the window, or preview the exact counts without deleting anything:
+# Переопределить окно или посмотреть точное число без удаления:
 php artisan vaulter:webhooks:prune --days=7
 php artisan vaulter:webhooks:prune --dry-run
 ```
 
-Она удаляет ровно два вида строк, которые больше никогда не меняются:
-
-- **разнесённые строки outbox** — статус `dispatched`, по `dispatched_at`;
-- **терминальные доставки** — статус `delivered` или `dead` (DLQ), по `updated_at` (время
-  терминализации).
-
-Строки в полёте **никогда** не трогаются: строка outbox в статусе `pending` (ею всё ещё владеет
-relay) и доставка `pending`/`failed` (ею всё ещё владеет sweep повторов по расписанию) остаются
-нетронутыми независимо от возраста. `--dry-run` сообщает счётчики, которые он *удалил бы*, ничего
-не удаляя. Команда завязана на фичу `reliability` — при выключенной фиче она ничего не делает и
-печатает уведомление (таблиц `v_outbox` / `v_webhook_*` может не быть). Значение хранения по
-умолчанию живёт в `config('vaulter.webhooks.retention_days')` (30, с нижней границей 0).
-Планируйте её рядом с командами relay/retry выше.
+Удаляются **терминальные доставки** — статус `delivered` или `dead` (DLQ), по `updated_at` (время
+перехода в терминальный статус). Доставка `pending`/`failed` (ею владеет retry-sweep) не трогается,
+сколько бы ей ни было. `--dry-run` сообщает, сколько *было бы* удалено, ничего не удаляя. Пока
+модуль вебхуков неактивен, команда ничего не делает и печатает уведомление. Срок по умолчанию —
+`config('vaulter-webhooks.retention_days')` (30, не меньше 0).
 
 ## Тестирование со штатными дублями {#testing}
 
@@ -675,7 +670,7 @@ Vaulter поставляет тестовые дубли под `Vaulter\Testing
 
 ```php
 // In a Pest test, force the open driver for the duration of the test.
-config()->set('vaulter.access.permission_driver', 'null'); // non-production only
+config()->set('vaulter-drive.access.permission_driver', 'null'); // non-production only
 
 $drive = Vaulter::drive($task)->actingAs($user);
 $node = $drive->files()->upload(UploadSource::fromString('hello', 'note.txt'));

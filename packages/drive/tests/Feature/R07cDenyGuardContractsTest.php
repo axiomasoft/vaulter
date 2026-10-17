@@ -5,18 +5,18 @@ declare(strict_types=1);
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Http\DriveV1;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * Absolute deny. The suite default is NullPermissionDriver, which short-circuits every
@@ -63,8 +63,8 @@ function r07cStorage(): Drive
 function r07cDeny(): void
 {
     app()->instance(R07cDenyRoleDriver::class, new R07cDenyRoleDriver);
-    config()->set('vaulter.access.permission_drivers.r07cdeny', R07cDenyRoleDriver::class);
-    config()->set('vaulter.access.permission_driver', 'r07cdeny');
+    config()->set('vaulter-drive.access.permission_drivers.r07cdeny', R07cDenyRoleDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'r07cdeny');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }

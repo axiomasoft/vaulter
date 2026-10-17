@@ -8,20 +8,22 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Repositories\NodeReadRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
+#[Internal]
 final class PurgeTrashCommand extends Command
 {
     use OpensWriteScope;
@@ -40,7 +42,7 @@ final class PurgeTrashCommand extends Command
 
     public function handle(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics): int
     {
-        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($nodes, $store, $purge, $metrics));
+        return Tenancy::without(fn (): int => $this->runMaintenance($nodes, $store, $purge, $metrics));
     }
 
     private function runMaintenance(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics): int
@@ -66,7 +68,7 @@ final class PurgeTrashCommand extends Command
                         : ($this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $this->driveConfig->trashRetentionDays());
                     $threshold = Carbon::now()->subDays($days);
                     $purged = $this->database->transaction(function () use ($node, $context, $threshold, $nodes, $store, $purge): int {
-                        $this->database->lockTree($context->driveId());
+                        $this->database->lockAggregate('drives', $context->driveId());
                         $locked = $store->lockTrashedRoot(Identity::key($node->getKey()), $threshold);
                         if ($locked === null) {
                             return 0;

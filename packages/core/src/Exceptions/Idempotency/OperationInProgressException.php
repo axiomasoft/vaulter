@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Exceptions\Idempotency;
 
 use Throwable;
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -13,6 +14,7 @@ use Vaulter\Exceptions\VaulterException;
  * Another request with the same idempotency key is still running and did not finish within the bounded
  * wait (D25). Nothing ran; retry after `Retry-After` seconds to get the outcome of the first request.
  */
+#[Api]
 final class OperationInProgressException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Drives;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
+use Vaulter\Attributes\Api;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -15,7 +16,8 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * The last row of a drive is gone: its purge finished. The row no longer
  * exists, so the event carries its ids, tenant and profile.
  */
-final readonly class DriveDeleted extends DomainEvent
+#[Api]
+final readonly class DriveDeleted extends DriveEvent
 {
     public function __construct(
         public string $driveId,
@@ -31,9 +33,9 @@ final readonly class DriveDeleted extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::DriveDeleted;
+        return DriveEventType::DriveDeleted;
     }
 
     public function scope(): EventScope

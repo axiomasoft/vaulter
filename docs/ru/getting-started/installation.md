@@ -27,8 +27,9 @@ composer require axioma-studio/vaulter
 ```
 
 Сам по себе `axioma-studio/vaulter-core` не даёт ни Drive, ни функций редактирования
-документов — это общее ядро (авторизация, контракты CAS, sharing, панели). Чтобы взять только часть
-продукта, подключите именно те пакеты, которые нужны вашему приложению:
+документов — это ядро (модульная система, операции, события с outbox, идемпотентность, ошибки, каркасы HTTP и
+конфига), и доменных таблиц у него нет. Чтобы взять только часть продукта, подключите именно те пакеты, которые
+нужны вашему приложению:
 
 <!-- snippet: shell -->
 
@@ -36,13 +37,39 @@ composer require axioma-studio/vaulter
 # Drive (папки/файлы/загрузки) — автоматически подтягивает axioma-studio/vaulter-media (CAS)
 composer require axioma-studio/vaulter-drive
 
-# Документные узлы (редактирование TipTap/Yjs, версии, комментарии) — не зависит от Drive
+# Документные узлы (редактирование TipTap/Yjs, версии, комментарии) — требует vaulter-drive
 composer require axioma-studio/vaulter-documents
 ```
 
 Любая из команд также подтянет `axioma-studio/vaulter-core` как зависимость, поэтому
-установка одного `axioma-studio/vaulter-core` имеет смысл только если вы планируете сами
-реализовать все доменные контракты без Drive и Documents.
+установка одного `axioma-studio/vaulter-core` имеет смысл только если вы строите собственные модули
+поверх ядра.
+
+Три пакета не входят в метапакет и ставятся по необходимости. Каждый требует `vaulter-drive`:
+
+<!-- snippet: shell -->
+
+```bash
+# Исходящие вебхуки (opt-in модуль, см. ниже)
+composer require axioma-studio/vaulter-webhooks
+
+# Админ-панель для Filament 5
+composer require axioma-studio/vaulter-filament
+
+# Драйвер прав AzGuard
+composer require axioma-studio/vaulter-azgard
+```
+
+`vaulter-webhooks` открывает исходящий сетевой трафик, поэтому его модуль выключен, пока вы не включите его в
+`config/vaulter.php` (`'modules' => ['webhooks' => true]`, см. [Модули](/ru/concepts/modules)); таблицы создаёт
+`php artisan migrate` в любом случае.
+
+Защищённые HTTP-маршруты по умолчанию требуют аутентификации через `auth:sanctum`. Установите и настройте
+Laravel Sanctum в хосте (`composer require laravel/sanctum`) или задайте
+`vaulter.routes.middleware.authenticated` для guard вашего приложения. Анонимные защищённые запросы получают 401;
+публичные share-ссылки и подписанные callback-запросы хаба используют независимые стеки `public` и `hub` и не
+требуют токена Sanctum. Метрики запросов добавляются во все три стека автоматически. См.
+[Конфигурацию](/ru/guides/configuration#routes).
 
 Затем выполните встроенную команду установки — она публикует конфиг каждого установленного
 пакета Vaulter и предлагает запустить миграции:
@@ -56,8 +83,9 @@ php artisan vaulter:install
 ::: details Что делает `vaulter:install`
 - публикует конфиг каждого установленного пакета (`vaulter-config`, `vaulter-media-config`,
   `vaulter-drive-config`, …); существующий файл пропускается без `--force`,
-- спрашивает auth-middleware и драйвер прав (или берёт `--middleware` / `--driver`) и печатает
-  строки для `.env` и конфига — `config/*.php` и `.env` она никогда не редактирует,
+- спрашивает auth-middleware (или берёт `--middleware`) и печатает строку для конфига — `config/*.php` и
+  `.env` она никогда не редактирует; драйвер прав выбирайте через `vaulter-drive.access.permission_driver`
+  (`VAULTER_PERMISSION_DRIVER`),
 - предлагает выполнить `php artisan migrate` (или выполняет с `--migrate`),
 - предлагает поставить звезду репозиторию на GitHub.
 
@@ -75,14 +103,13 @@ php artisan vaulter:install
 
 ```bash [публикация + миграции]
 php artisan vendor:publish --tag=vaulter-config
-php artisan vendor:publish --tag=vaulter-migrations
 php artisan migrate
 ```
 
 <!-- snippet: shell -->
 
 ```bash [только конфиг]
-# Миграции Vaulter обнаруживаются и запускаются даже без публикации,
+# Миграции Vaulter запускаются из vendor/ и никогда не публикуются,
 # поэтому минимум — это только файл конфигурации:
 php artisan vendor:publish --tag=vaulter-config
 php artisan migrate
@@ -90,11 +117,12 @@ php artisan migrate
 
 :::
 
-::: info Миграции обнаруживаются автоматически
-Сервис-провайдер вызывает `discoversMigrations()->runsMigrations()`, поэтому миграции пакета
-запускаются прямо из `vendor/` без публикации. Публикуйте их тегом `--tag=vaulter-migrations`
-только когда нужно их **редактировать** (например, подправить схему под собственную панель).
-Опубликованный конфиг ложится в `config/vaulter.php`.
+::: info Миграции не публикуются
+Каждый пакет запускает миграции своих таблиц прямо из `vendor/`: `vaulter-core` — outbox и ключи
+идемпотентности, `vaulter-media` — блобы и их пины, `vaulter-drive` — таблицы диска, `vaulter-documents` —
+таблицы документов, `vaulter-webhooks` — эндпоинты и доставки. Тега публикации для них нет, поэтому опубликованных копий, которые расходятся с пакетом, не
+бывает, а таблица пакета, который вы не ставили, не создаётся. Опубликованный конфиг ложится в
+`config/vaulter.php`.
 :::
 
 ## 2. Фронтенд — Vue-пакет
@@ -148,7 +176,7 @@ docker compose -f hocuspocus-server/docker-compose.yml up -d
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 $drive = Vaulter::drive($user);   // любая Eloquent-модель
 $drive->root();                 // автоматически созданная корневая папка (Node)

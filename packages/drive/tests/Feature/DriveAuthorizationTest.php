@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Fixtures\Access\ProfileCreateGate;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The Drive REST surface UNDER the ACL (M2a / H.2): hidden nodes return 404,
@@ -22,7 +22,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 

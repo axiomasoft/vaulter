@@ -19,7 +19,7 @@ cut a subtree off from grants above, use an [inheritance boundary](/concepts/acc
 
 ## Anatomy of a grant
 
-`Vaulter\Models\Access\NodeGrant` (table `v_node_grants`, unique per node, subject and scope):
+`Vaulter\Drive\Models\Access\NodeGrant` (table `v_node_grants`, unique per node, subject and scope):
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -33,14 +33,14 @@ cut a subtree off from grants above, use an [inheritance boundary](/concepts/acc
 | `granted_by` | id? | the actor who created the grant |
 | `tenant_id` | id? | present when tenancy is enabled |
 
-The model is swappable — point `config('vaulter.models.grant')` at a subclass (for
+The model is swappable — point `config('vaulter-drive.models.grant')` at a subclass (for
 example to add tenant scoping). `inherited` / `inherited_from_node_id` are reserved for
 an optional materialised read-model and stay `false`/`null`: the source of truth is the
 direct rows plus the tree.
 
 ### Subject
 
-A grant is addressed to a `Vaulter\Access\ValueObjects\Subject` — a `(type, id)` pair.
+A grant is addressed to a `Vaulter\Drive\Access\ValueObjects\Subject` — a `(type, id)` pair.
 The `type` is always a registered morph alias, never a raw FQCN. The role driver expands
 an actor into the list of subjects whose grants apply (see
 [`subjectsFor`](/extending/permission-drivers#the-permissiondriver-contract)); Vaulter builds
@@ -49,7 +49,7 @@ an actor into the list of subjects whose grants apply (see
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 
 $user = Subject::ofModel($actor);        // morph alias + key
 $role = new Subject(type: 'role', id: 'editor');
@@ -72,7 +72,7 @@ permission driver (`override()`), not to a grant. Restrict a subtree with
 
 ### Scope + inheritance
 
-`Vaulter\Enums\Access\GrantScope` — `item` applies only to the node it sits on;
+`Vaulter\Drive\Enums\Access\GrantScope` — `item` applies only to the node it sits on;
 `subtree` (the default) additionally flows down to descendants during the ancestor walk,
 **up to and including** the first `inherit_grants = false` node — grants above that node
 never reach below it. Only `subtree` grants inherit
@@ -85,7 +85,7 @@ downward (`GrantScope::inheritsDownward()`).
 
 ## Writing a grant
 
-`access()->grant()` (backed by `Vaulter\Actions\Access\GrantNodeAccessAction`) persists a
+`access()->grant()` (backed by `Vaulter\Drive\Actions\Access\GrantNodeAccessAction`) persists a
 grant. It is **idempotent** on the grant-unique key: re-granting the same subject the same
 scope updates the role and expiry. The write runs in a transaction and emits
 `NodeGrantCreated`.
@@ -93,10 +93,10 @@ scope updates the role and expiry. The write runs in a transaction and emits
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
 
 $grant = Vaulter::drive($drive)->actingAs($actor)->access()->grant(
     $node,
@@ -137,7 +137,7 @@ never broader and never longer-lived than what it inherits.
 
 ## Revoking grants
 
-`Vaulter\Actions\Access\RevokeNodeAccessAction` removes **every** grant a subject holds
+`Vaulter\Drive\Actions\Access\RevokeNodeAccessAction` removes **every** grant a subject holds
 on a node — both scopes — and returns the count removed. It emits
 `NodeGrantRevoked` only when something was actually revoked (an empty revoke is a silent
 no-op). Transactional.
@@ -145,8 +145,8 @@ no-op). Transactional.
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Actions\Access\RevokeNodeAccessAction;
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Actions\Access\RevokeNodeAccessAction;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 
 $removed = app(RevokeNodeAccessAction::class)->execute(
     node: $node,
@@ -239,15 +239,15 @@ transaction commits, so a listener never sees an uncommitted grant.
 
 | Event | Payload | When |
 |---|---|---|
-| `Vaulter\Events\Access\NodeGrantCreated` | `NodeGrant $grant`, `int\|string\|null $actorId` | a grant was created or updated |
-| `Vaulter\Events\Access\NodeGrantRevoked` | `Node $node`, `Subject $subject`, `int $revoked`, `int\|string\|null $actorId` | a subject's grants were revoked |
+| `Vaulter\Drive\Events\Access\NodeGrantCreated` | `NodeGrant $grant`, `int\|string\|null $actorId` | a grant was created or updated |
+| `Vaulter\Drive\Events\Access\NodeGrantRevoked` | `Node $node`, `Subject $subject`, `int $revoked`, `int\|string\|null $actorId` | a subject's grants were revoked |
 
 A downstream listener can bump an `acl_version` cache or record activity:
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Drive\Events\Access\NodeGrantCreated;
 
 Event::listen(function (NodeGrantCreated $event): void {
     Cache::increment("acl_version:{$event->grant->node_id}");

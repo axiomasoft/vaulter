@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Cas\BlobReconciler;
+use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -23,9 +23,9 @@ beforeEach(function (): void {
 it('records gc mark and sweep metrics', function (): void {
     $store = app(BlobStore::class);
     $blob = $store->commit(CasTestHelpers::streamFor('gc-metrics'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $version = CasTestHelpers::makeVersion();
-    $store->attach($version, $blob);
-    $store->detach($version, $blob);
+    $version = CasTestHelpers::reference();
+    CasTestHelpers::pin($blob, $version);
+    CasTestHelpers::unpin($blob, $version);
     app(BlobReconciler::class)->reconcile();
 
     app(BlobGarbageCollector::class)->collect(graceHours: 1);

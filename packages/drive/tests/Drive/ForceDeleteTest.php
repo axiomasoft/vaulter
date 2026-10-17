@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
+use Vaulter\Media\Models\Cas\Blob;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -32,7 +33,7 @@ it('forceDelete отцепляет рёбра блоба → блоб стано
         ->and(Blob::query()->count())->toBe(1);
 
     $blob = Blob::query()->first();
-    expect($blob->versions()->count())->toBe(0);
+    expect(RevisionBlobPins::edges($blob))->toBe(0)->and(RevisionBlobPins::pins($blob))->toBe(0);
 });
 
 it('forceDelete уменьшает used_bytes на освобождённый размер', function (): void {

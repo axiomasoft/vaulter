@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -14,6 +15,7 @@ use Vaulter\Exceptions\VaulterException;
  * would delete them for good; the document is read-only until the host enables the
  * missing extensions again.
  */
+#[Api]
 final class DocumentContentDegradedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

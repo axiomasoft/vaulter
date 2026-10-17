@@ -5,28 +5,28 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Actions\Content\ClaimScanWorkAction;
-use Vaulter\Content\ScanAttempt;
-use Vaulter\Content\ScanInput;
-use Vaulter\Content\ScanResult;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Contracts\Tenancy\TenantResolver;
+use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Content\PrivateScanReader;
+use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Enums\Cas\ScanVerdict;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Content\ScanObligationRepository;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Media\Content\ScanInput;
+use Vaulter\Media\Content\ScanResult;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Contracts\Cas\ContentScanner;
+use Vaulter\Media\Enums\Cas\ScanVerdict;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -38,9 +38,9 @@ beforeEach(function (): void {
     config()->set('vaulter.tenancy.enabled', true);
     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
     app()->instance(TenantResolver::class, new MutableTenantResolver);
-    config()->set('vaulter.scan.mode', 'all_content');
-    config()->set('vaulter.scan.scanner_key', 'fixture');
-    config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter-drive.scan.mode', 'all_content');
+    config()->set('vaulter-drive.scan.scanner_key', 'fixture');
+    config()->set('vaulter-drive.scan.scanner_version', '1');
     $this->scanner = new class implements ContentScanner
     {
         public int $reads = 0;

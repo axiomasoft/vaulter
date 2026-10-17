@@ -7,33 +7,33 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\CursorPaginator;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Access\ValueObjects\AccessExplanation;
-use Vaulter\Access\ValueObjects\NodeAbilities;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Page;
-use Vaulter\Data\Sharing\MintedShareLink;
-use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Data\Sharing\ShareLinkUpdate;
-use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
-use Vaulter\Data\Snapshots\FileRevisionSnapshot;
-use Vaulter\Data\Snapshots\GrantSnapshot;
-use Vaulter\Data\Snapshots\MintedShareLink as SnapshotMintedShareLink;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Data\Snapshots\ShareLinkSnapshot;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\InheritanceRestriction;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\NodeSort;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Operations\DriveContext;
+use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
+use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\Sharing\MintedShareLink;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Drive\Data\Snapshots\GrantSnapshot;
+use Vaulter\Drive\Data\Snapshots\MintedShareLink as SnapshotMintedShareLink;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\InheritanceRestriction;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\NodeSort;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Models\Sharing\NodeShare;
+use Vaulter\Drive\Operations\DriveContext;
 
 function p32Type(?ReflectionType $type): string
 {
@@ -105,7 +105,7 @@ function p32ExpectedType(string $type, bool $snapshots = false): string
     if (str_starts_with($type, '?')) {
         $type = substr($type, 1).'|null';
     }
-    $parts = array_map(static fn (string $part): string => $symbols[$part] ?? (in_array($part, ['int', 'string', 'bool', 'array', 'void', 'mixed', 'null', 'self'], true) ? $part : 'Vaulter\\Data\\Drive\\'.$part), explode('|', $type));
+    $parts = array_map(static fn (string $part): string => $symbols[$part] ?? (in_array($part, ['int', 'string', 'bool', 'array', 'void', 'mixed', 'null', 'self'], true) ? $part : 'Vaulter\\Drive\\Data\\'.$part), explode('|', $type));
     sort($parts);
 
     return implode('|', $parts);
@@ -174,7 +174,7 @@ it('matches all seven Operations signatures against the literal normative PHP AP
             // PLAN2.D40 removes the shared pinned/position update in favour of personal stars;
             // a replaced literal method is dropped here and comes back from the amendments.
             $methods = [...array_values(array_filter($methods, static fn (array $method): bool => !in_array($name.'::'.$method[1], $removed, true))), ...$amended];
-            $ref = new ReflectionClass('Vaulter\\Contracts\\'.$domain.'\\'.$name);
+            $ref = new ReflectionClass('Vaulter\\Drive\\Contracts\\'.($domain === 'Drive' ? '' : $domain.'\\').$name);
             expect($ref->isInterface())->toBeTrue()->and($ref->getMethods())->toHaveCount(count($methods));
             foreach ($methods as $method) {
                 p32AssertSignature($ref->getMethod($method[1]), $method[2], $method[3], snapshots: true);
@@ -190,7 +190,7 @@ it('matches immutable value constructors and UploadSource factory signatures aga
     $literal = preg_replace('/\/\/[^\n]*/', '', $literal);
     foreach (['UploadOptions', 'RevisionOptions', 'CreateFolderOptions', 'MoveOptions', 'CopyOptions', 'RestoreOptions', 'ListOptions', 'SearchOptions', 'FileStream'] as $name) {
         preg_match('/final readonly class '.$name.'\b.*?public function __construct\((.*?)\)/s', $literal, $matches);
-        $ref = new ReflectionClass('Vaulter\\Data\\Drive\\'.$name);
+        $ref = new ReflectionClass('Vaulter\\Drive\\Data\\'.$name);
         expect($ref->isFinal())->toBeTrue()->and($ref->isReadOnly())->toBeTrue();
         if (in_array($name, ['UploadOptions', 'RevisionOptions'], true) && !str_contains($matches[1], 'declaredMimeType')) {
             $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?string $declaredMimeType = null';

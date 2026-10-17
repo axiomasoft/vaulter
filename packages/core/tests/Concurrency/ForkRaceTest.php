@@ -6,8 +6,8 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Concurrency\RaceOutcome;
+use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
  * The harness proves itself: a locked read-modify-write serialises, the same code

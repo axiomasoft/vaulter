@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Support;
 
-use Vaulter\Contracts\Drive\NodeSnapshotContributor;
-use Vaulter\Data\Snapshots\DocumentHeadSnapshot;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Contracts\NodeSnapshotContributor;
+use Vaulter\Drive\Data\Snapshots\DocumentHeadSnapshot;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Node;
 
 /**
  * The `documents.heads` contribution to the drive's node snapshots: the `document` fragment of
  * document nodes, one query for the whole page.
- *
- * @internal
  */
+#[Internal]
 final readonly class DocumentHeads implements NodeSnapshotContributor
 {
     public const string KEY = 'document';

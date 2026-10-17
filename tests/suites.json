@@ -37,10 +37,9 @@
             "packages/core/tests/Arch/OperationsUseRunnerTest.php",
             "packages/core/tests/Arch/ProvidersDeclareOnlyTest.php",
             "packages/core/tests/Arch/PublicApiReturnTypesTest.php",
-            "packages/core/tests/Arch/PublicApiSnapshotTest.php",
             "packages/core/tests/Arch/ServiceLocatorRatchetTest.php",
+            "packages/core/tests/Arch/SurfaceManifestTest.php",
             "packages/core/tests/Arch/TestingBoundaryTest.php",
-            "packages/core/tests/Changes/ChangeCursorTest.php",
             "packages/core/tests/Events/EventCatalogTest.php",
             "packages/core/tests/Events/EventPipelineArchTest.php",
             "packages/core/tests/Events/EventsReferenceTest.php",
@@ -53,31 +52,12 @@
             "packages/core/tests/PublicApi/SequenceOptionContractTest.php",
             "packages/core/tests/PublicApi/UploadSourceTest.php",
             "packages/core/tests/Unit/AccessEnumsTest.php",
-            "packages/core/tests/Unit/BlobScopeTest.php",
             "packages/core/tests/Unit/DatabaseCompatibilityDocsGuardTest.php",
             "packages/core/tests/Unit/DatabaseSchemaReuseTest.php",
             "packages/core/tests/Unit/EnumTest.php",
             "packages/core/tests/Unit/GatePermissionResolverDocGuardTest.php",
             "packages/core/tests/Unit/InstallationDocsGuardTest.php",
             "packages/core/tests/Unit/StorageAdapterRemovedGuardTest.php"
-          ]
-        },
-        {
-          "key": "ActivityDisabledTestCase+RefreshDatabase",
-          "fingerprint": "e2ae2a333cdd",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/ActivityGate/FeatureGateTest.php"
           ]
         },
         {
@@ -117,12 +97,11 @@
             "serial"
           ],
           "files": [
-            "packages/core/tests/Changes/ChangeJournalTest.php",
             "packages/core/tests/Concurrency/EventRecorderRollbackPgTest.php",
             "packages/core/tests/Concurrency/OutboxFanoutRaceTest.php",
-            "packages/core/tests/Concurrency/WebhookAutoDisableRaceTest.php",
-            "packages/core/tests/Events/EventRecorderTest.php",
-            "packages/core/tests/Events/WebhookAutoDisableCommitTest.php"
+            "packages/core/tests/Concurrency/OutboxLateCommitTest.php",
+            "packages/core/tests/Concurrency/OutboxLeaseTakeoverTest.php",
+            "packages/core/tests/Events/EventRecorderTest.php"
           ]
         },
         {
@@ -140,14 +119,14 @@
             "serial"
           ],
           "files": [
-            "packages/core/tests/Changes/ChangeFeedReadTest.php",
-            "packages/core/tests/Changes/PruneChangesCommandTest.php",
-            "packages/core/tests/Concurrency/ChangeJournalRaceTest.php",
             "packages/core/tests/Concurrency/ForkRaceTest.php",
             "packages/core/tests/Concurrency/IdempotencyRaceTest.php",
+            "packages/core/tests/Events/EventSinkContractTest.php",
             "packages/core/tests/Idempotency/IdempotencyContractTest.php",
-            "packages/core/tests/Operations/OperationRunnerContractTest.php",
-            "packages/core/tests/Tenancy/TenantProvisioningRaceTest.php"
+            "packages/core/tests/Modules/AcmeModuleContractTest.php",
+            "packages/core/tests/Modules/CleanInstallMatrixTest.php",
+            "packages/core/tests/Modules/ModuleUninstallTest.php",
+            "packages/core/tests/Operations/OperationRunnerContractTest.php"
           ]
         },
         {
@@ -165,49 +144,10 @@
             "serial"
           ],
           "files": [
-            "packages/core/tests/Access/InheritanceChangedEventTest.php",
             "packages/core/tests/Doctor/CoreDoctorChecksTest.php",
-            "packages/core/tests/Feature/PruneWebhooksTest.php",
-            "packages/core/tests/Http/WebhookEndpointsV1Test.php",
             "packages/core/tests/Observability/P85/P85Section53CoreMetricsTest.php",
-            "packages/core/tests/Sharing/ShareLinkLifecycleEventsTest.php",
-            "packages/core/tests/Sharing/ShareLinkLifecycleTest.php"
-          ]
-        },
-        {
-          "key": "EnablesWebhooksModule+TestCase",
-          "fingerprint": "7bf80a893189",
-          "lifecycle": "custom",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/Observability/Tracing/WebhookPipelineTracingTest.php"
-          ]
-        },
-        {
-          "key": "ExercisesWideNodeListing+RefreshDatabase+TestCase",
-          "fingerprint": "9c8b0d322a50",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/Access/WideNodeListingTest.php"
+            "packages/core/tests/Outbox/OutboxRelayTest.php",
+            "packages/core/tests/Outbox/OutboxWriteTest.php"
           ]
         },
         {
@@ -325,24 +265,6 @@
           ]
         },
         {
-          "key": "RefreshDatabase+SpatieTestCase",
-          "fingerprint": "b08c15c0f71a",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/Spatie/SpatieDriverTest.php"
-          ]
-        },
-        {
           "key": "RefreshDatabase+TablePrefixTestCase",
           "fingerprint": "4885e0f72862",
           "lifecycle": "refresh",
@@ -375,22 +297,6 @@
             "serial"
           ],
           "files": [
-            "packages/core/tests/Access/AccessAwareListingTest.php",
-            "packages/core/tests/Access/AccessModelV1Test.php",
-            "packages/core/tests/Access/AccessResolverTest.php",
-            "packages/core/tests/Access/DatabaseDriverTest.php",
-            "packages/core/tests/Access/EvaluateManyEquivalenceTest.php",
-            "packages/core/tests/Access/GateDriverTest.php",
-            "packages/core/tests/Access/GrantFailLoudTest.php",
-            "packages/core/tests/Access/GrantRevokeTest.php",
-            "packages/core/tests/Access/NodePolicyTest.php",
-            "packages/core/tests/Access/PermissionDriverBoundaryTest.php",
-            "packages/core/tests/Access/PermissionDriverContractTest.php",
-            "packages/core/tests/Access/SharedWithMeTest.php",
-            "packages/core/tests/Access/StorageShowAuthorizationTest.php",
-            "packages/core/tests/Access/TenantDelegationContractTest.php",
-            "packages/core/tests/Activity/ActivityVisibilityTest.php",
-            "packages/core/tests/Activity/RecordActivityTest.php",
             "packages/core/tests/Configuration/ConfigDefaultsLoadingTest.php",
             "packages/core/tests/Configuration/ConfigNormalizerTest.php",
             "packages/core/tests/Configuration/ConfigValidatorTest.php",
@@ -399,44 +305,20 @@
             "packages/core/tests/Console/CommandsReferenceCommandTest.php",
             "packages/core/tests/Console/ConfigReferenceCommandTest.php",
             "packages/core/tests/Console/SchedulingRegistrarTest.php",
-            "packages/core/tests/Content/DownloadGuardsTest.php",
-            "packages/core/tests/Content/EgressInventoryTest.php",
-            "packages/core/tests/Content/NodeContentLifecycleRegistryTest.php",
-            "packages/core/tests/Content/ScanEvidenceBoundaryTest.php",
+            "packages/core/tests/Database/AggregateLockTest.php",
             "packages/core/tests/Doctor/DoctorJsonSchemaTest.php",
             "packages/core/tests/Doctor/DoctorReadOnlyTest.php",
             "packages/core/tests/Doctor/DoctorRunnerTest.php",
             "packages/core/tests/Events/CoreEventCatalogConformanceTest.php",
-            "packages/core/tests/Feature/ActivityApiTest.php",
-            "packages/core/tests/Feature/CapabilityPolicyTest.php",
-            "packages/core/tests/Feature/DeletionExceptionCodesTest.php",
             "packages/core/tests/Feature/EventTypeTest.php",
-            "packages/core/tests/Feature/FileHandlerKeyTest.php",
-            "packages/core/tests/Feature/HandlerBaselineTest.php",
             "packages/core/tests/Feature/NodeCommentFeatureOffTest.php",
-            "packages/core/tests/Feature/NodeShareApiTest.php",
             "packages/core/tests/Feature/ServiceProviderTest.php",
-            "packages/core/tests/Feature/ShareLinkRequestMutationContractTest.php",
             "packages/core/tests/Feature/VaulterManagerExporterHandlerSeamTest.php",
-            "packages/core/tests/Http/AbilitiesManyTest.php",
-            "packages/core/tests/Http/ActivityV1Test.php",
-            "packages/core/tests/Http/CacheHeadersV1Test.php",
-            "packages/core/tests/Http/ChangesV1Test.php",
-            "packages/core/tests/Http/ContentResponderTest.php",
             "packages/core/tests/Http/CrossTenantV1Test.php",
-            "packages/core/tests/Http/GrantsV1Test.php",
             "packages/core/tests/Http/HttpKernelV1Test.php",
-            "packages/core/tests/Http/InheritanceV1Test.php",
             "packages/core/tests/Http/LegacyRoutesRemovedTest.php",
-            "packages/core/tests/Http/NotModifiedAfterAuthorizationTest.php",
             "packages/core/tests/Http/PreconditionsTest.php",
-            "packages/core/tests/Http/PublicShareHeadersV1Test.php",
-            "packages/core/tests/Http/PublicSharesV1Test.php",
-            "packages/core/tests/Http/RepresentationTagTest.php",
-            "packages/core/tests/Http/SharesV1Test.php",
-            "packages/core/tests/Http/UniformNotFoundV1Test.php",
             "packages/core/tests/Modules/ModuleUninstallCommandTest.php",
-            "packages/core/tests/Naming/NamePolicyTest.php",
             "packages/core/tests/Observability/P83/P83ActivityFeedMetricsTest.php",
             "packages/core/tests/Observability/P83/P83Section51MetricsTest.php",
             "packages/core/tests/Observability/P83/P83UploadSessionActiveMetricsTest.php",
@@ -451,58 +333,26 @@
             "packages/core/tests/Operations/OperationTaxonomyTest.php",
             "packages/core/tests/Operations/ProfileGuardBoundaryTest.php",
             "packages/core/tests/Operations/ProfilePermissionDriverTest.php",
-            "packages/core/tests/Profiles/ConfigCacheSafetyTest.php",
-            "packages/core/tests/Profiles/DrivePolicyTest.php",
-            "packages/core/tests/Profiles/FrozenProfileTest.php",
-            "packages/core/tests/Profiles/ProfilePolicyTest.php",
-            "packages/core/tests/Profiles/ProfileRegistryTest.php",
-            "packages/core/tests/Profiles/ScanPolicyAlgebraTest.php",
             "packages/core/tests/Providers/AccessRegistrarTest.php",
             "packages/core/tests/Providers/BindingsRegistrarTest.php",
-            "packages/core/tests/Providers/DriveSliceRegistrarTest.php",
             "packages/core/tests/Providers/EventsRegistrarTest.php",
             "packages/core/tests/Recipes/PermissionDriverRecipeTest.php",
-            "packages/core/tests/Schema/ActivitySchemaTest.php",
             "packages/core/tests/Schema/BlobDedupIndexTest.php",
-            "packages/core/tests/Schema/BlobDedupScopeTest.php",
             "packages/core/tests/Schema/CanonicalSchemaTest.php",
-            "packages/core/tests/Schema/CursorTieBreakerTest.php",
-            "packages/core/tests/Schema/FileHeadIntegrityTest.php",
-            "packages/core/tests/Schema/FileVersionBlobTest.php",
             "packages/core/tests/Schema/HostKeyColumnsSchemaTest.php",
             "packages/core/tests/Schema/HotPathIndexesTest.php",
             "packages/core/tests/Schema/KeyColumnTypesTest.php",
-            "packages/core/tests/Schema/MassAssignmentHardeningTest.php",
-            "packages/core/tests/Schema/NameKeyUniquenessTest.php",
-            "packages/core/tests/Schema/NodeAdjacencyTest.php",
-            "packages/core/tests/Schema/NodeAncestorMaxDepthTest.php",
-            "packages/core/tests/Schema/NodeCycleDetectionTest.php",
-            "packages/core/tests/Schema/NodeGrantSchemaTest.php",
-            "packages/core/tests/Schema/NodeKeyNarrowingTest.php",
-            "packages/core/tests/Schema/NodeSearchLikeEscapingTest.php",
-            "packages/core/tests/Schema/NodeShareSchemaTest.php",
-            "packages/core/tests/Schema/PanelConnectionTest.php",
             "packages/core/tests/Schema/SchemaSnapshotTest.php",
-            "packages/core/tests/Schema/SiblingUniqueTest.php",
-            "packages/core/tests/Sharing/CreateShareLinkTest.php",
-            "packages/core/tests/Sharing/PublicShareDownloadHeadersTest.php",
-            "packages/core/tests/Sharing/ShareResolverTest.php",
-            "packages/core/tests/Sharing/ShareScopeTest.php",
-            "packages/core/tests/Sharing/ShareSecurityBoundaryTest.php",
             "packages/core/tests/Support/CollaborationDefaultsGuardTest.php",
             "packages/core/tests/Support/ContractsDocFqcnGuardTest.php",
             "packages/core/tests/Support/DocsDriftGuardTest.php",
             "packages/core/tests/Support/DomainExceptionStatusTest.php",
             "packages/core/tests/Support/DriveNameRulesConfigSeamTest.php",
             "packages/core/tests/Support/EnumCaseAttributeResolverInstanceCacheTest.php",
-            "packages/core/tests/Support/FacadeMethodDocblockTest.php",
             "packages/core/tests/Support/ReleaseReadinessGuardTest.php",
             "packages/core/tests/Support/SnapshotResourceTimestampTest.php",
             "packages/core/tests/Support/TenantFootgunGuardTest.php",
-            "packages/core/tests/Tenancy/StrictTenancyTest.php",
-            "packages/core/tests/Tenancy/TenantJobBoundaryTest.php",
             "packages/core/tests/Testing/ContractSuitesTest.php",
-            "packages/core/tests/Testing/FactoriesTest.php",
             "packages/core/tests/WriteGuard/WriteScopeTest.php"
           ]
         },
@@ -521,10 +371,7 @@
             "serial"
           ],
           "files": [
-            "packages/core/tests/Console/InstallCommandTest.php",
-            "packages/core/tests/Console/MakeFileHandlerCommandTest.php",
-            "packages/core/tests/Console/MakePermissionDriverCommandTest.php",
-            "packages/core/tests/Profiles/MakeProfileCommandTest.php"
+            "packages/core/tests/Console/InstallCommandTest.php"
           ]
         },
         {
@@ -585,43 +432,6 @@
           ]
         },
         {
-          "key": "RefreshDatabase+WebhooksTestCase",
-          "fingerprint": "bdd7f08fe41d",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/Webhooks/ConcurrentDeliveryTest.php",
-            "packages/core/tests/Webhooks/DeliverWebhookTest.php",
-            "packages/core/tests/Webhooks/OutboundUrlGuardTest.php",
-            "packages/core/tests/Webhooks/OutboxFanoutTest.php",
-            "packages/core/tests/Webhooks/OutboxRelayTest.php",
-            "packages/core/tests/Webhooks/OutboxStagingTest.php",
-            "packages/core/tests/Webhooks/OutboxTransactionTest.php",
-            "packages/core/tests/Webhooks/RedeliverWebhookTest.php",
-            "packages/core/tests/Webhooks/ResponseSizeLimitTest.php",
-            "packages/core/tests/Webhooks/SigningSecretEncryptionTest.php",
-            "packages/core/tests/Webhooks/StandardWebhookVerifierTest.php",
-            "packages/core/tests/Webhooks/StandardWebhooksSigningTest.php",
-            "packages/core/tests/Webhooks/WebhookAutoDisableTest.php",
-            "packages/core/tests/Webhooks/WebhookEndpointCrudTest.php",
-            "packages/core/tests/Webhooks/WebhookEndpointScopeTest.php",
-            "packages/core/tests/Webhooks/WebhookPruneSafetyTest.php",
-            "packages/core/tests/Webhooks/WebhookRetryDispatcherTest.php",
-            "packages/core/tests/Webhooks/WebhookRetryScheduleTest.php",
-            "packages/core/tests/Webhooks/WebhookSchemaTest.php",
-            "packages/core/tests/Webhooks/WebhookSecretRotationTest.php"
-          ]
-        },
-        {
           "key": "TestCase",
           "fingerprint": "20db02f08b7a",
           "lifecycle": "custom",
@@ -637,9 +447,7 @@
           ],
           "files": [
             "packages/core/tests/Operations/ProblemMappingTest.php",
-            "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
-            "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
-            "packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php"
+            "packages/core/tests/Tenancy/TenancyWithoutTest.php"
           ]
         },
         {
@@ -663,6 +471,7 @@
             "packages/core/tests/Http/Problems/ProblemMetaRedactionTest.php",
             "packages/core/tests/Http/Problems/ProblemRendererTest.php",
             "packages/core/tests/Http/Problems/ProblemSpecRulesTest.php",
+            "packages/core/tests/Modules/ActivationMatrixTest.php",
             "packages/core/tests/Modules/ActivationTest.php",
             "packages/core/tests/Modules/DriveDisabledTest.php",
             "packages/core/tests/Modules/InvalidModuleGraphConsoleTest.php",
@@ -670,8 +479,10 @@
             "packages/core/tests/Modules/ModuleKernelBootTest.php",
             "packages/core/tests/Modules/ModulesCommandTest.php",
             "packages/core/tests/Modules/OwnershipRegistryTest.php",
+            "packages/core/tests/Modules/RouteLabelSourceTest.php",
             "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
             "packages/core/tests/Observability/Tracing/TraceRecorderBindingTest.php",
+            "packages/core/tests/Unit/IdentityFitsKeyTest.php",
             "packages/core/tests/Unit/NodeNameTest.php"
           ]
         },
@@ -688,6 +499,7 @@
             "serial"
           ],
           "files": [
+            "packages/core/tests/Modules/ActivationCacheTest.php",
             "packages/core/tests/Modules/RouteCacheActivationTest.php"
           ]
         }
@@ -720,8 +532,11 @@
           "files": [
             "packages/media/tests/Arch/ArchTest.php",
             "packages/media/tests/Arch/ConfigurationBoundaryTest.php",
+            "packages/media/tests/Arch/PinsBoundaryTest.php",
             "packages/media/tests/Arch/PublicApiSnapshotTest.php",
-            "packages/media/tests/Arch/TestingBoundaryTest.php"
+            "packages/media/tests/Arch/TestingBoundaryTest.php",
+            "packages/media/tests/Unit/BlobScopeTest.php",
+            "packages/media/tests/Unit/ContentScannerContractSuiteTest.php"
           ]
         },
         {
@@ -739,7 +554,9 @@
             "serial"
           ],
           "files": [
+            "packages/media/tests/Cas/BlobPinTransactionTest.php",
             "packages/media/tests/Cas/BlobScopeKeyTest.php",
+            "packages/media/tests/Cas/PinSweepRaceTest.php",
             "packages/media/tests/Cas/ScopeKeyReconcileTest.php"
           ]
         },
@@ -763,12 +580,15 @@
             "packages/media/tests/Cas/BlobCommitTest.php",
             "packages/media/tests/Cas/BlobCrossScopeGcTest.php",
             "packages/media/tests/Cas/BlobDedupScopeBehaviourTest.php",
+            "packages/media/tests/Cas/BlobDedupScopeTest.php",
             "packages/media/tests/Cas/BlobFindOrCreateTest.php",
             "packages/media/tests/Cas/BlobGarbageCollectorTest.php",
             "packages/media/tests/Cas/BlobGcBatchTest.php",
             "packages/media/tests/Cas/BlobGcPipelineTest.php",
             "packages/media/tests/Cas/BlobOrphanPruneTest.php",
             "packages/media/tests/Cas/BlobOrphanSweepTest.php",
+            "packages/media/tests/Cas/BlobPinGcTest.php",
+            "packages/media/tests/Cas/BlobPinStatusTest.php",
             "packages/media/tests/Cas/BlobReconcilerTest.php",
             "packages/media/tests/Cas/CasPromoteAtomicTest.php",
             "packages/media/tests/Cas/ColdMutationSurvivorTest.php",
@@ -777,7 +597,7 @@
             "packages/media/tests/Cas/OrphanGraceConfigTest.php",
             "packages/media/tests/Cas/ReconcileBlobsOrphanCommandTest.php",
             "packages/media/tests/Cas/SweepPendingSerializableTest.php",
-            "packages/media/tests/Doctor/MediaDoctorChecksTest.php",
+            "packages/media/tests/Doctor/BlobPinsCheckTest.php",
             "packages/media/tests/Feature/BootTest.php",
             "packages/media/tests/Observability/P85Section53MediaMetricsTest.php",
             "packages/media/tests/Recipes/MediaRecipeTest.php"
@@ -798,7 +618,8 @@
           "files": [
             "packages/media/tests/Configuration/MediaConfigTest.php",
             "packages/media/tests/Configuration/StorageDriverCapabilityTest.php",
-            "packages/media/tests/Console/SchedulingRegistrarTest.php"
+            "packages/media/tests/Console/SchedulingRegistrarTest.php",
+            "packages/media/tests/Support/UtcDateTimeCastTest.php"
           ]
         }
       ]
@@ -816,6 +637,40 @@
       ],
       "partitions": [
         {
+          "key": "(unbound)",
+          "fingerprint": "922f4b9187ab",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/Changes/ChangeCursorTest.php"
+          ]
+        },
+        {
+          "key": "ActivityDisabledTestCase+RefreshDatabase",
+          "fingerprint": "e2ae2a333cdd",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/ActivityGate/FeatureGateTest.php"
+          ]
+        },
+        {
           "key": "DatabaseMigrations+TestCase",
           "fingerprint": "c83ff6c62f49",
           "lifecycle": "migrations",
@@ -830,7 +685,11 @@
             "serial"
           ],
           "files": [
+            "packages/drive/tests/Changes/ChangeFeedReadTest.php",
+            "packages/drive/tests/Changes/ChangeJournalTest.php",
             "packages/drive/tests/Changes/DriveChangesEndToEndTest.php",
+            "packages/drive/tests/Changes/PruneChangesCommandTest.php",
+            "packages/drive/tests/Concurrency/ChangeJournalRaceTest.php",
             "packages/drive/tests/Concurrency/CompleteUploadRaceTest.php",
             "packages/drive/tests/Concurrency/CompleteUploadRetryTest.php",
             "packages/drive/tests/Concurrency/DedicatedConnectionTest.php",
@@ -841,19 +700,22 @@
             "packages/drive/tests/Concurrency/OutermostRetryRealFailureTest.php",
             "packages/drive/tests/Concurrency/QuotaRaceTest.php",
             "packages/drive/tests/Concurrency/QuotaRecountRaceTest.php",
+            "packages/drive/tests/Concurrency/RevisionBlobsRollbackTest.php",
             "packages/drive/tests/Concurrency/RevisionNumberRaceTest.php",
+            "packages/drive/tests/Concurrency/RevisionPinPurgeRaceTest.php",
             "packages/drive/tests/Concurrency/RevisionPruneRaceTest.php",
             "packages/drive/tests/Concurrency/RootTransactionSnapshotTest.php",
             "packages/drive/tests/Concurrency/SameNameUploadRaceTest.php",
             "packages/drive/tests/Concurrency/ScanWorkRecoveryRaceTest.php",
             "packages/drive/tests/Concurrency/TreeLockRaceTest.php",
             "packages/drive/tests/Concurrency/TusConcurrentPatchTest.php",
-            "packages/drive/tests/Concurrency/TusPatchVsSweepRaceTest.php"
+            "packages/drive/tests/Concurrency/TusPatchVsSweepRaceTest.php",
+            "packages/drive/tests/Tenancy/TenantProvisioningRaceTest.php"
           ]
         },
         {
-          "key": "EnablesWebhooksModule+RefreshDatabase+TestCase",
-          "fingerprint": "1a18f6780bda",
+          "key": "ExercisesWideNodeListing+RefreshDatabase+TestCase",
+          "fingerprint": "9c8b0d322a50",
           "lifecycle": "refresh",
           "database": true,
           "engines": [
@@ -866,13 +728,7 @@
             "serial"
           ],
           "files": [
-            "packages/drive/tests/Drive/R07CommandActivityContractsTest.php",
-            "packages/drive/tests/Events/DriveEventsRecordedTest.php",
-            "packages/drive/tests/Events/FileRevisionDeletedEventTest.php",
-            "packages/drive/tests/Events/NodeUpdatedEventTest.php",
-            "packages/drive/tests/Feature/MutationContractsTest.php",
-            "packages/drive/tests/Feature/OutboxEventIdentityTest.php",
-            "packages/drive/tests/Feature/R07ActionControllerContractsTest.php"
+            "packages/drive/tests/Access/WideNodeListingTest.php"
           ]
         },
         {
@@ -894,6 +750,24 @@
           ]
         },
         {
+          "key": "RefreshDatabase+SpatieTestCase",
+          "fingerprint": "b08c15c0f71a",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/Spatie/SpatieDriverTest.php"
+          ]
+        },
+        {
           "key": "RefreshDatabase+TestCase",
           "fingerprint": "555a082c1a50",
           "lifecycle": "refresh",
@@ -908,6 +782,29 @@
             "serial"
           ],
           "files": [
+            "packages/drive/tests/Access/AccessAwareListingTest.php",
+            "packages/drive/tests/Access/AccessModelV1Test.php",
+            "packages/drive/tests/Access/AccessResolverTest.php",
+            "packages/drive/tests/Access/DatabaseDriverTest.php",
+            "packages/drive/tests/Access/EvaluateManyEquivalenceTest.php",
+            "packages/drive/tests/Access/GateDriverTest.php",
+            "packages/drive/tests/Access/GrantFailLoudTest.php",
+            "packages/drive/tests/Access/GrantRevokeTest.php",
+            "packages/drive/tests/Access/InheritanceChangedEventTest.php",
+            "packages/drive/tests/Access/NodePolicyTest.php",
+            "packages/drive/tests/Access/PermissionDriverBoundaryTest.php",
+            "packages/drive/tests/Access/PermissionDriverContractTest.php",
+            "packages/drive/tests/Access/SharedWithMeTest.php",
+            "packages/drive/tests/Access/StorageShowAuthorizationTest.php",
+            "packages/drive/tests/Access/TenantDelegationContractTest.php",
+            "packages/drive/tests/Activity/ActivityVisibilityTest.php",
+            "packages/drive/tests/Activity/RecordActivityTest.php",
+            "packages/drive/tests/Activity/StableMorphAliasTest.php",
+            "packages/drive/tests/Content/DownloadGuardsTest.php",
+            "packages/drive/tests/Content/EgressInventoryTest.php",
+            "packages/drive/tests/Content/NodeContentLifecycleRegistryTest.php",
+            "packages/drive/tests/Content/ScanEvidenceBoundaryTest.php",
+            "packages/drive/tests/Doctor/DiskDoctorChecksTest.php",
             "packages/drive/tests/Doctor/DriveDoctorChecksTest.php",
             "packages/drive/tests/Doctor/ScanDoctorChecksTest.php",
             "packages/drive/tests/Drive/CopyMutationContractsTest.php",
@@ -922,7 +819,9 @@
             "packages/drive/tests/Drive/MoveRenameTest.php",
             "packages/drive/tests/Drive/NodeStarPropertiesTest.php",
             "packages/drive/tests/Drive/QuotaLedgerTest.php",
+            "packages/drive/tests/Drive/R07CommandActivityContractsTest.php",
             "packages/drive/tests/Drive/RecountDrivesTest.php",
+            "packages/drive/tests/Drive/RevisionBlobLinksTest.php",
             "packages/drive/tests/Drive/RevisionDeletionLivenessTest.php",
             "packages/drive/tests/Drive/RevisionRetentionTest.php",
             "packages/drive/tests/Drive/StorageManagerTest.php",
@@ -930,15 +829,28 @@
             "packages/drive/tests/Drive/TrashRootsTest.php",
             "packages/drive/tests/Drive/UploadConfigTest.php",
             "packages/drive/tests/Drive/UploadFileTest.php",
+            "packages/drive/tests/Drive/VisibleDrivesTest.php",
             "packages/drive/tests/Events/DriveEventCatalogConformanceTest.php",
+            "packages/drive/tests/Events/DriveEventsRecordedTest.php",
+            "packages/drive/tests/Events/FileRevisionDeletedEventTest.php",
+            "packages/drive/tests/Events/NodeUpdatedEventTest.php",
+            "packages/drive/tests/Feature/ActivityApiTest.php",
+            "packages/drive/tests/Feature/CapabilityPolicyTest.php",
             "packages/drive/tests/Feature/CommandOutputContractTest.php",
+            "packages/drive/tests/Feature/DeletionExceptionCodesTest.php",
             "packages/drive/tests/Feature/DriveApiTest.php",
             "packages/drive/tests/Feature/DriveAuthorizationTest.php",
             "packages/drive/tests/Feature/DriveResourceCreateGateTest.php",
             "packages/drive/tests/Feature/ExactListingTest.php",
+            "packages/drive/tests/Feature/FileHandlerKeyTest.php",
+            "packages/drive/tests/Feature/HandlerBaselineTest.php",
             "packages/drive/tests/Feature/HostRouteBindingTest.php",
+            "packages/drive/tests/Feature/MutationContractsTest.php",
+            "packages/drive/tests/Feature/NodeShareApiTest.php",
+            "packages/drive/tests/Feature/OutboxEventIdentityTest.php",
             "packages/drive/tests/Feature/PurgeTrashTest.php",
             "packages/drive/tests/Feature/QuotaReserveTest.php",
+            "packages/drive/tests/Feature/R07ActionControllerContractsTest.php",
             "packages/drive/tests/Feature/R07ExceptionContractsTest.php",
             "packages/drive/tests/Feature/R07RequestRuleContractsTest.php",
             "packages/drive/tests/Feature/R07TusControllerContractsTest.php",
@@ -947,32 +859,56 @@
             "packages/drive/tests/Feature/R07cDenyGuardContractsTest.php",
             "packages/drive/tests/Feature/R07dObservableMutantTest.php",
             "packages/drive/tests/Feature/ResumableUploadApiTest.php",
+            "packages/drive/tests/Feature/ShareLinkRequestMutationContractTest.php",
             "packages/drive/tests/Feature/TrashRemanenceTest.php",
             "packages/drive/tests/Feature/TreeInvariantsTest.php",
             "packages/drive/tests/Feature/TusProtocolTest.php",
             "packages/drive/tests/Feature/TusResponseContractsTest.php",
             "packages/drive/tests/Feature/UploadChunkLimitTest.php",
             "packages/drive/tests/Feature/UploadSessionOwnershipTest.php",
+            "packages/drive/tests/Http/AbilitiesManyTest.php",
+            "packages/drive/tests/Http/ActivityV1Test.php",
             "packages/drive/tests/Http/CacheHeadersDriveV1Test.php",
+            "packages/drive/tests/Http/CacheHeadersV1Test.php",
+            "packages/drive/tests/Http/ChangesV1Test.php",
+            "packages/drive/tests/Http/ContentResponderTest.php",
             "packages/drive/tests/Http/DirectSignedDownloadTest.php",
+            "packages/drive/tests/Http/DriveRouteLabelsTest.php",
             "packages/drive/tests/Http/DrivesV1Test.php",
             "packages/drive/tests/Http/FilesV1Test.php",
+            "packages/drive/tests/Http/GrantsV1Test.php",
             "packages/drive/tests/Http/IdempotencyKeyHttpTest.php",
             "packages/drive/tests/Http/IfMatchRequiredTest.php",
+            "packages/drive/tests/Http/InheritanceV1Test.php",
+            "packages/drive/tests/Http/ListQueryTest.php",
             "packages/drive/tests/Http/NodeEtagRepresentationTest.php",
             "packages/drive/tests/Http/NodesV1Test.php",
+            "packages/drive/tests/Http/NotModifiedAfterAuthorizationTest.php",
             "packages/drive/tests/Http/NotModifiedV1Test.php",
+            "packages/drive/tests/Http/PreconditionsTest.php",
             "packages/drive/tests/Http/PreviewerCannotDownloadTest.php",
+            "packages/drive/tests/Http/PublicShareHeadersV1Test.php",
+            "packages/drive/tests/Http/PublicSharesV1Test.php",
             "packages/drive/tests/Http/QuarantinedDownloadTest.php",
+            "packages/drive/tests/Http/RepresentationTagTest.php",
+            "packages/drive/tests/Http/SharesV1Test.php",
             "packages/drive/tests/Http/StaleIfMatchTest.php",
             "packages/drive/tests/Http/StarPropertiesV1Test.php",
             "packages/drive/tests/Http/TrashV1Test.php",
             "packages/drive/tests/Http/UniformNotFoundDriveV1Test.php",
+            "packages/drive/tests/Http/UniformNotFoundV1Test.php",
             "packages/drive/tests/Http/UploadsV1Test.php",
+            "packages/drive/tests/Naming/NamePolicyTest.php",
             "packages/drive/tests/Observability/P84Section52MetricsTest.php",
             "packages/drive/tests/Observability/P85Section53DriveMetricsTest.php",
             "packages/drive/tests/Observability/Tracing/UploadSweepTracingTest.php",
+            "packages/drive/tests/Profiles/ConfigCacheSafetyTest.php",
+            "packages/drive/tests/Profiles/DrivePolicyTest.php",
+            "packages/drive/tests/Profiles/FrozenProfileTest.php",
+            "packages/drive/tests/Profiles/ProfilePolicyTest.php",
+            "packages/drive/tests/Profiles/ProfileRegistryTest.php",
             "packages/drive/tests/Profiles/ProfileRuntimeTest.php",
+            "packages/drive/tests/Profiles/ScanPolicyAlgebraTest.php",
             "packages/drive/tests/PublicApi/AuthorizationInsideOperationTest.php",
             "packages/drive/tests/PublicApi/CopySubtreeAuthorizationTest.php",
             "packages/drive/tests/PublicApi/LifecycleBoundaryTest.php",
@@ -980,8 +916,33 @@
             "packages/drive/tests/PublicApi/OperationMatrixTest.php",
             "packages/drive/tests/Recipes/DriveRecipeTest.php",
             "packages/drive/tests/Recipes/ReadmeRecipeTest.php",
+            "packages/drive/tests/Schema/ActivitySchemaTest.php",
+            "packages/drive/tests/Schema/CursorTieBreakerTest.php",
+            "packages/drive/tests/Schema/FileHeadIntegrityTest.php",
+            "packages/drive/tests/Schema/FileVersionBlobTest.php",
+            "packages/drive/tests/Schema/MassAssignmentHardeningTest.php",
+            "packages/drive/tests/Schema/NameKeyUniquenessTest.php",
+            "packages/drive/tests/Schema/NodeAdjacencyTest.php",
+            "packages/drive/tests/Schema/NodeAncestorMaxDepthTest.php",
+            "packages/drive/tests/Schema/NodeCycleDetectionTest.php",
+            "packages/drive/tests/Schema/NodeGrantSchemaTest.php",
+            "packages/drive/tests/Schema/NodeKeyNarrowingTest.php",
+            "packages/drive/tests/Schema/NodeSearchLikeEscapingTest.php",
+            "packages/drive/tests/Schema/NodeShareSchemaTest.php",
+            "packages/drive/tests/Schema/PanelConnectionTest.php",
+            "packages/drive/tests/Schema/SiblingUniqueTest.php",
+            "packages/drive/tests/Sharing/CreateShareLinkTest.php",
+            "packages/drive/tests/Sharing/PublicShareDownloadHeadersTest.php",
+            "packages/drive/tests/Sharing/ShareLinkLifecycleEventsTest.php",
+            "packages/drive/tests/Sharing/ShareLinkLifecycleTest.php",
+            "packages/drive/tests/Sharing/ShareResolverTest.php",
+            "packages/drive/tests/Sharing/ShareScopeTest.php",
+            "packages/drive/tests/Sharing/ShareSecurityBoundaryTest.php",
             "packages/drive/tests/Tenancy/HttpTenantResolutionTest.php",
             "packages/drive/tests/Tenancy/PrivateScannerTenantBoundaryTest.php",
+            "packages/drive/tests/Tenancy/StrictTenancyTest.php",
+            "packages/drive/tests/Tenancy/TenantJobBoundaryTest.php",
+            "packages/drive/tests/Testing/FactoriesTest.php",
             "packages/drive/tests/Testing/ScanLifecycleContractTest.php",
             "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php",
             "packages/drive/tests/Uploads/P3/ContentDeliveryBoundaryTest.php",
@@ -1013,6 +974,45 @@
           ]
         },
         {
+          "key": "RefreshDatabase+TestCase#skeleton",
+          "fingerprint": "555a082c1a50",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": true,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/Access/MakePermissionDriverCommandTest.php",
+            "packages/drive/tests/Profiles/MakeProfileCommandTest.php"
+          ]
+        },
+        {
+          "key": "TestCase",
+          "fingerprint": "20db02f08b7a",
+          "lifecycle": "custom",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/Schema/NodeSequenceSchemaTest.php",
+            "packages/drive/tests/Schema/ScanEvidenceSchemaTest.php",
+            "packages/drive/tests/Tenancy/TenantIdentifierPredicateTest.php"
+          ]
+        },
+        {
           "key": "TestCase+WithoutDatabaseSchema",
           "fingerprint": "ebfe4eb78046",
           "lifecycle": "none",
@@ -1031,15 +1031,151 @@
             "packages/drive/tests/Arch/OperationsBoundaryTest.php",
             "packages/drive/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/drive/tests/Arch/PublicApiSnapshotTest.php",
+            "packages/drive/tests/Arch/RevisionBlobLinksBoundaryTest.php",
             "packages/drive/tests/Arch/TestingBoundaryTest.php",
             "packages/drive/tests/Configuration/DriveConfigTest.php",
+            "packages/drive/tests/Configuration/DriveConfigValidatorTest.php",
             "packages/drive/tests/Configuration/ModuleRegistrationOrderTest.php",
             "packages/drive/tests/Configuration/UploadFileSizePolicyTest.php",
             "packages/drive/tests/Console/SchedulingRegistrarTest.php",
             "packages/drive/tests/Http/DriveProblemCodesTest.php",
             "packages/drive/tests/Modules/DriveSlotsTest.php",
             "packages/drive/tests/Providers/BindingsRegistrarTest.php",
-            "packages/drive/tests/Providers/HttpRegistrarTest.php"
+            "packages/drive/tests/Providers/DriveSliceRegistrarTest.php",
+            "packages/drive/tests/Providers/FacadeMethodDocblockTest.php",
+            "packages/drive/tests/Providers/HttpRegistrarTest.php",
+            "packages/drive/tests/Providers/VaulterEntryPointTest.php"
+          ]
+        },
+        {
+          "key": "TestCase+WithoutDatabaseSchema#skeleton",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": true,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/drive/tests/Console/MakeFileHandlerCommandTest.php"
+          ]
+        }
+      ]
+    },
+    "webhooks": {
+      "kind": "pest",
+      "cwd": "packages/webhooks",
+      "vendor": "vendor/bin/pest",
+      "config": "phpunit.xml",
+      "tests_dir": "packages/webhooks/tests",
+      "path_base": "package",
+      "default": true,
+      "discovery": [
+        "--list-tests"
+      ],
+      "partitions": [
+        {
+          "key": "(unbound)",
+          "fingerprint": "922f4b9187ab",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/webhooks/tests/Arch/ArchTest.php",
+            "packages/webhooks/tests/Arch/ConfigurationBoundaryTest.php",
+            "packages/webhooks/tests/Arch/PublicApiSnapshotTest.php",
+            "packages/webhooks/tests/Arch/TestingBoundaryTest.php"
+          ]
+        },
+        {
+          "key": "DatabaseMigrations+TestCase",
+          "fingerprint": "c83ff6c62f49",
+          "lifecycle": "migrations",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/webhooks/tests/Concurrency/WebhookAutoDisableRaceTest.php",
+            "packages/webhooks/tests/Events/WebhookAutoDisableCommitTest.php"
+          ]
+        },
+        {
+          "key": "RefreshDatabase+TestCase",
+          "fingerprint": "555a082c1a50",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/webhooks/tests/Configuration/WebhooksConfigTest.php",
+            "packages/webhooks/tests/Console/SchedulingRegistrarTest.php",
+            "packages/webhooks/tests/Feature/PruneWebhooksTest.php",
+            "packages/webhooks/tests/Http/WebhookEndpointsV1Test.php",
+            "packages/webhooks/tests/Http/WebhookExceptionStatusTest.php",
+            "packages/webhooks/tests/Http/WebhooksProblemCodesTest.php",
+            "packages/webhooks/tests/Modules/WebhooksModuleTest.php",
+            "packages/webhooks/tests/Outbox/WebhookFanoutConsumerTest.php",
+            "packages/webhooks/tests/Schema/MassAssignmentHardeningTest.php",
+            "packages/webhooks/tests/Schema/WebhooksKeyColumnsTest.php",
+            "packages/webhooks/tests/Webhooks/ConcurrentDeliveryTest.php",
+            "packages/webhooks/tests/Webhooks/DeliverWebhookTest.php",
+            "packages/webhooks/tests/Webhooks/OutboundUrlGuardTest.php",
+            "packages/webhooks/tests/Webhooks/OutboxStagingTest.php",
+            "packages/webhooks/tests/Webhooks/OutboxTransactionTest.php",
+            "packages/webhooks/tests/Webhooks/RedeliverWebhookTest.php",
+            "packages/webhooks/tests/Webhooks/ResponseSizeLimitTest.php",
+            "packages/webhooks/tests/Webhooks/SigningSecretEncryptionTest.php",
+            "packages/webhooks/tests/Webhooks/StandardWebhookVerifierTest.php",
+            "packages/webhooks/tests/Webhooks/StandardWebhooksSigningTest.php",
+            "packages/webhooks/tests/Webhooks/WebhookAutoDisableTest.php",
+            "packages/webhooks/tests/Webhooks/WebhookEndpointCrudTest.php",
+            "packages/webhooks/tests/Webhooks/WebhookEndpointScopeTest.php",
+            "packages/webhooks/tests/Webhooks/WebhookPruneSafetyTest.php",
+            "packages/webhooks/tests/Webhooks/WebhookRetryDispatcherTest.php",
+            "packages/webhooks/tests/Webhooks/WebhookRetryScheduleTest.php",
+            "packages/webhooks/tests/Webhooks/WebhookSchemaTest.php",
+            "packages/webhooks/tests/Webhooks/WebhookSecretRotationTest.php"
+          ]
+        },
+        {
+          "key": "TestCase",
+          "fingerprint": "20db02f08b7a",
+          "lifecycle": "custom",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/webhooks/tests/Observability/Tracing/WebhookPipelineTracingTest.php"
           ]
         }
       ]
@@ -1105,6 +1241,7 @@
             "packages/documents/tests/Http/CommentsV1Test.php",
             "packages/documents/tests/Http/DocumentContentV1Test.php",
             "packages/documents/tests/Http/DocumentRevisionsV1Test.php",
+            "packages/documents/tests/Http/DocumentsRouteLabelsTest.php",
             "packages/documents/tests/Http/ExportV1Test.php",
             "packages/documents/tests/Http/HubV1RoutesTest.php"
           ]
@@ -1129,7 +1266,7 @@
           ]
         },
         {
-          "key": "DatabaseMigrations+EnablesWebhooksModule+OperationsTestCase",
+          "key": "DatabaseMigrations+OperationsTestCase",
           "fingerprint": "6a4c8e099d78",
           "lifecycle": "migrations",
           "database": true,
@@ -1250,26 +1387,6 @@
           ]
         },
         {
-          "key": "EnablesWebhooksModule+OperationsTestCase+RefreshDatabase",
-          "fingerprint": "a3dcd5dc68d8",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/documents/tests/Events/DocumentEventValidatorsTest.php",
-            "packages/documents/tests/Events/DocumentEventsRecordedTest.php",
-            "packages/documents/tests/Events/DocumentJournalTest.php"
-          ]
-        },
-        {
           "key": "ExportTestCase+RefreshDatabase",
           "fingerprint": "04ced82d6226",
           "lifecycle": "refresh",
@@ -1343,6 +1460,9 @@
           ],
           "files": [
             "packages/documents/tests/Events/DocumentEventCatalogConformanceTest.php",
+            "packages/documents/tests/Events/DocumentEventValidatorsTest.php",
+            "packages/documents/tests/Events/DocumentEventsRecordedTest.php",
+            "packages/documents/tests/Events/DocumentJournalTest.php",
             "packages/documents/tests/Operations/CommentOperationsTest.php",
             "packages/documents/tests/Operations/DocumentAbilityMatrixTest.php",
             "packages/documents/tests/Operations/DocumentOperationsTest.php",
@@ -1367,6 +1487,7 @@
           ],
           "files": [
             "packages/documents/tests/Schema/DocumentAggregateSchemaTest.php",
+            "packages/documents/tests/Schema/DocumentsKeyColumnsTest.php",
             "packages/documents/tests/Schema/NodeCommentSchemaTest.php",
             "packages/documents/tests/Unit/ContentHasherTest.php",
             "packages/documents/tests/Unit/DocumentsConfigMergeTest.php",
@@ -1437,6 +1558,7 @@
             "packages/documents/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/documents/tests/Arch/PublicApiSnapshotTest.php",
             "packages/documents/tests/Arch/TestingBoundaryTest.php",
+            "packages/documents/tests/Configuration/CollaborationSecretsTest.php",
             "packages/documents/tests/Configuration/DocumentsConfigTest.php",
             "packages/documents/tests/Providers/BindingsRegistrarTest.php",
             "packages/documents/tests/Providers/CollaborationRegistrarTest.php",
@@ -1633,6 +1755,7 @@
             "packages/filament/tests/Feature/NodeResourceTest.php",
             "packages/filament/tests/Feature/NodeShareResourceTest.php",
             "packages/filament/tests/Feature/PanelActorGuardTest.php",
+            "packages/filament/tests/Feature/PanelRecordsTest.php",
             "packages/filament/tests/Feature/ResourceListingScopeTest.php",
             "packages/filament/tests/Feature/ResourcePagesTest.php",
             "packages/filament/tests/Feature/VaulterPluginTest.php"
@@ -1738,7 +1861,11 @@
             "tests/Repo/Arch/BoundaryScanTest.php",
             "tests/Repo/Arch/IdentitiesTest.php",
             "tests/Repo/Arch/InventoryHarnessTest.php",
+            "tests/Repo/Arch/MoveTypesTest.php",
+            "tests/Repo/Arch/SurfaceManifestTest.php",
+            "tests/Repo/Arch/SurfaceRulesTest.php",
             "tests/Repo/Arch/TargetMapTest.php",
+            "tests/Repo/ConsumerCheckTest.php",
             "tests/Repo/TestGroupsTest.php",
             "tests/Repo/TestRunnerTest.php",
             "tests/Repo/TestSelectTest.php",

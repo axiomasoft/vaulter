@@ -48,8 +48,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Vaulter\\Documents\\Tests\\": "tests/",
-            "Vaulter\\Tests\\": "../core/tests/"
+            "Vaulter\\Documents\\Tests\\": "tests/"
         }
     },
     "extra": {

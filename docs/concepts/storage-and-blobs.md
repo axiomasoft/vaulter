@@ -9,18 +9,19 @@ outline: deep
 Vaulter never copies file bytes into its own tables. Every uploaded file is stored
 **once** as an immutable, content-addressed **blob** on a Flysystem disk, and the
 database keeps only metadata: the `sha256`, the size, the disk, the scope-qualified
-key, a lifecycle status, and the edges that pin the blob to file versions.
+key, a lifecycle status, and the **pins** that keep the blob alive.
 
 This is the **content-addressed store (CAS)**. It gives you transparent
 deduplication, a clear separation between *bytes on disk* and *rows in the
 database*, and a garbage collector that is safe to run while uploads are in flight.
 
 ::: info Where this lives
-The CAS implementation is in `Vaulter\Media\Cas\*` (package `axioma-studio/vaulter-media`;
-the host-facing `BlobLock` stays at `Vaulter\Cas\BlobLock` in core), the row model is
-`Vaulter\Models\Cas\Blob`, the lifecycle enum is `Vaulter\Enums\Cas\BlobStatus`, and
-configuration sits under the `cas`, `dedup`, `gc` and `storage` keys of
-`config/vaulter.php`.
+The CAS belongs to the package `axioma-studio/vaulter-media`: the implementation is in `Vaulter\Media\Cas\*`
+(including `BlobLock`), the contracts in `Vaulter\Media\Contracts\Cas\*`, the row model is
+`Vaulter\Media\Models\Cas\Blob`, the lifecycle enum is `Vaulter\Media\Enums\Cas\BlobStatus`, the tables are
+`v_blobs` and `v_blob_references` (the pins), and configuration sits under `config/vaulter-media.php`
+(`vaulter-media.models.blob`, `disk`, `dedup`, `gc`). Media knows no drive table: whoever keeps bytes alive pins them
+through `BlobPins`.
 :::
 
 ## The mental model
@@ -38,16 +39,16 @@ BlobStore::commitStaged() ─► one locked transaction: find-or-create v_blobs 
 ContentStore::promote() ─► write staged bytes to "<scope>/ab/<sha256>" on the disk
      │
      ▼
-v_file_version_blobs    ─► the EDGE that pins the blob alive (liveness truth)
+BlobPins::pin()          ─► a row in v_blob_references that keeps the blob alive (liveness truth)
 ```
 
 Three contracts split the work, and all three are swappable through `config('vaulter-media')`:
 
 | Contract | Default | Responsibility |
 |---|---|---|
-| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | High-level lifecycle: `commit` / `commitStaged` / `attach` / `detach` / `read`. Prepared and stream CAS entry points. |
-| `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Byte side: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Knows bytes, hashes and keys — never a `v_blobs` row. |
-| `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Thin Flysystem abstraction: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
+| `Vaulter\Media\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | High-level lifecycle: `commit` / `commitStaged` / `read`. Prepared and stream CAS entry points. Keeping a blob alive is not its job — that is `BlobPins`. |
+| `Vaulter\Media\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Byte side: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Knows bytes, hashes and keys — never a `v_blobs` row. |
+| `Vaulter\Media\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Thin Flysystem abstraction: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
 ```php
 // config/vaulter-media.php
@@ -64,7 +65,7 @@ your own class to change how bytes are staged, hashed, promoted, or stored — s
 
 ## Bytes on disk, metadata in the database
 
-A blob is just metadata. The `v_blobs` row (model `Vaulter\Models\Cas\Blob`) carries:
+A blob is just metadata. The `v_blobs` row (model `Vaulter\Media\Models\Cas\Blob`) carries:
 
 | Column | Meaning |
 |---|---|
@@ -73,7 +74,7 @@ A blob is just metadata. The `v_blobs` row (model `Vaulter\Models\Cas\Blob`) car
 | `disk` | The Flysystem disk the canonical object lives on. |
 | `storage_key` | The scope-qualified path of the object — `"<scope>/ab/<sha256>"`. |
 | `status` | Lifecycle state (see [Blob lifecycle](#blob-lifecycle)). |
-| `ref_count` | A **reconciled cache** of the live edge count — *not* the liveness truth. |
+| `ref_count` | A **reconciled cache** of the live pin count — *not* the liveness truth. |
 | `dedup_scope` | `tenant` \| `drive` \| `off` (`global` on blobs not yet repaired) — the boundary the address is unique within. |
 | `scope_key` | Lossless `tenant:{id}`, `drive:{id}` or `off:{ulid}`; unique together with `sha256`. |
 | `tenant_id` / `storage_id` | Informational scope IDs; `scope_key` owns deduplication. |
@@ -121,7 +122,7 @@ transaction, so hashing a multi-GB upload never holds the row/advisory lock.
 :::
 
 The staged object (`Vaulter\Media\Cas\StagedTempObject`, implementing
-`Vaulter\Contracts\Cas\StagedObject`) exposes `path()`, `sha256()`, `sizeBytes()`,
+`Vaulter\Media\Contracts\Cas\StagedObject`) exposes `path()`, `sha256()`, `sizeBytes()`,
 `readStream()` and an idempotent `discard()` that removes the temp file once the
 bytes are promoted (or the commit rolls back).
 
@@ -199,18 +200,30 @@ Key properties (all from `Vaulter\Media\Cas\BlobStore`):
   newly created (or the canonical object is somehow missing — `promote()` is
   idempotent and conditional, so a resurrected row whose object vanished is
   re-promoted safely).
-- **No synchronous `ref_count++`.** The liveness truth is the *edge* in
-  `v_file_version_blobs`; `ref_count` is a reconciled cache that may lag.
+- **No synchronous `ref_count++`.** The liveness truth is the *pin* in
+  `v_blob_references`; `ref_count` is a reconciled cache that may lag.
 
-### Attaching and reading
+### Pinning and reading
 
-A committed blob is pinned alive by a **version↔blob edge**:
+A committed blob is kept alive by a **pin**: a row `(blob, owner_type, reference_key)`, unique on that triple,
+written through the `Vaulter\Media\Contracts\Cas\BlobPins` contract by the module that keeps the bytes. The
+`owner_type` is opaque and names the owner (`drive.revision_blob` for a file revision's link); the `reference_key`
+is derived from the owner's own row. The owner pins in the **same transaction** that writes its row and unpins in
+the transaction that deletes it, under the blob's `(scope, sha256)` lock:
 
 ```php
-$blobStore->attach($fileVersion, $blob, ['role' => 'data', 'ordinal' => 0]);
-$blobStore->detach($fileVersion, $blob);   // bytes are NOT deleted here — GC handles that
-$stream = $blobStore->read($blob);         // resource|null over the canonical bytes
+$pins->pin($blob, 'drive.revision_blob', $revisionId.':data:0');
+$pins->unpin($blob, 'drive.revision_blob', $revisionId.':data:0'); // bytes are NOT deleted here — GC handles that
+$stream = $blobStore->read($blob);                                 // resource|null over the canonical bytes
 ```
+
+In the drive, `Vaulter\Drive\Content\RevisionBlobLinks` is the only writer of the revision↔blob link and its pin.
+A pin to a tombstoned blob is accepted only while its bytes still exist (the blob is then committed again); a pin
+to a deleting or deleted blob throws `BlobUnavailableException` (problem code `blob_unavailable`, 409 over REST) —
+commit the bytes again and pin the returned blob. Pins outlive the owner's activation: switching the drive off,
+or removing it from Composer, releases nothing, and `vaulter:doctor` (`media.blobs.pins`) names the owners that are
+gone. Only the owner's own purge or rollback releases its pins (`vaulter:module:uninstall drive --force --purge`);
+no generic command removes another module's pins. See the [`BlobPins` contract](/reference/php-api).
 
 In the Drive, `IngestFileAction` prepares and hashes bytes through
 `ContentStore::stage()` before entering its SQL transaction. Inside the transaction,
@@ -227,7 +240,7 @@ back all metadata. Copies reserve the sum of their subtree's heads in one UPDATE
 purging a file free bytes.
 
 The upload then calls `BlobStore::commitStaged($staged, $scope, $disk)`, creates the
-file/version/edge and updates the head. `commitStaged()` leaves the staged object
+file/revision/link (and its pin) and updates the head. `commitStaged()` leaves the staged object
 intact. Its caller discards it in `finally`, after completion or failure, so SQL
 serialization/deadlock retries (up to three attempts) reuse the same prepared bytes.
 `commit($stream, $scope, $disk)` remains the convenience stage/commitStaged/discard
@@ -243,12 +256,12 @@ grace period under the same CAS lock, preserving objects referenced by winners.
 Reading a blob is internal. Bytes reach an HTTP client only through the REST v1
 [file delivery](/reference/rest-api#file-delivery) point, which checks access, tenant, profile
 and scan state again on **every** request and pins the **exact revision** asked for (the head,
-or an explicit revision). `vaulter.downloads.delivery_mode` picks how:
+or an explicit revision). `vaulter-drive.downloads.delivery_mode` picks how:
 
 | Mode | What the client gets | Revocation |
 |---|---|---|
 | `strict` (default) | the bytes, streamed by the application, `Cache-Control: private, no-store` | every new request is checked; a stream already started is not cut |
-| `direct_signed` (opt-in) | a `302` to a URL your `Vaulter\Contracts\Cas\DirectContentUrlSigner` signs for that exact object version, valid `vaulter.downloads.direct_ttl_seconds` (1–300) | a URL already issued stays valid until it expires — revoking access does not cancel it |
+| `direct_signed` (opt-in) | a `302` to a URL your `Vaulter\Media\Contracts\Cas\DirectContentUrlSigner` signs for that exact object version, valid `vaulter-drive.downloads.direct_ttl_seconds` (1–300) | a URL already issued stays valid until it expires — revoking access does not cancel it |
 
 `direct_signed` needs a signer bound in the container; the signer receives the immutable content
 identity (blob, storage key, storage version, sha256, size) and must sign exactly that. Choose it
@@ -262,7 +275,7 @@ Only committed or superseded revisions can be downloaded. A caller without Downl
 
 ## Blob lifecycle
 
-`Vaulter\Enums\Cas\BlobStatus` is the state machine:
+`Vaulter\Media\Enums\Cas\BlobStatus` is the state machine:
 
 ```
 Pending → Committed → Tombstoned → Deleting → Deleted
@@ -283,11 +296,12 @@ and `isLive()` returns true for `Pending` and `Committed` (both pin their bytes)
 
 ## Garbage collection (two-phase, race-free)
 
-When you trash and purge a file, its version edges detach. A blob with no remaining
-edges is *garbage* — but deleting its bytes safely, while uploads may be
+When you trash and purge a file, its revision links go and their pins are released. A blob with no remaining
+pins is *garbage* — but deleting its bytes safely, while uploads may be
 resurrecting that exact `sha256`, is the hard part. Vaulter's GC
 (`Vaulter\Media\Cas\BlobGarbageCollector`) solves it in two phases, **ACL-blind** and run
-as the system (a node a user cannot see still pins its blob).
+as the system (a node a user cannot see still pins its blob). It reads only the media tables — `v_blobs` and
+`v_blob_references` — never a table of the drive.
 
 ### Phase 1 — mark
 
@@ -295,7 +309,7 @@ Scan `committed ∧ ref_count <= 0` (the `scopeGarbageCollectable` query). For e
 candidate, under the per-`(scope, sha256)` lock, **re-verify** that:
 
 - the status is still `Committed` (the cheap scan may be stale), and
-- no live edge exists in `v_file_version_blobs`.
+- no pin exists in `v_blob_references`.
 
 If both hold, `tombstone()` sets `status = Tombstoned` and `delete_after_at = now +
 grace`. The grace deadline is armed *here*, so the sweep can never delete within the
@@ -304,7 +318,7 @@ grace window.
 ### Phase 2 — sweep
 
 Take `tombstoned` blobs past their grace (`scopeSweepable`). Under the lock,
-re-verify the blob is still `Tombstoned`, still has no live edge, and is past
+re-verify the blob is still `Tombstoned`, still has no pin, and is past
 `delete_after_at`. Only then: `markDeleting` → physical delete of the
 scope-qualified object → `markDeleted` (an idempotent tombstone; a missing object is
 fine).
@@ -314,10 +328,10 @@ Every transaction that changes a content address's liveness — upload-commit,
 GC-mark, GC-sweep — takes the per-`(scope, sha256)` lock as its **first statement**
 and decides from rows read *after* it. That is what makes online GC safe: a commit
 that wins the lock resurrects a tombstoned blob *before* the sweep can see it; a
-sweep that wins the lock re-checks edge existence *before* deleting.
+sweep that wins the lock re-checks pin existence *before* deleting.
 :::
 
-Per database driver (`Vaulter\Cas\BlobLock`):
+Per database driver (`Vaulter\Media\Cas\BlobLock`):
 
 - **PostgreSQL** — `pg_advisory_xact_lock(hashtext(scope||sha256))`, a real mutex
   held for the whole transaction. The sweep additionally runs `SERIALIZABLE` with
@@ -333,7 +347,7 @@ three even when the advisory lock is a no-op.
 ### Pending sweep
 
 `sweepPending()` clears rows from a crashed staging — a `Pending` row older than the
-grace window (`first_seen_at < now − grace`) that carries no edge. Its possibly
+grace window (`first_seen_at < now − grace`) that carries no pin. Its possibly
 partial object is deleted and the row finalised as a deleted tombstone, under the
 lock so a slow-but-live commit is never stolen.
 
@@ -391,7 +405,7 @@ recipe.
 
 `ref_count` is a cache, not the truth, so it drifts. `vaulter:blobs:reconcile`
 (backed by `Vaulter\Media\Cas\BlobReconciler`) rebuilds it from the
-`v_file_version_blobs` edge counts — the real liveness source — and reports
+`v_blob_references` pin counts — the real liveness source — and reports
 integrity hazards. It **never deletes anything**.
 
 ```bash
@@ -492,7 +506,7 @@ before its row commits, and a fresh object must never be mistaken for an orphan.
 
 Blobs live on a standard Laravel Flysystem disk. The disk for a given blob is
 resolved per call by `FlysystemStorageDriver::disk()`: a blob's own `disk` column
-(set from the owning `v_storages.disk`) wins, otherwise the install default:
+(set from the owning `v_drives.disk`) wins, otherwise the install default:
 
 ```php
 // config/vaulter.php
@@ -539,7 +553,7 @@ different, recommended backstop — see the `uploads` config.)
 ## The CAS commit saga
 
 The CAS saga is stage → SHA-256 → `cas:{scope_key}:{sha256}` lock → row lookup or
-resurrection → conditional promotion → edge → SQL commit. SQL rollback after
+resurrection → conditional promotion → pin → SQL commit. SQL rollback after
 promotion can leave an orphan. Reconcile recognizes both key layouts, waits for
 `orphan_grace_hours`, and rechecks row absence under the same CAS lock before
 removing bytes. GC uses the blob row's `scope_key` with that identical namespace.

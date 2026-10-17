@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Configuration;
 
+use Vaulter\Attributes\Api;
+
 /**
  * Where identical bytes share one stored blob. Deduplication never
  * crosses a tenant: a shared install-wide scope would let one tenant learn that
@@ -11,6 +13,7 @@ namespace Vaulter\Media\Configuration;
  *
  * @closed The string values are the vaulter-media.dedup.scope settings.
  */
+#[Api]
 enum DedupScope: string
 {
     /** Within one tenant; a drive without a tenant deduplicates within itself. */

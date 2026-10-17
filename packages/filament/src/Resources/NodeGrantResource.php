@@ -15,83 +15,53 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Override;
 use UnitEnum;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Contracts\Access\AccessOperations;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\NodeGrantResource\Pages\ListNodeGrants;
-use Vaulter\Filament\Support\PanelActor;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
-use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\Filament\Support\PanelDrives;
+use Vaulter\Filament\Support\PanelGrants;
+use Vaulter\Filament\Support\PanelNodes;
+use Vaulter\Filament\Support\PanelRecord;
+use Vaulter\Filament\Support\PanelRecords;
 
 /**
- * The per-node ACL admin surface: list, create and revoke
- * the node grants the {@see AccessOperations} folds into effective permissions. A
- * grant gives a subject (type + id) a role on a node, with an item|subtree scope
- * and an optional read-time expiry; grants are positive only.
+ * The per-node ACL admin surface: list, create and revoke the node grants the drive's
+ * access operations manage. A grant gives a subject (type + id) a role on a node, with an
+ * item|subtree scope and an optional read-time expiry; grants are positive only.
  *
- * Every mutation flows through a CORE Action — never a direct Eloquent write:
- *   - create → {@see AccessOperations} (idempotent upsert on the grant key);
- *   - revoke → {@see AccessOperations} (drops every grant a subject holds).
- * Both require Ability::Manage on the target node, gated through the AccessOperations,
- * so the panel never bypasses the ACL. The model resolves through
- * {@see app(VaulterConfig::class)->model('grant')} for swappability.
+ * Rows are the grants the drive handles list for the nodes the acting admin can manage
+ * ({@see PanelGrants}); every mutation flows through the same handle's access operations —
+ * never a direct Eloquent write — and they require Ability::Manage on the node, so the
+ * panel never bypasses the ACL.
+ *
+ * @phpstan-import-type GrantRow from PanelGrants
  */
+#[Internal]
 final class NodeGrantResource extends Resource
 {
-    protected static ?string $model = NodeGrant::class;
+    protected static ?string $model = PanelRecord::class;
+
+    protected static ?string $modelLabel = 'node grant';
+
+    protected static bool $isGloballySearchable = false;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-key';
 
     protected static string|UnitEnum|null $navigationGroup = 'Vaulter';
-
-    #[Override]
-    public static function getModel(): string
-    {
-        return app(VaulterConfig::class)->model('grant');
-    }
-
-    /**
-     * Access-aware listing: narrow to grant rows whose node_id is in
-     * the acting admin's grant-reachable candidate set (the same set
-     * {@see NodeResource::getEloquentQuery()} narrows the node table to). Empty
-     * candidate set (no actor, or an actor with zero grants) ⇒ empty table.
-     */
-    #[Override]
-    public static function getEloquentQuery(): Builder
-    {
-        $query = app(TenancyBoundary::class)->constrain(parent::getEloquentQuery(), 'node.storage');
-
-        $ids = [];
-        $nodeClass = app(VaulterConfig::class)->model('node');
-        foreach (app(TenancyBoundary::class)->constrain($nodeClass::query())->whereNull('trashed_at')->lazyById(100) as $node) {
-            try {
-                foreach (self::operations($node)->grants(Identity::stringify($node->getKey())) as $row) {
-                    $ids[] = $row->id;
-                }
-            } catch (VaulterException) {
-                // Hidden nodes and disabled features contribute no rows.
-            }
-        }
-
-        return $query->whereKey($ids);
-    }
 
     #[Override]
     public static function form(Schema $schema): Schema
@@ -103,6 +73,8 @@ final class NodeGrantResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->records(self::records(...))
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 TextColumn::make('node_id')
                     ->label('Node')
@@ -110,13 +82,13 @@ final class NodeGrantResource extends Resource
 
                 TextColumn::make('subject_type')
                     ->label('Subject')
-                    ->formatStateUsing(fn (string $state, NodeGrant $record): string => $state.' #'.$record->subject_id)
+                    ->formatStateUsing(fn (string $state, array $record): string => $state.' #'.self::field($record, 'subject_id'))
                     ->searchable(),
 
                 TextColumn::make('role_key')
                     ->label('Role')
                     ->badge()
-                    ->formatStateUsing(fn (string $state, NodeGrant $record): string => ucfirst($state).' v'.$record->role_version)
+                    ->formatStateUsing(fn (string $state, array $record): string => ucfirst($state).' v'.self::field($record, 'role_version'))
                     ->sortable(),
 
                 TextColumn::make('scope')
@@ -160,7 +132,7 @@ final class NodeGrantResource extends Resource
     public static function canCreate(): bool
     {
         // Created through the header action (which authorizes Manage on the chosen
-        // node and calls the core Action), not a flat resource create page.
+        // node through the access operations), not a flat resource create page.
         return false;
     }
 
@@ -205,23 +177,27 @@ final class NodeGrantResource extends Resource
     }
 
     /**
-     * Persist a grant from the validated create-form data via the core Action. The
-     * Manage ability on the chosen node is enforced here; a denial surfaces as a
-     * warning notification rather than a silent write.
+     * Persist a grant from the validated create-form data through the node's drive handle.
+     * The node must be one the admin can view and the access operations require Manage on it;
+     * a denial surfaces as a warning notification rather than a silent write. A hidden node
+     * and a missing node answer alike.
      *
      * @param array<string, mixed> $data
      */
     public static function grantFromData(array $data): void
     {
-        $node = self::resolveNode($data['node_id'] ?? null);
+        $nodeId = $data['node_id'] ?? null;
+        $found = is_int($nodeId) || is_string($nodeId) ? PanelNodes::find($nodeId) : null;
 
-        if (!$node instanceof Node) {
+        if ($found === null) {
             self::notifyDenied('The selected node no longer exists.');
 
             return;
         }
 
-        if (!self::actorCanManage($node)) {
+        [$handle, $node] = $found;
+
+        if (!self::actorCanManage($handle->access(), $node->id)) {
             self::notifyDenied('You may not manage access on this node.');
 
             return;
@@ -230,8 +206,8 @@ final class NodeGrantResource extends Resource
         /** @var string $expiresAt */
         $expiresAt = $data['expires_at'] ?? '';
 
-        self::operations($node)->grant(
-            node: Identity::stringify($node->getKey()),
+        $handle->access()->grant(
+            node: $node->id,
             grant: new GrantInput(
                 subject: new Subject(
                     // Filament validation already supplies these enum/string fields with their declared types.
@@ -248,8 +224,36 @@ final class NodeGrantResource extends Resource
     }
 
     /**
-     * Revoke every grant a subject holds on the row's node via the core Action.
-     * Gated by Ability::Manage on the node.
+     * Revoke every grant a subject holds on the row's node through the drive's access
+     * operations, which re-check Manage inside the mutation.
+     *
+     * @param array<mixed> $record a panel grant row
+     */
+    public static function revokeRecord(array $record): void
+    {
+        $handle = PanelDrives::handle(self::field($record, 'drive_id')) ?? throw NodeNotFoundException::forId('missing');
+        $handle->access()->revoke(node: self::field($record, 'node_id'), grant: self::field($record, 'id'));
+    }
+
+    /**
+     * @param  array<string, mixed>                    $filters
+     * @return Paginator<string, array<string, mixed>>
+     */
+    private static function records(?string $search, array $filters, ?string $sortColumn, ?string $sortDirection, int $page, int|string $recordsPerPage): Paginator
+    {
+        $role = PanelRecords::filterValue($filters, 'role_key');
+        $rows = array_values(array_filter(
+            PanelGrants::rows(),
+            static fn (array $row): bool => ($role === null || $row['role_key'] === $role)
+                && PanelRecords::contains($row['subject_type'].' '.$row['subject_id'], $search),
+        ));
+
+        return PanelRecords::paginate($rows, $sortColumn, $sortDirection, $page, $recordsPerPage, 'created_at');
+    }
+
+    /**
+     * Revoke every grant a subject holds on the row's node. Gated by Ability::Manage on
+     * the node: the rows are only built for nodes the admin can manage.
      */
     private static function revokeAction(): Action
     {
@@ -258,28 +262,18 @@ final class NodeGrantResource extends Resource
             ->icon('heroicon-o-trash')
             ->color('danger')
             ->requiresConfirmation()
-            ->visible(fn (NodeGrant $record): bool => self::actorCanManage($record->node))
-            ->action(function (NodeGrant $record): void {
+            ->action(function (array $record): void {
                 self::revokeRecord($record);
 
                 Notification::make()->title('Grant revoked')->success()->send();
             });
     }
 
-    /**
-     * Whether the acting admin may manage grants on the node. No acting
-     * user ⇒ false.
-     */
-    private static function actorCanManage(Node $node): bool
+    /** Whether the handle lets the acting admin manage grants on the node (listing them needs Manage). */
+    private static function actorCanManage(AccessOperations $access, string $nodeId): bool
     {
-        $actor = PanelActor::current();
-
-        if ($actor === null) {
-            return false;
-        }
-
         try {
-            self::operations($node)->grants(Identity::stringify($node->getKey()));
+            $access->grants($nodeId);
 
             return true;
         } catch (VaulterException) {
@@ -287,30 +281,12 @@ final class NodeGrantResource extends Resource
         }
     }
 
-    public static function revokeRecord(NodeGrant $record): void
+    /** @param array<mixed> $record */
+    private static function field(array $record, string $key): string
     {
-        $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
-        self::operations($node)->revoke(node: Identity::stringify($node->getKey()), grant: Identity::stringify($record->getKey()));
-    }
+        $value = $record[$key] ?? null;
 
-    private static function operations(Node $node): AccessOperations
-    {
-        $actor = PanelActor::current() ?? throw MissingActorException::required();
-        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
-
-        return app()->makeWith(AccessOperations::class, ['context' => DriveContext::for(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
-    }
-
-    private static function resolveNode(int|string|null $id): ?Node
-    {
-        // Both values also produce `find() === null`; this fast path avoids a needless query.
-        if ($id === null || $id === '') { // @pest-mutate-ignore: BooleanOrToBooleanAnd,EmptyStringToNotEmpty
-            return null;
-        }
-
-        $model = app(VaulterConfig::class)->model('node');
-
-        return app(TenancyBoundary::class)->constrain($model::query())->find($id);
+        return is_scalar($value) ? (string) $value : '';
     }
 
     /**
@@ -318,19 +294,13 @@ final class NodeGrantResource extends Resource
      */
     private static function nodeOptions(): array
     {
-        $model = app(VaulterConfig::class)->model('node');
+        $options = [];
 
-        /** @var array<int|string, string> $options */
-        $options = app(TenancyBoundary::class)->constrain($model::query())
-            ->whereNull('trashed_at')
-            ->orderBy('drive_id')
-            ->orderBy('name')
-            ->get()
-            ->filter(fn (Node $node): bool => self::actorCanManage($node))
-            ->mapWithKeys(fn (Node $node): array => [
-                $node->getKey() => sprintf('#%s %s [%s]', $node->getKey(), $node->name === '' ? '(root)' : $node->name, $node->drive_id),
-            ])
-            ->all();
+        foreach (PanelNodes::rows() as $node) {
+            if ($node['trashed_at'] === null && ($node['abilities'][Ability::Manage->value] ?? false) === true) {
+                $options[$node['id']] = sprintf('#%s %s [%s]', $node['id'], $node['name'] === '' ? '(root)' : $node['name'], $node['drive_id']);
+            }
+        }
 
         return $options;
     }

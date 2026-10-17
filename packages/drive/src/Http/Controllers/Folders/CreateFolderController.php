@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Folders;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Http\Requests\Folders\CreateFolderRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 
 /** Create a folder (Create in the parent; the drive root when no parent is given). */
+#[Internal]
 final readonly class CreateFolderController
 {
     public function __construct(private NodeResponses $nodes) {}

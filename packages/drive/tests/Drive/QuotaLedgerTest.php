@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Data\Drive\CopyOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\FileRevisionSnapshot;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\CopyOptions;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
-use Vaulter\Exceptions\Drive\QuotaExceededException;
-use Vaulter\Exceptions\Drive\RevisionPinnedException;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Quota\QuotaCalculator;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException;
+use Vaulter\Drive\Exceptions\QuotaExceededException;
+use Vaulter\Drive\Exceptions\RevisionPinnedException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\FileRevisionBlob;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Quota\QuotaCalculator;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * P4-I18 (PLAN2.D48): used_bytes is the logical sum of every retained revision of the
@@ -179,7 +179,7 @@ it('forgets the source of restores whose source revision is deleted', function (
 });
 
 it('lets a writer pin but only a manager delete revisions', function (): void {
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $node = quotaLedgerUpload($system, 'first');
     $first = DriveTestHelpers::model($node)->file()->firstOrFail()->current_revision_id;

@@ -7,13 +7,14 @@ namespace Vaulter\Documents\Testing\Contracts;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\App;
 use PHPUnit\Framework\Assert;
+use Vaulter\Attributes\Api;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Exceptions\DuplicateDocumentExporterException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 /**
  * What a document exporter must keep, for the host's own exporters as well as the
@@ -27,6 +28,7 @@ use Vaulter\Models\Drive\Node;
  * exporter renders are read from the installed type registry, and the filename from
  * the bound resolver.
  */
+#[Api]
 final class ExporterContractTests
 {
     public function assertExporterContract(DocumentExporter $exporter): void

@@ -7,19 +7,21 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Drive\Actions\Drives\RecountDriveQuotaAction;
-use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * Recompute v_drives.used_bytes from the retained revisions, drive by drive, and
  * report the drift it finds. --dry-run reads and reports without writing.
  * It runs as maintenance outside any tenant, scoped to the drives it names.
  */
+#[Internal]
 final class RecountDrivesCommand extends Command
 {
     use OpensWriteScope;
@@ -28,7 +30,7 @@ final class RecountDrivesCommand extends Command
 
     protected $description = 'Recount the used bytes of drives from their retained file revisions.';
 
-    public function handle(RecountDriveQuotaAction $recount, VaulterConfig $config, VaulterManager $manager): int
+    public function handle(RecountDriveQuotaAction $recount, DriveConfig $config): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $only = array_values(array_filter(array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', (array) $this->option('drive')), static fn (string $id): bool => $id !== ''));
@@ -36,7 +38,7 @@ final class RecountDrivesCommand extends Command
         $checked = 0;
         $drifted = 0;
 
-        $ids = $manager->withoutTenancy(fn (): array => $config->model('drive')::query()
+        $ids = Tenancy::without(fn (): array => $config->model('drive')::query()
             ->where('status', '!=', DriveStatus::Deleting->value)
             ->when($only !== [], static fn ($query) => $query->whereKey($only))
             ->orderBy('id')->pluck('id')->all());
@@ -46,7 +48,7 @@ final class RecountDrivesCommand extends Command
                 continue;
             }
             try {
-                $report = $manager->withoutTenancy(fn (): array => $recount->execute($key, $dryRun));
+                $report = Tenancy::without(fn (): array => $recount->execute($key, $dryRun));
             } catch (Throwable $exception) {
                 $failed = true;
                 Log::error('Vaulter drive recount failed.', [

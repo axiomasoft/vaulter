@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Uploads;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
@@ -14,6 +15,7 @@ use Vaulter\Exceptions\VaulterException;
  * a ZIP archive. The server recomputes the type from the bytes it holds and refuses
  * to commit a type-confused object rather than trust the client's claim.
  */
+#[Api]
 final class UploadContentMismatchException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

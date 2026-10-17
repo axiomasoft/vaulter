@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Events\Drives\DriveUnarchived;
-use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Drive\Exceptions\InvalidDriveStateException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Drive\InvalidDriveStateException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
 
 /** archived → active. */
+#[Internal]
 final readonly class UnarchiveDriveAction
 {
     public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder) {}
@@ -21,7 +23,7 @@ final readonly class UnarchiveDriveAction
     public function execute(DriveContext $context): Drive
     {
         return $this->database->transaction(function () use ($context): Drive {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $drive = $this->drives->lock($context->driveId());
             if ($drive->status !== DriveStatus::Archived) {
                 throw InvalidDriveStateException::for($drive->id, 'unarchive', $drive->status);

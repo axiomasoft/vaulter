@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
 
 /** A previewer sees the file and its metadata but never gets its bytes. */
 uses(RefreshDatabase::class);
 
 it('shows the node to a previewer, with download off, and refuses the bytes with 403', function (string $mode): void {
     Storage::fake('local');
-    config()->set('vaulter.downloads.delivery_mode', $mode);
+    config()->set('vaulter-drive.downloads.delivery_mode', $mode);
     $drive = V1::drive(userId: 1);
     $file = V1::file($drive, 'preview.txt', 'preview only');
     $revision = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();

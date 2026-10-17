@@ -10,16 +10,16 @@ use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Content\UploadCleanupReconciler;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Testing\Concurrency\ForkRace;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 

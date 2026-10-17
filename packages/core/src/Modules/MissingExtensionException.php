@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\VaulterException;
 
 /**
  * A capability or a slot handler was asked for but no active module provides it — an integration
  * error, not a client one.
  */
+#[Api]
 final class MissingExtensionException extends VaulterException
 {
     public static function capability(string $contract): self

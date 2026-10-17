@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Concerns;
 
-use Illuminate\Foundation\Application;
-use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Testing\Concerns\EnablesModules;
 
 /**
  * For a test file that asserts webhook outbox rows, endpoints or commands: boots the package with the
@@ -14,13 +13,11 @@ use Vaulter\Tests\Webhooks\WebhookTestHelpers;
  */
 trait EnablesWebhooksModule
 {
-    /**
-     * @param Application $app
-     */
-    protected function defineEnvironment($app): void
-    {
-        parent::defineEnvironment($app);
+    use EnablesModules;
 
-        WebhookTestHelpers::enableModule($app);
+    /** @return list<string> */
+    protected function modulesToEnable(): array
+    {
+        return ['webhooks'];
     }
 }

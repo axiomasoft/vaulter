@@ -8,26 +8,26 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 use LogicException;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Drives\DriveCreated;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
+use Vaulter\Drive\Repositories\DriveReadRepository;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Repositories\Changes\ChangeHeadRepository;
-use Vaulter\Repositories\Drive\DriveReadRepository;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
@@ -42,6 +42,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * root node, and root_node_id is repointed at it once it exists (the schema leaves
  * that pair without a hard FK to dodge the chicken-and-egg insert order).
  */
+#[Internal]
 final readonly class DriveProvisioner
 {
     public function __construct(
@@ -142,8 +143,8 @@ final readonly class DriveProvisioner
         }
 
         return $this->database->transaction(function () use ($storage): Node {
-            $this->database->lockTree($storage->id);
-            $class = app(VaulterConfig::class)->model('drive');
+            $this->database->lockAggregate('drives', $storage->id);
+            $class = app(DriveConfig::class)->model('drive');
             $storage = $class::query()->whereKey($storage->getRawOriginal($storage->getKeyName()))->lockForUpdate()->firstOrFail();
             $storage = app(TenancyBoundary::class)->assertDrive($storage);
             $existing = $storage->rootNode()->first();

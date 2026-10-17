@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /** Typed accessors over the `schedule` blocks of the Vaulter config roots. */
+#[Api]
 final readonly class ScheduleConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     /** Whether the packages put their maintenance tasks on the host scheduler at all. */

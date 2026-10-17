@@ -7,21 +7,22 @@ namespace Vaulter\Drive\Http\Controllers\Uploads;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Drive\Http\Resources\Uploads\UploadSessionResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\UploadsOf;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
 
 /**
  * The S3-multipart resumable-upload protocol over the upload operations:
@@ -34,6 +35,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * is only the protocol's receipt. Sessions are resolved like the tus ones: by upload id
  * to their drive, tenant-scoped, then authorized by the operations.
  */
+#[Internal]
 final class S3MultipartProtocolController
 {
     public function __construct(

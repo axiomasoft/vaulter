@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Content\ImmutableContentIdentity;
-use Vaulter\Content\SignedContentUrl;
-use Vaulter\Contracts\Cas\DirectContentUrlSigner;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Http\V1;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Http\V1;
+use Vaulter\Media\Content\ImmutableContentIdentity;
+use Vaulter\Media\Content\SignedContentUrl;
+use Vaulter\Media\Contracts\Cas\DirectContentUrlSigner;
 
 /**
  * In the opt-in direct_signed mode a download is an uncached 302 to a short-lived URL of
@@ -35,8 +35,8 @@ final class DriveRecordingSigner implements DirectContentUrlSigner
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.downloads.delivery_mode', 'direct_signed');
-    config()->set('vaulter.downloads.direct_ttl_seconds', 120);
+    config()->set('vaulter-drive.downloads.delivery_mode', 'direct_signed');
+    config()->set('vaulter-drive.downloads.direct_ttl_seconds', 120);
     app()->instance(DirectContentUrlSigner::class, $this->signer = new DriveRecordingSigner);
     $this->drive = V1::drive(userId: 1);
     $this->actingAs(V1::user(1));

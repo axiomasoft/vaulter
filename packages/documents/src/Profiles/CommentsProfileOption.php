@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Profiles;
 
-use Vaulter\Contracts\Profiles\ProfileOption;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Profiles\Profile;
+use Vaulter\Drive\Contracts\Profiles\ProfileOption;
+use Vaulter\Drive\Profiles\Profile;
 
 /**
  * The `comments` profile option: comments are globally on while `vaulter-documents.comments.enabled` is; a
  * profile may only narrow it, which the drive's profile policy enforces.
  */
+#[Internal]
 final readonly class CommentsProfileOption implements ProfileOption
 {
     public const string NAME = 'comments';

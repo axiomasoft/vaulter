@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Profiles;
 
-use Vaulter\Contracts\Profiles\ProfileOption;
-use Vaulter\Profiles\Profile;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Contracts\Profiles\ProfileOption;
+use Vaulter\Drive\Profiles\Profile;
 
 /**
  * The `allowed_document_types` profile option: a profile may restrict its drives to some document types
@@ -13,6 +14,7 @@ use Vaulter\Profiles\Profile;
  * The type registry is filled while the documents module boots, after the profiles are validated, so the keys are
  * not checked against it here.
  */
+#[Internal]
 final readonly class AllowedDocumentTypesProfileOption implements ProfileOption
 {
     public const string NAME = 'allowed_document_types';

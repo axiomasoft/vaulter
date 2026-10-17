@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Collaboration;
 
-use Vaulter\Access\AccessResolver;
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\HostUserResolver;
@@ -17,12 +17,13 @@ use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\DriveStatus;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Support\Identity;
 
 /**
@@ -33,9 +34,8 @@ use Vaulter\Support\Identity;
  * tenant, the drive is active (archived: read-only), the room's epoch is the
  * document's current one, and the token subject's rights now. A revoked Edit therefore
  * takes effect on the hub's next call.
- *
- * @internal
  */
+#[Internal]
 final readonly class CollaborationHub
 {
     public function __construct(

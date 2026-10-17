@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\Log;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Documents\Data\Collaboration\RoomRef;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -12,8 +16,10 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Support\Identity;
 
+#[Api]
 final readonly class DocumentsConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function revisionLimit(): int
@@ -166,6 +172,24 @@ final readonly class DocumentsConfig
                 .'Fix: set VAULTER_COLLAB_SECRET (JWT key, Laravel only) and VAULTER_COLLAB_WEBHOOK_SECRET (shared with the hub) to different values.',
             );
         }
+    }
+
+    /**
+     * Collaboration needs a nonempty JWT secret and a different nonempty webhook secret: production refuses to boot
+     * without them, any other environment logs a warning.
+     */
+    public function assertCollaborationSecrets(Application $app): void
+    {
+        $jwt = $this->hubJwtSecret();
+        $webhook = $this->hubWebhookSecret();
+        if (!$this->collaborationEnabled() || ($jwt !== null && $jwt !== '' && $webhook !== null && $webhook !== '' && $jwt !== $webhook)) {
+            return;
+        }
+        $message = '[Vaulter] Collaboration requires nonempty, different JWT and webhook secrets.';
+        if ($app->environment('production')) {
+            throw new InvalidConfigurationException($message);
+        }
+        Log::warning($message);
     }
 
     public function hubTimestampTolerance(): int

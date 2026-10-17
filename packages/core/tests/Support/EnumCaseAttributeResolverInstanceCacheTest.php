@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Vaulter\Attributes\Label;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Drive\Enums\Access\Effect;
 use Vaulter\Support\EnumCaseAttributeResolver;
 
 /*
  * P4.6 / F-P2.1-05 (Minor, D19 red-before): `EnumCaseAttributeResolver` used to
  * carry a `private static array $cache` — a process-wide reflection-attribute
- * cache living entirely outside `VaulterManager`/the facade, a literal E3.3
+ * cache living entirely outside `Vaulter`/the facade, a literal E3.3
  * violation ("no global state besides facades"). This test proves the cache is
  * now owned by the INSTANCE, not the class: a fresh instance never inherits
  * another instance's cached entries. On the pre-fix `static $cache`, reading the

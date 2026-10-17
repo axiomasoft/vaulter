@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
-use Vaulter\Contracts\Drive\DriveExtension;
-use Vaulter\Contracts\Drive\NodeContentLifecycle;
-use Vaulter\Contracts\Drive\NodeSnapshotContributor;
-use Vaulter\Contracts\Presentation\KindPresenter;
-use Vaulter\Contracts\Profiles\ProfileOption;
+use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Documents\Console\MakeDocumentTypeCommand;
 use Vaulter\Documents\Console\MakeExporterCommand;
@@ -20,10 +17,12 @@ use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Doctor\CollaborationCheck;
 use Vaulter\Documents\Doctor\DocumentTypesCheck;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
+use Vaulter\Documents\Http\Support\DocumentsRouteLabels;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Presentation\DocumentPresenter;
@@ -31,14 +30,21 @@ use Vaulter\Documents\Profiles\AllowedDocumentTypesProfileOption;
 use Vaulter\Documents\Profiles\CommentsProfileOption;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Providers\CollaborationRegistrar;
+use Vaulter\Documents\Schema\DocumentsSchema;
 use Vaulter\Documents\Support\DocumentHeads;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Drive\Contracts\DriveExtension;
+use Vaulter\Drive\Contracts\NodeContentLifecycle;
+use Vaulter\Drive\Contracts\NodeSnapshotContributor;
+use Vaulter\Drive\Contracts\Presentation\KindPresenter;
+use Vaulter\Drive\Contracts\Profiles\ProfileOption;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
+use Vaulter\Modules\OwnsSchema;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
 
@@ -47,8 +53,14 @@ use Vaulter\Modules\VaulterModule;
  * and — until collaboration becomes its own module (P5, D32) — the collaboration routes, still mounted by
  * the existing `vaulter-documents.collaboration.enabled` switch inside the routes file.
  */
-final class DocumentsModule implements VaulterModule
+#[Internal]
+final class DocumentsModule implements OwnsSchema, VaulterModule
 {
+    public static function ownedSchema(): string
+    {
+        return DocumentsSchema::class;
+    }
+
     public function id(): ModuleId
     {
         return new ModuleId('documents');
@@ -73,11 +85,14 @@ final class DocumentsModule implements VaulterModule
     {
         $module
             ->config('vaulter-documents', dirname(__DIR__).'/config/vaulter-documents.php')
+            ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/documents.php')
             ->problems(DocumentsProblemCodes::class)
+            ->events(DocumentEventType::class)
             ->bindings(BindingsRegistrar::class)
             ->bindings(CollaborationRegistrar::class)
             ->commands(MakeDocumentTypeCommand::class, MakeExporterCommand::class)
+            ->slot(RouteLabelSource::class, DocumentsRouteLabels::class, 'documents.routes')
             ->slot(DoctorCheck::class, DocumentTypesCheck::class, 'documents.types', key: 'documents.types')
             ->slot(DoctorCheck::class, CollaborationCheck::class, 'documents.collaboration', key: 'documents.collaboration')
             // The drive's node snapshots carry the `document` fragment; a handle serves the document and comment operations.

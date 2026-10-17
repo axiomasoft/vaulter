@@ -8,8 +8,8 @@ use Closure;
 use Illuminate\Contracts\Config\Repository;
 use InvalidArgumentException;
 use LogicException;
-use stdClass;
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
@@ -28,17 +28,14 @@ use Vaulter\Operations\OperationClaim;
  * - otherwise run the attempt under a savepoint: a result is encoded into the receipt in the same transaction; a
  *   refusal whose code is `receipt: cacheable` rolls back to the savepoint (the mutation and its event sinks) and
  *   is stored instead; any other failure rolls back everything, the claim included.
- *
- * @internal
  */
+#[Internal]
 final readonly class IdempotencyClaim implements OperationClaim
 {
     /** The receipt kind of a stored refusal. */
     public const string REFUSAL = 'vaulter.problem';
 
     public const int DEFAULT_TTL_SECONDS = 86400;
-
-    private const array TUPLE = ['tenant_kind', 'tenant_id', 'scope_kind', 'scope_id', 'actor_kind', 'actor_id', 'operation'];
 
     public function __construct(
         private IdempotencyStore $store,
@@ -114,46 +111,40 @@ final readonly class IdempotencyClaim implements OperationClaim
     /**
      * @param array<string, string|null> $tuple
      */
-    private function replay(Operation $operation, IdempotentWrite $idempotency, stdClass $receipt, array $tuple, string $requestHash): mixed
+    private function replay(Operation $operation, IdempotentWrite $idempotency, StoredReceipt $receipt, array $tuple, string $requestHash): mixed
     {
         // The digest is the same; a different stored tuple is a hash collision, and is refused like a reused key.
-        foreach (self::TUPLE as $field) {
-            $stored = $receipt->{$field};
-            if (($stored === null ? null : (string) $stored) !== $tuple[$field]) {
+        foreach (StoredReceipt::TUPLE as $field) {
+            if ($receipt->tuple[$field] !== $tuple[$field]) {
                 throw IdempotencyKeyReusedException::forOperation($operation->spec->name);
             }
         }
-        if (base64_decode((string) $receipt->idempotency_key, true) !== $tuple['idempotency_key']
-            || !hash_equals((string) $receipt->request_hash, $requestHash)) {
+        if (base64_decode($receipt->idempotencyKey, true) !== $tuple['idempotency_key']
+            || !hash_equals($receipt->requestHash, $requestHash)) {
             throw IdempotencyKeyReusedException::forOperation($operation->spec->name);
         }
 
-        $idempotency->authorizer->authorize(
-            self::ref($receipt->resource_kind, $receipt->resource_id),
-            self::ref($receipt->auth_scope_kind, $receipt->auth_scope_id),
-        );
+        $idempotency->authorizer->authorize($receipt->resource, $receipt->scope);
 
-        $body = json_decode((string) $receipt->receipt_body, true, flags: JSON_THROW_ON_ERROR);
-        if (!is_array($body)) {
-            throw new LogicException('[Vaulter] An idempotency receipt has no body.');
-        }
+        $body = self::decoded($receipt->body);
         $this->outcome->markReplayed();
 
-        if ($receipt->receipt_kind === self::REFUSAL) {
-            $headers = $receipt->receipt_headers === null ? [] : json_decode((string) $receipt->receipt_headers, true, flags: JSON_THROW_ON_ERROR);
+        if ($receipt->kind === self::REFUSAL) {
+            $headers = $receipt->headers === null ? [] : self::decoded($receipt->headers);
+            $details = $body['details'] ?? [];
 
             return new CachedRefusal(new ReplayedProblemException(
-                (string) $body['code'],
-                (int) $body['status'],
-                is_array($body['details'] ?? null) ? $body['details'] : [],
-                is_array($headers) ? array_map(strval(...), $headers) : [],
+                self::text($body['code'] ?? null),
+                is_int($body['status'] ?? null) ? $body['status'] : 500,
+                is_array($details) ? self::keyed($details) : [],
+                array_map(self::text(...), $headers),
             ));
         }
-        if ($receipt->receipt_kind !== $idempotency->codec->kind()) {
-            throw new LogicException(sprintf('[Vaulter] The idempotency receipt of "%s" was written by the codec "%s", not "%s".', $operation->spec->name, (string) $receipt->receipt_kind, $idempotency->codec->kind()));
+        if ($receipt->kind !== $idempotency->codec->kind()) {
+            throw new LogicException(sprintf('[Vaulter] The idempotency receipt of "%s" was written by the codec "%s", not "%s".', $operation->spec->name, $receipt->kind, $idempotency->codec->kind()));
         }
 
-        return $idempotency->codec->decode($body, (int) $receipt->codec_version);
+        return $idempotency->codec->decode($body, $receipt->codecVersion);
     }
 
     private function ttl(): int
@@ -163,9 +154,31 @@ final readonly class IdempotencyClaim implements OperationClaim
         return is_int($ttl) && $ttl > 0 ? $ttl : self::DEFAULT_TTL_SECONDS;
     }
 
-    private static function ref(mixed $kind, mixed $id): ?ResourceRef
+    /**
+     * @return array<string, mixed>
+     */
+    private static function decoded(string $json): array
     {
-        return is_string($kind) && $kind !== '' && $id !== null && (string) $id !== '' ? new ResourceRef($kind, (string) $id) : null;
+        $decoded = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+        if (!is_array($decoded)) {
+            throw new LogicException('[Vaulter] An idempotency receipt has no body.');
+        }
+
+        return self::keyed($decoded);
+    }
+
+    /**
+     * @param  array<array-key, mixed> $values
+     * @return array<string, mixed>
+     */
+    private static function keyed(array $values): array
+    {
+        return array_filter($values, is_string(...), ARRAY_FILTER_USE_KEY);
+    }
+
+    private static function text(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
     }
 
     /**

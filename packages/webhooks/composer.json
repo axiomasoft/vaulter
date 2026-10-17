@@ -1,0 +1,100 @@
+{
+    "name": "axioma-studio/vaulter-webhooks",
+    "description": "Webhooks for Vaulter — signed outbound deliveries of drive events, endpoint management and retries, an outbox consumer over the vaulter-core kernel.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "webhooks",
+        "outbox",
+        "events",
+        "vaulter"
+    ],
+    "homepage": "https://github.com/axiomasoft/vaulter",
+    "authors": [
+        {
+            "name": "Dmitry Vostrikov",
+            "email": "dv.vostrikov@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/axiomasoft/vaulter/issues",
+        "source": "https://github.com/axiomasoft/vaulter"
+    },
+    "require": {
+        "php": "^8.4",
+        "axioma-studio/vaulter-core": "self.version",
+        "axioma-studio/vaulter-drive": "self.version",
+        "spatie/laravel-package-tools": "^1.92"
+    },
+    "require-dev": {
+        "opis/json-schema": "^2.4",
+        "symfony/yaml": "^8.0",
+        "axioma-studio/vaulter-media": "self.version",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.13",
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "pestphp/pest-plugin-type-coverage": "^4.0",
+        "phpstan/phpstan": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vaulter\\Webhooks\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Vaulter\\Webhooks\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Vaulter\\Webhooks\\VaulterWebhooksServiceProvider"
+            ]
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../core",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../drive",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../media",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "../../scripts/t sqlite -p webhooks",
+        "test:types": "vendor/bin/pest --type-coverage --min=100",
+        "lint": "vendor/bin/pint",
+        "lint:check": "vendor/bin/pint --test",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "mutate": "vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95"
+    }
+}

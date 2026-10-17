@@ -11,21 +11,19 @@ use Illuminate\Support\ServiceProvider;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
 
-use Vaulter\Access\PermissionDriverCatalog;
+use Vaulter\Attributes\Internal;
 
 /**
  * Publishes the config of every installed Vaulter package and prints the host
  * settings it will not touch: host config and .env stay under the host's control.
  */
+#[Internal]
 final class InstallCommand extends Command
 {
     private const string DEFAULT_MIDDLEWARE = 'auth:sanctum';
 
-    private const string DEFAULT_DRIVER = 'database';
-
     protected $signature = 'vaulter:install
         {--middleware= : Auth middleware for the authenticated route stack, e.g. auth:sanctum}
-        {--driver= : Permission driver: database|gate|spatie|<name from access.permission_drivers>}
         {--migrate : Run the migrations without asking}
         {--force : Overwrite config files that are already published}';
 
@@ -40,15 +38,8 @@ final class InstallCommand extends Command
     {
         $interactive = $this->input->isInteractive();
         $middleware = $this->option('middleware');
-        $driver = $this->option('driver');
         if ($middleware !== null && preg_match('/^[A-Za-z0-9_\\\\.:,\-]+$/D', $middleware) !== 1) {
             $this->components->error('Invalid --middleware value.');
-
-            return self::FAILURE;
-        }
-        $drivers = $this->permissionDrivers();
-        if ($driver !== null && !in_array($driver, $drivers, true)) {
-            $this->components->error('Unknown --driver "'.$driver.'"; known: '.implode(', ', $drivers).'.');
 
             return self::FAILURE;
         }
@@ -59,9 +50,8 @@ final class InstallCommand extends Command
 
         if ($interactive) {
             $middleware ??= (string) select('Auth middleware for the authenticated route stack', [self::DEFAULT_MIDDLEWARE, 'auth', 'auth:api', 'auth:web'], self::DEFAULT_MIDDLEWARE);
-            $driver ??= (string) select('Permission driver', $drivers, in_array(self::DEFAULT_DRIVER, $drivers, true) ? self::DEFAULT_DRIVER : $drivers[0]);
         }
-        $this->hostSettings($middleware ?? self::DEFAULT_MIDDLEWARE, $driver ?? self::DEFAULT_DRIVER);
+        $this->hostSettings($middleware ?? self::DEFAULT_MIDDLEWARE);
 
         if ($this->option('migrate') === true || ($interactive && confirm('Run the migrations now?', false))) {
             $this->call('migrate');
@@ -99,14 +89,6 @@ final class InstallCommand extends Command
         return $tags;
     }
 
-    /** @return list<string> */
-    private function permissionDrivers(): array
-    {
-        $names = array_map(strval(...), array_keys($this->laravel->make(PermissionDriverCatalog::class)->classes()));
-
-        return array_values(array_unique([...['database', 'gate', 'spatie'], ...$names]));
-    }
-
     private function publish(string $tag): void
     {
         foreach (ServiceProvider::pathsToPublish(null, $tag) as $from => $to) {
@@ -125,11 +107,10 @@ final class InstallCommand extends Command
         }
     }
 
-    private function hostSettings(string $middleware, string $driver): void
+    private function hostSettings(string $middleware): void
     {
         $this->newLine();
         $this->line('Apply these yourself; the installer does not edit config or .env:');
-        $this->line('  .env:                      VAULTER_PERMISSION_DRIVER='.$driver);
         $this->line("  config/vaulter.php:        routes.middleware.authenticated => ['api', '".$middleware."']");
         $this->newLine();
     }

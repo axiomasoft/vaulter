@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Events;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Support\Identity;
 
 /**
@@ -11,6 +12,7 @@ use Vaulter\Support\Identity;
  * receive it. Ids travel as strings so the activity row, the outbox row and the
  * webhook envelope carry the same value whatever the id strategy.
  */
+#[Api]
 final readonly class EventScope
 {
     public ?string $tenantId;

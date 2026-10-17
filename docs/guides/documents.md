@@ -113,7 +113,7 @@ needs `Download`, not `View`: a previewer reads a document in the app but cannot
 ```php
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Facades\Documents;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 
 $drive = Vaulter::drive($project)->actingAs($user);
 $documents = Documents::in($drive);
@@ -147,9 +147,9 @@ checkpoint, atomically. Rich-text content is a TipTap document — the root node
 <!-- recipe: packages/documents/tests/Recipes/DocumentsRecipeTest.php#documents-create -->
 
 ```php [PHP]
-use Vaulter\Data\Drive\CreateFolderOptions;
+use Vaulter\Drive\Data\CreateFolderOptions;
 use Vaulter\Documents\Facades\Documents;
-use Vaulter\Enums\Drive\OnNameConflict;
+use Vaulter\Drive\Enums\OnNameConflict;
 
 $node = Documents::in($drive)->create(
     name: 'Design notes',
@@ -409,7 +409,7 @@ curl 'https://app.test/api/vaulter/v1/documents/77/revisions?per_page=50'
 <!-- recipe: packages/documents/tests/Recipes/DocumentsRecipeTest.php#documents-revisions -->
 
 ```php [PHP]
-use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Drive\Data\ListOptions;
 
 $page = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50));
 $next = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50, cursor: $page->nextCursor));

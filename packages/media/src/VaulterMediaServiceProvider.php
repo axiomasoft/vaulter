@@ -6,6 +6,7 @@ namespace Vaulter\Media;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Attributes\Api;
 use Vaulter\Modules\OffersModules;
 
 /**
@@ -17,13 +18,14 @@ use Vaulter\Modules\OffersModules;
  * Dependency direction is one-way: media requires core, core does not require media at runtime. The
  * provider only offers {@see MediaModule}; the core module kernel registers what the module declares.
  */
+#[Api]
 final class VaulterMediaServiceProvider extends PackageServiceProvider
 {
     use OffersModules;
 
     public function configurePackage(Package $package): void
     {
-        $package->name('vaulter-media');
+        $package->name('vaulter-media')->hasTranslations();
     }
 
     public function packageRegistered(): void

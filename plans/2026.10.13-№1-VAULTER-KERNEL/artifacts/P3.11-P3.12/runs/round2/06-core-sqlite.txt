@@ -1,0 +1,28 @@
+### scripts/t sqlite -p core packages/core/tests/Http/Problems packages/core/tests/OpenApi packages/core/tests/Modules packages/core/tests/Idempotency packages/core/tests/Operations packages/core/tests/Support/DomainExceptionStatusTest.php packages/core/tests/Configuration packages/core/tests/Doctor
+>>> core sqlite [(unbound)] parallel  files=4 processes=4
+{"tool":"pest","result":"passed","tests":71,"passed":71,"assertions":171,"duration_ms":493}
+>>> core sqlite [DatabaseMigrations+TestCase] parallel  files=2 processes=2
+{"tool":"pest","result":"passed","tests":56,"passed":56,"assertions":165,"duration_ms":12189}
+>>> core sqlite [EnablesWebhooksModule+RefreshDatabase+TestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":24,"passed":24,"assertions":120,"duration_ms":3416}
+>>> core sqlite [OpenApiTestCase] parallel  files=6 processes=6
+{"tool":"pest","result":"passed","tests":44,"passed":43,"assertions":3830,"duration_ms":5282,"skipped":1}
+>>> core sqlite [RefreshDatabase+TestCase] parallel  files=19 processes=8
+{"tool":"pest","result":"passed","tests":183,"passed":183,"assertions":729,"duration_ms":5062}
+>>> core sqlite [TestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":4,"passed":4,"assertions":12,"duration_ms":877}
+>>> core sqlite [TestCase+WithoutDatabaseSchema] parallel  files=14 processes=8
+{"tool":"pest","result":"passed","tests":142,"passed":142,"assertions":1684,"duration_ms":1628}
+>>> core sqlite [TestCase+WithoutDatabaseSchema#skeleton] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":3,"passed":3,"assertions":7,"duration_ms":770}
+
+== scripts/t summary ==
+core sqlite [(unbound)] parallel   exit=0 skipped=0 1s  ok
+core sqlite [DatabaseMigrations+TestCase] parallel exit=0 skipped=0 12s  ok
+core sqlite [EnablesWebhooksModule+RefreshDatabase+TestCase] single exit=0 skipped=0 4s  ok
+core sqlite [OpenApiTestCase] parallel exit=0 skipped=1 6s  ok
+core sqlite [RefreshDatabase+TestCase] parallel exit=0 skipped=0 5s  ok
+core sqlite [TestCase] single      exit=0 skipped=0 1s  ok
+core sqlite [TestCase+WithoutDatabaseSchema] parallel exit=0 skipped=0 2s  ok
+core sqlite [TestCase+WithoutDatabaseSchema#skeleton] single exit=0 skipped=0 1s  ok
+EXIT=0

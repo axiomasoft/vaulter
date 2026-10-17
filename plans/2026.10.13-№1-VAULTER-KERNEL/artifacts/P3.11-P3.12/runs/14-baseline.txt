@@ -1,0 +1,23 @@
+### scripts/t baseline --compare
+discover core
+discover media
+discover drive
+discover documents
+discover azgard
+discover filament
+discover repo
+discover hub
+discover vue
+ok   core: original 2002, current 1920, missing 399 (ledgered), added 317
+warn core: tests/baseline/core.list is stale against discovery — run `scripts/t baseline --write -p core`
+ok   media: original 198, current 191, missing 18 (ledgered), added 11
+ok   drive: original 1120, current 1146, missing 2 (ledgered), added 28
+warn drive: tests/baseline/drive.list is stale against discovery — run `scripts/t baseline --write -p drive`
+ok   documents: original 799, current 804, missing 4 (ledgered), added 9
+ok   azgard: original 59, current 58, missing 10 (ledgered), added 9
+ok   filament: original 117, current 117, missing 0 (ledgered), added 0
+ok   repo: original 0, current 184, missing 0 (ledgered), added 184
+ok   hub: original 13, current 13, missing 0 (ledgered), added 0
+ok   vue: original 303, current 307, missing 0 (ledgered), added 4
+warn vue: tests/baseline/vue.list is stale against discovery — run `scripts/t baseline --write -p vue`
+EXIT=0

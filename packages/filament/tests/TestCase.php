@@ -23,6 +23,7 @@ use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Filament\Tests\Fixtures\TestPanelProvider;
 use Vaulter\Filament\VaulterFilamentServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
@@ -84,13 +85,15 @@ abstract class TestCase extends OrchestraTestCase
         // The resource tests exercise the REAL ACL: opt into the database host-role
         // driver so AccessResolver resolves grants from v_node_grants (the open
         // 'null' driver would grant everything and hide the authorization tests).
-        $app['config']->set('vaulter.access.permission_driver', 'database');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'database');
 
         $app['config']->set('vaulter.routes.middleware.authenticated', []);
     }
 
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__.'/../vendor/axioma-studio/vaulter-core/database/migrations');
+        foreach (SuiteDatabaseConnection::migrationPaths($this->app) as $path) {
+            $this->loadMigrationsFrom($path);
+        }
     }
 }

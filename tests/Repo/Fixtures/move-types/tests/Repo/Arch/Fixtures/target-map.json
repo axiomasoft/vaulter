@@ -1,0 +1,13 @@
+{
+    "version": 1,
+    "types": [
+        {"action": "move", "file": "packages/core/src/Roles/Role.php", "fqcn": "Acme\\Roles\\Role", "owner": "drive", "phase": "P4", "rule": "core:fqcn:Acme\\Roles\\Role", "target_fqcn": "Acme\\Drive\\Roles\\Role"},
+        {"action": "move", "file": "packages/core/src/Roles/Policy.php", "fqcn": "Acme\\Roles\\Policy", "owner": "drive", "phase": "P4", "rule": "core:fqcn:Acme\\Roles\\Policy", "target_fqcn": "Acme\\Drive\\Roles\\Policy"},
+        {"action": "keep", "file": "packages/core/src/Roles/Neighbor.php", "fqcn": "Acme\\Roles\\Neighbor", "owner": "core", "phase": "stay", "rule": "core:fqcn:Acme\\Roles\\Neighbor", "target_fqcn": "Acme\\Roles\\Neighbor"},
+        {"action": "move", "file": "packages/core/src/Folders/Folder.php", "fqcn": "Acme\\Folders\\Folder", "owner": "drive", "phase": "P4", "rule": "other:fqcn:Acme\\Folders\\Folder", "target_fqcn": "Acme\\Drive\\Folders\\Folder"},
+        {"action": "move", "file": "packages/core/src/Perm.php", "fqcn": "Acme\\Perm", "owner": "drive", "phase": "P4", "rule": "other:fqcn:Acme\\Perm", "target_fqcn": "Acme\\Drive\\Perm"},
+        {"action": "keep", "file": "packages/core/src/PermX.php", "fqcn": "Acme\\PermX", "owner": "core", "phase": "stay", "rule": "core:fqcn:Acme\\PermX", "target_fqcn": "Acme\\PermX"},
+        {"action": "keep", "file": "packages/core/src/Support/Clock.php", "fqcn": "Acme\\Support\\Clock", "owner": "core", "phase": "stay", "rule": "core:fqcn:Acme\\Support\\Clock", "target_fqcn": "Acme\\Support\\Clock"},
+        {"action": "replace", "file": "packages/core/src/Legacy/Old.php", "fqcn": "Acme\\Legacy\\Old", "owner": "drive", "phase": "P4", "rule": "core:fqcn:Acme\\Legacy\\Old", "target_fqcn": "Acme\\Drive\\Legacy\\Old"}
+    ]
+}

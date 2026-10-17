@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 
+#[Api]
 final readonly class FilamentConfig
 {
+    #[Internal]
     public function __construct(private Repository $config) {}
 
     public function navigationGroup(): string

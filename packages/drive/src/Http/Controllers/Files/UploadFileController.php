@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Files;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Http\Requests\Files\UploadFileRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 
 /** Upload a new file in one request (Create in the parent; the drive root when no parent is given). */
+#[Internal]
 final readonly class UploadFileController
 {
     public function __construct(private NodeResponses $nodes) {}

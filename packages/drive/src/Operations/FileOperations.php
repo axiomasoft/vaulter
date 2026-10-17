@@ -7,47 +7,49 @@ namespace Vaulter\Drive\Operations;
 use Closure;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Content\ContentDelivery;
-use Vaulter\Contracts\Drive\FileOperations as Contract;
-use Vaulter\Data\Drive\FileStream;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\RevisionOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
 use Vaulter\Data\Page;
-use Vaulter\Data\Snapshots\FileRevisionSnapshot;
-use Vaulter\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Files\RestoreFileRevisionAction;
 use Vaulter\Drive\Actions\Files\SetFileRevisionRetentionAction;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
+use Vaulter\Drive\Content\ContentDelivery;
+use Vaulter\Drive\Contracts\FileOperations as Contract;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Files\IngestReceipt;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\NodeSort;
-use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\NotAFileException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Data\FileStream;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\RevisionOptions;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Drive\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\NodeSort;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\NotAFileException;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
-use Vaulter\Support\TreeGuard;
 
+#[Api]
 final readonly class FileOperations implements Contract
 {
+    #[Internal]
     public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names, private DeleteFileRevisionAction $deleteRevision, private SetFileRevisionRetentionAction $retention, private NodeSnapshotMapper $nodes, private FileRevisionSnapshotMapper $revisions, private OperationRunner $runner) {}
 
     public function upload(UploadSource $source, ?UploadOptions $options = null): NodeSnapshot
@@ -179,7 +181,7 @@ final readonly class FileOperations implements Contract
     private function uploadSibling(Node $parent, string $name): ?Node
     {
         return $this->database->transaction(function () use ($parent, $name): ?Node {
-            $this->database->lockTreeShared($this->context->driveId());
+            $this->database->lockAggregateShared('drives', $this->context->driveId());
             $locked = $this->tree->locked($this->tree->lock([$parent->id]), $parent->id);
             $this->tree->assertActiveFolder($locked);
 

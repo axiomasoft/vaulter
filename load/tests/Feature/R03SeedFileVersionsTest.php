@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Load\Console\SeedLoadDatasetCommand;
-use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Models\Drive\Storage as DriveStorage;
 use Vaulter\Support\Config;
 
@@ -35,7 +35,7 @@ it('seeds primary blob relations matching GC edges for hot and metadata-only ver
         'blobs' => ['hot_set' => 1, 'hot_set_avg_bytes' => 128, 'orphan' => 0],
     ]);
 
-    $versions = FileVersion::query()->orderBy('id')->get();
+    $versions = FileRevision::query()->orderBy('id')->get();
     expect($versions)->toHaveCount(2);
     foreach ($versions as $version) {
         expect($version->blob)->not->toBeNull()

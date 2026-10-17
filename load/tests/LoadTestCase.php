@@ -7,13 +7,14 @@ namespace Vaulter\Load\Tests;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Storage;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Load\LoadServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
-use Vaulter\Tests\Webhooks\FakeHostResolver;
 use Vaulter\VaulterServiceProvider;
+use Vaulter\Webhooks\Contracts\HostResolver;
+use Vaulter\Webhooks\Testing\FakeHostResolver;
+use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 abstract class LoadTestCase extends OrchestraTestCase
 {
@@ -38,6 +39,7 @@ abstract class LoadTestCase extends OrchestraTestCase
             VaulterMediaServiceProvider::class,
             VaulterDriveServiceProvider::class,
             VaulterDocumentsServiceProvider::class,
+            VaulterWebhooksServiceProvider::class,
             LoadServiceProvider::class,
         ];
     }

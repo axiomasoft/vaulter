@@ -6,6 +6,7 @@ namespace Vaulter\Http\Support;
 
 use JsonException;
 use stdClass;
+use Vaulter\Attributes\Internal;
 
 /**
  * Strong entity tags of the versioned API.
@@ -18,6 +19,7 @@ use stdClass;
  * Document content carries nothing caller-specific, so its tag is the content
  * generation itself.
  */
+#[Internal]
 final class RepresentationTag
 {
     private const int FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR;

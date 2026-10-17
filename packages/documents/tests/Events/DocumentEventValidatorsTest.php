@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Tests\Concerns\EnablesWebhooksModule;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 
 /**
  * Document events carry the validators of the writer's result (state_version, epoch),
  * not those of the possibly older head checkpoint.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
+uses(OperationsTestCase::class, RefreshDatabase::class);
 
 it('takes state_version and epoch of every save from the writer, not from the checkpoint', function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 3600);
@@ -37,8 +36,8 @@ it('takes state_version and epoch of every save from the writer, not from the ch
         [false, $afterSecond->state_version, $afterSecond->collab_epoch],
         [false, $afterThird->state_version, $afterThird->collab_epoch],
     ])->and($afterThird->state_version)->toBeGreaterThan($afterSecond->state_version)
-        // Neither save took a checkpoint, so no webhook was staged for them.
-        ->and(Outbox::query()->where('event', EventType::DocumentUpdated->value)->exists())->toBeFalse();
+        // Neither save took a checkpoint: their outbox rows stay inside the process (not external), no webhook.
+        ->and(OutboxEvent::query()->where('type', DocumentEventType::DocumentUpdated->value)->where('external', true)->exists())->toBeFalse();
 });
 
 it('puts the writer validators of a checkpointed save into the envelope', function (): void {
@@ -48,7 +47,7 @@ it('puts the writer validators of a checkpointed save into the envelope', functi
     $documents->update($node, DocumentTestHelpers::content('two')->toArray());
 
     $document = Document::query()->where('node_id', $node->id)->sole();
-    $data = Outbox::query()->where('event', EventType::DocumentUpdated->value)->sole()->payload['data'];
+    $data = OutboxEvent::query()->where('type', DocumentEventType::DocumentUpdated->value)->sole()->payload['data'];
 
     expect($data['state_version'])->toBe($document->state_version)
         ->and($data['epoch'])->toBe($document->collab_epoch)

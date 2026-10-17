@@ -7,15 +7,14 @@ outline: deep
 # Filament admin plugin
 
 `axioma-studio/vaulter-filament` is an optional **Filament 5** plugin that adds Vaulter management
-to an existing Filament panel. It registers two families of resources:
+to an existing Filament panel. It requires `axioma-studio/vaulter-drive` (and, through it, core and media) and
+registers one family of resources, the **Drive / permissions** domain — `Drive`, `Node`, `NodeGrant`, `NodeShare`,
+`Activity`.
 
-- the **Drive / permissions** domain — `Drive`, `Node`, `NodeGrant`, `NodeShare`, `Activity`;
-- the **legacy document-centric** surface — `Document`, `Folder`, `Share`.
-
-The node and drive resources read and write through the authorized
-[`DriveHandle`](/reference/php-api) — `Vaulter::drive($drive)->actingAs(PanelActor::current())` — and its
-snapshot DTOs; the grant, share and activity resources use the same core operations with the panel actor. The panel never calls a core Action or Repository and never evaluates grants itself, so it
-cannot bypass the ACL.
+Every resource reads and writes through the authorized [`DriveHandle`](/reference/php-api) —
+`Vaulter::drive($drive)->actingAs(PanelActor::current())` — and its snapshot DTOs. A row of a table is a snapshot
+the drive returned, not an Eloquent record: the panel queries no Vaulter model, never calls an Action or Repository
+and never evaluates grants itself, so it cannot bypass the ACL.
 
 ::: tip Related reading
 The Drive UI for end users lives in the [Vue package](/guides/vue). The authorization model these
@@ -73,8 +72,7 @@ $plugin = VaulterPlugin::current($panel); // returns the VaulterPlugin
 ```
 
 `register()` calls `$panel->resources([...])` with only the resources whose config toggle is on
-(see [Configuration](#configuration)); the Drive/permissions domain is registered first, then the
-legacy document surface.
+(see [Configuration](#configuration)).
 
 ## Configuration
 
@@ -89,7 +87,7 @@ return [
 
     // Toggle which resources the plugin registers. Each defaults to true.
     'resources' => [
-        // Drive / permissions domain (M1–M4 core).
+        // Drive / permissions domain.
         'drive'    => true,
         'node'     => true,
         'grant'    => true,
@@ -103,21 +101,16 @@ Turn a key to `false` to drop the resource from the panel. The plugin reads each
 `config('vaulter-filament.resources.{key}', true)` — an omitted or non-boolean value is treated as
 `true`.
 
-::: tip Drive-only panel
-If your host app does not use the legacy document tables, set `document`, `folder` and
-`legacy_share` to `false` to show only the Drive/permissions resources.
-:::
-
 ## How authorization works
 
 Every Drive/permissions resource resolves its acting admin through `Vaulter\Filament\Support\PanelActor`
-and works through the handle that admin gets from core. The handle decides what exists for them and what
-they may do, so a change in core access rules reaches the panel without a panel change:
+and works through the handle that admin gets from the drive. The handle decides what exists for them and what
+they may do, so a change in the drive access rules reaches the panel without a panel change:
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Filament\Support\PanelActor;
 
 $handle = Vaulter::drive($drive)->actingAs(PanelActor::current());
@@ -147,12 +140,13 @@ A **read-mostly** view of the ownable, polymorphic disk roots. Drives are provis
 `Vaulter\Drive\DriveProvisioner` (get-or-create on a host entity), never minted from the panel — so this resource
 **cannot create or edit** a row (`canCreate()` returns `false`); it lists and inspects.
 
-- **Model**: resolved via `app(\Vaulter\Configuration\VaulterConfig::class)->model('drive')` (`Vaulter\Models\Drive\Drive` by default).
-- **Table**: name, owner (`owner_type #owner_id`), disk, used bytes, quota (`∞` when unlimited),
+- **Rows**: the drive snapshots of `Vaulter::drives($actor)` — a drive is listed when the admin can view its
+  root.
+- **Table**: name, owner (`owner_type #owner_id`), profile badge, used bytes, quota (`∞` when unlimited),
   status, created-at. Default sort `created_at desc`.
-- **Infolist** (view page): Drive / Owner / Usage sections, with human-formatted byte sizes.
-- **Pages**: `index` (list) and `view` (`/{record}`). Classes: `ListDrives` and `ViewDrive`
-  under `Vaulter\Filament\Resources\DriveResource\Pages`.
+- **Details**: the `view` row action opens a read-only modal (Drive / Owner / Usage), since a snapshot has no
+  model page to open.
+- **Pages**: `index` only (`ListDrives` under `Vaulter\Filament\Resources\DriveResource\Pages`).
 
 #### NodeResource
 
@@ -175,9 +169,9 @@ The heart of the panel: the unified `folder | file | document | shortcut` node t
 PanelDrives::handle($driveId)->nodes()->rename(node: $id, name: $name);
 ```
 
-- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node')` (`Vaulter\Models\Drive\Node`).
 - **Rows**: Filament custom records built from the handle's listings (`children()` walked per drive,
-  plus `trash()->list()`), bounded to the first 2000 nodes. There is no Eloquent query behind the table.
+  plus `trash()->list()`), bounded to the first 2000 nodes. There is no Eloquent query behind the table. Only
+  the drives whose root the admin can view contribute rows.
 - **Table**: a kind icon (`folder` → folder, `file` → document, `document` → document-text,
   `shortcut` → arrow-top-right), name (root rows show `(root)`), kind badge, storage, parent, size,
   trashed-at, created-at.
@@ -212,7 +206,8 @@ $handle->access()->grant($nodeId, new GrantInput(
 ));
 ```
 
-- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Models\Access\NodeGrant`).
+- **Rows**: for every live node the admin may view and manage, the grants the handle's `access()` operations list
+  (a node the handle refuses contributes no row), bounded like the node table.
 - **Table**: node, subject (`type #id`), role badge, scope, expires-at (`Never` when null), created-at.
   Filter: role.
 - **Form fields**: node, subject type (a registered morph alias such as `user` / `role` / `team`),
@@ -251,10 +246,10 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 ));
 
 // Shown exactly once — never recoverable from the row afterward:
-//   app(\Vaulter\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
+//   app(\Vaulter\Drive\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
 ```
 
-- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Models\Sharing\NodeShare`).
+- **Rows**: the share links the handle's `shares()` operations list for every node the admin may manage.
 - **Table**: node, `token_prefix…` badge, role, scope, a computed status badge
   (`Live` / `Revoked` / `Expired` / `Exhausted`), use count (`n / max` when
   capped), expires-at, created-at. Filter: a `Revoked` ternary.
@@ -268,33 +263,20 @@ A **read-only** view of the append-only `v_activity` audit log — verb, actor, 
 model is append-only by construction, so the resource is non-creatable, non-editable and
 non-deletable (`canCreate`/`canEdit`/`canDelete` all return `false`).
 
-- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('activity')` (`Vaulter\Models\Activity\Activity`).
-- **Table**: verb badge, actor (`type #id`), target (`type #id`), storage, when. Filter: verb
-  (`SelectFilter` over `EventType` cases).
-- **Infolist** (view page): Event / Actor / Target / Request sections (the Request section includes a
-  `KeyValueEntry` for `context` plus ip / user-agent / request-id).
-- **Pages**: `index` (list) and `view` (`/{record}`). Classes: `ListActivities` and `ViewActivity`
-  under `Vaulter\Filament\Resources\ActivityResource\Pages`.
+- **Rows**: each listed drive's `activity()->forDrive(...)` entries — the drive's own projection decides which
+  entries and fields the admin sees — bounded to the first 2000.
+- **Table**: verb badge, actor (`type #id`), target (`type #id`), drive, when. Filter: verb
+  (`SelectFilter` over the event catalogue).
+- **Details**: a read-only modal with Event / Actor / Target / Request sections (the Request section includes
+  `context` plus ip / user-agent / request-id).
+- **Pages**: `index` only (`ListActivities` under `Vaulter\Filament\Resources\ActivityResource\Pages`).
 
-### Legacy document-centric surface
+## Models are not queried
 
-These remain for hosts still on the document-centric tables. Each resolves its model through a
-`VaulterConfig::model(string)` helper so a swapped model is still governed.
-
-| Resource | Default model | What it manages |
-|----------|---------------|-----------------|
-| `DocumentResource` | `Vaulter\Models\Documents\Document` | searchable/sortable documents (title, type, workspace), a trashed filter, an edit form and delete / restore / force-delete actions |
-| `FolderResource` | `Vaulter\Models\Documents\DocumentFolder` | the workspace folder tree (list, create, edit, delete) |
-| `ShareResource` | `Vaulter\Models\Documents\DocumentShare` | tokenized public document shares — list and **revoke** (read-only; links are minted via the API) |
-
-Toggle them off with the `document`, `folder` and `legacy_share` config keys.
-
-## Model swappability
-
-Every resource resolves its model through a `Vaulter\Configuration\VaulterConfig::model(string)` helper
-(`storageModel()`, `nodeModel()`, `grantModel()`, `nodeShareModel()`, `activityModel()`, …). If your
-host app swaps a Vaulter model for a subclass, the Filament resources keep governing it without any
-change.
+The panel lists snapshots, so it does not matter whether your host swapped a Vaulter model for a subclass
+(`vaulter-drive.models.*`): the drive handle resolves the swapped model, and the panel keeps governing it without
+any change. The `drive`, `node`, `grant`, `share` and `activity` toggles in `config/vaulter-filament.php` are the only
+configuration.
 
 ## Why a separate package
 

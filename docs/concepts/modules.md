@@ -17,11 +17,11 @@ module registers nothing at runtime; its database schema is still installed.
 |---|---|---|---|
 | `core` | `vaulter-core` | auto | — |
 | `media` | `vaulter-media` | auto | `core` |
-| `drive` | `vaulter-drive` (with its slices still located in `vaulter-core`) | auto | `core`, `media` |
+| `drive` | `vaulter-drive` | auto | `core`, `media` |
 | `documents` | `vaulter-documents` | auto | `core`, `drive` |
-| `azgard` | `vaulter-azgard` | auto (selected with `vaulter.access.permission_driver`) | `core`, `drive` |
+| `azgard` | `vaulter-azgard` | auto (selected with `vaulter-drive.access.permission_driver`) | `core`, `drive` |
 | `filament` | `vaulter-filament` | auto (the panel plugin is added to a panel by the host) | `drive` |
-| `webhooks` | `vaulter-core` (until it gets its own package) | **opt-in** | `core`, `drive` |
+| `webhooks` | `vaulter-webhooks` (installed separately) | **opt-in** | `core`, `drive` |
 
 *Auto* modules are active unless switched off; *opt-in* modules — the ones that open outbound
 network traffic or need secrets — only when switched on. One config key overrides the policy:
@@ -35,10 +35,11 @@ network traffic or need secrets — only when switched on. One config key overri
 
 Values must be `true` or `false`, and keys must name installed modules. A module that is active
 while a module it requires is not makes the graph invalid — a dependency is never switched on
-silently. Switching the drive off (`'drive' => false`) removes all of it, its routes, commands and
-bindings located in `vaulter-core` included; every module that requires it must be switched off too. Run `php artisan vaulter:modules` to see every module, its policy, whether it is active
-and why. `vaulter.features.webhooks` no longer exists; a host config that still sets it fails at
-boot with a pointer to `vaulter.modules.webhooks`.
+silently. Switching the drive off (`'drive' => false`) removes all of it — its routes, commands, bindings and
+doctor checks; every module that requires it must be switched off too. Run `php artisan vaulter:modules` to see every
+module, its policy, whether it is active and why. Webhooks are switched only by `vaulter.modules.webhooks`
+(`vaulter.features.webhooks` does not exist; a host config that still sets it fails at boot with a pointer to the
+module key). The package must be installed first: `composer require axioma-studio/vaulter-webhooks`.
 
 ## An invalid module graph
 
@@ -62,9 +63,22 @@ rebuild the caches (`php artisan optimize:clear && php artisan optimize`) and re
 ## Uninstalling a module
 
 Disabling a module keeps its tables and data. `php artisan vaulter:module:uninstall <module>`
-plans the removal of a module's schema as a dry run — its migrations and tables, the modules that
-require it, foreign keys other owners hold on its tables — and says why it would be refused. Until
-the create-migrations are split by owner, `--force` and `--purge` refuse.
+plans the removal of a module's schema as a dry run — its migrations and tables, the rows they hold, the modules that
+require it, foreign keys other owners hold on its tables, and the media pins it keeps — and says why it would be
+refused.
+
+- `--force` rolls back the migrations of the module's own schema paths (newest first). It is refused while the
+  module's tables hold rows or it keeps pins, while another installed module requires it, and for `core`.
+- `--force --purge` first deletes the module's rows and releases its **own** media pins, then rolls back. `--purge`
+  without `--force` is a usage error.
+- It never drops, deletes or releases anything of another owner, and no lock keeps writers out: disable the module
+  and stop its traffic first. What the dry run read is read again inside the purge transaction and before each
+  rollback; a row or pin that has appeared stops the removal.
+
+Exit codes: `0` planned or done, `1` refused or failed with nothing changed, `2` usage (unknown module,
+`--purge` without `--force`), `3` applied partially. On SQLite and PostgreSQL the purge and the rollbacks are one
+transaction; on a driver whose DDL commits (MySQL) a failure after the purge leaves the module partially removed —
+repeat `--force`. Media bytes of a purged module stay in storage until the next garbage collection.
 
 ## See also
 

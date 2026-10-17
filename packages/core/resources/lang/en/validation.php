@@ -18,7 +18,7 @@ declare(strict_types=1);
  */
 return [
 
-    // {@see \Vaulter\Support\DriveNameRules::messages()} — the shared node-name
+    // {@see \Vaulter\Drive\Support\DriveNameRules::messages()} — the shared node-name
     // validation message for create/rename/upload/copy Drive requests (§2.2).
     'name_no_separators' => 'The name must not contain path separators (/ or \\).',
 

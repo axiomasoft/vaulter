@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
@@ -18,9 +17,10 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
  * The hub protocol end to end at the HTTP boundary: load → seed → store behind the
@@ -223,7 +223,7 @@ it('takes a revoked Edit into account on the next call (OPUS D24)', function ():
     $token = Hub::token($node);
     Hub::call('authenticate', ['room' => Hub::room($node)], $token)->assertJsonPath('mode', 'rw');
 
-    $grants = config('vaulter.models.grant');
+    $grants = config('vaulter-drive.models.grant');
     app(VaulterDatabase::class)->write(fn () => $grants::query()->where('node_id', $node->id)->delete());
     AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 1);
 

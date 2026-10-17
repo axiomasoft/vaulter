@@ -23,10 +23,7 @@ A link has four settings that matter:
 | **generation** | integer | Raised by every rotation; ends every visit opened with the previous token. |
 
 ::: info Two distinct channels
-This page documents **node** share-links (`v_node_shares`, the Drive channel). The legacy
-**document** shares (unversioned `GET /shares/{token}`, `Vaulter\Models\Documents\DocumentShare`) are a
-separate, older surface that grants a stringly-typed level on a `Document`. New code should
-use node share-links.
+This page documents **node** share-links (`v_node_shares`, the Drive channel). They are evaluated as a separate pass from identity grants and never unioned with them ([ADR-0013](/adr/0013-two-sharing-channels)).
 :::
 
 ## Roles and audiences
@@ -97,7 +94,7 @@ input is optional. The validated request (`StoreShareLinkRequest`) accepts:
 | `audience`   | string   | `anyone`       | `anyone`, `authenticated` or `tenant`. |
 | `scope`      | string   | `item`         | `item` (the node only) or `subtree` (the node + its descendants). |
 | `password`   | string   | `null`         | 1–255 chars; hashed before it touches the DB (`Hash::make`) — never stored raw. |
-| `expires_at` | ISO-8601 | now + 72 h     | Must be `after:now`, within `vaulter.sharing.max_ttl_hours` **and** the drive profile's `maxShareLinkTtlDays`. |
+| `expires_at` | ISO-8601 | now + 72 h     | Must be `after:now`, within `vaulter-drive.sharing.max_ttl_hours` **and** the drive profile's `maxShareLinkTtlDays`. |
 | `max_uses`   | int      | `null` (∞)     | The number of successful redemptions; `min:1`. |
 
 ::: code-group
@@ -122,9 +119,9 @@ curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../shares \
 <!-- snippet: host -->
 
 ```php [PHP]
-use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
 
 // shares() authorizes Ability::Share on the node; the Action only mints + persists.
 $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new ShareLinkInput(
@@ -166,7 +163,7 @@ async function mint() {
 :::
 
 The create response carries the raw `token` and a full `url` (built from
-`config('vaulter.sharing.url_base')` + the token). **Every other response omits them** — the
+`config('vaulter-drive.sharing.url_base')` + the token). **Every other response omits them** — the
 token is unrecoverable from the stored row, so capture it now. The response is never stored by a
 cache (`Cache-Control: no-store`).
 
@@ -212,7 +209,7 @@ audience ends the link sessions opened before the change.
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
 
 Vaulter::drive($owner)->actingAs($user)->shares()->update($node, $share, new ShareLinkUpdate(
     expiresAt: now()->addDay(),
@@ -336,8 +333,8 @@ never lands in a URL or access log), then falls back to a `password` query/body 
 ## Lifetime and the drive policy
 
 A link always expires. Without `expires_at` the Action stamps now plus
-`vaulter.sharing.default_ttl_hours`; an explicit value may not pass
-`vaulter.sharing.max_ttl_hours`. On top of that, the drive profile can cap every link of its
+`vaulter-drive.sharing.default_ttl_hours`; an explicit value may not pass
+`vaulter-drive.sharing.max_ttl_hours`. On top of that, the drive profile can cap every link of its
 drives:
 
 <!-- snippet: host -->
@@ -375,7 +372,7 @@ Public share downloads go through the same single egress point as every authenti
 download ([File delivery](/reference/rest-api#file-delivery)): each request re-resolves the
 link (token generation, revocation, expiry, audience, policy) and re-checks the scan state of
 the exact revision before the first byte. Public share downloads are **always streamed**
-through the application, also when `vaulter.downloads.delivery_mode` is `direct_signed`, so a
+through the application, also when `vaulter-drive.downloads.delivery_mode` is `direct_signed`, so a
 link that is revoked or rotated stops serving at the next request. A download that has already
 started is not interrupted. The headers are `Content-Disposition: attachment` with an RFC 6266
 `filename*`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox`,
@@ -407,7 +404,7 @@ The hardening is in the code, not bolted on:
 ```php
 // config/vaulter.php
 'sharing' => [
-    // The \Vaulter\Contracts\Sharing\ShareTokenGenerator used to mint the raw token.
+    // The \Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator used to mint the raw token.
     // Only its sha256 hash is ever stored. Default: RandomShareTokenGenerator (43 chars).
     'token_generator' => RandomShareTokenGenerator::class,
 
@@ -424,7 +421,7 @@ The hardening is in the code, not bolted on:
 ],
 ```
 
-The swappable `NodeShare` model is bound via `config('vaulter.models.node_share')`. The default share-token generator
+The swappable `NodeShare` model is bound via `config('vaulter-drive.models.node_share')`. The default share-token generator
 mints 43 characters of `base64url(random_bytes(32))`; swap it by binding your own
 `ShareTokenGenerator` — see [Custom share-token generator](/guides/recipes).
 
@@ -449,8 +446,8 @@ rows stage atomically with the change. Neither carries the raw token (the persis
 
 | Event                                          | Dispatched when |
 | ---------------------------------------------- | --------------- |
-| `Vaulter\Events\Sharing\NodeShareCreated`      | A link is minted. Carries the `NodeShare` + `actorId`. |
-| `Vaulter\Events\Sharing\NodeShareRevoked`      | A link is revoked (only on a real state change — re-revoke is silent). |
+| `Vaulter\Drive\Events\Sharing\NodeShareCreated`      | A link is minted. Carries the `NodeShare` + `actorId`. |
+| `Vaulter\Drive\Events\Sharing\NodeShareRevoked`      | A link is revoked (only on a real state change — re-revoke is silent). |
 
 Updating and rotating a link emit no event of their own yet; the event pipeline of 1.0 adds
 them.

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Uploads;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -16,8 +18,10 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * A resumable-upload session was opened. Audited only: upload
  * sessions are not a webhook type.
  */
-final readonly class UploadInitiated extends DomainEvent
+#[Api]
+final readonly class UploadInitiated extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public UploadSession $session,
         ActorRef $actor,
@@ -28,9 +32,9 @@ final readonly class UploadInitiated extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::UploadInitiated;
+        return DriveEventType::UploadInitiated;
     }
 
     public function scope(): EventScope

@@ -108,6 +108,6 @@ final class DownloadStreamMetrics
             $normalized = substr($normalized, strlen($prefix) + 1);
         }
 
-        return VaulterHttpOperationMap::resolve(method: 'GET', pathAfterPrefix: $normalized) === 'download';
+        return app(VaulterHttpOperationMap::class)->resolve(method: 'GET', pathAfterPrefix: $normalized) === 'download';
     }
 }

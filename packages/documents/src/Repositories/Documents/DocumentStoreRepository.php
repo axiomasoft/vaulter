@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Repositories\Documents;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Documents\Document;
 
 /**
  * Row writes of the document aggregate. Only CreateDocumentAction (the empty
  * aggregate) and DocumentStateWriter (everything after) call it.
- *
- * @internal
  */
+#[Internal]
 final class DocumentStoreRepository
 {
     /**

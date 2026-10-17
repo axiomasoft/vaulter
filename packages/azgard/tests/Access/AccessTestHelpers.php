@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Azgard\Tests\Access;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 
 /**
  * Builders for the M2a ACL tests: a storage with a known tree, a subject user, and
@@ -68,7 +68,7 @@ final class AccessTestHelpers
      */
     public static function folder(Drive $storage, ?Node $parent, string $name, bool $inheritGrants = true): Node
     {
-        $model = config('vaulter.models.node');
+        $model = config('vaulter-drive.models.node');
 
         /** @var Node $node */
         $node = new $model;
@@ -97,7 +97,7 @@ final class AccessTestHelpers
     ): NodeGrant {
         $subjectType ??= (new TestUser)->getMorphClass();
 
-        $model = config('vaulter.models.grant');
+        $model = config('vaulter-drive.models.grant');
 
         /** @var NodeGrant $grant */
         $grant = new $model;

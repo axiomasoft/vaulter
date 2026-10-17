@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers\Nodes;
 
 use Illuminate\Http\JsonResponse;
-use Vaulter\Data\Drive\MoveOptions;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Data\MoveOptions;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Http\Requests\Nodes\MoveNodeRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /** Move a node into another folder of its drive (Move, Create there); If-Match is required. */
+#[Internal]
 final readonly class MoveNodeController
 {
     public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private NodeResponses $nodes) {}

@@ -3,11 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\UploadOperations;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
@@ -15,8 +16,7 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Drive\Uploads\UploadsOf;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Media\Contracts\Cas\BlobStore;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -51,7 +51,7 @@ function flakyBlobStore(int $failures, int &$calls): void
 
         return $real->commitStaged(...$arguments);
     });
-    foreach (['attach', 'detach', 'commit', 'read'] as $method) {
+    foreach (['commit', 'read'] as $method) {
         $store->shouldReceive($method)->andReturnUsing(fn (...$arguments) => $real->{$method}(...$arguments));
     }
     app()->instance(BlobStore::class, $store);
@@ -99,7 +99,7 @@ it('does not retry a non-concurrency failure', function (): void {
         $calls++;
         throw new RuntimeException('disk full');
     });
-    foreach (['attach', 'detach', 'commit', 'read'] as $method) {
+    foreach (['commit', 'read'] as $method) {
         $store->shouldReceive($method)->andReturnUsing(fn (...$arguments) => $real->{$method}(...$arguments));
     }
     app()->instance(BlobStore::class, $store);

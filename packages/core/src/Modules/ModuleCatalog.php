@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 
 /**
  * The manifests offered by the package providers while the application registers. The kernel reads
  * them once, in its booting callback, and seals the catalogue: a provider registered after boot cannot
  * offer a module any more.
- *
- * @internal
  */
+#[Internal]
 final class ModuleCatalog
 {
     /** @var list<string> */

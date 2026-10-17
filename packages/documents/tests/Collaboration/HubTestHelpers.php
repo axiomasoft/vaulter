@@ -6,7 +6,6 @@ namespace Vaulter\Documents\Tests\Collaboration;
 
 use Firebase\JWT\JWT;
 use Illuminate\Testing\TestResponse;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -14,11 +13,12 @@ use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\FakeHostUserResolver;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /**
  * The hub's side of the protocol for tests: room tokens shaped exactly like
@@ -34,7 +34,7 @@ final class HubTestHelpers
 
     public static function configure(): void
     {
-        config()->set('vaulter.access.permission_driver', 'database');
+        config()->set('vaulter-drive.access.permission_driver', 'database');
         config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
         config()->set('vaulter-documents.collaboration.hub.webhook_secret', self::WEBHOOK_SECRET);
         config()->set('vaulter-documents.collaboration.hub.jwt_secret', self::JWT_SECRET);

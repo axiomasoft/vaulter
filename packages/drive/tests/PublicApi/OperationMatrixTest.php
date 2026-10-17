@@ -5,32 +5,32 @@ declare(strict_types=1);
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\OnNameConflict;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Data\ListOptions;
+use Vaulter\Drive\Data\RestoreOptions;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Enums\OnNameConflict;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Drive\Exceptions\Nodes\InvalidCursorException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Files\ContentUnavailableException;
-use Vaulter\Exceptions\Nodes\InvalidCursorException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 final class OperationMatrixNoCreateDriver extends DatabasePermissionDriver
 {
@@ -42,7 +42,7 @@ final class OperationMatrixNoCreateDriver extends DatabasePermissionDriver
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.access.permission_driver', 'database');
     $this->owner = DriveTestHelpers::host();
     $this->system = Vaulter::drive($this->owner)->asSystem('operation matrix fixture');
     $this->user = AccessTestHelpers::user(71);
@@ -58,11 +58,7 @@ function operationMatrixGrant(DriveHandle $system, Node|NodeSnapshot $node, Auth
 
 function operationMatrixState(): array
 {
-    $db = app(VaulterDatabase::class)->connection();
-
-    return array_map(static fn (string $table): array => $db->table($table)->orderBy('id')->get()->map(fn ($row): array => (array) $row)->all(), [
-        'v_nodes', 'v_files', 'v_file_revisions', 'v_file_revision_blobs', 'v_blobs', 'v_drives', 'v_activity', 'v_outbox',
-    ]);
+    return DriveTestHelpers::writeTablesSnapshot();
 }
 
 /*
@@ -257,8 +253,8 @@ it('checks each move copy and changed restore destination independently', functi
 it('checks the host drive admission gate for both create and upload despite a full parent grant', function (string $operation): void {
     $parent = $this->system->folders()->create('parent');
     operationMatrixGrant($this->system, $parent, $this->user, RoleRegistry::OWNER);
-    config()->set('vaulter.access.permission_drivers.no_create', OperationMatrixNoCreateDriver::class);
-    config()->set('vaulter.access.permission_driver', 'no_create');
+    config()->set('vaulter-drive.access.permission_drivers.no_create', OperationMatrixNoCreateDriver::class);
+    config()->set('vaulter-drive.access.permission_driver', 'no_create');
     $before = operationMatrixState();
     $run = fn () => $operation === 'create'
         ? $this->actor->folders()->create('blocked', $parent)

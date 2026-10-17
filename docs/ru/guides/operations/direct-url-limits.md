@@ -4,10 +4,10 @@ title: Лимиты direct URL
 
 # Лимиты direct URL
 
-При `vaulter.downloads.delivery_mode = direct_signed` скачивание — подписанный URL хранилища,
+При `vaulter-drive.downloads.delivery_mode = direct_signed` скачивание — подписанный URL хранилища,
 который Vaulter не проксирует:
 
-- URL работает, пока не пройдёт `downloads.direct_ttl_seconds` (по умолчанию 60);
+- URL работает, пока не пройдёт `vaulter-drive.downloads.direct_ttl_seconds` (по умолчанию 60);
 - **отзыв доступа, перенос в корзину или удаление файла не аннулирует уже выданный URL** — срок ограничен только TTL;
 - запрос видит хранилище, а не Vaulter, поэтому аудит и rate limits Vaulter не применяются.
 

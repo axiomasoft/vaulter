@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Vue 3 + TypeScript components, composables and API client for Vaulter.",
   "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "type": "module",
   "vaulter": {
     "api": "1"

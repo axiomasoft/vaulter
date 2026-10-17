@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 use Illuminate\Http\Request;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Drive\Models\Node;
 
 arch('all package code declares strict types')
     ->expect('Vaulter')
@@ -26,22 +26,14 @@ arch('the package never depends on the host application (E5.1)')
  * copy-pasted from the consuming app while building a feature) breaks installability
  * in a clean host that does not carry that class.
  *
- * `Console/MakeProfileCommand.php` is a deliberate, allow-listed exception: it is a
- * scaffolding command (`make:vaulter-panel`) that EMITS the string `App\Vaulter\Panels`
- * as the target namespace for code it generates INTO the host application — the
- * package itself never imports or executes anything under `App\*`.
+ * The scaffolding commands that EMIT `App\*` as the namespace of code generated INTO the host
+ * moved with their domains (vaulter-drive); the core has none left.
  */
 test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
     $src = __DIR__.'/../../src';
     $offenders = [];
 
-    // Scaffolding commands legitimately emit `App\*` as a STRING (the namespace of
-    // generated host code), never as a real import/dependency of the package itself.
-    $allowlist = [
-        'Console/MakeProfileCommand.php',
-        'Console/MakeFileHandlerCommand.php',
-        'Console/MakePermissionDriverCommand.php',
-    ];
+    $allowlist = [];
 
     /** @var Iterator<SplFileInfo> $files */
     $files = new RegexIterator(
@@ -101,7 +93,7 @@ arch('internal namespaces are not consumed outside the Vaulter package tree (E3.
  * pluggable. (If someone made AccessResolver a contract, this fails.)
  */
 arch('the AccessResolver is a concrete, non-swappable class')
-    ->expect('Vaulter\Access\AccessResolver')
+    ->expect('Vaulter\Drive\Access\AccessResolver')
     ->not->toBeInterface();
 
 /**
@@ -110,7 +102,7 @@ arch('the AccessResolver is a concrete, non-swappable class')
  * A leak of Node into the contract breaks the swappable-driver boundary.
  */
 arch('the PermissionDriver contract never references the Node model')
-    ->expect('Vaulter\Contracts\Access\PermissionDriver')
+    ->expect('Vaulter\Drive\Contracts\Access\PermissionDriver')
     ->not->toUse(Node::class);
 
 /**
@@ -155,10 +147,10 @@ arch('the document handler registry and its handlers are final')
 arch('the core-owned handler engine and its baseline handlers are final (P0.4/D10)')
     ->expect('Vaulter\Engines')
     ->toBeFinal()
-    ->ignoring('Vaulter\Handlers\AbstractFileHandler');
+    ->ignoring('Vaulter\Drive\Handlers\AbstractFileHandler');
 
 arch('the FileHandler contract is an interface (H.5)')
-    ->expect('Vaulter\Contracts\Handlers\FileHandler')
+    ->expect('Vaulter\Drive\Contracts\Handlers\FileHandler')
     ->toBeInterface();
 
 arch('actions are final')
@@ -173,9 +165,20 @@ arch('data transfer objects are readonly')
     ->expect('Vaulter\Data')
     ->toBeReadonly();
 
+// Enums, interfaces and traits cannot be readonly; the catalogue, the sink writer and the delivery control keep
+// per-call state, the outbox model is Eloquent and the lease exception extends RuntimeException (D29, D38).
 arch('events are readonly')
     ->expect('Vaulter\Events')
-    ->toBeReadonly();
+    ->classes()
+    ->toBeReadonly()
+    ->ignoring([
+        'Vaulter\Events\EventCatalog',
+        'Vaulter\Events\SinkWriter',
+        'Vaulter\Events\EventTypeCast',
+        'Vaulter\Events\Outbox\DeliveryControl',
+        'Vaulter\Events\Outbox\Models\OutboxEvent',
+        'Vaulter\Events\Outbox\Exceptions\LeaseLostException',
+    ]);
 
 arch('contracts are interfaces')
     ->expect('Vaulter\Contracts')
@@ -279,7 +282,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
     $rootsWithAllowed = [
         'Enums' => [],
         // The event pipeline's base class, its single recorder and the catalogue reference renderer are cross-domain (PLAN2.D22).
-        'Events' => ['DomainEvent', 'EventRecorder', 'EventsReference'],
+        // The event catalogue mechanics and the EventSink slot are cross-domain kernel types too (D38).
+        'Events' => ['DomainEvent', 'EventRecorder', 'EventsReference', 'EventCatalog', 'EventSink', 'EventSources', 'EventTypeCast', 'EventTypeContract', 'SinkResult', 'SinkWriter'],
         'Models' => [], // Concerns/ is a subdir, not a depth-0 file.
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],
@@ -340,15 +344,13 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     $nested = layersNestedUnderDomain(__DIR__.'/../../src');
 
     // Public error and test contracts live with their respective families; the event
-    // value objects are the ValueObjects domain "Events", like Enums/Events. Webhooks/Events
-    // holds the operational Laravel events hosts listen to (WebhookEndpointDisabled); its
-    // FQCN is documented, so it stays beside the webhook delivery it reports on.
+    // value objects are the ValueObjects domain "Events", the "Events" domain of the neutral event values.
     // Exceptions/Http holds the exceptions of the HTTP protocol itself (428 precondition).
-    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events', 'Webhooks/Events'])))->toBe([])
+    // Events/Outbox/Models holds the outbox model of the kernel outbox (D29: Vaulter\Events\Outbox\Models\OutboxEvent).
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Testing/Contracts', 'Testing/Events', 'ValueObjects/Events', 'Events/Outbox/Models'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
-        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ContentScannerContractTests.php', 'FileHandlerContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
-        ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'EventType.php'])
-        ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'ActivityTarget.php', 'EventScope.php', 'EventSubject.php', 'JournalEffect.php']);
+        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ModuleContractTests.php'])
+        ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'EventScope.php', 'EventSubject.php']);
 });
 
 /**
@@ -403,24 +405,24 @@ test('split classes resolve under their canonical domain namespace', function ()
     // class MUST exist at exactly this canonical per-domain FQCN. A regression that
     // leaves a class flat or under a wrong domain makes class_exists() false here.
     $expected = [
-        'Vaulter\Models\Drive\Node',
-        'Vaulter\Models\Cas\Blob',
-        'Vaulter\Models\Access\NodeGrant',
-        'Vaulter\Models\Sharing\NodeShare',
+        'Vaulter\Drive\Models\Node',
+        'Vaulter\Media\Models\Cas\Blob',
+        'Vaulter\Drive\Models\Access\NodeGrant',
+        'Vaulter\Drive\Models\Sharing\NodeShare',
         'Vaulter\Drive\Models\Uploads\UploadSession',
-        'Vaulter\Models\Activity\Activity',
+        'Vaulter\Drive\Models\Activity\Activity',
         'Vaulter\Documents\Models\Revisions\DocumentRevision',
-        'Vaulter\Enums\Drive\NodeKind',
-        'Vaulter\Enums\Access\Ability',
-        'Vaulter\Events\Sharing\NodeShareCreated',
+        'Vaulter\Drive\Enums\NodeKind',
+        'Vaulter\Drive\Enums\Access\Ability',
+        'Vaulter\Drive\Events\Sharing\NodeShareCreated',
         'Vaulter\Drive\Exceptions\Nodes\NodeCycleException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
-        'Vaulter\Exceptions\Profiles\UnknownProfileException',
-        'Vaulter\Repositories\Drive\NodeReadRepository',
-        'Vaulter\Contracts\Cas\BlobStore',
-        'Vaulter\Contracts\Access\PermissionDriver',
+        'Vaulter\Drive\Exceptions\Profiles\UnknownProfileException',
+        'Vaulter\Drive\Repositories\NodeReadRepository',
+        'Vaulter\Media\Contracts\Cas\BlobStore',
+        'Vaulter\Drive\Contracts\Access\PermissionDriver',
         'Vaulter\Documents\Content\TipTap\TipTapContent',
-        'Vaulter\Access\ValueObjects\NodeAbilities',
+        'Vaulter\Drive\Access\ValueObjects\NodeAbilities',
     ];
 
     $missing = array_values(array_filter(
@@ -491,7 +493,7 @@ arch('core (and all Vaulter code) never depends on the extracted vaulter-media p
 
 /**
  * Scans packages/core/src for a `Vaulter\<root>\` reference OUTSIDE comments/docblocks
- * (the ActivityRecorder/OutboxRecorder/VaulterManager docblocks legitimately name
+ * (the ActivityRecorder/OutboxWriter docblocks legitimately name
  * extracted-package classes in prose explaining the seam split). This is a file scan
  * (NOT `expect('Vaulter')->not->toUse(...)`) so it enforces core⊥<package> WITHOUT an
  * ->ignoring exclusion: each satellite is a require-dev sibling autoloaded into the
@@ -544,8 +546,16 @@ function coreReferencesTo(string $root): array
     return $offenders;
 }
 
-test('core source never references the extracted vaulter-drive package (P2 #5 / D1)', function (): void {
-    expect(coreReferencesTo('Drive'))->toBe([]);
+/**
+ * P4 ownership move (D10, D40): the drive domain (models, repositories, snapshots, profiles, activity, changes) now lives in
+ * vaulter-drive and the HTTP/config/kernel slice moved with P4.11. No core file names a `Vaulter\Drive\` type any more (P4.16, I1 blocks).
+ */
+test('core source references the vaulter-drive package nowhere (P2 #5 / D1, I1 blocks from P4.16)', function (): void {
+    $src = (string) realpath(__DIR__.'/../../src');
+    $found = array_map(static fn (string $path): string => substr((string) realpath($path), strlen($src) + 1), coreReferencesTo('Drive'));
+    sort($found);
+
+    expect($found)->toBe([]);
 });
 
 /**
@@ -675,7 +685,7 @@ arch('the FileHandler contract seam is kind-neutral and never depends on vaulter
 arch('DB facade only in Database and Schema (AD25)')
     ->expect('Illuminate\Support\Facades\DB')
     ->toOnlyBeUsedIn(['Vaulter\Database', 'Vaulter\Schema'])
-    ->ignoring(['Vaulter\Tests', 'Vaulter\Load']);
+    ->ignoring(['Vaulter\Tests', 'Vaulter\Testing', 'Vaulter\Load']);
 
 arch('domain exceptions implement the HTTP problem contract')
     ->expect('Vaulter\Exceptions')
@@ -685,12 +695,9 @@ arch('domain exceptions implement the HTTP problem contract')
         'Vaulter\Exceptions\VaulterException',
         // P2.5 configuration failures stop boot before any endpoint can respond.
         'Vaulter\Exceptions\Configuration\InvalidConfigurationException',
-        'Vaulter\Exceptions\Access\MissingPermissionDriverException',
-        'Vaulter\Exceptions\Profiles\InvalidProfileException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Support\MissingPackageException',
         'Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException',
-        'Vaulter\Exceptions\Webhooks\WebhookResponseTooLargeException',
     ]);
 
 arch('production source never imports testing helpers (D35)')

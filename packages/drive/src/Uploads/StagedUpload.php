@@ -9,16 +9,17 @@ use Illuminate\Validation\ValidationException;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
-use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Files\UploadFacts;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
+use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
-use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Media\Cas\StagedTempObject;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Media\Contracts\Cas\StorageDriver;
 
 /**
  * The staged temp for a resumable upload. The bytes accumulate on the
@@ -36,6 +37,7 @@ use Vaulter\Models\Drive\Drive;
  * back through ContentStore::stage, so the invariant (hash the local staged
  * file) still holds at the moment of commit.
  */
+#[Internal]
 final readonly class StagedUpload
 {
     /**

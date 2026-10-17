@@ -9,30 +9,30 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Events\Uploads\UploadAborted;
 use Vaulter\Drive\Events\Uploads\UploadExpired;
 use Vaulter\Drive\Events\Uploads\UploadInitiated;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Kernel;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 
@@ -51,6 +51,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * CommitUploadAction — the manager only moves the session's state and cleans up the
  * staged temp + protocol state on abort/expire.
  */
+#[Internal]
 final readonly class UploadSessionManager
 {
     public function __construct(
@@ -312,7 +313,7 @@ final readonly class UploadSessionManager
         if (!$fresh instanceof UploadSession) {
             throw NodeNotFoundException::forId('upload');
         }
-        $driveClass = app(VaulterConfig::class)->model('drive');
+        $driveClass = app(DriveConfig::class)->model('drive');
         $drive = $driveClass::query()->whereKey($fresh->drive_id)->first();
         if (!$drive instanceof Drive) {
             throw NodeNotFoundException::forId('drive');

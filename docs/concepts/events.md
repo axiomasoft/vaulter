@@ -55,7 +55,7 @@ the journal; applying it twice is harmless.
 
 `list(string $cursor, int $limit = 100): ChangePage` returns `changes` (a list of `NodeChange`),
 the next `cursor` and `hasMore`. Apply the changes in order, store the cursor, and ask again at
-once while `hasMore` is true. `limit` is 1..`changes.max_page_size` (default 1000).
+once while `hasMore` is true. `limit` is 1..`vaulter-drive.changes.max_page_size` (default 1000).
 
 Each `NodeChange` has `nodeId`, `operation`, `reason`, `subtree`, `node` and `nodeSequence`:
 
@@ -100,7 +100,7 @@ Rotating `app.key` invalidates every stored cursor.
 `list()` throws `CursorExpiredException` (`cursor_expired`, 410) when the entries after the cursor
 are gone:
 
-- `vaulter:changes:prune` deleted them — entries live `changes.retention_days` (default 30) days;
+- `vaulter:changes:prune` deleted them — entries live `vaulter-drive.changes.retention_days` (default 30) days;
 - `vaulter:changes:reset` started a new epoch of the drive's journal (after a restore from backup).
 
 Resynchronize: take a new `startCursor()`, list the drive again and replace your copy. A reader
@@ -117,7 +117,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 
 A client offline for longer than the retention window resynchronizes on its next read. See
 [Commands](/reference/commands#vaulter-changes-prune) and
-[Configuration → Change journal](/reference/config#change-journal-—-changes).
+[Configuration → Change journal](/reference/config#change-journal-—-vaulter-drive-changes).
 
 ## Webhooks
 
@@ -136,5 +136,5 @@ journalled; a purge is already a `remove` from the trash.
 
 The journal is written in the transaction of the change itself, as its last step: a change and
 its entry commit together, and entries become visible in the order of their position. It is on by
-default (`features.changes`); switching it off and on again leaves a gap that only
+default (`vaulter-drive.features.changes`); switching it off and on again leaves a gap that only
 `vaulter:changes:reset` closes.

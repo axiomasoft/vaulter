@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use Vaulter\Actions\Content\ActivateScanPolicyAction;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Content\ScanPolicySpec;
-use Vaulter\Content\ScanSnapshot;
-use Vaulter\Contracts\Content\ScanPolicyResolver as Resolver;
-use Vaulter\Enums\Cas\ScanMode;
+use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
+use Vaulter\Drive\Contracts\Content\ScanPolicyResolver as Resolver;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Repositories\Content\ScanPolicyStateRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Repositories\Content\ScanPolicyStateRepository;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Media\Enums\Cas\ScanMode;
 
+#[Internal]
 final readonly class ScanPolicyResolver implements Resolver
 {
     public function __construct(private ProfilePolicy $profilesPolicy, private ProfileRegistry $profiles,

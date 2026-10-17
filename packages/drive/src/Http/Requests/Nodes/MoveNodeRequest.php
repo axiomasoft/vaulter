@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
 use Illuminate\Validation\Rule;
-use Vaulter\Enums\Drive\OnNameConflict;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /** POST nodes/{node}/move: the destination folder (the drive root when null) and what a name clash does. */
+#[Internal]
 final class MoveNodeRequest extends VaulterFormRequest
 {
     /**

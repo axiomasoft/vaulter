@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.16",
   "title": "Матрица активации I6 и фикстура стороннего модуля AcmeModule (I8)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Фикстурные приложения доказывают I6 (absent, installed-inactive, active, misconfigured, dependency inactive, re-enable с данными, route:cache/config:cache до смены активации, InvalidModuleGraph) через spies запросов/резолвов/маршрутов/слушателей; AcmeModule (сторонний модуль на тех же слотах: Guard, Restriction, Contributor, OperationMiddleware, EventSink, OutboxConsumer) проходит контрактный набор I8.",
   "why": "I6 строится в P3 (блокирует P4), I8 требует фикстуру независимого расширения (phase context). Риски: проверка «0 маршрутов» без spies резолва не доказывает нулевую цену; route-cache тесты пишут в skeleton.",
   "scope": {
@@ -144,6 +144,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:47:32Z"
+  "result": {
+    "started_at": "2026-10-15T06:44:57Z",
+    "finished_at": "2026-10-15T07:03:47Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "4280423a-de44-4a0b-9f3e-b8f554f7f074"
+    },
+    "notes": "ActivationMatrixTest (11), ActivationCacheTest (4), AcmeModuleContractTest (24, sqlite+pgsql), ModuleContractTests (Api); inventory --check, doc-links зелёные. Единый ревью grok 4.7 по просьбе владельца — после P3.17.",
+    "deviations": [
+      "config:cache смоделирован (Testbench не читает кэш конфига); у Restriction нет исполнителя в ядре — runner в фикстуре; файлы сверх task_files: zones.json, groups.php, Arch-тесты+snapshot, target-map, ADR-0027"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T07:03:47Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-15T07:03:47Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-15T07:03:47Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-15T07:03:47Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-15T07:03:47Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-15T07:03:47Z"
 }

@@ -4,24 +4,35 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Data\Drive\UploadOptions;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
+use Vaulter\Drive\Data\UploadOptions;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Providers\BindingsRegistrar as DriveBindingsRegistrar;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Tenancy\MutableTenantResolver;
-use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 uses(EnablesWebhooksModule::class);
+
+// MySQL commits DDL implicitly, so the tables these tests drop stay dropped after the test (SQLite and PostgreSQL roll them back with
+// the test transaction). Start the next test from an empty database that RefreshDatabase migrates afresh.
+afterEach(function (): void {
+    if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+        Schema::dropAllTables();
+        RefreshDatabaseState::$migrated = false;
+    }
+});
 
 /** @return list<DoctorFinding> */
 function coreFindings(string $key, bool $production = false): array
@@ -72,6 +83,11 @@ it('finds every table and migration of a migrated schema', function (): void {
 });
 
 it('reports a missing table and a pending migration as errors', function (): void {
+    // MySQL commits DDL implicitly: the drop would outlive the test transaction and break the next test.
+    if (DB::connection()->getDriverName() === 'mysql') {
+        $this->markTestSkipped('DDL is not transactional on MySQL.');
+    }
+
     Schema::drop(coreTable('drive_changes'));
     Schema::drop(coreTable('drive_change_heads'));
     DB::table('migrations')->where('migration', 'like', '%_create_v_drive_changes_table')->delete();
@@ -91,6 +107,10 @@ it('treats a published migration under a new timestamp as applied', function ():
 });
 
 it('reports a missing migrations table', function (): void {
+    if (DB::connection()->getDriverName() === 'mysql') {
+        $this->markTestSkipped('DDL is not transactional on MySQL.');
+    }
+
     Schema::drop('migrations');
 
     expect(coreCodes('core.schema.tables'))->toContain('core.schema.migrations_table_missing');
@@ -143,14 +163,15 @@ it('samples drives without a single root and limits the sample', function (): vo
 });
 
 it('lists every failing validator, not the first one', function (): void {
-    config(['vaulter.models.drive' => stdClass::class, 'vaulter.access.permission_driver' => 'nonexistent']);
+    // A kernel section and a drive section are both wrong: each validator reports its own, the kernel's as `core`.
+    config(['vaulter.idempotency.ttl_seconds' => 0, 'vaulter-drive.models.drive' => stdClass::class, 'vaulter-drive.access.permission_driver' => 'nonexistent']);
 
     $findings = coreFindings('core.config.valid');
 
-    expect($findings)->toHaveCount(1)
-        ->and($findings[0]->severity)->toBe(DoctorSeverity::Error)
-        ->and($findings[0]->code)->toBe('core.config.invalid')
-        ->and($findings[0]->evidence['validator'])->toBe('core');
+    expect($findings)->toHaveCount(2)
+        ->and(array_map(static fn (DoctorFinding $finding): string => $finding->severity->name, $findings))->toBe(['Error', 'Error'])
+        ->and(array_map(static fn (DoctorFinding $finding): string => $finding->code, $findings))->toBe(['core.config.invalid', 'core.config.invalid'])
+        ->and(array_map(static fn (DoctorFinding $finding): string => $finding->evidence['validator'], $findings))->toBe(['core', DriveBindingsRegistrar::class]);
 });
 
 it('runs the validators the other packages tag', function (): void {
@@ -197,14 +218,14 @@ it('requires an auth middleware with a defined guard on the authenticated routes
 it('refuses the null driver always and a non-production driver in production', function (): void {
     expect(coreCodes('core.access.driver'))->toBe(['core.access.null_driver']);
 
-    config(['vaulter.access.permission_driver' => 'database']);
+    config(['vaulter-drive.access.permission_driver' => 'database']);
     expect(coreCodes('core.access.driver'))->toBe(['core.access.driver_ok']);
 
-    config(['vaulter.access.permission_drivers.test_double' => NullPermissionDriver::class, 'vaulter.access.permission_driver' => 'test_double']);
+    config(['vaulter-drive.access.permission_drivers.test_double' => NullPermissionDriver::class, 'vaulter-drive.access.permission_driver' => 'test_double']);
     expect(coreCodes('core.access.driver'))->toBe(['core.access.driver_ok'])
         ->and(coreCodes('core.access.driver', production: true))->toBe(['core.access.non_production_driver']);
 
-    config(['vaulter.access.permission_drivers.broken' => 'Missing\\Driver', 'vaulter.access.permission_driver' => 'broken']);
+    config(['vaulter-drive.access.permission_drivers.broken' => 'Missing\\Driver', 'vaulter-drive.access.permission_driver' => 'broken']);
     expect(coreCodes('core.access.driver'))->toBe(['core.access.unresolved']);
 });
 
@@ -236,7 +257,7 @@ it('warns when nothing schedules the maintenance tasks', function (): void {
     app()->forgetInstance(Schedule::class);
     expect(coreCodes('core.scheduler'))->toBe(['core.scheduler.not_scheduled']);
 
-    app(Schedule::class)->command('vaulter:webhooks:relay');
+    app(Schedule::class)->command('vaulter:relay');
     expect(coreCodes('core.scheduler'))->toBe(['core.scheduler.scheduled']);
 });
 
@@ -247,37 +268,52 @@ it('warns about a cache that is not shared across instances', function (): void 
     expect(coreCodes('core.cache'))->toBe(['core.cache.shared']);
 });
 
-it('measures the webhook outbox lag and skips it with webhooks off', function (): void {
-    expect(coreCodes('core.webhooks.outbox_lag'))->toBe(['core.webhooks.outbox_current']);
+it('measures the outbox lag per consumer', function (): void {
+    expect(coreCodes('core.outbox.lag'))->toBe(['core.outbox.current']);
 
-    insertOutboxRow(['status' => 'pending', 'available_at' => now()->subMinutes(30)]);
-    $finding = coreFindings('core.webhooks.outbox_lag')[0];
-    expect($finding->code)->toBe('core.webhooks.outbox_lagging')
+    insertOutboxRow(['created_at' => now()->subMinutes(30)]);
+    $finding = coreFindings('core.outbox.lag')[0];
+    expect($finding->code)->toBe('core.outbox.lagging')
         ->and($finding->severity)->toBe(DoctorSeverity::Warning)
-        ->and(coreSeverities('core.webhooks.outbox_lag', production: true))->toBe(['warning']);
+        ->and($finding->evidence['consumers'])->toBe('webhooks.fanout')
+        ->and(coreSeverities('core.outbox.lag', production: true))->toBe(['warning']);
 
+    // The outbox checks are the kernel's: they stay with the webhooks module off.
     WebhookTestHelpers::switchModule($this->app, false);
-    expect(app(DoctorRegistry::class)->unmatched(['core.webhooks']))->toBe(['core.webhooks']);
+    expect(app(DoctorRegistry::class)->unmatched(['core.outbox', 'core.webhooks']))->toBe(['core.webhooks']);
 });
 
-it('does not count a row that is not due yet as lag', function (): void {
-    insertOutboxRow(['status' => 'pending', 'available_at' => now()->addHour(), 'created_at' => now()->subDay()]);
+it('does not count a delivery that is not due yet as lag', function (): void {
+    insertOutboxRow(['created_at' => now()->subDay()], ['next_attempt_at' => now()->addHour()]);
 
-    expect(coreCodes('core.webhooks.outbox_lag'))->toBe(['core.webhooks.outbox_current']);
+    expect(coreCodes('core.outbox.lag'))->toBe(['core.outbox.current']);
 });
 
 it('escalates a stuck relay lease in production', function (): void {
-    insertOutboxRow(['status' => 'pending', 'claim_until' => now()->subMinutes(2), 'claim_token' => 'live']);
-    expect(coreCodes('core.webhooks.relay_leases'))->toBe(['core.webhooks.relay_leases_ok']);
+    insertOutboxRow([], ['state' => 'leased', 'lease_owner' => 'live', 'lease_generation' => 1, 'lease_expires_at' => now()->subMinutes(2)]);
+    expect(coreCodes('core.outbox.leases'))->toBe(['core.outbox.leases_ok']);
 
-    insertOutboxRow(['status' => 'pending', 'claim_until' => now()->subMinutes(20), 'claim_token' => 'dead']);
-    insertOutboxRow(['status' => 'completed', 'claim_until' => now()->subMinutes(20)]);
+    insertOutboxRow([], ['state' => 'leased', 'lease_owner' => 'dead', 'lease_generation' => 1, 'lease_expires_at' => now()->subMinutes(20)]);
+    insertOutboxRow([], ['state' => 'done', 'lease_expires_at' => now()->subMinutes(20)]);
 
-    $finding = coreFindings('core.webhooks.relay_leases')[0];
-    expect($finding->code)->toBe('core.webhooks.relay_leases_stuck')
+    $finding = coreFindings('core.outbox.leases')[0];
+    expect($finding->code)->toBe('core.outbox.leases_stuck')
         ->and($finding->severity)->toBe(DoctorSeverity::Warning)
         ->and($finding->evidence['stuck'])->toBe(1)
-        ->and(coreSeverities('core.webhooks.relay_leases', production: true))->toBe(['error']);
+        ->and(coreSeverities('core.outbox.leases', production: true))->toBe(['error']);
+});
+
+it('compares the settle window with the transaction limits of the database', function (): void {
+    $codes = coreCodes('core.outbox.settle_window');
+
+    // SQLite serialises writers: there is no limit to compare, the window passes.
+    expect($codes)->toHaveCount(1)
+        ->and($codes[0])->toBeIn(DB::connection()->getDriverName() === 'sqlite' ? ['core.outbox.settle_window_ok'] : ['core.outbox.settle_window_ok', 'core.outbox.settle_window_short', 'core.outbox.settle_window_unbounded']);
+
+    config(['vaulter.outbox.settle_window_seconds' => 1]);
+    if (DB::connection()->getDriverName() === 'mysql') {
+        expect(coreCodes('core.outbox.settle_window'))->toBe(['core.outbox.settle_window_short']);
+    }
 });
 
 it('does not count an endpoint switched off by its owner nor the deliveries parked with it', function (): void {
@@ -310,15 +346,21 @@ it('counts disabled endpoints and dead deliveries', function (): void {
         ->and($finding->hint)->toContain('vaulter:webhooks:redeliver');
 });
 
-/** @param array<string, mixed> $attributes */
-function insertOutboxRow(array $attributes): void
+/**
+ * An outbox event and its webhooks.fanout delivery row.
+ *
+ * @param array<string, mixed> $event
+ * @param array<string, mixed> $delivery
+ */
+function insertOutboxRow(array $event, array $delivery = []): void
 {
     static $next = 0;
     $next++;
-    DB::table(coreTable('outbox'))->insert([
-        'event_id' => 'doctor-event-'.$next, 'profile' => 'default', 'event' => 'file.uploaded', 'payload' => '{}',
-        'available_at' => now(), 'attempts' => 0, 'status' => 'pending', 'claim_generation' => 0, 'delivery_count' => 0,
-        'legacy_fanout' => false, 'created_at' => now(), 'updated_at' => now(),
-        ...$attributes,
+    $row = ['event_id' => 'doctor-event-'.$next, 'scope_kind' => 'tenant', 'type' => 'file.uploaded', 'external' => true, 'payload' => '{}', 'created_at' => now(), ...$event];
+    DB::table(coreTable('outbox'))->insert($row);
+    DB::table(coreTable('outbox_deliveries'))->insert([
+        'event_id' => $row['event_id'], 'consumer_id' => 'webhooks.fanout', 'outbox_seq' => DB::table(coreTable('outbox'))->where('event_id', $row['event_id'])->value('outbox_seq'),
+        'state' => 'pending', 'attempts' => 0, 'next_attempt_at' => now(), 'lease_generation' => 0, 'created_at' => now(), 'updated_at' => now(),
+        ...$delivery,
     ]);
 }

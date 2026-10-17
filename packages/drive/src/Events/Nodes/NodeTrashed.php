@@ -5,23 +5,27 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Changes\ChangeReason;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Changes\ChangeReason;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
+use Vaulter\Drive\ValueObjects\Events\JournalEffect;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
-use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A node and its whole subtree were soft-trashed: the trashed
  * triplet is set atomically. used_bytes is NOT decremented — trashed bytes still
  * occupy storage until forceDelete.
  */
-final readonly class NodeTrashed extends DomainEvent
+#[Api]
+final readonly class NodeTrashed extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Node $node,
         ActorRef $actor,
@@ -32,9 +36,9 @@ final readonly class NodeTrashed extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::NodeTrashed;
+        return DriveEventType::NodeTrashed;
     }
 
     public function scope(): EventScope

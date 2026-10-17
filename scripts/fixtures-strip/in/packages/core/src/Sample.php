@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Vaulter;
 
 /**
  * Patch one namespace atomically (PLAN2.D41): the set keys.
  *
  * (F-P1.8-02) Whole line gone.
- * @property int    $size_bytes
- * Owned by core (P2 #5 / ADR-0019) — see {@see Other}.
+ *
+ * @property int $size_bytes
+ *                           Owned by core (P2 #5 / ADR-0019) — see {@see Other}.
  */
 final class Sample
 {

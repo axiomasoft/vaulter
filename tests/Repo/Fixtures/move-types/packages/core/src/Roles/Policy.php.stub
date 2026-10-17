@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Roles;
+
+final class Policy
+{
+    public function role(): Role
+    {
+        return new Role(new Neighbor, $this, new \Acme\Support\Clock);
+    }
+}

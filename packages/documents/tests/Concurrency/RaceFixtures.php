@@ -15,11 +15,11 @@ use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Concurrency\ForkRace;
-use Vaulter\Tests\Concurrency\RaceOutcome;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Testing\Concurrency\ForkRace;
+use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
  * Shared pieces of the PostgreSQL race scenarios of the document validators: a committed

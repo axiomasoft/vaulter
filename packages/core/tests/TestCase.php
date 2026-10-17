@@ -6,14 +6,15 @@ namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
-use Vaulter\Tests\Concerns\RefreshesDatabaseForSchemaVariant;
-use Vaulter\Tests\Support\OpenApi\ValidatesOpenApiResponses;
-use Vaulter\Tests\Support\SuiteDatabaseConnection;
-use Vaulter\Tests\Webhooks\FakeHostResolver;
+use Vaulter\Testing\Concerns\RefreshesDatabaseForSchemaVariant;
+use Vaulter\Testing\Support\OpenApi\ValidatesOpenApiResponses;
+use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
+use Vaulter\Webhooks\Contracts\HostResolver;
+use Vaulter\Webhooks\Testing\FakeHostResolver;
+use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
@@ -51,6 +52,10 @@ abstract class TestCase extends OrchestraTestCase
             // cross-cutting core suites (Activity/Webhooks feeds fed by Drive events,
             // the full-stack Feature specs) resolve it through this provider.
             VaulterDriveServiceProvider::class,
+            // The opt-in webhooks module (a dev dependency of the kernel tests): the activation, outbox and
+            // module-graph suites use it as the module with an external consumer; it stays off unless a test
+            // switches vaulter.modules.webhooks on.
+            VaulterWebhooksServiceProvider::class,
         ];
     }
 
@@ -81,7 +86,7 @@ abstract class TestCase extends OrchestraTestCase
         // H.2 / D6″) grants every actor full access, so the M1c Drive tests keep
         // their open behaviour. The M2a ACL tests opt INTO the 'database' driver
         // explicitly to exercise real grant resolution.
-        $app['config']->set('vaulter.access.permission_driver', 'null');
+        $app['config']->set('vaulter-drive.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy for the base suite. The published
         // config now defaults to ulid (D9); the legacy default-panel document
@@ -95,7 +100,7 @@ abstract class TestCase extends OrchestraTestCase
         // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
         SuiteDatabaseConnection::skipOnForeignEngine($this);
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(SuiteDatabaseConnection::migrationPaths($this->app));
     }
 
     /**

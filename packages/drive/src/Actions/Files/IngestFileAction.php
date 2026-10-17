@@ -4,44 +4,49 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Files;
 
+use Closure;
 use LogicException;
 use Psr\Http\Message\StreamInterface;
-use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Files\IngestReceipt;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Events\Files\FileUploaded;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
+use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+use Vaulter\Drive\Exceptions\QuotaExceededException as CoreQuotaExceededException;
+use Vaulter\Drive\Models\File;
+use Vaulter\Drive\Models\FileRevision;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
+use Vaulter\Drive\Operations\NodeSequence;
+use Vaulter\Drive\Profiles\DrivePolicyEnforcer;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
+use Vaulter\Drive\Repositories\FileRevisionStoreRepository;
+use Vaulter\Drive\Repositories\FileStoreRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Support\DriveLifecycle;
+use Vaulter\Drive\Support\TreeGuard;
 use Vaulter\Drive\Uploads\Inspection\UploadInspection;
 use Vaulter\Drive\Uploads\PreparedUpload;
 use Vaulter\Drive\Uploads\StagedUpload;
-use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
-use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Media\Configuration\MediaConfig;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\NodeSequence;
-use Vaulter\Profiles\DrivePolicyEnforcer;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
-use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
-use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\DriveLifecycle;
+use Vaulter\Media\Contracts\Cas\BlobStore;
+use Vaulter\Media\Exceptions\Cas\BlobUnavailableException;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
+use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
-use Vaulter\Support\TreeGuard;
-use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Commit an upload into the Drive (commit flow): stage → quota → BlobStore.commitStaged
@@ -62,6 +67,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  *
  * Operations authorize before this command; locked invariants remain in the Action.
  */
+#[Internal]
 final readonly class IngestFileAction
 {
     public function __construct(
@@ -83,6 +89,7 @@ final readonly class IngestFileAction
         private ScanAdmission $scans,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private RevisionBlobLinks $links,
     ) {}
 
     public function execute(DriveContext $context, IngestFileInput $data): Node
@@ -137,7 +144,7 @@ final readonly class IngestFileAction
 
             $receipt = $this->database->transaction(function () use ($context, $data, $staged, $name, $parentId): IngestReceipt {
                 // Lock order: drive → nodes → file → quota → CAS, so concurrent writers never deadlock.
-                $this->database->lockTreeShared($data->storage->id);
+                $this->database->lockAggregateShared('drives', $data->storage->id);
                 $this->lifecycle->assertWritable($context);
 
                 if ($name !== null && $parentId !== null) {
@@ -174,19 +181,18 @@ final readonly class IngestFileAction
                     throw new LogicException('An upload requires a persisted storage identifier.');
                 }
 
-                $blob = $this->blobs->commitStaged(
-                    staged: $staged,
-                    scope: BlobScope::forUpload(
-                        $this->mediaConfig->dedupScope()->value,
-                        $data->storage->tenant_id === null ? null : (string) $data->storage->tenant_id,
-                        (string) $storageId,
-                    ),
-                    disk: $data->storage->disk,
+                // One scope for the commit and a re-commit: 'off' mints a new scope per call.
+                $scope = BlobScope::forUpload(
+                    $this->mediaConfig->dedupScope()->value,
+                    $data->storage->tenant_id === null ? null : (string) $data->storage->tenant_id,
+                    (string) $storageId,
                 );
+                $commit = fn (): Blob => $this->blobs->commitStaged(staged: $staged, scope: $scope, disk: $data->storage->disk);
+                $blob = $commit();
 
                 return $file instanceof File
-                    ? $this->commitNewVersion(context: $context, data: $data, file: $file, previousHead: $previousHead, blob: $blob, size: $size, admissionSequence: $admissionSequence)
-                    : $this->commitNewFile(context: $context, data: $data, blob: $blob, size: $size, name: $name ?? '', parentId: $parentId ?? throw new LogicException('An upload requires a destination.'), admissionSequence: $admissionSequence);
+                    ? $this->commitNewVersion(context: $context, data: $data, file: $file, previousHead: $previousHead, blob: $blob, commit: $commit, size: $size, admissionSequence: $admissionSequence)
+                    : $this->commitNewFile(context: $context, data: $data, blob: $blob, commit: $commit, size: $size, name: $name ?? '', parentId: $parentId ?? throw new LogicException('An upload requires a destination.'), admissionSequence: $admissionSequence);
             }, 3);
 
             $this->metrics->counter(
@@ -207,8 +213,10 @@ final readonly class IngestFileAction
 
     /**
      * New-file path: node(kind=file) → file → number=1 → edge → repoint.
+     *
+     * @param Closure(): Blob $commit commits the staged bytes again
      */
-    private function commitNewFile(DriveContext $context, IngestFileInput $data, Blob $blob, int $size, string $name, int|string $parentId, int $admissionSequence): IngestReceipt
+    private function commitNewFile(DriveContext $context, IngestFileInput $data, Blob $blob, Closure $commit, int $size, string $name, int|string $parentId, int $admissionSequence): IngestReceipt
     {
         $node = $this->nodeStore->create([
             'drive_id' => $data->storage->id,
@@ -232,7 +240,7 @@ final readonly class IngestFileAction
 
         $version = $this->makeVersion(context: $context, data: $data, file: $file, blob: $blob, size: $size, versionNo: 1, admissionSequence: $admissionSequence);
 
-        $this->blobs->attach($version, $blob);
+        $this->link(version: $version, blob: $blob, commit: $commit);
 
         $this->files->repointHead(
             file: $file,
@@ -252,8 +260,10 @@ final readonly class IngestFileAction
     /**
      * New-version path: bump number, new version + edge against the
      * (deduped) blob, mark the prior head superseded, repoint file + node heads.
+     *
+     * @param Closure(): Blob $commit commits the staged bytes again
      */
-    private function commitNewVersion(DriveContext $context, IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size, int $admissionSequence): IngestReceipt
+    private function commitNewVersion(DriveContext $context, IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, Closure $commit, int $size, int $admissionSequence): IngestReceipt
     {
         $node = $data->targetNode;
 
@@ -271,7 +281,7 @@ final readonly class IngestFileAction
             admissionSequence: $admissionSequence,
         );
 
-        $this->blobs->attach($version, $blob);
+        $this->link(version: $version, blob: $blob, commit: $commit);
 
         if ($previousHead instanceof FileRevision) {
             $this->versions->markSuperseded($previousHead);
@@ -306,6 +316,26 @@ final readonly class IngestFileAction
         ));
 
         return new IngestReceipt($node, $version);
+    }
+
+    /**
+     * Link the revision to its blob: edge + pin (D23). The pin is refused only when the bytes went with a sweep
+     * between the commit and the pin; this upload still holds them, so it commits them again — the row is
+     * resurrected and the object promoted under the same lock — and pins that.
+     *
+     * @param Closure(): Blob $commit
+     */
+    private function link(FileRevision $version, Blob $blob, Closure $commit): void
+    {
+        try {
+            $this->links->attach($version, $blob);
+        } catch (BlobUnavailableException) {
+            $again = $commit();
+            if (Identity::stringify($again->getKey()) !== Identity::stringify($blob->getKey())) {
+                throw new LogicException('[Vaulter] A re-commit of the same bytes in the same scope returned another blob.');
+            }
+            $this->links->attach($version, $again);
+        }
     }
 
     private function makeVersion(

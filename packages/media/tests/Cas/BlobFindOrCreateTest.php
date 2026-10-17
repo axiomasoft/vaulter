@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Cas\BlobLock;
-use Vaulter\Enums\Cas\BlobStatus;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\Media\Cas\BlobLock;
+use Vaulter\Media\Enums\Cas\BlobStatus;
+use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Media\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Media\ValueObjects\Cas\BlobScope;
 
 /**
  * find-or-create regressions (H.3): the row id is always real (the ON CONFLICT

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Routing\Route;
-use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
+use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleState;
-use Vaulter\Tests\Concerns\FreshApplication;
-use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Testing\Concerns\FreshApplication;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);

@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Documents\Enums\DocumentEventType;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Events\EventTypeContract;
 
 it('keeps the 0.2 stored vocabulary and appends the 1.0 lifecycle, document and comment types', function (): void {
-    expect(array_map(static fn (EventType $type): string => $type->value, EventType::cases()))->toBe([
+    expect(array_map(static fn (EventTypeContract $type): string => (string) $type->value, [...DriveEventType::cases(), ...DocumentEventType::cases()]))->toBe([
         'drive.created', 'folder.created', 'file.uploaded', 'file.revision_added',
         'upload.initiated', 'upload.aborted', 'upload.expired',
         'node.moved', 'node.renamed', 'node.copied', 'node.updated', 'node.trashed', 'node.restored',
@@ -17,13 +19,17 @@ it('keeps the 0.2 stored vocabulary and appends the 1.0 lifecycle, document and 
     ]);
 });
 
-it('keeps upload sessions out of webhooks and document saves out of the activity feed', function (): void {
-    expect(EventType::webhookTypes())->toHaveCount(29)
-        ->not->toContain(EventType::UploadInitiated, EventType::UploadAborted, EventType::UploadExpired)
-        ->and(EventType::names())->toContain('drive.created', 'folder.created', 'file.revision_added', 'document.updated')
-        ->and(EventType::activityTypes())->toHaveCount(31)
-        ->not->toContain(EventType::DocumentUpdated)
-        ->and(EventType::UploadInitiated->isActivity())->toBeTrue()
-        ->and(EventType::UploadInitiated->isWebhook())->toBeFalse()
-        ->and(EventType::DocumentUpdated->isActivity())->toBeFalse();
+it('keeps upload sessions external-free and document saves out of the activity feed', function (): void {
+    $all = [...DriveEventType::cases(), ...DocumentEventType::cases()];
+    $external = array_values(array_filter($all, static fn (EventTypeContract $type): bool => $type->spec()->external));
+    $activity = array_values(array_filter($all, static fn (EventTypeContract $type): bool => $type->spec()->activity));
+
+    expect($external)->toHaveCount(29)
+        ->not->toContain(DriveEventType::UploadInitiated, DriveEventType::UploadAborted, DriveEventType::UploadExpired)
+        ->toContain(DriveEventType::DriveCreated, DriveEventType::FolderCreated, DriveEventType::FileRevisionAdded, DocumentEventType::DocumentUpdated)
+        ->and($activity)->toHaveCount(31)
+        ->not->toContain(DocumentEventType::DocumentUpdated)
+        ->and(DriveEventType::UploadInitiated->spec()->activity)->toBeTrue()
+        ->and(DriveEventType::UploadInitiated->spec()->external)->toBeFalse()
+        ->and(DocumentEventType::DocumentUpdated->spec()->activity)->toBeFalse();
 });

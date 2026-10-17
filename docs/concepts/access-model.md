@@ -22,7 +22,7 @@ decision deterministic. The role drivers are covered in
 
 ::: info Two lanes, one authority
 The `AccessResolver` is the single authority every Policy, `DriveHandle`, controller
-and Resource asks. It lives at `Vaulter\Access\AccessResolver`. The host plugs into
+and Resource asks. It lives at `Vaulter\Drive\Access\AccessResolver`. The host plugs into
 it through the `PermissionDriver` contract — never by replacing the resolver.
 :::
 
@@ -40,8 +40,8 @@ it through the `PermissionDriver` contract — never by replacing the resolver.
 | `filterSharedWith(Authorizable $actor, iterable $candidates)` | `list<Node>` | Re-resolves "shared with me" candidates through the full algorithm. |
 
 ```php
-use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Enums\Access\Ability;
 
 $resolver = app(AccessResolver::class);
 
@@ -56,7 +56,7 @@ place the algorithm lives, and every other method reads its result.
 ## Abilities and roles
 
 Vaulter reasons over a single integer. Every ability owns **one bit**
-(`Vaulter\Enums\Access\Permission`), and `Ability::bits()` returns it:
+(`Vaulter\Drive\Enums\Access\Permission`), and `Ability::bits()` returns it:
 
 | Ability | Bit | Ability | Bit |
 |---|---|---|---|
@@ -73,7 +73,7 @@ without being able to download or copy it. `Ability::satisfiedBy($bits)` is
 
 ### Roles v1
 
-A grant stores a **role** (`Vaulter\Access\Roles\Role`) and its version, resolved through
+A grant stores a **role** (`Vaulter\Drive\Access\Roles\Role`) and its version, resolved through
 `RoleRegistry`. A role is a closed set of abilities; each built-in role contains the one
 before it:
 
@@ -185,7 +185,7 @@ download is refused.
 
 ## The GrantSet
 
-`effectiveGrants()` returns a `Vaulter\Access\ValueObjects\GrantSet` — a final readonly
+`effectiveGrants()` returns a `Vaulter\Drive\Access\ValueObjects\GrantSet` — a final readonly
 value object carrying the folded decision:
 
 | Field | Meaning |
@@ -202,7 +202,7 @@ The resolver computes a flat ability map so the front-end renders only the actio
 actor may perform — no permission logic duplicated in JavaScript, no extra round-trips.
 
 `NodeResource` fills its `abilities` object via
-`Vaulter\Access\ValueObjects\NodeAbilities::for($actor, $node, $resolver)`, which calls
+`Vaulter\Drive\Access\ValueObjects\NodeAbilities::for($actor, $node, $resolver)`, which calls
 `abilitiesFor()`. When there is no acting user, **every flag is false** (the client
 shows a read-only shell rather than mis-advertising actions).
 
@@ -275,7 +275,7 @@ application key. It is bound to the storage, listing kind, parent or search term
 ordering. An invalid signature or mismatched query returns 422 `validation_failed`
 with `errors.cursor`; restart that listing without a cursor.
 
-`vaulter.listing.scan_budget` defaults to 1000 candidates per request. A page can be
+`vaulter-drive.listing.scan_budget` defaults to 1000 candidates per request. A page can be
 short or empty while `next_cursor` remains non-null. Follow that cursor until null
 to reach later visible nodes. Changing `per_page` does not change the cursor's scope.
 
@@ -309,13 +309,13 @@ over this endpoint.
 ## Fail-loud: the null driver
 
 The default driver is `database` — a fully standalone lane with zero host dependency.
-For local boot-up there is also an **open** driver, `Vaulter\Testing\NullPermissionDriver`,
+For local boot-up there is also an **open** driver, `Vaulter\Drive\Testing\NullPermissionDriver`,
 which grants every actor full access via an absolute `Allow` override.
 
 The `PermissionDriverManager` rejects the null driver **in production**:
 
 ```php
-// Vaulter\Access\PermissionDriverManager::driver()
+// Vaulter\Drive\Access\PermissionDriverManager::driver()
 if (is_a($class, NullPermissionDriver::class, allow_string: true) && $this->isProduction) {
     throw MissingPermissionDriverException::nullDriverInProduction($key);
 }
@@ -326,7 +326,7 @@ is explicit:
 
 > The open null host-role driver is forbidden in production. Why: it grants every actor
 > full access; running it in prod would expose every node. Fix: set
-> `config('vaulter.access.permission_driver')` to a real driver (`database`/`gate`/`spatie`/
+> `config('vaulter-drive.access.permission_driver')` to a real driver (`database`/`gate`/`spatie`/
 > `azgard`) or bind your own `PermissionDriver`.
 
 ::: danger Never ship the null driver

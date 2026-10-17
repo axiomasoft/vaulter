@@ -26,14 +26,12 @@ use Throwable;
  * type-map, the identities and the scans share.
  *
  * @phpstan-type Method array{name: string, visibility: string, static: bool}
- * @phpstan-type Declaration array{fqcn: string, kind: string, file: string, package: ?string, extends: list<string>, implements: list<string>, traits: list<string>, attributes: list<string>, methods: list<Method>}
+ * @phpstan-type Declaration array{fqcn: string, kind: string, file: string, package: ?string, extends: list<string>, implements: list<string>, traits: list<string>, attributes: list<string>, spi_kind: ?string, methods: list<Method>}
  * @phpstan-type Reference array{file: string, symbol: string, kind: string, target: string}
  */
 final class SourceIndex
 {
-    /** Packages whose code is indexed; the files are packages/<p>/{src,database,config,routes}/**\/*.php. */
-    public const PACKAGES = ['core', 'media', 'drive', 'documents', 'azgard', 'filament'];
-
+    /** The code of a package is packages/<p>/{src,database,config,routes}/**\/*.php; which packages: Repo::sourcePackages(). */
     public const ROOTS = ['src', 'database', 'config', 'routes'];
 
     public const ELOQUENT_BASES = [
@@ -189,7 +187,7 @@ final class SourceIndex
     private static function migrationTables(Repo $repo): array
     {
         $tables = [];
-        foreach (glob($repo->path('packages/core/database/migrations/*.php')) ?: [] as $migration) {
+        foreach (glob($repo->path('packages/*/database/migrations/*.php')) ?: [] as $migration) {
             if (preg_match('/create_v_(.+)_table\.php$/', basename($migration), $m) === 1) {
                 $tables[] = $m[1];
             }
@@ -203,7 +201,7 @@ final class SourceIndex
     private static function readSources(Repo $repo): array
     {
         $files = [];
-        foreach (self::PACKAGES as $package) {
+        foreach ($repo->sourcePackages() as $package) {
             foreach (self::ROOTS as $root) {
                 $dir = $repo->path("packages/{$package}/{$root}");
                 if (!is_dir($dir)) {
@@ -348,9 +346,13 @@ final class IndexVisitor extends NodeVisitorAbstract
             }
         }
         $attributes = [];
+        $spiKind = null;
         foreach ($node->attrGroups as $group) {
             foreach ($group->attrs as $attribute) {
                 $attributes[] = $attribute->name->toString();
+                if ($attribute->name->toString() === 'Vaulter\Attributes\Spi') {
+                    $spiKind = self::spiKind($attribute);
+                }
             }
         }
         $methods = [];
@@ -382,8 +384,25 @@ final class IndexVisitor extends NodeVisitorAbstract
             'implements' => $implements,
             'traits' => $traits,
             'attributes' => $attributes,
+            'spi_kind' => $spiKind,
             'methods' => $methods,
         ];
+    }
+
+    /** The case named by the `kind` argument of `#[Spi(SpiKind::Implement)]`; null when it is not a constant of SpiKind. */
+    private static function spiKind(Node\Attribute $attribute): ?string
+    {
+        foreach ($attribute->args as $i => $argument) {
+            if (($argument->name === null && $i === 0) || $argument->name?->toString() === 'kind') {
+                $value = $argument->value;
+
+                return $value instanceof Expr\ClassConstFetch && $value->name instanceof Node\Identifier && $value->class instanceof Name && $value->class->toString() === 'Vaulter\\Attributes\\SpiKind'
+                    ? $value->name->toString()
+                    : null;
+            }
+        }
+
+        return null;
     }
 
     /** @param  list<Node\UseItem>  $items */

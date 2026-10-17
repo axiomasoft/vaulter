@@ -5,33 +5,35 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Closure;
-use Vaulter\Access\OperationGuard;
-use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Uploads\AbortUploadAction;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Actions\Uploads\InitiateUploadAction;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
 
+#[Api]
 final readonly class UploadOperations
 {
+    #[Internal]
     public function __construct(
         DriveHandle $handle,
         private DriveContext $context,
@@ -104,7 +106,8 @@ final readonly class UploadOperations
         });
     }
 
-    /** @internal Protocol adapters use the same current ownership/ACL boundary. */
+    /** Protocol adapters use the same current ownership/ACL boundary. */
+    #[Internal]
     public function status(UploadSession|int|string $session): UploadSession
     {
         $session = $this->find($session);
@@ -117,6 +120,7 @@ final readonly class UploadOperations
      * @param  resource                        $chunk
      * @return array{offset:int,complete:bool}
      */
+    #[Internal]
     public function patch(UploadSession|int|string $session, mixed $chunk, int $offset): array
     {
         return $this->manager->withSession($this->find($session), function (UploadSession $locked) use ($chunk, $offset): array {
@@ -135,6 +139,7 @@ final readonly class UploadOperations
      * @param  resource                                $chunk
      * @return array{part_no:int,size:int,etag:string}
      */
+    #[Internal]
     public function putPart(UploadSession|int|string $session, int $partNo, int $byteOffset, mixed $chunk): array
     {
         return $this->manager->withSession($this->find($session), function (UploadSession $locked) use ($partNo, $byteOffset, $chunk): array {

@@ -9,10 +9,10 @@ outline: deep
 Document handlers are Vaulter's **format-extensibility** layer. A handler claims a set of
 mime types and/or extensions, declares what it can do with a file (edit / preview / download
 / thumbnail / collaborate), and returns the front-end mount descriptor — which Vue component
-the client opens the node in. The `Vaulter\Handlers\FileHandlerRegistry` resolves the best
+the client opens the node in. The `Vaulter\Drive\Handlers\FileHandlerRegistry` resolves the best
 handler for a file, and the client routes the node to that surface **without hard-coding mime
 logic**. The registry and its baseline handlers (`PreviewHandler`/`DownloadOnlyHandler`) are
-core-owned — a drive-only host with no other package installed still resolves preview/download
+drive-owned — a drive-only host with no other package installed still resolves preview/download
 for every file. Handlers serve **files** only: a document node is presented by its
 [document type](./document-types.md), not by a handler.
 
@@ -29,16 +29,16 @@ every leaf node, not just `kind=document`. For rendering content out to a file, 
 
 ## The contract
 
-A handler implements `Vaulter\Contracts\Handlers\FileHandler`:
+A handler implements `Vaulter\Drive\Contracts\Handlers\FileHandler`:
 
-<!-- snippet: signature Vaulter\Contracts\Handlers\FileHandler -->
+<!-- snippet: signature Vaulter\Drive\Contracts\Handlers\FileHandler -->
 
 ```php
-namespace Vaulter\Contracts\Handlers;
+namespace Vaulter\Drive\Contracts\Handlers;
 
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 interface FileHandler
 {
@@ -64,7 +64,7 @@ interface FileHandler
 
 ### Capabilities
 
-`Vaulter\ValueObjects\Handlers\ContentCapabilities` is what a handler advertises per file.
+`Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities` is what a handler advertises per file.
 `downloadable` defaults to `true` (anything can be downloaded as bytes); the richer flags are
 opt-in:
 
@@ -80,7 +80,7 @@ new ContentCapabilities(
 );
 ```
 
-These map one-to-one to the `Vaulter\Enums\Handlers\Capability` cases the registry filters
+These map one-to-one to the `Vaulter\Drive\Enums\Handlers\Capability` cases the registry filters
 by: `Edit`, `Preview`, `Download`, `Thumbnail`, `Collaborate`.
 
 ::: warning `previewable` ≠ safe-to-inline
@@ -93,7 +93,7 @@ advertises that a preview exists.
 
 ### The front-end mount descriptor
 
-`Vaulter\ValueObjects\Handlers\ViewerDescriptor` tells the client which Vue component to mount, the
+`Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor` tells the client which Vue component to mount, the
 stable viewer key and any extra serialisable props:
 
 <!-- snippet: host -->
@@ -113,7 +113,7 @@ so the Vue client routes the node without re-running mime logic. The
 
 ### The file descriptor
 
-`Vaulter\ValueObjects\Handlers\FileDescriptor` is the immutable description the registry
+`Vaulter\Drive\ValueObjects\Handlers\FileDescriptor` is the immutable description the registry
 routes on — claimed mime, the server-**sniffed** detected mime, extension and size — without
 touching the bytes or the database. Routing keys on `canonicalMime()`.
 
@@ -133,7 +133,7 @@ presentation comes from their [document type](./document-types.md) (`vaulter/ric
 
 ## Resolution algorithm
 
-`Vaulter\Handlers\FileHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
+`Vaulter\Drive\Handlers\FileHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
 returns the best handler and **never returns null**. The order is:
 
 1. **Mime-first** — collect handlers claiming the canonical (sniffed) mime: an exact match
@@ -152,15 +152,15 @@ files sorts the handler set once.
 
 ## Built-in handlers
 
-The default set is registered from config (`config('vaulter.handlers')`):
+The default set is registered from config (`config('vaulter-drive.handlers')`):
 
 <!-- snippet: config -->
 
 ```php
 // config/vaulter.php
 'handlers' => [
-    Vaulter\Handlers\Builtin\PreviewHandler::class,
-    Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
+    Vaulter\Drive\Handlers\Builtin\PreviewHandler::class,
+    Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -201,7 +201,7 @@ curl https://app.test/api/vaulter/v1/nodes/77
 <!-- snippet: host -->
 
 ```php [PHP — the resolver]
-use Vaulter\Contracts\Handlers\NodePresenter;
+use Vaulter\Drive\Contracts\Handlers\NodePresenter;
 
 $descriptor = app(NodePresenter::class)->present($node);
 // NodePresentation: ->id, ->documentType, ->typeAvailable, ->capabilities, ->ui (->toArray() to serialise)
@@ -239,10 +239,10 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Drive\Contracts\Handlers\FileHandler;
+use Vaulter\Drive\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
 
 final class CsvHandler implements FileHandler
 {
@@ -306,9 +306,9 @@ once, so registering in two places is safe):
 ```php [config — cache-safe FQCN list]
 // config/vaulter.php — append to the handlers list (FQCN only, config-cache safe)
 'handlers' => [
-    Vaulter\Handlers\Builtin\PreviewHandler::class,
+    Vaulter\Drive\Handlers\Builtin\PreviewHandler::class,
     App\Vaulter\Handlers\CsvHandler::class,        // [!code ++]
-    Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
+    Vaulter\Drive\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -316,7 +316,7 @@ once, so registering in two places is safe):
 
 ```php [runtime — Vaulter::handlers()->register]
 // In a service provider's boot() — FQCN or an instance
-use Vaulter\Facades\Vaulter;
+use Vaulter\Drive\Facades\Vaulter;
 use App\Vaulter\Handlers\CsvHandler;
 
 Vaulter::handlers()->register(CsvHandler::class);
@@ -422,16 +422,16 @@ engine itself is yours — replace the key as above, or fill the shell's default
 php artisan vaulter:make:file-handler Csv
 ```
 
-Writes a handler in `app/Vaulter/FileHandlers/Csv.php` and a Pest test in `tests/Unit/Vaulter/` that runs `FileHandlerContractTests`. It prints the line to `vaulter.handlers`
+Writes a handler in `app/Vaulter/FileHandlers/Csv.php` and a Pest test in `tests/Unit/Vaulter/` that runs `FileHandlerContractTests`. It prints the line to `vaulter-drive.handlers`
 and never edits your config. An existing file is kept unless you pass `--force`.
 
 ## Reference
 
-- Contract — `Vaulter\Contracts\Handlers\FileHandler`
-- Registry — `Vaulter\Handlers\FileHandlerRegistry` (`resolve`, `register`, `all`) — core-owned
-- Resolver — `Vaulter\Handlers\NodePresenter` (per-node descriptor) — core-owned
-- Manager seam — `Vaulter\VaulterManager::handlers()->register()` / `::handlers()`
+- Contract — `Vaulter\Drive\Contracts\Handlers\FileHandler`
+- Registry — `Vaulter\Drive\Handlers\FileHandlerRegistry` (`resolve`, `register`, `all`) — drive-owned
+- Resolver — `Vaulter\Drive\Handlers\NodePresenter` (per-node descriptor) — drive-owned
+- Manager seam — `Vaulter\Drive\Vaulter::handlers()->register()` / `::handlers()`
 - VOs — `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`, `FileDescriptor`
-- Enum — `Vaulter\Enums\Handlers\Capability`
+- Enum — `Vaulter\Drive\Enums\Handlers\Capability`
 - Built-ins — `PreviewHandler`, `DownloadOnlyHandler` (documents: see [Document Types](./document-types.md))
 - Frontend viewers (`@vaulter/vue`) — the `viewers` plugin option, `VaulterViewer`, `createViewerRegistry`, `useViewerRegistry`

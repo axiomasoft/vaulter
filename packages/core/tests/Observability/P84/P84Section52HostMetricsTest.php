@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Load\Http\Middleware\RecordRequestPeakMemory;
 use Vaulter\Load\Listeners\RecordThrottledResponse;
 use Vaulter\Load\Observability\DownloadStreamMetrics;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Sharing\ShareTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -159,7 +159,7 @@ it('caps vaulter_download_stream_active at php-fpm max children', function (): v
 });
 
 it('records download ttfb and bytes on public share download', function (): void {
-    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter-drive.features.share_links', true);
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('share-bytes'), 'shared.bin'));
     ShareTestHelpers::share($file, token: 'metrics-share');

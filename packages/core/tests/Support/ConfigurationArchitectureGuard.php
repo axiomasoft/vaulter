@@ -85,7 +85,7 @@ final class ConfigurationArchitectureGuard
                             continue;
                         }
                         $allowConfig = in_array($scope, ['tests', 'config'], true)
-                            || ($scope === 'src' && str_starts_with($path, $owner.'/src/Configuration/'));
+                            || ($scope === 'src' && (str_starts_with($path, $owner.'/src/Configuration/') || str_starts_with($path, $owner.'/src/Testing/')));
                         array_push($violations, ...$this->scanSource($contents, $path, $allowConfig));
                     }
                     if ($required && $phpFiles === 0) {

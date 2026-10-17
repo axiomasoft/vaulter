@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Doctor\Checks;
 
 use Throwable;
+use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorSeverity;
 
+#[Internal]
 final readonly class DatabaseConnectionCheck implements DoctorCheck
 {
     private const array SUPPORTED = ['pgsql', 'mysql', 'mariadb'];

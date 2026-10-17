@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Contracts;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * Materialises a host user (an Authorizable) by its id so the
@@ -17,6 +19,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
  * Returns null when the id resolves to nothing (the webhook then answers allowed=false
  * rather than failing open).
  */
+#[Spi(SpiKind::Implement)]
 interface HostUserResolver
 {
     public function find(int|string $id): ?Authorizable;

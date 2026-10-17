@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Doctor;
 
+use Vaulter\Attributes\Api;
+
 /**
  * One result line of a check. Evidence carries counts, names and flags only: never a secret,
  * a connection string or a user's file name (the runner trims it to 20 short scalar entries).
  */
+#[Api]
 final readonly class DoctorFinding
 {
     /** @param array<string, scalar|null> $evidence */

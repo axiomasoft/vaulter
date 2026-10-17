@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
-use Vaulter\Support\NodeName;
+use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
+use Vaulter\Drive\Support\NodeName;
 use Vaulter\Tests\TestCase;
 
 // The base rules every name policy builds on; nothing is trimmed (PLAN2.D39).

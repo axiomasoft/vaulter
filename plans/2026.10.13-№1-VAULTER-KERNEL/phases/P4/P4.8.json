@@ -1,0 +1,273 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.8",
+  "title": "Drive A: Access и Sharing из core в vaulter-drive",
+  "status": "done_with_deviations",
+  "summary": "`move-types --owner=drive --rule-file=core-access-sharing` (102 типа: AccessResolver, драйверы прав, роли, OperationGuard, ExactListing, Actions/Contracts/Data/Enums/Events/Exceptions/Http/Models/Operations/Policies/Repositories/Rules Access+Sharing, Share*), тесты `packages/core/tests/{Access,Sharing,Spatie}` и access/sharing HTTP-тесты → drive.",
+  "why": "D10: модель доступа и шаринг — понятия drive. Риск: драйвер Spatie (I4 explicit-adapter) и NodePolicy/Gate-регистрация (AccessRegistrar ещё в core до P4.11) — FQCN переписываются инструментом, allowlist I4 перегенерируется.",
+  "scope": {
+    "include": [
+      "Перенос селектором",
+      "Тесты по p4-design#drive-moves",
+      "I4 allowlist explicit-adapter с новым FQCN (перегенерация)"
+    ],
+    "exclude": [
+      "AccessRegistrar/конфиг access (P4.11)",
+      "Изменение поведения",
+      "Правки docs/, docs/ru/, README (P4.20, D43)"
+    ]
+  },
+  "depends_on": [
+    "P4.7"
+  ],
+  "decisions": [
+    "D10",
+    "D20",
+    "D41",
+    "D43",
+    "D44"
+  ],
+  "skills": [
+    "php:namespace-refactor-safety"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design",
+      "why": "нормы P4: границы, команды, перенос тестов, ledger, порядок, прогрессия инвариантов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "CLI и поведение инструмента переноса",
+      "required": true,
+      "section": "move-tool"
+    },
+    {
+      "ref": "knowledge/p4-design",
+      "why": "селектор, тесты, ручные шаги пункта",
+      "required": true,
+      "section": "drive-moves"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "точные команды качества, ledger идентичностей, процедура схемы, документация",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "D10",
+      "why": "владение drive",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orchestration",
+      "why": "Fast-набор и запреты, карта пунктов, лестница решений",
+      "required": true,
+      "section": "run-set"
+    },
+    {
+      "ref": "D41",
+      "why": "режим прогонов PLAN3",
+      "required": true
+    },
+    {
+      "ref": "D43",
+      "why": "приоритет кода и тестов, nits, отклонения",
+      "required": true
+    },
+    {
+      "ref": "D44",
+      "why": "автономность и Perplexity",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/**",
+      "change": "modify",
+      "note": "перенос инструментом"
+    },
+    {
+      "path": "packages/drive/src/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "packages/filament/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "packages/azgard/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "load/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "e2e/**",
+      "change": "modify",
+      "note": "ссылки"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/**",
+      "change": "modify",
+      "note": "только через inventory.php --write; правила tests/Repo/Arch/*.json — руками"
+    },
+    {
+      "path": "tests/Repo/Arch/*.json",
+      "change": "modify",
+      "note": "правила target-map"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "modify",
+      "note": "ledger"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify",
+      "note": "константа принятых решений"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "CHANGES.json/CHANGES.md, текущие *.list/*.count; original/* неизменны"
+    }
+  ],
+  "rules": [
+    "Только инструмент + перенос тестов `--tests`; ручные правки — лишь то, что инструмент отметил warning.",
+    "Поведение и ожидания тестов не меняются; HTTP golden routes-v1.json неизменен.",
+    "Ledger: FQCN-строки в конфиг-дефолтах/serialized — redefined D10.",
+    "Прогоны — только Fast-набор (D41, knowledge/orchestration#run-set): ≤10 мин на пункт, команда ≤5 мин; серверные движки, full, serial/extended/stand, coverage, мутации, load не запускать. Тесты для серверных/serial/stand линий писать и классифицировать (groups.php), не запускать. Известные красные RealAzgard* (azgard) — pre-existing, не провал.",
+    "Документацию (docs/, docs/ru/, README) не править — единый проход в P4.20 по ledger идентичностей (D43); исключение — красный целевой тест-страж документации. Мелочи — одна строка в artifacts/nits.md; отклонения и попутные баги чинить на месте (fix-коммит с тестом); развилки — Perplexity и D# (D44)."
+  ],
+  "guidance": "`scripts/php84 php scripts/inventory/move-types.php --owner=drive --rule-file=core-access-sharing --tests=packages/core/tests/Access:packages/drive/tests/Access --tests=packages/core/tests/Sharing:packages/drive/tests/Sharing --tests=packages/core/tests/Spatie:packages/drive/tests/Spatie --dry-run` → проверить отчёт → `--apply`; HTTP-тесты access/sharing из packages/core/tests/Http переносить по одному файлу (`--tests=<file>:<file>`). Затем pint, `inventory.php --write`, правила target-map, `scripts/t baseline --write -p core,drive`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test ! -e packages/core/src/Access && test ! -e packages/core/src/Sharing && test ! -e packages/core/src/Actions/Access && test ! -e packages/core/src/Actions/Sharing && test ! -e packages/core/tests/Access && test ! -e packages/core/tests/Sharing",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p drive,core,documents,media,filament,repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p azgard",
+      "expect": "exit 0 либо падают только 10 RealAzgard* (дрейф ../azguard, pre-existing)",
+      "kind": "impact"
+    },
+    {
+      "id": "V4",
+      "cmd": "(scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/documents && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/filament && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) && (cd packages/azgard && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Access/Sharing в drive",
+    "тесты в drive suite"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-16T19:12:53Z",
+    "finished_at": "2026-10-17T00:26:06Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "102 типа Access/Sharing/Spatie → drive; Fast-набор зелёный после восстановления azguard-pin",
+    "deviations": [
+      "ArchTest ядра — храповик из 42 файлов (обнуляется в P4.16); arch-тест documents переформулирован под граф D6; azgard ArchTest допускает Vaulter\\Drive; HTTP-тесты перенесены вручную (инструмент принимает только каталоги)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T00:26:06Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T00:26:06Z"
+}

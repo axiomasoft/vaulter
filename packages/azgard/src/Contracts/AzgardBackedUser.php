@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Azgard\Contracts;
 
 use AzGuard\Contracts\AzGuardSubject;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * The host user the {@see AzgardGuardAdapter} bridges into
@@ -26,4 +28,5 @@ use AzGuard\Contracts\AzGuardSubject;
  * The user model must be a subject model of the AzGuard panel that owns Vaulter's
  * permissions (`PanelBuilder::for(User::class)`).
  */
+#[Spi(SpiKind::Implement)]
 interface AzgardBackedUser extends AzGuardSubject {}

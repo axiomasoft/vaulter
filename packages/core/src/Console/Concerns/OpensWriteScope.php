@@ -6,14 +6,14 @@ namespace Vaulter\Console\Concerns;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 
 /**
  * Runs a Vaulter command as a Vaulter write: the models it changes pass the write guard
  * . A command is maintenance work done by the package, not by a caller.
- *
- * @internal
  */
+#[Internal]
 trait OpensWriteScope
 {
     public function run(InputInterface $input, OutputInterface $output): int

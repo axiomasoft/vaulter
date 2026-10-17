@@ -7,23 +7,24 @@ namespace Vaulter\Drive\Http\Controllers\Uploads;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Drive\Http\Resources\Uploads\UploadSessionResource;
+use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
+use Vaulter\Drive\Http\Support\HttpResourceResolver;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadsOf;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
-use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
 
 /**
  * The tus.io CORE resumable-upload protocol over the upload operations, which authorize
@@ -45,6 +46,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
  * drive is resolved tenant-scoped and the operations then decide, so an unknown,
  * foreign or someone else's session all answer not found.
  */
+#[Internal]
 final class TusProtocolController
 {
     private const string TUS_VERSION = '1.0.0';

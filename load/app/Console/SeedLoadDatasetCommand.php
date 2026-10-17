@@ -10,19 +10,20 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
+use Vaulter\Drive\Content\RevisionBlobLinks;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Media\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Support\Config;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\Webhooks\Models\WebhookEndpoint;
 
 /**
  * VLT-LOAD P2.3 — seed the stand to its tier's volume envelope (reference-env.md §2),
@@ -503,7 +504,7 @@ final class SeedLoadDatasetCommand extends Command
                         )])[0];
 
                         $versionModel = Config::fileVersionModel();
-                        $blobStore->attach(version: $versionModel::query()->find($versionId), blob: $blob);
+                        app(RevisionBlobLinks::class)->attach(revision: $versionModel::query()->find($versionId), blob: $blob);
 
                         continue;
                     }
@@ -926,7 +927,7 @@ final class SeedLoadDatasetCommand extends Command
      */
     private function seedWebhookEndpoints(array $profile): array
     {
-        $model = config('vaulter.models.webhook_endpoint');
+        $model = config('vaulter-webhooks.models.webhook_endpoint');
         $ids = [];
 
         for ($i = 1; $i <= $profile['active']; $i++) {

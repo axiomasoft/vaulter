@@ -8,22 +8,22 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\NodeReadRepository;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Load\Listeners\RecordBroadcastQueueWait;
 use Vaulter\Load\Observability\CollaborationRoomMetrics;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
@@ -67,8 +67,8 @@ it('records vaulter_tree_query_duration_seconds for search queries', function ()
 it('records vaulter_tree_cte_anchors when grant filtering resolves subtree anchors', function (): void {
     LoadTier::set('S');
 
-    config()->set('vaulter.features.grants', true);
-    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-drive.features.grants', true);
+    config()->set('vaulter-drive.access.permission_driver', 'database');
 
     app()->forgetInstance(NodeReadRepository::class);
 

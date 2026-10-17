@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The v_node_comments schema (ADR-0014 шаг 1): the table, its columns, the node_id

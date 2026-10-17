@@ -6,12 +6,14 @@ namespace Vaulter\Testing;
 
 use RuntimeException;
 use Throwable;
+use Vaulter\Attributes\Api;
 use Vaulter\Contracts\Observability\TraceRecorder;
 
 /**
  * In-memory {@see TraceRecorder} for package tests. Records span nesting,
  * attributes and error status without a tracing backend.
  */
+#[Api]
 final class FakeTraceRecorder implements TraceRecorder
 {
     /** @var list<string> */

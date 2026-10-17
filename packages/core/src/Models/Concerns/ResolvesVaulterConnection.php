@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use function Illuminate\Support\enum_value;
 
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\DatabaseConfig;
 
 /**
@@ -18,13 +19,14 @@ use Vaulter\Configuration\DatabaseConfig;
  * before this trait existed — a host that never sets the key sees no change in
  * behaviour, only a host that DOES set it gets every Vaulter-owned table's model
  * routed to that named connection, matching where {@see
- * \Vaulter\Schema\SchemaBuilder} created the table.
+ * \Vaulter\Schema\SchemaHelpers::schemaConnection()} created the table.
  *
- * Host apps that swap in their own model (configuration key vaulter.models.*) simply omit
+ * Host apps that swap in their own model (configuration key vaulter-drive.models.*) simply omit
  * this trait if they want a different connection resolution strategy.
  *
  * @mixin Model
  */
+#[Api]
 trait ResolvesVaulterConnection
 {
     #[\Override]

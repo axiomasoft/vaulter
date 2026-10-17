@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Attributes\Api;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Contracts\IdStrategy;
 
@@ -15,6 +16,7 @@ use Vaulter\Contracts\IdStrategy;
  * hostKey/actor/tenant use the independent host-key type; panel/bits/reference add
  * the per-table convention columns from the .
  */
+#[Api]
 final class VaulterSchema
 {
     /**

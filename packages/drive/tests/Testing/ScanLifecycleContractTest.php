@@ -15,10 +15,10 @@ use Vaulter\Testing\Fixtures\FixtureActor;
 function scanHost(string $mode, string $queue = 'database'): Closure
 {
     return static function () use ($mode, $queue): void {
-        config()->set('vaulter.scan.mode', $mode);
-        config()->set('vaulter.scan.scanner_key', 'contract');
-        config()->set('vaulter.scan.scanner_version', '1');
-        config()->set('vaulter.scan.rollout_key', 'contract-rollout');
+        config()->set('vaulter-drive.scan.mode', $mode);
+        config()->set('vaulter-drive.scan.scanner_key', 'contract');
+        config()->set('vaulter-drive.scan.scanner_version', '1');
+        config()->set('vaulter-drive.scan.rollout_key', 'contract-rollout');
         config()->set('queue.default', $queue);
         config()->set('queue.connections.database.retry_after', 180);
     };

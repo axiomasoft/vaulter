@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Drives;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
-use Vaulter\Events\DomainEvent;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Attributes\Api;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Access\ActorRef;
-use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /** The drive changed its lifecycle status: it is now archived. */
-final readonly class DriveArchived extends DomainEvent
+#[Api]
+final readonly class DriveArchived extends DriveEvent
 {
+    #[Internal]
     public function __construct(
         public Drive $drive,
         ActorRef $actor,
@@ -26,9 +30,9 @@ final readonly class DriveArchived extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::DriveArchived;
+        return DriveEventType::DriveArchived;
     }
 
     public function scope(): EventScope

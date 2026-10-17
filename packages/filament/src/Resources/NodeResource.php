@@ -19,22 +19,22 @@ use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 use Override;
 use UnitEnum;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Filament\Support\PanelNodes;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Filament\Support\PanelRecord;
+use Vaulter\Filament\Support\PanelRecords;
 
 /**
  * The Drive-node admin surface — the heart of the panel. It lists the unified
@@ -49,21 +49,18 @@ use Vaulter\Models\Drive\Node;
  *
  * @phpstan-import-type NodeRow from PanelNodes
  */
+#[Internal]
 final class NodeResource extends Resource
 {
-    protected static ?string $model = Node::class;
+    protected static ?string $model = PanelRecord::class;
+
+    protected static ?string $modelLabel = 'node';
+
+    protected static bool $isGloballySearchable = false;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static string|UnitEnum|null $navigationGroup = 'Vaulter';
-
-    protected static ?string $recordTitleAttribute = 'name';
-
-    #[Override]
-    public static function getModel(): string
-    {
-        return app(VaulterConfig::class)->model('node');
-    }
 
     #[Override]
     public static function form(Schema $schema): Schema
@@ -109,7 +106,7 @@ final class NodeResource extends Resource
 
                 TextColumn::make('size_bytes')
                     ->label('Size')
-                    ->formatStateUsing(fn (int $state): string => self::humanBytes($state))
+                    ->formatStateUsing(fn (int $state): string => PanelRecords::humanBytes($state))
                     ->sortable(),
 
                 TextColumn::make('trashed_at')
@@ -178,25 +175,17 @@ final class NodeResource extends Resource
         return false;
     }
 
-    #[Override]
-    public static function getEloquentQuery(): Builder
-    {
-        // The table is fed by handle listings (see records()); an Eloquent query over
-        // nodes would be an access bypass, so anything that reaches for one gets no rows.
-        return parent::getEloquentQuery()->whereRaw('1 = 0');
-    }
-
     /**
-     * @param  array<string, mixed>           $filters
-     * @return Paginator<int|string, NodeRow>
+     * @param  array<string, mixed>                    $filters
+     * @return Paginator<string, array<string, mixed>>
      */
     private static function records(?string $search, array $filters, ?string $sortColumn, ?string $sortDirection, int $page, int|string $recordsPerPage): Paginator
     {
         $rows = collect(PanelNodes::rows());
 
-        $kind = self::filterValue($filters, 'kind');
-        $drive = self::filterValue($filters, 'drive_id');
-        $trashed = self::filterValue($filters, 'trashed_at');
+        $kind = PanelRecords::filterValue($filters, 'kind');
+        $drive = PanelRecords::filterValue($filters, 'drive_id');
+        $trashed = PanelRecords::filterValue($filters, 'trashed_at');
 
         $rows = $rows
             ->when($kind !== null, fn ($rows) => $rows->filter(fn (array $row): bool => $row['kind']->value === $kind))
@@ -207,26 +196,7 @@ final class NodeResource extends Resource
             })
             ->when(is_string($search) && $search !== '', fn ($rows) => $rows->filter(fn (array $row): bool => str_contains(mb_strtolower($row['name']), mb_strtolower((string) $search))));
 
-        $column = $sortColumn ?? 'created_at';
-        $rows = $rows->sortBy(
-            fn (array $row): mixed => $row[$column] instanceof BackedEnum ? $row[$column]->value : ($row[$column] instanceof \DateTimeInterface ? $row[$column]->getTimestamp() : $row[$column]),
-            descending: ($sortDirection ?? 'desc') === 'desc',
-        )->keyBy('id');
-
-        // The per-page select posts its value as a string; only "all" means every row.
-        $perPage = is_numeric($recordsPerPage) ? max((int) $recordsPerPage, 1) : max($rows->count(), 1);
-
-        // Rows stay keyed by node id (Filament's record key); one extra row tells the simple paginator whether a next page exists.
-        return new Paginator($rows->slice(($page - 1) * $perPage, $perPage + 1)->all(), $perPage, $page);
-    }
-
-    /** @param array<string, mixed> $filters */
-    private static function filterValue(array $filters, string $name): ?string
-    {
-        $entry = $filters[$name] ?? null;
-        $value = is_array($entry) ? ($entry['value'] ?? null) : null;
-
-        return is_scalar($value) && (string) $value !== '' ? (string) $value : null;
+        return PanelRecords::paginate(array_values($rows->all()), $sortColumn, $sortDirection, $page, $recordsPerPage, 'created_at');
     }
 
     /**
@@ -430,18 +400,5 @@ final class NodeResource extends Resource
             NodeKind::Document => 'heroicon-o-document-text',
             NodeKind::Shortcut => 'heroicon-o-arrow-top-right-on-square',
         };
-    }
-
-    private static function humanBytes(int $bytes): string
-    {
-        if ($bytes <= 0) {
-            return '—';
-        }
-
-        $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-        $power = (int) min(floor(log($bytes, 1024)), count($units) - 1);
-        $value = $bytes / (1024 ** $power);
-
-        return sprintf('%s %s', rtrim(rtrim(number_format($value, 2), '0'), '.'), $units[$power]);
     }
 }

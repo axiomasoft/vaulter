@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Events\Drives\DriveArchived;
-use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Drive\Exceptions\InvalidDriveStateException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\DriveStoreRepository;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Drive\InvalidDriveStateException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Drive\DriveStoreRepository;
 
 /** active → archived: the drive becomes read-only. */
+#[Internal]
 final readonly class ArchiveDriveAction
 {
     public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder) {}
@@ -22,7 +24,7 @@ final readonly class ArchiveDriveAction
     {
         return $this->database->transaction(function () use ($context): Drive {
             // T exclusive: no tree write of this drive is in flight when the status flips.
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $drive = $this->drives->lock($context->driveId());
             if ($drive->status !== DriveStatus::Active) {
                 throw InvalidDriveStateException::for($drive->id, 'archive', $drive->status);

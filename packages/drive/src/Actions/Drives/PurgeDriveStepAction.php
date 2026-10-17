@@ -4,25 +4,26 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
-use Vaulter\Access\OperationGuard;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Content\RevisionBlobLinks;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
+use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Events\Drives\DriveDeleted;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\Changes\ChangeEntryRepository;
+use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Events\EventRecorder;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Repositories\Changes\ChangeEntryRepository;
-use Vaulter\Repositories\Changes\ChangeHeadRepository;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
-use Vaulter\VaulterManager;
+use Vaulter\Tenancy\Tenancy;
 
 /**
  * One resumable step of purging a drive that is being deleted: open uploads
@@ -32,14 +33,14 @@ use Vaulter\VaulterManager;
  * children left one last transaction removes the root, the drive's change journal and
  * the drive row. Activity and outbox rows stay as history. Safe to repeat after any crash.
  */
+#[Internal]
 final readonly class PurgeDriveStepAction
 {
     public const int BATCH = 100;
 
     public function __construct(
-        private VaulterConfig $config,
+        private DriveConfig $config,
         private VaulterDatabase $database,
-        private VaulterManager $manager,
         private PurgeNodeAction $purge,
         private UploadSessionManager $uploads,
         private DriveConfig $driveConfig,
@@ -47,12 +48,13 @@ final readonly class PurgeDriveStepAction
         private EventRecorder $recorder,
         private ChangeEntryRepository $changes,
         private ChangeHeadRepository $heads,
+        private RevisionBlobLinks $links,
     ) {}
 
     /** @return bool true when the drive is gone (or was never being deleted), false while children remain */
     public function execute(int|string $driveId): bool
     {
-        return $this->manager->withoutTenancy(function () use ($driveId): bool {
+        return Tenancy::without(function () use ($driveId): bool {
             $drive = $this->config->model('drive')::query()->whereKey($driveId)->first();
             if (!$drive instanceof Drive || $drive->status !== DriveStatus::Deleting) {
                 return true;
@@ -98,7 +100,7 @@ final readonly class PurgeDriveStepAction
     private function finish(DriveContext $context, ?Node $root): bool
     {
         return $this->database->transaction(function () use ($context, $root): bool {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $drive = $this->config->model('drive')::query()->whereKey($context->driveId())->lockForUpdate()->first();
             if (!$drive instanceof Drive || $drive->status !== DriveStatus::Deleting) {
                 return true;
@@ -107,6 +109,11 @@ final readonly class PurgeDriveStepAction
             if ($root !== null && $nodeClass::query()->where('drive_id', $drive->getKey())->where('parent_id', $root->getKey())->exists()) {
                 return false;
             }
+            // The revisions left on the drive (none after the node purges, unless a node was out of the root's
+            // subtree) lose their edges and pins before the cascade of the drive row would drop them (D23).
+            $files = $this->config->model('file')::query()->select('id')
+                ->whereIn('node_id', $nodeClass::query()->select('id')->where('drive_id', $drive->getKey()));
+            $this->links->detachAll($this->config->model('file_revision')::query()->whereIn('file_id', $files)->orderBy('id')->pluck('id')->all());
             if ($root !== null) {
                 $this->nodes->purgeSubtree(collect([$root->id]));
             }

@@ -410,6 +410,14 @@ it('refuses a problem code declared by two installed modules', function (): void
         ->and($reasons)->toContain('problem code "fixture_missing" is declared by both "host" and "optional"');
 });
 
+it('refuses a problem code a module declares twice through two sources', function (): void {
+    $reasons = invalidReasons([
+        fixtureHost(static fn (ModuleBuilder $m) => $m->provides(Greeter::class, PlainGreeter::class)->problems(FixtureProblemCodes::class)->problems(FixtureProblemCodes::class)),
+    ]);
+
+    expect($reasons)->toContain(sprintf('module "host" declares the problem code "fixture_conflict" twice (%s)', FixtureProblemCodes::class));
+});
+
 it('refuses a problem source that is not one, a malformed code and an entry without a spec', function (): void {
     $reasons = invalidReasons([
         fixtureHost(static fn (ModuleBuilder $m) => $m->provides(Greeter::class, PlainGreeter::class)

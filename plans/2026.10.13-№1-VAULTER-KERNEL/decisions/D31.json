@@ -3,7 +3,7 @@
   "id": "D31",
   "title": "Квалификация фаз P2–P6 без полной матрицы; full — при закрытии плана",
   "date": "2026-10-13",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Как квалифицировать фазы P2–P6, если полная матрица `scripts/t all --full --engines=sqlite,pgsql,mysql` по решению владельца в P1.9 перенесена на закрытие плана (tests/README.md, Run policy)?",
   "options": [
     {
@@ -23,6 +23,7 @@
     "Квалификация фазы без full не называется полной: отчёт указывает, что полная матрица ожидает закрытия плана."
   ],
   "global": true,
+  "superseded_by": "D41",
   "actor": {
     "provider": "anthropic",
     "model": "claude-opus-5-5",

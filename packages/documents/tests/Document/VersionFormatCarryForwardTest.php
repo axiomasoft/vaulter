@@ -15,7 +15,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Support\DocumentTypeKey;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
 /*
  * VLT-CANON P0.4 (L3) stamped the 0.2 per-version `format` explicitly so appended rows

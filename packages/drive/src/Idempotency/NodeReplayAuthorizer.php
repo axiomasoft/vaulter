@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Idempotency;
 
-use Vaulter\Access\OperationGuard;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Operations\OperationKind;
-use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\Operations\OperationKind;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Idempotency\ReplayAuthorizer;
 use Vaulter\Idempotency\ResourceRef;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\DriveContext;
-use Vaulter\Operations\NodeLocator;
 
 /**
  * The current authorization of a replayed node write (D25, architecture#operation-chains «Replay»), with the same
@@ -23,9 +24,8 @@ use Vaulter\Operations\NodeLocator;
  *
  * Create (`folders.create`) needs Create in the folder that holds the node now; any other write needs `$ability`
  * on the node itself, or on the scope when the node is gone.
- *
- * @internal
  */
+#[Internal]
 final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
 {
     private function __construct(
@@ -48,7 +48,7 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
         return new self($context, $locator, $guard, $ability, $node);
     }
 
-    public function scope(mixed $result): ?ResourceRef
+    public function scope(mixed $result): ResourceRef
     {
         if ($result instanceof NodeSnapshot) {
             return $result->parentId === null ? $this->drive() : new ResourceRef('node', $result->parentId);

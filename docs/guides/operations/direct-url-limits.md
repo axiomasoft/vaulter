@@ -4,10 +4,10 @@ title: Direct URL limits
 
 # Direct URL limits
 
-With `vaulter.downloads.delivery_mode = direct_signed`, a download is a signed storage URL that
+With `vaulter-drive.downloads.delivery_mode = direct_signed`, a download is a signed storage URL that
 Vaulter does not proxy:
 
-- the URL works until `downloads.direct_ttl_seconds` (default 60) passes;
+- the URL works until `vaulter-drive.downloads.direct_ttl_seconds` (default 60) passes;
 - **revoking access, trashing or deleting the file does not invalidate an issued URL** — exposure is bounded only by the TTL;
 - the storage sees the request, not Vaulter, so Vaulter's audit and rate limits do not apply.
 
