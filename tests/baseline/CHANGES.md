@@ -1410,3 +1410,4 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `azgard`: 9
 - `filament`: 27
 - `webhooks`: 77
+- `vue`: 4

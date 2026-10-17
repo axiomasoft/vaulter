@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.21",
   "title": "Квалификация P4 (Fast-набор, D41)",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Последний пункт P4: быстрая линия sqlite всех PHP-наборов (вкл. webhooks) и repo, baseline compare, inventory (I1/I2/I3/I5 блокирующие), sqlite snapshot + original неизменен, static quality всех пакетов, vue typecheck/api-check, doc links, consumer-check --dry-run; отчёт artifacts/P4.21/qualification.md. Серверные линии, полная матрица и прочее — PLAN4.",
   "why": "D41: квалификация фазы — только Fast-набор (≤10 мин); закрывает phase V1.",
   "scope": {
@@ -187,6 +187,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T08:31:29Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    }
+  },
+  "updated_at": "2026-10-17T08:31:29Z"
 }

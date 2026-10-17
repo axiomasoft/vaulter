@@ -12791,6 +12791,15 @@
         "P\\Tests\\Schema\\WebhooksKeyColumnsTest::__pest_evaluable_it_declares_the_key_columns_of_its_own_tables_to_the_key_type_check_of_the_kernel",
         "P\\Tests\\Webhooks\\WebhookEndpointCrudTest::__pest_evaluable_it_answers_an_oversized_endpoint_id_after_the_ability_check__403_without_manage__404_with_it"
       ]
+    },
+    "vue": {
+      "count": 4,
+      "names": [
+        "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > detects the forbidden shapes",
+        "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > finds every import shape in a source text",
+        "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > imports only itself and framework-neutral packages",
+        "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > scans the api folder"
+      ]
     }
   }
 }
