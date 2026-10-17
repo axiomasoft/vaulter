@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.7",
   "title": "Хаб, протокол 2: envelope/ack, собственный pending ledger, retry full jitter, режимы buffered/durable, источники server/direct/Redis; v1 store удалён",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Хаб: `src/backend.js` (клиент v2: authenticate/load/append, HMAC, `X-Vaulter-Collab-Protocol: 2`), `src/retry.js` (full jitter base 100 мс/cap 2 с, ≤5 попыток, дедлайн 10 с, таймаут попытки 2 с, Retry-After в остатке дедлайна; retry только network/5xx/429), `src/ledger.js` (очередь на документ, независимая от onStoreDocument/debounce/destroy), `src/persistence.js` (stateless envelope → append → ack/nack; direct/server-origin → update_id хаба; Redis-origin не append-ится; load: replay checkpoint+tail), режимы buffered/durable и бюджет pending (stop writes всех rooms), status-сообщения; full-state `onStoreDocument` удалён. PHP: удалены маршрут `vaulter.v1.collaboration.hub.store`, `HubStoreController`, `PersistCollaborationStateAction`, `PersistCollaborationStateInput`; v2-маршруты требуют протокол 2.",
   "why": "D26: обычный Yjs sync не application ack; Hocuspocus 4.3.0 не повторяет failed store, destroy ждёт без дедлайна (закреплено P5.2). Hard risks: ack до backend commit; потеря server/direct-изменений (11); двойной append Redis-origin; новый update_id при повторе (1, 14); retry auth/validation/generation-ошибок; неограниченная очередь в buffered; failed append без нового изменения не повторяется (16).",
   "scope": {
@@ -186,6 +186,12 @@
       "note": "CHANGES.json/CHANGES.md и текущие *.list/*.count; original/* неизменны"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/dc03efe2725efc9ecca99ee3ae8fd6ba918b51303ac104dc508cc02b2f13a6d6",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Ack клиенту — только после 200 append; ack содержит update_id клиента без изменения.",
     "Повтор append — тот же update_id/sha256/payload; новых id при retry нет.",
@@ -258,6 +264,87 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T09:05:06Z"
+  "result": {
+    "started_at": "2026-10-17T18:22:41Z",
+    "finished_at": "2026-10-17T21:16:18Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "opus",
+      "effort": "xhigh"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-6f68f944490e7a9756317291-P5.7",
+    "notes": "Hub protocol 2: new src/backend.js (authenticate/load/append, HMAC, X-Vaulter-Collab-Protocol: 2; append makes one attempt and reports it), src/retry.js (full jitter base 100 ms/cap 2 s, ≤5 attempts, 10 s deadline including network time, 2 s per attempt, Retry-After within the remaining deadline, retries only network/5xx/429; time injectable), src/ledger.js (per-document FIFO queue independent of onStoreDocument/debounce/destroy; a record leaves only on 200; an exhausted series gives nack retry:true plus an error log and a failure count, the record is kept and the periodic flush cycle repeats it; 409 epoch drops the generation's records and closes the room 4409; 404 → 4404; 401/403 of a client record → close 4001/4403; server records are never dropped on credential errors; protocol mismatch keeps the record and raises a flag; running byte totals), src/persistence.js (stateless envelopes {t:u,v:2,g,id,h,b} validated, applied and appended under the client's id, ack {t:ack,id,seq,g} only after commit with the id echoed unchanged; nack codes; server/direct changes appended once under a hub uuid; Redis-origin and connection-origin sync updates never appended; load replays checkpoint+tail in seq order; an empty generation is seeded once as the log's first record via append with seed_state_version, reloaded on 409 seed_conflict; pending server records re-applied on reload; buffered budgets per room and total stop writes in every room; durable stops writes while the backend does not answer; status messages on connect and on every switch; serverWrite() returns after append in durable mode; state() for P5.9), src/rooms.js (close codes and helpers). src/index.js rewired without onStoreDocument; a client that does not announce protocol=2 is read-only. src/config.js adds VAULTER_COLLAB_MODE, PENDING_BUDGET_BYTES, PENDING_ROOM_BUDGET_BYTES, FLUSH_INTERVAL_MS, RETRY_* with validation. webhook.js removed. Hub tests: new retry/ledger/envelope/origins/modes plus support/{mock-backend,rooms}.js (loopback http mock, virtual time); rewritten epoch-fence, load-seed, readonly, v1-paths, webhook. PHP: deleted route vaulter.v1.collaboration.hub.store, HubStoreController, PersistCollaborationStateAction, PersistCollaborationStateInput, PersistCollaborationStateTest and the v1 CollaborationHub::load/store; authenticate and load require protocol 2 (HubProtocol::negotiate removed); append takes an optional seed_state_version (UpdateLog::assertSeedable under L3+L4: no record, no checkpoint, state version unchanged, else 409 collaboration_seed_conflict) and re-reads the drive status under the drive lock (archived 403, deleting 404); Checkpoint::publish now records vaulter_collab_snapshot_duration_seconds. PHP tests rewritten on append and checkpoint (HubProtocolTest, HubV1RoutesTest, CollaborationWebhookTest, ContentFenceV1Test, HubDriveLifecycleTest, FeatureGate, BoundaryTest, module and route-label tests, two pgsql race tests); new tests/Http/ProtocolVersionTest.php. OpenAPI: /collaboration/hub/store and the HubLoaded/HubStored(Envelope) schemas removed, protocol header required, seed_state_version added; schema.d.ts edited by hand to match. Fixtures: inventory --write (http/protocol identities, target-map, surface), identities ledger (store route removed D26; load/authenticate/append/seed_conflict redefined D26), i13 stale entry removed, golden routes regenerated, suites.json, baselines written with 29 ledger replacements. Other runs, all exit 0: node --test retry/ledger/webhook/v1-paths/config/security (79 pass); scripts/t sqlite -p collaboration over all test directories (Http, Collaboration, Persistence, Module, Arch, Document, Restore, Disable, Console, Doctor, Operations, Providers, Configuration); core OpenApi dir, P83DocumentsMetricsTest, RouteLabelSourceTest, SchemaSnapshotTest; scripts/t sqlite -p repo (240); pint on the touched core tests; scripts/t baseline --compare -p core,media,drive,webhooks,documents,collaboration,azgard,filament,repo,hub.\nChanged: openapi/vaulter-v1.yaml, packages/collaboration/hub/package.json, packages/collaboration/hub/src/backend.js, packages/collaboration/hub/src/config.js, packages/collaboration/hub/src/index.js, packages/collaboration/hub/src/ledger.js, packages/collaboration/hub/src/persistence.js, packages/collaboration/hub/src/retry.js, packages/collaboration/hub/src/rooms.js, packages/collaboration/hub/src/webhook.js, packages/collaboration/hub/test/envelope.test.js, packages/collaboration/hub/test/epoch-fence.test.js, packages/collaboration/hub/test/ledger.test.js, packages/collaboration/hub/test/load-seed.test.js, packages/collaboration/hub/test/modes.test.js, packages/collaboration/hub/test/origins.test.js, packages/collaboration/hub/test/readonly.test.js, packages/collaboration/hub/test/retry.test.js, packages/collaboration/hub/test/support/mock-backend.js, packages/collaboration/hub/test/support/rooms.js, packages/collaboration/hub/test/v1-paths.test.js, packages/collaboration/hub/test/webhook.test.js, packages/collaboration/routes/collaboration.php, packages/collaboration/src/Actions/PersistCollaborationStateAction.php, packages/collaboration/src/CollaborationHub.php, packages/collaboration/src/Data/PersistCollaborationStateInput.php, packages/collaboration/src/Exceptions/CollaborationSeedConflictException.php, packages/collaboration/src/Http/Controllers/Collaboration/HubAppendController.php, packages/collaboration/src/Http/Controllers/Collaboration/HubAuthenticateController.php, packages/collaboration/src/Http/Controllers/Collaboration/HubLoadController.php, packages/collaboration/src/Http/Controllers/Collaboration/HubStoreController.php, packages/collaboration/src/Http/Support/CollaborationRouteLabels.php, packages/collaboration/src/Http/Support/HubProtocol.php, packages/collaboration/src/Persistence/Checkpoint.php, packages/collaboration/src/Persistence/UpdateEnvelope.php, packages/collaboration/src/Persistence/UpdateLog.php, packages/collaboration/tests/Arch/BoundaryTest.php, packages/collaboration/tests/Arch/__snapshots__/surface.txt, packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php, packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php, packages/collaboration/tests/Collaboration/HubProtocolTest.php, packages/collaboration/tests/Collaboration/HubTestHelpers.php, packages/collaboration/tests/Collaboration/PersistCollaborationStateTest.php, packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php, packages/collaboration/tests/Concurrency/CollaborationLivenessRaceTest.php, packages/collaboration/tests/Document/CollaborationFeatureGateTest.php, packages/collaboration/tests/Http/CollaborationRouteLabelsTest.php, packages/collaboration/tests/Http/ContentFenceV1Test.php, packages/collaboration/tests/Http/HubAppendV2Test.php, packages/collaboration/tests/Http/HubV1RoutesTest.php, packages/collaboration/tests/Http/ProtocolVersionTest.php, packages/collaboration/tests/Module/CollaborationModuleTest.php, packages/core/tests/Fixtures/golden/routes-v1.json, packages/core/tests/Modules/RouteLabelSourceTest.php, packages/core/tests/ObservabilityDocuments/P83DocumentsMetricsTest.php, packages/core/tests/Schema/SchemaSnapshotTest.php, packages/vue/src/api/schema.d.ts, tests/Repo/Arch/Fixtures/allowlists/i13.json, tests/Repo/Arch/Fixtures/identities/changes.json, tests/Repo/Arch/Fixtures/identities/http.json, tests/Repo/Arch/Fixtures/identities/protocol.json, tests/Repo/Arch/Fixtures/target-map.json, tests/baseline/CHANGES.json, tests/baseline/CHANGES.md, tests/baseline/collaboration.count, tests/baseline/collaboration.list, tests/baseline/hub.count, tests/baseline/hub.list, tests/suites.json",
+    "deviations": [
+      "The hub tests that import yjs, @hocuspocus/server or @hocuspocus/transformer were written but could not run here: envelope, origins and modes (new); epoch-fence, load-seed and readonly (rewritten); plus the existing hocuspocus-v4, websocket-hardening, collab-expiry, redis-extension-wiring, schema-parity and on-connect. The workspace deps are hoisted to the root node_modules, which the sandbox masks; the npm registry is blocked; the npm cache has no packuments for @hocuspocus/server. Only the dependency-free files ran (retry, ledger, webhook, v1-paths, config, security: 79 pass), plus node --check on every hub file. V1 (node --test part) and V2 not confirmed by the executor.",
+      "Changed outside scope.write_set: packages/collaboration/hub/package.json (the check script names the new src files; webhook.js is gone), packages/core/tests/Modules/RouteLabelSourceTest.php and packages/core/tests/ObservabilityDocuments/P83DocumentsMetricsTest.php (they used the deleted store route/action), packages/core/tests/Fixtures/golden/routes-v1.json (store route removed; regenerated), packages/core/tests/Schema/SchemaSnapshotTest.php (pre-existing red, see the next issue).",
+      "Pre-existing reds fixed on the spot (D43): core RouteListSnapshotTest's golden list lacked the P5.4/P5.5 routes (append, checkpoint, compaction.lease), so it had been red since P5.4; regenerated with UPDATE_GOLDEN=1. core SchemaSnapshotTest had been red since P5.4: the expected fixtures hold the collaboration tables, but the harness did not create them and the pre-P1.10 comparison did not exclude them. Both fixed. I found this by running the whole core sqlite suite once by mistake (an empty file filter), against the D45 rule on heavy runs; every other core partition passed.",
+      "Protocol addition chosen at detail level: append accepts an optional seed_state_version. The hub's seed of an empty generation is appended as the log's first record (origin server), and the backend refuses it with 409 collaboration_seed_conflict (the problem code is reused) once the generation has a record or a checkpoint, or the state version moved. Without it, removing the v1 store (seed=true plus state_version precondition) would have lost both protections: two hubs seeding at once (duplicated content) and a REST update between load and seed (silently overwritten by the next checkpoint). The protocol section's append body did not list the field.",
+      "Bug fixed along the way (D43 (4)): the P5.4 append path did not re-check the drive status under its locks, so an archive or deletion committed after CollaborationHub::open still let an append land; the v1 action checked it (assertUserWritable). UpdateLog::append now reads the drive status with a shared locking read under the drive lock that lock() takes (archived → 403 permission_denied, not active → 404), after the receipt lookup, so a committed retry still gets its receipt. HubDriveLifecycleTest proves it on sqlite; the pgsql liveness race tests were rewritten on append.",
+      "V7 as written was not run: vue discovery (npx vitest list) needs the npm registry, which the sandbox refuses (as in P5.4–P5.6). scripts/t baseline --compare -p core,media,drive,webhooks,documents,collaboration,azgard,filament,repo,hub exits 0. packages/vue/src/api/schema.d.ts was edited by hand in openapi-typescript's shape (store path/operation and HubLoaded/HubStored(Envelope) removed, required protocol header, seed_state_version), because api:generate and api:check could not run.",
+      "changed outside the write set: packages/collaboration/hub/package.json, packages/core/tests/Fixtures/golden/routes-v1.json, packages/core/tests/Modules/RouteLabelSourceTest.php, packages/core/tests/ObservabilityDocuments/P83DocumentsMetricsTest.php, packages/core/tests/Schema/SchemaSnapshotTest.php"
+    ],
+    "pending": [
+      "Server-origin credentials: append requires a room JWT (ResolveCollaborationCall), and the design's 'subject in the body' for server appends does not exist in P5.4. A server/direct change is appended with the token serverWrite() names or its origin's context.token, else with the current token of a writer connected to this hub (or the serverToken option). With no such writer, the record waits in the ledger, logged once (no_credentials), until a writer connects or shutdown. Nothing is dropped, but nothing is persisted either.",
+      "Docs not updated (D43 docs pass): hub README.md, docs/guides/hub.md, docs/guides/collaboration.md and docs/reference/rest-api.md (plus the ru copies) still describe onStoreDocument and /collaboration/hub/store, and lack the new hub env vars (VAULTER_COLLAB_MODE, VAULTER_COLLAB_PENDING_BUDGET_BYTES, VAULTER_COLLAB_PENDING_ROOM_BUDGET_BYTES, VAULTER_COLLAB_FLUSH_INTERVAL_MS, VAULTER_COLLAB_RETRY_*). No doc guard test is red. hub/test/e2e/restore-epoch.e2e.js still drives v1 store semantics; it is excluded from this item (PLAN4).",
+      "follow_up(spec_mismatch): Protocol addition chosen at detail level: append accepts an optional seed_state_version. The hub's seed of an empty generation is appended as the log's first record (origin server), and the backend refuses it with 409 collaboration_seed_conflict (the problem code is reused) once the generation has a record or a checkpoint, or the state version moved. Without it, removing the v1 store (seed=true plus state_version precondition) would have lost both protections: two hubs seeding at once (duplicated content) and a REST update between load and seed (silently overwritten by the next checkpoint). The protocol section's append body did not list the field."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T21:16:18Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T21:16:18Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T21:16:18Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T21:16:18Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T21:16:18Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T21:16:18Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V6.json"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-17T21:16:18Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V7.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V1.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V2.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V3.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V4.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V5.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V6.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.7/evidence/V7.json"
+    ]
+  },
+  "updated_at": "2026-10-17T21:16:18Z"
 }

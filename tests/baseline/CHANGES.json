@@ -11716,10 +11716,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_decodes_a_store_projection_with_the_document_type_s_own_schema",
-      "new": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_decodes_a_store_projection_with_the_document_type_s_own_schema",
+      "replacement": [
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_decodes_a_checkpoint_projection_with_the_document_type_s_own_schema"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -11748,34 +11750,42 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_persists_the_yjs_state_with_its_projection__bytea_round_trips__size_set_",
-      "new": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_persists_the_yjs_state_with_its_projection__bytea_round_trips__size_set_",
+      "replacement": [
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_appends_a_binary_update_losslessly_and_publishes_its_checkpoint_with_the_projection__bytea_round_trips__size_set_"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_a_store_over_content_that_cannot_be_saved_back\"dataset \"degraded read\"\"",
-      "new": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_a_store_over_content_that_cannot_be_saved_back\"dataset \"degraded read\"\"",
+      "replacement": [
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_an_append_over_content_that_cannot_be_saved_back\"dataset \"degraded read\"\""
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_a_store_over_content_that_cannot_be_saved_back\"dataset \"newer schema\"\"",
-      "new": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_a_store_over_content_that_cannot_be_saved_back\"dataset \"newer schema\"\"",
+      "replacement": [
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_an_append_over_content_that_cannot_be_saved_back\"dataset \"newer schema\"\""
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_a_store_over_content_that_cannot_be_saved_back\"dataset \"type not installed\"\"",
-      "new": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_a_store_over_content_that_cannot_be_saved_back\"dataset \"type not installed\"\"",
+      "replacement": [
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_an_append_over_content_that_cannot_be_saved_back\"dataset \"type not installed\"\""
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -11812,18 +11822,22 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_rejects_a_store_call_driven_by_a_read_only_room_token",
-      "new": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_rejects_a_store_call_driven_by_a_read_only_room_token",
+      "replacement": [
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_rejects_an_append_driven_by_a_read_only_room_token"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_rejects_a_store_call_without_a_token__even_when_signed",
-      "new": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_rejects_a_store_call_without_a_token__even_when_signed",
+      "replacement": [
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_rejects_an_append_call_without_a_token__even_when_signed"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -11884,26 +11898,32 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_requires_the_JSON_projection_for_a_type_that_cannot_derive_it_from_the_state",
-      "new": "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_requires_the_JSON_projection_for_a_type_that_cannot_derive_it_from_the_state",
+      "replacement": [
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_requires_the_JSON_projection_with_a_checkpoint"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\HubDriveLifecycleTest::__pest_evaluable_it_refuses_a_store_when_the_drive_changes_after_the_room_was_opened\"dataset \"archived\"\"",
-      "new": "P\\Tests\\Collaboration\\HubDriveLifecycleTest::__pest_evaluable_it_refuses_a_store_when_the_drive_changes_after_the_room_was_opened\"dataset \"archived\"\"",
+      "replacement": [
+        "P\\Tests\\Collaboration\\HubDriveLifecycleTest::__pest_evaluable_it_refuses_an_append_when_the_drive_changes_after_the_room_was_opened\"dataset \"archived\"\""
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\HubDriveLifecycleTest::__pest_evaluable_it_refuses_a_store_when_the_drive_changes_after_the_room_was_opened\"dataset \"deleting\"\"",
-      "new": "P\\Tests\\Collaboration\\HubDriveLifecycleTest::__pest_evaluable_it_refuses_a_store_when_the_drive_changes_after_the_room_was_opened\"dataset \"deleting\"\"",
+      "replacement": [
+        "P\\Tests\\Collaboration\\HubDriveLifecycleTest::__pest_evaluable_it_refuses_an_append_when_the_drive_changes_after_the_room_was_opened\"dataset \"deleting\"\""
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -11948,10 +11968,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_fences_off_a_store_from_the_room_opened_before_a_restore__V12_",
-      "new": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_fences_off_a_store_from_the_room_opened_before_a_restore__V12_",
+      "replacement": [
+        "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_fences_off_an_append_from_the_room_opened_before_a_restore__V12_"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -11988,10 +12010,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_lets_a_read_only_connection_load_but_never_store",
-      "new": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_lets_a_read_only_connection_load_but_never_store",
+      "replacement": [
+        "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_lets_a_read_only_connection_load_but_never_append"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12020,10 +12044,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_refuses_a_projection_above_the_content_limit",
-      "new": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_refuses_a_projection_above_the_content_limit",
+      "replacement": [
+        "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_refuses_a_checkpoint_projection_above_the_content_limit"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12036,10 +12062,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_refuses_a_state_above_collaboration_max__state__bytes_with_413_and_writes_nothing",
-      "new": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_refuses_a_state_above_collaboration_max__state__bytes_with_413_and_writes_nothing",
+      "replacement": [
+        "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_refuses_a_checkpoint_state_above_collaboration_max__state__bytes_with_413_and_writes_nothing"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12060,10 +12088,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_stores_and_seeds_the_projection_the_hub_emits_for_a_link__an_image_and_a_table",
-      "new": "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_stores_and_seeds_the_projection_the_hub_emits_for_a_link__an_image_and_a_table",
+      "replacement": [
+        "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_publishes_the_projection_the_hub_emits_for_a_link__an_image_and_a_table_in_a_checkpoint"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Collaboration/HubProtocolTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12140,18 +12170,22 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Concurrency\\CollaborationFenceRaceTest::__pest_evaluable_it_lets_exactly_one_of_two_concurrent_seeds_of_an_empty_document_through",
-      "new": "P\\Tests\\Concurrency\\CollaborationFenceRaceTest::__pest_evaluable_it_lets_exactly_one_of_two_concurrent_seeds_of_an_empty_document_through",
+      "replacement": [
+        "P\\Tests\\Concurrency\\CollaborationFenceRaceTest::__pest_evaluable_it_lets_exactly_one_of_two_concurrent_seeds_of_an_empty_generation_through"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Concurrency\\CollaborationFenceRaceTest::__pest_evaluable_it_serializes_a_store_of_the_old_room_against_a_restore__never_the_old_state_at_the_new_epoch",
-      "new": "P\\Tests\\Concurrency\\CollaborationFenceRaceTest::__pest_evaluable_it_serializes_a_store_of_the_old_room_against_a_restore__never_the_old_state_at_the_new_epoch",
+      "replacement": [
+        "P\\Tests\\Concurrency\\CollaborationFenceRaceTest::__pest_evaluable_it_serializes_an_append_of_the_old_room_against_a_restore__never_a_record_of_the_old_room_under_the_new_epoch"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12176,12 +12210,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\CollaborationFeatureGateTest::__pest_evaluable_it_collab_store_404s__route_not_mounted__when_collaboration_is_off__F_P1_6_01",
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
-      "decision": "D1",
-      "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Document\\CollaborationFeatureGateTest::__pest_evaluable_it_the_hub_routes_answer_404_when_the_module_is_off\"('store')\""
-      ]
+        "P\\Tests\\Document\\CollaborationFeatureGateTest::__pest_evaluable_it_the_hub_routes_answer_404_when_the_module_is_off\"('append')\""
+      ],
+      "new_suite": "collaboration",
+      "reason": "moved to the collaboration package with the realtime implementation (P5.1); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12270,10 +12304,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_answers_a_malformed_store_body_422_validation__failed_after_the_room_was_opened",
-      "new": "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_answers_a_malformed_store_body_422_validation__failed_after_the_room_was_opened",
+      "replacement": [
+        "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_answers_a_malformed_append_body_422_validation__failed_after_the_room_was_opened"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Http/HubV1RoutesTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Http/HubV1RoutesTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12294,10 +12330,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_refuses_a_store_from_a_past_generation_with_the_terminal_409_and_a_read_only_token_with_403",
-      "new": "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_refuses_a_store_from_a_past_generation_with_the_terminal_409_and_a_read_only_token_with_403",
+      "replacement": [
+        "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_refuses_an_append_from_a_past_generation_with_the_terminal_409_and_a_read_only_token_with_403"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Http/HubV1RoutesTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Http/HubV1RoutesTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12318,18 +12356,22 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_refuses_an_unsigned_or_token_less_call_401_as_problem_json\"('store')\"",
-      "new": "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_refuses_an_unsigned_or_token_less_call_401_as_problem_json\"('store')\"",
+      "replacement": [
+        "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_refuses_an_unsigned_or_token_less_call_401_as_problem_json\"('append')\""
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Http/HubV1RoutesTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Http/HubV1RoutesTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_serves_authenticate__load_and_store_under_the_v1_hub_names",
-      "new": "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_serves_authenticate__load_and_store_under_the_v1_hub_names",
+      "replacement": [
+        "P\\Tests\\Http\\HubV1RoutesTest::__pest_evaluable_it_serves_authenticate__load_and_append_under_the_v1_hub_names__and_no_full_state_store"
+      ],
       "new_suite": "collaboration",
-      "reason": "the test file moved to packages/collaboration/tests/Http/HubV1RoutesTest.php (P5 ownership move)",
-      "decision": "D1"
+      "reason": "the test file moved to packages/collaboration/tests/Http/HubV1RoutesTest.php (P5 ownership move); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12372,32 +12414,32 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Concurrency\\DocumentMutationLivenessRaceTest::__pest_evaluable_it_a_collaboration_store_racing_drive_deletion_either_commits_before_deletion_or_changes_nothing",
-      "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Concurrency\\CollaborationLivenessRaceTest::__pest_evaluable_it_a_collaboration_store_racing_drive_deletion_either_commits_before_deletion_or_changes_nothing"
+        "P\\Tests\\Concurrency\\CollaborationLivenessRaceTest::__pest_evaluable_it_a_collaboration_append_racing_drive_deletion_either_commits_before_deletion_or_changes_nothing"
       ],
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
-      "decision": "D1"
+      "new_suite": "collaboration",
+      "reason": "moved to the collaboration package with the realtime implementation (P5.1); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Concurrency\\DocumentMutationLivenessRaceTest::__pest_evaluable_it_a_document_writer_racing_a_trash_lands_before_it_or_is_refused_after_it__never_after\"('collaboration')\"",
-      "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Concurrency\\CollaborationLivenessRaceTest::__pest_evaluable_it_a_hub_store_racing_a_trash_lands_before_it_or_is_refused_after_it__never_after"
+        "P\\Tests\\Concurrency\\CollaborationLivenessRaceTest::__pest_evaluable_it_a_hub_append_racing_a_trash_lands_before_it_or_is_refused_after_it__never_after"
       ],
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
-      "decision": "D1"
+      "new_suite": "collaboration",
+      "reason": "moved to the collaboration package with the realtime implementation (P5.1); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Concurrency\\DocumentMutationLivenessRaceTest::__pest_evaluable_it_a_document_writer_racing_an_archive_of_its_drive_lands_before_it_or_is_refused_after_it\"('collaboration')\"",
-      "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Concurrency\\CollaborationLivenessRaceTest::__pest_evaluable_it_a_hub_store_racing_an_archive_of_its_drive_lands_before_it_or_is_refused_after_it"
+        "P\\Tests\\Concurrency\\CollaborationLivenessRaceTest::__pest_evaluable_it_a_hub_append_racing_an_archive_of_its_drive_lands_before_it_or_is_refused_after_it"
       ],
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
-      "decision": "D1"
+      "new_suite": "collaboration",
+      "reason": "moved to the collaboration package with the realtime implementation (P5.1); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12590,32 +12632,32 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\DocumentNodeTest::__pest_evaluable_it_PersistCollaborationStateAction_rejects_a_projection_over_max__document__size__kb__F_P1_11_05",
-      "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Collaboration\\PersistCollaborationStateTest::__pest_evaluable_it_rejects_a_projection_over_max__document__size__kb__F_P1_11_05"
+        "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_refuses_a_checkpoint_projection_above_the_content_limit"
       ],
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
-      "decision": "D1"
+      "new_suite": "collaboration",
+      "reason": "moved to the collaboration package with the realtime implementation (P5.1); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\DocumentSchemaWritableTest::__pest_evaluable_it_refuses_a_collaboration_store_once_a_newer_schema_is_the_working_state",
-      "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Collaboration\\PersistCollaborationStateTest::__pest_evaluable_it_refuses_a_collaboration_store_once_a_newer_schema_is_the_working_state"
+        "P\\Tests\\Collaboration\\CollaborationWebhookTest::__pest_evaluable_it_refuses_an_append_over_content_that_cannot_be_saved_back\"dataset \"newer schema\"\""
       ],
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
-      "decision": "D1"
+      "new_suite": "collaboration",
+      "reason": "moved to the collaboration package with the realtime implementation (P5.1); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
       "old": "P\\Tests\\Document\\DocumentStateVersionTest::__pest_evaluable_it_fences_a_write_from_an_old_collaboration_epoch_before_anything_is_written",
-      "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Collaboration\\PersistCollaborationStateTest::__pest_evaluable_it_fences_a_write_from_an_old_collaboration_epoch_before_anything_is_written"
+        "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_fences_a_past_epoch_inside_the_locked_write_itself__not_only_at_the_endpoint"
       ],
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
-      "decision": "D1"
+      "new_suite": "collaboration",
+      "reason": "moved to the collaboration package with the realtime implementation (P5.1); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -12630,12 +12672,12 @@
     {
       "suite": "documents",
       "old": "P\\Tests\\Http\\DocumentContentV1Test::__pest_evaluable_it_refuses_a_PUT_after_a_hub_store_landed_between_the_read_and_the_write",
-      "new_suite": "collaboration",
       "replacement": [
-        "P\\Tests\\Http\\ContentFenceV1Test::__pest_evaluable_it_refuses_a_PUT_after_a_hub_store_landed_between_the_read_and_the_write"
+        "P\\Tests\\Http\\ContentFenceV1Test::__pest_evaluable_it_refuses_a_PUT_after_a_hub_append_landed_between_the_read_and_the_write"
       ],
-      "reason": "moved to the collaboration package with the realtime implementation (P5.1)",
-      "decision": "D1"
+      "new_suite": "collaboration",
+      "reason": "moved to the collaboration package with the realtime implementation (P5.1); P5.7: rewritten on the protocol 2 append and checkpoint, the protocol 1 full-state store is gone",
+      "decision": "D26"
     },
     {
       "suite": "documents",
@@ -14144,17 +14186,17 @@
       ]
     },
     "collaboration": {
-      "count": 175,
+      "count": 192,
       "names": [
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_changes_the_pending_marker_of_a_document_only_through_the_documents_state_contract",
+        "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_has_no_full_state_store__the_hub_store_route_and_its_action_are_gone",
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_never_names_the_documents_table__except_as_the_target_of_its_own_foreign_keys",
-        "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_uses_neither_the_documents_state_writer_nor_their_store_repository__except_the_protocol_1_store_until_it_goes",
+        "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_uses_neither_the_documents_state_writer_nor_their_store_repository",
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_writes_no_document_row_through_the_documents_model",
         "P\\Tests\\Arch\\HttpV1ArchTest::__pest_evaluable_collaboration_controllers_never_reach_for_Repositories_or_the_AccessResolver_themselves",
         "P\\Tests\\Arch\\HttpV1ArchTest::__pest_evaluable_collaboration_v1_controllers_are_final_single_action_classes",
         "P\\Tests\\Arch\\HttpV1ArchTest::__pest_evaluable_it_gives_collaboration_v1_controllers_no_public_method_besides_the_constructor_and_____invoke",
         "P\\Tests\\Arch\\HttpV1ArchTest::__pest_evaluable_it_names_every_collaboration_route_vaulter_v1___under_the_versioned_prefix",
-        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_Actions_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_CollaborationCallResolver_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_CollaborationCall_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_CollaborationDriverManager_never_uses_the_Testing_namespaces",
@@ -14179,9 +14221,7 @@
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_Providers_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_Schema_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_VaulterCollaborationServiceProvider_never_uses_the_Testing_namespaces",
-        "P\\Tests\\Collaboration\\PersistCollaborationStateTest::__pest_evaluable_it_counts_Yjs_and_projection_changes_while_an_identical_Yjs_state_is_a_no_op__raising_one_event_per_change",
-        "P\\Tests\\Collaboration\\PersistCollaborationStateTest::__pest_evaluable_it_refuses_a_seed_over_an_existing_Yjs_state_and_a_seed_built_from_a_state_version_that_moved_on",
-        "P\\Tests\\Collaboration\\PersistCollaborationStateTest::__pest_evaluable_it_refuses_a_state_over_the_largest_one_a_store_may_write",
+        "P\\Tests\\Collaboration\\HubProtocolTest::__pest_evaluable_it_refuses_a_seed_over_a_generation_that_starts_from_a_checkpoint",
         "P\\Tests\\Concurrency\\AppendRaceTest::__pest_evaluable_it_gives_two_concurrent_appends_of_one_generation_the_seqs_1_and_2__each_with_its_receipt",
         "P\\Tests\\Concurrency\\CompactionRaceTest::__pest_evaluable_it_commits_exactly_one_of_two_publications_of_the_same__C__H__and_leaves_HS_−_H_updates",
         "P\\Tests\\Concurrency\\CompactionRaceTest::__pest_evaluable_it_keeps_an_update_appended_while_H_is_published__its_payload_and_the_marker_past_H",
@@ -14239,7 +14279,26 @@
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_refuses_an_append_without_a_usable_Content_Length_with_413_before_the_signature_check\"dataset \"not a number\"\"",
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_refuses_an_append_without_a_usable_Content_Length_with_413_before_the_signature_check\"dataset \"signed\"\"",
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_seeds_a_load_from_the_content_of_the_locked_row__together_with_its_state_version",
-        "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_still_answers_protocol_1_to_a_load_without_the_header_and_refuses_another_version",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_names_the_protocol_in_the_mismatch_so_the_hub_can_tell_a_deployment_fault",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('append') / dataset \"no header\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('append') / dataset \"protocol 1\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('append') / dataset \"protocol 3\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('authenticate') / dataset \"no header\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('authenticate') / dataset \"protocol 1\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('authenticate') / dataset \"protocol 3\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('checkpoint') / dataset \"no header\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('checkpoint') / dataset \"protocol 1\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('checkpoint') / dataset \"protocol 3\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('compaction/lease') / dataset \"no header\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('compaction/lease') / dataset \"protocol 1\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('compaction/lease') / dataset \"protocol 3\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('load') / dataset \"no header\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('load') / dataset \"protocol 1\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('load') / dataset \"protocol 3\"\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_repeats_the_protocol_header_on_every_answer_of_a_room_call\"('append')\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_repeats_the_protocol_header_on_every_answer_of_a_room_call\"('authenticate')\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_repeats_the_protocol_header_on_every_answer_of_a_room_call\"('load')\"",
+        "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_repeats_the_protocol_header_on_the_worker_s_answers",
         "P\\Tests\\Module\\CollaborationModuleTest::__pest_evaluable_it_activates_nothing_at_all_while_the_documents_module_it_needs_is_switched_off",
         "P\\Tests\\Module\\CollaborationModuleTest::__pest_evaluable_it_declares_an_opt_in_manifest_that_needs_the_documents_module",
         "P\\Tests\\Module\\CollaborationModuleTest::__pest_evaluable_it_drains_pending_documents_through_the_hub_and_closes_the_generations_a_restore_leaves_once_it_is_switched_on",
@@ -14324,17 +14383,22 @@
       ]
     },
     "hub": {
-      "count": 14,
+      "count": 19,
       "names": [
         "packages/collaboration/hub/test/collab-expiry.test.js",
         "packages/collaboration/hub/test/config.test.js",
         "packages/collaboration/hub/test/e2e/restore-epoch.e2e.js",
+        "packages/collaboration/hub/test/envelope.test.js",
         "packages/collaboration/hub/test/epoch-fence.test.js",
         "packages/collaboration/hub/test/hocuspocus-v4.test.js",
+        "packages/collaboration/hub/test/ledger.test.js",
         "packages/collaboration/hub/test/load-seed.test.js",
+        "packages/collaboration/hub/test/modes.test.js",
         "packages/collaboration/hub/test/on-connect.test.js",
+        "packages/collaboration/hub/test/origins.test.js",
         "packages/collaboration/hub/test/readonly.test.js",
         "packages/collaboration/hub/test/redis-extension-wiring.test.js",
+        "packages/collaboration/hub/test/retry.test.js",
         "packages/collaboration/hub/test/schema-parity.test.js",
         "packages/collaboration/hub/test/security.test.js",
         "packages/collaboration/hub/test/v1-paths.test.js",

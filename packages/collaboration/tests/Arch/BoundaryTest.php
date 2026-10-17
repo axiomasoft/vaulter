@@ -2,21 +2,14 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
 use Symfony\Component\Finder\Finder;
 
 /*
  * The bypass p5-design#invariants forbids (D26, D27): collaboration changes the state documents own only through the
  * documents state contract (CollaborativeState). Its sources name no v_documents table, write no document row, and
- * neither the documents' state writer nor their store repository.
- *
- * The one exception is the protocol 1 store (Actions/PersistCollaborationStateAction.php behind
- * vaulter.v1.collaboration.hub.store), which still writes through DocumentStateWriter until P5.7 removes it with its
- * route; the exception ends with the route.
+ * neither the documents' state writer nor their store repository — without exception since the protocol 1 store
+ * (vaulter.v1.collaboration.hub.store) is gone (P5.7).
  */
-
-/** The protocol 1 store, the only file still allowed the documents' state writer while its route exists. */
-const BOUNDARY_V1_STORE = 'Actions/PersistCollaborationStateAction.php';
 
 /** @return array<string, string> path relative to src/ => contents */
 function boundarySources(): array
@@ -38,15 +31,12 @@ function boundarySources(): array
     return $files;
 }
 
-/**
- * @param  list<string> $allowed
- * @return list<string>
- */
-function boundaryOffenders(string $pattern, array $allowed = []): array
+/** @return list<string> */
+function boundaryOffenders(string $pattern): array
 {
     $offenders = [];
     foreach (boundarySources() as $path => $contents) {
-        if (preg_match($pattern, $contents) === 1 && !in_array($path, $allowed, true)) {
+        if (preg_match($pattern, $contents) === 1) {
             $offenders[] = $path;
         }
     }
@@ -63,11 +53,14 @@ it('writes no document row through the documents model', function (): void {
         ->and(boundaryOffenders('/\$(document|aggregate)\w*->(save|update|forceFill|delete)\(/i'))->toBe([]);
 });
 
-it('uses neither the documents state writer nor their store repository, except the protocol 1 store until it goes', function (): void {
-    $allowed = Route::has('vaulter.v1.collaboration.hub.store') ? [BOUNDARY_V1_STORE] : [];
+it('uses neither the documents state writer nor their store repository', function (): void {
+    expect(boundaryOffenders('/\bDocumentStateWriter\b|\bDocumentStoreRepository\b|\bDocumentRevisionStoreRepository\b/'))->toBe([]);
+});
 
-    expect(boundaryOffenders('/\bDocumentStateWriter\b|\bDocumentStoreRepository\b|\bDocumentRevisionStoreRepository\b/', $allowed))->toBe([])
-        ->and(array_key_exists(BOUNDARY_V1_STORE, boundarySources()))->toBe(Route::has('vaulter.v1.collaboration.hub.store'));
+it('has no full-state store: the hub store route and its action are gone', function (): void {
+    expect(app('router')->has('vaulter.v1.collaboration.hub.store'))->toBeFalse()
+        ->and(array_key_exists('Actions/PersistCollaborationStateAction.php', boundarySources()))->toBeFalse()
+        ->and(array_key_exists('Http/Controllers/Collaboration/HubStoreController.php', boundarySources()))->toBeFalse();
 });
 
 it('changes the pending marker of a document only through the documents state contract', function (): void {

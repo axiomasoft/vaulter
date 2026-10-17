@@ -10,10 +10,10 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * A hub tried to seed the collaboration state of a document that already has one — or
- * whose JSON moved on since the hub read it (a REST update between collab/load and the
- * seed: it does not move the epoch while there is no Yjs state, so the state version is
- * the precondition). Seeding builds new Yjs insertions from the JSON; a second seed would
+ * A hub tried to append the seed of a generation that already has a record or a checkpoint —
+ * or whose JSON moved on since the hub read it (a REST update between collab/load and the
+ * seed append: it does not move the epoch while there is no Yjs state, so the state version
+ * is the precondition). Seeding builds new Yjs insertions from the JSON; a second seed would
  * duplicate the whole document when the rooms merge, and a stale one would overwrite the
  * newer text, so the seed is refused and the hub reloads the document.
  */

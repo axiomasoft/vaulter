@@ -20,8 +20,8 @@ use Vaulter\Drive\Models\Node;
 
 /*
  * Protocol 2 at the HTTP boundary: append answers the committed receipt and a retry the same one; load replays the
- * checkpoint and the committed tail (C, H]; every protocol 2 answer carries X-Vaulter-Collab-Protocol: 2. Until the v1
- * hub is gone (P5.7) a load without the header still answers protocol 1, and the v1 store route stays.
+ * checkpoint and the committed tail (C, H]; every answer carries X-Vaulter-Collab-Protocol: 2 (a call without it is
+ * refused: ProtocolVersionTest).
  */
 beforeEach(function (): void {
     Hub::configure();
@@ -67,7 +67,7 @@ it('loads the checkpoint and the committed tail under protocol 2', function (): 
         ->assertJsonPath('checkpoint', null)
         ->assertJsonPath('checkpoint_seq', 0)
         ->assertJsonPath('head_seq', 2)
-        // No checkpoint yet: the JSON is what the room is seeded from before the tail is replayed.
+        // No checkpoint yet: the JSON is reported with the tail (the hub seeds from it only while the log is empty).
         ->assertJsonPath('content.content.0.content.0.text', 'Draft')
         ->assertJsonPath('tail', [
             ['seq' => 1, 'update_id' => $ids[0], 'payload' => base64_encode('first')],
@@ -82,18 +82,6 @@ it('loads an empty log of a document nobody appended to, without creating its he
         ->assertJsonPath('tail', []);
 
     expect(DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))->count())->toBe(0);
-});
-
-it('still answers protocol 1 to a load without the header and refuses another version', function (): void {
-    Hub::call('load', ['room' => Hub::room($this->node)], $this->token)
-        ->assertOk()
-        ->assertHeaderMissing(HubProtocol::HEADER)
-        ->assertJsonPath('state', null)
-        ->assertJsonPath('epoch', 0);
-
-    Hub::callV2('load', ['room' => Hub::room($this->node)], $this->token, protocol: '3')
-        ->assertStatus(409)
-        ->assertJsonPath('code', 'collaboration_protocol_mismatch');
 });
 
 it('refuses a protocol 2 load of a document the subject cannot see with the 404 of a missing one', function (): void {

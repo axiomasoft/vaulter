@@ -2,38 +2,56 @@
 
 declare(strict_types=1);
 
+use Illuminate\Testing\TestResponse;
+use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\AcmeKanbanV2Type;
+use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapSchema;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Models\Node;
 
 /**
- * Серверные вызовы хаба Hocuspocus: authenticate / load / store. Пускают только с
+ * Серверные вызовы хаба Hocuspocus (протокол 2): authenticate / load / append. Пускают только с
  * room-JWT И валидной HMAC-подписью тела (оба барьера обязательны; shared-секрет
  * личностью больше не является). Yjs-бинарь — источник истины (round-trip bytea +
- * размер), TipTap — проекция. Комната жёстко привязана к узлу и поколению.
+ * размер), TipTap — проекция checkpoint. Комната жёстко привязана к узлу и поколению.
  */
 beforeEach(function (): void {
     Hub::configure();
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
 });
 
-// ── collab/store ──────────────────────────────────────────────────────────────────
+/**
+ * A signed append as the hub posts it, with the protocol header; `$headers` overrides the signed ones.
+ *
+ * @param array<string, mixed>  $body
+ * @param array<string, string> $headers
+ */
+function webhookAppend(array $body, array $headers): TestResponse
+{
+    return test()->postJson('api/vaulter/v1/collaboration/hub/append', $body, [HubProtocol::HEADER => '2', ...$headers]);
+}
 
-it('persists the yjs state with its projection (bytea round-trips, size set)', function (): void {
+// ── collab/append ─────────────────────────────────────────────────────────────────
+
+it('appends a binary update losslessly and publishes its checkpoint with the projection (bytea round-trips, size set)', function (): void {
     $node = Hub::document();
-    $yjs = "\x00\x01\x02\x03binary-yjs-state\xff\xfe";
+    $yjs = "\x00\x01\x02\x03binary-yjs-update\xff\xfe";
 
-    Hub::call('store', Hub::storeBody($node, $yjs), Hub::token($node))
+    Hub::call('append', Hub::seedBody($node, $yjs), Hub::token($node))
         ->assertOk()
-        ->assertJsonPath('data.changed', true)
-        ->assertJsonPath('data.epoch', 0);
+        ->assertJsonPath('seq', 1)
+        ->assertJsonPath('generation', 0);
+    Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))->assertOk()->assertJsonPath('tail.0.payload', base64_encode($yjs));
 
+    Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => Hub::tiptap('From hub')]);
     $state = Hub::aggregate($node);
 
     expect($state->yjs_state)->toBe($yjs)
@@ -41,58 +59,60 @@ it('persists the yjs state with its projection (bytea round-trips, size set)', f
         ->and($state->content['content'][0]['content'][0]['text'] ?? null)->toBe('From hub');
 });
 
-it('requires the JSON projection for a type that cannot derive it from the state', function (): void {
+it('requires the JSON projection with a checkpoint', function (): void {
     $node = Hub::document();
-    $body = ['room' => Hub::room($node), 'state' => base64_encode('state-without-projection')];
+    Hub::call('append', Hub::seedBody($node, 'state-without-projection'), Hub::token($node))->assertOk();
+    $lease = Compaction::leaseOf($node);
 
-    Hub::call('store', $body, Hub::token($node))
-        ->assertStatus(422)
-        ->assertJsonPath('code', 'invalid_document_content');
+    Hub::callV2('checkpoint', [
+        'document' => $lease->nodeId, 'generation' => 0, 'lease_token' => $lease->token, 'covered_from' => 0, 'covered_through' => 1,
+        'expected_checkpoint_version' => $lease->checkpointVersion, 'state' => base64_encode('state-without-projection'),
+    ], token: null)->assertStatus(422)->assertJsonValidationErrors('content');
 
     expect(Hub::aggregate($node)->yjs_state)->toBeNull();
 });
 
-it('rejects a store call without a token, even when signed', function (): void {
+it('rejects an append call without a token, even when signed', function (): void {
     $node = Hub::document();
 
-    Hub::call('store', Hub::storeBody($node, 'bytes'), null)->assertStatus(401);
+    Hub::call('append', Hub::appendBody($node, 'bytes'), null)->assertStatus(401);
 
-    expect(Hub::aggregate($node)->state_version)->toBe(1);
+    expect(Compaction::head($node))->toBeNull();
 });
 
 it('no longer accepts the shared webhook secret as an identity', function (): void {
     $node = Hub::document();
-    $body = Hub::storeBody($node, 'bytes');
+    $body = Hub::appendBody($node, 'bytes');
 
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, [
+    webhookAppend($body, [
         ...Hub::headers($body, null),
         'X-Vaulter-Collab-Secret' => Hub::WEBHOOK_SECRET,
     ])->assertStatus(401);
 });
 
-it('rejects a store call driven by a read-only room token', function (): void {
+it('rejects an append driven by a read-only room token', function (): void {
     $node = Hub::document();
 
-    Hub::call('store', Hub::storeBody($node, 'bytes'), Hub::token($node, mode: 'ro'))
+    Hub::call('append', Hub::appendBody($node, 'bytes'), Hub::token($node, mode: 'ro'))
         ->assertForbidden();
 
-    expect(Hub::aggregate($node)->yjs_state)->toBeNull();
+    expect(Compaction::head($node))->toBeNull();
 });
 
 it('forbids a token minted for node A from addressing node B', function (): void {
     $nodeA = Hub::document();
     $nodeB = Hub::document();
 
-    Hub::call('store', Hub::storeBody($nodeB, 'cross-node'), Hub::token($nodeA))
+    Hub::call('append', Hub::appendBody($nodeB, 'cross-node'), Hub::token($nodeA))
         ->assertForbidden();
 
-    expect(Hub::aggregate($nodeB)->state_version)->toBe(1);
+    expect(Compaction::head($nodeB))->toBeNull();
 });
 
 it('rejects a tampered token and a token whose claims disagree with its room', function (array $claims, string $suffix): void {
     $node = Hub::document();
 
-    Hub::call('store', Hub::storeBody($node, 'bytes'), Hub::token($node, claims: $claims).$suffix)
+    Hub::call('append', Hub::appendBody($node, 'bytes'), Hub::token($node, claims: $claims).$suffix)
         ->assertStatus(401);
 })->with([
     'tampered signature' => [[], 'x'],
@@ -108,52 +128,53 @@ it('rejects a tampered token and a token whose claims disagree with its room', f
 it('rejects a token without a body signature', function (): void {
     $node = Hub::document();
 
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', Hub::storeBody($node, 'bytes'), ['Authorization' => 'Bearer '.Hub::token($node)])
+    webhookAppend(Hub::appendBody($node, 'bytes'), ['Authorization' => 'Bearer '.Hub::token($node)])
         ->assertStatus(401);
 
-    expect(Hub::aggregate($node)->state_version)->toBe(1);
+    expect(Compaction::head($node))->toBeNull();
 });
 
 it('rejects a signature whose timestamp is outside the ±300s window', function (): void {
     $node = Hub::document();
-    $body = Hub::storeBody($node, 'bytes');
+    $body = Hub::appendBody($node, 'bytes');
 
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, Hub::headers($body, Hub::token($node), timestamp: time() - 301))
+    webhookAppend($body, Hub::headers($body, Hub::token($node), timestamp: time() - 301))
         ->assertStatus(401);
 });
 
 it('rejects a replayed signature (same nonce twice)', function (): void {
     $node = Hub::document();
-    $body = Hub::storeBody($node, 'replay-bytes');
+    $body = Hub::appendBody($node, 'replay-bytes');
     $headers = Hub::headers($body, Hub::token($node));
 
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, $headers)->assertOk();
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, $headers)->assertStatus(401);
+    webhookAppend($body, $headers)->assertOk();
+    webhookAppend($body, $headers)->assertStatus(401);
 });
 
 it('keeps the nonce until the signature itself expires, not just tolerance seconds from receipt', function (): void {
     $node = Hub::document();
-    $body = Hub::storeBody($node, 'late-replay-bytes');
+    $body = Hub::appendBody($node, 'late-replay-bytes');
     // Future-dated within tolerance: the signature stays valid for ~550s from now.
     $headers = Hub::headers($body, Hub::token($node), timestamp: time() + 250);
 
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, $headers)->assertOk();
+    webhookAppend($body, $headers)->assertOk();
 
     $this->travel(400)->seconds();
 
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, $headers)->assertStatus(401);
+    webhookAppend($body, $headers)->assertStatus(401);
 });
 
 it('rejects a body other than the signed one, without burning the nonce of the genuine delivery', function (): void {
     $node = Hub::document();
-    $signed = Hub::storeBody($node, 'original-bytes');
+    $signed = Hub::appendBody($node, 'original-bytes');
     $headers = Hub::headers($signed, Hub::token($node));
-    $tampered = [...$signed, 'state' => base64_encode('swapped-bytes')];
+    $tampered = [...$signed, 'payload' => base64_encode('swapped-bytes'), 'sha256' => hash('sha256', 'swapped-bytes')];
 
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', $tampered, $headers)->assertStatus(401);
-    test()->postJson('api/vaulter/v1/collaboration/hub/store', $signed, $headers)->assertOk();
+    webhookAppend($tampered, $headers)->assertStatus(401);
+    webhookAppend($signed, $headers)->assertOk();
 
-    expect(Hub::aggregate($node)->yjs_state)->toBe('original-bytes');
+    expect(Compaction::seqs($node))->toBe([1]);
+    Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))->assertJsonPath('tail.0.payload', base64_encode('original-bytes'));
 });
 
 // ── collab/authenticate ─────────────────────────────────────────────────────────────
@@ -220,19 +241,22 @@ it('authenticates an editor read-only on content that cannot be saved back', fun
         ->assertJsonPath('mode', 'ro');
 })->with('unwritable collaboration documents');
 
-it('refuses a store over content that cannot be saved back', function (Closure $node, string $code): void {
+it('refuses an append over content that cannot be saved back', function (Closure $node): void {
     $node = $node();
     $before = Hub::aggregate($node);
 
-    Hub::call('store', Hub::storeBody($node, 'room-without-widget'), Hub::token($node))
-        ->assertStatus(409)
-        ->assertJsonPath('code', $code);
+    // The room is read-only (authenticate above): nothing of it is appended, so no checkpoint can overwrite the content.
+    Hub::call('append', Hub::seedBody($node, 'room-without-widget'), Hub::token($node))
+        ->assertForbidden()
+        ->assertJsonPath('code', 'permission_denied');
 
     $after = Hub::aggregate($node);
     expect($after->content)->toBe($before->content)
         ->and($after->yjs_state)->toBeNull()
+        ->and($after->pending_through_seq)->toBeNull()
         ->and($after->schema_version)->toBe($before->schema_version)
-        ->and($after->state_version)->toBe($before->state_version);
+        ->and($after->state_version)->toBe($before->state_version)
+        ->and(Compaction::head($node))->toBeNull();
 })->with('unwritable collaboration documents');
 
 it('refuses every hub call for a type that cannot collaborate', function (): void {
@@ -244,23 +268,23 @@ it('refuses every hub call for a type that cannot collaborate', function (): voi
             ->assertStatus(409)
             ->assertJsonPath('code', 'collaboration_unavailable');
     }
-    Hub::call('store', Hub::storeBody($node, 'board-room', ['columns' => []]), Hub::token($node))
+    Hub::call('append', Hub::appendBody($node, 'board-room'), Hub::token($node))
         ->assertStatus(409)
         ->assertJsonPath('code', 'collaboration_unavailable');
 });
 
-it('decodes a store projection with the document type\'s own schema', function (): void {
+it('decodes a checkpoint projection with the document type\'s own schema', function (): void {
     $empty = ['type' => 'doc', 'content' => []];
     $node = Hub::document(content: TipTapContent::fromArray($empty, TipTapSchema::markdown()), type: 'vaulter/markdown');
+    Hub::call('append', Hub::seedBody($node, 'markdown-room'), Hub::token($node))->assertOk();
 
-    // A table is rich text, not markdown: storing it would leave the document degraded.
+    // A table is rich text, not markdown: publishing it would leave the document degraded.
     $table = ['type' => 'doc', 'content' => [
         ['type' => 'table', 'content' => [['type' => 'tableRow', 'content' => [['type' => 'tableCell']]]]],
     ]];
 
-    Hub::call('store', Hub::storeBody($node, 'markdown-room', $table), Hub::token($node))
-        ->assertStatus(422)
-        ->assertJsonPath('code', 'invalid_document_content');
+    expect(fn () => Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => $table]))
+        ->toThrow(InvalidDocumentContentException::class);
 
     $state = Hub::aggregate($node);
     expect($state->content)->toBe($empty)

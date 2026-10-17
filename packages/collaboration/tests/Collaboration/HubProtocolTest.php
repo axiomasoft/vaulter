@@ -3,18 +3,21 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Collaboration\Actions\PersistCollaborationStateAction;
-use Vaulter\Collaboration\Data\PersistCollaborationStateInput;
+use Illuminate\Support\Str;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationUnavailableException;
+use Vaulter\Collaboration\Persistence\UpdateEnvelope;
+use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Exceptions\DocumentStateTooLargeException;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -23,13 +26,15 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /**
- * The hub protocol end to end at the HTTP boundary: load → seed → store behind the
+ * The hub protocol 2 end to end at the HTTP boundary: load → seed → append behind the
  * epoch fence, read-only enforced by the backend, and every call re-checking the live
  * document (trash, drive status, tenant, rights). The hub process itself is covered by
- * packages/collaboration/hub/test and scripts/collab-e2e.sh.
+ * packages/collaboration/hub/test.
  */
 beforeEach(function (): void {
     Hub::configure();
+    // A checkpoint is published under a lease, and a single record is due for one here.
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 1);
 });
 
 function hubRestore(Node $node, DocumentRevision $revision): DocumentRevision
@@ -47,46 +52,66 @@ it('loads the JSON to seed from while the document has no Yjs state, then the st
 
     Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))
         ->assertOk()
-        ->assertJsonPath('state', null)
+        ->assertHeader('X-Vaulter-Collab-Protocol', '2')
+        ->assertJsonPath('checkpoint', null)
+        ->assertJsonPath('tail', [])
         ->assertJsonPath('content.content.0.content.0.text', 'Draft')
-        ->assertJsonPath('epoch', 0)
-        ->assertJsonPath('schemaVersion', 1)
-        ->assertJsonPath('stateVersion', 1)
+        ->assertJsonPath('generation', 0)
+        ->assertJsonPath('schema_version', 1)
+        ->assertJsonPath('state_version', 1)
         ->assertJsonPath('type', 'vaulter/rich-text');
 
-    Hub::call('store', Hub::storeBody($node, 'seeded-state', Hub::tiptap('Draft'), seed: true), Hub::token($node))
-        ->assertOk();
+    $seed = Hub::seedBody($node, 'seeded-state', stateVersion: 1);
+    Hub::call('append', $seed, Hub::token($node))->assertOk()->assertJsonPath('seq', 1);
 
+    // The seed is the log's first record: every hub replays it instead of seeding again.
     Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))
         ->assertOk()
-        ->assertJsonPath('state', base64_encode('seeded-state'))
-        ->assertJsonPath('content', null)
-        ->assertJsonPath('stateVersion', 2);
+        ->assertJsonPath('checkpoint', null)
+        ->assertJsonPath('head_seq', 1)
+        ->assertJsonPath('tail', [['seq' => 1, 'update_id' => $seed['update_id'], 'payload' => base64_encode('seeded-state')]])
+        ->assertJsonPath('state_version', 1);
 });
 
-it('lets a read-only connection load but never store', function (): void {
+it('lets a read-only connection load but never append', function (): void {
     $node = Hub::document(level: RoleRegistry::READER);
 
     Hub::call('load', ['room' => Hub::room($node)], Hub::token($node, mode: 'ro'))->assertOk();
     // Even a token that claims rw writes nothing for a user who now only reads.
-    Hub::call('store', Hub::storeBody($node, 'reader-edit'), Hub::token($node, mode: 'rw'))->assertForbidden();
-    Hub::call('store', Hub::storeBody($node, 'reader-edit'), Hub::token($node, mode: 'ro'))->assertForbidden();
+    Hub::call('append', Hub::appendBody($node, 'reader-edit'), Hub::token($node, mode: 'rw'))->assertForbidden();
+    Hub::call('append', Hub::seedBody($node, 'reader-seed'), Hub::token($node, mode: 'ro'))->assertForbidden();
 
-    expect(Hub::aggregate($node)->yjs_state)->toBeNull();
+    expect(Compaction::head($node))->toBeNull()
+        ->and(Hub::aggregate($node)->pending_through_seq)->toBeNull();
 });
 
 it('accepts exactly one seed per generation', function (): void {
     $node = Hub::document();
+    $first = Hub::seedBody($node, 'first-seed');
 
-    Hub::call('store', Hub::storeBody($node, 'first-seed', seed: true), Hub::token($node))->assertOk();
-    Hub::call('store', Hub::storeBody($node, 'second-seed', seed: true), Hub::token($node))
+    Hub::call('append', $first, Hub::token($node))->assertOk()->assertJsonPath('seq', 1);
+    Hub::call('append', Hub::seedBody($node, 'second-seed', stateVersion: 1), Hub::token($node))
         ->assertStatus(409)
         ->assertJsonPath('code', 'collaboration_seed_conflict');
+    // The first seed's retry is answered from its receipt, not refused as a second seed.
+    Hub::call('append', $first, Hub::token($node))->assertOk()->assertJsonPath('seq', 1);
 
-    expect(Hub::aggregate($node)->yjs_state)->toBe('first-seed');
+    expect(Compaction::seqs($node))->toBe([1]);
 });
 
-it('stores and seeds the projection the hub emits for a link, an image and a table', function (): void {
+it('refuses a seed over a generation that starts from a checkpoint', function (): void {
+    $node = Hub::document();
+    Hub::call('append', Hub::seedBody($node, 'seed'), Hub::token($node))->assertOk();
+    Compaction::publish(Compaction::leaseOf($node));
+    $version = Hub::aggregate($node)->state_version;
+
+    expect(Compaction::seqs($node))->toBe([]);
+    Hub::call('append', Hub::seedBody($node, 'late-seed', stateVersion: $version), Hub::token($node))
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'collaboration_seed_conflict');
+});
+
+it('publishes the projection the hub emits for a link, an image and a table in a checkpoint', function (): void {
     // Exactly what the hub projects (TiptapTransformer.fromYdoc): the link mark
     // carries every attribute @tiptap/extension-link declares, `title: null` included.
     $projection = ['type' => 'doc', 'content' => [
@@ -101,16 +126,18 @@ it('stores and seeds the projection the hub emits for a link, an image and a tab
     ]];
     $node = Hub::document();
 
-    Hub::call('store', Hub::storeBody($node, 'seed-with-link', $projection, seed: true), Hub::token($node))->assertOk();
-    Hub::call('store', Hub::storeBody($node, 'edit-with-link', $projection), Hub::token($node))->assertOk();
+    Hub::call('append', Hub::seedBody($node, 'seed-with-link'), Hub::token($node))->assertOk();
+    Hub::call('append', Hub::appendBody($node, 'edit-with-link'), Hub::token($node))->assertOk();
+    $result = Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => $projection]);
 
-    expect(Hub::aggregate($node)->content['content'][0]['content'][0]['marks'][0]['attrs']['href'])->toBe('https://example.com');
+    expect($result->markerCleared)->toBeTrue()
+        ->and(Hub::aggregate($node)->content['content'][0]['content'][0]['marks'][0]['attrs']['href'])->toBe('https://example.com');
 });
 
 it('refuses a seed built before a REST update and loses no text', function (): void {
     $node = Hub::document(level: RoleRegistry::WRITER, actorId: 1);
     $loaded = Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))->assertOk();
-    $version = $loaded->json('stateVersion');
+    $version = $loaded->json('state_version');
 
     // The document has no Yjs state, so this update does not move the epoch.
     $handle = Vaulter::drive($node->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(1));
@@ -118,43 +145,46 @@ it('refuses a seed built before a REST update and loses no text', function (): v
     expect(Hub::aggregate($node)->collab_epoch)->toBe(0);
 
     // The hub still seeds from what it loaded ('Draft'): refused, 'Written over REST' survives.
-    Hub::call('store', Hub::storeBody($node, 'stale-seed', Hub::tiptap('Draft'), seed: true, stateVersion: $version), Hub::token($node))
+    Hub::call('append', Hub::seedBody($node, 'stale-seed', stateVersion: $version), Hub::token($node))
         ->assertStatus(409)
         ->assertJsonPath('code', 'collaboration_seed_conflict')
         ->assertJsonPath('meta.context.expected_state_version', $version)
         ->assertJsonPath('meta.context.actual_state_version', Hub::aggregate($node)->state_version);
     $after = Hub::aggregate($node);
     expect($after->yjs_state)->toBeNull()
+        ->and($after->pending_through_seq)->toBeNull()
+        ->and(Compaction::seqs($node))->toBe([])
         ->and($after->content['content'][0]['content'][0]['text'])->toBe('Written over REST');
 
     // The hub loads again and seeds from the current content.
     $reloaded = Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))
         ->assertOk()
         ->assertJsonPath('content.content.0.content.0.text', 'Written over REST');
-    Hub::call('store', Hub::storeBody($node, 'fresh-seed', Hub::tiptap('Written over REST'), seed: true, stateVersion: $reloaded->json('stateVersion')), Hub::token($node))
-        ->assertOk();
-    expect(Hub::aggregate($node)->yjs_state)->toBe('fresh-seed');
+    Hub::call('append', Hub::seedBody($node, 'fresh-seed', stateVersion: $reloaded->json('state_version')), Hub::token($node))
+        ->assertOk()
+        ->assertJsonPath('seq', 1);
 });
 
 it('rejects a malformed seed state_version', function (): void {
     $node = Hub::document();
 
     foreach (['3', -1, 1.5, true] as $bad) {
-        Hub::call('store', [...Hub::storeBody($node, 'seed', seed: true), 'state_version' => $bad], Hub::token($node))->assertStatus(422);
+        Hub::call('append', [...Hub::appendBody($node, 'seed', origin: 'server'), 'seed_state_version' => $bad], Hub::token($node))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('seed_state_version');
     }
 
-    expect(Hub::aggregate($node)->yjs_state)->toBeNull();
+    expect(Compaction::head($node))->toBeNull();
 });
 
 // ── the epoch fence ─────────────────────────────────────────────────────────────────
 
-it('fences off a store from the room opened before a restore (V12)', function (): void {
+it('fences off an append from the room opened before a restore (V12)', function (): void {
     Event::fake([DocumentRestored::class]);
     $node = Hub::document();
     $first = DocumentTestHelpers::head($node);
     $oldToken = Hub::token($node);
 
-    Hub::call('store', Hub::storeBody($node, 'live-edit', Hub::tiptap('Live edit')), $oldToken)->assertOk();
     hubRestore($node, $first);
 
     $restored = Hub::aggregate($node);
@@ -164,8 +194,8 @@ it('fences off a store from the room opened before a restore (V12)', function ()
         && $event->restoredFrom->is($first)
         && $event->stateVersion === $restored->state_version);
 
-    // The hub's debounced store of the old room arrives late: refused, nothing changes.
-    Hub::call('store', Hub::storeBody($node, 'late-old-edit', Hub::tiptap('Late'), epoch: 0), $oldToken)
+    // The old room's pending update arrives late: refused, nothing changes.
+    Hub::call('append', Hub::appendBody($node, 'late-old-edit', generation: 0), $oldToken)
         ->assertStatus(409)
         ->assertJsonPath('code', 'collaboration_epoch_mismatch')
         ->assertJsonPath('meta.context.expected', 0)
@@ -180,13 +210,14 @@ it('fences off a store from the room opened before a restore (V12)', function ()
     $after = Hub::aggregate($node);
     expect($after->content)->toBe($restored->content)
         ->and($after->yjs_state)->toBe($restored->yjs_state)
-        ->and($after->state_version)->toBe($restored->state_version);
+        ->and($after->state_version)->toBe($restored->state_version)
+        ->and(Compaction::head($node, 0))->toBeNull();
 
     // The new generation loads the restored content and writes again.
     Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))
         ->assertOk()
-        ->assertJsonPath('epoch', 1);
-    Hub::call('store', Hub::storeBody($node, 'new-room-edit'), Hub::token($node))->assertOk();
+        ->assertJsonPath('generation', 1);
+    Hub::call('append', Hub::seedBody($node, 'new-room-seed'), Hub::token($node))->assertOk()->assertJsonPath('generation', 1);
 });
 
 it('fences a past epoch inside the locked write itself, not only at the endpoint', function (): void {
@@ -194,16 +225,18 @@ it('fences a past epoch inside the locked write itself, not only at the endpoint
     hubRestore($node, DocumentTestHelpers::head($node));
     $before = Hub::aggregate($node);
 
-    expect(fn () => app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
-        node: $node, yjsState: 'stale-room', content: Hub::tiptap('stale'), expectedEpoch: 0,
+    expect(fn () => app(UpdateLog::class)->append($node->getKey(), new UpdateEnvelope(
+        generation: 0, updateId: (string) Str::uuid(), payload: 'stale-room', claimedSha256: hash('sha256', 'stale-room'),
     )))->toThrow(CollaborationEpochMismatchException::class);
 
-    expect(Hub::aggregate($node)->state_version)->toBe($before->state_version);
+    expect(Hub::aggregate($node)->state_version)->toBe($before->state_version)
+        ->and(Compaction::head($node, 0))->toBeNull();
 });
 
 it('moves the epoch on an external JSON replace of a document with Yjs state', function (): void {
     $node = Hub::document(level: RoleRegistry::WRITER, actorId: 1);
-    Hub::call('store', Hub::storeBody($node, 'room-state'), Hub::token($node))->assertOk();
+    Hub::call('append', Hub::seedBody($node, 'room-state'), Hub::token($node))->assertOk();
+    Compaction::publish(Compaction::leaseOf($node));
 
     $handle = Vaulter::drive($node->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(1));
     Documents::in($handle)->update($node->id, Hub::tiptap('Replaced by API'));
@@ -212,8 +245,9 @@ it('moves the epoch on an external JSON replace of a document with Yjs state', f
     expect($document->collab_epoch)->toBe(1)
         // The hub seeds the next room from the replaced JSON.
         ->and($document->yjs_state)->toBeNull();
-    Hub::call('store', Hub::storeBody($node, 'stale', epoch: 0), Hub::token($node, epoch: 0))
-        ->assertStatus(409);
+    Hub::call('append', Hub::appendBody($node, 'stale', generation: 0), Hub::token($node, epoch: 0))
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'collaboration_epoch_mismatch');
 });
 
 // ── live checks on every call ───────────────────────────────────────────────────────
@@ -228,7 +262,7 @@ it('takes a revoked Edit into account on the next call (OPUS D24)', function ():
     AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 1);
 
     Hub::call('authenticate', ['room' => Hub::room($node)], $token)->assertOk()->assertJsonPath('mode', 'ro');
-    Hub::call('store', Hub::storeBody($node, 'after-revoke'), $token)->assertForbidden();
+    Hub::call('append', Hub::appendBody($node, 'after-revoke'), $token)->assertForbidden();
 });
 
 it('shares an archived drive read-only', function (): void {
@@ -240,7 +274,7 @@ it('shares an archived drive read-only', function (): void {
         ->assertJsonPath('allowed', true)
         ->assertJsonPath('mode', 'ro');
     Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))->assertOk();
-    Hub::call('store', Hub::storeBody($node, 'archived-edit'), Hub::token($node))->assertForbidden();
+    Hub::call('append', Hub::appendBody($node, 'archived-edit'), Hub::token($node))->assertForbidden();
 });
 
 it('answers node_not_found for a trashed document, another tenant or a drive being deleted', function (Closure $change): void {
@@ -253,7 +287,7 @@ it('answers node_not_found for a trashed document, another tenant or a drive bei
             ->assertNotFound()
             ->assertJsonPath('code', 'node_not_found');
     }
-    Hub::call('store', Hub::storeBody($node, 'gone', epoch: 0), $token)->assertNotFound();
+    Hub::call('append', Hub::appendBody($node, 'gone', generation: 0), $token)->assertNotFound();
 })->with([
     'trashed' => [static fn (Node $node) => Vaulter::drive($node->storage()->firstOrFail())->asSystem('hub test')->nodes()->trash($node->id)],
     'drive deleting' => [static fn (Node $node) => app(VaulterDatabase::class)->write(fn () => $node->storage()->update(['status' => 'deleting']))],
@@ -265,29 +299,45 @@ it('refuses a body that names another room than the token', function (): void {
 
     Hub::call('authenticate', ['room' => Hub::room($node).'0'], Hub::token($node))->assertForbidden();
     Hub::call('load', [], Hub::token($node))->assertForbidden();
+    Hub::call('append', ['room' => Hub::room($node).'0'] + Hub::appendBody($node, 'x'), Hub::token($node))->assertForbidden();
 });
 
 // ── limits ──────────────────────────────────────────────────────────────────────────
 
-it('refuses a state above collaboration.max_state_bytes with 413 and writes nothing', function (): void {
+it('refuses a checkpoint state above collaboration.max_state_bytes with 413 and writes nothing', function (): void {
     config()->set('vaulter-collaboration.max_state_bytes', 8);
     $node = Hub::document();
+    Hub::call('append', Hub::seedBody($node, 'seed'), Hub::token($node))->assertOk();
+    $lease = Compaction::leaseOf($node);
+    $checkpoint = static fn (string $state): array => [
+        'document' => $lease->nodeId,
+        'generation' => 0,
+        'lease_token' => $lease->token,
+        'covered_from' => 0,
+        'covered_through' => 1,
+        'expected_checkpoint_version' => $lease->checkpointVersion,
+        'state' => base64_encode($state),
+        'content' => Hub::tiptap('Seed'),
+    ];
 
-    Hub::call('store', Hub::storeBody($node, str_repeat('y', 9)), Hub::token($node))
+    Hub::callV2('checkpoint', $checkpoint(str_repeat('y', 9)), token: null)
         ->assertStatus(413)
-        ->assertJsonPath('code', 'document_state_too_large');
-    Hub::call('store', Hub::storeBody($node, str_repeat('y', 8)), Hub::token($node))->assertOk();
+        ->assertJsonPath('code', 'collaboration_update_too_large');
+    expect(Hub::aggregate($node)->yjs_state)->toBeNull()
+        ->and(Compaction::seqs($node))->toBe([1]);
+
+    Hub::callV2('checkpoint', $checkpoint(str_repeat('y', 8)), token: null)->assertOk()->assertJsonPath('marker_cleared', true);
 });
 
-it('refuses a projection above the content limit', function (): void {
+it('refuses a checkpoint projection above the content limit', function (): void {
     config()->set('vaulter-documents.content.max_size_kb', 1);
     $node = Hub::document();
+    Hub::call('append', Hub::seedBody($node, 'seed'), Hub::token($node))->assertOk();
 
-    Hub::call('store', Hub::storeBody($node, 'state', Hub::tiptap(str_repeat('x', 2048))), Hub::token($node))
-        ->assertStatus(422)
-        ->assertJsonPath('code', 'invalid_document_content');
-
-    expect(Hub::aggregate($node)->yjs_state)->toBeNull();
+    expect(fn () => Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => Hub::tiptap(str_repeat('x', 2048))]))
+        ->toThrow(InvalidDocumentContentException::class);
+    expect(Hub::aggregate($node)->yjs_state)->toBeNull()
+        ->and(Compaction::marker($node))->toBe([0, 1]);
 });
 
 // ── error contract ──────────────────────────────────────────────────────────────────

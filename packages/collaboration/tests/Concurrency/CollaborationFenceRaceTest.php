@@ -2,110 +2,79 @@
 
 declare(strict_types=1);
 
-use Vaulter\Collaboration\Actions\PersistCollaborationStateAction;
-use Vaulter\Collaboration\Data\PersistCollaborationStateInput;
-use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
-use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
-use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers;
+use Illuminate\Support\Str;
+use Vaulter\Collaboration\Persistence\UpdateEnvelope;
+use Vaulter\Collaboration\Persistence\UpdateLog;
+use Vaulter\Collaboration\Tests\Concurrency\RaceFixtures;
+use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Drive\Models\Node;
-use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Testing\Concurrency\ForkRace;
-use Vaulter\Testing\Concurrency\RaceOutcome;
 
 /**
- * The storage fence under real concurrency (PostgreSQL, separate backends): a hub
- * store of the room opened before a restore either commits before the restore (and is
- * replaced by it) or is refused — the restored document never ends up with the old
- * room's state. Two hub instances seeding the same empty document: exactly one wins.
+ * The generation fence under real concurrency (PostgreSQL, separate backends): an append of the room opened before a
+ * restore either commits before the restore — whose pending marker then keeps the restore from closing the generation
+ * over it (409 document_state_pending without a drainer) — or is refused after it; the restored generation never holds
+ * a record of the old room. Two hub instances seeding the same empty generation: exactly one seed is appended.
  */
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this, app(VaulterDatabase::class)->connection()->getName());
 });
 
-function fenceRaceDocument(): Node
+function fenceRaceAppend(Node $node, string $payload, ?int $seedStateVersion = null): mixed
 {
-    $drive = DocumentTestHelpers::drive();
-
-    return app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
-        storage: $drive->model(),
-        name: 'Fence race',
-        content: DocumentTestHelpers::content('restored'),
-        parent: DriveTestHelpers::model($drive->root()),
+    return app(UpdateLog::class)->append($node->getKey(), new UpdateEnvelope(
+        generation: 0,
+        updateId: (string) Str::uuid(),
+        payload: $payload,
+        claimedSha256: hash('sha256', $payload),
+        origin: $seedStateVersion === null ? 'client' : 'server',
+        seedStateVersion: $seedStateVersion,
     ));
 }
 
-/** @return array{kind: string, pid: int} */
-function fenceRaceWrite(Closure $write): array
-{
-    $pid = (int) app(VaulterDatabase::class)->connection()->selectOne('select pg_backend_pid() as pid')->pid;
-
-    try {
-        $write();
-
-        return ['kind' => 'committed', 'pid' => $pid];
-    } catch (CollaborationEpochMismatchException) {
-        return ['kind' => 'epoch_mismatch', 'pid' => $pid];
-    } catch (CollaborationSeedConflictException) {
-        return ['kind' => 'seed_conflict', 'pid' => $pid];
-    }
-}
-
-it('serializes a store of the old room against a restore: never the old state at the new epoch', function (): void {
-    $node = fenceRaceDocument();
+it('serializes an append of the old room against a restore: never a record of the old room under the new epoch', function (): void {
+    $node = RaceFixtures::document();
     $first = DocumentTestHelpers::head($node);
-    // The room has been editing: Yjs state exists at epoch 0.
-    app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
-        node: $node, yjsState: 'room-state', content: HubTestHelpers::tiptap('room edit'), expectedEpoch: 0,
-    ));
 
-    $outcomes = ForkRace::run([
-        static fn (): array => fenceRaceWrite(static fn () => app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
-            node: $node, yjsState: 'late-room-state', content: HubTestHelpers::tiptap('late edit'), expectedEpoch: 0,
-        ))),
-        static fn (): array => fenceRaceWrite(static fn () => app(RestoreDocumentRevisionAction::class)->execute(
+    $results = RaceFixtures::race([
+        static fn (): array => RaceFixtures::attempt(static fn () => fenceRaceAppend($node, 'late-room-update')),
+        static fn (): array => RaceFixtures::attempt(static fn () => app(RestoreDocumentRevisionAction::class)->execute(
             DocumentTestHelpers::context($node, actorId: 1), new RestoreDocumentRevisionInput(node: $node, revision: $first),
         )),
-    ], connections: [app(VaulterDatabase::class)->connection()->getName()]);
-
-    foreach ($outcomes as $outcome) {
-        expect($outcome->ok)->toBeTrue($outcome->message ?? '');
-    }
-    $results = array_map(static fn (RaceOutcome $outcome): array => $outcome->value, $outcomes);
+    ]);
     $document = DocumentTestHelpers::document($node);
+    $outcome = [$results[0]['kind'], $results[1]['kind']];
 
-    expect(count(array_unique(array_column($results, 'pid'))))->toBe(2)
-        ->and($results[1]['kind'])->toBe('committed')
-        // Store first then restore, or restore first then a refused store.
-        ->and($results[0]['kind'])->toBeIn(['committed', 'epoch_mismatch'])
-        ->and($document->collab_epoch)->toBe(1)
-        ->and($document->yjs_state)->toBeNull()
-        ->and($document->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('restored')->toArray());
+    // Append first (its marker refuses the restore), or restore first (the append's generation is over).
+    expect($outcome)->toBeIn([['committed', 'document_state_pending'], ['collaboration_epoch_mismatch', 'committed']]);
+    if ($outcome[0] === 'committed') {
+        expect($document->collab_epoch)->toBe(0)
+            ->and(Compaction::seqs($node, 0))->toBe([1])
+            ->and(Compaction::marker($node))->toBe([0, 1]);
+    } else {
+        expect($document->collab_epoch)->toBe(1)
+            ->and(Compaction::head($node, 0))->toBeNull()
+            ->and(Compaction::marker($node))->toBe([null, null]);
+    }
 });
 
-it('lets exactly one of two concurrent seeds of an empty document through', function (): void {
-    $node = fenceRaceDocument();
-    $seed = static fn (string $state): Closure => static fn (): array => fenceRaceWrite(static fn () => app(PersistCollaborationStateAction::class)->execute(
-        new PersistCollaborationStateInput(node: $node, yjsState: $state, content: HubTestHelpers::tiptap('restored'), expectedEpoch: 0, seed: true),
-    ));
+it('lets exactly one of two concurrent seeds of an empty generation through', function (): void {
+    $node = RaceFixtures::document();
+    $version = DocumentTestHelpers::document($node)->state_version;
 
-    $outcomes = ForkRace::run([$seed('seed-a'), $seed('seed-b')], connections: [app(VaulterDatabase::class)->connection()->getName()]);
-
-    foreach ($outcomes as $outcome) {
-        expect($outcome->ok)->toBeTrue($outcome->message ?? '');
-    }
-    $results = array_map(static fn (RaceOutcome $outcome): array => $outcome->value, $outcomes);
+    $results = RaceFixtures::race([
+        static fn (): array => RaceFixtures::attempt(static fn () => fenceRaceAppend($node, 'seed-a', $version)),
+        static fn (): array => RaceFixtures::attempt(static fn () => fenceRaceAppend($node, 'seed-b', $version)),
+    ]);
     $kinds = array_column($results, 'kind');
     sort($kinds);
-    $document = DocumentTestHelpers::document($node);
 
-    expect($kinds)->toBe(['committed', 'seed_conflict'])
-        ->and(count(array_unique(array_column($results, 'pid'))))->toBe(2)
-        ->and($document->yjs_state)->toBeIn(['seed-a', 'seed-b'])
-        ->and($document->state_version)->toBe(2);
+    expect($kinds)->toBe(['collaboration_seed_conflict', 'committed'])
+        ->and(Compaction::seqs($node))->toBe([1])
+        ->and(Compaction::marker($node))->toBe([0, 1])
+        ->and(DocumentTestHelpers::document($node)->state_version)->toBe($version);
 });

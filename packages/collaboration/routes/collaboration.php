@@ -9,7 +9,6 @@ use Vaulter\Collaboration\Http\Controllers\Collaboration\HubAuthenticateControll
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubCheckpointController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubCompactionLeaseController;
 use Vaulter\Collaboration\Http\Controllers\Collaboration\HubLoadController;
-use Vaulter\Collaboration\Http\Controllers\Collaboration\HubStoreController;
 use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Collaboration\Http\Middleware\VerifyHubSignature;
@@ -45,7 +44,6 @@ Route::prefix($routes->versionedPrefix())
     ->group(static function (): void {
         Route::post('collaboration/hub/authenticate', HubAuthenticateController::class)->name('collaboration.hub.authenticate');
         Route::post('collaboration/hub/load', HubLoadController::class)->name('collaboration.hub.load');
-        Route::post('collaboration/hub/store', HubStoreController::class)->name('collaboration.hub.store');
     });
 
 // Protocol 2 append: the body size is checked by its Content-Length before the signature check reads the body.

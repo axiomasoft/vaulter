@@ -11,13 +11,18 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Drain\DrainState;
 use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
+use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\LockedDocumentState;
+use Vaulter\Drive\Enums\Access\Ability;
+use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Support\Identity;
 
 /**
@@ -38,13 +43,16 @@ final readonly class UpdateLog
         private DatabaseConfig $tables,
         private CollaborativeState $state,
         private DrainState $draining,
+        private NodeReadRepository $nodes,
     ) {}
 
     /**
      * @throws CollaborationDrainingException       a managed disable drains the log; nothing was written
-     * @throws NodeNotFoundException                the node is gone or in the trash
+     * @throws NodeNotFoundException                the node is gone or in the trash, or its drive is being deleted
+     * @throws PermissionDeniedException            its drive was archived after the room was opened
      * @throws CollaborationEpochMismatchException  the generation is not the document's current one, or it was retired
      * @throws CollaborationUpdateMismatchException the claimed hash is wrong, or the id was committed with another payload
+     * @throws CollaborationSeedConflictException   a seed over a log that is no longer empty, or over newer JSON
      */
     public function append(int|string $nodeId, UpdateEnvelope $update): AppendResult
     {
@@ -70,6 +78,10 @@ final readonly class UpdateLog
                 }
 
                 return new AppendResult($locked->documentId, $update->generation, $update->updateId, $receipt->seq, $receipt->sha256, duplicate: true);
+            }
+            $this->assertDriveWritable($locked);
+            if ($update->seedStateVersion !== null) {
+                $this->assertSeedable($locked, $head, $update->seedStateVersion);
             }
 
             $seq = $head['head_seq'] + 1;
@@ -192,6 +204,48 @@ final readonly class UpdateLog
         $row = $query->first(['seq', 'sha256']);
 
         return $row === null ? null : new Receipt($documentId, $generation, $updateId, self::int($row->seq), Identity::stringify($row->sha256));
+    }
+
+    /**
+     * The drive's status read under the shared drive lock lock() holds, which an archive or a deletion takes
+     * exclusively: one committed after the hub opened the room refuses the append here, so a new record never lands
+     * after it (an archived drive is read-only, a drive being deleted is gone). A committed update still answers its
+     * receipt above.
+     *
+     * @throws PermissionDeniedException the drive was archived
+     * @throws NodeNotFoundException     the drive is being deleted or otherwise not usable
+     */
+    private function assertDriveWritable(LockedDocumentState $locked): void
+    {
+        // A locking read: on MySQL (REPEATABLE READ) a plain one would answer from the snapshot of lock()'s first read.
+        $status = $this->nodes->find($locked->nodeId)?->storage()->sharedLock()->value('status');
+        if ($status === DriveStatus::Archived) {
+            throw PermissionDeniedException::forAbility(Ability::Edit->value);
+        }
+        if ($status !== DriveStatus::Active) {
+            throw NodeNotFoundException::forId($locked->nodeId);
+        }
+    }
+
+    /**
+     * The hub's seed is the first record of a generation without checkpoint, built from the JSON of state version
+     * `$expected`: another hub seeded first (a record or a checkpoint exists) or the JSON moved on since the hub loaded
+     * it (a REST write while there is no Yjs state does not move the generation) — both refuse it, under L3 + L4.
+     *
+     * @param array{head_seq: int, checkpoint_seq: int} $head
+     *
+     * @throws CollaborationSeedConflictException
+     */
+    private function assertSeedable(LockedDocumentState $locked, array $head, int $expected): void
+    {
+        // The size column tells whether a checkpoint exists without reading it; a locking read, as in read().
+        $checkpointed = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->value('yjs_state_size') !== null;
+        if ($head['head_seq'] > 0 || $checkpointed) {
+            throw new CollaborationSeedConflictException($locked->nodeId);
+        }
+        if ($locked->stateVersion !== $expected) {
+            throw new CollaborationSeedConflictException($locked->nodeId, $expected, $locked->stateVersion);
+        }
     }
 
     /** C4 under L3: only the document's current generation takes writes, and a retired one never again. */

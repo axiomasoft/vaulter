@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
@@ -16,6 +17,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\State\CheckpointPublication;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Support\LoadTier;
 
 /**
  * The publication of a checkpoint the hub merged under a compaction lease (C6, C7), as one compare-and-set under the
@@ -35,6 +37,7 @@ final readonly class Checkpoint
         private VaulterDatabase $database,
         private LogTables $log,
         private CollaborativeState $state,
+        private MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -47,6 +50,17 @@ final readonly class Checkpoint
      * @throws InvalidDocumentContentException          the type rejects the projection
      */
     public function publish(CheckpointRequest $request): CheckpointResult
+    {
+        // The snapshot of the document's state is written here (the full-state store is gone): its duration is the one
+        // vaulter_collab_snapshot_duration_seconds measures.
+        return $this->metrics->timing(
+            name: 'vaulter_collab_snapshot_duration_seconds',
+            operation: fn (): CheckpointResult => $this->transaction($request),
+            labels: ['tier' => LoadTier::label()],
+        );
+    }
+
+    private function transaction(CheckpointRequest $request): CheckpointResult
     {
         return $this->database->transaction(function () use ($request): CheckpointResult {
             $locked = $this->state->lock($request->nodeId);

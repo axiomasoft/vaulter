@@ -18,9 +18,11 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 
 /**
  * Protocol 2 append: one Yjs update of the room's generation into the document's log. Body `{room, generation,
- * update_id (uuid), sha256 (hex of the payload), payload (base64), origin: client|server}`. The answer `{generation,
- * update_id, seq, sha256, persisted: true}` is built after the commit; a retry with the same update_id and payload gets
- * the same seq. The base64 length is checked against `limits.update_bytes` before it is decoded.
+ * update_id (uuid), sha256 (hex of the payload), payload (base64), origin: client|server, seed_state_version?}`. The
+ * answer `{generation, update_id, seq, sha256, persisted: true}` is built after the commit; a retry with the same
+ * update_id and payload gets the same seq. The base64 length is checked against `limits.update_bytes` before it is
+ * decoded. `seed_state_version` marks the hub's seed (409 collaboration_seed_conflict unless the generation has no
+ * checkpoint and no record yet and the document's state version still equals it).
  */
 #[Internal]
 final readonly class HubAppendController
@@ -44,6 +46,7 @@ final readonly class HubAppendController
         $sha256 = $request->input('sha256');
         $payload = $request->input('payload');
         $origin = $request->input('origin', 'client');
+        $seedStateVersion = $request->input('seed_state_version');
 
         $errors = array_filter([
             'generation' => is_int($generation) && $generation >= 0 ? null : 'The generation must be a non-negative integer.',
@@ -51,8 +54,12 @@ final readonly class HubAppendController
             'sha256' => is_string($sha256) && preg_match('/^[0-9a-fA-F]{64}$/', $sha256) === 1 ? null : 'The sha256 must be 64 hex digits.',
             'payload' => is_string($payload) && $payload !== '' ? null : 'The payload must be a non-empty base64 string.',
             'origin' => in_array($origin, ['client', 'server'], true) ? null : 'The origin must be client or server.',
+            'seed_state_version' => $seedStateVersion === null || (is_int($seedStateVersion) && $seedStateVersion >= 0)
+                ? null
+                : 'The seed_state_version must be a non-negative integer.',
         ]);
-        if ($errors !== [] || !is_int($generation) || !is_string($updateId) || !is_string($sha256) || !is_string($payload) || !is_string($origin)) {
+        if ($errors !== [] || !is_int($generation) || !is_string($updateId) || !is_string($sha256) || !is_string($payload) || !is_string($origin)
+            || ($seedStateVersion !== null && !is_int($seedStateVersion))) {
             throw ValidationException::withMessages(array_map(static fn (string $message): array => [$message], $errors));
         }
 
@@ -70,6 +77,13 @@ final readonly class HubAppendController
             throw new CollaborationUpdateTooLargeException(strlen($decoded), $max);
         }
 
-        return new UpdateEnvelope(generation: $generation, updateId: strtolower($updateId), payload: $decoded, claimedSha256: $sha256, origin: $origin);
+        return new UpdateEnvelope(
+            generation: $generation,
+            updateId: strtolower($updateId),
+            payload: $decoded,
+            claimedSha256: $sha256,
+            origin: $origin,
+            seedStateVersion: $seedStateVersion,
+        );
     }
 }

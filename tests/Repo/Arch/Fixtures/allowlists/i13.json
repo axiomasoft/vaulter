@@ -740,17 +740,6 @@
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/collaboration/src/Data/PersistCollaborationStateInput.php",
-            "kind": "property",
-            "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
-            "removed_in": "P7",
-            "symbol": "Vaulter\\Collaboration\\Data\\PersistCollaborationStateInput::$node",
-            "target": "Vaulter\\Drive\\Models\\Node",
-            "view": "signature"
-        },
-        {
-            "category": "domain-model",
-            "count": 1,
             "file": "packages/documents/src/Data/Comments/DeleteCommentInput.php",
             "kind": "property",
             "reason": "D27: the supported signature names a type marked #[Internal]; its owner publishes the type or narrows the signature before the P7 freeze",

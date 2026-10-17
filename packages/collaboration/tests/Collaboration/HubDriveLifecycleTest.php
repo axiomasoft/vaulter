@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Vaulter\Collaboration\CollaborationCall;
 use Vaulter\Collaboration\CollaborationHub;
 use Vaulter\Collaboration\Data\RoomRef;
+use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
@@ -16,7 +19,11 @@ use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 
-it('refuses a store when the drive changes after the room was opened', function (DriveStatus $status, string $exception): void {
+/*
+ * An archive or a deletion of the drive committed after the hub opened a room still refuses the room's next append: the
+ * log reads the drive's status under the drive lock its append takes, so no record lands after either (F05/F06).
+ */
+it('refuses an append when the drive changes after the room was opened', function (DriveStatus $status, string $exception): void {
     Hub::configure();
     Queue::fake();
     $node = Hub::document();
@@ -36,10 +43,11 @@ it('refuses a store when the drive changes after the room was opened', function 
     $sequence = $node->fresh()->sequence;
     Event::fake([DocumentContentUpdated::class]);
 
-    expect(fn () => $hub->store(
-        room: $room, call: $call, yjsState: 'late-state', content: Hub::tiptap('Late'), seed: false,
-    ))->toThrow($exception)
+    expect(fn () => $hub->append($room, $call, new UpdateEnvelope(
+        generation: 0, updateId: (string) Str::uuid(), payload: 'late-update', claimedSha256: hash('sha256', 'late-update'),
+    )))->toThrow($exception)
         ->and(Hub::aggregate($node)->getAttributes())->toBe($before)
+        ->and(Compaction::head($node))->toBeNull()
         ->and(DocumentTestHelpers::revisions($node)->modelKeys())->toBe($history)
         ->and($node->fresh()->sequence)->toBe($sequence);
     Event::assertNotDispatched(DocumentContentUpdated::class);

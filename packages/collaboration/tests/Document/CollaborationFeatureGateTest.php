@@ -50,7 +50,7 @@ it('the hub routes answer 404 when the module is off', function (string $endpoin
         'room' => 'vaulter.documents.'.$node->getKey(),
         'state' => base64_encode('anything'),
     ])->assertNotFound();
-})->with(['authenticate', 'load', 'store']);
+})->with(['authenticate', 'load', 'append']);
 
 it('base (non-realtime) content editing keeps working with the collaboration module off', function (): void {
     $node = collabGateDocumentNode();

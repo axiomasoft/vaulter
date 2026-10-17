@@ -93,7 +93,7 @@ it('stays off by default: no routes, no driver, no operations, and the host stil
         ->and($kernel->isActive('collaboration'))->toBeFalse()
         ->and(collaborationState($app)->activeReason)->toBe(ModuleState::REASON_DEFAULT)
         ->and(collaborationRoutes($app))->toBe([])
-        ->and($app['router']->has('vaulter.v1.collaboration.hub.store'))->toBeFalse()
+        ->and($app['router']->has('vaulter.v1.collaboration.hub.append'))->toBeFalse()
         ->and($app['router']->has('vaulter.v1.documents.collaboration.session'))->toBeFalse()
         ->and($kernel->capabilities()->has(CollaborationDriver::class))->toBeFalse()
         ->and($app->bound(CollaborationOperations::class))->toBeFalse()
@@ -112,7 +112,6 @@ it('mounts the session and the hub routes behind the module middleware once it i
             'vaulter.v1.documents.collaboration.session',
             'vaulter.v1.collaboration.hub.authenticate',
             'vaulter.v1.collaboration.hub.load',
-            'vaulter.v1.collaboration.hub.store',
             'vaulter.v1.collaboration.hub.append',
             'vaulter.v1.collaboration.hub.compaction.lease',
             'vaulter.v1.collaboration.hub.checkpoint',

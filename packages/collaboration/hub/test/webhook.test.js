@@ -1,9 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
-import { authenticate, BackendRejection, loadDocument, storeDocument } from '../src/webhook.js'
+import { append, authenticate, BackendRejection, load, PROTOCOL_HEADER } from '../src/backend.js'
 
-// Unit coverage for the backend client the hooks call. fetch is mocked — no network.
+// Unit coverage for the protocol 2 backend client the hub calls (src/backend.js). fetch is
+// mocked — no network.
 
 const cfg = {
   webhookBase: 'http://laravel/api/vaulter/v1',
@@ -20,10 +21,11 @@ function mockFetch(handler) {
   return { fetchImpl, calls }
 }
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(body, status = 200, headers = {}) {
   return {
     ok: status >= 200 && status < 300,
     status,
+    headers: { get: (name) => headers[name] ?? headers[name.toLowerCase()] ?? null },
     json: async () => body,
     text: async () => JSON.stringify(body),
   }
@@ -33,9 +35,11 @@ function expectedSignature(timestamp, rawBody, secret) {
   return crypto.createHmac('sha256', secret).update(`${timestamp}.${rawBody}`).digest('hex')
 }
 
+const UPDATE = { room: 'vaulter.documents.1.42.0', generation: 0, updateId: '6f9619ff-8b86-4011-b42d-00c04fc964ff', sha256: 'ab'.repeat(32), payload: 'AQID', token: 'jwt' }
+
 // ── authentication of every call ─────────────────────────────────────────────
 
-test('every call carries the room JWT and a signature of the exact bytes it sends, never the secret itself', async () => {
+test('every call carries the room JWT, protocol 2 and a signature of the exact bytes it sends, never the secret itself', async () => {
   const { fetchImpl, calls } = mockFetch(() => jsonResponse({ allowed: true, mode: 'rw', userId: '7', epoch: 0 }))
 
   const before = Math.floor(Date.now() / 1000)
@@ -47,6 +51,7 @@ test('every call carries the room JWT and a signature of the exact bytes it send
 
   assert.equal(calls[0].url, 'http://laravel/api/vaulter/v1/collaboration/hub/authenticate')
   assert.equal(headers.Authorization, 'Bearer jwt-abc')
+  assert.equal(headers[PROTOCOL_HEADER], '2')
   assert.equal(headers['X-Vaulter-Collab-Secret'], undefined)
   assert.ok(Number.isInteger(timestamp) && timestamp >= before && timestamp <= after)
   assert.equal(headers['X-Vaulter-Collab-Signature'], expectedSignature(timestamp, rawBody, cfg.webhookSecret))
@@ -54,10 +59,10 @@ test('every call carries the room JWT and a signature of the exact bytes it send
 })
 
 test('two calls with the same payload never share a signature (fresh nonce per body)', async () => {
-  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ state: null }))
+  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ checkpoint: null, tail: [] }))
 
-  await loadDocument({ token: 't', room: 'r' }, { config: cfg, fetchImpl })
-  await loadDocument({ token: 't', room: 'r' }, { config: cfg, fetchImpl })
+  await load({ token: 't', room: 'r' }, { config: cfg, fetchImpl })
+  await load({ token: 't', room: 'r' }, { config: cfg, fetchImpl })
 
   assert.notEqual(JSON.parse(calls[0].init.body).nonce, JSON.parse(calls[1].init.body).nonce)
   assert.notEqual(calls[0].init.headers['X-Vaulter-Collab-Signature'], calls[1].init.headers['X-Vaulter-Collab-Signature'])
@@ -88,88 +93,97 @@ test('authenticate maps the backend answer and defaults to read-only', async () 
   }
 })
 
-test('authenticate refuses on any non-2xx and names an epoch conflict', async () => {
+test('authenticate refuses on any non-2xx and names an epoch or protocol conflict', async () => {
   const unauthenticated = mockFetch(() => jsonResponse({ message: 'Unauthenticated collaboration call.' }, 401))
-  const conflict = mockFetch(() => jsonResponse({ code: 'collaboration_epoch_mismatch' }, 409))
+  const epoch = mockFetch(() => jsonResponse({ code: 'collaboration_epoch_mismatch' }, 409))
+  const protocol = mockFetch(() => jsonResponse({ code: 'collaboration_protocol_mismatch' }, 409))
 
   assert.deepEqual(
     await authenticate({ token: 't', room: 'r' }, { config: cfg, fetchImpl: unauthenticated.fetchImpl }),
     { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: null },
   )
-  assert.equal(
-    (await authenticate({ token: 't', room: 'r' }, { config: cfg, fetchImpl: conflict.fetchImpl })).conflict,
-    'collaboration_epoch_mismatch',
-  )
+  assert.equal((await authenticate({ token: 't', room: 'r' }, { config: cfg, fetchImpl: epoch.fetchImpl })).conflict, 'collaboration_epoch_mismatch')
+  assert.equal((await authenticate({ token: 't', room: 'r' }, { config: cfg, fetchImpl: protocol.fetchImpl })).conflict, 'collaboration_protocol_mismatch')
 })
 
 // ── load ────────────────────────────────────────────────────────────────────
 
-test('loadDocument returns the backend payload and rejects 4xx without retry semantics', async () => {
-  const payload = { state: null, content: { type: 'doc', content: [] }, epoch: 0, schemaVersion: 1, stateVersion: 1, type: 'vaulter/rich-text' }
+test('load returns the log and rejects a 4xx without retry semantics', async () => {
+  const payload = { generation: 0, schema_version: 1, type: 'vaulter/rich-text', state_version: 1, checkpoint: null, checkpoint_seq: 0, head_seq: 0, content: { type: 'doc', content: [] }, tail: [] }
   const ok = mockFetch(() => jsonResponse(payload))
   const gone = mockFetch(() => jsonResponse({ code: 'node_not_found' }, 404))
   const down = mockFetch(() => jsonResponse({}, 503))
 
-  assert.deepEqual(await loadDocument({ token: 't', room: 'r' }, { config: cfg, fetchImpl: ok.fetchImpl }), payload)
+  assert.deepEqual(await load({ token: 't', room: 'r' }, { config: cfg, fetchImpl: ok.fetchImpl }), payload)
+  assert.equal(ok.calls[0].url, 'http://laravel/api/vaulter/v1/collaboration/hub/load')
   await assert.rejects(
-    loadDocument({ token: 't', room: 'r' }, { config: cfg, fetchImpl: gone.fetchImpl }),
+    load({ token: 't', room: 'r' }, { config: cfg, fetchImpl: gone.fetchImpl }),
     (error) => error instanceof BackendRejection && error.status === 404 && error.code === 'node_not_found',
   )
-  await assert.rejects(loadDocument({ token: 't', room: 'r' }, { config: cfg, fetchImpl: down.fetchImpl }), /collab\/load failed \(503\)/)
+  await assert.rejects(load({ token: 't', room: 'r' }, { config: cfg, fetchImpl: down.fetchImpl }), /collab\/load failed \(503\)/)
 })
 
-// ── store ───────────────────────────────────────────────────────────────────
+// ── append ──────────────────────────────────────────────────────────────────
 
-test('storeDocument posts the base64 state, the projection and the seed flag', async () => {
-  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ data: { changed: true, epoch: 0 } }))
-  const state = Buffer.from(new Uint8Array([0, 1, 2, 255])).toString('base64')
-  const content = { type: 'doc', content: [] }
+test('append posts the update as protocol 2 expects it and returns the committed receipt', async () => {
+  const receipt = { generation: 0, update_id: UPDATE.updateId, seq: 4, sha256: UPDATE.sha256, persisted: true }
+  const { fetchImpl, calls } = mockFetch(() => jsonResponse(receipt))
 
-  const result = await storeDocument({ room: 'r', state, content, seed: true, token: 'jwt' }, { config: cfg, fetchImpl })
+  const answer = await append(UPDATE, { config: cfg, fetchImpl })
   const sent = JSON.parse(calls[0].init.body)
 
-  assert.equal(calls[0].url, 'http://laravel/api/vaulter/v1/collaboration/hub/store')
-  assert.deepEqual({ room: sent.room, state: sent.state, content: sent.content, seed: sent.seed }, { room: 'r', state, content, seed: true })
-  assert.equal('user_id' in sent, false)
-  assert.deepEqual(result, { ok: true, data: { changed: true, epoch: 0 } })
+  assert.equal(calls[0].url, 'http://laravel/api/vaulter/v1/collaboration/hub/append')
+  assert.deepEqual(
+    { room: sent.room, generation: sent.generation, update_id: sent.update_id, sha256: sent.sha256, payload: sent.payload, origin: sent.origin },
+    { room: UPDATE.room, generation: 0, update_id: UPDATE.updateId, sha256: UPDATE.sha256, payload: 'AQID', origin: 'client' },
+  )
+  assert.equal('seed_state_version' in sent, false)
+  assert.deepEqual(answer, { ok: true, status: 200, ack: receipt })
 })
 
-test('storeDocument sends the state version a seed was built from, and nothing else adds it', async () => {
-  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ data: {} }))
+test('the seed of an empty generation carries the state version load returned', async () => {
+  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ generation: 0, update_id: UPDATE.updateId, seq: 1, sha256: UPDATE.sha256, persisted: true }))
 
-  await storeDocument({ room: 'r', state: 'AAA=', seed: true, stateVersion: 7, token: 't' }, { config: cfg, fetchImpl })
-  await storeDocument({ room: 'r', state: 'AAA=', token: 't' }, { config: cfg, fetchImpl })
+  await append({ ...UPDATE, origin: 'server', seedStateVersion: 5 }, { config: cfg, fetchImpl })
 
-  assert.equal(JSON.parse(calls[0].init.body).state_version, 7)
-  assert.equal('state_version' in JSON.parse(calls[1].init.body), false)
+  assert.equal(JSON.parse(calls[0].init.body).seed_state_version, 5)
+  assert.equal(JSON.parse(calls[0].init.body).origin, 'server')
 })
 
-test('storeDocument reports a 4xx as a terminal answer instead of throwing (no retry loop)', async () => {
-  for (const [status, code] of [[409, 'collaboration_epoch_mismatch'], [409, 'collaboration_seed_conflict'], [403, 'permission_denied'], [404, 'node_not_found']]) {
+test('append reports a refusal with its status and problem code, and a 429 with its Retry-After', async () => {
+  for (const [status, code] of [[409, 'collaboration_epoch_mismatch'], [422, 'collaboration_update_mismatch'], [403, 'permission_denied'], [503, 'collaboration_draining']]) {
     const { fetchImpl } = mockFetch(() => jsonResponse({ code }, status))
-    assert.deepEqual(
-      await storeDocument({ room: 'r', state: 'AAA=', token: 't' }, { config: cfg, fetchImpl }),
-      { ok: false, status, code },
-    )
+
+    assert.deepEqual(await append(UPDATE, { config: cfg, fetchImpl }), { ok: false, status, code, retryAfterMs: null })
+  }
+
+  const throttled = mockFetch(() => jsonResponse({ code: 'too_many_requests' }, 429, { 'Retry-After': '3' }))
+  assert.deepEqual(await append(UPDATE, { config: cfg, fetchImpl: throttled.fetchImpl }), { ok: false, status: 429, code: 'too_many_requests', retryAfterMs: 3000 })
+})
+
+test('a 2xx without a committed receipt of this update is not an ack', async () => {
+  for (const body of [{}, { persisted: true, seq: 1, update_id: 'another' }, { persisted: false, seq: 1, update_id: UPDATE.updateId }]) {
+    const { fetchImpl } = mockFetch(() => jsonResponse(body))
+    const answer = await append(UPDATE, { config: cfg, fetchImpl })
+
+    assert.equal(answer.ok, false)
+    assert.equal(answer.status, 502)
   }
 })
 
-test('storeDocument throws on 408/425/429 (try later) so the hub retries instead of reporting a refusal', async () => {
-  for (const status of [408, 425, 429]) {
-    const { fetchImpl } = mockFetch(() => jsonResponse({ code: 'throttled' }, status))
-
-    await assert.rejects(
-      storeDocument({ room: 'r', state: 'AAA=', token: 't' }, { config: cfg, fetchImpl }),
-      new RegExp(`collab/store failed \\(${status}\\)`),
-    )
-  }
-})
-
-test('storeDocument throws on 5xx so Hocuspocus retries, without echoing the token', async () => {
-  const { fetchImpl } = mockFetch(() => jsonResponse({}, 502))
+test('append throws when there is no answer, without echoing the token', async () => {
+  const fetchImpl = async () => { throw new TypeError('fetch failed') }
 
   await assert.rejects(
-    storeDocument({ room: 'r', state: 'AAA=', token: 'secret-token' }, { config: cfg, fetchImpl }),
-    (error) => /collab\/store failed \(502\)/.test(error.message) && !error.message.includes('secret-token'),
+    append({ ...UPDATE, token: 'secret-token' }, { config: cfg, fetchImpl }),
+    (error) => /fetch failed/.test(error.message) && !error.message.includes('secret-token'),
   )
+})
+
+test('an append attempt is aborted after its timeout', async () => {
+  const fetchImpl = (url, init) => new Promise((resolve, reject) => {
+    init.signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+  })
+
+  await assert.rejects(append(UPDATE, { config: cfg, fetchImpl, timeoutMs: 20 }), /aborted/)
 })

@@ -25,8 +25,8 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 /**
  * The hub's side of the protocol for tests: room tokens shaped exactly like
  * HocuspocusCollaborationDriver mints them, and requests signed the way
- * packages/collaboration/hub/src/webhook.js signs them. An unsigned or token-less request never
- * reaches the controller.
+ * packages/collaboration/hub/src/backend.js signs them, with `X-Vaulter-Collab-Protocol: 2`. An unsigned or
+ * token-less request never reaches the controller.
  */
 final class HubTestHelpers
 {
@@ -118,22 +118,19 @@ final class HubTestHelpers
     }
 
     /**
-     * One hub call. Like the hub, every body carries a fresh nonce: two calls with the
-     * same payload in the same second (authenticate, then load) must not share a
-     * signature, or the second one reads as a replay.
+     * One hub call, protocol 2 like every hub route. Like the hub, every body carries a fresh nonce: two calls with the
+     * same payload in the same second (authenticate, then load) must not share a signature, or the second one reads as
+     * a replay.
      *
      * @param array<string, mixed> $body
      */
     public static function call(string $endpoint, array $body, ?string $token): TestResponse
     {
-        $body['nonce'] = bin2hex(random_bytes(8));
-
-        return test()->postJson('api/vaulter/v1/collaboration/hub/'.$endpoint, $body, self::headers($body, $token));
+        return self::callV2($endpoint, $body, $token);
     }
 
     /**
-     * One protocol 2 hub call: the same signed request with `X-Vaulter-Collab-Protocol` (`$protocol` null leaves the
-     * header out).
+     * One hub call with a chosen `X-Vaulter-Collab-Protocol` (`$protocol` null leaves the header out).
      *
      * @param array<string, mixed> $body
      */
@@ -153,35 +150,29 @@ final class HubTestHelpers
      *
      * @return array<string, mixed>
      */
-    public static function appendBody(Node $node, string $payload, ?string $updateId = null, ?int $generation = null, ?string $sha256 = null, string $origin = 'client'): array
+    public static function appendBody(Node $node, string $payload, ?string $updateId = null, ?int $generation = null, ?string $sha256 = null, string $origin = 'client', ?int $seedStateVersion = null): array
     {
         $generation ??= self::aggregate($node)->collab_epoch;
 
-        return [
+        return array_filter([
             'room' => self::room($node, $generation),
             'generation' => $generation,
             'update_id' => $updateId ?? (string) Str::uuid(),
             'sha256' => $sha256 ?? hash('sha256', $payload),
             'payload' => base64_encode($payload),
             'origin' => $origin,
-        ];
+            'seed_state_version' => $seedStateVersion,
+        ], static fn (mixed $value): bool => $value !== null);
     }
 
     /**
-     * A store body as the hub sends it.
+     * The hub's seed of an empty generation: the first record, from the JSON of the state version load returned.
      *
-     * @param  array<string, mixed>|null $content
      * @return array<string, mixed>
      */
-    public static function storeBody(Node $node, string $state, ?array $content = null, bool $seed = false, ?int $epoch = null, ?int $stateVersion = null): array
+    public static function seedBody(Node $node, string $payload, ?int $stateVersion = null, ?string $updateId = null): array
     {
-        return array_filter([
-            'room' => self::room($node, $epoch),
-            'state' => base64_encode($state),
-            'content' => $content ?? self::tiptap('From hub'),
-            'seed' => $seed ?: null,
-            'state_version' => $stateVersion,
-        ], static fn (mixed $value): bool => $value !== null);
+        return self::appendBody($node, $payload, $updateId, origin: 'server', seedStateVersion: $stateVersion ?? self::aggregate($node)->state_version);
     }
 
     /** @return array<string, mixed> */

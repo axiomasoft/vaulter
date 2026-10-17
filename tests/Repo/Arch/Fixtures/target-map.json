@@ -699,20 +699,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/collaboration/src/Actions/PersistCollaborationStateAction.php",
-            "fqcn": "Vaulter\\Collaboration\\Actions\\PersistCollaborationStateAction",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Collaboration\\Actions\\PersistCollaborationStateAction"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/collaboration/src/CollaborationCall.php",
             "fqcn": "Vaulter\\Collaboration\\CollaborationCall",
             "kind": "final-class",
@@ -877,20 +863,6 @@
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Collaboration\\Contracts\\HostUserResolver"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/collaboration/src/Data/PersistCollaborationStateInput.php",
-            "fqcn": "Vaulter\\Collaboration\\Data\\PersistCollaborationStateInput",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Collaboration\\Data\\PersistCollaborationStateInput"
         },
         {
             "action": "keep",
@@ -1255,20 +1227,6 @@
             "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubLoadController"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubStoreController.php",
-            "fqcn": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubStoreController",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubStoreController"
         },
         {
             "action": "keep",

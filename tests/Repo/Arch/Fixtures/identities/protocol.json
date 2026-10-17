@@ -1274,6 +1274,13 @@
             "id": "problem:collaboration_draining",
             "kind": "protocol",
             "reason": "P5.6: 503, retryable with_backoff, receipt never — an append while vaulter:collaboration:drain drains the log before the module is switched off; nothing is written, the hub keeps the update"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "problem:collaboration_seed_conflict",
+            "kind": "protocol",
+            "reason": "P5.7: answered by collaboration.hub.append for a seed over a generation that already has a record or a checkpoint, or over JSON whose state version moved (the protocol 1 store that answered it is gone)"
         }
     ],
     "items": [

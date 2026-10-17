@@ -19,10 +19,10 @@ it('adds the session and hub labels to the ones the drive and the documents cont
     $operations = app(VaulterHttpOperationMap::class);
 
     expect($operations->operationFor('vaulter.v1.documents.collaboration.session'))->toBe('collab_issue')
-        ->and($operations->operationFor('vaulter.v1.collaboration.hub.store'))->toBe('collab_persist')
+        ->and($operations->operationFor('vaulter.v1.collaboration.hub.append'))->toBe('collab_append')
         ->and($operations->operationFor('vaulter.v1.documents.export'))->toBe('doc_export')
         ->and($operations->resolve('POST', 'v1/documents/9/collaboration/session'))->toBe('collab_issue')
-        ->and($operations->resolve('POST', 'v1/collaboration/hub/store'))->toBe('collab_persist')
-        ->and(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.store'))->toBe('collab.store')
+        ->and($operations->resolve('POST', 'v1/collaboration/hub/append'))->toBe('collab_append')
+        ->and(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.append'))->toBe('collab.append')
         ->and(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.authenticate'))->toBe('collab.authenticate');
 });

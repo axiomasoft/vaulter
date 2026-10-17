@@ -23,10 +23,21 @@
 //   VAULTER_COLLAB_THROTTLE_SECONDS — window the attempts are counted over (default 60).
 //   VAULTER_COLLAB_BAN_TIME         — ban duration in minutes (default 5).
 //
-// Liveness / persistence pressure:
+// Liveness:
 //   VAULTER_COLLAB_TIMEOUT_MS     — dead-peer heartbeat interval (default 30000).
-//   VAULTER_COLLAB_DEBOUNCE_MS    — onStoreDocument debounce (default 5000).
-//   VAULTER_COLLAB_MAX_DEBOUNCE_MS— hard cap before a forced store (default 30000).
+//   VAULTER_COLLAB_DEBOUNCE_MS    — Hocuspocus' debounce before it unloads an idle room (default 5000).
+//   VAULTER_COLLAB_MAX_DEBOUNCE_MS— hard cap of that debounce (default 30000).
+//
+// Persistence (protocol 2; every update is appended through the pending ledger, src/ledger.js):
+//   VAULTER_COLLAB_MODE                     — buffered (default) | durable (see src/persistence.js).
+//   VAULTER_COLLAB_PENDING_BUDGET_BYTES     — pending bytes of all rooms before writes stop (default 64 MiB).
+//   VAULTER_COLLAB_PENDING_ROOM_BUDGET_BYTES— pending bytes of one room before writes stop (default 8 MiB).
+//   VAULTER_COLLAB_FLUSH_INTERVAL_MS        — the ledger's flush cycle, which repeats failed appends (default 1000).
+//   VAULTER_COLLAB_RETRY_BASE_MS            — full jitter base (default 100).
+//   VAULTER_COLLAB_RETRY_CAP_MS             — full jitter cap (default 2000).
+//   VAULTER_COLLAB_RETRY_MAX_ATTEMPTS       — attempts of one retry series (default 5).
+//   VAULTER_COLLAB_RETRY_DEADLINE_MS        — deadline of one series, network time included (default 10000).
+//   VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS — timeout of one attempt (default 2000).
 //
 // Scaling / ops:
 //   VAULTER_COLLAB_REDIS_URL      — when set, enables the Redis extension (multi-instance sync).
@@ -87,6 +98,9 @@ function isProductionEnv(env = process.env) {
   return !['development', 'dev', 'test', 'local'].includes(nodeEnv)
 }
 
+/** buffered (default): sync before the append, bounded pending memory; durable: writes stop while appends fail. */
+export const PERSISTENCE_MODES = Object.freeze(['buffered', 'durable'])
+
 /** The Laravel API version every hub call is addressed to. */
 const API_VERSION_SUFFIX = '/v1'
 
@@ -141,10 +155,21 @@ export function buildConfig(env = process.env) {
     throttleSeconds: int('VAULTER_COLLAB_THROTTLE_SECONDS', 60, env),
     banTime: int('VAULTER_COLLAB_BAN_TIME', 5, env),
 
-    // Liveness / persistence pressure
+    // Liveness
     timeout: int('VAULTER_COLLAB_TIMEOUT_MS', 30000, env),
     debounce: int('VAULTER_COLLAB_DEBOUNCE_MS', 5000, env),
     maxDebounce: int('VAULTER_COLLAB_MAX_DEBOUNCE_MS', 30000, env),
+
+    // Persistence (protocol 2)
+    mode: str('VAULTER_COLLAB_MODE', 'buffered', env).trim().toLowerCase(),
+    pendingBudgetBytes: int('VAULTER_COLLAB_PENDING_BUDGET_BYTES', 64 * 1024 * 1024, env),
+    pendingRoomBudgetBytes: int('VAULTER_COLLAB_PENDING_ROOM_BUDGET_BYTES', 8 * 1024 * 1024, env),
+    flushIntervalMs: int('VAULTER_COLLAB_FLUSH_INTERVAL_MS', 1000, env),
+    retryBaseMs: int('VAULTER_COLLAB_RETRY_BASE_MS', 100, env),
+    retryCapMs: int('VAULTER_COLLAB_RETRY_CAP_MS', 2000, env),
+    retryMaxAttempts: int('VAULTER_COLLAB_RETRY_MAX_ATTEMPTS', 5, env),
+    retryDeadlineMs: int('VAULTER_COLLAB_RETRY_DEADLINE_MS', 10000, env),
+    retryAttemptTimeoutMs: int('VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS', 2000, env),
 
     // Scaling / ops
     redisUrl: str('VAULTER_COLLAB_REDIS_URL', undefined, env),
@@ -208,6 +233,14 @@ export function validateConfig(conf = config) {
     { key: 'timeout', env: 'VAULTER_COLLAB_TIMEOUT_MS', min: 0 },
     { key: 'debounce', env: 'VAULTER_COLLAB_DEBOUNCE_MS', min: 0 },
     { key: 'maxDebounce', env: 'VAULTER_COLLAB_MAX_DEBOUNCE_MS', min: 0 },
+    { key: 'pendingBudgetBytes', env: 'VAULTER_COLLAB_PENDING_BUDGET_BYTES', min: 1 },
+    { key: 'pendingRoomBudgetBytes', env: 'VAULTER_COLLAB_PENDING_ROOM_BUDGET_BYTES', min: 1 },
+    { key: 'flushIntervalMs', env: 'VAULTER_COLLAB_FLUSH_INTERVAL_MS', min: 10 },
+    { key: 'retryBaseMs', env: 'VAULTER_COLLAB_RETRY_BASE_MS', min: 1 },
+    { key: 'retryCapMs', env: 'VAULTER_COLLAB_RETRY_CAP_MS', min: 1 },
+    { key: 'retryMaxAttempts', env: 'VAULTER_COLLAB_RETRY_MAX_ATTEMPTS', min: 1 },
+    { key: 'retryDeadlineMs', env: 'VAULTER_COLLAB_RETRY_DEADLINE_MS', min: 1 },
+    { key: 'retryAttemptTimeoutMs', env: 'VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS', min: 1 },
   ]
   for (const { key, env, min, max } of numeric) {
     const value = conf[key]
@@ -224,6 +257,15 @@ export function validateConfig(conf = config) {
   }
   if (Number.isInteger(conf.port) && conf.port === conf.healthPort) {
     problems.push('VAULTER_COLLAB_PORT and VAULTER_COLLAB_HEALTH_PORT must differ.')
+  }
+  if (!PERSISTENCE_MODES.includes(conf.mode)) {
+    problems.push(`VAULTER_COLLAB_MODE must be one of ${PERSISTENCE_MODES.join(', ')}.`)
+  }
+  if (Number.isInteger(conf.retryBaseMs) && Number.isInteger(conf.retryCapMs) && conf.retryCapMs < conf.retryBaseMs) {
+    problems.push('VAULTER_COLLAB_RETRY_CAP_MS must be >= VAULTER_COLLAB_RETRY_BASE_MS.')
+  }
+  if (Number.isInteger(conf.retryAttemptTimeoutMs) && Number.isInteger(conf.retryDeadlineMs) && conf.retryAttemptTimeoutMs > conf.retryDeadlineMs) {
+    problems.push('VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS must be <= VAULTER_COLLAB_RETRY_DEADLINE_MS.')
   }
 
   return problems

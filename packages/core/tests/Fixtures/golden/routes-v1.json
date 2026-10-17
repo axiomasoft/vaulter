@@ -88,6 +88,24 @@
         ]
     },
     {
+        "name": "vaulter.v1.collaboration.hub.append",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/collaboration/hub/append",
+        "middleware": [
+            "vaulter.module:collaboration",
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend",
+            "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
+        ]
+    },
+    {
         "name": "vaulter.v1.collaboration.hub.authenticate",
         "methods": [
             "POST"
@@ -105,11 +123,11 @@
         ]
     },
     {
-        "name": "vaulter.v1.collaboration.hub.load",
+        "name": "vaulter.v1.collaboration.hub.checkpoint",
         "methods": [
             "POST"
         ],
-        "uri": "api/vaulter/v1/collaboration/hub/load",
+        "uri": "api/vaulter/v1/collaboration/hub/checkpoint",
         "middleware": [
             "vaulter.module:collaboration",
             "api",
@@ -118,15 +136,34 @@
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
             "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
             "throttle:vaulter-public",
-            "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
+            "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend:checkpoint",
+            "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
         ]
     },
     {
-        "name": "vaulter.v1.collaboration.hub.store",
+        "name": "vaulter.v1.collaboration.hub.compaction.lease",
         "methods": [
             "POST"
         ],
-        "uri": "api/vaulter/v1/collaboration/hub/store",
+        "uri": "api/vaulter/v1/collaboration/hub/compaction/lease",
+        "middleware": [
+            "vaulter.module:collaboration",
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend",
+            "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
+        ]
+    },
+    {
+        "name": "vaulter.v1.collaboration.hub.load",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/collaboration/hub/load",
         "middleware": [
             "vaulter.module:collaboration",
             "api",

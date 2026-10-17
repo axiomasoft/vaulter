@@ -3393,57 +3393,7 @@ paths:
       tags:
       - hub
       summary: 'Hub: authenticate a room connection'
-      security:
-      - hubSecret: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - room
-              properties:
-                room:
-                  type: string
-      responses:
-        '200':
-          description: OK
-          headers:
-            X-Vaulter-Api-Version:
-              $ref: '#/components/headers/XVaulterApiVersion'
-            X-Request-Id:
-              $ref: '#/components/headers/XRequestId'
-            Cache-Control:
-              $ref: '#/components/headers/CacheControlStore'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/XRateLimitLimit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/XRateLimitRemaining'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HubAuthenticated'
-        '401':
-          $ref: '#/components/responses/Problem401'
-        '403':
-          $ref: '#/components/responses/Problem403'
-        '404':
-          $ref: '#/components/responses/Problem404'
-        '409':
-          $ref: '#/components/responses/Problem409'
-        '429':
-          $ref: '#/components/responses/Problem429'
-        '500':
-          $ref: '#/components/responses/Problem500'
-  /collaboration/hub/load:
-    post:
-      operationId: collaboration.hub.load
-      tags:
-      - hub
-      summary: 'Hub: load the state of a room'
-      description: 'With X-Vaulter-Collab-Protocol: 2 the checkpoint and the committed tail (HubLoadedV2); without the header
-        the protocol 1 state (HubLoaded).'
+      description: 'Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise).'
       security:
       - hubSecret: []
       parameters:
@@ -3478,9 +3428,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                - $ref: '#/components/schemas/HubLoaded'
-                - $ref: '#/components/schemas/HubLoadedV2'
+                $ref: '#/components/schemas/HubAuthenticated'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
@@ -3493,14 +3441,18 @@ paths:
           $ref: '#/components/responses/Problem429'
         '500':
           $ref: '#/components/responses/Problem500'
-  /collaboration/hub/store:
+  /collaboration/hub/load:
     post:
-      operationId: collaboration.hub.store
+      operationId: collaboration.hub.load
       tags:
       - hub
-      summary: 'Hub: store the state of a room'
+      summary: 'Hub: load the state of a room'
+      description: 'Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The checkpoint and
+        the committed tail to replay on it; before the generation has any record, the JSON the hub builds its seed from.'
       security:
       - hubSecret: []
+      parameters:
+      - $ref: '#/components/parameters/XVaulterCollabProtocol'
       requestBody:
         required: true
         content:
@@ -3509,24 +3461,9 @@ paths:
               type: object
               required:
               - room
-              - state
               properties:
                 room:
                   type: string
-                state:
-                  type: string
-                  description: Base64 Yjs state.
-                content:
-                  type:
-                  - object
-                  - 'null'
-                seed:
-                  type: boolean
-                state_version:
-                  type:
-                  - integer
-                  - 'null'
-                  minimum: 0
       responses:
         '200':
           description: OK
@@ -3541,10 +3478,12 @@ paths:
               $ref: '#/components/headers/XRateLimitLimit'
             X-RateLimit-Remaining:
               $ref: '#/components/headers/XRateLimitRemaining'
+            X-Vaulter-Collab-Protocol:
+              $ref: '#/components/headers/XVaulterCollabProtocol'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HubStoredEnvelope'
+                $ref: '#/components/schemas/HubLoadedV2'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
@@ -3553,10 +3492,6 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
-        '413':
-          $ref: '#/components/responses/Problem413'
-        '422':
-          $ref: '#/components/responses/Problem422'
         '429':
           $ref: '#/components/responses/Problem429'
         '500':
@@ -3569,7 +3504,9 @@ paths:
       summary: 'Hub: append one update to the log of a room (protocol 2)'
       description: 'Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is
         checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large).
-        The answer is the committed receipt: a retry with the same update_id and payload gets the same seq. While
+        The answer is the committed receipt: a retry with the same update_id and payload gets the same seq. The hub''s seed
+        of an empty generation carries seed_state_version: it is appended only while the generation has no checkpoint and
+        no record and the document''s state version still equals it (409 collaboration_seed_conflict otherwise). While
         vaulter:collaboration:drain drains the log before the module is switched off, every append answers 503
         collaboration_draining and nothing is written; the hub keeps the update and retries it with backoff.'
       security:
@@ -3607,6 +3544,11 @@ paths:
                   enum:
                   - client
                   - server
+                seed_state_version:
+                  type: integer
+                  minimum: 0
+                  description: Only on the hub's seed (the first record of a generation, built from the JSON load returned)
+                    — the state_version load returned.
       responses:
         '200':
           description: OK
@@ -3827,9 +3769,9 @@ components:
     XVaulterCollabProtocol:
       name: X-Vaulter-Collab-Protocol
       in: header
-      required: false
-      description: 'The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409
-        collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed).'
+      required: true
+      description: 'The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value,
+        answers 409 collaboration_protocol_mismatch before anything is read.'
       schema:
         type: string
     IdempotencyKey:
@@ -5638,49 +5580,6 @@ components:
               payload:
                 type: string
                 description: Base64 Yjs update.
-    HubLoaded:
-      type: object
-      required:
-      - state
-      - content
-      - epoch
-      - schemaVersion
-      - stateVersion
-      - type
-      properties:
-        state:
-          type:
-          - string
-          - 'null'
-          description: Base64 Yjs state, null before the first store.
-        content:
-          type:
-          - object
-          - 'null'
-        epoch:
-          type: integer
-        schemaVersion:
-          type: integer
-        stateVersion:
-          type: integer
-        type:
-          type: string
-    HubStored:
-      type: object
-      required:
-      - changed
-      - epoch
-      - state_version
-      - yjs_state_size
-      properties:
-        changed:
-          type: boolean
-        epoch:
-          type: integer
-        state_version:
-          type: integer
-        yjs_state_size:
-          type: integer
     AbilitiesExplained:
       type: object
       required:
@@ -5927,13 +5826,6 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/CollaborationSession'
-    HubStoredEnvelope:
-      type: object
-      required:
-      - data
-      properties:
-        data:
-          $ref: '#/components/schemas/HubStored'
     AbilitiesExplainedEnvelope:
       type: object
       required:

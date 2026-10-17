@@ -33,7 +33,7 @@ it('labels the routes of every active module from its own contribution', functio
 
     expect($operations->operationFor('vaulter.v1.nodes.show'))->toBe('point_read')
         ->and($operations->operationFor('vaulter.v1.documents.content.update'))->toBe('doc_write')
-        ->and($operations->operationFor('vaulter.v1.collaboration.hub.store'))->toBe('collab_persist')
+        ->and($operations->operationFor('vaulter.v1.collaboration.hub.append'))->toBe('collab_append')
         ->and($operations->operationFor('vaulter.v1.no-such-route'))->toBeNull()
         ->and($throttled->routeFor('vaulter.v1.uploads.store'))->toBe('uploads.tus_create')
         ->and($throttled->routeFor('vaulter.v1.collaboration.hub.authenticate'))->toBe('collab.authenticate')

@@ -32,15 +32,6 @@ Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final read
 Vaulter\Collaboration\Contracts\HostUserResolver spi:implement since 1.0 interface
   public function find(int|string $id): ?Illuminate\Contracts\Auth\Access\Authorizable
 
-Vaulter\Collaboration\Data\PersistCollaborationStateInput api since 1.0 final readonly class
-  public int|null|string $actorId
-  public ?array $content
-  public ?int $expectedEpoch
-  public ?int $expectedStateVersion
-  public Vaulter\Drive\Models\Node $node
-  public bool $seed
-  public string $yjsState
-
 Vaulter\Collaboration\Data\RoomRef api since 1.0 final readonly class
   public string $driveId
   public int $epoch

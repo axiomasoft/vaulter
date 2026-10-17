@@ -1042,7 +1042,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hub: authenticate a room connection */
+        /**
+         * Hub: authenticate a room connection
+         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise).
+         */
         post: operations["collaboration.hub.authenticate"];
         delete?: never;
         options?: never;
@@ -1061,26 +1064,9 @@ export interface paths {
         put?: never;
         /**
          * Hub: load the state of a room
-         * @description With X-Vaulter-Collab-Protocol: 2 the checkpoint and the committed tail (HubLoadedV2); without the header the protocol 1 state (HubLoaded).
+         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The checkpoint and the committed tail to replay on it; before the generation has any record, the JSON the hub builds its seed from.
          */
         post: operations["collaboration.hub.load"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/collaboration/hub/store": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Hub: store the state of a room */
-        post: operations["collaboration.hub.store"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1098,7 +1084,7 @@ export interface paths {
         put?: never;
         /**
          * Hub: append one update to the log of a room (protocol 2)
-         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large). The answer is the committed receipt: a retry with the same update_id and payload gets the same seq. While vaulter:collaboration:drain drains the log before the module is switched off, every append answers 503 collaboration_draining and nothing is written; the hub keeps the update and retries it with backoff.
+         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large). The answer is the committed receipt: a retry with the same update_id and payload gets the same seq. The hub's seed of an empty generation carries seed_state_version: it is appended only while the generation has no checkpoint and no record and the document's state version still equals it (409 collaboration_seed_conflict otherwise). While vaulter:collaboration:drain drains the log before the module is switched off, every append answers 503 collaboration_draining and nothing is written; the hub keeps the update and retries it with backoff.
          */
         post: operations["collaboration.hub.append"];
         delete?: never;
@@ -1643,21 +1629,6 @@ export interface components {
                 payload: string;
             }[];
         };
-        HubLoaded: {
-            /** @description Base64 Yjs state, null before the first store. */
-            state: string | null;
-            content: Record<string, never> | null;
-            epoch: number;
-            schemaVersion: number;
-            stateVersion: number;
-            type: string;
-        };
-        HubStored: {
-            changed: boolean;
-            epoch: number;
-            state_version: number;
-            yjs_state_size: number;
-        };
         AbilitiesExplained: {
             abilities: components["schemas"]["Abilities"];
             explain: {
@@ -1750,9 +1721,6 @@ export interface components {
         };
         CollaborationSessionEnvelope: {
             data: components["schemas"]["CollaborationSession"];
-        };
-        HubStoredEnvelope: {
-            data: components["schemas"]["HubStored"];
         };
         AbilitiesExplainedEnvelope: {
             data: components["schemas"]["AbilitiesExplained"];
@@ -1975,7 +1943,7 @@ export interface components {
     parameters: {
         /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
         IfMatch: string;
-        /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
+        /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
         XVaulterCollabProtocol: string;
         /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
         IdempotencyKey: string;
@@ -5061,46 +5029,9 @@ export interface operations {
     "collaboration.hub.authenticate": {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    room: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
-                    "X-Request-Id": components["headers"]["XRequestId"];
-                    "Cache-Control": components["headers"]["CacheControlStore"];
-                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
-                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HubAuthenticated"];
-                };
-            };
-            401: components["responses"]["Problem401"];
-            403: components["responses"]["Problem403"];
-            404: components["responses"]["Problem404"];
-            409: components["responses"]["Problem409"];
-            429: components["responses"]["Problem429"];
-            500: components["responses"]["Problem500"];
-        };
-    };
-    "collaboration.hub.load": {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
-                "X-Vaulter-Collab-Protocol"?: components["parameters"]["XVaulterCollabProtocol"];
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
             };
             path?: never;
             cookie?: never;
@@ -5125,7 +5056,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HubLoaded"] | components["schemas"]["HubLoadedV2"];
+                    "application/json": components["schemas"]["HubAuthenticated"];
                 };
             };
             401: components["responses"]["Problem401"];
@@ -5136,10 +5067,13 @@ export interface operations {
             500: components["responses"]["Problem500"];
         };
     };
-    "collaboration.hub.store": {
+    "collaboration.hub.load": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -5147,11 +5081,6 @@ export interface operations {
             content: {
                 "application/json": {
                     room: string;
-                    /** @description Base64 Yjs state. */
-                    state: string;
-                    content?: Record<string, never> | null;
-                    seed?: boolean;
-                    state_version?: number | null;
                 };
             };
         };
@@ -5164,18 +5093,17 @@ export interface operations {
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
                     "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HubStoredEnvelope"];
+                    "application/json": components["schemas"]["HubLoadedV2"];
                 };
             };
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
-            413: components["responses"]["Problem413"];
-            422: components["responses"]["Problem422"];
             429: components["responses"]["Problem429"];
             500: components["responses"]["Problem500"];
         };
@@ -5183,9 +5111,9 @@ export interface operations {
     "collaboration.hub.append": {
         parameters: {
             query?: never;
-            header?: {
-                /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
-                "X-Vaulter-Collab-Protocol"?: components["parameters"]["XVaulterCollabProtocol"];
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
             };
             path?: never;
             cookie?: never;
@@ -5203,6 +5131,8 @@ export interface operations {
                     payload: string;
                     /** @enum {string} */
                     origin?: "client" | "server";
+                    /** @description Only on the hub's seed (the first record of a generation, built from the JSON load returned) — the state_version load returned. */
+                    seed_state_version?: number;
                 };
             };
         };
@@ -5236,9 +5166,9 @@ export interface operations {
     "collaboration.hub.compaction.lease": {
         parameters: {
             query?: never;
-            header?: {
-                /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
-                "X-Vaulter-Collab-Protocol"?: components["parameters"]["XVaulterCollabProtocol"];
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
             };
             path?: never;
             cookie?: never;
@@ -5280,9 +5210,9 @@ export interface operations {
     "collaboration.hub.checkpoint": {
         parameters: {
             query?: never;
-            header?: {
-                /** @description The hub ↔ backend protocol version the call speaks. `2` on protocol 2 calls; any other value answers 409 collaboration_protocol_mismatch. A load without the header answers protocol 1 (until the v1 hub is removed). */
-                "X-Vaulter-Collab-Protocol"?: components["parameters"]["XVaulterCollabProtocol"];
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
             };
             path?: never;
             cookie?: never;
