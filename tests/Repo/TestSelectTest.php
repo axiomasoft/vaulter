@@ -473,11 +473,11 @@ it('plans a core sub-zone change by group and pulls the dependent sub-zones and 
 });
 
 it('plans a Node or load change for its own suite only', function (): void {
-    foreach ([['hocuspocus-server/src/index.js', 'hub'], ['packages/vue/src/plugin.ts', 'vue'], ['load/app/Foo.php', 'load']] as [$path, $suite]) {
+    foreach ([['packages/collaboration/hub/src/index.js', 'hub'], ['packages/vue/src/plugin.ts', 'vue'], ['load/app/Foo.php', 'load']] as [$path, $suite]) {
         [$code, $plan] = s_select(["--paths=$path"]);
         expect($code)->toBe(0, $path)->and($plan['affected'])->toBe([$suite], $path);
     }
-    [, $hub] = s_select(['--paths=hocuspocus-server/src/index.js']);
+    [, $hub] = s_select(['--paths=packages/collaboration/hub/src/index.js']);
     expect(s_runs($hub))->toBe(['scripts/t -p hub']);
 });
 

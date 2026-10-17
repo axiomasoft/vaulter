@@ -55,7 +55,7 @@ function z_test_files(): array
     foreach ($inventory['suites'] as $name => $suite) {
         $files[$name] = match (true) {
             $suite['kind'] === 'pest' => z_files($suite['tests_dir'], '*Test.php'),
-            $name === 'hub' => [...z_files('hocuspocus-server/test', '*.test.js'), ...z_files('hocuspocus-server/test/e2e', '*.e2e.js')],
+            $name === 'hub' => [...z_files('packages/collaboration/hub/test', '*.test.js'), ...z_files('packages/collaboration/hub/test/e2e', '*.e2e.js')],
             $name === 'vue' => z_files('packages/vue/tests', '*.test.ts'),
             default => [],
         };
@@ -72,7 +72,7 @@ function z_src_roots(): array
     foreach (glob(z_root().'/packages/*/src/*') ?: [] as $entry) {
         $roots[] = substr($entry, strlen(z_root()) + 1);
     }
-    foreach (['hocuspocus-server/src', 'packages/vue/src', 'load/app'] as $root) {
+    foreach (['packages/collaboration/hub/src', 'packages/vue/src', 'load/app'] as $root) {
         $roots[] = $root;
     }
     sort($roots);

@@ -16,7 +16,7 @@ use Vaulter\Support\Identity;
 
 /**
  * The collaboration transport targeting an external Node Hocuspocus hub (see
- * hocuspocus-server/). The client connects with a signed room JWT; the hub forwards it
+ * packages/collaboration/hub/). The client connects with a signed room JWT; the hub forwards it
  * on every authenticate/load/store call, where the backend re-checks it against the
  * live document. Requires firebase/php-jwt.
  *

@@ -45,7 +45,7 @@ services:
 
   hub:
     build:
-      context: ../hocuspocus-server
+      context: ../packages/collaboration/hub
     environment:
       # Dev stand: NODE_ENV=development opens the Origin allowlist (a published/prod image
       # defaults to production and REQUIRES VAULTER_COLLAB_ALLOWED_ORIGINS — see config.js).
@@ -60,7 +60,7 @@ services:
       laravel:
         condition: service_healthy
     # F-P4.5-03: symmetric with the reference deployment's own healthcheck
-    # (hocuspocus-server/docker-compose.yml) — the hub exposes the same /health
+    # (packages/collaboration/hub/docker-compose.yml) — the hub exposes the same /health
     # endpoint on VAULTER_COLLAB_HEALTH_PORT.
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
