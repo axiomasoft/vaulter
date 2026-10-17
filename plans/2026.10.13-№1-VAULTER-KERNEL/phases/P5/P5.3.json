@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.3",
   "title": "Documents: публичный state-контракт CollaborativeState (D27), pending marker и document_state_pending",
-  "status": "in_progress",
+  "status": "todo",
   "summary": "`Vaulter\\Documents\\State\\CollaborativeState` (#[Api], реализация Internal) с DTO `LockedDocumentState`, `PendingMarker`, `CheckpointPublication`, `CheckpointOutcome`: `lock()` (T→N→D), `markPending()`, `publishCheckpoint()` (CAS generation/state_version, снятие marker только при PT ≤ H), `pendingDocuments()`; вне транзакции — LogicException. SPI `Vaulter\\Documents\\State\\PendingStateDrainer` (#[Spi(Implement)], capability OptionalSingle в DocumentsModule). Колонки `v_documents.pending_generation`, `pending_through_seq` + CHECK (create-DDL DocumentsSchema, D21). Guards drain-or-409 `document_state_pending` (409, retryable with_backoff, receipt never) в REST PUT content, restore, export, GET content, purge документа (C8, C9). DocumentStateWriter остаётся Internal.",
   "why": "D26, D27, p5-design#invariants C5, C8, C9: documents владеет generation и marker; collaboration пишет только через публичный контракт; без marker REST тихо читает или перезаписывает устаревшую проекцию. Hard risks: снятие marker без покрытия (потеря saved-правок при restore/replace), deadlock при нарушении порядка T→N→D, ожидание drain внутри транзакции (locks на время хаба), stale JSON как актуальный.",
   "scope": {
@@ -250,13 +250,6 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": {
-    "started_at": "2026-10-17T10:32:20Z",
-    "executor": {
-      "provider": "claude-code",
-      "model": "opus",
-      "session": "run-35b13a7f5cee7cb847752590"
-    }
-  },
-  "updated_at": "2026-10-17T11:02:30Z"
+  "result": null,
+  "updated_at": "2026-10-17T11:12:53Z"
 }

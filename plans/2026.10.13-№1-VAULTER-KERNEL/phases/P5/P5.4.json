@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.4",
   "title": "Журнал обновлений: heads/updates/receipts, append с receipts, generation-fencing и лимитами (протокол 2, backend)",
-  "status": "in_progress",
+  "status": "todo",
   "summary": "Миграции `0001_01_01_000501` heads (вкл. lease_token/lease_owner/lease_expires_at/drain_requested_at/retired_at), `000502` updates, `000503` receipts и `Vaulter\\Collaboration\\Schema\\CollaborationSchema`; `Persistence\\UpdateLog::append()` по C1–C4 (CollaborativeState::lock → heads FOR UPDATE → receipt/hash → seq → update+receipt+markPending → commit → ack); `POST /v1/collaboration/hub/append` и `load` v2 (checkpoint + tail (C,H]); заголовок `X-Vaulter-Collab-Protocol: 2` на v2-маршрутах; problems `collaboration_update_mismatch` (422), `collaboration_update_too_large` (413), `collaboration_protocol_mismatch` (409); лимиты до декодирования; config `mode`, `limits.update_bytes`, `limits.request_bytes`; `scripts/schema-snapshot.php` с провайдером collaboration; I15 набор `+collaboration`; arch-тест границы. v1 `/hub/store` пока остаётся.",
   "why": "D26 и p5-design#invariants C1–C4: авторитетны бинарные Yjs-обновления с receipts; сегодняшний store без базовой версии (CollaborationHub:171) перезаписывает full state. Hard risks: ack до commit; вторая запись при повторе после потерянного ответа (сценарий 1); запись в старую generation после restore (7); отказ по размеру после аллокации (17); скрытый документ/тенант отвечает иначе, чем отсутствующий.",
   "scope": {
@@ -271,13 +271,6 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": {
-    "started_at": "2026-10-17T10:32:20Z",
-    "executor": {
-      "provider": "claude-code",
-      "model": "opus",
-      "session": "run-f76c17e1910bb13c455c89de"
-    }
-  },
-  "updated_at": "2026-10-17T11:02:32Z"
+  "result": null,
+  "updated_at": "2026-10-17T11:12:55Z"
 }
