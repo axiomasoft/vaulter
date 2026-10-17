@@ -60,3 +60,7 @@ P4.16 | packages/core/tests/Arch/OperationsBoundaryTest.php:1 | two drive-only a
 P4.16 | packages/core/tests | 107 of 230 core test files name Vaulter\Drive\ / Documents / Media / Webhooks types (core is a full-stack suite); the tests of drive concepts should move to the owners in a separate pass (move-types --tests handles only whole directories)
 P4.16 | packages/drive/tests/Arch/OperationsBoundaryTest.php:1 | the I9 model ratchet lists nine controllers that still name a model (protocol controllers, ListPublicShareNodes, six webhook admin controllers) and the webhook admin still calls Actions/Repositories directly (no Operations for the global webhook surface)
 P4.16 | tests/baseline/vue.list:1 | stale against discovery (pre-existing): scripts/t baseline --write -p vue
+P4.17 | docs/reference/commands.md:90, docs/ru/reference/commands.md:91 | «--force/--purge недоступны (P4)» — обновить в P4.20
+P4.17 | media/ModuleUninstall | media --purge оставляет объекты хранилища сиротами (до GC)
+P4.17 | core/ModuleUninstallCommand | purge без guard выключенного модуля/lock — возможны записи при живом трафике
+P4.17 | core/ModuleUninstallCommand | MySQL: DDL коммитится, purge+rollback не атомарны; fresh-app тесты на серверных БД пересмотреть в PLAN4
