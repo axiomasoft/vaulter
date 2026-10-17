@@ -1099,6 +1099,7 @@ export interface components {
             /**
              * @description Stable machine readable code (SemVer). A status without a Vaulter code answers http_<status>.
              * @example actor_required
+             * @example blob_unavailable
              * @example cannot_delete_head_revision
              * @example collaboration_epoch_mismatch
              * @example collaboration_seed_conflict
