@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Content;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Actions\Content\FenceScanAttemptAction;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Media\Contracts\Cas\BlobStore;
-use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]
 final readonly class PrivateScanReader

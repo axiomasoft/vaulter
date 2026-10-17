@@ -9,11 +9,11 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Jobs\Middleware\RestoreTenantContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
-use Vaulter\Jobs\Middleware\RestoreTenantContext;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
-use Vaulter\Tests\TestCase;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 

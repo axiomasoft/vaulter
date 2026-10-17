@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveConfigValidator;
 use Vaulter\Drive\Contracts\Profiles\ProfileOption;
 use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Drive\Profiles\Profile;
@@ -101,8 +101,8 @@ it('hydrates DI profile providers only once during boot validation', function ()
     });
     config()->set('vaulter-drive.profiles.providers', [$provider::class]);
     app()->forgetInstance(ProfileRegistry::class);
-    app(ConfigValidator::class)->validate(app(VaulterConfig::class), app());
+    (new DriveConfigValidator(app('config')))->validate(app(DriveConfig::class), app());
     app(ProfileRegistry::class);
-    app(ConfigValidator::class)->validate(app(VaulterConfig::class), app());
+    (new DriveConfigValidator(app('config')))->validate(app(DriveConfig::class), app());
     expect($count)->toBe(1);
 });

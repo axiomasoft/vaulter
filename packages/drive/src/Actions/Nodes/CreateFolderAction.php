@@ -50,7 +50,7 @@ final readonly class CreateFolderAction
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
         return $this->database->transaction(function () use ($context, $data, $name, $parentId): Node {
-            $this->database->lockTreeShared($data->storage->id);
+            $this->database->lockAggregateShared('drives', $data->storage->id);
             $this->lifecycle->assertWritable($context);
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);

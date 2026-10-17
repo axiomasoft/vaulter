@@ -6,9 +6,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Drive;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
-use Vaulter\Tests\TestCase;
 
 uses(TestCase::class);
 

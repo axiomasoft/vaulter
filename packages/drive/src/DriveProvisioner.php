@@ -9,7 +9,6 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
@@ -25,10 +24,10 @@ use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Repositories\DriveStoreRepository;
 use Vaulter\Drive\Repositories\NodeStoreRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
@@ -144,8 +143,8 @@ final readonly class DriveProvisioner
         }
 
         return $this->database->transaction(function () use ($storage): Node {
-            $this->database->lockTree($storage->id);
-            $class = app(VaulterConfig::class)->model('drive');
+            $this->database->lockAggregate('drives', $storage->id);
+            $class = app(DriveConfig::class)->model('drive');
             $storage = $class::query()->whereKey($storage->getRawOriginal($storage->getKeyName()))->lockForUpdate()->firstOrFail();
             $storage = app(TenancyBoundary::class)->assertDrive($storage);
             $existing = $storage->rootNode()->first();

@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Testing\Sharing;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
@@ -43,8 +43,8 @@ final class ShareTestHelpers
         int $useCount = 0,
         ?Carbon $revokedAt = null,
     ): NodeShare {
-        $model = app(VaulterConfig::class)->model('node_share');
-        $nodeModel = app(VaulterConfig::class)->model('node');
+        $model = app(DriveConfig::class)->model('node_share');
+        $nodeModel = app(DriveConfig::class)->model('node');
         $row = $node instanceof Node ? $node : $nodeModel::query()->findOrFail($node->id);
 
         /** @var NodeShare $share */

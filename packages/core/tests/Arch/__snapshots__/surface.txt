@@ -43,7 +43,6 @@ Vaulter\Configuration\ConfigNormalizer api since 1.0 final class
   public function registerDefaults(string $root, string $path): void
 
 Vaulter\Configuration\ConfigValidator api since 1.0 final readonly class
-  public static function assertCollaborationSecrets(bool $enabled, ?string $jwtSecret, ?string $webhookSecret, Illuminate\Contracts\Foundation\Application $app): void
   public static function assertImplements(string $key, string $class, string $base): void
   public static function assertModel(string $key, string $class, string $base): void
   public function validate(Vaulter\Configuration\VaulterConfig $config, Illuminate\Contracts\Foundation\Application $app): void
@@ -101,19 +100,12 @@ Vaulter\Configuration\TenancyConfig api since 1.0 final readonly class
   public function resolver(): string
 
 Vaulter\Configuration\VaulterConfig api since 1.0 final readonly class
-  public function access(): Vaulter\Drive\Configuration\AccessConfig
-  public function changes(): Vaulter\Drive\Configuration\ChangesConfig
   public function database(): Vaulter\Configuration\DatabaseConfig
-  public function downloads(): Vaulter\Drive\Configuration\DownloadsConfig
-  public function featureEnabled(string $feature, ?string $profile = null): bool
   public function ids(): Vaulter\Configuration\IdsConfig
-  public function listing(): Vaulter\Drive\Configuration\ListingConfig
-  public function model(string $key): string
   public function observability(): Vaulter\Configuration\ObservabilityConfig
   public function outbox(): Vaulter\Configuration\OutboxConfig
+  public function outboxModel(): string
   public function routes(): Vaulter\Configuration\RoutesConfig
-  public function scan(): Vaulter\Drive\Configuration\ScanConfig
-  public function sharing(): Vaulter\Drive\Configuration\SharingConfig
   public function tenancy(): Vaulter\Configuration\TenancyConfig
 
 Vaulter\Contracts\Doctor\DoctorCheck spi:implement since 1.0 interface
@@ -138,6 +130,11 @@ Vaulter\Contracts\Observability\MetricsRecorder spi:implement since 1.0 interfac
 Vaulter\Contracts\Observability\TraceRecorder spi:implement since 1.0 interface
   public function span(string $name, callable $operation, array $attributes = []): mixed
 
+Vaulter\Contracts\Routing\RouteLabelSource spi:implement since 1.0 interface
+  public function operationPaths(): array
+  public function operations(): array
+  public function throttled(): array
+
 Vaulter\Contracts\Tenancy\ResolvesOwnerTenant spi:implement since 1.0 interface
   public function tenantOf(Illuminate\Database\Eloquent\Model $owner): int|null|string
 
@@ -157,8 +154,8 @@ Vaulter\Database\VaulterDatabase api since 1.0 final class
   public function afterCommit(Closure $callback): void
   public function connection(): Illuminate\Database\Connection
   public function driver(): string
-  public function lockTree(int|string $storageId): void
-  public function lockTreeShared(int|string $storageId): void
+  public function lockAggregate(string $entity, int|string $id): void
+  public function lockAggregateShared(string $entity, int|string $id): void
   public function transaction(Closure $callback, int $attempts = 3): mixed
 
 Vaulter\Doctor\DoctorCheckResult api since 1.0 final readonly class
@@ -204,14 +201,9 @@ Vaulter\Events\DomainEvent api since 1.0 abstract readonly class
   public Carbon\CarbonImmutable $occurredAt
   public function __construct(Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?Carbon\CarbonImmutable $occurredAt = null)
   public function activityContext(): array
-  public function activityTarget(): ?Vaulter\Drive\ValueObjects\Events\ActivityTarget
   public abstract function data(): array
   protected static function id(mixed $value): ?string
   public function isExternal(): bool
-  public function journal(): ?Vaulter\Drive\ValueObjects\Events\JournalEffect
-  protected static function nodeScope(Vaulter\Drive\Models\Node $node): Vaulter\ValueObjects\Events\EventScope
-  protected static function nodeSubject(Vaulter\Drive\Models\Node $node): Vaulter\ValueObjects\Events\EventSubject
-  protected static function nodeUpsert(Vaulter\Drive\Models\Node $node, bool $subtree = false, ?int $sequence = null): Vaulter\Drive\ValueObjects\Events\JournalEffect
   public abstract function scope(): Vaulter\ValueObjects\Events\EventScope
   public function sequence(): ?int
   public abstract function subject(): Vaulter\ValueObjects\Events\EventSubject
@@ -420,7 +412,6 @@ Vaulter\Http\Resources\PageResponse api since 1.0 final class
   public const int MAX_PER_PAGE = 200
   public static function cursor(Illuminate\Http\Request $request): ?string
   public static function fromPaginator(Illuminate\Contracts\Pagination\CursorPaginator $paginator, callable $map): Illuminate\Http\JsonResponse
-  public static function listOptions(Illuminate\Http\Request $request): Vaulter\Drive\Data\ListOptions
   public static function make(Vaulter\Data\Page $page, callable $map, int $perPage): Illuminate\Http\JsonResponse
   public static function perPage(Illuminate\Http\Request $request): int
 
@@ -702,14 +693,6 @@ Vaulter\Testing\FakeTraceRecorder api since 1.0 final class implements Vaulter\C
   public function assertSpan(string $name, ?array $attributes = null, ?string $parent = null): void
   public function span(string $name, callable $operation, array $attributes = []): mixed
   public function spans(): array
-
-Vaulter\Testing\InteractsWithVaulter api since 1.0 trait
-  public function assertNodeNotVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Drive\Models\Node|string $node): void
-  public function assertNodeVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Drive\Models\Node|string $node): void
-  public function assertVaulterEventNotRecorded(Vaulter\Events\EventTypeContract $type): void
-  public function assertVaulterEventRecorded(Vaulter\Events\EventTypeContract $type, ?callable $where = null): void
-  public function vaulterActingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): Closure
-  public function vaulterFakeStorage(?string $disk = null): Illuminate\Contracts\Filesystem\Filesystem
 
 Vaulter\ValueObjects\Access\Actor api since 1.0 final readonly class
   public function __serialize(): array

@@ -6,7 +6,6 @@ namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\QueryException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -219,7 +218,7 @@ final class UploadSessionStoreRepository
         if ($session->status !== UploadStatus::Assembled || $resultNodeId === null || $resultRevisionId === null || $inputFingerprint === null || preg_match('/^[a-f0-9]{64}$/', $inputFingerprint) !== 1) {
             throw UploadConflictException::forClosedSession($session->upload_id);
         }
-        $nodeClass = app(VaulterConfig::class)->model('node');
+        $nodeClass = app(DriveConfig::class)->model('node');
         $node = $nodeClass::query()->where('drive_id', $session->drive_id)->whereKey($resultNodeId)->first();
         $file = $node?->file()->first();
         $revision = $file?->versions()->whereKey($resultRevisionId)->first();

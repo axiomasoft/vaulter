@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Repositories;
 use Illuminate\Database\Eloquent\Builder;
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\FileRevisionBlob;
 use Vaulter\Media\Models\Cas\Blob;
@@ -24,7 +24,7 @@ use Vaulter\Support\Identity;
 final readonly class FileRevisionBlobStoreRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
     ) {}
 
     /**

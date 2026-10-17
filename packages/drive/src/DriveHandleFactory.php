@@ -8,17 +8,17 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle as Contract;
 use Vaulter\Drive\Contracts\DriveHandleFactory as Factory;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Repositories\DriveReadRepository;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 
 #[Internal]
 final readonly class DriveHandleFactory implements Factory
 {
-    public function __construct(private Container $container, private VaulterConfig $config)
+    public function __construct(private Container $container, private DriveConfig $config)
     {
         if (PHP_INT_SIZE !== 8) {
             throw new \LogicException('Node sequence APIs require a 64-bit PHP runtime.');

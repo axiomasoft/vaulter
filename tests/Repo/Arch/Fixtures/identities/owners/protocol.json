@@ -219,18 +219,6 @@
         },
         {
             "match": "prefix",
-            "value": "morph:Vaulter\\Tenancy\\",
-            "owner": "core",
-            "why": "kernel Tenancy"
-        },
-        {
-            "match": "prefix",
-            "value": "morph:Vaulter\\VaulterServiceProvider::",
-            "owner": "core",
-            "why": "the kernel provider registers the stable morph aliases of the Vaulter models in the morph map"
-        },
-        {
-            "match": "prefix",
             "value": "morph:Vaulter\\ValueObjects\\Access\\",
             "owner": "drive",
             "why": "access values"

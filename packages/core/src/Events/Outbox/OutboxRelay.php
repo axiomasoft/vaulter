@@ -175,7 +175,7 @@ final readonly class OutboxRelay
         }
 
         /** @var class-string<OutboxEvent> $model */
-        $model = $this->vaulterConfig->model('outbox');
+        $model = $this->vaulterConfig->outboxModel();
         $events = $model::query()->whereIn('event_id', array_column($claims, 'event_id'))->get()->keyBy('event_id');
 
         $finished = 0;

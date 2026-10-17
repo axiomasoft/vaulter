@@ -9,12 +9,12 @@ use InvalidArgumentException;
 use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Changes\ChangeCursor;
 use Vaulter\Drive\Changes\ChangeJournal;
 use Vaulter\Drive\Configuration\ChangesConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Changes\ChangePage;
 use Vaulter\Drive\Data\Changes\NodeChange;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
@@ -28,8 +28,8 @@ use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * The change journal of a drive as one reader sees it. A syncing
@@ -51,7 +51,7 @@ final readonly class ChangeOperations
         private OperationGuard $guard,
         private NodeSnapshotMapper $mapper,
         private VaulterDatabase $database,
-        private VaulterConfig $config,
+        private DriveConfig $config,
         private ChangesConfig $changes,
         private TenancyConfig $tenancy,
         private TenancyBoundary $boundary,

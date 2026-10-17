@@ -41,7 +41,7 @@ final readonly class ResolveCommentAction
         return $this->database->transaction(function () use ($context, $data, $resolvedBy): NodeComment {
             $driveId = $context->driveId();
             $nodeId = $data->comment->node_id;
-            $this->database->lockTreeShared($driveId);
+            $this->database->lockAggregateShared('drives', $driveId);
             $this->lifecycle->assertWritable($context);
             $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
             if (!$this->tree->sameStorage($current, $driveId)) {

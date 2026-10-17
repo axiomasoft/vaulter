@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Database\Factories\NodeFactory;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
@@ -175,7 +175,7 @@ class Node extends Model
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'parent_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'parent_id');
     }
 
     /**
@@ -183,7 +183,7 @@ class Node extends Model
      */
     public function children(): HasMany
     {
-        return $this->hasMany(app(VaulterConfig::class)->model('node'), 'parent_id');
+        return $this->hasMany(app(DriveConfig::class)->model('node'), 'parent_id');
     }
 
     /**
@@ -191,7 +191,7 @@ class Node extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('drive'), 'drive_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('drive'), 'drive_id');
     }
 
     /**
@@ -201,7 +201,7 @@ class Node extends Model
      */
     public function file(): HasOne
     {
-        return $this->hasOne(app(VaulterConfig::class)->model('file'), 'node_id');
+        return $this->hasOne(app(DriveConfig::class)->model('file'), 'node_id');
     }
 
     /**

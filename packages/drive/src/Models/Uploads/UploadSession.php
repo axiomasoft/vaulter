@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -100,7 +99,7 @@ class UploadSession extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('drive'), 'drive_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('drive'), 'drive_id');
     }
 
     /**
@@ -120,7 +119,7 @@ class UploadSession extends Model
      */
     public function assembledBlob(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('blob'), 'assembled_blob_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('blob'), 'assembled_blob_id');
     }
 
     /**

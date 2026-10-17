@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Queries;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\ExactListing;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Data\NodePage;
 use Vaulter\ValueObjects\Access\Actor;
@@ -17,7 +17,7 @@ use Vaulter\ValueObjects\Access\Actor;
 #[Internal]
 final readonly class SharedWithActorQuery
 {
-    public function __construct(private AccessResolver $access, private ExactListing $listing, private VaulterConfig $config) {}
+    public function __construct(private AccessResolver $access, private ExactListing $listing, private DriveConfig $config) {}
 
     public function execute(Authorizable $actor, ListOptions $options): NodePage
     {

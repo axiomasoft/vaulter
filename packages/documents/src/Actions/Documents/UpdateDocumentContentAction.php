@@ -73,7 +73,7 @@ final readonly class UpdateDocumentContentAction
             if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === '' || $driveId === '') {
                 throw NodeNotFoundException::forId('unpersisted');
             }
-            $this->database->lockTreeShared($driveId);
+            $this->database->lockAggregateShared('drives', $driveId);
             $this->lifecycle->assertWritable($context);
             $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
             if (!$this->tree->sameStorage($current, $driveId)) {

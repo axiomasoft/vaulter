@@ -46,7 +46,7 @@ final readonly class SetNodePropertiesAction
         $node = $this->locator->find(context: $context, key: $data->node);
 
         return $this->database->transaction(function () use ($context, $data, $node): Node {
-            $this->database->lockTreeShared($node->drive_id);
+            $this->database->lockAggregateShared('drives', $node->drive_id);
             $this->lifecycle->assertWritable($context);
             $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
             $this->sequence->assertExpected(locked: $current, expected: $data->expectedSequence);

@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
@@ -49,8 +48,8 @@ it('SEC-BACKFILL materializes bounded durable activation work and checkpoints it
     config()->set('vaulter-drive.scan.scanner_key', 'fixture');
     config()->set('vaulter-drive.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
-    $run = app(VaulterConfig::class)->model('scan_backfill_run');
-    $work = app(VaulterConfig::class)->model('scan_obligation');
+    $run = app(DriveConfig::class)->model('scan_backfill_run');
+    $work = app(DriveConfig::class)->model('scan_obligation');
     expect($run::query()->count())->toBe(1)->and($work::query()->count())->toBe(0);
     $result = app(ScanBackfillReconciler::class)->expand(1);
     expect($result['backfill_materialized'])->toBe(1)->and($work::query()->count())->toBe(1)
@@ -66,7 +65,7 @@ it('SEC-RECOVERY-bounds rejects contradictory command scope and dry run creates 
     $this->artisan('vaulter:scan:reconcile', ['--tenant' => 'a', '--all-tenants' => true])->assertExitCode(2);
     $this->artisan('vaulter:scan:rescan', ['--request-id' => 'not-a-uuid', '--dry-run' => true])->assertExitCode(2);
     $this->artisan('vaulter:scan:reconcile', ['--dry-run' => true])->assertExitCode(0);
-    $class = app(VaulterConfig::class)->model('scan_obligation');
+    $class = app(DriveConfig::class)->model('scan_obligation');
     expect($class::query()->count())->toBe(0);
 });
 
@@ -115,7 +114,7 @@ it('SEC-R13 outer rollback removes admission work revision and queued publicatio
     } finally {
         fclose($stream);
     }
-    $class = app(VaulterConfig::class)->model('scan_obligation');
+    $class = app(DriveConfig::class)->model('scan_obligation');
     expect($class::query()->count())->toBe(0)->and(FileRevision::query()->count())->toBe(0)
         ->and($drive->refresh()->scan_admission_sequence)->toBe(0);
     Bus::assertNothingDispatched();
@@ -191,7 +190,7 @@ it('SEC-RECOVERY-bounds signed cursors resume one revision and reject signature 
     $cursor = $first['next_cursor'];
     $tampered = substr($cursor, 0, -1).(str_ends_with($cursor, '0') ? '1' : '0');
     expect(Artisan::call('vaulter:scan:rescan', [...$options, '--after' => $tampered]))->toBe(2);
-    $class = app(VaulterConfig::class)->model('scan_obligation');
+    $class = app(DriveConfig::class)->model('scan_obligation');
     expect($class::query()->count())->toBe(1);
     expect(Artisan::call('vaulter:scan:rescan', [...$options, '--after' => $cursor]))->toBe(0);
     expect($class::query()->count())->toBe(2);
@@ -217,7 +216,7 @@ it('SEC-BACKFILL new content preparation retains legacy work at same spec all co
     app(ScanBackfillReconciler::class)->expand();
     app(ScanBackfillReconciler::class)->expand();
     expect($revision->scanObligations()->count())->toBe(1);
-    $runClass = app(VaulterConfig::class)->model('scan_backfill_run');
+    $runClass = app(DriveConfig::class)->model('scan_backfill_run');
     $before = $runClass::query()->firstOrFail();
     expect($before->state)->toBe('completed');
     config()->set('vaulter-drive.scan.mode', 'all_content');
@@ -312,7 +311,7 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
         app(VaulterDatabase::class)->write(fn () => $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save());
         $bus = Mockery::mock(Dispatcher::class);
         $bus->shouldReceive('dispatch')->andThrow(new RuntimeException('broker unavailable'));
-        $publisher = new ScanWorkReconciler(database: app(VaulterDatabase::class), config: app(VaulterConfig::class), driveConfig: app(DriveConfig::class), work: app(ScanObligationRepository::class), recover: app(RecoverScanWorkAction::class), supersede: app(SupersedeScanWorkAction::class), policies: app(ScanPolicyResolver::class), bus: $bus);
+        $publisher = new ScanWorkReconciler(database: app(VaulterDatabase::class), config: app(DriveConfig::class), driveConfig: app(DriveConfig::class), work: app(ScanObligationRepository::class), recover: app(RecoverScanWorkAction::class), supersede: app(SupersedeScanWorkAction::class), policies: app(ScanPolicyResolver::class), bus: $bus);
         $before = now('UTC')->getTimestamp();
         $publisher->reconcile();
         $available = $work->refresh()->available_at->getTimestamp();
@@ -394,7 +393,7 @@ it('SEC-RECOVERY-remaining-due counts all still-due work whatever the batch limi
         app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, $name.'.txt', 'text/plain'));
         fclose($stream);
     }
-    $class = app(VaulterConfig::class)->model('scan_obligation');
+    $class = app(DriveConfig::class)->model('scan_obligation');
     app(VaulterDatabase::class)->write(fn () => $class::query()->update(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()]));
 
     // The count must not inherit the batch's ORDER BY/LIMIT (PostgreSQL rejects ORDER BY on a bare aggregate).

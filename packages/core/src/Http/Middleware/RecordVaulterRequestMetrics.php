@@ -18,7 +18,7 @@ use Vaulter\Support\LoadTier;
 #[Internal]
 final readonly class RecordVaulterRequestMetrics
 {
-    public function __construct(private MetricsRecorder $metrics) {}
+    public function __construct(private MetricsRecorder $metrics, private VaulterHttpOperationMap $operations) {}
 
     /**
      * @param Closure(Request): Response $next
@@ -55,7 +55,7 @@ final readonly class RecordVaulterRequestMetrics
     {
         $name = $request->route()?->getName();
 
-        return is_string($name) ? VaulterHttpOperationMap::operationFor($name) : null;
+        return is_string($name) ? $this->operations->operationFor($name) : null;
     }
 
     private function outcomeFor(int $status): string

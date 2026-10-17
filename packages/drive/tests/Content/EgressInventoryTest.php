@@ -21,5 +21,5 @@ it('SEC-R17 inventory keeps descriptors metadata-only and installed delivery med
         expect($source)->toBeString()->not->toContain('->temporaryUrl(', '->setNotModified(', '->isNotModified(', 'HTTP_NOT_MODIFIED');
     }
     expect(file_get_contents($root.'/packages/drive/src/Operations/FileOperations.php'))->toContain('$this->delivery->stream(');
-    expect(file_get_contents($root.'/packages/core/src/Http/Support/DownloadHeaders.php'))->toContain('private, no-store');
+    expect(file_get_contents($root.'/packages/drive/src/Http/Support/DownloadHeaders.php'))->toContain('private, no-store');
 });

@@ -8,8 +8,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Content\ScanRequest;
 
@@ -21,7 +21,7 @@ use Vaulter\Drive\Models\Content\ScanRequest;
 #[Internal]
 final readonly class ScanObligationRepository
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database) {}
+    public function __construct(private DriveConfig $config, private VaulterDatabase $database) {}
 
     public function find(int|string $id): ?ScanObligation
     {

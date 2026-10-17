@@ -12,6 +12,7 @@ use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
+use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
 /** The tables the drive module owns: drives, the node tree, files and their revisions, scan work, grants and shares, uploads, activity and the change journal. */
 #[Internal]
@@ -41,6 +42,46 @@ final class DriveSchema implements ModuleSchema
             'activity',
             'drive_change_heads',
             'drive_changes',
+        ];
+    }
+
+    /** @return list<KeyColumnExpectation> the key columns of the module's tables and the kind each must have: `HK` host key, `REF` entity id, `STRING` of a length */
+    public function keyColumns(): array
+    {
+        return [
+            new KeyColumnExpectation('drives', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('drives', 'owner_id', 'HK'),
+            new KeyColumnExpectation('drives', 'created_by', 'HK'),
+            new KeyColumnExpectation('nodes', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('nodes', 'trashed_by', 'HK'),
+            new KeyColumnExpectation('nodes', 'created_by', 'HK'),
+            new KeyColumnExpectation('nodes', 'updated_by', 'HK'),
+            new KeyColumnExpectation('nodes', 'content_modified_by', 'HK'),
+            new KeyColumnExpectation('files', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('files', 'created_by', 'HK'),
+            new KeyColumnExpectation('file_revisions', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('file_revisions', 'created_by', 'HK'),
+            new KeyColumnExpectation('node_grants', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('node_grants', 'subject_id', 'HK'),
+            new KeyColumnExpectation('node_grants', 'granted_by', 'HK'),
+            new KeyColumnExpectation('node_shares', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('node_shares', 'granted_by', 'HK'),
+            new KeyColumnExpectation('node_user_states', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('node_user_states', 'actor_id', 'HK'),
+            new KeyColumnExpectation('upload_sessions', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('upload_sessions', 'created_by', 'HK'),
+            new KeyColumnExpectation('activity', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('activity', 'actor_id', 'HK'),
+            new KeyColumnExpectation('nodes', 'drive_id', 'REF'),
+            new KeyColumnExpectation('node_user_states', 'node_id', 'REF'),
+            new KeyColumnExpectation('file_revision_blobs', 'file_revision_id', 'REF'),
+            new KeyColumnExpectation('upload_sessions', 'drive_id', 'REF'),
+            new KeyColumnExpectation('upload_sessions', 'target_node_id', 'REF'),
+            new KeyColumnExpectation('upload_sessions', 'result_node_id', 'REF'),
+            new KeyColumnExpectation('upload_sessions', 'result_revision_id', 'REF'),
+            new KeyColumnExpectation('activity', 'drive_id', 'REF'),
+            new KeyColumnExpectation('drives', 'profile', 'STRING', 64),
+            new KeyColumnExpectation('activity', 'event_id', 'STRING', 26),
         ];
     }
 

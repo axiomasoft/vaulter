@@ -7,12 +7,12 @@ namespace Vaulter\Drive\Repositories\Activity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Events\EventTypeContract;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side queries over v_activity. The feed is scoped to a
@@ -28,7 +28,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 final class ActivityReadRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
     ) {}
 
     /**

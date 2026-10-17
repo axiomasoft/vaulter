@@ -8,10 +8,10 @@ use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Drive\ValueObjects\Events\JournalEffect;
-use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * copy_current also writes direct grants; each of those is its own grant.created.
  */
 #[Api]
-final readonly class NodeInheritanceChanged extends DomainEvent
+final readonly class NodeInheritanceChanged extends DriveEvent
 {
     #[Internal]
     public function __construct(

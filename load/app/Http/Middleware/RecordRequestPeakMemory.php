@@ -57,6 +57,6 @@ final readonly class RecordRequestPeakMemory
             $path = ltrim(substr($path, strlen($prefix)), '/');
         }
 
-        return VaulterHttpOperationMap::resolve(method: $request->method(), pathAfterPrefix: $path);
+        return app(VaulterHttpOperationMap::class)->resolve(method: $request->method(), pathAfterPrefix: $path);
     }
 }

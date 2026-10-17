@@ -9,13 +9,13 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
 use Vaulter\Drive\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Drive\Actions\Access\RevokeNodeAccessAction;
 use Vaulter\Drive\Actions\Access\SetNodeInheritanceAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Access\AccessOperations as Contract;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
@@ -38,7 +38,7 @@ use Vaulter\Operations\OperationSpec;
 final readonly class AccessOperations implements Contract
 {
     #[Internal]
-    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private VaulterConfig $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance, private AccessSnapshotMapper $grantMapper, private NodeSnapshotMapper $nodeMapper, private OperationRunner $runner) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private DriveConfig $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance, private AccessSnapshotMapper $grantMapper, private NodeSnapshotMapper $nodeMapper, private OperationRunner $runner) {}
 
     /** @return list<GrantSnapshot> */
     public function grants(NodeSnapshot|string|int $node): array

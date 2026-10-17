@@ -2,25 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Testing;
+namespace Vaulter\Drive\Testing;
 
 use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Api;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Events\EventTypeContract;
+use Vaulter\Support\Identity;
 
 /**
  * Test helpers for an application that embeds Vaulter. Everything goes through the
@@ -61,7 +63,7 @@ trait InteractsWithVaulter
             $faked[$name] = Storage::fake($name);
         }
 
-        $default = App::make(ProfileRegistry::class)->default()->getDisk() ?? (string) Config::get('filesystems.default', 'local');
+        $default = App::make(ProfileRegistry::class)->default()->getDisk() ?? Config::string('filesystems.default', 'local');
 
         return $faked[$default] ?? Storage::fake($default);
     }
@@ -102,10 +104,10 @@ trait InteractsWithVaulter
         Assert::assertFalse($this->vaulterNodeVisibleTo($user, $node), 'The node is visible to the actor.');
     }
 
-    /** @return Collection<int, Model> */
+    /** @return Collection<int, Activity> */
     private function vaulterEvents(EventTypeContract $type): Collection
     {
-        $activity = App::make(VaulterConfig::class)->model('activity');
+        $activity = App::make(DriveConfig::class)->model('activity');
 
         return Vaulter::withoutTenancy(static fn () => $activity::query()->where('verb', $type->value)->get());
     }
@@ -116,11 +118,11 @@ trait InteractsWithVaulter
      */
     private function vaulterNodeVisibleTo(Authorizable $user, Node|string $node): bool
     {
-        $row = $node instanceof Node ? $node : Vaulter::withoutTenancy(static fn () => App::make(VaulterConfig::class)->model('node')::query()->find($node));
+        $row = $node instanceof Node ? $node : Vaulter::withoutTenancy(static fn () => App::make(DriveConfig::class)->model('node')::query()->find($node));
         Assert::assertInstanceOf(Node::class, $row, 'The node does not exist, so its visibility is not defined.');
 
         try {
-            Vaulter::drive($row->storage)->actingAs($user)->nodes()->find($row->getKey());
+            Vaulter::drive($row->storage)->actingAs($user)->nodes()->find(Identity::stringify($row->getKey()));
         } catch (NodeNotFoundException) {
             return false;
         }

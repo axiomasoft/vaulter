@@ -4407,6 +4407,29 @@
             "id": "problem:webhook_endpoint_not_found",
             "kind": "protocol",
             "reason": "P4.13: the source of the format or code is the webhooks package; the format and the code are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "morph:Vaulter\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
+            "id": "morph:Vaulter\\Drive\\Tenancy\\TenancyBoundary::assertOwner#getMorphClass",
+            "kind": "protocol",
+            "reason": "P4.16: the drive/node tenant boundary moved from the kernel to the drive; the read of the owner's morph class is unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D10",
+            "from": "morph:Vaulter\\VaulterServiceProvider::bootModuleKernel#morphMap",
+            "id": "morph:Vaulter\\Drive\\Providers\\BindingsRegistrar::boot#morphMap",
+            "kind": "protocol",
+            "reason": "P4.16: the drive registers the stable morph aliases of its drive and node models (vaulter.drive, vaulter.node) when it boots; the kernel no longer knows them"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "command:vaulter:install",
+            "kind": "cli",
+            "reason": "P4.16: the permission driver is the drive's concept, so the installer no longer asks for it: the --driver option and the VAULTER_PERMISSION_DRIVER hint are gone (the drive's config and doctor own the driver choice)"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

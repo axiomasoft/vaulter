@@ -7,7 +7,6 @@ namespace Vaulter\Drive\Concerns;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Vaulter\Attributes\Api;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
@@ -31,7 +30,7 @@ trait HasDrives
         $event = method_exists(static::class, 'forceDeleted') ? 'forceDeleted' : 'deleted';
 
         static::registerModelEvent($event, static function (Model $owner): void {
-            $config = self::vaulter(VaulterConfig::class);
+            $config = self::vaulter(DriveConfig::class);
             if (!self::vaulter(DriveConfig::class)->drivesDeleteWithOwner()) {
                 return;
             }
@@ -55,7 +54,7 @@ trait HasDrives
     /** @return MorphMany<Drive, $this> */
     public function drives(): MorphMany
     {
-        return $this->morphMany(self::vaulter(VaulterConfig::class)->model('drive'), 'owner');
+        return $this->morphMany(self::vaulter(DriveConfig::class)->model('drive'), 'owner');
     }
 
     /**

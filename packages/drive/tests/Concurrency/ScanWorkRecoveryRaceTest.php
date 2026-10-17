@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\FenceScanAttemptAction;
@@ -13,6 +12,7 @@ use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
@@ -92,7 +92,7 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
         });
     }]);
     expect($outcomes[0]->ok)->toBeFalse();
-    $workClass = app(VaulterConfig::class)->model('scan_obligation');
+    $workClass = app(DriveConfig::class)->model('scan_obligation');
     $row = $workClass::query()->where('drive_id', $drive->id)->firstOrFail();
     expect($row->state)->toBe('pending')->and($row->attempt)->toBe(0);
     $recovered = ForkRace::run([function () use ($row): bool {
@@ -146,7 +146,7 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
         $outcomes = ForkRace::run([
             function () use ($drive, $context, $ready): int {
                 return app(VaulterDatabase::class)->transaction(function () use ($drive, $context, $ready): int {
-                    app(VaulterDatabase::class)->lockTreeShared($drive->id);
+                    app(VaulterDatabase::class)->lockAggregateShared('drives', $drive->id);
                     $stream = UploadTestHelpers::streamFor('before activation');
                     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'before.txt', 'text/plain'));
                     fclose($stream);
@@ -169,7 +169,7 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
                 config()->set('vaulter-drive.scan.scanner_key', 'fixture');
                 config()->set('vaulter-drive.scan.scanner_version', '1');
                 app(ScanPolicyResolver::class)->initialize($drive, $context);
-                $class = app(VaulterConfig::class)->model('scan_policy_state');
+                $class = app(DriveConfig::class)->model('scan_policy_state');
 
                 return $class::query()->where('drive_id', $drive->id)->where('predicate_key', 'global')->firstOrFail()->boundary_sequence;
             },

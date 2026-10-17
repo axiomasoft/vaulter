@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Vaulter\Attributes\Api;
 use Vaulter\Data\Page;
-use Vaulter\Drive\Data\ListOptions;
 
 /**
  * The one list envelope of the versioned API: `{data, meta: {next_cursor, per_page}}`.
@@ -46,12 +45,7 @@ final class PageResponse
         return self::envelope(array_values(array_map($map, $paginator->items())), $paginator->nextCursor()?->encode(), $paginator->perPage());
     }
 
-    /** `per_page` and `cursor` of the query string; out of range → 422 validation_failed. */
-    public static function listOptions(Request $request): ListOptions
-    {
-        return new ListOptions(perPage: self::perPage($request), cursor: self::cursor($request));
-    }
-
+    /** `per_page` of the query string; out of range → 422 validation_failed. */
     public static function perPage(Request $request): int
     {
         self::validate($request);

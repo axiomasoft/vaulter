@@ -9,11 +9,11 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Broadcast;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Collaboration\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Drive\Access\AccessResolver;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Modules\ModuleBindings;
@@ -64,7 +64,7 @@ final class CollaborationRegistrar implements ModuleBindings
             return false;
         }
 
-        $model = app(VaulterConfig::class)->model('node');
+        $model = app(DriveConfig::class)->model('node');
         $node = $model::query()->find($roomId);
 
         if (!$node instanceof Node || !$node->kind->isDocument()) {

@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Database\Factories;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Vaulter\Attributes\Api;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\CreateFolderOptions;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
@@ -69,7 +69,7 @@ final class NodeFactory extends VaulterFactory
             ? $handle->files()->upload(UploadSource::fromString($this->stateText('bytes', ''), $name), new UploadOptions(parent: $parent?->id, declaredMimeType: $this->stateString('mime')))
             : $handle->folders()->create($name, $parent?->id, new CreateFolderOptions);
 
-        $class = app(VaulterConfig::class)->model('node');
+        $class = app(DriveConfig::class)->model('node');
 
         return $this->withTenant(static fn (): Model => $class::query()->whereKey($snapshot->id)->firstOrFail());
     }

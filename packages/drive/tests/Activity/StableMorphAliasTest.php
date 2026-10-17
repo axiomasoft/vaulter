@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Drive;
@@ -56,7 +56,7 @@ it('gives the host subclass configured in vaulter-drive.models the same alias', 
 
     expect($node->getMorphClass())->toBe('vaulter.node')
         ->and($drive->getMorphClass())->toBe('vaulter.drive')
-        ->and((new (app(VaulterConfig::class)->model('node')))->getMorphClass())->toBe(Node::MORPH_ALIAS);
+        ->and((new (app(DriveConfig::class)->model('node')))->getMorphClass())->toBe(Node::MORPH_ALIAS);
 });
 
 it('is not renamed by a host morph map and is not refused by enforceMorphMap', function (): void {

@@ -12,9 +12,7 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\DocumentExporter;
@@ -26,6 +24,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
@@ -83,17 +82,12 @@ final class BindingsRegistrar implements ModuleBindings
         $config = $app->make(DocumentsConfig::class);
         $config->model('document_revision');
         $config->model('node_comment');
-        Document::configure($app->make(DatabaseConfig::class), $app->make(VaulterConfig::class), $config);
+        Document::configure($app->make(DatabaseConfig::class), $app->make(DriveConfig::class), $config);
         // Core reads a document head through this relation without depending on
         // the documents package; subclasses of the configured node model inherit it.
         Node::resolveRelationUsing('document', static fn (Node $node): HasOne => $node->hasOne(Document::class, 'node_id'));
         $config->assertDistinctHubSecrets();
-        ConfigValidator::assertCollaborationSecrets(
-            enabled: $config->collaborationEnabled(),
-            jwtSecret: $config->hubJwtSecret(),
-            webhookSecret: $config->hubWebhookSecret(),
-            app: $app,
-        );
+        $config->assertCollaborationSecrets($app);
 
         self::bootDocumentTypes($app, $config);
         self::bootDocumentExporters($app, $config);

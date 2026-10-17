@@ -7,7 +7,7 @@ namespace Vaulter\Drive\ValueObjects\Events;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Changes\ChangeOperation;
 use Vaulter\Drive\Enums\Changes\ChangeReason;
-use Vaulter\Events\DomainEvent;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Support\Identity;
 
 /**
@@ -16,7 +16,7 @@ use Vaulter\Support\Identity;
  * re-read the folder's subtree, because the change reaches every descendant (a move,
  * a copy, a restore, an access change).
  *
- * @see DomainEvent::journal()
+ * @see DriveEvent::journal()
  */
 #[Internal]
 final readonly class JournalEffect

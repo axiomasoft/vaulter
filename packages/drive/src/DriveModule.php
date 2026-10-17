@@ -6,6 +6,7 @@ namespace Vaulter\Drive;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
+use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Doctor\Checks\RoutesAuthCheck;
 use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
@@ -59,6 +60,7 @@ use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Drive\Handlers\NodePresenter as CoreNodePresenter;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
+use Vaulter\Drive\Http\Support\DriveRouteLabels;
 use Vaulter\Drive\Providers\AccessRegistrar;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Providers\DriveSliceRegistrar;
@@ -145,6 +147,7 @@ final class DriveModule implements OwnsSchema, VaulterModule
             ->events(DriveEventType::class)
             ->slot(EventSink::class, ActivitySink::class, 'drive.activity')
             ->slot(EventSink::class, ChangeJournalSink::class, 'drive.changes')
+            ->slot(RouteLabelSource::class, DriveRouteLabels::class, 'drive.routes')
             ->bindings(DriveSliceRegistrar::class)
             ->bindings(AccessRegistrar::class)
             ->bindings(BindingsRegistrar::class)

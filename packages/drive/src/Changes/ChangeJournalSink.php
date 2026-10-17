@@ -6,7 +6,8 @@ namespace Vaulter\Drive\Changes;
 
 use Illuminate\Contracts\Container\Container;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\SinkResult;
@@ -21,13 +22,13 @@ use Vaulter\Events\SinkWriter;
 final readonly class ChangeJournalSink implements EventSink
 {
     public function __construct(
-        private VaulterConfig $config,
+        private DriveConfig $config,
         private Container $container,
     ) {}
 
     public function record(DomainEvent $event, SinkWriter $writer): SinkResult
     {
-        $journal = $this->config->featureEnabled('changes') ? $event->journal() : null;
+        $journal = $event instanceof DriveEvent && $this->config->featureEnabled('changes') ? $event->journal() : null;
         if ($journal === null) {
             return SinkResult::Skipped;
         }

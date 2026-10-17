@@ -21,8 +21,8 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]
 final readonly class OperationGuard

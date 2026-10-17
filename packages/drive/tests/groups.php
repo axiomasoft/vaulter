@@ -35,6 +35,8 @@ return [
         'PublicApi/LifecycleBoundaryTest.php',
         'PublicApi/NodeSequenceContractTest.php',
         'Content/ScanEvidenceBoundaryTest.php',
+        'Tenancy/TenantIdentifierPredicateTest.php',
+        'Tenancy/TenantProvisioningRaceTest.php',
     ],
     // Every forked race of the Concurrency folder (CompleteUploadRetryTest does not fork: it stays in the parallel lane).
     'serial' => [
@@ -57,6 +59,7 @@ return [
         'Concurrency/TreeLockRaceTest.php',
         'Concurrency/TusConcurrentPatchTest.php',
         'Concurrency/TusPatchVsSweepRaceTest.php',
+        'Tenancy/TenantProvisioningRaceTest.php',
     ],
     'extended' => [],
     'stand' => [],
@@ -80,5 +83,6 @@ return [
         'Concurrency/ScanWorkRecoveryRaceTest.php',
         'Concurrency/TreeLockRaceTest.php',
         'Concurrency/TusPatchVsSweepRaceTest.php',
+        'Tenancy/TenantProvisioningRaceTest.php',
     ],
 ];

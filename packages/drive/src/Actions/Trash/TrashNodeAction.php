@@ -37,7 +37,7 @@ final readonly class TrashNodeAction
         $node = app(NodeLocator::class)->find(context: $context, key: $data->node, includeTrashed: true);
 
         return $this->database->transaction(function () use ($node, $data, $context): Node {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $this->lifecycle->assertWritable($context);
             $locked = $this->tree->lock(array_values($this->nodes->subtree($node)->modelKeys()));
             $current = $this->tree->locked($locked, $node->id);

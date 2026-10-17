@@ -9,10 +9,10 @@ use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Drive\ValueObjects\Events\JournalEffect;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -24,7 +24,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * content validators the write produced (state_version, collab_epoch).
  */
 #[Api]
-final readonly class DocumentCreated extends DomainEvent
+final readonly class DocumentCreated extends DriveEvent
 {
     #[Internal]
     public function __construct(

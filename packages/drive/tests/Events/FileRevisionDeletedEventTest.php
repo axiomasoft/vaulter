@@ -8,9 +8,9 @@ use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Events\EventConformance;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Testing\Events\EventConformance;
 use Vaulter\Testing\Support\CanonicalJson;
 
 /**

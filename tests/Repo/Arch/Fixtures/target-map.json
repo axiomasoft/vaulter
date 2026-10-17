@@ -1046,6 +1046,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Contracts/Routing/RouteLabelSource.php",
+            "fqcn": "Vaulter\\Contracts\\Routing\\RouteLabelSource",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Contracts\\Routing\\RouteLabelSource",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Contracts\\Routing\\RouteLabelSource"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Contracts/Tenancy/ResolvesOwnerTenant.php",
             "fqcn": "Vaulter\\Contracts\\Tenancy\\ResolvesOwnerTenant",
             "kind": "interface",
@@ -3271,6 +3285,20 @@
         },
         {
             "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Http/Support/DocumentsRouteLabels.php",
+            "fqcn": "Vaulter\\Documents\\Http\\Support\\DocumentsRouteLabels",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Http\\Support\\DocumentsRouteLabels"
+        },
+        {
+            "action": "keep",
             "eloquent": true,
             "file": "packages/documents/src/Models/Comments/NodeComment.php",
             "fqcn": "Vaulter\\Documents\\Models\\Comments\\NodeComment",
@@ -4640,6 +4668,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveConfig"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Configuration/DriveConfigValidator.php",
+            "fqcn": "Vaulter\\Drive\\Configuration\\DriveConfigValidator",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Configuration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Configuration\\DriveConfigValidator"
         },
         {
             "action": "keep",
@@ -6940,6 +6982,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Events/DriveEvent.php",
+            "fqcn": "Vaulter\\Drive\\Events\\DriveEvent",
+            "kind": "abstract-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Events\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Events\\DriveEvent"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Events/Drives/DriveArchived.php",
             "fqcn": "Vaulter\\Drive\\Events\\Drives\\DriveArchived",
             "kind": "final-class",
@@ -9166,6 +9222,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Http/Support/DownloadHeaders.php",
+            "fqcn": "Vaulter\\Drive\\Http\\Support\\DownloadHeaders",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Http\\Support\\DownloadHeaders"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Http/Support/DriveRouteLabels.php",
+            "fqcn": "Vaulter\\Drive\\Http\\Support\\DriveRouteLabels",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Http\\Support\\DriveRouteLabels"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Http/Support/HttpOperationContextFactory.php",
             "fqcn": "Vaulter\\Drive\\Http\\Support\\HttpOperationContextFactory",
             "kind": "final-class",
@@ -9190,6 +9274,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Http\\Support\\HttpResourceResolver"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Http/Support/ListQuery.php",
+            "fqcn": "Vaulter\\Drive\\Http\\Support\\ListQuery",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Http\\Support\\ListQuery"
         },
         {
             "action": "keep",
@@ -9232,6 +9330,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Idempotency\\NodeSnapshotCodec"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Jobs/Middleware/RestoreTenantContext.php",
+            "fqcn": "Vaulter\\Drive\\Jobs\\Middleware\\RestoreTenantContext",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Jobs\\Middleware\\RestoreTenantContext"
         },
         {
             "action": "keep",
@@ -10720,6 +10832,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Tenancy/TenancyBoundary.php",
+            "fqcn": "Vaulter\\Drive\\Tenancy\\TenancyBoundary",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Tenancy\\TenancyBoundary"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Testing/Access/AccessTestHelpers.php",
             "fqcn": "Vaulter\\Drive\\Testing\\Access\\AccessTestHelpers",
             "kind": "final-class",
@@ -10828,6 +10954,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\Testing\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Testing\\Drive\\DriveTestHelpers"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Testing/Events/EventConformance.php",
+            "fqcn": "Vaulter\\Drive\\Testing\\Events\\EventConformance",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Testing\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Testing\\Events\\EventConformance"
         },
         {
             "action": "keep",
@@ -10982,6 +11122,20 @@
             "rule": "other-packages:prefix:Vaulter\\Drive\\Testing\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Testing\\Http\\V1"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/drive/src/Testing/InteractsWithVaulter.php",
+            "fqcn": "Vaulter\\Drive\\Testing\\InteractsWithVaulter",
+            "kind": "trait",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Testing\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Drive\\Testing\\InteractsWithVaulter"
         },
         {
             "action": "keep",
@@ -12510,20 +12664,6 @@
             "target_fqcn": "Vaulter\\Http\\Resources\\PageResponse"
         },
         {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Http/Support/DownloadHeaders.php",
-            "fqcn": "Vaulter\\Http\\Support\\DownloadHeaders",
-            "kind": "final-class",
-            "note": "open: used for downloads only today; moves to drive if the kernel does not consume it (P4)",
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Http\\Support\\DownloadHeaders",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Http\\Support\\DownloadHeaders"
-        },
-        {
             "action": "split",
             "eloquent": false,
             "file": "packages/core/src/Http/Support/Preconditions.php",
@@ -12718,20 +12858,6 @@
             "rule": "core-kernel:prefix:Vaulter\\Idempotency\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Idempotency\\StoredReceipt"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Jobs/Middleware/RestoreTenantContext.php",
-            "fqcn": "Vaulter\\Jobs\\Middleware\\RestoreTenantContext",
-            "kind": "final-class",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Jobs\\Middleware\\RestoreTenantContext",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Jobs\\Middleware\\RestoreTenantContext"
         },
         {
             "action": "keep",
@@ -14276,20 +14402,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Tenancy/TenancyBoundary.php",
-            "fqcn": "Vaulter\\Tenancy\\TenancyBoundary",
-            "kind": "final-class",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:fqcn:Vaulter\\Tenancy\\TenancyBoundary",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Tenancy\\TenancyBoundary"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/core/src/Tenancy/TenancyBypass.php",
             "fqcn": "Vaulter\\Tenancy\\TenancyBypass",
             "kind": "final-class",
@@ -14430,20 +14542,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/core/src/Testing/Events/EventConformance.php",
-            "fqcn": "Vaulter\\Testing\\Events\\EventConformance",
-            "kind": "final-class",
-            "note": null,
-            "owner": "core",
-            "package": "core",
-            "phase": "stay",
-            "rule": "core-kernel:prefix:Vaulter\\Testing\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Testing\\Events\\EventConformance"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/core/src/Testing/FakeMetricsRecorder.php",
             "fqcn": "Vaulter\\Testing\\FakeMetricsRecorder",
             "kind": "final-class",
@@ -14524,20 +14622,6 @@
             "rule": "core-kernel:prefix:Vaulter\\Testing\\Fixtures\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Testing\\Fixtures\\TestUser"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/core/src/Testing/InteractsWithVaulter.php",
-            "fqcn": "Vaulter\\Testing\\InteractsWithVaulter",
-            "kind": "trait",
-            "note": "must not reference package tests or internal domain types (architecture#ownership-map); P3 splits drive-specific parts",
-            "owner": "core",
-            "package": "core",
-            "phase": "P3",
-            "rule": "core-kernel:fqcn:Vaulter\\Testing\\InteractsWithVaulter",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Testing\\InteractsWithVaulter"
         },
         {
             "action": "keep",

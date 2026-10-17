@@ -30,7 +30,7 @@ use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Drive\Support\ShareToken;
 use Vaulter\Drive\Tenancy\ShareTenantContext;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 
 /**
  * Resolves a bearer share-token into a {@see ShareContext} — the

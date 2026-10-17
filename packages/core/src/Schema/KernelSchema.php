@@ -8,6 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
+use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
 /** The tables the kernel owns: the transactional outbox, its consumers and deliveries, and the idempotency keys. */
 #[Internal]
@@ -23,6 +24,14 @@ final class KernelSchema implements ModuleSchema
             'outbox_consumers',
             'outbox_deliveries',
             'idempotency_keys',
+        ];
+    }
+
+    /** @return list<KeyColumnExpectation> the key columns of the module's tables and the kind each must have: `HK` host key, `REF` entity id, `STRING` of a length */
+    public function keyColumns(): array
+    {
+        return [
+            new KeyColumnExpectation('outbox', 'aggregate_id', 'STRING', 64),
         ];
     }
 

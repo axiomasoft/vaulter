@@ -18,6 +18,7 @@ use Vaulter\Console\PruneOutboxCommand;
 use Vaulter\Console\RelayCommand;
 use Vaulter\Console\RelayReplayCommand;
 use Vaulter\Contracts\Doctor\DoctorCheck;
+use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Doctor\Checks\CacheCheck;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Doctor\Checks\DatabaseConnectionCheck;
@@ -132,6 +133,7 @@ final class CoreModule implements OwnsSchema, VaulterModule
             ->defineSlot(OperationMiddleware::class, SlotKind::OperationMiddleware, Cardinality::Many)
             ->defineSlot(EventSink::class, SlotKind::EventSink, Cardinality::Many)
             ->defineSlot(OutboxConsumer::class, SlotKind::OutboxConsumer, Cardinality::Many)
+            ->defineSlot(RouteLabelSource::class, SlotKind::Contributor, Cardinality::Many)
             ->slot(OperationMiddleware::class, TelemetryMiddleware::class, 'core.telemetry');
 
         foreach (self::DOCTOR_CHECKS as $key => $check) {

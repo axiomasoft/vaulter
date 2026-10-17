@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Support;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\DriveArchivedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -25,9 +25,9 @@ use Vaulter\Drive\Operations\DriveContext;
 #[Internal]
 final readonly class DriveLifecycle
 {
-    public function __construct(private VaulterConfig $config) {}
+    public function __construct(private DriveConfig $config) {}
 
-    /** Call right after lockTree()/lockTreeShared(), inside the Action's transaction. */
+    /** Call right after lockAggregate()/lockAggregateShared(), inside the Action's transaction. */
     public function assertWritable(DriveContext $context): void
     {
         $system = $context->actor->isSystem();

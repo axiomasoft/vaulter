@@ -39,10 +39,10 @@ use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Kernel;
 use Vaulter\Modules\MissingExtensionException;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 #[Api]

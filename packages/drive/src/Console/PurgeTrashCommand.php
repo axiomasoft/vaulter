@@ -68,7 +68,7 @@ final class PurgeTrashCommand extends Command
                         : ($this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $this->driveConfig->trashRetentionDays());
                     $threshold = Carbon::now()->subDays($days);
                     $purged = $this->database->transaction(function () use ($node, $context, $threshold, $nodes, $store, $purge): int {
-                        $this->database->lockTree($context->driveId());
+                        $this->database->lockAggregate('drives', $context->driveId());
                         $locked = $store->lockTrashedRoot(Identity::key($node->getKey()), $threshold);
                         if ($locked === null) {
                             return 0;

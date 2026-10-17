@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Repositories;
 
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side lookups over v_drives. The get-or-create entry point is the
@@ -28,7 +28,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 final class DriveReadRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
     ) {}
 
     /** @var array<string, Drive|null> */

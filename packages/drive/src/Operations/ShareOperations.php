@@ -8,12 +8,12 @@ use Closure;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Drive\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Drive\Actions\Sharing\RotateShareLinkAction;
 use Vaulter\Drive\Actions\Sharing\UpdateShareLinkAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Sharing\ShareOperations as Contract;
 use Vaulter\Drive\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Drive\Data\Sharing\RevokeShareInput;
@@ -37,7 +37,7 @@ use Vaulter\Operations\OperationSpec;
 final readonly class ShareOperations implements Contract
 {
     #[Internal]
-    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private VaulterConfig $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper, private OperationRunner $runner) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private DriveConfig $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     /** @return list<ShareLinkSnapshot> */
     public function list(NodeSnapshot|string|int $node): array

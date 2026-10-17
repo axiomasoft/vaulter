@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Jobs\Middleware;
+namespace Vaulter\Drive\Jobs\Middleware;
 
 use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
@@ -10,8 +10,8 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Auth;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Tenancy\TenancyBypass;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;

@@ -11,6 +11,7 @@ use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
+use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
 /** The tables the documents module owns: node comments, documents and their revisions. */
 #[Internal]
@@ -25,6 +26,21 @@ final class DocumentsSchema implements ModuleSchema
             'node_comments',
             'documents',
             'document_revisions',
+        ];
+    }
+
+    /** @return list<KeyColumnExpectation> the key columns of the module's tables and the kind each must have: `HK` host key, `REF` entity id, `STRING` of a length */
+    public function keyColumns(): array
+    {
+        return [
+            new KeyColumnExpectation('node_comments', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('node_comments', 'author_id', 'HK'),
+            new KeyColumnExpectation('node_comments', 'resolved_by', 'HK'),
+            new KeyColumnExpectation('documents', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('documents', 'created_by', 'HK'),
+            new KeyColumnExpectation('documents', 'updated_by', 'HK'),
+            new KeyColumnExpectation('document_revisions', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('document_revisions', 'created_by', 'HK'),
         ];
     }
 

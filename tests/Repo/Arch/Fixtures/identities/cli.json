@@ -84,6 +84,13 @@
             "id": "command:vaulter:webhooks:retry",
             "kind": "cli",
             "reason": "P4.13: the command class moved to vaulter-webhooks (Vaulter\\Webhooks\\Console); the name and the signature are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D10",
+            "id": "command:vaulter:install",
+            "kind": "cli",
+            "reason": "P4.16: the permission driver is the drive's concept, so the installer no longer asks for it: the --driver option and the VAULTER_PERMISSION_DRIVER hint are gone (the drive's config and doctor own the driver choice)"
         }
     ],
     "items": [
@@ -580,15 +587,6 @@
                     "default": null,
                     "description": "Auth middleware for the authenticated route stack, e.g. auth:sanctum",
                     "name": "middleware",
-                    "shortcut": null,
-                    "value_required": false
-                },
-                {
-                    "accepts_value": true,
-                    "array": false,
-                    "default": null,
-                    "description": "Permission driver: database|gate|spatie|<name from access.permission_drivers>",
-                    "name": "driver",
                     "shortcut": null,
                     "value_required": false
                 },

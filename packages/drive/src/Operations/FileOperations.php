@@ -181,7 +181,7 @@ final readonly class FileOperations implements Contract
     private function uploadSibling(Node $parent, string $name): ?Node
     {
         return $this->database->transaction(function () use ($parent, $name): ?Node {
-            $this->database->lockTreeShared($this->context->driveId());
+            $this->database->lockAggregateShared('drives', $this->context->driveId());
             $locked = $this->tree->locked($this->tree->lock([$parent->id]), $parent->id);
             $this->tree->assertActiveFolder($locked);
 

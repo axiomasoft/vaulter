@@ -15,6 +15,7 @@ use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Providers\BindingsRegistrar as DriveBindingsRegistrar;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -162,14 +163,15 @@ it('samples drives without a single root and limits the sample', function (): vo
 });
 
 it('lists every failing validator, not the first one', function (): void {
-    config(['vaulter-drive.models.drive' => stdClass::class, 'vaulter-drive.access.permission_driver' => 'nonexistent']);
+    // A kernel section and a drive section are both wrong: each validator reports its own, the kernel's as `core`.
+    config(['vaulter.idempotency.ttl_seconds' => 0, 'vaulter-drive.models.drive' => stdClass::class, 'vaulter-drive.access.permission_driver' => 'nonexistent']);
 
     $findings = coreFindings('core.config.valid');
 
-    expect($findings)->toHaveCount(1)
-        ->and($findings[0]->severity)->toBe(DoctorSeverity::Error)
-        ->and($findings[0]->code)->toBe('core.config.invalid')
-        ->and($findings[0]->evidence['validator'])->toBe('core');
+    expect($findings)->toHaveCount(2)
+        ->and(array_map(static fn (DoctorFinding $finding): string => $finding->severity->name, $findings))->toBe(['Error', 'Error'])
+        ->and(array_map(static fn (DoctorFinding $finding): string => $finding->code, $findings))->toBe(['core.config.invalid', 'core.config.invalid'])
+        ->and(array_map(static fn (DoctorFinding $finding): string => $finding->evidence['validator'], $findings))->toBe(['core', DriveBindingsRegistrar::class]);
 });
 
 it('runs the validators the other packages tag', function (): void {

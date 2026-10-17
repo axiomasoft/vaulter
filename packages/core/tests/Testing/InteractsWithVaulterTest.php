@@ -9,8 +9,8 @@ use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Contracts\PermissionFixture;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\InteractsWithVaulter;
 use Vaulter\Testing\Fixtures\FixtureActor;
-use Vaulter\Testing\InteractsWithVaulter;
 
 uses(InteractsWithVaulter::class);
 

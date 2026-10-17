@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Database\Factories\DriveFactory;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -95,7 +95,7 @@ class Drive extends Model
      */
     public function nodes(): HasMany
     {
-        return $this->hasMany(app(VaulterConfig::class)->model('node'), 'drive_id');
+        return $this->hasMany(app(DriveConfig::class)->model('node'), 'drive_id');
     }
 
     /**
@@ -105,7 +105,7 @@ class Drive extends Model
      */
     public function rootNode(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'root_node_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'root_node_id');
     }
 
     /**

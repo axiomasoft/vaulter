@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Activity\ActivityRecorder;
+use Vaulter\Drive\Changes\ChangeJournalSink;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Activity\RecordActivityCommand;
 use Vaulter\Drive\Data\CopyOptions;
 use Vaulter\Drive\Data\UploadOptions;
@@ -15,6 +17,7 @@ use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Events\Access\NodeGrantRevoked;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Events\Sharing\NodeShareCreated;
 use Vaulter\Drive\Events\Sharing\NodeShareRevoked;
@@ -26,9 +29,14 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Sharing\ShareTestHelpers;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Events\EventTypeContract;
+use Vaulter\Events\SinkResult;
+use Vaulter\Events\SinkWriter;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * The append-only activity feed (§2.9 / M2c-activity). Each Drive domain event must
@@ -236,7 +244,7 @@ it('rolls the originating action back when the activity write fails', function (
     $actor = DriveTestHelpers::actor($drive, 7);
 
     // A store repository that always fails simulates a broken audit sink.
-    $this->app->bind(ActivityStoreRepository::class, fn (): ActivityStoreRepository => new class(app(VaulterConfig::class), app(VaulterDatabase::class), app(IdStrategyResolver::class)) extends ActivityStoreRepository
+    $this->app->bind(ActivityStoreRepository::class, fn (): ActivityStoreRepository => new class(app(DriveConfig::class), app(VaulterDatabase::class), app(IdStrategyResolver::class)) extends ActivityStoreRepository
     {
         #[Override]
         public function record(RecordActivityCommand $command): bool
@@ -269,4 +277,83 @@ it('degrades to null ip/user-agent/request-id off the HTTP lifecycle', function 
     expect($row->ip)->toBeNull()
         ->and($row->user_agent)->toBeNull()
         ->and($row->request_id)->toBeNull();
+});
+
+// ─────────────────────── an event of the kernel that is no DriveEvent ───────────────────────
+
+/** A DomainEvent that is no DriveEvent: it carries no activity target and no journal entry (P4.16). */
+function plainDomainEvent(string $driveId): DomainEvent
+{
+    return new readonly class(recordActivityActor(), 'corr-plain', $driveId) extends DomainEvent
+    {
+        public function __construct(ActorRef $actor, string $correlationId, private readonly string $driveId)
+        {
+            parent::__construct($actor, $correlationId);
+        }
+
+        public function type(): EventTypeContract
+        {
+            return DriveEventType::DriveCreated;
+        }
+
+        public function scope(): EventScope
+        {
+            return new EventScope(tenantId: null, driveId: $this->driveId, profile: 'default');
+        }
+
+        public function subject(): EventSubject
+        {
+            return new EventSubject(type: 'drive', id: $this->driveId);
+        }
+
+        public function data(): array
+        {
+            return ['name' => 'plain'];
+        }
+    };
+}
+
+it('records an activity row without a target for an event that is no DriveEvent, and journals nothing for it', function (): void {
+    $storage = DriveTestHelpers::drive()->model();
+    Activity::query()->delete();
+    $event = plainDomainEvent((string) $storage->getKey());
+
+    $inserted = app(ActivityRecorder::class)->record($event);
+    $sink = (new ChangeJournalSink(app(DriveConfig::class), app()))->record($event, new SinkWriter(app(VaulterDatabase::class)));
+
+    $row = ActivityTestHelpers::only(DriveEventType::DriveCreated->value);
+
+    expect($inserted)->toBeTrue()
+        ->and($row->target_id)->toBeNull()
+        ->and($row->target_type)->toBeNull()
+        ->and($sink)->toBe(SinkResult::Skipped)
+        ->and($event instanceof DriveEvent)->toBeFalse();
+});
+
+it('gives a DriveEvent a null activity target and no journal entry until it names them', function (): void {
+    $event = new readonly class(recordActivityActor(), 'corr-bare') extends DriveEvent
+    {
+        public function type(): EventTypeContract
+        {
+            return DriveEventType::DriveCreated;
+        }
+
+        public function scope(): EventScope
+        {
+            return new EventScope(tenantId: null, driveId: null, profile: 'default');
+        }
+
+        public function subject(): EventSubject
+        {
+            return new EventSubject(type: 'drive', id: 'd');
+        }
+
+        public function data(): array
+        {
+            return [];
+        }
+    };
+
+    expect($event->activityTarget())->toBeNull()
+        ->and($event->journal())->toBeNull();
 });

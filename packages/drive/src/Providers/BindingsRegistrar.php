@@ -7,10 +7,12 @@ namespace Vaulter\Drive\Providers;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\DriveConfigValidator;
 use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\DocumentPurgeLifecycle;
 use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
@@ -21,6 +23,7 @@ use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
@@ -40,6 +43,7 @@ final class BindingsRegistrar implements ModuleBindings
     {
         $app->singleton(DriveConfig::class, static fn (Container $app): DriveConfig => new DriveConfig($app->make('config')));
         $app->bind(ScanWorkSettings::class, DriveConfig::class);
+        $app->bind(TenancyBoundary::class);
 
         $app->singleton(ScanPolicyResolver::class, \Vaulter\Drive\Content\ScanPolicyResolver::class);
         $app->singleton(\Vaulter\Drive\Content\ScanPolicyResolver::class);
@@ -51,6 +55,7 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(UploadSessionManager::class);
         $app->bind('vaulter.config_validator.drive', static fn (Container $app): Closure => static function () use ($app): void {
             $config = $app->make(DriveConfig::class);
+            (new DriveConfigValidator($app->make('config')))->validate($config, $app->make(Application::class));
             $config->model('upload_session');
             $config->model('upload_part');
             $config->validateScanWork();
@@ -131,8 +136,17 @@ final class BindingsRegistrar implements ModuleBindings
     public function boot(Application $app): void
     {
         $config = $app->make(DriveConfig::class);
+        (new DriveConfigValidator($app->make('config')))->validate($config, $app);
         $config->model('upload_session');
         $config->model('upload_part');
+        // The stable morph aliases (`vaulter.node`, `vaulter.drive`) are stored in polymorphic columns, so a host's
+        // morphTo() must resolve them to the configured model classes. Merged into the host's map once every
+        // provider booted (never replacing it), and without enforceMorphMap().
+        $app->booted(static function () use ($config): void {
+            $drive = $config->model('drive');
+            $node = $config->model('node');
+            Relation::morphMap([$drive::MORPH_ALIAS => $drive, $node::MORPH_ALIAS => $node], merge: true);
+        });
         // Fail at boot on a bad value; the tasks themselves read the config when the scheduler resolves.
         (new ScheduleConfig($app->make('config')))->frequencies('vaulter-drive', SchedulingRegistrar::KEYS);
         // Invalid or duplicate registrations fail at application boot.

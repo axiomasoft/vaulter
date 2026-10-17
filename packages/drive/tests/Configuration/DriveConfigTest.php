@@ -3,13 +3,19 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
+use Vaulter\Drive\Configuration\ChangesConfig;
+use Vaulter\Drive\Configuration\DownloadsConfig;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Configuration\ListingConfig;
+use Vaulter\Drive\Configuration\ScanConfig;
+use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Handlers\Builtin\PreviewHandler;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Profiles\DefaultProfile;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Media\Models\Cas\Blob;
 
 it('reads drive settings live and uses the canonical byte ceiling', function (): void {
     $repository = new Repository(['vaulter-drive' => require __DIR__.'/../../config/vaulter-drive.php']);
@@ -119,14 +125,41 @@ it('resolves a swappable drive model from vaulter-drive.models and refuses a for
     $config = new DriveConfig($repository);
     $subclass = new class extends Node {};
 
-    expect($config->modelClass('node'))->toBe(Node::class);
+    expect($config->model('node'))->toBe(Node::class);
 
     $repository->set('vaulter-drive.models.node', $subclass::class);
 
-    expect($config->modelClass('node'))->toBe($subclass::class);
+    expect($config->model('node'))->toBe($subclass::class);
 
     $repository->set('vaulter-drive.models.node', stdClass::class);
 
-    expect(fn () => $config->modelClass('node'))->toThrow(InvalidConfigurationException::class, 'vaulter-drive.models.node');
-    expect(fn () => $config->modelClass('outbox'))->toThrow(InvalidConfigurationException::class, 'vaulter-drive.models.outbox');
+    expect(fn () => $config->model('node'))->toThrow(InvalidConfigurationException::class, 'vaulter-drive.models.node');
+    expect(fn () => $config->model('outbox'))->toThrow(InvalidConfigurationException::class, 'vaulter-drive.models.outbox');
+});
+
+it('resolves the upload models, the blob model of the media package and the accessors of the drive sections', function (): void {
+    $repository = new Repository([
+        'vaulter-drive' => require __DIR__.'/../../config/vaulter-drive.php',
+        'vaulter-media' => require __DIR__.'/../../../media/config/vaulter-media.php',
+    ]);
+    $config = new DriveConfig($repository);
+
+    expect($config->model('upload_session'))->toBe(UploadSession::class)
+        ->and($config->model('upload_part'))->toBe(UploadPart::class)
+        ->and($config->model('blob'))->toBe(Blob::class)
+        ->and($config->featureEnabled('changes'))->toBe($repository->get('vaulter-drive.features.changes') === true)
+        ->and($config->access()->permissionDriver())->toBeString()
+        ->and($config->scan())->toBeInstanceOf(ScanConfig::class)
+        ->and($config->listing())->toBeInstanceOf(ListingConfig::class)
+        ->and($config->sharing())->toBeInstanceOf(SharingConfig::class)
+        ->and($config->downloads())->toBeInstanceOf(DownloadsConfig::class)
+        ->and($config->changes())->toBeInstanceOf(ChangesConfig::class);
+
+    $repository->set('vaulter-drive.features.changes', false);
+
+    expect($config->featureEnabled('changes'))->toBeFalse();
+
+    $repository->set('vaulter-drive.features.changes', true);
+
+    expect($config->featureEnabled('changes'))->toBeTrue();
 });

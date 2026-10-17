@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Node;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 
 /**
  * Read-side queries over v_node_grants. It fetches the live, non-expired
@@ -25,7 +25,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 final class GrantReadRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
         private readonly TenancyBoundary $boundary,
     ) {}
 

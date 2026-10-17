@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Providers;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Configuration\AccessConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Policies\NodePolicy;
@@ -53,11 +53,11 @@ final class AccessRegistrar implements ModuleBindings
 
     private function registerPolicies(): void
     {
-        Gate::policy(app(VaulterConfig::class)->model('node'), NodePolicy::class);
+        Gate::policy(app(DriveConfig::class)->model('node'), NodePolicy::class);
 
         // Cover the base model too, so a host that route-binds the base Node (not a
         // subclass) still hits the policy.
-        if (app(VaulterConfig::class)->model('node') !== Node::class) {
+        if (app(DriveConfig::class)->model('node') !== Node::class) {
             Gate::policy(Node::class, NodePolicy::class);
         }
     }

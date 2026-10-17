@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Testing\Events;
+namespace Vaulter\Drive\Testing\Events;
 
 use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Internal;

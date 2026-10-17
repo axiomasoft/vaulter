@@ -26,7 +26,7 @@ final readonly class RecountDriveQuotaAction
     public function execute(int|string $driveId, bool $dryRun = false): array
     {
         return $this->database->transaction(function () use ($driveId, $dryRun): array {
-            $this->database->lockTree($driveId);
+            $this->database->lockAggregate('drives', $driveId);
             $drive = $this->drives->lock($driveId);
             $before = $drive->used_bytes;
             $after = $this->quota->usedBytes($drive->id);

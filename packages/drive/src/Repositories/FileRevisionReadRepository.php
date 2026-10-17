@@ -6,11 +6,11 @@ namespace Vaulter\Drive\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\File;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 
 /**
  * Read-side lookups over the immutable v_file_revisions for the HTTP layer:
@@ -25,7 +25,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 final class FileRevisionReadRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
     ) {}
 
     /**

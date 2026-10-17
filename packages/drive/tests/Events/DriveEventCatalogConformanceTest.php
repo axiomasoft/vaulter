@@ -12,9 +12,9 @@ use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Testing\Events\EventConformance;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Testing\Events\EventConformance;
 use Vaulter\Testing\Fixtures\TestUser;
 
 /**

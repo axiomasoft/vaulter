@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -75,7 +75,7 @@ class NodeComment extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'node_id');
     }
 
     /**

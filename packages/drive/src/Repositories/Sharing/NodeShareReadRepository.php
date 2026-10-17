@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Repositories\Sharing;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 
 /**
  * Read-side queries over v_node_shares. It resolves a LIVE share by
@@ -23,7 +23,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 final class NodeShareReadRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
     ) {}
 
     /**

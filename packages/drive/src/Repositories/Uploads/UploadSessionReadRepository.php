@@ -11,8 +11,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side lookups over v_upload_sessions. The resumable endpoints

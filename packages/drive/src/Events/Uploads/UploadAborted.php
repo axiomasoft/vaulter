@@ -8,9 +8,9 @@ use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * {@see UploadSessionManager::abort()} in the same transaction.
  */
 #[Api]
-final readonly class UploadAborted extends DomainEvent
+final readonly class UploadAborted extends DriveEvent
 {
     #[Internal]
     public function __construct(

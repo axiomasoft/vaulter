@@ -11,7 +11,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanAttempt;
 use Vaulter\Drive\Content\ScanWorkTransitions;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 
 /**
  * A live trusted attempt may record a deterministic failure without trusting altered content.

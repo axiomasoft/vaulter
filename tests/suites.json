@@ -124,8 +124,7 @@
             "packages/core/tests/Events/EventSinkContractTest.php",
             "packages/core/tests/Idempotency/IdempotencyContractTest.php",
             "packages/core/tests/Modules/AcmeModuleContractTest.php",
-            "packages/core/tests/Operations/OperationRunnerContractTest.php",
-            "packages/core/tests/Tenancy/TenantProvisioningRaceTest.php"
+            "packages/core/tests/Operations/OperationRunnerContractTest.php"
           ]
         },
         {
@@ -304,6 +303,7 @@
             "packages/core/tests/Console/CommandsReferenceCommandTest.php",
             "packages/core/tests/Console/ConfigReferenceCommandTest.php",
             "packages/core/tests/Console/SchedulingRegistrarTest.php",
+            "packages/core/tests/Database/AggregateLockTest.php",
             "packages/core/tests/Doctor/DoctorJsonSchemaTest.php",
             "packages/core/tests/Doctor/DoctorReadOnlyTest.php",
             "packages/core/tests/Doctor/DoctorRunnerTest.php",
@@ -315,6 +315,7 @@
             "packages/core/tests/Http/CrossTenantV1Test.php",
             "packages/core/tests/Http/HttpKernelV1Test.php",
             "packages/core/tests/Http/LegacyRoutesRemovedTest.php",
+            "packages/core/tests/Http/PreconditionsTest.php",
             "packages/core/tests/Modules/ModuleUninstallCommandTest.php",
             "packages/core/tests/Observability/P83/P83ActivityFeedMetricsTest.php",
             "packages/core/tests/Observability/P83/P83Section51MetricsTest.php",
@@ -349,8 +350,6 @@
             "packages/core/tests/Support/ReleaseReadinessGuardTest.php",
             "packages/core/tests/Support/SnapshotResourceTimestampTest.php",
             "packages/core/tests/Support/TenantFootgunGuardTest.php",
-            "packages/core/tests/Tenancy/StrictTenancyTest.php",
-            "packages/core/tests/Tenancy/TenantJobBoundaryTest.php",
             "packages/core/tests/Testing/ContractSuitesTest.php",
             "packages/core/tests/WriteGuard/WriteScopeTest.php"
           ]
@@ -446,8 +445,7 @@
           ],
           "files": [
             "packages/core/tests/Operations/ProblemMappingTest.php",
-            "packages/core/tests/Tenancy/TenancyWithoutTest.php",
-            "packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php"
+            "packages/core/tests/Tenancy/TenancyWithoutTest.php"
           ]
         },
         {
@@ -479,6 +477,7 @@
             "packages/core/tests/Modules/ModuleKernelBootTest.php",
             "packages/core/tests/Modules/ModulesCommandTest.php",
             "packages/core/tests/Modules/OwnershipRegistryTest.php",
+            "packages/core/tests/Modules/RouteLabelSourceTest.php",
             "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
             "packages/core/tests/Observability/Tracing/TraceRecorderBindingTest.php",
             "packages/core/tests/Unit/IdentityFitsKeyTest.php",
@@ -708,7 +707,8 @@
             "packages/drive/tests/Concurrency/ScanWorkRecoveryRaceTest.php",
             "packages/drive/tests/Concurrency/TreeLockRaceTest.php",
             "packages/drive/tests/Concurrency/TusConcurrentPatchTest.php",
-            "packages/drive/tests/Concurrency/TusPatchVsSweepRaceTest.php"
+            "packages/drive/tests/Concurrency/TusPatchVsSweepRaceTest.php",
+            "packages/drive/tests/Tenancy/TenantProvisioningRaceTest.php"
           ]
         },
         {
@@ -871,12 +871,14 @@
             "packages/drive/tests/Http/ChangesV1Test.php",
             "packages/drive/tests/Http/ContentResponderTest.php",
             "packages/drive/tests/Http/DirectSignedDownloadTest.php",
+            "packages/drive/tests/Http/DriveRouteLabelsTest.php",
             "packages/drive/tests/Http/DrivesV1Test.php",
             "packages/drive/tests/Http/FilesV1Test.php",
             "packages/drive/tests/Http/GrantsV1Test.php",
             "packages/drive/tests/Http/IdempotencyKeyHttpTest.php",
             "packages/drive/tests/Http/IfMatchRequiredTest.php",
             "packages/drive/tests/Http/InheritanceV1Test.php",
+            "packages/drive/tests/Http/ListQueryTest.php",
             "packages/drive/tests/Http/NodeEtagRepresentationTest.php",
             "packages/drive/tests/Http/NodesV1Test.php",
             "packages/drive/tests/Http/NotModifiedAfterAuthorizationTest.php",
@@ -936,6 +938,8 @@
             "packages/drive/tests/Sharing/ShareSecurityBoundaryTest.php",
             "packages/drive/tests/Tenancy/HttpTenantResolutionTest.php",
             "packages/drive/tests/Tenancy/PrivateScannerTenantBoundaryTest.php",
+            "packages/drive/tests/Tenancy/StrictTenancyTest.php",
+            "packages/drive/tests/Tenancy/TenantJobBoundaryTest.php",
             "packages/drive/tests/Testing/FactoriesTest.php",
             "packages/drive/tests/Testing/ScanLifecycleContractTest.php",
             "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php",
@@ -1002,7 +1006,8 @@
           ],
           "files": [
             "packages/drive/tests/Schema/NodeSequenceSchemaTest.php",
-            "packages/drive/tests/Schema/ScanEvidenceSchemaTest.php"
+            "packages/drive/tests/Schema/ScanEvidenceSchemaTest.php",
+            "packages/drive/tests/Tenancy/TenantIdentifierPredicateTest.php"
           ]
         },
         {
@@ -1027,6 +1032,7 @@
             "packages/drive/tests/Arch/RevisionBlobLinksBoundaryTest.php",
             "packages/drive/tests/Arch/TestingBoundaryTest.php",
             "packages/drive/tests/Configuration/DriveConfigTest.php",
+            "packages/drive/tests/Configuration/DriveConfigValidatorTest.php",
             "packages/drive/tests/Configuration/ModuleRegistrationOrderTest.php",
             "packages/drive/tests/Configuration/UploadFileSizePolicyTest.php",
             "packages/drive/tests/Console/SchedulingRegistrarTest.php",
@@ -1232,6 +1238,7 @@
             "packages/documents/tests/Http/CommentsV1Test.php",
             "packages/documents/tests/Http/DocumentContentV1Test.php",
             "packages/documents/tests/Http/DocumentRevisionsV1Test.php",
+            "packages/documents/tests/Http/DocumentsRouteLabelsTest.php",
             "packages/documents/tests/Http/ExportV1Test.php",
             "packages/documents/tests/Http/HubV1RoutesTest.php"
           ]
@@ -1477,6 +1484,7 @@
           ],
           "files": [
             "packages/documents/tests/Schema/DocumentAggregateSchemaTest.php",
+            "packages/documents/tests/Schema/DocumentsKeyColumnsTest.php",
             "packages/documents/tests/Schema/NodeCommentSchemaTest.php",
             "packages/documents/tests/Unit/ContentHasherTest.php",
             "packages/documents/tests/Unit/DocumentsConfigMergeTest.php",
@@ -1547,6 +1555,7 @@
             "packages/documents/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/documents/tests/Arch/PublicApiSnapshotTest.php",
             "packages/documents/tests/Arch/TestingBoundaryTest.php",
+            "packages/documents/tests/Configuration/CollaborationSecretsTest.php",
             "packages/documents/tests/Configuration/DocumentsConfigTest.php",
             "packages/documents/tests/Providers/BindingsRegistrarTest.php",
             "packages/documents/tests/Providers/CollaborationRegistrarTest.php",

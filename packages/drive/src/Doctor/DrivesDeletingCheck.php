@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Doctor;
 
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\DriveStatus;
 
 #[Internal]
@@ -17,7 +17,7 @@ final readonly class DrivesDeletingCheck implements DoctorCheck
 {
     private const int HOURS = 24;
 
-    public function __construct(private VaulterConfig $config) {}
+    public function __construct(private DriveConfig $config) {}
 
     public function key(): string
     {

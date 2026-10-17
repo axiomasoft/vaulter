@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Content;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Media\Models\Cas\Blob;
@@ -22,7 +22,7 @@ use Vaulter\Media\Models\Cas\Blob;
 #[Internal]
 final readonly class ScanAuthorityRepository
 {
-    public function __construct(private VaulterConfig $config) {}
+    public function __construct(private DriveConfig $config) {}
 
     public function drive(int|string $id): ?Drive
     {

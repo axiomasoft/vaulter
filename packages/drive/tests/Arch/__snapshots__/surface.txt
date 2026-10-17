@@ -112,23 +112,29 @@ Vaulter\Drive\Configuration\DownloadsConfig api since 1.0 final readonly class
   public function inlineMimeTypes(): array
 
 Vaulter\Drive\Configuration\DriveConfig api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Content\ScanWorkSettings
+  public function access(): Vaulter\Drive\Configuration\AccessConfig
   public function allowedMimeTypes(): array
   public function blockedExtensions(): array
+  public function changes(): Vaulter\Drive\Configuration\ChangesConfig
   public function chunkSize(): int
   public function defaultQuota(): ?int
+  public function downloads(): Vaulter\Drive\Configuration\DownloadsConfig
+  public function featureEnabled(string $feature, ?string $profile = null): bool
   public function leaseSeconds(): int
+  public function listing(): Vaulter\Drive\Configuration\ListingConfig
   public function maxActiveSessionsPerActor(): int
   public function maxAttempts(): int
   public function maxChunkSize(): int
   public function maxFileSize(): int
   public function metadataAllowedKeys(): array
   public function metadataMaxValueLength(): int
-  public function model(string $key): string
   public function resumableEnabled(): bool
+  public function scan(): Vaulter\Drive\Configuration\ScanConfig
   public function scanQueue(): string
   public function scanWork(string $key): int
   public function scannerTimeoutSeconds(): int
   public function sessionTtlHours(): int
+  public function sharing(): Vaulter\Drive\Configuration\SharingConfig
   public function trashRetentionDays(): int
   public function validateScanWork(bool $requireBroker = false): void
 
@@ -847,7 +853,7 @@ Vaulter\Drive\Enums\Uploads\UploadStatus api since 1.0 enum: string uses Vaulter
   public function isOpen(): bool
   public static function values(): array
 
-Vaulter\Drive\Events\Access\NodeGrantCreated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Access\NodeGrantCreated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Access\NodeGrant $grant
   public function activityContext(): array
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
@@ -857,7 +863,7 @@ Vaulter\Drive\Events\Access\NodeGrantCreated api since 1.0 final readonly class 
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Access\NodeGrantRevoked api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Access\NodeGrantRevoked api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Node $node
   public int $revoked
   public Vaulter\Drive\Access\ValueObjects\Subject $subject
@@ -869,7 +875,7 @@ Vaulter\Drive\Events\Access\NodeGrantRevoked api since 1.0 final readonly class 
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Access\NodeInheritanceChanged api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Access\NodeInheritanceChanged api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public bool $inherits
   public Vaulter\Drive\Models\Node $node
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
@@ -879,7 +885,14 @@ Vaulter\Drive\Events\Access\NodeInheritanceChanged api since 1.0 final readonly 
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Drives\DriveArchived api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\DriveEvent api since 1.0 abstract readonly class extends Vaulter\Events\DomainEvent
+  public function activityTarget(): ?Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  public function journal(): ?Vaulter\Drive\ValueObjects\Events\JournalEffect
+  protected static function nodeScope(Vaulter\Drive\Models\Node $node): Vaulter\ValueObjects\Events\EventScope
+  protected static function nodeSubject(Vaulter\Drive\Models\Node $node): Vaulter\ValueObjects\Events\EventSubject
+  protected static function nodeUpsert(Vaulter\Drive\Models\Node $node, bool $subtree = false, ?int $sequence = null): Vaulter\Drive\ValueObjects\Events\JournalEffect
+
+Vaulter\Drive\Events\Drives\DriveArchived api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Drive $drive
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
   public function data(): array
@@ -887,7 +900,7 @@ Vaulter\Drive\Events\Drives\DriveArchived api since 1.0 final readonly class ext
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Drives\DriveCreated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Drives\DriveCreated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Node $root
   public Vaulter\Drive\Models\Drive $storage
   public function activityContext(): array
@@ -897,7 +910,7 @@ Vaulter\Drive\Events\Drives\DriveCreated api since 1.0 final readonly class exte
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Drives\DriveDeleted api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Drives\DriveDeleted api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public string $driveId
   public string $ownerId
   public string $ownerType
@@ -910,7 +923,7 @@ Vaulter\Drive\Events\Drives\DriveDeleted api since 1.0 final readonly class exte
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Drives\DriveUnarchived api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Drives\DriveUnarchived api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Drive $drive
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
   public function data(): array
@@ -918,7 +931,7 @@ Vaulter\Drive\Events\Drives\DriveUnarchived api since 1.0 final readonly class e
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Files\FileRevisionAdded api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Files\FileRevisionAdded api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\File $file
   public Vaulter\Drive\Models\Node $node
   public Vaulter\Drive\Models\FileRevision $version
@@ -932,7 +945,7 @@ Vaulter\Drive\Events\Files\FileRevisionAdded api since 1.0 final readonly class 
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Files\FileRevisionDeleted api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Files\FileRevisionDeleted api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\File $file
   public Vaulter\Drive\Models\Node $node
   public int|string $revisionId
@@ -946,7 +959,7 @@ Vaulter\Drive\Events\Files\FileRevisionDeleted api since 1.0 final readonly clas
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Files\FileUploaded api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Files\FileUploaded api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\File $file
   public Vaulter\Drive\Models\Node $node
   public Vaulter\Drive\Models\FileRevision $version
@@ -959,7 +972,7 @@ Vaulter\Drive\Events\Files\FileUploaded api since 1.0 final readonly class exten
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Nodes\FolderCreated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Nodes\FolderCreated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Node $node
   public function activityContext(): array
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
@@ -970,7 +983,7 @@ Vaulter\Drive\Events\Nodes\FolderCreated api since 1.0 final readonly class exte
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Nodes\NodeCopied api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Nodes\NodeCopied api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Node $copy
   public Vaulter\Drive\Models\Node $source
   public function activityContext(): array
@@ -982,7 +995,7 @@ Vaulter\Drive\Events\Nodes\NodeCopied api since 1.0 final readonly class extends
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Nodes\NodeMoved api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Nodes\NodeMoved api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public int|null|string $fromParentId
   public Vaulter\Drive\Models\Node $node
   public int|null|string $toParentId
@@ -995,7 +1008,7 @@ Vaulter\Drive\Events\Nodes\NodeMoved api since 1.0 final readonly class extends 
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Nodes\NodePurged api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Nodes\NodePurged api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public const int LISTED_NODE_IDS = 1000
   public int $freedBytes
   public array $nodeIds
@@ -1009,7 +1022,7 @@ Vaulter\Drive\Events\Nodes\NodePurged api since 1.0 final readonly class extends
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Nodes\NodeRenamed api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Nodes\NodeRenamed api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public string $fromName
   public Vaulter\Drive\Models\Node $node
   public string $toName
@@ -1022,7 +1035,7 @@ Vaulter\Drive\Events\Nodes\NodeRenamed api since 1.0 final readonly class extend
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Nodes\NodeRestored api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Nodes\NodeRestored api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Node $node
   public function activityContext(): array
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
@@ -1033,7 +1046,7 @@ Vaulter\Drive\Events\Nodes\NodeRestored api since 1.0 final readonly class exten
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Nodes\NodeTrashed api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Nodes\NodeTrashed api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Node $node
   public function activityContext(): array
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
@@ -1044,7 +1057,7 @@ Vaulter\Drive\Events\Nodes\NodeTrashed api since 1.0 final readonly class extend
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Nodes\NodeUpdated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Nodes\NodeUpdated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Node $node
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
   public function data(): array
@@ -1054,7 +1067,7 @@ Vaulter\Drive\Events\Nodes\NodeUpdated api since 1.0 final readonly class extend
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Sharing\NodeShareCreated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Sharing\NodeShareCreated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Sharing\NodeShare $share
   public function activityContext(): array
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
@@ -1063,7 +1076,7 @@ Vaulter\Drive\Events\Sharing\NodeShareCreated api since 1.0 final readonly class
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Sharing\NodeShareRevoked api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Sharing\NodeShareRevoked api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Sharing\NodeShare $share
   public function activityContext(): array
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
@@ -1072,7 +1085,7 @@ Vaulter\Drive\Events\Sharing\NodeShareRevoked api since 1.0 final readonly class
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Sharing\NodeShareRotated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Sharing\NodeShareRotated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Sharing\NodeShare $share
   public function activityContext(): array
   public function activityTarget(): Vaulter\Drive\ValueObjects\Events\ActivityTarget
@@ -1081,7 +1094,7 @@ Vaulter\Drive\Events\Sharing\NodeShareRotated api since 1.0 final readonly class
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Sharing\NodeShareUpdated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Sharing\NodeShareUpdated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public array $changed
   public Vaulter\Drive\Models\Sharing\NodeShare $share
   public function activityContext(): array
@@ -1091,7 +1104,7 @@ Vaulter\Drive\Events\Sharing\NodeShareUpdated api since 1.0 final readonly class
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Uploads\UploadAborted api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Uploads\UploadAborted api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Uploads\UploadSession $session
   public function activityContext(): array
   public function data(): array
@@ -1099,7 +1112,7 @@ Vaulter\Drive\Events\Uploads\UploadAborted api since 1.0 final readonly class ex
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Uploads\UploadExpired api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Uploads\UploadExpired api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Uploads\UploadSession $session
   public function activityContext(): array
   public function data(): array
@@ -1107,7 +1120,7 @@ Vaulter\Drive\Events\Uploads\UploadExpired api since 1.0 final readonly class ex
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
-Vaulter\Drive\Events\Uploads\UploadInitiated api since 1.0 final readonly class extends Vaulter\Events\DomainEvent
+Vaulter\Drive\Events\Uploads\UploadInitiated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Uploads\UploadSession $session
   public function activityContext(): array
   public function data(): array
@@ -1585,6 +1598,14 @@ Vaulter\Drive\Testing\Contracts\PermissionFixture api since 1.0 final readonly c
 
 Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests api since 1.0 final class
   public function assertScanLifecycleContract(callable $configureHost, Illuminate\Contracts\Auth\Authenticatable $actor): void
+
+Vaulter\Drive\Testing\InteractsWithVaulter api since 1.0 trait
+  public function assertNodeNotVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Drive\Models\Node|string $node): void
+  public function assertNodeVisibleTo(Illuminate\Contracts\Auth\Access\Authorizable $user, Vaulter\Drive\Models\Node|string $node): void
+  public function assertVaulterEventNotRecorded(Vaulter\Events\EventTypeContract $type): void
+  public function assertVaulterEventRecorded(Vaulter\Events\EventTypeContract $type, ?callable $where = null): void
+  public function vaulterActingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): Closure
+  public function vaulterFakeStorage(?string $disk = null): Illuminate\Contracts\Filesystem\Filesystem
 
 Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities api since 1.0 final readonly class
   public bool $collaborative

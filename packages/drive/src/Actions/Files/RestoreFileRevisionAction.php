@@ -37,7 +37,7 @@ final readonly class RestoreFileRevisionAction
         $node = $this->locator->find($context, $data->node);
 
         return $this->database->transaction(function () use ($context, $data, $node): FileRevision {
-            $this->database->lockTreeShared($node->drive_id);
+            $this->database->lockAggregateShared('drives', $node->drive_id);
             $this->lifecycle->assertWritable($context);
             $node = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
             $this->tree->assertLive($node);

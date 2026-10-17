@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 
 /**
  * F-P4.1-01 / F-P4.1-02 (VLT-REMED P4.3, batch B16) — schema green guard, no
@@ -54,4 +54,4 @@ it('v_activity carries the (created_at) feed index exactly once, not twice (F-P4
     );
 
     expect($duplicates)->toHaveCount(1);
-})->skip(fn (): bool => !app(VaulterConfig::class)->featureEnabled('activity'), 'v_activity only exists when the activity feature is enabled');
+})->skip(fn (): bool => !app(DriveConfig::class)->featureEnabled('activity'), 'v_activity only exists when the activity feature is enabled');

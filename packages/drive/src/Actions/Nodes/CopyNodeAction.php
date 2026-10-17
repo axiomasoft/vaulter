@@ -52,7 +52,7 @@ final readonly class CopyNodeAction
 
         try {
             return $this->database->transaction(function () use ($source, $parentId, $name, $data, $context): Node {
-                $this->database->lockTreeShared($context->driveId());
+                $this->database->lockAggregateShared('drives', $context->driveId());
                 $this->lifecycle->assertWritable($context);
                 $sourceIds = array_values($this->nodes->subtree($source)->modelKeys());
                 $locked = $this->tree->lock([...$sourceIds, $parentId]);

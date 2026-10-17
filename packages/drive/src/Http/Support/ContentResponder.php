@@ -28,7 +28,6 @@ use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\FileRevisionReadRepository;
 use Vaulter\Drive\Sharing\ShareContext;
 use Vaulter\Http\Middleware\AssignCorrelationId;
-use Vaulter\Http\Support\DownloadHeaders;
 use Vaulter\Support\LoadTier;
 
 /**

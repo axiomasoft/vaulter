@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Repositories\Sharing;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\Roles\Role;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Sharing\NodeShare;
@@ -23,7 +23,7 @@ use Vaulter\Drive\Models\Sharing\NodeShare;
 final class NodeShareStoreRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
     ) {}
 
     /**

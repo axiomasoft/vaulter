@@ -161,42 +161,41 @@ final class VaulterDatabase
     }
 
     /**
-     * The storage's tree lock, exclusive: for operations that change the shape of the
-     * tree or touch many node rows (move, restore, trash, purge). Taken before any
-     * node row lock.
+     * The lock of an aggregate root, exclusive: for operations that change the shape of what hangs under the root or
+     * touch many of its rows (a drive's tree: move, restore, trash, purge). `$entity` is the entity key of the root's
+     * table. Taken before any lock of a row under the root.
      */
-    public function lockTree(int|string $storageId): void
+    public function lockAggregate(string $entity, int|string $id): void
     {
-        $this->requireTransaction('lockTree');
+        $this->requireTransaction('lockAggregate');
 
         if ($this->driver() === 'pgsql') {
-            $this->advisoryLock('vaulter:tree:'.$storageId);
+            $this->advisoryLock('vaulter:'.$entity.':'.$id);
 
             return;
         }
 
-        $this->connection()->table($this->databaseConfig->table('drives'))
-            ->where('id', $storageId)->lockForUpdate()->first(['id']);
+        $this->connection()->table($this->databaseConfig->table($entity))
+            ->where('id', $id)->lockForUpdate()->first(['id']);
     }
 
     /**
-     * The storage's tree lock, shared: for writes under a single locked parent
-     * (create, upload, copy, rename). On PostgreSQL they run concurrently with each
-     * other and wait only for an exclusive holder. Elsewhere the lock is the storage
-     * row, which these writes update (quota) or reference (foreign-key check) anyway,
-     * so it is taken exclusively.
+     * The lock of an aggregate root, shared: for writes under a single locked parent (create, upload, copy, rename).
+     * On PostgreSQL they run concurrently with each other and wait only for an exclusive holder. Elsewhere the lock is
+     * the root row, which these writes update (quota) or reference (foreign-key check) anyway, so it is taken
+     * exclusively.
      */
-    public function lockTreeShared(int|string $storageId): void
+    public function lockAggregateShared(string $entity, int|string $id): void
     {
-        $this->requireTransaction('lockTreeShared');
+        $this->requireTransaction('lockAggregateShared');
 
         if ($this->driver() === 'pgsql') {
-            $this->connection()->statement('SELECT pg_advisory_xact_lock_shared(hashtext(?))', ['vaulter:tree:'.$storageId]);
+            $this->connection()->statement('SELECT pg_advisory_xact_lock_shared(hashtext(?))', ['vaulter:'.$entity.':'.$id]);
 
             return;
         }
 
-        $this->lockTree($storageId);
+        $this->lockAggregate($entity, $id);
     }
 
     public function advisoryLock(string $key): void

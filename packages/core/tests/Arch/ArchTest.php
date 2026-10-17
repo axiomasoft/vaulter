@@ -548,30 +548,14 @@ function coreReferencesTo(string $root): array
 
 /**
  * P4 ownership move (D10, D40): the drive domain (models, repositories, snapshots, profiles, activity, changes) now lives in
- * vaulter-drive and the HTTP/config/kernel slice moved with P4.11. These core files name `Vaulter\Drive\` types in the meantime; the list is a ratchet:
- * it must shrink as the files move, it is empty from P4.16 (I1 blocks), and a file that stops referencing drive has to leave it.
+ * vaulter-drive and the HTTP/config/kernel slice moved with P4.11. No core file names a `Vaulter\Drive\` type any more (P4.16, I1 blocks).
  */
-test('core source references the extracted vaulter-drive package only from the files that move to it (P2 #5 / D1, P4.8)', function (): void {
+test('core source references the vaulter-drive package nowhere (P2 #5 / D1, I1 blocks from P4.16)', function (): void {
     $src = (string) realpath(__DIR__.'/../../src');
-    $transitional = [
-        'Configuration/ConfigValidator.php',
-        'Configuration/VaulterConfig.php',
-        'Console/InstallCommand.php',
-        'Events/DomainEvent.php',
-        'Http/Problems/CoreProblemCodes.php',
-        'Http/Resources/PageResponse.php',
-        'Http/Support/DownloadHeaders.php',
-        'Http/Support/Preconditions.php',
-        'Jobs/Middleware/RestoreTenantContext.php',
-        'Tenancy/TenancyBoundary.php',
-        'Testing/Events/EventConformance.php',
-        'Testing/InteractsWithVaulter.php',
-    ];
     $found = array_map(static fn (string $path): string => substr((string) realpath($path), strlen($src) + 1), coreReferencesTo('Drive'));
     sort($found);
-    sort($transitional);
 
-    expect($found)->toBe($transitional);
+    expect($found)->toBe([]);
 });
 
 /**

@@ -11,7 +11,6 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
@@ -25,11 +24,11 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Tenancy\Tenancy;
-use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]
 final class RescanFileRevisionsCommand extends Command
@@ -72,7 +71,7 @@ final class RescanFileRevisionsCommand extends Command
      */
     public static function drives(array $scope): Builder
     {
-        $class = app(VaulterConfig::class)->model('drive');
+        $class = app(DriveConfig::class)->model('drive');
         $query = app(TenancyBoundary::class)->constrain($class::query());
         if ($scope['tenant'] !== null) {
             if (app(TenancyBoundary::class)->enforced() && $scope['tenant'] !== app(TenancyBoundary::class)->current()) {
@@ -152,7 +151,7 @@ final class RescanFileRevisionsCommand extends Command
                 }
                 $drives->where('id', $activating || $cursor['last_revision_id'] === null ? '>' : '>=', $cursor['last_drive_id']);
             }
-            $revisionClass = app(VaulterConfig::class)->model('file_revision');
+            $revisionClass = app(DriveConfig::class)->model('file_revision');
             // Validate every explicit key before any mutation; keys never derive tenant privilege.
             foreach ($this->revisionKeys() as $key) {
                 if (!$revisionClass::query()->whereKey($key)->whereHas('file.node', fn ($q) => $q->whereIn('drive_id', self::drives($scope)->select('id')))->exists()) {
@@ -170,7 +169,7 @@ final class RescanFileRevisionsCommand extends Command
                     $out['scanned']++;
                     if (!$out['dry_run']) {
                         $database->transaction(function () use ($database, $drive, $policies, $activate, $scope): void {
-                            $database->lockTree($drive->id);
+                            $database->lockAggregate('drives', $drive->id);
                             $fresh = $drive->newQuery()->whereKey($drive->id)->lockForUpdate()->firstOrFail();
                             $context = DriveContext::system($fresh, $scope['reason']);
                             foreach ($policies->desired($fresh) as $spec) {
@@ -210,7 +209,7 @@ final class RescanFileRevisionsCommand extends Command
                             continue;
                         }
                         $obligation = $database->transaction(function () use ($database, $drive, $revision, $snapshots, $policies, $requestWork, $spec, $request, $scope, $existing, $publisher) {
-                            $database->lockTreeShared($drive->id);
+                            $database->lockAggregateShared('drives', $drive->id);
                             $snapshot = $snapshots->load($revision, true);
                             $policies->forDrive($snapshot['drive']);
                             $context = DriveContext::system($snapshot['drive'], $scope['reason']);

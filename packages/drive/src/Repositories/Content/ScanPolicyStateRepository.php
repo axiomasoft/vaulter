@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Content;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Models\Content\ScanBackfillRun;
 use Vaulter\Drive\Models\Content\ScanPolicyState;
@@ -15,7 +15,7 @@ use Vaulter\Drive\Models\Drive;
 #[Internal]
 final readonly class ScanPolicyStateRepository
 {
-    public function __construct(private VaulterConfig $config, private ScanAuthorityRepository $authority) {}
+    public function __construct(private DriveConfig $config, private ScanAuthorityRepository $authority) {}
 
     public function state(Drive $drive, ScanPolicySpec $spec): ?ScanPolicyState
     {

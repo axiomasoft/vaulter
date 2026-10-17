@@ -10,7 +10,7 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Testing\Events\EventConformance;
+use Vaulter\Drive\Testing\Events\EventConformance;
 
 /**
  * The document and comment events, produced by the real Actions, carry exactly the

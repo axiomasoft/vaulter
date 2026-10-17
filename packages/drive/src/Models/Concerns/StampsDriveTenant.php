@@ -7,10 +7,10 @@ namespace Vaulter\Drive\Models\Concerns;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Drive;
-use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 
 /** @internal Server-owned tenant stamping; host model scopes remain additional. */
 #[Internal]
@@ -22,7 +22,7 @@ trait StampsDriveTenant
             if (!app(TenancyConfig::class)->enabled()) {
                 return;
             }
-            $config = app(VaulterConfig::class);
+            $config = app(DriveConfig::class);
             $driveId = $row->getAttribute('drive_id');
             if ($driveId === null) {
                 $nodeId = $row->getAttribute('node_id');

@@ -40,7 +40,7 @@ final readonly class SetFileRevisionRetentionAction
         $revisionId = $revision instanceof FileRevision ? $revision->getRawOriginal($revision->getKeyName()) : $revision;
 
         return $this->database->transaction(function () use ($context, $node, $revisionId, $keepForever): FileRevision {
-            $this->database->lockTreeShared($node->drive_id);
+            $this->database->lockAggregateShared('drives', $node->drive_id);
             $this->lifecycle->assertWritable($context);
             $node = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
             $this->tree->assertLive($node);

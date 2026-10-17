@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Problems;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
@@ -43,7 +42,8 @@ final class CoreProblemCodes implements ProblemCodeSource
             // Exhausted serialization retries: the request is safe to repeat, and never a stored outcome.
             'concurrent_update' => new ProblemSpec(409, ConcurrentUpdateException::class, Retryable::WithBackoff),
             'dependency_unavailable' => new ProblemSpec(503, null, Retryable::WithBackoff),
-            'duplicate_registration' => new ProblemSpec(500, DuplicateNodeContentLifecycleException::class),
+            // A second registration of a kind, type or exporter at boot: the registry owners raise it with this code.
+            'duplicate_registration' => new ProblemSpec(500),
             'extension_failed' => new ProblemSpec(500, InvalidExtensionResult::class),
             'idempotency_key_reused' => new ProblemSpec(422, IdempotencyKeyReusedException::class),
             'internal_error' => new ProblemSpec(500),
@@ -52,7 +52,8 @@ final class CoreProblemCodes implements ProblemCodeSource
             'module_not_ready' => new ProblemSpec(503, ModuleNotReadyException::class),
             'operation_in_progress' => new ProblemSpec(409, OperationInProgressException::class, Retryable::WithBackoff),
             'payload_too_large' => new ProblemSpec(413, PostTooLargeException::class, receipt: ReceiptPolicy::Cacheable),
-            'permission_denied' => new ProblemSpec(403, PermissionDeniedException::class),
+            // The refusal of an ability: the framework's gate denial and the owners' permission exceptions render it.
+            'permission_denied' => new ProblemSpec(403, AuthorizationException::class),
             'precondition_required' => new ProblemSpec(428, PreconditionRequiredException::class, Retryable::AfterRefetch),
             'rate_limited' => new ProblemSpec(429, ThrottleRequestsException::class, Retryable::WithBackoff),
             'registry_frozen' => new ProblemSpec(500, RegistryFrozenException::class),

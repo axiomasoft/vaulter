@@ -8,20 +8,20 @@ use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
 
 #[Api]
 final readonly class NodeLocator
 {
     #[Internal]
     public function __construct(
-        private VaulterConfig $config,
+        private DriveConfig $config,
         private VaulterDatabase $database,
         private TenancyConfig $tenancy,
         private TenancyBoundary $boundary,

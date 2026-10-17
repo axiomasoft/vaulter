@@ -936,15 +936,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Http\\Support\\DownloadHeaders",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "note": "open: used for downloads only today; moves to drive if the kernel does not consume it (P4)",
-            "why": "architecture#kernel: HTTP-каркас — generic header rendering (Content-Disposition/ETag) shared by owners"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Http\\Support\\Preconditions",
             "owner": "core",
             "action": "split",
@@ -960,14 +951,6 @@
             "phase": "P4",
             "note": "core keeps the generic tag/canonical-json helper; node() -> drive; document() -> documents",
             "why": "architecture#kernel: HTTP-каркас — generic strong ETag/canonical JSON helper stays; entity tags belong to owners"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Jobs\\Middleware\\RestoreTenantContext",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Tenancy — restores the tenant context in queued jobs of every module"
         },
         {
             "match": "fqcn",
@@ -1352,14 +1335,6 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Tenancy\\TenancyBoundary",
-            "owner": "core",
-            "action": "keep",
-            "phase": "stay",
-            "why": "architecture#kernel: Tenancy — TenantResolver machinery and withoutTenancy (Tenancy::without)"
-        },
-        {
-            "match": "fqcn",
             "value": "Vaulter\\Tenancy\\TenancyBypass",
             "owner": "core",
             "action": "keep",
@@ -1389,15 +1364,6 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel: Тестовый кит — fakes of the kernel SPIs"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Testing\\InteractsWithVaulter",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "note": "must not reference package tests or internal domain types (architecture#ownership-map); P3 splits drive-specific parts",
-            "why": "architecture#kernel: Тестовый кит — the trait hosts use to test against the kernel (baseline (core PublicApiSnapshot) lists it)"
         },
         {
             "match": "fqcn",
@@ -1775,6 +1741,14 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#persistence + D40 (P4.5): v_idempotency_keys is owned by core"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Routing\\RouteLabelSource",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#kernel: HTTP-каркас — the kernel labels the metrics of every versioned route; modules contribute their route names (P4.16)"
         }
     ]
 }

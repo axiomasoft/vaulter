@@ -6,7 +6,6 @@ use Illuminate\Config\Repository;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Drive\Models\Node;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
@@ -47,25 +46,19 @@ it('keeps no drive and no webhooks section in the kernel config root (P4.11, P4.
         ->and(array_keys($config['schedule']))->toBe(['enabled', 'outbox_relay', 'outbox_prune', 'idempotency_prune']);
 });
 
-it('resolves the model keys of the core from vaulter.models and those of the drive from vaulter-drive.models', function (): void {
-    $repository = new Repository([
-        'vaulter' => ['models' => ['outbox' => stdClass::class]],
-        'vaulter-drive' => ['models' => ['node' => stdClass::class]],
-    ]);
+it('resolves the outbox model from vaulter.models and refuses a foreign class', function (): void {
+    $repository = new Repository(['vaulter' => ['models' => ['outbox' => stdClass::class]]]);
     $config = new VaulterConfig($repository);
 
-    expect(fn () => $config->model('outbox'))->toThrow(InvalidConfigurationException::class, 'vaulter.models.outbox')
-        ->and(fn () => $config->model('node'))->toThrow(InvalidConfigurationException::class, 'vaulter-drive.models.node')
-        ->and(fn () => $config->model('nope'))->toThrow(InvalidConfigurationException::class, 'vaulter-drive.models.nope');
+    expect(fn () => $config->outboxModel())->toThrow(InvalidConfigurationException::class, 'vaulter.models.outbox');
 
     $repository->set('vaulter.models.outbox', OutboxEvent::class);
-    $repository->set('vaulter-drive.models.node', Node::class);
 
-    expect($config->model('outbox'))->toBe(OutboxEvent::class)
-        ->and($config->model('node'))->toBe(Node::class)
-        ->and($config->featureEnabled('changes'))->toBeFalse();
+    expect($config->outboxModel())->toBe(OutboxEvent::class);
+});
 
-    $repository->set('vaulter-drive.features.changes', true);
-
-    expect($config->featureEnabled('changes'))->toBeTrue();
+it('has no accessor of a module section: the drive reads its own through DriveConfig', function (): void {
+    foreach (['model', 'featureEnabled', 'scan', 'access', 'listing', 'sharing', 'downloads', 'changes'] as $method) {
+        expect(method_exists(VaulterConfig::class, $method))->toBeFalse($method);
+    }
 });

@@ -8,9 +8,9 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -30,7 +30,7 @@ final class PurgeDrivesCommand extends Command
 
     protected $description = 'Purge drives with status deleting: nodes, revisions and blob references, then the drive row.';
 
-    public function handle(VaulterConfig $config, PurgeDriveStepAction $step): int
+    public function handle(DriveConfig $config, PurgeDriveStepAction $step): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $sync = (bool) $this->option('sync');

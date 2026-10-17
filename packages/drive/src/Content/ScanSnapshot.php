@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Content;
 
 use LogicException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\File;
 use Vaulter\Drive\Models\FileRevision;
@@ -21,7 +21,7 @@ use Vaulter\Media\Models\Cas\Blob;
 #[Internal]
 final readonly class ScanSnapshot
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private BlobLock $lock) {}
+    public function __construct(private DriveConfig $config, private VaulterDatabase $database, private BlobLock $lock) {}
 
     /** @return array{revision:FileRevision,file:File,node:Node,drive:Drive,blob:?Blob,identity:?ImmutableContentIdentity} */
     public function load(FileRevision $revision, bool $lock = false): array
@@ -39,7 +39,7 @@ final readonly class ScanSnapshot
             throw new LogicException('Scan content scope is unavailable.');
         }
         if ($lock) {
-            $this->database->lockTreeShared($drive->id);
+            $this->database->lockAggregateShared('drives', $drive->id);
             $node = $nodeClass::query()->whereKey($node->id)->lockForUpdate()->firstOrFail();
             $file = $fileClass::query()->whereKey($file->id)->lockForUpdate()->firstOrFail();
             $persisted = $revisionClass::query()->whereKey($persisted->id)->lockForUpdate()->firstOrFail();

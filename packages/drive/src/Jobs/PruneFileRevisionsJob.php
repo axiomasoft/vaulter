@@ -13,9 +13,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Exceptions\CannotDeleteHeadRevisionException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\RevisionPinnedException;
@@ -60,13 +60,13 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
         return 'vaulter-revisions-prune:'.Identity::stringify($this->driveId);
     }
 
-    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, VaulterConfig $config): void
+    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, DriveConfig $config): void
     {
         $database->write(fn (): array => $this->run($delete, $profiles, $database, $tables, $config));
     }
 
     /** @return array{candidates: int, deleted: int, skipped: int, freed_bytes: int} */
-    public function run(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, VaulterConfig $config): array
+    public function run(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, DriveConfig $config): array
     {
         return Tenancy::without(function () use ($delete, $profiles, $database, $tables, $config): array {
             $report = ['candidates' => 0, 'deleted' => 0, 'skipped' => 0, 'freed_bytes' => 0];

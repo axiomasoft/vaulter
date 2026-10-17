@@ -2,28 +2,30 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Tenancy;
+namespace Vaulter\Drive\Tenancy;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Internal;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Tenancy\ResolvesOwnerTenant;
 use Vaulter\Contracts\Tenancy\TenantResolver;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
-use Vaulter\Drive\Tenancy\ShareTenantContext;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Support\Identity;
+use Vaulter\Tenancy\TenancyBypass;
+use Vaulter\Tenancy\TenantIdentityPredicate;
 
 /** @internal Central boundary; resolver values and supplied models are never cached. */
 #[Internal]
 final readonly class TenancyBoundary
 {
-    public function __construct(private TenancyConfig $config, private VaulterConfig $models,
+    public function __construct(private TenancyConfig $config, private DriveConfig $models, private IdsConfig $ids,
         private Container $container, private TenancyBypass $bypass) {}
 
     public static function normalize(int|string|null $tenant): ?string
@@ -211,7 +213,7 @@ final readonly class TenancyBoundary
      */
     private function tenantPredicate(Builder $query, string $tenant): Builder
     {
-        $type = $this->models->ids()->hostKeys();
+        $type = $this->ids->hostKeys();
         if (($type === 'bigint' && filter_var($tenant, FILTER_VALIDATE_INT) === false)
             || ($type === 'uuid' && preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/D', $tenant) !== 1)) {
             return $query->whereRaw('1 = 0');

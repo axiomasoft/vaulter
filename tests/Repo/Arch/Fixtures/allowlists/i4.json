@@ -268,11 +268,11 @@
         {
             "category": "host-lifecycle",
             "count": 1,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "file": "packages/drive/src/Configuration/DriveConfigValidator.php",
             "kind": "probe",
             "reason": "проверка resolved ProfileRegistry — состояние контейнера хоста, не выбор модуля",
             "removed_in": "never",
-            "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
+            "symbol": "Vaulter\\Drive\\Configuration\\DriveConfigValidator::validate",
             "target": "\\Vaulter\\Drive\\Profiles\\ProfileRegistry::class",
             "view": "current"
         },

@@ -10,6 +10,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
+use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
 /** The tables the webhooks module owns: subscriber endpoints and delivery attempts. */
 #[Internal]
@@ -24,6 +25,12 @@ final class WebhooksSchema implements ModuleSchema
             'webhook_endpoints',
             'webhook_deliveries',
         ];
+    }
+
+    /** @return list<KeyColumnExpectation> the key columns of the module's tables and the kind each must have: `HK` host key, `REF` entity id, `STRING` of a length */
+    public function keyColumns(): array
+    {
+        return [];
     }
 
     public function create(string $entity): void

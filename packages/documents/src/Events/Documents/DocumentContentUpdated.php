@@ -9,10 +9,10 @@ use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Drive\ValueObjects\Events\JournalEffect;
-use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -28,7 +28,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * the saves that took a checkpoint.
  */
 #[Api]
-final readonly class DocumentContentUpdated extends DomainEvent
+final readonly class DocumentContentUpdated extends DriveEvent
 {
     #[Internal]
     public function __construct(

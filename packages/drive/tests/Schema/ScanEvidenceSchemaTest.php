@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -76,7 +76,7 @@ it('creates the scan evidence and work schema with enforced checks and foreign k
 })->with(['bigint', 'ulid', 'uuid7']);
 
 it('guards scan authority against mass assignment and validates aliased model subclasses', function (): void {
-    $config = app(VaulterConfig::class);
+    $config = app(DriveConfig::class);
     foreach (['scan_obligation', 'scan_request', 'scan_evidence', 'scan_policy_state', 'scan_backfill_run'] as $alias) {
         $class = $config->model($alias);
         $model = new $class;

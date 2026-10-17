@@ -47,7 +47,7 @@ final readonly class PurgeNodeAction
         }
         $node = app(NodeLocator::class)->find(context: $context, key: $data->node, includeTrashed: true);
         $this->database->transaction(function () use ($node, $context, $data): void {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $this->lifecycle->assertWritable($context);
             $ids = array_values($this->nodes->subtree($node)->modelKeys());
             $locked = $this->tree->lock($ids);

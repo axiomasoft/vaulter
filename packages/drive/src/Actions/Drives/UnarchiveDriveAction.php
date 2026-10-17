@@ -23,7 +23,7 @@ final readonly class UnarchiveDriveAction
     public function execute(DriveContext $context): Drive
     {
         return $this->database->transaction(function () use ($context): Drive {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $drive = $this->drives->lock($context->driveId());
             if ($drive->status !== DriveStatus::Archived) {
                 throw InvalidDriveStateException::for($drive->id, 'unarchive', $drive->status);

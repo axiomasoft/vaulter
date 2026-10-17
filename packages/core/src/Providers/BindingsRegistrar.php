@@ -22,6 +22,8 @@ use Vaulter\CoreModule;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
+use Vaulter\Http\Middleware\VaulterHttpOperationMap;
+use Vaulter\Http\Middleware\VaulterThrottledRouteMap;
 use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotencyOutcome;
 use Vaulter\Idempotency\IdempotencyStore;
@@ -33,7 +35,6 @@ use Vaulter\Operations\OperationClaim;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\EnumCaseAttributeResolver;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Tenancy\TenancyBypass;
 
 /**
@@ -50,7 +51,6 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(IdsConfig::class);
         $app->singleton(TenancyConfig::class);
         $app->scoped(TenancyBypass::class);
-        $app->bind(TenancyBoundary::class);
         $app->scoped(TenantResolver::class, static function (Application $app): TenantResolver {
             $resolver = $app->make($app->make(TenancyConfig::class)->resolver());
             if (!$resolver instanceof TenantResolver) {
@@ -60,6 +60,8 @@ final class BindingsRegistrar implements ModuleBindings
             return $resolver;
         });
         $app->singleton(RoutesConfig::class);
+        $app->singleton(VaulterHttpOperationMap::class);
+        $app->singleton(VaulterThrottledRouteMap::class);
         $app->singleton(ObservabilityConfig::class);
         $app->singletonIf(ConfigNormalizer::class);
         $app->singleton(ConfigValidator::class);

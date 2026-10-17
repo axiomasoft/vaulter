@@ -26,7 +26,7 @@ final readonly class DeleteDriveAction
     public function execute(DriveContext $context): Drive
     {
         return $this->database->transaction(function () use ($context): Drive {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $drive = $this->drives->lock($context->driveId());
             if ($drive->status !== DriveStatus::Deleting) {
                 $drive = $this->drives->setStatus($drive, DriveStatus::Deleting);

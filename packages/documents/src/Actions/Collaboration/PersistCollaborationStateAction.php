@@ -103,7 +103,7 @@ final readonly class PersistCollaborationStateAction
                     throw NodeNotFoundException::forId('unpersisted');
                 }
 
-                $this->database->lockTreeShared($driveId);
+                $this->database->lockAggregateShared('drives', $driveId);
                 try {
                     $this->lifecycle->assertUserWritable($driveId);
                 } catch (DriveArchivedException) {

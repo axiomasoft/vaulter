@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter;
 
 use Illuminate\Console\Application as Artisan;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -91,15 +90,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
     private function bootModuleKernel(): void
     {
         $kernel = $this->app->make(Kernel::class);
-        // The stable morph aliases (`vaulter.node`, `vaulter.drive`) are stored in polymorphic columns, so a host's
-        // morphTo() must resolve them to the configured model classes. Merged into the host's map once every
-        // provider booted (never replacing it), and without enforceMorphMap().
-        $this->app->booted(function (): void {
-            $config = $this->app->make(VaulterConfig::class);
-            $drive = $config->model('drive');
-            $node = $config->model('node');
-            Relation::morphMap([$drive::MORPH_ALIAS => $drive, $node::MORPH_ALIAS => $node], merge: true);
-        });
         (new HttpRegistrar)->boot($this->app);
         if (!$kernel->isValid()) {
             $this->registerInvalidGraphRoute();

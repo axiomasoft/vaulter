@@ -17,13 +17,13 @@ use Illuminate\Support\Str;
 use PHPUnit\Framework\Assert;
 use Vaulter\Attributes\Api;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Drive\Actions\Content\SettleScanWorkAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
@@ -39,13 +39,13 @@ use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Testing\InteractsWithVaulter;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Enums\Cas\ScanMode;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
 use Vaulter\Media\Testing\FakeContentScanner;
 use Vaulter\Testing\Fixtures\FixtureOwner;
-use Vaulter\Testing\InteractsWithVaulter;
 
 /**
  * The scan lifecycle as the host has configured it, proved through the public surface:
@@ -248,7 +248,7 @@ final class ScanLifecycleContractTests
 
     private function revision(NodeSnapshot $node): FileRevision
     {
-        $class = App::make(VaulterConfig::class)->model('node');
+        $class = App::make(DriveConfig::class)->model('node');
 
         return $class::query()->findOrFail($node->id)->file()->firstOrFail()->currentRevision()->firstOrFail();
     }

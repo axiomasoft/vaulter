@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Vaulter\Attributes\EventSpec;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Testing\Events\EventConformance;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Events\EventTypeContract;
-use Vaulter\Testing\Events\EventConformance;
 
 /**
  * The event catalogue (D38): the modules contribute their enums, every case declares its EventSpec, and the

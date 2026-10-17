@@ -8,9 +8,9 @@ use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * prefix; neither reaches the webhook, the prefix is recorded in the activity feed.
  */
 #[Api]
-final readonly class NodeShareRotated extends DomainEvent
+final readonly class NodeShareRotated extends DriveEvent
 {
     #[Internal]
     public function __construct(

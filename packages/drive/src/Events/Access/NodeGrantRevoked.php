@@ -9,10 +9,10 @@ use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Drive\ValueObjects\Events\JournalEffect;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -24,7 +24,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * rows were removed.
  */
 #[Api]
-final readonly class NodeGrantRevoked extends DomainEvent
+final readonly class NodeGrantRevoked extends DriveEvent
 {
     #[Internal]
     public function __construct(

@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\ValueObjects\AccessExplanation;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Access\ValueObjects\AccessSource;
@@ -17,6 +16,7 @@ use Vaulter\Drive\Access\ValueObjects\Decision;
 use Vaulter\Drive\Access\ValueObjects\GrantSet;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -27,8 +27,8 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Repositories\Access\GrantReadRepository;
 use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Repositories\NodeReadRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * The Vaulter-OWNED, NON-swappable effective-access engine. It combines the
@@ -54,7 +54,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 final class AccessResolver
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
         private readonly PermissionDriverManager $drivers,
         private readonly GrantReadRepository $grants,
         private readonly DriveReadRepository $storages,

@@ -14,9 +14,9 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\Content\ScanPolicyStateRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Enums\Cas\ScanMode;
-use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]
 final readonly class ScanPolicyResolver implements Resolver

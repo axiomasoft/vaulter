@@ -8,8 +8,8 @@ use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -20,7 +20,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * system actor.
  */
 #[Api]
-final readonly class UploadExpired extends DomainEvent
+final readonly class UploadExpired extends DriveEvent
 {
     #[Internal]
     public function __construct(

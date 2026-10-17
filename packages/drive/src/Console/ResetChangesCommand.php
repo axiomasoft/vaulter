@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\Tenancy;
@@ -28,7 +28,7 @@ final class ResetChangesCommand extends Command
 
     protected $description = 'Expire every change-journal cursor of a drive, forcing its clients to resynchronize.';
 
-    public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, VaulterConfig $config): int
+    public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, DriveConfig $config): int
     {
         $argument = $this->argument('drive');
         $label = is_scalar($argument) ? (string) $argument : '';

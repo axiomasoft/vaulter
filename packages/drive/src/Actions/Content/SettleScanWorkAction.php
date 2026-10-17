@@ -14,9 +14,9 @@ use Vaulter\Drive\Content\ScanWorkTransitions;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Records a scanner verdict for a live lease and quarantines infected content in the same transaction.
@@ -37,7 +37,7 @@ final readonly class SettleScanWorkAction
         return $this->database->transaction(function () use ($attempt, $result): bool {
             // Freeze the owning tree before any preliminary scope reads. A purge
             // that wins first leaves no revision; settlement then safely no-ops.
-            $this->database->lockTreeShared($attempt->driveId);
+            $this->database->lockAggregateShared('drives', $attempt->driveId);
             $revision = $this->authority->revision($attempt->revisionId);
             if ($revision === null) {
                 return false;

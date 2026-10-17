@@ -13,8 +13,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -26,7 +26,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * actor who resolved it is also stamped as resolved_by on the row.
  */
 #[Api]
-final readonly class CommentResolved extends DomainEvent implements ShouldBroadcast
+final readonly class CommentResolved extends DriveEvent implements ShouldBroadcast
 {
     #[Internal]
     public function __construct(

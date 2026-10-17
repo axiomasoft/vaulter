@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Drives;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
@@ -40,7 +39,7 @@ final readonly class PurgeDriveStepAction
     public const int BATCH = 100;
 
     public function __construct(
-        private VaulterConfig $config,
+        private DriveConfig $config,
         private VaulterDatabase $database,
         private PurgeNodeAction $purge,
         private UploadSessionManager $uploads,
@@ -101,7 +100,7 @@ final readonly class PurgeDriveStepAction
     private function finish(DriveContext $context, ?Node $root): bool
     {
         return $this->database->transaction(function () use ($context, $root): bool {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $drive = $this->config->model('drive')::query()->whereKey($context->driveId())->lockForUpdate()->first();
             if (!$drive instanceof Drive || $drive->status !== DriveStatus::Deleting) {
                 return true;

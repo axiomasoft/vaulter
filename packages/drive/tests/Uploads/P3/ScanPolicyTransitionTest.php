@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Drive\Actions\Content\ClaimScanWorkAction;
@@ -55,7 +54,7 @@ it('SEC-POLICY preserves first new content boundary across reactivation and off'
     config()->set('vaulter-drive.scan.rollout_key', 'first');
     $context = DriveContext::system($drive, 'fixture');
     app(VaulterDatabase::class)->transaction(fn () => app(ScanPolicyResolver::class)->initialize($drive, $context));
-    $class = app(VaulterConfig::class)->model('scan_policy_state');
+    $class = app(DriveConfig::class)->model('scan_policy_state');
     expect($class::query()->where('drive_id', $drive->id)->pluck('boundary_sequence')->all())->toBe([7, 7]);
     config()->set('vaulter-drive.scan.mode', 'off');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
@@ -125,7 +124,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
     $bind = function (ScanMode $mode): void {
         $registry = new ProfileRegistry;
         $registry->register((new Profile)->key('default')->uploads(new UploadPolicy(scanMode: $mode, scanPolicyVersion: 'profile-v1')));
-        $policy = new ProfilePolicy(app(VaulterConfig::class), app('config'), $registry, app(ScanConfig::class), app(Kernel::class));
+        $policy = new ProfilePolicy(app(DriveConfig::class), app('config'), $registry, app(ScanConfig::class), app(Kernel::class));
         $resolver = new ScanPolicyResolver($policy, $registry, app(ScanPolicyStateRepository::class), app(ScanSnapshot::class), app(ActivateScanPolicyAction::class));
         app()->instance(ScanPolicyResolver::class, $resolver);
         app()->instance(Vaulter\Drive\Contracts\Content\ScanPolicyResolver::class, $resolver);

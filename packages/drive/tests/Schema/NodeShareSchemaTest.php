@@ -7,7 +7,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Support\ShareToken;
@@ -36,7 +36,7 @@ it('creates the v_node_shares table with every §2.7 column', function (): void 
 it('defaults new shares to version 1 of their role, the anyone audience and generation 1', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'reader-default');
-    $share = ForceCreates::make(app(VaulterConfig::class)->model('node_share'), [
+    $share = ForceCreates::make(app(DriveConfig::class)->model('node_share'), [
         'node_id' => $node->id,
         'token_hash' => ShareToken::hash('reader-default'),
         'token_prefix' => 'reader-d',
@@ -52,7 +52,7 @@ it('rejects a duplicate token_hash (UNIQUE)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'doc');
 
-    $model = app(VaulterConfig::class)->model('node_share');
+    $model = app(DriveConfig::class)->model('node_share');
     $hash = ShareToken::hash('the-token');
 
     $base = [
@@ -78,7 +78,7 @@ it('stores the token hash, never the raw token', function (): void {
     $share = ShareToken::hash('raw-secret');
 
     /** @var NodeShare $row */
-    $row = ForceCreates::make(app(VaulterConfig::class)->model('node_share'), [
+    $row = ForceCreates::make(app(DriveConfig::class)->model('node_share'), [
         'node_id' => $node->getKey(),
         'token_hash' => $share,
         'token_prefix' => 'raw-secr',

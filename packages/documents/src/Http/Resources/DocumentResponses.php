@@ -63,11 +63,10 @@ final readonly class DocumentResponses
             throw DriveArchivedException::forDrive(Identity::stringify($model->getKey()));
         }
 
-        return Preconditions::matchDocument(
-            $request,
-            (new DocumentContentResource($document))->etag(),
-            $document->stateVersion,
-            new StaleDocumentStateException(expected: $document->stateVersion, actual: $document->stateVersion, nodeId: $nodeId),
-        );
+        if (!Preconditions::matches($request, (new DocumentContentResource($document))->etag())) {
+            throw new StaleDocumentStateException(expected: $document->stateVersion, actual: $document->stateVersion, nodeId: $nodeId);
+        }
+
+        return $document->stateVersion;
     }
 }

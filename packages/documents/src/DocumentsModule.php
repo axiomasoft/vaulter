@@ -6,6 +6,7 @@ namespace Vaulter\Documents;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
+use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Documents\Console\MakeDocumentTypeCommand;
 use Vaulter\Documents\Console\MakeExporterCommand;
@@ -21,6 +22,7 @@ use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
+use Vaulter\Documents\Http\Support\DocumentsRouteLabels;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Presentation\DocumentPresenter;
@@ -90,6 +92,7 @@ final class DocumentsModule implements OwnsSchema, VaulterModule
             ->bindings(BindingsRegistrar::class)
             ->bindings(CollaborationRegistrar::class)
             ->commands(MakeDocumentTypeCommand::class, MakeExporterCommand::class)
+            ->slot(RouteLabelSource::class, DocumentsRouteLabels::class, 'documents.routes')
             ->slot(DoctorCheck::class, DocumentTypesCheck::class, 'documents.types', key: 'documents.types')
             ->slot(DoctorCheck::class, CollaborationCheck::class, 'documents.collaboration', key: 'documents.collaboration')
             // The drive's node snapshots carry the `document` fragment; a handle serves the document and comment operations.

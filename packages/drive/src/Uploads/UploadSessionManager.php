@@ -11,7 +11,6 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
@@ -30,10 +29,10 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Kernel;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 
@@ -314,7 +313,7 @@ final readonly class UploadSessionManager
         if (!$fresh instanceof UploadSession) {
             throw NodeNotFoundException::forId('upload');
         }
-        $driveClass = app(VaulterConfig::class)->model('drive');
+        $driveClass = app(DriveConfig::class)->model('drive');
         $drive = $driveClass::query()->whereKey($fresh->drive_id)->first();
         if (!$drive instanceof Drive) {
             throw NodeNotFoundException::forId('drive');

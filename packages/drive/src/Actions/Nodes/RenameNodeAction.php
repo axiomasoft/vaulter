@@ -49,7 +49,7 @@ final readonly class RenameNodeAction
         $name = $this->policy->name(drive: $context->drive, name: $data->name);
 
         return $this->database->transaction(function () use ($node, $name, $data, $context): Node {
-            $this->database->lockTreeShared($node->drive_id);
+            $this->database->lockAggregateShared('drives', $node->drive_id);
             $this->lifecycle->assertWritable($context);
             // A move may have completed before the tree lock was acquired. Locate
             // its current parent now and lock the full set in primary-key order.

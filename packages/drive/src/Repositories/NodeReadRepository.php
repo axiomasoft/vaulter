@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\PermissionDriverManager;
 use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Exceptions\Nodes\TreeTraversalIncompleteException;
@@ -25,9 +25,9 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\Access\GrantReadRepository;
 use Vaulter\Drive\Support\NodeName;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side queries over the v_nodes adjacency tree. Tree reads use
@@ -58,7 +58,7 @@ final class NodeReadRepository
     private const int WHERE_IN_BIND_LIMIT = 900;
 
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
         private readonly AccessResolver $access,
         private readonly PermissionDriverManager $drivers,
         private readonly GrantReadRepository $grants,

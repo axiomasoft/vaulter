@@ -81,7 +81,7 @@ final readonly class CreateDocumentAction
         }
 
         return $this->database->transaction(function () use ($context, $data, $name, $parentId, $actorId): Node {
-            $this->database->lockTreeShared($data->storage->id);
+            $this->database->lockAggregateShared('drives', $data->storage->id);
             $this->lifecycle->assertWritable($context);
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);

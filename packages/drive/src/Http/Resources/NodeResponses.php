@@ -17,6 +17,7 @@ use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Drive\Http\Resources\Drive\NodeResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Operations\DriveContext;
@@ -111,7 +112,11 @@ final readonly class NodeResponses
             throw PermissionDeniedException::forAbility($ability->value);
         }
 
-        return Preconditions::matchNode($request, (new NodeResource($snapshot, $abilities))->etag(), $snapshot);
+        if (!Preconditions::matches($request, (new NodeResource($snapshot, $abilities))->etag())) {
+            throw StaleNodeException::forNode($snapshot->id);
+        }
+
+        return $snapshot->sequence;
     }
 
     /**

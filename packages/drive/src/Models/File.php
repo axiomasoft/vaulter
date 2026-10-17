@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -73,7 +73,7 @@ class File extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'node_id');
     }
 
     /**
@@ -81,7 +81,7 @@ class File extends Model
      */
     public function versions(): HasMany
     {
-        return $this->hasMany(app(VaulterConfig::class)->model('file_revision'), 'file_id');
+        return $this->hasMany(app(DriveConfig::class)->model('file_revision'), 'file_id');
     }
 
     /**
@@ -92,7 +92,7 @@ class File extends Model
      */
     public function currentRevision(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('file_revision'), 'current_revision_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('file_revision'), 'current_revision_id');
     }
 
     /**

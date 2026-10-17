@@ -18,9 +18,9 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Media\Content\ScanResult;
 use Vaulter\Media\Enums\Cas\ScanVerdict;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Creates scan work and its request ledger row; SQL owns generation fencing.

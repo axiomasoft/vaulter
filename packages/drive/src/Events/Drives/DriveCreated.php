@@ -8,10 +8,10 @@ use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -22,7 +22,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * auto-created root folder node.
  */
 #[Api]
-final readonly class DriveCreated extends DomainEvent
+final readonly class DriveCreated extends DriveEvent
 {
     #[Internal]
     public function __construct(

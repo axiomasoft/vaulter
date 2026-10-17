@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Drive\Http\Resources\Drive\NodeResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
@@ -50,7 +51,10 @@ final class NodeProbeRoutes
                     $drive = app(HttpOperationContextFactory::class)->forDrive($request, app(HttpResourceResolver::class)->driveOfNode($node));
                     $snapshot = $drive->nodes()->find($node);
                     $current = new NodeResource($snapshot, $drive->nodes()->abilities($snapshot));
-                    $expected = Preconditions::matchNode($request, $current->etag(), $snapshot);
+                    if (!Preconditions::matches($request, $current->etag())) {
+                        throw StaleNodeException::forNode($snapshot->id);
+                    }
+                    $expected = $snapshot->sequence;
                     $renamed = $drive->nodes()->rename($node, $request->string('name')->toString(), $expected);
                     $resource = new NodeResource($renamed, $drive->nodes()->abilities($renamed));
 

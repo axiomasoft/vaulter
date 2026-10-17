@@ -27,8 +27,12 @@ use Vaulter\Drive\Models\Sharing\NodeShare;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Profiles\DefaultProfile;
+use Vaulter\Drive\Profiles\ProfilePolicy;
 use Vaulter\Drive\Profiles\ProfileProvider;
+use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\Media\Models\Cas\Blob;
 
 #[Api]
 final readonly class DriveConfig implements ScanWorkSettings
@@ -164,15 +168,37 @@ final readonly class DriveConfig implements ScanWorkSettings
     }
 
     /**
-     * The class of a drive model the host may swap (`vaulter-drive.models.<key>`), checked against the shipped model.
+     * The class of a model the host may swap (`vaulter-drive.models.<key>`), checked against the shipped model. The
+     * blob model is the media package's (D6): its key lives in `vaulter-media.models.blob`.
      *
      * @throws InvalidConfigurationException when the key names no drive model or the class does not extend the shipped one
      *
-     * @return class-string<Model>
+     * @return (
+     *     $key is 'scan_backfill_run' ? class-string<ScanBackfillRun> : (
+     *     $key is 'scan_policy_state' ? class-string<ScanPolicyState> : (
+     *     $key is 'scan_evidence' ? class-string<ScanEvidenceRecord> : (
+     *     $key is 'scan_request' ? class-string<ScanRequest> : (
+     *     $key is 'scan_obligation' ? class-string<ScanObligation> : (
+     *     $key is 'drive' ? class-string<Drive> : (
+     *     $key is 'node' ? class-string<Node> : (
+     *     $key is 'file' ? class-string<File> : (
+     *     $key is 'file_revision' ? class-string<FileRevision> : (
+     *     $key is 'file_revision_blob' ? class-string<FileRevisionBlob> : (
+     *     $key is 'blob' ? class-string<Blob> : (
+     *     $key is 'grant' ? class-string<NodeGrant> : (
+     *     $key is 'node_share' ? class-string<NodeShare> : (
+     *     $key is 'activity' ? class-string<Activity> : (
+     *     $key is 'upload_session' ? class-string<UploadSession> : (
+     *     $key is 'upload_part' ? class-string<UploadPart> : class-string<Model>)))))))))))))))
+     * )
      */
     #[Internal]
-    public function modelClass(string $key): string
+    public function model(string $key): string
     {
+        if ($key === 'blob') {
+            return (new MediaConfig($this->config))->blobModel();
+        }
+
         $defaults = [
             'scan_obligation' => ScanObligation::class,
             'scan_request' => ScanRequest::class,
@@ -187,17 +213,62 @@ final readonly class DriveConfig implements ScanWorkSettings
             'grant' => NodeGrant::class,
             'node_share' => NodeShare::class,
             'activity' => Activity::class,
+            'upload_session' => UploadSession::class,
+            'upload_part' => UploadPart::class,
         ];
 
         $path = 'vaulter-drive.models.'.$key;
-        $class = $this->config->get($path, $defaults[$key] ?? null);
-        if (!is_string($class) || !isset($defaults[$key])) {
+        if (!isset($defaults[$key])) {
+            throw new InvalidConfigurationException('[Vaulter] Invalid model class for '.$path.'.');
+        }
+        $class = $this->config->get($path, $defaults[$key]);
+        if (!is_string($class)) {
             throw new InvalidConfigurationException('[Vaulter] Invalid model class for '.$path.'.');
         }
 
         ConfigValidator::assertModel($path, $class, $defaults[$key]);
 
         return $class;
+    }
+
+    /** Whether a drive feature is on: globally, or for `$profile` once the profile narrows it. */
+    public function featureEnabled(string $feature, ?string $profile = null): bool
+    {
+        if ($profile !== null) {
+            return app(ProfilePolicy::class)->featureEnabled(app(ProfileRegistry::class)->get($profile), $feature);
+        }
+
+        return $this->featureFlag($feature);
+    }
+
+    public function scan(): ScanConfig
+    {
+        return new ScanConfig($this->config);
+    }
+
+    public function access(): AccessConfig
+    {
+        return new AccessConfig($this->config);
+    }
+
+    public function listing(): ListingConfig
+    {
+        return new ListingConfig($this->config);
+    }
+
+    public function sharing(): SharingConfig
+    {
+        return new SharingConfig($this->config);
+    }
+
+    public function downloads(): DownloadsConfig
+    {
+        return new DownloadsConfig($this->config);
+    }
+
+    public function changes(): ChangesConfig
+    {
+        return new ChangesConfig($this->config);
     }
 
     public function defaultQuota(): ?int
@@ -330,38 +401,5 @@ final readonly class DriveConfig implements ScanWorkSettings
         $value = $this->config->get(key: 'vaulter-drive.uploads.resumable.enabled', default: true);
 
         return (bool) $value;
-    }
-
-    /** @return ($key is 'upload_session' ? class-string<UploadSession> : class-string<UploadPart>) */
-    public function model(string $key): string
-    {
-        if ($key === 'upload_session') {
-            return $this->configuredModel(key: $key, base: UploadSession::class);
-        }
-
-        if ($key === 'upload_part') {
-            return $this->configuredModel(key: $key, base: UploadPart::class);
-        }
-
-        throw new InvalidConfigurationException('[Vaulter] Unknown drive model key: '.$key);
-    }
-
-    /**
-     * @template T of \Illuminate\Database\Eloquent\Model
-     *
-     * @param  class-string<T> $base
-     * @return class-string<T>
-     */
-    private function configuredModel(string $key, string $base): string
-    {
-        $class = $this->config->get(key: 'vaulter-drive.models.'.$key, default: $base);
-
-        if (!is_string($class)) {
-            throw new InvalidConfigurationException('[Vaulter] Model vaulter-drive.models.'.$key.' must be a class name.');
-        }
-
-        ConfigValidator::assertModel(key: 'vaulter-drive.models.'.$key, class: $class, base: $base);
-
-        return $class;
     }
 }

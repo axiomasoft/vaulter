@@ -13,8 +13,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -26,7 +26,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * still carries its id/node_id in memory after the delete, so the payload is complete.
  */
 #[Api]
-final readonly class CommentDeleted extends DomainEvent implements ShouldBroadcast
+final readonly class CommentDeleted extends DriveEvent implements ShouldBroadcast
 {
     #[Internal]
     public function __construct(

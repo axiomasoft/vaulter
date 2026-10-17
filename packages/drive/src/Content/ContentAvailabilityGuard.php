@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Drive\Contracts\DownloadGuard;
 use Vaulter\Drive\Exceptions\Files\ContentUnavailableException;
@@ -16,9 +16,9 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Drive\Sharing\ShareContext;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Media\Enums\Cas\BlobStatus;
 use Vaulter\Media\Models\Cas\Blob;
-use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * The drive's `drive.content-availability` contribution to the DownloadGuard slot. Availability never grants
@@ -27,7 +27,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 #[Internal]
 final readonly class ContentAvailabilityGuard implements DownloadGuard
 {
-    public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
+    public function __construct(private DriveConfig $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
 
     public function check(DriveContext|ShareContext $context, Node $node, FileRevision $revision): void
     {

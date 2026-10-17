@@ -6,40 +6,43 @@ namespace Vaulter\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
+use Vaulter\Contracts\Routing\RouteLabelSource;
+use Vaulter\Kernel;
 
 /**
- * logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads).
- *
- * Routes are resolved by their name.
+ * The logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads), merged from the
+ * RouteLabelSource contributions of the active modules. Routes are resolved by their name.
  */
 #[Internal]
 final class VaulterThrottledRouteMap
 {
-    /** @var array<string, string> route name => logical route id */
-    private const array NAMED = [
-        'vaulter.v1.public-shares.show' => 'share.show',
-        'vaulter.v1.public-shares.nodes' => 'share.nodes',
-        'vaulter.v1.public-shares.download' => 'share.download',
-        'vaulter.v1.uploads.store' => 'uploads.tus_create',
-        'vaulter.v1.uploads.tus.patch' => 'uploads.tus_patch',
-        'vaulter.v1.uploads.show' => 'uploads.tus_status',
-        'vaulter.v1.uploads.tus.head' => 'uploads.tus_status',
-        'vaulter.v1.uploads.parts.store' => 'uploads.s3_parts',
-        'vaulter.v1.uploads.complete' => 'uploads.s3_complete',
-        'vaulter.v1.files.store' => 'uploads.single',
-        'vaulter.v1.collaboration.hub.authenticate' => 'collab.authenticate',
-        'vaulter.v1.collaboration.hub.store' => 'collab.store',
-    ];
+    /** @var array<string, string>|null */
+    private ?array $named = null;
 
-    public static function routeFor(string $routeName): ?string
+    public function __construct(private readonly Kernel $kernel) {}
+
+    public function routeFor(string $routeName): ?string
     {
-        return self::NAMED[$routeName] ?? null;
+        return ($this->named ??= $this->merged())[$routeName] ?? null;
     }
 
-    public static function resolve(Request $request): ?string
+    public function resolve(Request $request): ?string
     {
         $name = $request->route()?->getName();
 
-        return is_string($name) ? self::routeFor($name) : null;
+        return is_string($name) ? $this->routeFor($name) : null;
+    }
+
+    /** @return array<string, string> */
+    private function merged(): array
+    {
+        $names = [];
+        if ($this->kernel->isValid()) {
+            foreach ($this->kernel->extensions()->resolve(RouteLabelSource::class) as $source) {
+                $names += $source->throttled();
+            }
+        }
+
+        return $names;
     }
 }

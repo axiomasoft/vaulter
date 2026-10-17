@@ -81,7 +81,7 @@ final readonly class RestoreNodeAction
         $node = $this->locator->find(context: $context, key: $data->node, includeTrashed: true);
 
         return $this->database->transaction(function () use ($node, $data, $context): Node {
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $this->lifecycle->assertWritable($context);
             $fresh = $this->locator->find(context: $context, key: $node, includeTrashed: true);
             $ids = $this->nodes->subtree($fresh)->modelKeys();

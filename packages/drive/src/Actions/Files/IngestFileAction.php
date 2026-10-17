@@ -144,7 +144,7 @@ final readonly class IngestFileAction
 
             $receipt = $this->database->transaction(function () use ($context, $data, $staged, $name, $parentId): IngestReceipt {
                 // Lock order: drive → nodes → file → quota → CAS, so concurrent writers never deadlock.
-                $this->database->lockTreeShared($data->storage->id);
+                $this->database->lockAggregateShared('drives', $data->storage->id);
                 $this->lifecycle->assertWritable($context);
 
                 if ($name !== null && $parentId !== null) {

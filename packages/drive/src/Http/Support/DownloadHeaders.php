@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Http\Support;
+namespace Vaulter\Drive\Http\Support;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -12,10 +12,7 @@ use Vaulter\Drive\Configuration\DownloadsConfig;
 
 /**
  * The ONE shared response-header builder for a file download, used by BOTH PHP-stream download surfaces — the identity
- * DownloadController (vaulter-drive) and the public PublicShareController (this
- * package). Referenced from vaulter-drive, never the other way — core must not
- * depend on the extracted drive package, so this class stays
- * plain-prose about its drive-side caller rather than importing/`@see`-ing it.
+ * DownloadController and the PublicShareController.
  * The declared `mime_type` is attacker-controlled (set by whoever uploaded the
  * file), so it is NEVER trusted directly: `X-Content-Type-Options: nosniff` is
  * set unconditionally, and `Content-Type` is only ever the declared mime when it

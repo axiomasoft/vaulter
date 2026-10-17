@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Jobs\PruneFileRevisionsJob;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -33,7 +33,7 @@ final class PruneRevisionsCommand extends Command
 
     protected $description = 'Delete non-current file revisions past their profile retention policy.';
 
-    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, VaulterConfig $config): int
+    public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, DriveConfig $config): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $only = array_values(array_filter(array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', (array) $this->option('drive')), static fn (string $id): bool => $id !== ''));

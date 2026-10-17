@@ -10,6 +10,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\ModuleSchema;
 use Vaulter\Schema\SchemaHelpers;
+use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
 /** The tables the media module owns: the content-addressed blobs and the pins that keep them alive (D23). */
 #[Internal]
@@ -23,6 +24,15 @@ final class MediaSchema implements ModuleSchema
         return [
             'blobs',
             'blob_references',
+        ];
+    }
+
+    /** @return list<KeyColumnExpectation> the key columns of the module's tables and the kind each must have: `HK` host key, `REF` entity id, `STRING` of a length */
+    public function keyColumns(): array
+    {
+        return [
+            new KeyColumnExpectation('blobs', 'tenant_id', 'HK'),
+            new KeyColumnExpectation('blobs', 'storage_id', 'REF'),
         ];
     }
 

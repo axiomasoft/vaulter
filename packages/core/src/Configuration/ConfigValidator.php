@@ -7,26 +7,19 @@ namespace Vaulter\Configuration;
 use Closure;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Support\Facades\Log;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Drive\Access\PermissionDriverCatalog;
-use Vaulter\Drive\Configuration\AccessConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Configuration\ScanConfig;
-use Vaulter\Drive\Contracts\Access\NonProductionPermissionDriver;
-use Vaulter\Drive\Contracts\Access\PermissionDriver;
-use Vaulter\Drive\Exceptions\Profiles\InvalidProfileException;
-use Vaulter\Drive\Profiles\ProfilePolicy;
-use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Events\Outbox\OutboxSchedule;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotencySchedule;
-use Vaulter\Kernel;
 
+/**
+ * Validates the kernel's own `vaulter.*` sections; each module validates its sections itself (the drive through
+ * `vaulter.config_validators`, which `vaulter:doctor` repeats).
+ */
 #[Api]
 final readonly class ConfigValidator
 {
@@ -50,6 +43,7 @@ final readonly class ConfigValidator
             $this->validateTenantResolver($app->make(TenantResolver::class));
         }
         $config->outbox()->validate();
+        $config->outboxModel();
         $schedule = new ScheduleConfig($this->config);
         $schedule->enabled();
         // Each module validates its own schedule keys.
@@ -57,68 +51,6 @@ final readonly class ConfigValidator
         $ttl = $this->config->get('vaulter.idempotency.ttl_seconds', IdempotencyClaim::DEFAULT_TTL_SECONDS);
         if (!is_int($ttl) || $ttl < 1) {
             throw new InvalidConfigurationException('[Vaulter] vaulter.idempotency.ttl_seconds must be a positive integer (seconds).');
-        }
-
-        // The drive sections live in vaulter-drive: validated only while the drive is active.
-        if ($app->make(Kernel::class)->isActive('drive')) {
-            $this->validateDrive($config, $app);
-        }
-    }
-
-    private function validateDrive(VaulterConfig $config, Application $app): void
-    {
-        $access = $config->access();
-        $key = $access->permissionDriver();
-        $drivers = (new PermissionDriverCatalog($access, $app->make(Kernel::class)))->classes();
-        if (!isset($drivers[$key])) {
-            throw new InvalidConfigurationException('[Vaulter] Unknown '.AccessConfig::PERMISSION_DRIVER_KEY.' "'.$key.'".');
-        }
-        self::assertImplements(AccessConfig::PERMISSION_DRIVERS_KEY.'.'.$key, $drivers[$key], PermissionDriver::class);
-        if ($app->environment('production') && is_a($drivers[$key], NonProductionPermissionDriver::class, true)) {
-            throw new InvalidConfigurationException('[Vaulter] Non-production permission driver "'.$key.'" is forbidden in production.');
-        }
-        $config->changes()->retentionDays();
-        $config->changes()->maxPageSize();
-        $config->sharing()->tokenGenerator();
-        foreach ([
-            'drive',
-            'node',
-            'file',
-            'scan_obligation', 'scan_request', 'scan_evidence', 'scan_policy_state', 'scan_backfill_run',
-            'file_revision',
-            'file_revision_blob',
-            'grant',
-            'node_share',
-            'activity',
-            'outbox',
-        ] as $key) {
-            $config->model($key);
-        }
-
-        $driveConfig = new DriveConfig($this->config);
-        try {
-            if ($app->resolved(ProfileRegistry::class)) {
-                $registry = $app->make(ProfileRegistry::class);
-                // Standalone validation may use a different Repository than the booted app.
-                if ($config !== $app->make(VaulterConfig::class)) {
-                    $registry = ProfileRegistry::fromConfig($driveConfig->profileProviders(), $driveConfig->defaultProfile(), $app);
-                }
-            } else {
-                $registry = ProfileRegistry::fromConfig($driveConfig->profileProviders(), $driveConfig->defaultProfile(), $app);
-                $app->instance(ProfileRegistry::class, $registry);
-            }
-            $policy = new ProfilePolicy($config, $this->config, $registry, new ScanConfig($this->config), $app->make(Kernel::class));
-            foreach ($registry->all() as $profile) {
-                $policy->validate($profile);
-                $profileKey = $profile->getPermissionDriver() ?? $access->permissionDriver();
-                self::assertImplements(AccessConfig::PERMISSION_DRIVERS_KEY.'.'.$profileKey, $drivers[$profileKey] ?? '', PermissionDriver::class);
-                if ($app->environment('production') && is_a($drivers[$profileKey], NonProductionPermissionDriver::class, true)) {
-                    throw new InvalidConfigurationException('[Vaulter] Non-production profile permission driver "'.$profileKey.'" is forbidden in production.');
-                }
-            }
-            (new ScanConfig($this->config))->scanner();
-        } catch (InvalidProfileException $exception) {
-            throw new InvalidConfigurationException($exception->getMessage(), previous: $exception);
         }
     }
 
@@ -146,18 +78,6 @@ final readonly class ConfigValidator
         if ($class === '' || !class_exists($class) || !is_a($class, $base, true)) {
             throw new InvalidConfigurationException('[Vaulter] Config key "'.$key.'" must name a class implementing or extending '.$base.'; got "'.$class.'".');
         }
-    }
-
-    public static function assertCollaborationSecrets(bool $enabled, ?string $jwtSecret, ?string $webhookSecret, Application $app): void
-    {
-        if (!$enabled || ($jwtSecret !== null && $jwtSecret !== '' && $webhookSecret !== null && $webhookSecret !== '' && $jwtSecret !== $webhookSecret)) {
-            return;
-        }
-        $message = '[Vaulter] Collaboration requires nonempty, different JWT and webhook secrets.';
-        if ($app->environment('production')) {
-            throw new InvalidConfigurationException($message);
-        }
-        Log::warning($message);
     }
 
     private function validateTenantResolver(object $resolver): void

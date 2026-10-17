@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\FileRevision;
 
 /**
@@ -19,7 +19,7 @@ use Vaulter\Drive\Models\FileRevision;
 final class FileRevisionStoreRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
         private readonly VaulterDatabase $database,
     ) {}
 

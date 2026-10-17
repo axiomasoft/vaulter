@@ -8,12 +8,12 @@ use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\File;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Drive\ValueObjects\Events\JournalEffect;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -24,7 +24,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * bumped, current_revision_id repointed, the prior head marked superseded.
  */
 #[Api]
-final readonly class FileRevisionAdded extends DomainEvent
+final readonly class FileRevisionAdded extends DriveEvent
 {
     #[Internal]
     public function __construct(

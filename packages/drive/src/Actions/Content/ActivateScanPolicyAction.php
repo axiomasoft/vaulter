@@ -33,7 +33,7 @@ final readonly class ActivateScanPolicyAction
             if (Identity::stringify($drive->getRawOriginal($drive->getKeyName())) !== (string) $context->driveId() || $rolloutKey !== $spec->rolloutKey) {
                 throw new LogicException('Scan activation scope or rollout differs.');
             }
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $current = $this->authority->lockDriveOrFail($context->driveId());
             $state = $this->states->lockState($current->id, $spec->predicateKey);
             if ($state !== null && (string) $state->tenant_id !== (string) $current->tenant_id) {

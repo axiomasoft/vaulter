@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Doctor;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Quota\QuotaCalculator;
 use Vaulter\Support\Identity;
@@ -21,7 +21,7 @@ use Vaulter\Support\Identity;
 #[Internal]
 final readonly class DrivesUsageCheck implements DoctorCheck
 {
-    public function __construct(private VaulterConfig $config, private QuotaCalculator $quota) {}
+    public function __construct(private DriveConfig $config, private QuotaCalculator $quota) {}
 
     public function key(): string
     {

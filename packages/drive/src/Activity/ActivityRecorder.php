@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Activity;
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Data\Activity\RecordActivityCommand;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Support\RequestContext;
@@ -35,7 +36,7 @@ final readonly class ActivityRecorder
     public function record(DomainEvent $event): bool
     {
         $scope = $event->scope();
-        $target = $event->activityTarget();
+        $target = $event instanceof DriveEvent ? $event->activityTarget() : null;
         $request = RequestContext::capture();
         $context = [...$event->activityContext(), 'correlation_id' => $event->correlationId];
         if ($event->actor->reason !== null) {

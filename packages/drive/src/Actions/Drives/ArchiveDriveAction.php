@@ -24,7 +24,7 @@ final readonly class ArchiveDriveAction
     {
         return $this->database->transaction(function () use ($context): Drive {
             // T exclusive: no tree write of this drive is in flight when the status flips.
-            $this->database->lockTree($context->driveId());
+            $this->database->lockAggregate('drives', $context->driveId());
             $drive = $this->drives->lock($context->driveId());
             if ($drive->status !== DriveStatus::Active) {
                 throw InvalidDriveStateException::for($drive->id, 'archive', $drive->status);

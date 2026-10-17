@@ -8,7 +8,6 @@ use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Drive\Actions\Content\SupersedeScanWorkAction;
@@ -17,13 +16,13 @@ use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Models\Content\ScanObligation;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Repositories\Content\ScanObligationRepository;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Tenancy\TenancyBoundary;
 
 #[Internal]
 final readonly class ScanWorkReconciler
 {
-    public function __construct(private VaulterDatabase $database, private VaulterConfig $config,
+    public function __construct(private VaulterDatabase $database, private DriveConfig $config,
         private DriveConfig $driveConfig, private ScanObligationRepository $work,
         private RecoverScanWorkAction $recover, private SupersedeScanWorkAction $supersede,
         private ScanPolicyResolver $policies, private Dispatcher $bus) {}

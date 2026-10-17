@@ -9,9 +9,9 @@ use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
-use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, DatabaseMigrations::class);
 

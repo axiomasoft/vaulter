@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Builder;
 use RuntimeException;
 use Throwable;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -67,7 +66,7 @@ final readonly class UploadCleanupReconciler
                     || (string) $locked->assembled_blob_id !== (string) $locked->result_blob_id) {
                     throw new RuntimeException('Upload cleanup has incomplete committed pointers.');
                 }
-                $nodeClass = app(VaulterConfig::class)->model('node');
+                $nodeClass = app(DriveConfig::class)->model('node');
                 $node = $nodeClass::query()->where('drive_id', $locked->drive_id)->whereKey($locked->result_node_id)->first();
                 $revision = $node?->file()->first()?->versions()->whereKey($locked->result_revision_id)->first();
                 if ($revision === null || (string) $revision->blob_id !== (string) $locked->result_blob_id) {

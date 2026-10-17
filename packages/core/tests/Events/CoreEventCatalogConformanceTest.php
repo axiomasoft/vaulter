@@ -13,7 +13,7 @@ use Vaulter\Drive\Operations\AccessOperations;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\ShareOperations;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Testing\Events\EventConformance;
+use Vaulter\Drive\Testing\Events\EventConformance;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\TestCase;
 

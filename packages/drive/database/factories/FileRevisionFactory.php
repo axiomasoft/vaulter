@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Vaulter\Attributes\Api;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\RevisionOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Models\Drive;
@@ -78,7 +78,7 @@ final class FileRevisionFactory extends VaulterFactory
             new RevisionOptions(declaredMimeType: $this->stateString('mime', 'text/plain')),
         );
 
-        $class = app(VaulterConfig::class)->model('file_revision');
+        $class = app(DriveConfig::class)->model('file_revision');
 
         return $this->withTenant(static fn (): Model => $class::query()->whereKey($snapshot->id)->firstOrFail());
     }

@@ -11,6 +11,7 @@ use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Drive\Http\Resources\FileRevisionResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\ListQuery;
 use Vaulter\Http\Resources\PageResponse;
 
 /** A file's retained revisions (View), newest first. */
@@ -21,7 +22,7 @@ final readonly class ListFileRevisionsController
 
     public function __invoke(Request $request, string $node): JsonResponse
     {
-        $options = PageResponse::listOptions($request);
+        $options = ListQuery::options($request);
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
 
         return PageResponse::make(

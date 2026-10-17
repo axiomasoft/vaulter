@@ -57,10 +57,7 @@
         "core-events": {
             "parent": "core",
             "suite": "core",
-            "src": [
-                "packages/core/src/Events",
-                "packages/core/src/Jobs"
-            ],
+            "src": ["packages/core/src/Events"],
             "tests": [
                 "packages/core/tests/Events",
                 "packages/core/tests/Outbox"
@@ -242,8 +239,8 @@
         "packages/core/tests/HostKeyMysql",
         "packages/core/tests/Database",
         "packages/core/tests/Events/EventRecorderTest.php",
-        "packages/core/tests/Tenancy/TenantProvisioningRaceTest.php",
-        "packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php",
+        "packages/drive/tests/Tenancy/TenantProvisioningRaceTest.php",
+        "packages/drive/tests/Tenancy/TenantIdentifierPredicateTest.php",
         "packages/core/tests/Modules/AcmeModuleContractTest.php",
         "packages/core/tests/Outbox/OutboxRelayTest.php",
         "packages/core/tests/Outbox/OutboxWriteTest.php",

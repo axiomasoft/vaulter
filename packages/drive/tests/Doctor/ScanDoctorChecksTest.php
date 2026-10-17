@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
@@ -74,7 +74,7 @@ function scanFixture(): array
     app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'a.txt', 'text/plain'));
     fclose($stream);
     app(ScanBackfillReconciler::class)->expand(10);
-    $work = app(VaulterConfig::class)->model('scan_obligation')::query()->firstOrFail();
+    $work = app(DriveConfig::class)->model('scan_obligation')::query()->firstOrFail();
 
     return [$drive, $work];
 }

@@ -19,12 +19,12 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Sharing\ShareResolver;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
-use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
-use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 

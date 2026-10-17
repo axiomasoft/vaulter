@@ -6449,8 +6449,8 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_never_references_the_extracted_vaulter_drive_package__P2__5___D1_",
-      "new": "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_extracted_vaulter_drive_package_only_from_the_files_that_move_to_it__P2__5___D1__P4_8_",
-      "reason": "the live check follows the moved namespace: its name carries the new owner FQCN (P4.8 ownership move)",
+      "new": "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_vaulter_drive_package_nowhere__P2__5___D1__I1_blocks_from_P4_16_",
+      "reason": "the live check follows the moved namespace: its name carries the new owner FQCN (P4.8 ownership move); P4.16: the transitional list is empty, the test now asserts that core names no drive type (I1 blocks)",
       "decision": "D40"
     },
     {
@@ -9618,9 +9618,10 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.profiles.providers', ['Vaulter\\Tests\\Fixtures\\Panels…rofile'])\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['Vaulter\\Drive\\Testing\\Fixture…rofile'])\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['Vaulter\\Drive\\Testing\\Fixture…rofile'])\"",
       "reason": "renamed: the FQCN named by the case title or its dataset changed with the P4.10 move (Vaulter\\Drive\\...)",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "core",
@@ -9689,23 +9690,26 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.access.permission_driver', 'missing')\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 'missing')\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 'missing')\"",
       "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.access.permission_driver', 42)\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 42)\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 42)\"",
       "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.access.permission_dri…tabase', 'stdClass')\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permissi…tabase', 'stdClass')\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permissi…tabase', 'stdClass')\"",
       "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "core",
@@ -9717,37 +9721,42 @@
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.models.node', 'stdClass')\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 'stdClass')\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 'stdClass')\"",
       "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.models.node', 42)\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 42)\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 42)\"",
       "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.profiles.default', 'stdClass')\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.default', 'stdClass')\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.default', 'stdClass')\"",
       "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.profiles.providers', ['stdClass'])\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['stdClass'])\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['stdClass'])\"",
       "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.sharing.token_generator', 'stdClass')\"",
-      "new": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.sharing.token_generator', 'stdClass')\"",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.sharing.token_generator', 'stdClass')\"",
       "reason": "P4.11: the dataset label names the config key under its new root vaulter-drive",
-      "decision": "D10"
+      "decision": "D10",
+      "new_suite": "drive"
     },
     {
       "suite": "drive",
@@ -11442,6 +11451,219 @@
       "new": "P\\Tests\\Feature\\ResourcePagesTest::__pest_evaluable_it_declares_no_record_page__every_row_is_a_snapshot_with_no_model_to_open",
       "reason": "drive and activity details open as a table modal over the snapshot row; no model-bound view page (P4.15)",
       "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_I15_maintenance_keeps_ACL_checks_and_authoritative_child_consistency",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_I15_maintenance_keeps_ACL_checks_and_authoritative_child_consistency",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_I15_restores_nested_maintenance_exceptions_without_carrying_bypass_into_a_Fiber",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_I15_restores_nested_maintenance_exceptions_without_carrying_bypass_into_a_Fiber",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_F1_binds_optional_owner_validation_lookup_and_insert_to_one_persisted_identity",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_F1_binds_optional_owner_validation_lookup_and_insert_to_one_persisted_identity",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_F2_rejects_mismatched_descendant_ancestor_breadcrumb_and_ACL_tree_stamps",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_F2_rejects_mismatched_descendant_ancestor_breadcrumb_and_ACL_tree_stamps",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_anonymous_bearer_shares_derive_only_their_target_tenant_and_do_not_open_a_foreign_system_handle",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_anonymous_bearer_shares_derive_only_their_target_tenant_and_do_not_open_a_foreign_system_handle",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_constrains_HTTP_lookup_search_shared_and_trash_reads_to_the_owning_drive_tenant",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_constrains_HTTP_lookup_search_shared_and_trash_reads_to_the_owning_drive_tenant",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_denies_mutated_supplied_drive_and_node_models_and_cached_repository_authority",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_denies_mutated_supplied_drive_and_node_models_and_cached_repository_authority",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_null_refuses_current_authority_while_normalized_tenant_ids_retain_leading_zeroes",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_null_refuses_current_authority_while_normalized_tenant_ids_retain_leading_zeroes",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_optional_owner_tenant_resolver_rereads_owner_on_both_provision_and_existing_lookup",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_optional_owner_tenant_resolver_rereads_owner_on_both_provision_and_existing_lookup",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_refuses_a_foreign_existing_owner_profile_winner_without_creating_another_drive",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_refuses_a_foreign_existing_owner_profile_winner_without_creating_another_drive",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_stamps_authoritative_drive_and_children_and_retained_system_handles_recheck_A_B_A",
+      "new": "P\\Tests\\Tenancy\\StrictTenancyTest::__pest_evaluable_it_V31_stamps_authoritative_drive_and_children_and_retained_system_handles_recheck_A_B_A",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\TenantIdentifierPredicateTest::__pest_evaluable_it_SEC_TENANT_IDENTITY_keeps_numeric_and_case_sensitive_tenant_identity_on_the_actual_database",
+      "new": "P\\Tests\\Tenancy\\TenantIdentifierPredicateTest::__pest_evaluable_it_SEC_TENANT_IDENTITY_keeps_numeric_and_case_sensitive_tenant_identity_on_the_actual_database",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\TenantJobBoundaryTest::__pest_evaluable_it_V08_a_deleted_queued_actor_fails_without_promotion_to_system_or_invoking_next",
+      "new": "P\\Tests\\Tenancy\\TenantJobBoundaryTest::__pest_evaluable_it_V08_a_deleted_queued_actor_fails_without_promotion_to_system_or_invoking_next",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\TenantJobBoundaryTest::__pest_evaluable_it_V08_rehydrates_a_user_through_Auth_and_evaluates_changed_permissions_at_execution",
+      "new": "P\\Tests\\Tenancy\\TenantJobBoundaryTest::__pest_evaluable_it_V08_rehydrates_a_user_through_Auth_and_evaluates_changed_permissions_at_execution",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\TenantJobBoundaryTest::__pest_evaluable_it_V08_validates_host_A_B_A_restores_on_next_exception_and_fails_absent_or_foreign_tenant_without_work",
+      "new": "P\\Tests\\Tenancy\\TenantJobBoundaryTest::__pest_evaluable_it_V08_validates_host_A_B_A_restores_on_next_exception_and_fails_absent_or_foreign_tenant_without_work",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Tenancy\\TenantProvisioningRaceTest::__pest_evaluable_it_V31_a_real_PG_owner_profile_race_has_one_tenant_winner_and_a_hidden_loser",
+      "new": "P\\Tests\\Tenancy\\TenantProvisioningRaceTest::__pest_evaluable_it_V31_a_real_PG_owner_profile_race_has_one_tenant_winner_and_a_hidden_loser",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): it tests the drive tenant boundary",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Jobs_never_uses_the_Testing_namespaces",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Http_never_uses_the_Testing_namespaces"
+      ],
+      "reason": "P4.16: the Vaulter\\Jobs namespace is gone from the kernel (its only class moved to the drive); the same rule runs for every remaining namespace",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_rejects_missing_or_reused_collaboration_secrets_in_production\"('jwt', null)\"",
+      "new": "P\\Tests\\Configuration\\CollaborationSecretsTest::__pest_evaluable_it_rejects_missing_or_reused_collaboration_secrets_in_production\"('jwt', null)\"",
+      "new_suite": "documents",
+      "reason": "moved to owner package (P4.16): the collaboration secrets belong to the documents configuration",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_rejects_missing_or_reused_collaboration_secrets_in_production\"('same', 'same')\"",
+      "new": "P\\Tests\\Configuration\\CollaborationSecretsTest::__pest_evaluable_it_rejects_missing_or_reused_collaboration_secrets_in_production\"('same', 'same')\"",
+      "new_suite": "documents",
+      "reason": "moved to owner package (P4.16): the collaboration secrets belong to the documents configuration",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_rejects_missing_or_reused_collaboration_secrets_in_production\"(null, 'webhook')\"",
+      "new": "P\\Tests\\Configuration\\CollaborationSecretsTest::__pest_evaluable_it_rejects_missing_or_reused_collaboration_secrets_in_production\"(null, 'webhook')\"",
+      "new_suite": "documents",
+      "reason": "moved to owner package (P4.16): the collaboration secrets belong to the documents configuration",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_rejects_missing_or_reused_collaboration_secrets_in_production\"(null, null)\"",
+      "new": "P\\Tests\\Configuration\\CollaborationSecretsTest::__pest_evaluable_it_rejects_missing_or_reused_collaboration_secrets_in_production\"(null, null)\"",
+      "new_suite": "documents",
+      "reason": "moved to owner package (P4.16): the collaboration secrets belong to the documents configuration",
+      "decision": "D14"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_rejects_the_null_permission_driver_at_production_boot",
+      "new": "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_rejects_the_null_permission_driver_at_production_boot",
+      "new_suite": "drive",
+      "reason": "moved to owner package (P4.16): the permission driver of the drive is validated by the drive",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_an_unknown_driver",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_a_malformed_middleware_and_no_longer_knows_a_permission_driver_option__the_drive_owns_it_"
+      ],
+      "reason": "P4.16: the installer no longer has a permission driver option (the drive owns the driver)",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_refuses_locks_without_a_transaction_on_its_connection\"('lockTree')\"",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_refuses_locks_without_a_transaction_on_its_connection\"('lockAggregate')\""
+      ],
+      "reason": "P4.16: lockTree/lockTreeShared are the generic aggregate locks lockAggregate/lockAggregateShared",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_refuses_locks_without_a_transaction_on_its_connection\"('lockTreeShared')\"",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_refuses_locks_without_a_transaction_on_its_connection\"('lockAggregateShared')\""
+      ],
+      "reason": "P4.16: lockTree/lockTreeShared are the generic aggregate locks lockAggregate/lockAggregateShared",
+      "decision": "D10"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_takes_the_tree_lock_in_shared_mode_for_single_parent_writes_on_PostgreSQL",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_takes_the_aggregate_lock_in_shared_mode_for_single_parent_writes_on_PostgreSQL"
+      ],
+      "reason": "P4.16: the tree lock is the generic aggregate lock",
+      "decision": "D10"
     }
   ],
   "additions": {
@@ -11449,7 +11671,7 @@
       "introduced": "P1.3",
       "count": 222,
       "names": [
-        "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__I3_and_I4_block__I1_and_I2_report_",
+        "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__all_four_block__I1_and_I2_since_P4_16__with_the_named_collaboration_residual_of_D32_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_matches_the_committed_allowlist_of_every_scan_to_the_current_tree__exactly\"('scan-i1')\"",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_matches_the_committed_allowlist_of_every_scan_to_the_current_tree__exactly\"('scan-i2')\"",
@@ -11674,9 +11896,9 @@
       ]
     },
     "core": {
-      "count": 439,
+      "count": 465,
       "names": [
-        "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_extracted_vaulter_drive_package_only_from_the_files_that_move_to_it__P2__5___D1__P4_8_",
+        "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_vaulter_drive_package_nowhere__P2__5___D1__I1_blocks_from_P4_16_",
         "P\\Packages\\core\\tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_core_activity_Operations_depend_on_the_drive_package_only_through_the_moved_access_types",
         "P\\Packages\\core\\tests\\Arch\\OperationsUseRunnerTest::__pest_evaluable_it_covers_every_Operations_class_of_drive__documents_and_the_core_located_ones",
         "P\\Packages\\core\\tests\\Arch\\OperationsUseRunnerTest::__pest_evaluable_it_lists_only_reads_that_exist_and_do_not_use_the_runner",
@@ -11722,22 +11944,29 @@
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_preserves_the_host_replacement_map_instead_of_merging_the_shipped_entries_back",
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_retains_default_exporter_formats_alongside_host_overrides\"(['Host\\HtmlExporter'])\"",
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_retains_default_exporter_formats_alongside_host_overrides\"([])\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 'missing')\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permission_driver', 42)\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.access.permissi…tabase', 'stdClass')\"",
         "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.handlers', [Closure Object ()])\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 'stdClass')\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.models.node', 42)\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.default', 'stdClass')\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['Vaulter\\Drive\\Testing\\Fixture…rofile'])\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.profiles.providers', ['stdClass'])\"",
-        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter-drive.sharing.token_generator', 'stdClass')\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.features.webhooks', true)\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.idempotency.ttl_seconds', 'a day')\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.idempotency.ttl_seconds', 0)\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.models.outbox', 'stdClass')\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.models.outbox', 42)\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_fails_boot_for_malformed_security_configuration\"('vaulter.routes.middleware.aut…icated', [Closure Object ()])\"",
+        "P\\Packages\\core\\tests\\Configuration\\ConfigValidatorTest::__pest_evaluable_it_leaves_the_sections_of_the_modules_to_the_modules",
+        "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_has_no_accessor_of_a_module_section__the_drive_reads_its_own_through_DriveConfig",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_keeps_no_drive_and_no_webhooks_section_in_the_kernel_config_root__P4_11__P4_13_",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_names_every_table_by_the_configured_prefix_and_the_canonical_entity__ignoring_table__names",
-        "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_resolves_the_model_keys_of_the_core_from_vaulter_models_and_those_of_the_drive_from_vaulter_drive_models",
+        "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_resolves_the_outbox_model_from_vaulter_models_and_refuses_a_foreign_class",
+        "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_a_malformed_middleware_and_no_longer_knows_a_permission_driver_option__the_drive_owns_it_",
         "P\\Packages\\core\\tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_schedules_the_outbox_and_journal_tasks_with_overlap_and_single_server_guards",
         "P\\Packages\\core\\tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_skips_the_webhook_tasks_when_webhooks_are_off_but_keeps_the_outbox_relay_and_the_journal_prune",
+        "P\\Packages\\core\\tests\\Database\\AggregateLockTest::__pest_evaluable_it_keeps_the_aggregate_lock_free_of_the_entities_of_any_module__the_entity_key_is_its_argument",
+        "P\\Packages\\core\\tests\\Database\\AggregateLockTest::__pest_evaluable_it_takes_the_aggregate_lock_of_any_entity_inside_a_transaction__on_its_own_table_outside_PostgreSQL\"('idempotency_keys')\"",
+        "P\\Packages\\core\\tests\\Database\\AggregateLockTest::__pest_evaluable_it_takes_the_aggregate_lock_of_any_entity_inside_a_transaction__on_its_own_table_outside_PostgreSQL\"('outbox')\"",
+        "P\\Packages\\core\\tests\\Database\\AggregateLockTest::__pest_evaluable_it_takes_the_aggregate_lock_of_any_entity_inside_a_transaction__on_its_own_table_outside_PostgreSQL\"('outbox_consumers')\"",
+        "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_refuses_locks_without_a_transaction_on_its_connection\"('lockAggregate')\"",
+        "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_refuses_locks_without_a_transaction_on_its_connection\"('lockAggregateShared')\"",
         "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_resolves_the_same_dedicated_connection_as_Vaulter_models\"('Vaulter\\Drive\\Models\\Node')\"",
+        "P\\Packages\\core\\tests\\Database\\VaulterDatabaseTest::__pest_evaluable_it_takes_the_aggregate_lock_in_shared_mode_for_single_parent_writes_on_PostgreSQL",
         "P\\Packages\\core\\tests\\Doctor\\CoreDoctorChecksTest::__pest_evaluable_it_compares_the_settle_window_with_the_transaction_limits_of_the_database",
         "P\\Packages\\core\\tests\\Doctor\\CoreDoctorChecksTest::__pest_evaluable_it_does_not_count_a_delivery_that_is_not_due_yet_as_lag",
         "P\\Packages\\core\\tests\\Doctor\\CoreDoctorChecksTest::__pest_evaluable_it_measures_the_outbox_lag_per_consumer",
@@ -11765,6 +11994,20 @@
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('string')\"",
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('ulid')\"",
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('uuid')\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_answers_304_for_a_weak_match_of_If_None_Match__the_wildcard_included\"dataset \"another tag\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_answers_304_for_a_weak_match_of_If_None_Match__the_wildcard_included\"dataset \"its weak form\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_answers_304_for_a_weak_match_of_If_None_Match__the_wildcard_included\"dataset \"no header\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_answers_304_for_a_weak_match_of_If_None_Match__the_wildcard_included\"dataset \"the current tag\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_answers_304_for_a_weak_match_of_If_None_Match__the_wildcard_included\"dataset \"the wildcard\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_matches_a_strong_If_Match_tag_and_refuses_a_weak_or_another_one\"dataset \"a comma inside quotes stays in its tag\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_matches_a_strong_If_Match_tag_and_refuses_a_weak_or_another_one\"dataset \"a weak tag of the current one\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_matches_a_strong_If_Match_tag_and_refuses_a_weak_or_another_one\"dataset \"another tag\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_matches_a_strong_If_Match_tag_and_refuses_a_weak_or_another_one\"dataset \"one of a list\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_matches_a_strong_If_Match_tag_and_refuses_a_weak_or_another_one\"dataset \"the current tag\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_no_longer_knows_a_node_or_a_document__the_owners_raise_their_own_refusal",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"blank\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"missing\"\"",
+        "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"wildcard\"\"",
         "P\\Packages\\core\\tests\\Http\\Problems\\ProblemCatalogLangTest::__pest_evaluable_it_keeps_the_lang_files_of_a_package_in_step_with_its_code_list\"dataset \"webhooks\"\"",
         "P\\Packages\\core\\tests\\Http\\Problems\\ProblemCatalogLangTest::__pest_evaluable_it_lists_the_codes_sorted__each_under_the_module_that_declares_it",
         "P\\Packages\\core\\tests\\Http\\Problems\\ProblemCatalogLangTest::__pest_evaluable_it_refuses_a_code_declared_by_two_modules_of_a_hand_built_catalogue",
@@ -12023,6 +12266,10 @@
         "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_accepts_a_route_cache_built_under_the_running_activation",
         "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_answers_404_for_a_cached_route_of_a_module_switched_off_after_the_cache_was_built",
         "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_reports_an_active_module_missing_from_a_route_cache_built_before_it_was_switched_on",
+        "P\\Packages\\core\\tests\\Modules\\RouteLabelSourceTest::__pest_evaluable_it_defines_the_RouteLabelSource_slot_in_the_kernel_as_a_contributor_slot",
+        "P\\Packages\\core\\tests\\Modules\\RouteLabelSourceTest::__pest_evaluable_it_labels_nothing_of_a_module_that_is_switched_off__and_binds_none_of_its_services",
+        "P\\Packages\\core\\tests\\Modules\\RouteLabelSourceTest::__pest_evaluable_it_labels_the_routes_of_every_active_module_from_its_own_contribution",
+        "P\\Packages\\core\\tests\\Modules\\RouteLabelSourceTest::__pest_evaluable_it_resolves_a_path_for_a_collector_that_sees_only_a_URI__the_first_matching_rule_winning",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_freezes_every_builder_once_compiled__valid_or_not\"dataset \"invalid graph\"\"",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_freezes_every_builder_once_compiled__valid_or_not\"dataset \"valid graph\"\"",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_refuses_an_offer_after_the_catalogue_is_sealed_and_keeps_one_offer_per_class",
@@ -12100,6 +12347,7 @@
         "P\\Packages\\core\\tests\\PublicApi\\OptionsTest::__pest_evaluable_it_rejects_page_sizes_outside_the_bounded_range_at_both_input_boundaries\"('Vaulter\\Drive\\Data\\SearchOptions') / (9223372036854775807)\"",
         "P\\Packages\\core\\tests\\PublicApi\\SequenceOptionContractTest::__pest_evaluable_it_preserves_optional_signed_int64_sequence_bounds_at_constructor_and_fluent_boundaries\"('Vaulter\\Drive\\Data\\MoveOptions')\"",
         "P\\Packages\\core\\tests\\PublicApi\\SequenceOptionContractTest::__pest_evaluable_it_preserves_optional_signed_int64_sequence_bounds_at_constructor_and_fluent_boundaries\"('Vaulter\\Drive\\Data\\RevisionOptions')\"",
+        "P\\Packages\\core\\tests\\Schema\\KeyColumnTypesTest::__pest_evaluable_it_collects_the_key_columns_from_the_schema_of_every_offered_module__each_on_a_table_of_its_own_module",
         "P\\Packages\\core\\tests\\Schema\\SchemaSnapshotTest::__pest_evaluable_it_creates_the_same_table_set_as_the_pre_P1_10_original_in_every_preset\"('mysql')\"",
         "P\\Packages\\core\\tests\\Schema\\SchemaSnapshotTest::__pest_evaluable_it_creates_the_same_table_set_as_the_pre_P1_10_original_in_every_preset\"('pgsql')\"",
         "P\\Packages\\core\\tests\\Schema\\SchemaSnapshotTest::__pest_evaluable_it_creates_the_same_table_set_as_the_pre_P1_10_original_in_every_preset\"('sqlite')\"",
@@ -12213,14 +12461,19 @@
       ]
     },
     "drive": {
-      "count": 95,
+      "count": 111,
       "names": [
+        "P\\Tests\\Activity\\RecordActivityTest::__pest_evaluable_it_gives_a_DriveEvent_a_null_activity_target_and_no_journal_entry_until_it_names_them",
+        "P\\Tests\\Activity\\RecordActivityTest::__pest_evaluable_it_records_an_activity_row_without_a_target_for_an_event_that_is_no_DriveEvent__and_journals_nothing_for_it",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_gives_the_host_subclass_configured_in_vaulter_drive_models_the_same_alias",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_is_not_renamed_by_a_host_morph_map_and_is_not_refused_by_enforceMorphMap",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_merges_the_aliases_without_erasing_a_host_morph_map_entry",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_registers_the_aliases_in_the_morph_map_so_a_host_morphTo___resolves_them",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_stores_a_node_and_a_drive_under_their_constant_alias",
         "P\\Tests\\Activity\\StableMorphAliasTest::__pest_evaluable_it_writes_the_alias_as_the_target_type_of_an_activity_row",
+        "P\\Tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_it_covers_the_HTTP_layer_of_every_package_that_serves_routes",
+        "P\\Tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_it_detects_a_model_import_of_a_controller",
+        "P\\Tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_it_keeps_the_controllers_off_the_domain_models_except_the_shrinking_exemption_list",
         "P\\Tests\\Arch\\RevisionBlobLinksBoundaryTest::__pest_evaluable_it_detaches_the_revision_links_on_every_path_that_deletes_revisions",
         "P\\Tests\\Arch\\RevisionBlobLinksBoundaryTest::__pest_evaluable_it_lets_only_RevisionBlobLinks_use_the_edge_repository",
         "P\\Tests\\Arch\\RevisionBlobLinksBoundaryTest::__pest_evaluable_it_recognises_an_edge_write_in_each_of_its_shapes\"('$config->model('file_revision…ete();')\"",
@@ -12244,6 +12497,9 @@
         "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_rejects_a_profile_list_that_is_not_a_list_of_ProfileProvider_classes\"dataset \"a map\"\"",
         "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_rejects_a_profile_list_that_is_not_a_list_of_ProfileProvider_classes\"dataset \"a scalar\"\"",
         "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_resolves_a_swappable_drive_model_from_vaulter_drive_models_and_refuses_a_foreign_class",
+        "P\\Tests\\Configuration\\DriveConfigTest::__pest_evaluable_it_resolves_the_upload_models__the_blob_model_of_the_media_package_and_the_accessors_of_the_drive_sections",
+        "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_reports_a_malformed_drive_configuration_under_the_doctor_check_of_the_kernel",
+        "P\\Tests\\Configuration\\DriveConfigValidatorTest::__pest_evaluable_it_validates_the_shipped_drive_configuration",
         "P\\Tests\\Configuration\\ModuleRegistrationOrderTest::__pest_evaluable_it_retains_module_defaults_and_applies_host_settings_when_modules_register_before_core",
         "P\\Tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_leaves_the_change_journal_prune_off_when_the_journal_is_off_or_the_key_is_null",
         "P\\Tests\\Console\\SchedulingRegistrarTest::__pest_evaluable_it_schedules_the_change_journal_prune_from_vaulter_drive_schedule_changes__prune_while_the_journal_is_on",
@@ -12276,6 +12532,9 @@
         "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_walks_past_a_full_chunk_of_hidden_candidates_to_a_visible_drive",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_declares_the_drive_codes_located_in_core_under_the_drive_module__D39_",
         "P\\Tests\\Http\\DriveProblemCodesTest::__pest_evaluable_it_says_whether_a_drive_refusal_may_be_retried",
+        "P\\Tests\\Http\\DriveRouteLabelsTest::__pest_evaluable_it_gives_every_path_rule_an_operation_the_named_labels_know__and_leaves_no_byte_route_unlabelled",
+        "P\\Tests\\Http\\DriveRouteLabelsTest::__pest_evaluable_it_is_merged_into_the_operation_map_of_the_kernel_with_the_contributions_of_the_other_modules",
+        "P\\Tests\\Http\\DriveRouteLabelsTest::__pest_evaluable_it_labels_only_routes_the_drive_mounts__so_a_renamed_route_cannot_leave_a_stale_label",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_answers_another_body_under_a_used_key_with_idempotency__key__reused",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_ignores_the_header_on_the_route_of_an_operation_without_idempotency",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_refuses_a_malformed_key_before_anything_runs\"dataset \"list\"\"",
@@ -12290,6 +12549,11 @@
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_rename_whose_If_Match_went_stale_because_the_first_request_committed",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_stores_a_stale_rename_under_its_key_and_replays_the_refusal",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_treats_the_quoted_and_the_plain_spelling_of_one_key_as_the_same_key",
+        "P\\Tests\\Http\\ListQueryTest::__pest_evaluable_it_defaults_the_page_size_and_drops_an_empty_cursor",
+        "P\\Tests\\Http\\ListQueryTest::__pest_evaluable_it_reads_per__page_and_cursor_of_the_query_string_into_the_list_options_of_the_drive",
+        "P\\Tests\\Http\\ListQueryTest::__pest_evaluable_it_refuses_a_page_size_out_of_range_with_a_422_validation_error\"('0')\"",
+        "P\\Tests\\Http\\ListQueryTest::__pest_evaluable_it_refuses_a_page_size_out_of_range_with_a_422_validation_error\"('201')\"",
+        "P\\Tests\\Http\\ListQueryTest::__pest_evaluable_it_refuses_a_page_size_out_of_range_with_a_422_validation_error\"('many')\"",
         "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_contributes_the_preview_and_download_only_handlers__the_file_and_shortcut_lifecycles_and_the_availability_guard",
         "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_contributes_the_three_built_in_permission_drivers_by_key",
         "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_declares_the_handle_factory_and_the_node_presenter_as_the_drive_capabilities",
@@ -12313,20 +12577,25 @@
       ]
     },
     "documents": {
-      "count": 12,
+      "count": 17,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_documents_depends_on_drive_but_never_directly_on_media__D6_",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_DocumentsModule_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Profiles_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Schema_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Configuration\\CollaborationSecretsTest::__pest_evaluable_it_only_warns_outside_production_and_stays_silent_for_distinct_secrets_or_a_disabled_collaboration",
         "P\\Tests\\Configuration\\DocumentsConfigTest::__pest_evaluable_it_answers_core_s_comments_question_through_its_profile_option_from_its_own_config",
         "P\\Tests\\Events\\DocumentJournalTest::__pest_evaluable_it_journals_exactly_the_created__updated_and_restored_document_types_of_the_catalogue",
+        "P\\Tests\\Http\\DocumentsRouteLabelsTest::__pest_evaluable_it_adds_the_document_and_hub_labels_to_the_ones_the_drive_contributes",
+        "P\\Tests\\Http\\DocumentsRouteLabelsTest::__pest_evaluable_it_labels_only_routes_the_documents_module_mounts__so_a_renamed_route_cannot_leave_a_stale_label",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_contributes_the_document_presenter_and_lifecycle_to_the_drive_slots__and_no_file_handler__PLAN2_P4_3_",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_fills_the_type_and_exporter_registries_from_the_module_contributions__once",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_provides_the_filename_seam_and_the_collaboration_transport_as_the_capabilities_of_the_module",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_refuses_a_graph_in_which_two_modules_contribute_the_same_document_type_or_exporter_key\"dataset \"exporter\"\"",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_refuses_a_graph_in_which_two_modules_contribute_the_same_document_type_or_exporter_key\"dataset \"type\"\"",
-        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_shares_the_sanitizer_with_the_existing_scheme_allow_list"
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_shares_the_sanitizer_with_the_existing_scheme_allow_list",
+        "P\\Tests\\Schema\\DocumentsKeyColumnsTest::__pest_evaluable_it_adds_the_documents_columns_to_the_key_columns_the_inspector_expects_of_the_whole_installation",
+        "P\\Tests\\Schema\\DocumentsKeyColumnsTest::__pest_evaluable_it_declares_the_host_key_columns_of_its_own_tables_to_the_key_type_check_of_the_kernel"
       ]
     },
     "azgard": {

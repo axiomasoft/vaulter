@@ -19,48 +19,16 @@ final class KeyColumnInspector
         private readonly VaulterDatabase $db,
         private readonly DatabaseConfig $database,
         private readonly IdsConfig $ids,
+        private readonly ModuleSchemas $schemas,
     ) {}
 
-    /** @return list<KeyColumnExpectation> */
+    /** @return list<KeyColumnExpectation> the key columns every offered module declares for its own tables */
     public function expected(): array
     {
-        $hostKeys = [
-            ['drives', 'tenant_id'], ['drives', 'owner_id'], ['drives', 'created_by'],
-            ['nodes', 'tenant_id'], ['nodes', 'trashed_by'], ['nodes', 'created_by'], ['nodes', 'updated_by'], ['nodes', 'content_modified_by'],
-            ['blobs', 'tenant_id'],
-            ['files', 'tenant_id'], ['files', 'created_by'],
-            ['file_revisions', 'tenant_id'], ['file_revisions', 'created_by'],
-            ['node_grants', 'tenant_id'], ['node_grants', 'subject_id'], ['node_grants', 'granted_by'],
-            ['node_shares', 'tenant_id'], ['node_shares', 'granted_by'],
-            ['node_comments', 'tenant_id'], ['node_comments', 'author_id'], ['node_comments', 'resolved_by'],
-            ['node_user_states', 'tenant_id'], ['node_user_states', 'actor_id'],
-            ['documents', 'tenant_id'], ['documents', 'created_by'], ['documents', 'updated_by'],
-            ['document_revisions', 'tenant_id'], ['document_revisions', 'created_by'],
-            ['upload_sessions', 'tenant_id'], ['upload_sessions', 'created_by'],
-            ['activity', 'tenant_id'], ['activity', 'actor_id'],
-        ];
-        $references = [
-            ['nodes', 'drive_id'],
-            ['node_user_states', 'node_id'],
-            ['blobs', 'storage_id'],
-            ['file_revision_blobs', 'file_revision_id'],
-            ['upload_sessions', 'drive_id'],
-            ['upload_sessions', 'target_node_id'],
-            ['upload_sessions', 'result_node_id'],
-            ['upload_sessions', 'result_revision_id'],
-            ['activity', 'drive_id'],
-        ];
-        $strings = [
-            ['drives', 'profile', 64],
-            ['activity', 'event_id', 26],
-            ['outbox', 'aggregate_id', 64],
-        ];
-
-        return [
-            ...array_map(fn (array $column): KeyColumnExpectation => new KeyColumnExpectation($column[0], $column[1], 'HK'), $hostKeys),
-            ...array_map(fn (array $column): KeyColumnExpectation => new KeyColumnExpectation($column[0], $column[1], 'REF'), $references),
-            ...array_map(fn (array $column): KeyColumnExpectation => new KeyColumnExpectation($column[0], $column[1], 'STRING', $column[2]), $strings),
-        ];
+        return array_merge([], ...array_values(array_map(
+            static fn (ModuleSchema $schema): array => $schema->keyColumns(),
+            $this->schemas->all(),
+        )));
     }
 
     /** @return list<KeyColumnMismatch> */

@@ -62,7 +62,7 @@ final readonly class MoveNodeAction
         $intoId = $this->tree->destinationId(storage: $node->storage, into: $data->into);
 
         return $this->database->transaction(function () use ($node, $intoId, $data, $context): Node {
-            $this->database->lockTree($node->drive_id);
+            $this->database->lockAggregate('drives', $node->drive_id);
             $this->lifecycle->assertWritable($context);
 
             $locked = $this->tree->lock([$node->id, $intoId]);

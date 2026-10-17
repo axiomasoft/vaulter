@@ -9,7 +9,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Http\Requests\Nodes\ListChildrenRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
-use Vaulter\Http\Resources\PageResponse;
+use Vaulter\Drive\Http\Support\ListQuery;
 
 /**
  * The visible children of a folder, one cursor page at a time; without `parent` the
@@ -24,7 +24,7 @@ final readonly class ListChildrenController
 
     public function __invoke(ListChildrenRequest $request, string $drive): JsonResponse
     {
-        $options = PageResponse::listOptions($request);
+        $options = ListQuery::options($request);
         $parent = $request->parent();
         $list = fn (DriveHandle $handle): JsonResponse => $this->nodes->page($handle, $handle->nodes()->children($parent, $options), $options->perPage);
 

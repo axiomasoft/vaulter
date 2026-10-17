@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.16",
   "title": "Очистка core до #kernel и блокирующие I1, I2, I5, I9",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Остатки доменного в core устраняются по списку файлов (config/vaulter.php, ConfigValidator, VaulterConfig, InstallCommand, CoreModule, VaulterDatabase, DomainEvent, CoreProblemCodes, PageResponse, DownloadHeaders, Preconditions::matchNode, RestoreTenantContext, BindingsRegistrar, KeyColumnInspector, TenancyBoundary, InteractsWithVaulter, VaulterServiceProvider; split Http\\Support VaulterHttpOperationMap/VaulterThrottledRouteMap); I1 и I2 (кроме D32-остатка) переходят в block с пустыми allowlist; I5 строгий; I9 — OperationsBoundaryTest для HTTP-контроллеров drive/documents/webhooks + Filament.",
   "why": "Фаза: после P4 core = только kernel; I1/I2/I5/I9 блокирующие (architecture#invariants). Риск: «нейтрализация» через новые понятия — любое новое ядро-понятие требует D# и ADR-записи (architecture#cost).",
   "scope": {
@@ -237,6 +237,55 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T05:40:10Z",
+    "finished_at": "2026-10-17T06:40:26Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "notes": "Попутно: LoadStateMetrics::observeOutboxBacklog читал мёртвый флаг features.webhooks; дрейф baseline service-locator исправлен.",
+    "deviations": [
+      "Пакетный прогон V3 не выполнен по указанию владельца (D45), отложен в PLAN4; проверено F1 по затронутым файлам и repo целиком (222 теста).",
+      "Новый kernel-контракт RouteLabelSource (слот Contributor) для route-map метрик вместо ссылок core на drive/documents.",
+      "VaulterDatabase::lockTree заменён на lockAggregate(entity,id); имя pg-advisory ключа изменилось (vaulter:drives:ID), pg не проверялся — PLAN4.",
+      "ModuleSchema::keyColumns() добавлен в интерфейс; опция vaulter:install --driver удалена (D10); VaulterConfig→DriveConfig без шима (D21); DriveEvent — новая база событий drive.",
+      "Хвосты строковых ссылок в core (ConfigNormalizer, PUBLIC_SHARE_ROUTES, RepresentationTag, ScopeRef::DRIVE и др.) — в nits; InteractsWithVaulterTest остался в core; 107/230 тестов core упоминают типы других пакетов."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T06:40:26Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T06:40:26Z"
 }

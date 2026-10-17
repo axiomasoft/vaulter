@@ -7,12 +7,13 @@ namespace Vaulter\Drive\Http\Controllers\Activity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Drive\Http\Resources\Activity\ActivityResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\ListQuery;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Support\LoadTier;
 
@@ -20,11 +21,11 @@ use Vaulter\Support\LoadTier;
 #[Internal]
 final readonly class ListNodeActivityController
 {
-    public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private MetricsRecorder $metrics, private VaulterConfig $config) {}
+    public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private MetricsRecorder $metrics, private DriveConfig $config) {}
 
     public function __invoke(Request $request, string $node): JsonResponse
     {
-        $options = PageResponse::listOptions($request);
+        $options = ListQuery::options($request);
         $handle = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
         $nodeType = $this->nodeType();
 

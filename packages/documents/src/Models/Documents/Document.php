@@ -12,7 +12,6 @@ use Illuminate\Support\Carbon;
 use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\OpaqueContent;
@@ -20,6 +19,7 @@ use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Database\Factories\DocumentFactory;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Support\DocumentTypeKey;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -80,11 +80,11 @@ class Document extends Model
      * provider so the model does not reach into the container. They read the
      * config repository on every call, so runtime config changes still apply.
      *
-     * @var array{database: DatabaseConfig, vaulter: VaulterConfig, documents: DocumentsConfig}|null
+     * @var array{database: DatabaseConfig, vaulter: DriveConfig, documents: DocumentsConfig}|null
      */
     private static ?array $configuration = null;
 
-    public static function configure(DatabaseConfig $database, VaulterConfig $vaulter, DocumentsConfig $documents): void
+    public static function configure(DatabaseConfig $database, DriveConfig $vaulter, DocumentsConfig $documents): void
     {
         self::$configuration = ['database' => $database, 'vaulter' => $vaulter, 'documents' => $documents];
     }
@@ -156,7 +156,7 @@ class Document extends Model
     }
 
     /**
-     * @return array{database: DatabaseConfig, vaulter: VaulterConfig, documents: DocumentsConfig}
+     * @return array{database: DatabaseConfig, vaulter: DriveConfig, documents: DocumentsConfig}
      */
     private static function configuration(): array
     {

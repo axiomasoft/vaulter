@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\App;
 use InvalidArgumentException;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
@@ -60,7 +60,7 @@ final readonly class PermissionFixture
         ));
         $drive->access()->restrictInheritance($child->id, InheritanceRestriction::Empty);
 
-        $nodes = App::make(VaulterConfig::class)->model('node');
+        $nodes = App::make(DriveConfig::class)->model('node');
 
         return new self(
             drive: $drive->model(),

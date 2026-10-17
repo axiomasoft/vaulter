@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
@@ -94,7 +94,7 @@ class NodeShare extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('node'), 'node_id');
     }
 
     /**

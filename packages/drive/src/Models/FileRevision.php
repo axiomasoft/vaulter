@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Database\Factories\FileRevisionFactory;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
 use Vaulter\Drive\Models\Content\ScanEvidenceRecord;
@@ -98,7 +98,7 @@ class FileRevision extends Model
      */
     public function file(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('file'), 'file_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('file'), 'file_id');
     }
 
     /**
@@ -108,7 +108,7 @@ class FileRevision extends Model
      */
     public function blob(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('blob'), 'blob_id');
+        return $this->belongsTo(app(DriveConfig::class)->model('blob'), 'blob_id');
     }
 
     /**
@@ -119,25 +119,25 @@ class FileRevision extends Model
     public function blobs(): BelongsToMany
     {
         return $this->belongsToMany(
-            related: app(VaulterConfig::class)->model('blob'),
+            related: app(DriveConfig::class)->model('blob'),
             table: app(DatabaseConfig::class)->table('file_revision_blobs'),
             foreignPivotKey: 'file_revision_id',
             relatedPivotKey: 'blob_id',
         )
-            ->using(app(VaulterConfig::class)->model('file_revision_blob'))
+            ->using(app(DriveConfig::class)->model('file_revision_blob'))
             ->withPivot(['role', 'ordinal', 'offset_bytes', 'length_bytes']);
     }
 
     /** @return HasMany<ScanEvidenceRecord, $this> */
     public function scanEvidence(): HasMany
     {
-        return $this->hasMany(app(VaulterConfig::class)->model('scan_evidence'), 'revision_id');
+        return $this->hasMany(app(DriveConfig::class)->model('scan_evidence'), 'revision_id');
     }
 
     /** @return HasMany<ScanObligation, $this> */
     public function scanObligations(): HasMany
     {
-        return $this->hasMany(app(VaulterConfig::class)->model('scan_obligation'), 'revision_id');
+        return $this->hasMany(app(DriveConfig::class)->model('scan_obligation'), 'revision_id');
     }
 
     /**

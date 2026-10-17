@@ -18,8 +18,6 @@ return [
         'Database',
         'Idempotency',
         'Events/EventRecorderTest.php',
-        'Tenancy/TenantProvisioningRaceTest.php',
-        'Tenancy/TenantIdentifierPredicateTest.php',
         'Modules/AcmeModuleContractTest.php',
         'Outbox/OutboxRelayTest.php',
         'Outbox/OutboxWriteTest.php',
@@ -31,7 +29,6 @@ return [
     'serial' => [
         'Concurrency',
         'Database/VaulterDatabaseTest.php',
-        'Tenancy/TenantProvisioningRaceTest.php',
     ],
     // No test of this suite qualifies yet: a scale test moves here only with a cheap same-defect equivalent on the PR lane
     // (classification.md, "Extended").
@@ -40,6 +37,5 @@ return [
     // Whole files that can only say something on a server engine: skipped before the schema is built on SQLite.
     'engine:server' => [
         'Concurrency',
-        'Tenancy/TenantProvisioningRaceTest.php',
     ],
 ];

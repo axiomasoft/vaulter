@@ -48,7 +48,7 @@ final readonly class OutboxWriter
 
                 // The model applies its casts (JSON payload, dates), so the row matches what Eloquent would write.
                 /** @var OutboxEvent $outbox */
-                $outbox = new ($this->config->model('outbox'));
+                $outbox = new ($this->config->outboxModel());
                 $outbox->forceFill([
                     'event_id' => $event->eventId,
                     'tenant_id' => $scope->tenantId,

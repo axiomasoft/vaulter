@@ -8,10 +8,10 @@ use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Events\ActivityTarget;
 use Vaulter\Drive\ValueObjects\Events\JournalEffect;
-use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * A folder was created in a storage tree.
  */
 #[Api]
-final readonly class FolderCreated extends DomainEvent
+final readonly class FolderCreated extends DriveEvent
 {
     #[Internal]
     public function __construct(

@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Cursor;
 use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Configuration\ListingConfig;
 use Vaulter\Drive\Data\ListOptions;
 use Vaulter\Drive\Enums\Access\Ability;
@@ -29,7 +29,7 @@ final readonly class VisibleActivityQuery
     /** Context keys that describe who holds access; only a Share-capable reader sees them. */
     private const array PRIVILEGED_CONTEXT_KEYS = ['subject_type', 'subject_id', 'permissions', 'token_prefix'];
 
-    public function __construct(private VaulterConfig $config, private ListingConfig $listing, private OperationGuard $guard, private Repository $repository) {}
+    public function __construct(private DriveConfig $config, private ListingConfig $listing, private OperationGuard $guard, private Repository $repository) {}
 
     /** @return VisibleActivityPaginator<Activity> */
     public function execute(DriveContext $context, ListOptions $options, ?Node $node = null, ?EventTypeContract $verb = null): VisibleActivityPaginator

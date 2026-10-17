@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Events\Drives;
 use Carbon\CarbonImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Drive\Enums\Events\DriveEventType;
-use Vaulter\Events\DomainEvent;
+use Vaulter\Drive\Events\DriveEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
@@ -17,7 +17,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
  * exists, so the event carries its ids, tenant and profile.
  */
 #[Api]
-final readonly class DriveDeleted extends DomainEvent
+final readonly class DriveDeleted extends DriveEvent
 {
     public function __construct(
         public string $driveId,

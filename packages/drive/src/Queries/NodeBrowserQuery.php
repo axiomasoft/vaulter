@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Access\ValueObjects\GrantSet;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -40,7 +40,7 @@ final readonly class NodeBrowserQuery
         private NodeLocator $locator,
         private OperationGuard $guard,
         private AccessResolver $access,
-        private VaulterConfig $config,
+        private DriveConfig $config,
         private NodeSnapshotMapper $mapper,
     ) {}
 

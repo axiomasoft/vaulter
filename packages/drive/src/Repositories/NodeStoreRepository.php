@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Support\Identity;
 
@@ -25,7 +25,7 @@ use Vaulter\Support\Identity;
 final class NodeStoreRepository
 {
     public function __construct(
-        private readonly VaulterConfig $vaulterConfig,
+        private readonly DriveConfig $vaulterConfig,
         private readonly VaulterDatabase $database,
     ) {}
 
@@ -225,7 +225,7 @@ final class NodeStoreRepository
     /**
      * Lock live node rows for the rest of the transaction, in ascending id order so
      * two operations over overlapping nodes queue instead of deadlocking (level 2:
-     * after lockTree, before aggregate and quota locks). SQLite has no row locks and
+     * after lockAggregate, before aggregate and quota locks). SQLite has no row locks and
      * serialises writers, so the grammar drops FOR UPDATE there. A missing id means
      * the node is gone.
      *

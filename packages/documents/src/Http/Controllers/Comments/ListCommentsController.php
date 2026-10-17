@@ -12,6 +12,7 @@ use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Resources\CommentResource;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
+use Vaulter\Drive\Http\Support\ListQuery;
 use Vaulter\Http\Resources\PageResponse;
 
 /** The comments on a node, oldest first (View). */
@@ -22,7 +23,7 @@ final readonly class ListCommentsController
 
     public function __invoke(Request $request, string $node): JsonResponse
     {
-        $options = PageResponse::listOptions($request);
+        $options = ListQuery::options($request);
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
         $page = $this->documents->comments($drive)->list($node, $options);
 

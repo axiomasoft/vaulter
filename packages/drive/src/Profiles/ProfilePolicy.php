@@ -8,8 +8,8 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Attributes\Internal;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Access\PermissionDriverCatalog;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Configuration\ScanConfig;
 use Vaulter\Drive\Content\ScanPolicySpec;
 use Vaulter\Drive\Contracts\Profiles\ProfileOption;
@@ -25,7 +25,7 @@ use Vaulter\Media\Enums\Cas\ScanMode;
 #[Internal]
 final readonly class ProfilePolicy
 {
-    public function __construct(private VaulterConfig $config, private Repository $repository, private ProfileRegistry $profiles, private ScanConfig $scan, private Kernel $kernel) {}
+    public function __construct(private DriveConfig $config, private Repository $repository, private ProfileRegistry $profiles, private ScanConfig $scan, private Kernel $kernel) {}
 
     public function featureEnabled(Profile $profile, string $feature): bool
     {

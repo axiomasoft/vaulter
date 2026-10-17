@@ -83,7 +83,7 @@ it('does not take a user session for a hub call, and the session routes are not 
 });
 
 it('rate-limits the hub like the other public surface and names it for the metrics', function (): void {
-    expect(VaulterThrottledRouteMap::routeFor('vaulter.v1.collaboration.hub.store'))->toBe('collab.store')
-        ->and(VaulterThrottledRouteMap::routeFor('vaulter.v1.collaboration.hub.authenticate'))->toBe('collab.authenticate')
-        ->and(VaulterHttpOperationMap::operationFor('vaulter.v1.collaboration.hub.store'))->toBe('collab_persist');
+    expect(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.store'))->toBe('collab.store')
+        ->and(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.authenticate'))->toBe('collab.authenticate')
+        ->and(app(VaulterHttpOperationMap::class)->operationFor('vaulter.v1.collaboration.hub.store'))->toBe('collab_persist');
 });
