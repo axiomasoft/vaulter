@@ -8,7 +8,7 @@ use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Override;
 use Vaulter\Attributes\Api;
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Filament\Configuration\FilamentConfig;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
@@ -114,7 +114,7 @@ final class VaulterPlugin implements Plugin
      * Whether a resource is enabled: its OWN config toggle
      * (FilamentConfig::resourceEnabled, default true) AND — when the
      * resource's schema is behind a core feature flag — that flag
-     * (`app(VaulterConfig::class)->featureEnabled()`). Without the AND-condition, a host that disabled
+     * (`app(DriveConfig::class)->featureEnabled()`). Without the AND-condition, a host that disabled
      * the `activity` subsystem but left `ActivityResource`'s own default-on toggle
      * untouched would keep the resource registered against a subsystem it turned
      * off, turning a legitimate "subsystem off" configuration into a broken
@@ -129,6 +129,6 @@ final class VaulterPlugin implements Plugin
             return false;
         }
 
-        return $feature === null || app(VaulterConfig::class)->featureEnabled($feature);
+        return $feature === null || app(DriveConfig::class)->featureEnabled($feature);
     }
 }

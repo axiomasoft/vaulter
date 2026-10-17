@@ -15,7 +15,7 @@ use Vaulter\Inventory\Scans\ScanGenerator;
 use Vaulter\Inventory\SourceIndex;
 
 /*
- * The boundary scans I1–I4 (I3 and I4 block, I1 and I2 report until P4.16): today's violations are listed in tests/Repo/Arch/Fixtures/allowlists/iN.json
+ * The boundary scans I1–I4 (I3 and I4 block from P3/P4.5, I1 and I2 from P4.16): today's violations are listed in tests/Repo/Arch/Fixtures/allowlists/iN.json
  * and must match them exactly (key and count), a new or a stale entry is red. The `scan:` tests run the same code on
  * synthetic sources, so they prove the red as well as the green.
  * Seed or refresh an allowlist from: scripts/php84 php scripts/inventory/inventory.php scan-iN --report --proposals=<path>
@@ -259,7 +259,7 @@ it('keeps fk-map.json equal to the foreign keys of the schema identities', funct
         ->and(array_column(array_filter($map['fks'], static fn (array $fk): bool => $fk['head']), 'name'))->toBe(['v_documents_head_fk', 'v_files_head_fk']);
 });
 
-it('keeps every committed allowlist entry reasoned, categorised and no later than the invariant blocks (I3 and I4 block, I1 and I2 report)', function (): void {
+it('keeps every committed allowlist entry reasoned, categorised and no later than the invariant blocks (all four block: I1 and I2 since P4.16, with the named collaboration residual of D32)', function (): void {
     $repo = Repo::discover();
     $count = 0;
     foreach (['I1', 'I2', 'I3', 'I4'] as $invariant) {
@@ -269,11 +269,14 @@ it('keeps every committed allowlist entry reasoned, categorised and no later tha
             expect($entry['reason'])->not->toBe('')->and($entry)->toHaveKey('category');
             $count++;
         }
-        expect($allowlist->mode)->toBe(in_array($invariant, ['I3', 'I4'], true) ? 'block' : 'report');
+        expect($allowlist->mode)->toBe('block');
         if ($invariant === 'I4') {
             expect(array_unique(array_column($allowlist->entries(), 'category')))->not->toContain('activation');
         }
     }
 
-    expect($count)->toBeGreaterThan(0);
+    // I1 is empty; what stays is the I2 residual of D32 (documents -> collaboration, removed in P5) and the I4 ones.
+    expect($count)->toBeGreaterThan(0)
+        ->and(Allowlist::load($repo, ScanGenerator::allowlistPath('I1'))->entries())->toBe([])
+        ->and(array_unique(array_column(Allowlist::load($repo, ScanGenerator::allowlistPath('I2'))->entries(), 'removed_in')))->toBe(['P5']);
 });

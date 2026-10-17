@@ -51,12 +51,6 @@ parameters:
             identifier: if.alwaysTrue
             path: packages/core/src/Drive/Uploads/Actions/CommitUploadAction.php
 
-        # Shipped for host test suites: the trait is consumed by Pest `uses()` in the
-        # host's own tests, never inside this package's src.
-        -
-            identifier: trait.unused
-            path: packages/core/src/Testing/InteractsWithVaulter.php
-
         # Offered to package providers (the manifest is declared from their register()); the
         # package's own providers adopt it in their own items, the fixture provider in tests.
         -

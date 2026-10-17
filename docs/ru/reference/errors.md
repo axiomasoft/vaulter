@@ -63,7 +63,7 @@ outline: deep
 | [`document_type_unavailable`](#document_type_unavailable) | 409 | documents | `never` | `cacheable` | `Vaulter\Documents\Exceptions\DocumentTypeUnavailableException` |
 | [`drive_archived`](#drive_archived) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\DriveArchivedException` |
 | [`drive_not_found`](#drive_not_found) | 404 | drive | `never` | `never` | `Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException` |
-| [`duplicate_registration`](#duplicate_registration) | 500 | core | `never` | `never` | `Vaulter\Drive\Exceptions\Registry\DuplicateNodeContentLifecycleException` |
+| [`duplicate_registration`](#duplicate_registration) | 500 | core | `never` | `never` | — |
 | [`extension_failed`](#extension_failed) | 500 | core | `never` | `never` | `Vaulter\Exceptions\Support\InvalidExtensionResult` |
 | [`file_size_limit_exceeded`](#file_size_limit_exceeded) | 413 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException` |
 | [`folder_children_limit_exceeded`](#folder_children_limit_exceeded) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException` |
@@ -91,7 +91,7 @@ outline: deep
 | [`not_a_file`](#not_a_file) | 422 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Nodes\NotAFileException` |
 | [`operation_in_progress`](#operation_in_progress) | 409 | core | `with_backoff` | `never` | `Vaulter\Exceptions\Idempotency\OperationInProgressException` |
 | [`payload_too_large`](#payload_too_large) | 413 | core | `never` | `cacheable` | `Illuminate\Http\Exceptions\PostTooLargeException` |
-| [`permission_denied`](#permission_denied) | 403 | core | `never` | `never` | `Vaulter\Drive\Exceptions\Access\PermissionDeniedException` |
+| [`permission_denied`](#permission_denied) | 403 | core | `never` | `never` | `Illuminate\Auth\Access\AuthorizationException` |
 | [`precondition_required`](#precondition_required) | 428 | core | `after_refetch` | `never` | `Vaulter\Exceptions\Http\PreconditionRequiredException` |
 | [`profile_restriction`](#profile_restriction) | 403 | drive | `never` | `never` | `Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException` |
 | [`quota_exceeded`](#quota_exceeded) | 413 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\QuotaExceededException` |
