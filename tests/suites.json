@@ -1865,6 +1865,7 @@
             "tests/Repo/Arch/SurfaceManifestTest.php",
             "tests/Repo/Arch/SurfaceRulesTest.php",
             "tests/Repo/Arch/TargetMapTest.php",
+            "tests/Repo/ConsumerCheckTest.php",
             "tests/Repo/TestGroupsTest.php",
             "tests/Repo/TestRunnerTest.php",
             "tests/Repo/TestSelectTest.php",

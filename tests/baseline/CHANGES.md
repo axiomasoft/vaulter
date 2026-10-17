@@ -1402,7 +1402,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 
 ## Additions (current − original)
 
-- `repo`: 222 (introduced P1.3)
+- `repo`: 239 (introduced P1.3)
 - `core`: 514
 - `media`: 90
 - `drive`: 111

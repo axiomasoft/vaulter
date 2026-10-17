@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.19",
   "title": "Split/CI/релиз-манифест для webhooks и I14 clean-consumer harness (blocking CI)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`release/packages.json` и `.github/workflows/monorepo-split.yml` получают webhooks; `ci.yml`/`weekly-full.yml` — линии suite webhooks; `scripts/release/consumer-check.sh <package>` собирает пакет в пустом каталоге только с объявленными зависимостями и гоняет его быстрый набор; CI-джоба `consumer-isolation` (core, media, drive, documents, webhooks) blocking.",
   "why": "I14 строится в P4 (каркас), квалификация архивов — PLAN4. Риск: harness, тихо использующий корневой vendor — тест harness на фикстуре с необъявленной зависимостью обязан падать.",
   "scope": {
@@ -241,6 +241,52 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T05:02:59Z"
+  "result": {
+    "started_at": "2026-10-17T07:30:21Z",
+    "finished_at": "2026-10-17T07:56:49Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "deviations": [
+      "V2: pytest не установлен, WorkflowPolicyTest.py запущен через python3 -m unittest (43 теста OK).",
+      "packages/core/composer.json: require-dev axioma-studio/vaulter-documents (self.version, path ../documents) и firebase/php-jwt ^7.0 — harness нашёл 42 импорта Vaulter\\Documents в тестах core (D43).",
+      "scripts/ci/workflow-policy.py изменён (генератор матриц CI), вне task_files; webhooks type coverage доведён до 100% (2 типа параметров). Реальный consumer-check без --dry-run не запускался (D41, PLAN4); разрешены только прямые require/require-dev, транзитивные — нарушение."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T07:56:49Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T07:56:49Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T07:56:49Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T07:56:49Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T07:56:49Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T07:56:49Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T07:56:49Z"
 }

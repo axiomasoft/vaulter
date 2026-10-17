@@ -136,11 +136,18 @@ class WorkflowPolicyTest(unittest.TestCase):
             self.assertTrue(any('coverage' in e.lower() for e in self.errors('tests.yml', doc)), doc)
 
 
+def consumer_job():
+    return {'needs': 'changes', 'if': "needs.changes.outputs.has_consumer == 'true'", 'runs-on': 'ubuntu-latest',
+            'timeout-minutes': 30, 'strategy': {'fail-fast': False, 'matrix': '${{ fromJSON(needs.changes.outputs.consumer_matrix) }}'},
+            'steps': [{'run': 'scripts/release/consumer-check.sh "$PACKAGE"'}]}
+
+
 def ci_doc():
-    lanes = ['quality', 'fast', 'db', 'serial', 'vue', 'hub', 'repo', 'openapi']
+    lanes = [policy.lane_job(lane) for lane in policy.LANES]
     jobs = {'changes': {'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}}
     for lane in lanes:
         jobs[lane] = {'needs': 'changes', 'runs-on': 'ubuntu-latest', 'timeout-minutes': 10, 'steps': []}
+    jobs['consumer-isolation'] = consumer_job()
     jobs['ci-gate'] = {'name': 'CI gate', 'if': 'always()', 'needs': ['changes'] + lanes,
                        'runs-on': 'ubuntu-latest', 'timeout-minutes': 5, 'steps': [{'run': 'true'}]}
     return {
@@ -171,7 +178,7 @@ def selector(status='ok', exit_code=0, suites=(), errors=()):
 def needs(results, **outputs):
     """toJSON(needs) of ci-gate: `results` maps job to result, `outputs` are the outputs of `changes`."""
     base = {'skip_reason': '', 'has_quality': 'false', 'has_fast': 'false', 'has_db': 'false', 'has_serial': 'false',
-            'has_vue': 'false', 'has_hub': 'false', 'has_repo': 'false', 'has_openapi': 'false'}
+            'has_consumer': 'false', 'has_vue': 'false', 'has_hub': 'false', 'has_repo': 'false', 'has_openapi': 'false'}
     base.update({k: v for k, v in outputs.items()})
     out = {job: {'result': result, 'outputs': {}} for job, result in results.items()}
     out['changes'] = {'result': results.get('changes', 'success'), 'outputs': base}
@@ -305,7 +312,7 @@ class SingleCiTest(unittest.TestCase):
     def test_docs_only_is_an_explicit_skip(self):
         out = self.plan(selector('docs_only', 0))
         self.assertEqual('docs-only', out['skip_reason'])
-        for lane in ('quality', 'fast', 'db', 'serial', 'vue', 'hub', 'repo', 'openapi'):
+        for lane in policy.LANES:
             self.assertEqual('false', out[f'has_{lane}'])
         self.assertEqual({'include': []}, json.loads(out['fast_matrix']))
         self.assertEqual('docs-only', self.plan(selector('no_changes', 0))['skip_reason'])
@@ -330,13 +337,15 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('true', out['has_openapi'])
 
     def test_exit_2_plan_is_the_full_affected_set(self):
-        suites = ['core', 'media', 'drive', 'documents', 'azgard', 'filament', 'load', 'repo', 'hub', 'vue']
+        suites = ['core', 'media', 'drive', 'documents', 'webhooks', 'azgard', 'filament', 'load', 'repo', 'hub', 'vue']
         out = self.plan(selector('unknown', 2, suites))
         self.assertEqual('true', out['has_vue'])
         self.assertEqual('true', out['has_hub'])
         self.assertEqual('true', out['has_repo'])
-        self.assertEqual(11, len(json.loads(out['fast_matrix'])['include']))  # 5 packages x 2 lines + filament x 1
-        self.assertEqual(6, len(json.loads(out['quality_matrix'])['include']))
+        self.assertEqual(13, len(json.loads(out['fast_matrix'])['include']))  # 6 packages x 2 lines + filament x 1
+        self.assertEqual(7, len(json.loads(out['quality_matrix'])['include']))
+        self.assertEqual(['core', 'media', 'drive', 'documents', 'webhooks'],
+                         [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
 
     def test_harness_change_still_runs_the_repository_wide_pint(self):
         out = self.plan(selector('ok', 0, ['repo']))
@@ -355,10 +364,127 @@ class SingleCiTest(unittest.TestCase):
         out = policy.plan_outputs(self.support, 'all')
         self.assertEqual('', out['skip_reason'])
         self.assertEqual('true', out['has_fast'])
-        self.assertEqual(12, len(json.loads(out['db_matrix'])['include']))
-        self.assertEqual(4, len(json.loads(out['serial_matrix'])['include']))
+        self.assertEqual(14, len(json.loads(out['db_matrix'])['include']))
+        self.assertEqual(5, len(json.loads(out['serial_matrix'])['include']))
+        self.assertEqual(5, len(json.loads(out['consumer_matrix'])['include']))
         with self.assertRaises(ValueError):
             policy.plan_outputs(self.support, 'changed')
+
+    # -- webhooks and the I14 consumer lane (PLAN3 P4.19) ---------------------------------------------------------------
+
+    def test_webhooks_is_a_php_package_of_every_lane(self):
+        support = self.support
+        self.assertIn('webhooks', policy.PHP_PACKAGES)
+        self.assertEqual(['12', '13'], support['webhooks']['lines'])
+        self.assertTrue(support['webhooks']['serial'], 'its groups.php declares serial cases (forked races)')
+        self.assertFalse(support['webhooks']['azguard'])
+
+        out = self.plan(selector('ok', 0, ['webhooks']), pgsql=selector('ok', 0, ['webhooks']), mysql=selector('ok', 0, ['webhooks']))
+        self.assertEqual({('webhooks', '12.*'), ('webhooks', '13.*')},
+                         {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
+        self.assertEqual(['webhooks'], [r['package'] for r in json.loads(out['serial_matrix'])['include']])
+        self.assertEqual([('webhooks', 'pgsql'), ('webhooks', 'mysql')],
+                         [(r['package'], r['engine']) for r in json.loads(out['db_matrix'])['include']])
+
+    def test_consumer_lane_follows_the_changed_consumer_packages(self):
+        out = self.plan(selector('ok', 0, ['drive', 'documents', 'filament', 'azgard']))
+        self.assertEqual('true', out['has_consumer'])
+        self.assertEqual(['drive', 'documents'], [r['package'] for r in json.loads(out['consumer_matrix'])['include']],
+                         'filament and azgard are not consumer packages (external gate D20 / own composer check)')
+
+        out = self.plan(selector('ok', 0, ['azgard', 'filament']))
+        self.assertEqual('false', out['has_consumer'])
+        self.assertEqual({'include': []}, json.loads(out['consumer_matrix']))
+
+    def test_harness_or_manifest_change_rechecks_every_consumer(self):
+        # scripts/release/*, tests/ or the manifest (an unknown path plans the whole set)
+        out = self.plan(selector('ok', 0, ['repo']))
+        self.assertEqual(['core', 'media', 'drive', 'documents', 'webhooks'],
+                         [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
+        self.assertEqual('true', out['has_consumer'])
+
+    def test_docs_only_runs_no_consumer(self):
+        out = self.plan(selector('docs_only', 0))
+        self.assertEqual('false', out['has_consumer'])
+        self.assertEqual({'include': []}, json.loads(out['consumer_matrix']))
+
+    def test_repository_ci_has_a_blocking_consumer_isolation_job(self):
+        doc = policy.load_workflow(ROOT / '.github' / 'workflows' / 'ci.yml')
+        job = doc['jobs']['consumer-isolation']
+        self.assertEqual([], policy.check_consumer_isolation('ci.yml', job))
+        self.assertIn('consumer-isolation', doc['jobs']['ci-gate']['needs'])
+        self.assertIn('has_consumer', doc['jobs']['changes']['outputs'])
+        self.assertIn('consumer_matrix', doc['jobs']['changes']['outputs'])
+
+    def test_consumer_isolation_policy_rejects_a_soft_or_dry_lane(self):
+        self.assertEqual([], policy.check_consumer_isolation('ci.yml', consumer_job()))
+
+        soft = consumer_job()
+        soft['continue-on-error'] = True
+        self.assertTrue(any('blocking' in e for e in policy.check_consumer_isolation('ci.yml', soft)))
+
+        soft = consumer_job()
+        soft['steps'][0]['continue-on-error'] = True
+        self.assertTrue(any('blocking' in e for e in policy.check_consumer_isolation('ci.yml', soft)))
+
+        dry = consumer_job()
+        dry['steps'][0]['run'] += ' --dry-run'
+        self.assertTrue(any('--dry-run' in e for e in policy.check_consumer_isolation('ci.yml', dry)))
+
+        fixed = consumer_job()
+        fixed['strategy']['matrix'] = {'package': ['core']}
+        self.assertTrue(any('consumer_matrix' in e for e in policy.check_consumer_isolation('ci.yml', fixed)))
+
+        other = consumer_job()
+        other['steps'] = [{'run': 'composer test'}]
+        self.assertTrue(any('consumer-check.sh' in e for e in policy.check_consumer_isolation('ci.yml', other)))
+
+        ungated = consumer_job()
+        del ungated['if']
+        self.assertTrue(any('has_consumer' in e for e in policy.check_consumer_isolation('ci.yml', ungated)))
+
+    def test_ci_requires_the_consumer_job_and_the_gate_to_need_it(self):
+        doc = ci_doc()
+        del doc['jobs']['consumer-isolation']
+        self.assertTrue(any('no consumer-isolation job' in e for e in policy.check_ci(doc, ROOT)))
+
+        doc = ci_doc()
+        doc['jobs']['ci-gate']['needs'].remove('consumer-isolation')
+        self.assertTrue(any("does not need ['consumer-isolation']" in e for e in policy.check_ci(doc, ROOT)))
+
+    def test_gate_is_red_when_an_expected_consumer_lane_did_not_succeed(self):
+        for result in ('failure', 'cancelled', 'skipped'):
+            red = needs({'quality': 'skipped', 'fast': 'skipped', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': result,
+                         'vue': 'skipped', 'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
+                        has_consumer='true', has_openapi='true', consumer_matrix=self.matrix(2))
+            self.assertEqual([f'consumer: required lane is {result}'], policy.gate_errors(red), result)
+
+        empty = needs({'quality': 'skipped', 'fast': 'skipped', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped',
+                       'vue': 'skipped', 'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
+                      has_consumer='true', has_openapi='true', consumer_matrix=self.matrix(0))
+        self.assertIn('consumer: required lane has an empty matrix', policy.gate_errors(empty))
+
+    # -- the release manifest and the split matrix carry webhooks -----------------------------------------------------
+
+    def test_release_manifest_and_split_matrix_list_webhooks_once(self):
+        manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
+        entries = [p for p in manifest['php'] if p['path'] == 'packages/webhooks']
+        self.assertEqual(1, len(entries))
+        self.assertEqual('axioma-studio/vaulter-webhooks', entries[0]['name'])
+        self.assertEqual(entries[0]['name'], entries[0]['split'])
+        self.assertFalse(entries[0].get('metapackage', False))
+        self.assertFalse(entries[0].get('excluded_unless_tagged', False))
+
+        split = policy.load_workflow(ROOT / '.github' / 'workflows' / 'monorepo-split.yml')
+        cells = split['jobs']['split']['strategy']['matrix']['package']
+        self.assertEqual(1, cells.count('webhooks'))
+        self.assertEqual(sorted(Path(p['path']).name for p in manifest['php']), sorted(cells))
+
+    def test_consumer_packages_are_releasable_php_packages(self):
+        manifest = json.loads((ROOT / 'release' / 'packages.json').read_text(encoding='utf-8'))
+        paths = {Path(p['path']).name for p in manifest['php'] if not p.get('metapackage')}
+        self.assertEqual(set(), set(policy.CONSUMER_PACKAGES) - paths)
+        self.assertEqual(set(), set(policy.CONSUMER_PACKAGES) - set(policy.PHP_PACKAGES))
 
     # -- gate: fake changes + needs fixtures ----------------------------------------------------------------------
 
@@ -366,7 +492,7 @@ class SingleCiTest(unittest.TestCase):
         return json.dumps({'include': [{'package': 'core'}] * rows})
 
     def test_gate_green_when_every_expected_lane_succeeded(self):
-        green = needs({'quality': 'success', 'fast': 'success', 'db': 'skipped', 'serial': 'skipped', 'vue': 'skipped',
+        green = needs({'quality': 'success', 'fast': 'success', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped',
                        'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
                       has_quality='true', has_fast='true', has_openapi='true',
                       quality_matrix=self.matrix(1), fast_matrix=self.matrix(2))
@@ -374,14 +500,14 @@ class SingleCiTest(unittest.TestCase):
 
     def test_gate_red_on_failure_cancel_and_unexpected_skip(self):
         for result in ('failure', 'cancelled', 'skipped'):
-            red = needs({'quality': result, 'fast': 'success', 'db': 'skipped', 'serial': 'skipped', 'vue': 'skipped',
+            red = needs({'quality': result, 'fast': 'success', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped',
                          'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
                         has_quality='true', has_fast='true', has_openapi='true',
                         quality_matrix=self.matrix(1), fast_matrix=self.matrix(2))
             self.assertEqual([f'quality: required lane is {result}'], policy.gate_errors(red), result)
 
     def test_gate_red_when_an_unexpected_lane_failed_or_changes_failed(self):
-        red = needs({'quality': 'success', 'fast': 'skipped', 'db': 'failure', 'serial': 'skipped', 'vue': 'skipped',
+        red = needs({'quality': 'success', 'fast': 'skipped', 'db': 'failure', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped',
                      'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
                     has_quality='true', has_openapi='true', quality_matrix=self.matrix(1))
         self.assertEqual(['db: failure'], policy.gate_errors(red))
@@ -389,7 +515,7 @@ class SingleCiTest(unittest.TestCase):
         self.assertTrue(policy.gate_errors(needs({'changes': 'cancelled'})))
 
     def test_gate_red_on_an_empty_required_matrix(self):
-        red = needs({'quality': 'success', 'fast': 'skipped', 'db': 'skipped', 'serial': 'skipped', 'vue': 'skipped',
+        red = needs({'quality': 'success', 'fast': 'skipped', 'db': 'skipped', 'serial': 'skipped', 'consumer-isolation': 'skipped', 'vue': 'skipped',
                      'hub': 'skipped', 'repo': 'skipped', 'openapi': 'success'},
                     has_quality='true', has_fast='true', has_openapi='true', quality_matrix=self.matrix(1), fast_matrix=self.matrix(0))
         errors = policy.gate_errors(red)
@@ -397,7 +523,7 @@ class SingleCiTest(unittest.TestCase):
         self.assertIn('fast: required lane is skipped', errors)
 
     def test_gate_accepts_only_an_explicit_skip_when_nothing_ran(self):
-        skipped = {lane: 'skipped' for lane in ('quality', 'fast', 'db', 'serial', 'vue', 'hub', 'repo', 'openapi')}
+        skipped = {policy.lane_job(lane): 'skipped' for lane in policy.LANES}
         self.assertEqual([], policy.gate_errors(needs(skipped, skip_reason='docs-only')))
         self.assertEqual(['changes: no lane expected and no explicit skip reason (an empty plan is not a pass)'],
                          policy.gate_errors(needs(skipped)))
@@ -406,7 +532,7 @@ class SingleCiTest(unittest.TestCase):
 
     def test_plan_then_gate_round_trip_for_docs_only(self):
         out = self.plan(selector('docs_only', 0))
-        skipped = {lane: 'skipped' for lane in ('quality', 'fast', 'db', 'serial', 'vue', 'hub', 'repo', 'openapi')}
+        skipped = {policy.lane_job(lane): 'skipped' for lane in policy.LANES}
         self.assertEqual([], policy.gate_errors(needs(skipped, **out)))
 
 

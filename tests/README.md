@@ -70,6 +70,7 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
 | Database | `ci.yml` (`db`), after `fast` is green | `scripts/t <engine> -p <pkg> --group=database` on PostgreSQL and MySQL services |
 | Serial | `ci.yml` (`serial`), after `fast` is green | `scripts/t pgsql -p <pkg> --group=serial -j1 --no-skips` |
 | Repo, hub, vue, openapi | `ci.yml` | harness tests, Node tests, spec validation |
+| Consumer isolation (I14) | `ci.yml` (`consumer-isolation`), blocking, per `core`, `media`, `drive`, `documents`, `webhooks` | `scripts/release/consumer-check.sh <pkg>`: the package in an empty directory with path repositories only on the siblings it declares (no repository `vendor/`, no `packages/core/tests`), then its fast sqlite set; `--dry-run` prints the plan and runs only the static refusal (an undeclared sibling class, `../core/tests`, `Vaulter\Tests`). Tested in `tests/Repo/ConsumerCheckTest.php`; the zip archives of a release are qualified in PLAN4 |
 | Gate | `ci.yml` (`ci-gate`) | the single required status |
 | Weekly full | `weekly-full.yml` (Monday) | `--full` on every engine, coverage, the stand |
 | Mutation, load | `mutation.yml`, `load.yml` | `workflow_dispatch` only, on the owner's request |
