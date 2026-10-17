@@ -3,14 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapRenderer;
-use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
@@ -247,18 +245,5 @@ it('UpdateDocumentContentAction rejects content over max_document_size_kb, F-P1.
     app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: oversizedContent(),
-    ));
-})->throws(InvalidDocumentContentException::class);
-
-it('PersistCollaborationStateAction rejects a projection over max_document_size_kb, F-P1.11-05', function (): void {
-    $drive = DocumentTestHelpers::drive();
-    $node = createDocument($drive, 'Yjs too big');
-
-    config()->set('vaulter-documents.content.max_size_kb', 1);
-
-    app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
-        node: $node->refresh(),
-        yjsState: 'small-yjs-state',
-        content: oversizedContent()->toArray(),
     ));
 })->throws(InvalidDocumentContentException::class);

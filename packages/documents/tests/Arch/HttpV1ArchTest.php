@@ -10,15 +10,13 @@ use Vaulter\Drive\Access\AccessResolver;
 
 /**
  * The shape of the documents v1 HTTP layer (P6-invariants#Bypass): single-action
- * controllers over the operations (the hub's three go through the collaboration hub, the
- * one service that re-checks a room on every call), resources built from snapshots, no
- * route model binding, and bytes only through the core ContentResponder.
+ * controllers over the operations, resources built from snapshots, no route model
+ * binding, and bytes only through the core ContentResponder.
  */
 const DOCUMENTS_V1_CONTROLLER_NAMESPACES = [
     'Vaulter\Documents\Http\Controllers\Documents',
     'Vaulter\Documents\Http\Controllers\Revisions',
     'Vaulter\Documents\Http\Controllers\Comments',
-    'Vaulter\Documents\Http\Controllers\Collaboration',
 ];
 
 arch('documents v1 controllers are final single-action classes')
@@ -58,7 +56,6 @@ arch('the legacy unversioned controllers and the removed middleware stay removed
     ->expect([
         'Vaulter\Documents\Http\Controllers\Documents\DocumentNodeController',
         'Vaulter\Documents\Http\Controllers\Comments\NodeCommentController',
-        'Vaulter\Documents\Http\Controllers\Collaboration\NodeCollaborationController',
         'Vaulter\Http\Middleware\ResolveVaulterRouteParameters',
     ])
     ->not->toBeUsed();

@@ -40,8 +40,7 @@ abstract class TestCase extends OrchestraTestCase
             VaulterDriveServiceProvider::class,
             VaulterMediaServiceProvider::class,
             // This package binds the Documents behaviour: the document type
-            // registry and the document presenter, the collaboration
-            // manager/broadcast channel, the document routes and the
+            // registry and the document presenter, the document routes and the
             // Documents-event Activity/outbox subscribers. The file handler
             // registry and the NodePresenter seam are core-owned (P0.4/D10) —
             // VaulterServiceProvider (core) binds them, not this provider.

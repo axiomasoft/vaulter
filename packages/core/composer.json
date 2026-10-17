@@ -36,6 +36,7 @@
     "require-dev": {
         "opis/json-schema": "^2.4",
         "symfony/yaml": "^8.0",
+        "axioma-studio/vaulter-collaboration": "self.version",
         "axioma-studio/vaulter-documents": "self.version",
         "axioma-studio/vaulter-drive": "self.version",
         "axioma-studio/vaulter-media": "self.version",
@@ -101,6 +102,13 @@
         {
             "type": "path",
             "url": "../webhooks",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../collaboration",
             "options": {
                 "symlink": true
             }

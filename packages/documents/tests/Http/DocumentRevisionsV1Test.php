@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Documents\Tests\Fixtures\GrantedDocuments as Granted;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -12,8 +12,8 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
  * restored; a restore is a content write, so it needs the content's tag.
  */
 beforeEach(function (): void {
-    Hub::configure();
-    $this->node = Hub::document(level: RoleRegistry::WRITER, actorId: 1);
+    Granted::configure();
+    $this->node = Granted::document(level: RoleRegistry::WRITER, actorId: 1);
     $this->id = (string) $this->node->getKey();
     $this->actingAs(AccessTestHelpers::user(1));
 });
@@ -76,17 +76,13 @@ it('restores with the content tag: 428 without it, 412 when stale, the old conte
     expect($restored->headers->get('ETag'))->toBe(Docs::etag($this->id));
 });
 
-it('moves the collaboration epoch on a restore, so the old room is fenced off', function (): void {
+it('moves the collaboration epoch on a restore, so a room of the old generation can no longer write', function (): void {
     $first = $this->getJson(Docs::url('documents/'.$this->id.'/revisions'))->json('data.0.id');
-    $epoch = Hub::aggregate($this->node)->collab_epoch;
+    $epoch = Granted::aggregate($this->node)->collab_epoch;
 
     $this->postJson(Docs::url('documents/'.$this->id.'/revisions/'.$first.'/restore'), [], Docs::ifMatch($this->id))
         ->assertOk()
         ->assertJsonPath('data.collab_epoch', $epoch + 1);
-
-    Hub::call('store', Hub::storeBody($this->node, 'old-room', epoch: $epoch), Hub::token($this->node, epoch: $epoch))
-        ->assertStatus(409)
-        ->assertJsonPath('code', 'collaboration_epoch_mismatch');
 });
 
 it('lets a reader read the history and refuses it every write', function (): void {

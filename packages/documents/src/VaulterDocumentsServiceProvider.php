@@ -11,7 +11,7 @@ use Vaulter\Modules\OffersModules;
 
 /**
  * The documents package only offers {@see DocumentsModule}: the core module kernel registers its use cases,
- * revisions, comments, collaboration and HTTP routes while the module is active.
+ * revisions, comments, export and HTTP routes while the module is active.
  */
 #[Api]
 final class VaulterDocumentsServiceProvider extends PackageServiceProvider

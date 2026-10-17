@@ -740,11 +740,11 @@
         {
             "category": "domain-model",
             "count": 1,
-            "file": "packages/documents/src/Data/Collaboration/PersistCollaborationStateInput.php",
+            "file": "packages/collaboration/src/Data/PersistCollaborationStateInput.php",
             "kind": "property",
             "reason": "D27: the supported signature names the domain Eloquent model; P4 replaces it by a snapshot or a ref (I9), I13 blocks from P7",
             "removed_in": "P7",
-            "symbol": "Vaulter\\Documents\\Data\\Collaboration\\PersistCollaborationStateInput::$node",
+            "symbol": "Vaulter\\Collaboration\\Data\\PersistCollaborationStateInput::$node",
             "target": "Vaulter\\Drive\\Models\\Node",
             "view": "signature"
         },

@@ -323,7 +323,7 @@ it('classifies the special cases of the architecture by name', function (): void
         ->and($types['Vaulter\Media\Contracts\Cas\BlobStore']['owner'])->toBe('media')
         ->and($types['Vaulter\Tenancy\Tenancy'])->toMatchArray(['owner' => 'core', 'action' => 'keep', 'surface' => 'Api'])
         ->and($types['Vaulter\Drive\Doctor\DiskSet']['owner'])->toBe('drive')
-        ->and($types['Vaulter\Documents\Collaboration\CollaborationHub'])->toMatchArray(['owner' => 'collaboration', 'phase' => 'P5'])
+        ->and($types['Vaulter\Collaboration\CollaborationHub'])->toMatchArray(['owner' => 'collaboration', 'phase' => 'stay', 'action' => 'keep'])
         ->and($members['Vaulter\Media\Cas\BlobStore::attach']['owner'])->toBe('drive');
 });
 

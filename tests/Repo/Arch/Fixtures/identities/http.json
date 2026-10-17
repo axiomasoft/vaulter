@@ -721,15 +721,43 @@
             "id": "route:vaulter.v1.webhook-endpoints.update",
             "kind": "http",
             "reason": "P4.13: the controller classes and the routes file moved to vaulter-webhooks (Vaulter\\Webhooks\\Http); the name, path, method and middleware are unchanged"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.store",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.collaboration.session",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
         }
     ],
     "flags": {
-        "vaulter-documents.collaboration.enabled": false,
         "vaulter-drive.features.activity": true,
         "vaulter-drive.features.changes": true,
         "vaulter-drive.features.grants": true,
         "vaulter-drive.features.public_listing": false,
         "vaulter-drive.features.share_links": false,
+        "vaulter.modules.collaboration": false,
         "vaulter.modules.webhooks": false
     },
     "items": [
@@ -914,22 +942,22 @@
             "uri": "api/vaulter/v1/drives/{drive}/changes/start"
         },
         {
-            "action": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubAuthenticateController",
-            "controller": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubAuthenticateController",
+            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubAuthenticateController",
+            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubAuthenticateController",
             "default_registered": false,
             "id": "route:vaulter.v1.collaboration.hub.authenticate",
             "methods": [
                 "POST"
             ],
             "middleware": [
-                "vaulter.module:documents",
+                "vaulter.module:collaboration",
                 "api",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+                "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
             ],
             "name": "vaulter.v1.collaboration.hub.authenticate",
             "openapi": {
@@ -938,31 +966,31 @@
             },
             "owner": "collaboration",
             "requires": [
-                "vaulter-documents.collaboration.enabled"
+                "vaulter.modules.collaboration"
             ],
             "source": {
-                "file": "packages/documents/src/Http/Controllers/Collaboration/HubAuthenticateController.php",
-                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubAuthenticateController"
+                "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubAuthenticateController.php",
+                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubAuthenticateController"
             },
             "uri": "api/vaulter/v1/collaboration/hub/authenticate"
         },
         {
-            "action": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubLoadController",
-            "controller": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubLoadController",
+            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubLoadController",
+            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubLoadController",
             "default_registered": false,
             "id": "route:vaulter.v1.collaboration.hub.load",
             "methods": [
                 "POST"
             ],
             "middleware": [
-                "vaulter.module:documents",
+                "vaulter.module:collaboration",
                 "api",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+                "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
             ],
             "name": "vaulter.v1.collaboration.hub.load",
             "openapi": {
@@ -971,31 +999,31 @@
             },
             "owner": "collaboration",
             "requires": [
-                "vaulter-documents.collaboration.enabled"
+                "vaulter.modules.collaboration"
             ],
             "source": {
-                "file": "packages/documents/src/Http/Controllers/Collaboration/HubLoadController.php",
-                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubLoadController"
+                "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubLoadController.php",
+                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubLoadController"
             },
             "uri": "api/vaulter/v1/collaboration/hub/load"
         },
         {
-            "action": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubStoreController",
-            "controller": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubStoreController",
+            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubStoreController",
+            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubStoreController",
             "default_registered": false,
             "id": "route:vaulter.v1.collaboration.hub.store",
             "methods": [
                 "POST"
             ],
             "middleware": [
-                "vaulter.module:documents",
+                "vaulter.module:collaboration",
                 "api",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
                 "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
                 "throttle:vaulter-public",
-                "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+                "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
             ],
             "name": "vaulter.v1.collaboration.hub.store",
             "openapi": {
@@ -1004,11 +1032,11 @@
             },
             "owner": "collaboration",
             "requires": [
-                "vaulter-documents.collaboration.enabled"
+                "vaulter.modules.collaboration"
             ],
             "source": {
-                "file": "packages/documents/src/Http/Controllers/Collaboration/HubStoreController.php",
-                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubStoreController"
+                "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubStoreController.php",
+                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubStoreController"
             },
             "uri": "api/vaulter/v1/collaboration/hub/store"
         },
@@ -1133,15 +1161,15 @@
             "uri": "api/vaulter/v1/nodes/{node}/comments"
         },
         {
-            "action": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
-            "controller": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
-            "default_registered": true,
+            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
+            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
+            "default_registered": false,
             "id": "route:vaulter.v1.documents.collaboration.session",
             "methods": [
                 "POST"
             ],
             "middleware": [
-                "vaulter.module:documents",
+                "vaulter.module:collaboration",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -1155,10 +1183,12 @@
                 "path": "/documents/{node}/collaboration/session"
             },
             "owner": "collaboration",
-            "requires": [],
+            "requires": [
+                "vaulter.modules.collaboration"
+            ],
             "source": {
-                "file": "packages/documents/src/Http/Controllers/Collaboration/CreateCollaborationSessionController.php",
-                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController"
+                "file": "packages/collaboration/src/Http/Controllers/Collaboration/CreateCollaborationSessionController.php",
+                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController"
             },
             "uri": "api/vaulter/v1/documents/{node}/collaboration/session"
         },

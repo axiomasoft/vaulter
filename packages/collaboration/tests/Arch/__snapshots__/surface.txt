@@ -1,0 +1,73 @@
+# Surface manifest of the package `collaboration` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
+# Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
+
+Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final readonly class
+  public function assertDistinctHubSecrets(): void
+  public function assertSecrets(Illuminate\Contracts\Foundation\Application $app): void
+  public function channelPrefix(): string
+  public function driver(): string
+  public function hubJwtSecret(): ?string
+  public function hubTimestampTolerance(): int
+  public function hubTokenTtl(): int
+  public function hubUrl(): ?string
+  public function hubWebhookSecret(): ?string
+  public function maxStateBytes(): int
+  public function parseRoom(string $room): ?Vaulter\Collaboration\Data\RoomRef
+  public function room(mixed $driveId, mixed $nodeId, int $epoch): string
+
+Vaulter\Collaboration\Contracts\HostUserResolver spi:implement since 1.0 interface
+  public function find(int|string $id): ?Illuminate\Contracts\Auth\Access\Authorizable
+
+Vaulter\Collaboration\Data\PersistCollaborationStateInput api since 1.0 final readonly class
+  public int|null|string $actorId
+  public ?array $content
+  public ?int $expectedEpoch
+  public ?int $expectedStateVersion
+  public Vaulter\Drive\Models\Node $node
+  public bool $seed
+  public string $yjsState
+
+Vaulter\Collaboration\Data\RoomRef api since 1.0 final readonly class
+  public string $driveId
+  public int $epoch
+  public string $nodeId
+  public function __construct(string $driveId, string $nodeId, int $epoch)
+
+Vaulter\Collaboration\Enums\CollaborationDriverType api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Hocuspocus = 'hocuspocus'
+
+Vaulter\Collaboration\Exceptions\CollaborationConfigException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
+  public static function missingSecret(): self
+
+Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly int $actual
+  public readonly int $expected
+  public function __construct(int $expected, int $actual)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly ?int $actualStateVersion
+  public readonly ?int $expectedStateVersion
+  public readonly string $nodeId
+  public function __construct(string $nodeId, ?int $expectedStateVersion = null, ?int $actualStateVersion = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+
+Vaulter\Collaboration\Exceptions\CollaborationUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly string $reason
+  public readonly ?string $type
+  public function __construct(string $reason, ?string $type = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+  public static function unsupportedType(string $type): self
+
+Vaulter\Collaboration\Operations\CollaborationOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\DriveExtension
+  public function session(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationSession
+
+Vaulter\Collaboration\VaulterCollaborationServiceProvider api since 1.0 final class extends Spatie\LaravelPackageTools\PackageServiceProvider uses Vaulter\Modules\OffersModules
+  public function configurePackage(Spatie\LaravelPackageTools\Package $package): void
+  public function packageRegistered(): void

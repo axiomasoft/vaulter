@@ -18,7 +18,7 @@ require_once __DIR__.'/Config.php';
 /**
  * identities/http.json: the routes a booted host registers (name, methods, uri, middleware, action), and their
  * match with the OpenAPI contract. The routes come from `scripts/inventory/boot/routes.php`, one separate PHP process
- * per run: the defaults, then once per feature flag (`vaulter-drive.features.*` and the collaboration switch) with the flag
+ * per run: the defaults, then once per feature flag (`vaulter-drive.features.*` and the opt-in module switches) with the flag
  * flipped. A route that appears or disappears with a flag gets `requires: [flag]`, which is finer than one run with
  * every opt-in flag on. The inventory itself never boots Laravel.
  *
@@ -32,7 +32,7 @@ final class Http
     public const OPENAPI = 'openapi/vaulter-v1.yaml';
 
     /** Switches besides `vaulter-drive.features.*` that mount routes; their default is read from the package config. */
-    public const EXTRA_FLAGS = ['vaulter.modules.webhooks' => false, 'vaulter-documents.collaboration.enabled' => false];
+    public const EXTRA_FLAGS = ['vaulter.modules.webhooks' => false, 'vaulter.modules.collaboration' => false];
 
     private const OPENAPI_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
@@ -42,7 +42,7 @@ final class Http
         $problems = [];
         foreach (['azgard', 'filament'] as $package) {
             if (is_dir($repo->path("packages/{$package}/routes"))) {
-                $problems[] = ['code' => 'unscanned-routes', 'message' => "http: packages/{$package}/routes exists — the boot lists only core, media, drive and documents; add the package to boot/routes.php", 'exit' => 1];
+                $problems[] = ['code' => 'unscanned-routes', 'message' => "http: packages/{$package}/routes exists — the boot lists only core, media, drive, documents, collaboration and webhooks; add the package to boot/routes.php", 'exit' => 1];
             }
         }
 

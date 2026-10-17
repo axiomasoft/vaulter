@@ -90,7 +90,7 @@ arch('internal namespaces are not used outside the package (E3.1)')
  * sat directly in the layer root with no domain sub-namespace, unlike core's
  * `Actions/Sharing`, `Enums/Webhooks`, … . P4.10 DISCHARGED it: the flat classes were
  * grouped under domain sub-namespaces (`Actions/Comments`, `Actions/Documents`,
- * `Actions/Revisions`, `Actions/Collaboration`, `Enums/Export`, `Models/Revisions`, …).
+ * `Actions/Revisions`, `Enums/Export`, `Models/Revisions`, …).
  * This test now asserts the CANON (no non-allow-listed class flat at a layer root)
  * and passes GREEN; the `->todo()` was removed by P4.10.
  *
@@ -144,10 +144,7 @@ arch('DB facade is routed through VaulterDatabase (AD25)')
 arch('domain exceptions implement the HTTP problem contract')
     ->expect('Vaulter\Documents\Exceptions')
     ->classes()
-    ->toImplement('Vaulter\Exceptions\Contracts\ProblemException')
-    ->ignoring([
-        'Vaulter\Documents\Exceptions\CollaborationConfigException',
-    ]);
+    ->toImplement('Vaulter\Exceptions\Contracts\ProblemException');
 
 arch('production source never imports testing helpers (D35)')
     ->expect('Vaulter\Documents')

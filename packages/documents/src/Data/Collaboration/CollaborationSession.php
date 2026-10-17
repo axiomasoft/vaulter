@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Data\Collaboration;
 
 use Vaulter\Attributes\Api;
-use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 
 /**
  * A realtime collaboration session for one generation of a document, as
- * DocumentOperations::collaborationSession() issues it and the collab-token endpoint
+ * CollaborationOperations::session() issues it and the collab-token endpoint
  * returns it:
  *
  *   - room          — "<prefix>.<driveId>.<nodeId>.<epoch>": one document, one generation.
@@ -23,7 +22,7 @@ use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 final readonly class CollaborationSession
 {
     public function __construct(
-        public CollaborationDriverType $driver,
+        public string $driver,
         public string $room,
         public string $nodeId,
         public string $driveId,
@@ -56,7 +55,7 @@ final readonly class CollaborationSession
     public function toArray(): array
     {
         return [
-            'driver' => $this->driver->value,
+            'driver' => $this->driver,
             'room' => $this->room,
             'node_id' => $this->nodeId,
             'drive_id' => $this->driveId,

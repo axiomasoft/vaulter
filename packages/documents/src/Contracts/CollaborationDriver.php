@@ -7,7 +7,6 @@ namespace Vaulter\Documents\Contracts;
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
-use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Drive\Models\Node;
 
 /**
@@ -21,7 +20,8 @@ use Vaulter\Drive\Models\Node;
 #[Spi(SpiKind::Implement)]
 interface CollaborationDriver
 {
-    public function type(): CollaborationDriverType;
+    /** The stable key of the transport (`vaulter-collaboration.driver`), e.g. `hocuspocus`. */
+    public function type(): string;
 
     /**
      * @param int        $epoch         the document's collab_epoch; part of the room name

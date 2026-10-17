@@ -19,8 +19,6 @@ return [
         'Document/PurgeTrashCascadeTest.php',
         'Document/DocumentSchemaWritableTest.php',
         'Document/DocumentCopyLifecycleTest.php',
-        'Collaboration/CollaborationWebhookTest.php',
-        'Collaboration/HubProtocolTest.php',
         'Types/UnknownDocumentTypeFallbackTest.php',
     ],
     'serial' => [

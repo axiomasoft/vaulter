@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
+use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Http\Middleware\EnsureModuleActive;
@@ -27,41 +28,22 @@ uses(TestCase::class, WithoutDatabaseSchema::class);
 // below exactly, with that phase — an expectation, not a skip: a new mismatch or a resolved one fails the test.
 
 /**
- * Identities declared by another module than their owner until the named phase moves them.
+ * Identities declared by another module than their owner until the named phase moves them (none left: the collaboration
+ * identities moved with the package in P5.1).
  *
  * @var array<string, array{declared_by: string, phase: string, ids: list<string>}>
  */
-const I5_DECLARED_ELSEWHERE = [
-    'collaboration' => [
-        'declared_by' => 'documents',
-        'phase' => 'P5',
-        'ids' => [
-            'problem:collaboration_epoch_mismatch',
-            'problem:collaboration_seed_conflict',
-            'problem:collaboration_unavailable',
-            'route:vaulter.v1.documents.collaboration.session',
-        ],
-    ],
-];
+const I5_DECLARED_ELSEWHERE = [];
 
 /**
  * Config roots holding keys of other owners until the config split of the named phase (D36, P3.6).
  *
  * @var array<string, array{declared_by: string, phase: string, owners: list<string>}>
  */
-const I5_SHARED_CONFIG_ROOTS = [
-    'vaulter-documents' => ['declared_by' => 'documents', 'phase' => 'P5', 'owners' => ['collaboration', 'documents']],
-];
+const I5_SHARED_CONFIG_ROOTS = [];
 
-/**
- * Routes of the inventory a default installation does not mount even with every module active: the collaboration
- * hub needs a configured hub (P5).
- */
-const I5_UNMOUNTED_ROUTES = [
-    'route:vaulter.v1.collaboration.hub.authenticate',
-    'route:vaulter.v1.collaboration.hub.load',
-    'route:vaulter.v1.collaboration.hub.store',
-];
+/** Routes of the inventory a default installation does not mount even with every module active (none left: the collaboration module mounts its own). */
+const I5_UNMOUNTED_ROUTES = [];
 
 /**
  * Modules whose packages the monorepo root does not install (azgard needs AzGuard, filament needs Filament): their
@@ -75,7 +57,7 @@ function i5App(): Application
 {
     static $app = null;
 
-    return $app ??= FreshApplication::boot(['vaulter.modules' => ['webhooks' => true]], after: [VaulterDocumentsServiceProvider::class]);
+    return $app ??= FreshApplication::boot(['vaulter.modules' => ['webhooks' => true, 'collaboration' => true]], after: [VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class]);
 }
 
 /**
@@ -129,7 +111,7 @@ it('compiles the full set with every module active', function (): void {
 
     expect($kernel->isValid())->toBeTrue(implode('; ', $kernel->reasons()))
         ->and(array_values(array_filter($kernel->modules(), static fn (ModuleState $s): bool => !$s->active)))->toBe([])
-        ->and(array_keys(i5Builders()))->toBe(['core', 'documents', 'drive', 'media', 'webhooks']);
+        ->and(array_keys(i5Builders()))->toBe(['collaboration', 'core', 'documents', 'drive', 'media', 'webhooks']);
 });
 
 it('gives every problem code the owner of the inventory', function (): void {

@@ -45,8 +45,6 @@ final class BindingsRegistrar implements ModuleBindings
             $config = $app->make(DocumentsConfig::class);
             $config->model('document_revision');
             $config->model('node_comment');
-            $config->assertDistinctHubSecrets();
-            $config->hubTokenTtl();
         });
         $app->tag('vaulter.config_validator.documents', ConfigValidCheck::TAG);
 
@@ -86,8 +84,6 @@ final class BindingsRegistrar implements ModuleBindings
         // Core reads a document head through this relation without depending on
         // the documents package; subclasses of the configured node model inherit it.
         Node::resolveRelationUsing('document', static fn (Node $node): HasOne => $node->hasOne(Document::class, 'node_id'));
-        $config->assertDistinctHubSecrets();
-        $config->assertCollaborationSecrets($app);
 
         self::bootDocumentTypes($app, $config);
         self::bootDocumentExporters($app, $config);

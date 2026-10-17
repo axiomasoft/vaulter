@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Documents\Tests\Fixtures\GrantedDocuments as Granted;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 
 /** Comments hang off any node of a drive; the routes are always there and the operations decide. */
 beforeEach(function (): void {
-    Hub::configure();
-    $this->node = Hub::document(level: RoleRegistry::COMMENTER, actorId: 1);
+    Granted::configure();
+    $this->node = Granted::document(level: RoleRegistry::COMMENTER, actorId: 1);
     $this->url = Docs::url('nodes/'.$this->node->getKey().'/comments');
     $this->actingAs(AccessTestHelpers::user(1));
 });
@@ -44,7 +44,7 @@ it('validates the body and keeps ids as strings', function (): void {
 });
 
 it('lets a reader list the thread but not write in it', function (): void {
-    $reader = Hub::document(level: RoleRegistry::READER, actorId: 1);
+    $reader = Granted::document(level: RoleRegistry::READER, actorId: 1);
     $url = Docs::url('nodes/'.$reader->getKey().'/comments');
 
     $this->getJson($url)->assertOk();
@@ -53,7 +53,7 @@ it('lets a reader list the thread but not write in it', function (): void {
 
 it('answers a comment of another node 404 comment_not_found and a stranger 404 node_not_found', function (): void {
     $id = $this->postJson($this->url, ['body' => 'mine'])->json('data.id');
-    $other = Hub::document(level: RoleRegistry::OWNER, actorId: 1);
+    $other = Granted::document(level: RoleRegistry::OWNER, actorId: 1);
     $otherUrl = Docs::url('nodes/'.$other->getKey().'/comments');
 
     $this->postJson($otherUrl.'/'.$id.'/resolve')->assertNotFound()->assertJsonPath('code', 'comment_not_found');

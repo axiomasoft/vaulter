@@ -78,9 +78,9 @@ function cacheDoctorCodes(Application $app): array
     return array_column($report['checks'][0]['findings'], 'code');
 }
 
-function cacheGet(Application $app, string $uri): int
+function cacheGet(Application $app, string $uri, string $method = 'GET'): int
 {
-    return $app->make(HttpKernel::class)->handle(Request::create($uri, server: ['HTTP_ACCEPT' => 'application/json']))->getStatusCode();
+    return $app->make(HttpKernel::class)->handle(Request::create($uri, $method, server: ['HTTP_ACCEPT' => 'application/json']))->getStatusCode();
 }
 
 it('answers 404 for the cached route of a module switched off after route:cache, and builds nothing of it', function (): void {
@@ -168,21 +168,32 @@ function cacheSetFromRoutes(AppSet $set, array $compiled, array $config): Applic
     return $app;
 }
 
-/** The first GET route of `$module` (route parameters filled in with 1): the request that must reach the module. */
-function cacheSetProbe(Application $app, string $module): string
+/**
+ * The first route of `$module`, a GET one when it has any (route parameters filled in with 1): the request that must reach the module.
+ *
+ * @return array{string, string} method, URI
+ */
+function cacheSetProbe(Application $app, string $module): array
 {
+    $first = null;
     foreach ($app['router']->getRoutes()->getRoutes() as $route) {
-        if ($route instanceof Route && in_array('GET', $route->methods(), true) && in_array(EnsureModuleActive::ALIAS.':'.$module, $route->middleware(), true)) {
-            return '/'.preg_replace('/\{[^}]+\}/', '1', $route->uri());
+        if (!$route instanceof Route || !in_array(EnsureModuleActive::ALIAS.':'.$module, $route->middleware(), true)) {
+            continue;
         }
+        $method = in_array('GET', $route->methods(), true) ? 'GET' : $route->methods()[0];
+        $probe = [$method, '/'.preg_replace('/\{[^}]+\}/', '1', $route->uri())];
+        if ($method === 'GET') {
+            return $probe;
+        }
+        $first ??= $probe;
     }
 
-    throw new RuntimeException("No GET route of module $module.");
+    return $first ?? throw new RuntimeException("No route of module $module.");
 }
 
 it('answers 404 for every cached route of the module a set adds once it is switched off after route:cache, with the cache stale in the doctor', function (AppSet $set): void {
     $built = cacheSetBoot($set, $set->on);
-    $probe = cacheSetProbe($built, $set->top);
+    [$method, $probe] = cacheSetProbe($built, $set->top);
     $compiled = cacheRoutesOf($built);
 
     $served = cacheSetFromRoutes($set, $compiled, $set->on);
@@ -190,9 +201,9 @@ it('answers 404 for every cached route of the module a set adds once it is switc
 
     expect($off->routesAreCached())->toBeTrue()
         ->and($off->make(Kernel::class)->isActive($set->top))->toBeFalse()
-        ->and(cacheGet($off, $probe))->toBe(404)
+        ->and(cacheGet($off, $probe, $method))->toBe(404)
         // The same request reaches the module while it is active: the 404 is the switch, not a missing record.
-        ->and(cacheGet($served, $probe))->not->toBe(404)
+        ->and(cacheGet($served, $probe, $method))->not->toBe(404)
         ->and(cacheDoctorCodes($off))->toBe(['core.modules.route_cache_stale']);
 })->with(fn (): array => AppSets::routedDataset());
 
@@ -200,6 +211,8 @@ it('reports the module a set adds as missing from a route cache built before it 
     $compiled = cacheRoutesOf(cacheSetBoot($set, $set->off()));
     $on = cacheSetFromRoutes($set, $compiled, $set->on);
 
-    expect(cacheGet($on, cacheSetProbe(cacheSetBoot($set, $set->on), $set->top)))->toBe(404)
+    [$method, $probe] = cacheSetProbe(cacheSetBoot($set, $set->on), $set->top);
+
+    expect(cacheGet($on, $probe, $method))->toBe(404)
         ->and(cacheDoctorCodes($on))->toContain('core.modules.routes_missing');
 })->with(fn (): array => AppSets::routedDataset());

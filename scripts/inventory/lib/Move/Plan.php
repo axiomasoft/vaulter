@@ -17,7 +17,13 @@ final class Plan
 {
     public const TARGET_MAP = 'tests/Repo/Arch/Fixtures/target-map.json';
 
-    public const OWNERS = ['drive', 'media', 'webhooks', 'documents'];
+    public const OWNERS = ['drive', 'media', 'webhooks', 'documents', 'collaboration'];
+
+    /** The phase whose target-map moves an owner receives: collaboration is carved out of documents in P5, the rest in P4. */
+    public static function phaseOf(string $owner): string
+    {
+        return $owner === 'collaboration' ? 'P5' : 'P4';
+    }
 
     /**
      * @param  Options    $options
@@ -56,7 +62,7 @@ final class Plan
             ];
         }
         if ($moves === [] && !($options['allow_empty'] ?? false)) {
-            throw new MoveUsage('the selection is empty: no type with phase=P4, action=move, owner='.$options['owner'].($options['rule_file'] !== null ? ', rule '.$options['rule_file'] : '').' matches');
+            throw new MoveUsage('the selection is empty: no type with phase='.self::phaseOf($options['owner']).', action=move, owner='.$options['owner'].($options['rule_file'] !== null ? ', rule '.$options['rule_file'] : '').' matches');
         }
         ksort($moves, SORT_STRING);
 
@@ -84,7 +90,7 @@ final class Plan
      */
     private static function selected(array $type, array $options): bool
     {
-        if (($type['phase'] ?? null) !== 'P4' || ($type['action'] ?? null) !== 'move' || ($type['owner'] ?? null) !== $options['owner']) {
+        if (($type['phase'] ?? null) !== self::phaseOf($options['owner']) || ($type['action'] ?? null) !== 'move' || ($type['owner'] ?? null) !== $options['owner']) {
             return false;
         }
         if ($options['rule_file'] !== null && explode(':', (string) ($type['rule'] ?? ''), 2)[0] !== $options['rule_file']) {

@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
+const ID_ACCEPTED_DECISIONS = ['D1', 'D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -407,12 +407,12 @@ describe('committed fixtures', function (): void {
         $http = id_fixture('http');
         $items = array_column($http['items'], null, 'id');
 
-        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter-drive.features.share_links', 'vaulter-documents.collaboration.enabled'])
+        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter-drive.features.share_links', 'vaulter.modules.collaboration'])
             ->and($http['flags'])->not->toHaveKey('vaulter.features.webhooks')
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['requires'])->toBe(['vaulter.modules.webhooks'])
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['default_registered'] ?? false)->toBeFalse()
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['middleware'])->toContain('vaulter.module:webhooks')
-            ->and($items['route:vaulter.v1.collaboration.hub.load']['requires'])->toBe(['vaulter-documents.collaboration.enabled'])
+            ->and($items['route:vaulter.v1.collaboration.hub.load']['requires'])->toBe(['vaulter.modules.collaboration'])
             ->and($items['route:vaulter.v1.collaboration.hub.load']['default_registered'] ?? false)->toBeFalse()
             ->and($items['route:vaulter.v1.grants.index'])->toMatchArray(['methods' => ['GET'], 'owner' => 'drive', 'openapi' => ['path' => '/nodes/{node}/grants', 'operation_id' => 'grants.index']])
             ->and($items['route:vaulter.v1.grants.index']['requires'] ?? [])->toBe([])

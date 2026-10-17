@@ -129,6 +129,12 @@
             "tests": ["packages/documents/tests"],
             "uses": ["core", "media", "drive"]
         },
+        "collaboration": {
+            "suite": "collaboration",
+            "src": ["packages/collaboration/src", "packages/collaboration/config", "packages/collaboration/resources", "packages/collaboration/routes"],
+            "tests": ["packages/collaboration/tests"],
+            "uses": ["core", "media", "drive", "documents"]
+        },
         "azgard": {
             "suite": "azgard",
             "src": ["packages/azgard/src", "packages/azgard/config"],
@@ -211,6 +217,12 @@
         {"path": "packages/documents/tests/TestCase.php", "zones": ["documents"]},
         {"path": "packages/documents/tests/Concerns", "zones": ["documents"]},
         {"path": "packages/documents/tests/Fixtures", "zones": ["documents"]},
+        {"path": "packages/collaboration/composer.json", "zones": ["collaboration"]},
+        {"path": "packages/collaboration/phpunit.xml", "zones": ["collaboration"]},
+        {"path": "packages/collaboration/tests/Pest.php", "zones": ["collaboration"]},
+        {"path": "packages/collaboration/tests/TestCase.php", "zones": ["collaboration"]},
+        {"path": "packages/collaboration/tests/Support", "zones": ["collaboration"]},
+        {"path": "packages/collaboration/tests/Fixtures", "zones": ["collaboration"]},
         {"path": "packages/azgard/composer.json", "zones": ["azgard"]},
         {"path": "packages/azgard/phpunit.xml", "zones": ["azgard"]},
         {"path": "packages/azgard/tests/Pest.php", "zones": ["azgard"]},
@@ -324,9 +336,10 @@
         "packages/documents/tests/Document/PurgeTrashCascadeTest.php",
         "packages/documents/tests/Document/DocumentSchemaWritableTest.php",
         "packages/documents/tests/Document/DocumentCopyLifecycleTest.php",
-        "packages/documents/tests/Collaboration/CollaborationWebhookTest.php",
-        "packages/documents/tests/Collaboration/HubProtocolTest.php",
         "packages/documents/tests/Types/UnknownDocumentTypeFallbackTest.php",
+        "packages/collaboration/tests/Concurrency",
+        "packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php",
+        "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
         "packages/azgard/tests/RealAzgard",
         "packages/azgard/tests/RealAzgardIsolated"
     ],

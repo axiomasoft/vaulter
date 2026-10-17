@@ -1,0 +1,38 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Collaboration;
+
+use Vaulter\Attributes\Internal;
+use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
+use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
+use Vaulter\Collaboration\Exceptions\CollaborationUnavailableException;
+use Vaulter\Http\Problems\ProblemCodeSource;
+use Vaulter\Http\Problems\ProblemSpec;
+use Vaulter\Http\Problems\ReceiptPolicy;
+use Vaulter\Http\Problems\Retryable;
+
+/**
+ * The problem codes of the collaboration module: declared by its manifest, so they are in the catalogue only
+ * while the opt-in module is active. A stable public contract, so a code is added here, in
+ * lang/{en,ru}/problems.php and in the reference docs together.
+ */
+#[Internal]
+final class CollaborationProblemCodes implements ProblemCodeSource
+{
+    public function translationNamespace(): string
+    {
+        return 'vaulter-collaboration';
+    }
+
+    public function codes(): array
+    {
+        return [
+            'collaboration_epoch_mismatch' => new ProblemSpec(409, CollaborationEpochMismatchException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
+            'collaboration_seed_conflict' => new ProblemSpec(409, CollaborationSeedConflictException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
+            // The host's configuration decides, not the request: waiting does not help and a receipt would outlive a config change.
+            'collaboration_unavailable' => new ProblemSpec(409, CollaborationUnavailableException::class),
+        ];
+    }
+}

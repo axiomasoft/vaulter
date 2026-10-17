@@ -13,7 +13,6 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
-use Vaulter\Documents\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -52,10 +51,6 @@ final readonly class DocumentStateWriter
         $this->assertTransaction();
 
         // Preconditions are checked before anything is written.
-        if ($change->expectedEpoch !== null && $change->expectedEpoch !== $locked->collab_epoch) {
-            throw new CollaborationEpochMismatchException(expected: $change->expectedEpoch, actual: $locked->collab_epoch);
-        }
-
         if ($change->expectedStateVersion !== null) {
             if ($change->expectedStateVersion < 0) {
                 throw new InvalidArgumentException('[Vaulter] An expected state version must be nonnegative.');

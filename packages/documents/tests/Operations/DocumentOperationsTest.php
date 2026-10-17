@@ -3,12 +3,9 @@
 declare(strict_types=1);
 
 use Vaulter\Data\Page;
-use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
-use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
@@ -16,12 +13,7 @@ use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Operations\DocumentOperations;
-use Vaulter\Documents\Tests\Collaboration\HubTestHelpers;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanV2Type;
-use Vaulter\Documents\Tests\Types\TypesTestCase;
-use Vaulter\Documents\Types\MarkdownDocumentType;
-use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\CreateFolderOptions;
@@ -33,12 +25,10 @@ use Vaulter\Drive\Enums\OnNameConflict;
 use Vaulter\Drive\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Exceptions\Access\MissingActorException;
 
 /**
  * PLAN2.P4.8: DocumentOperations returns snapshots, keeps the content validator
@@ -228,63 +218,6 @@ it('refuses document methods on a folder', function (): void {
 
     expect(fn () => Documents::in($handle)->content($folder->id))->toThrow(NotADocumentException::class);
 });
-
-it('needs a user for a collaboration session and maps Edit to read-write', function (): void {
-    [$handle, $documents, $node] = documentsFixture();
-    AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 5);
-
-    expect(fn () => $documents->collaborationSession($node->id))->toThrow(MissingActorException::class)
-        ->and(Documents::in($handle->actingAs(AccessTestHelpers::user(5)))->collaborationSession($node->id)->readOnly)->toBeFalse();
-});
-
-it('binds a collaboration session to the document generation and schema', function (): void {
-    [$handle, , $node] = documentsFixture();
-    AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 5);
-    $documents = Documents::in($handle->actingAs(AccessTestHelpers::user(5)));
-    $first = $documents->revisions($node->id)->items[0];
-    $documents->restore($node->id, $first->id);
-
-    $session = $documents->collaborationSession($node->id);
-
-    expect($session->epoch)->toBe(1)
-        ->and($session->schemaVersion)->toBe(1)
-        ->and($session->nodeId)->toBe($node->id)
-        ->and($session->driveId)->toBe($node->driveId)
-        ->and($session->room)->toBe('vaulter.documents.'.$node->driveId.'.'.$node->id.'.1')
-        ->and($session->mode())->toBe('rw');
-});
-
-it('answers collaboration_unavailable when collaboration is off or the type cannot collaborate', function (): void {
-    [$handle, , $node] = documentsFixture();
-    AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 5);
-    $documents = Documents::in($handle->actingAs(AccessTestHelpers::user(5)));
-
-    config()->set('vaulter-documents.collaboration.enabled', false);
-    expect(fn () => $documents->collaborationSession($node->id))->toThrow(CollaborationUnavailableException::class);
-
-    config()->set('vaulter-documents.collaboration.enabled', true);
-    TypesTestCase::installTypes([RichTextDocumentType::class, MarkdownDocumentType::class, AcmeKanbanV2Type::class]);
-    $board = HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5, content: OpaqueContent::fromArray(['columns' => []]), type: 'acme/kanban', schemaVersion: 2);
-    $boardDocuments = Documents::in(Vaulter::drive($board->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(5)));
-
-    expect(fn () => $boardDocuments->collaborationSession($board->id))->toThrow(CollaborationUnavailableException::class, 'unsupported_type');
-});
-
-it('gives an editor a read-only session when the room could not write', function (Closure $arrange): void {
-    [$node, $clientSchemaVersion] = $arrange();
-    $documents = Documents::in(Vaulter::drive($node->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(5)));
-
-    expect($documents->collaborationSession($node->id, $clientSchemaVersion)->readOnly)->toBeTrue();
-})->with([
-    'type not installed' => [static fn (): array => [HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5, content: OpaqueContent::fromArray(['cells' => []]), type: 'acme/gone'), null]],
-    'client speaks another schema' => [static fn (): array => [HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5), 2]],
-    'archived drive' => [static function (): array {
-        $node = HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5);
-        app(VaulterDatabase::class)->write(fn () => $node->storage()->update(['status' => 'archived']));
-
-        return [$node, null];
-    }],
-]);
 
 it('records the acting user on content writes', function (): void {
     [$handle, , $node] = documentsFixture();

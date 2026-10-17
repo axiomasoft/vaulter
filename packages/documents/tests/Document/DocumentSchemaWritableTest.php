@@ -3,17 +3,14 @@
 declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
-use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Tests\Collaboration\HubTestHelpers;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
@@ -60,18 +57,4 @@ it('refuses a JSON update without an expectation once a newer schema is the work
         ->and($after->content_hash)->toBe($before->content_hash)
         ->and($after->revision_count)->toBe($before->revision_count)
         ->and($after->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('newer')->toArray());
-});
-
-it('refuses a collaboration store once a newer schema is the working state', function (): void {
-    $node = restoredNewerSchema();
-    $before = DocumentTestHelpers::document($node);
-
-    expect(fn () => app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
-        node: $node, yjsState: 'late-room', content: HubTestHelpers::tiptap('late edit'),
-    )))->toThrow(DocumentContentDegradedException::class);
-
-    $after = DocumentTestHelpers::document($node);
-    expect($after->state_version)->toBe($before->state_version)
-        ->and($after->yjs_state)->toBe($before->yjs_state)
-        ->and($after->revision_count)->toBe($before->revision_count);
 });

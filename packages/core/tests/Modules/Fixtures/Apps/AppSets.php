@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Modules\Fixtures\Apps;
 
+use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
@@ -11,8 +12,9 @@ use Vaulter\VaulterServiceProvider;
 use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 
 /**
- * The application sets of the install matrix: core; +media; +drive; +documents; +webhooks; +azgard; +filament — each
- * downward-closed by the package graph (D6): webhooks, azgard and filament need the drive, the drive needs the media.
+ * The application sets of the install matrix: core; +media; +drive; +documents; +collaboration; +webhooks; +azgard; +filament —
+ * each downward-closed by the package graph (D6): collaboration needs the documents, webhooks, azgard and filament need the drive, the
+ * drive needs the media.
  *
  * The azgard and filament packages are not a dev dependency of the core (the azgard bridge pulls the external AzGuard
  * package, the Filament admin the Filament framework): their manifests and offering providers need neither, so the matrix
@@ -21,10 +23,10 @@ use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 final class AppSets
 {
     /** The module ids of every package of the monorepo that offers one. */
-    public const array ALL_MODULES = ['core', 'media', 'drive', 'documents', 'webhooks', 'azgard', 'filament'];
+    public const array ALL_MODULES = ['core', 'media', 'drive', 'documents', 'collaboration', 'webhooks', 'azgard', 'filament'];
 
     /** Modules that mount routes of their own. */
-    public const array ROUTE_MODULES = ['drive', 'documents', 'webhooks'];
+    public const array ROUTE_MODULES = ['drive', 'documents', 'collaboration', 'webhooks'];
 
     private const array SIBLING_PACKAGES = [
         'Vaulter\\Azgard\\' => 'azgard',
@@ -41,12 +43,14 @@ final class AppSets
         $core = [VaulterServiceProvider::class];
         $media = [...$core, VaulterMediaServiceProvider::class];
         $drive = [...$media, VaulterDriveServiceProvider::class];
+        $documents = [...$drive, VaulterDocumentsServiceProvider::class];
 
         $sets = [
             new AppSet('core', $core, ['core'], 'core', null),
             new AppSet('core+media', $media, ['core', 'media'], 'media', 'core'),
             new AppSet('core+media+drive', $drive, ['core', 'media', 'drive'], 'drive', 'core+media', requiredOff: 'media'),
-            new AppSet('+documents', [...$drive, VaulterDocumentsServiceProvider::class], ['core', 'media', 'drive', 'documents'], 'documents', 'core+media+drive', requiredOff: 'drive'),
+            new AppSet('+documents', $documents, ['core', 'media', 'drive', 'documents'], 'documents', 'core+media+drive', requiredOff: 'drive'),
+            new AppSet('+collaboration', [...$documents, VaulterCollaborationServiceProvider::class], ['core', 'media', 'drive', 'documents', 'collaboration'], 'collaboration', '+documents', ['vaulter.modules.collaboration' => true], 'documents'),
             new AppSet('+webhooks', [...$drive, VaulterWebhooksServiceProvider::class], ['core', 'media', 'drive', 'webhooks'], 'webhooks', 'core+media+drive', ['vaulter.modules.webhooks' => true], 'drive'),
             new AppSet('+azgard', [...$drive, 'Vaulter\\Azgard\\VaulterAzgardServiceProvider'], ['core', 'media', 'drive', 'azgard'], 'azgard', 'core+media+drive', requiredOff: 'drive'),
             new AppSet('+filament', [...$drive, 'Vaulter\\Filament\\VaulterFilamentServiceProvider'], ['core', 'media', 'drive', 'filament'], 'filament', 'core+media+drive', requiredOff: 'drive'),
@@ -66,7 +70,7 @@ final class AppSets
             self::ALL_MODULES,
             'filament',
             null,
-            ['vaulter.modules.webhooks' => true],
+            ['vaulter.modules.webhooks' => true, 'vaulter.modules.collaboration' => true],
         );
     }
 

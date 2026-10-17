@@ -15,11 +15,11 @@ it('labels only routes the documents module mounts, so a renamed route cannot le
     }
 });
 
-it('adds the document and hub labels to the ones the drive contributes', function (): void {
+it('adds the document labels to the ones the drive contributes', function (): void {
     $operations = app(VaulterHttpOperationMap::class);
 
     expect($operations->operationFor('vaulter.v1.documents.export'))->toBe('doc_export')
         ->and($operations->operationFor('vaulter.v1.nodes.show'))->toBe('point_read')
         ->and($operations->resolve('GET', 'v1/documents/9/export/html'))->toBe('doc_export')
-        ->and(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.store'))->toBe('collab.store');
+        ->and(app(VaulterThrottledRouteMap::class)->routeFor('vaulter.v1.collaboration.hub.store'))->toBeNull();
 });

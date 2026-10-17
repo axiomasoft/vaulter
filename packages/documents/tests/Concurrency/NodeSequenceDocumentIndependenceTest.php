@@ -3,15 +3,14 @@
 declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
-use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
-use Vaulter\Documents\Tests\Collaboration\HubTestHelpers;
 use Vaulter\Documents\Tests\Concurrency\RaceFixtures;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
+use Vaulter\Documents\Tests\Fixtures\StateWrites;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Testing\Concurrency\ForkRace;
 
@@ -35,9 +34,7 @@ it('lets a rename with expectedSequence succeed beside a parallel content write:
     $drive = $node->storage;
     $first = DocumentTestHelpers::head($node);
     $content = static fn (): Closure => match ($writer) {
-        'store' => static fn () => app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
-            node: $node, yjsState: "actual\0Yjs\0snapshot", content: HubTestHelpers::tiptap('room edit'),
-        )),
+        'store' => static fn () => StateWrites::yjs($node, "actual\0Yjs\0snapshot", GrantedDocuments::tiptap('room edit')),
         'update' => static fn () => app(UpdateDocumentContentAction::class)->execute(
             DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('race edit'), expectedStateVersion: 1),
         ),

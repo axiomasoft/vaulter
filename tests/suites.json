@@ -1193,60 +1193,6 @@
       ],
       "partitions": [
         {
-          "key": "CollaborationEnabledTestCase+DatabaseMigrations",
-          "fingerprint": "218c1de8d453",
-          "lifecycle": "migrations",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "parallel",
-            "serial"
-          ],
-          "files": [
-            "packages/documents/tests/Concurrency/CollaborationFenceRaceTest.php",
-            "packages/documents/tests/Concurrency/CommentMutationRaceTest.php",
-            "packages/documents/tests/Concurrency/DegradedContentRaceTest.php",
-            "packages/documents/tests/Concurrency/DocumentMutationLivenessRaceTest.php",
-            "packages/documents/tests/Concurrency/DocumentRenameStaleTest.php",
-            "packages/documents/tests/Concurrency/DocumentStateRaceTest.php",
-            "packages/documents/tests/Concurrency/NodeSequenceDocumentIndependenceTest.php"
-          ]
-        },
-        {
-          "key": "CollaborationEnabledTestCase+RefreshDatabase",
-          "fingerprint": "498be69c043e",
-          "lifecycle": "refresh",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/documents/tests/Collaboration/CollaborationWebhookTest.php",
-            "packages/documents/tests/Collaboration/HubDriveLifecycleTest.php",
-            "packages/documents/tests/Collaboration/HubProtocolTest.php",
-            "packages/documents/tests/Collaboration/NodeCollaborationTokenTest.php",
-            "packages/documents/tests/Collaboration/TipTapSchemaFixtureTest.php",
-            "packages/documents/tests/Http/CollaborationSessionV1Test.php",
-            "packages/documents/tests/Http/CommentsV1Test.php",
-            "packages/documents/tests/Http/DocumentContentV1Test.php",
-            "packages/documents/tests/Http/DocumentRevisionsV1Test.php",
-            "packages/documents/tests/Http/DocumentsRouteLabelsTest.php",
-            "packages/documents/tests/Http/ExportV1Test.php",
-            "packages/documents/tests/Http/HubV1RoutesTest.php"
-          ]
-        },
-        {
           "key": "CommentsTestCase+RefreshDatabase",
           "fingerprint": "3c421f87af15",
           "lifecycle": "refresh",
@@ -1284,6 +1230,30 @@
           ]
         },
         {
+          "key": "DocumentTestCase+DatabaseMigrations",
+          "fingerprint": "218c1de8d453",
+          "lifecycle": "migrations",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "parallel",
+            "serial"
+          ],
+          "files": [
+            "packages/documents/tests/Concurrency/CommentMutationRaceTest.php",
+            "packages/documents/tests/Concurrency/DegradedContentRaceTest.php",
+            "packages/documents/tests/Concurrency/DocumentMutationLivenessRaceTest.php",
+            "packages/documents/tests/Concurrency/DocumentRenameStaleTest.php",
+            "packages/documents/tests/Concurrency/DocumentStateRaceTest.php",
+            "packages/documents/tests/Concurrency/NodeSequenceDocumentIndependenceTest.php"
+          ]
+        },
+        {
           "key": "DocumentTestCase+RefreshDatabase",
           "fingerprint": "9e5284c9310f",
           "lifecycle": "refresh",
@@ -1299,8 +1269,6 @@
           ],
           "files": [
             "packages/documents/tests/Doctor/DocumentsDoctorChecksTest.php",
-            "packages/documents/tests/Document/CollaborationFeatureGateTest.php",
-            "packages/documents/tests/Document/CollaborationSessionTest.php",
             "packages/documents/tests/Document/ContentEgressBoundaryTest.php",
             "packages/documents/tests/Document/DocumentContentReadPathTest.php",
             "packages/documents/tests/Document/DocumentCopyLifecycleTest.php",
@@ -1329,7 +1297,12 @@
             "packages/documents/tests/Document/RevisionIdentityTest.php",
             "packages/documents/tests/Document/SpreadsheetContentTest.php",
             "packages/documents/tests/Document/TrashDocumentTest.php",
-            "packages/documents/tests/Document/VersionFormatCarryForwardTest.php"
+            "packages/documents/tests/Document/VersionFormatCarryForwardTest.php",
+            "packages/documents/tests/Http/CommentsV1Test.php",
+            "packages/documents/tests/Http/DocumentContentV1Test.php",
+            "packages/documents/tests/Http/DocumentRevisionsV1Test.php",
+            "packages/documents/tests/Http/DocumentsRouteLabelsTest.php",
+            "packages/documents/tests/Http/ExportV1Test.php"
           ]
         },
         {
@@ -1558,12 +1531,163 @@
             "packages/documents/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/documents/tests/Arch/PublicApiSnapshotTest.php",
             "packages/documents/tests/Arch/TestingBoundaryTest.php",
-            "packages/documents/tests/Configuration/CollaborationSecretsTest.php",
             "packages/documents/tests/Configuration/DocumentsConfigTest.php",
             "packages/documents/tests/Providers/BindingsRegistrarTest.php",
-            "packages/documents/tests/Providers/CollaborationRegistrarTest.php",
             "packages/documents/tests/Providers/HttpRegistrarTest.php",
             "packages/documents/tests/Providers/InvalidDefaultDocumentTypeTest.php"
+          ]
+        }
+      ]
+    },
+    "collaboration": {
+      "kind": "pest",
+      "cwd": "packages/collaboration",
+      "vendor": "vendor/bin/pest",
+      "config": "phpunit.xml",
+      "tests_dir": "packages/collaboration/tests",
+      "path_base": "package",
+      "default": true,
+      "discovery": [
+        "--list-tests"
+      ],
+      "partitions": [
+        {
+          "key": "CollaborationEnabledTestCase+DatabaseMigrations",
+          "fingerprint": "218c1de8d453",
+          "lifecycle": "migrations",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "parallel",
+            "serial"
+          ],
+          "files": [
+            "packages/collaboration/tests/Concurrency/CollaborationFenceRaceTest.php",
+            "packages/collaboration/tests/Concurrency/CollaborationLivenessRaceTest.php"
+          ]
+        },
+        {
+          "key": "CollaborationEnabledTestCase+RefreshDatabase",
+          "fingerprint": "498be69c043e",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php",
+            "packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php",
+            "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
+            "packages/collaboration/tests/Collaboration/NodeCollaborationTokenTest.php",
+            "packages/collaboration/tests/Collaboration/PersistCollaborationStateTest.php",
+            "packages/collaboration/tests/Collaboration/TipTapSchemaFixtureTest.php",
+            "packages/collaboration/tests/Doctor/CollaborationCheckTest.php",
+            "packages/collaboration/tests/Document/CollaborationSessionTest.php",
+            "packages/collaboration/tests/Http/CollaborationRouteLabelsTest.php",
+            "packages/collaboration/tests/Http/CollaborationSessionV1Test.php",
+            "packages/collaboration/tests/Http/ContentFenceV1Test.php",
+            "packages/collaboration/tests/Http/HubV1RoutesTest.php",
+            "packages/collaboration/tests/Operations/CollaborationOperationsTest.php"
+          ]
+        },
+        {
+          "key": "CollaborationEnabledTestCase+WithoutDatabaseSchema",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/collaboration/tests/Arch/HttpV1ArchTest.php",
+            "packages/collaboration/tests/Arch/TestingBoundaryTest.php"
+          ]
+        },
+        {
+          "key": "HubMiddlewareStackTestCase+RefreshDatabase",
+          "fingerprint": "6ee96fcb4341",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/collaboration/tests/Feature/HubMiddlewareStackV1Test.php"
+          ]
+        },
+        {
+          "key": "RefreshDatabase+TestCase",
+          "fingerprint": "555a082c1a50",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/collaboration/tests/Document/CollaborationFeatureGateTest.php"
+          ]
+        },
+        {
+          "key": "TestCase",
+          "fingerprint": "20db02f08b7a",
+          "lifecycle": "custom",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/collaboration/tests/Module/CollaborationModuleTest.php"
+          ]
+        },
+        {
+          "key": "TestCase+WithoutDatabaseSchema",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "packages/collaboration/tests/Configuration/CollaborationConfigTest.php",
+            "packages/collaboration/tests/Configuration/CollaborationSecretsTest.php",
+            "packages/collaboration/tests/Providers/CollaborationRegistrarTest.php"
           ]
         }
       ]

@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Problems;
 
 use Vaulter\Attributes\Internal;
-use Vaulter\Documents\Exceptions\CollaborationEpochMismatchException;
-use Vaulter\Documents\Exceptions\CollaborationSeedConflictException;
-use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
@@ -26,7 +23,7 @@ use Vaulter\Http\Problems\Retryable;
 /**
  * The problem codes of the documents package: a stable public contract, so a code is added
  * here, in lang/{en,ru}/problems.php and in the reference docs together. The `collaboration_*`
- * codes belong to the collaboration concept and move with it in P5.
+ * codes belong to the collaboration module.
  */
 #[Internal]
 final class DocumentsProblemCodes implements ProblemCodeSource
@@ -39,10 +36,6 @@ final class DocumentsProblemCodes implements ProblemCodeSource
     public function codes(): array
     {
         return [
-            'collaboration_epoch_mismatch' => new ProblemSpec(409, CollaborationEpochMismatchException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
-            'collaboration_seed_conflict' => new ProblemSpec(409, CollaborationSeedConflictException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
-            // The host's configuration decides, not the request: waiting does not help and a receipt would outlive a config change.
-            'collaboration_unavailable' => new ProblemSpec(409, CollaborationUnavailableException::class),
             'comment_not_found' => new ProblemSpec(404, CommentNotFoundException::class),
             'document_content_degraded' => new ProblemSpec(409, DocumentContentDegradedException::class, receipt: ReceiptPolicy::Cacheable),
             'document_revision_not_found' => new ProblemSpec(404, DocumentRevisionNotFoundException::class),

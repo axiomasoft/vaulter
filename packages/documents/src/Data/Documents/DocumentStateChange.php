@@ -25,7 +25,6 @@ final readonly class DocumentStateChange
         public int $schemaVersion,
         public ?string $yjsState = null,
         public int|string|null $actorId = null,
-        public ?int $expectedEpoch = null,
         public ?int $expectedStateVersion = null,
         public bool $forceCheckpoint = false,
         public ?string $label = null,

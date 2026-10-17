@@ -4451,6 +4451,119 @@
             "id": "command:vaulter:blobs:reconcile",
             "kind": "cli",
             "reason": "P4.20: the description says the ref_count is rebuilt from the pins (v_blob_references), not from edge counts; name, signature and behaviour are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.driver",
+            "id": "config:vaulter-collaboration.driver",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.jwt_secret",
+            "id": "config:vaulter-collaboration.hub.jwt_secret",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.timestamp_tolerance",
+            "id": "config:vaulter-collaboration.hub.timestamp_tolerance",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.token_ttl",
+            "id": "config:vaulter-collaboration.hub.token_ttl",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.url",
+            "id": "config:vaulter-collaboration.hub.url",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.webhook_secret",
+            "id": "config:vaulter-collaboration.hub.webhook_secret",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.max_state_bytes",
+            "id": "config:vaulter-collaboration.max_state_bytes",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.broadcast.channel_prefix",
+            "id": "config:vaulter-documents.broadcast.channel_prefix",
+            "kind": "config",
+            "reason": "P5.1: the channel prefix is read by the comment events of the documents and by the collaboration package (rooms, channel authorization): it stays with the documents, outside the collaboration section"
+        },
+        {
+            "change": "removed",
+            "decision": "D22",
+            "id": "config:vaulter-documents.collaboration.enabled",
+            "kind": "config",
+            "reason": "P5.1: collaboration is an opt-in module, switched by vaulter.modules.collaboration (default false); the documents package has no collaboration switch"
+        },
+        {
+            "change": "added",
+            "decision": "D1",
+            "id": "publish:vaulter-collaboration-config",
+            "kind": "config",
+            "reason": "P5.1: publish tag of the collaboration package provider"
+        },
+        {
+            "change": "added",
+            "decision": "D1",
+            "id": "publish:vaulter-collaboration-translations",
+            "kind": "config",
+            "reason": "P5.1: publish tag of the collaboration package provider"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.store",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.collaboration.session",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

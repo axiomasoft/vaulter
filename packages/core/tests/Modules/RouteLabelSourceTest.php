@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Contracts\Routing\RouteLabelSource;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -26,7 +27,7 @@ it('defines the RouteLabelSource slot in the kernel as a contributor slot', func
 });
 
 it('labels the routes of every active module from its own contribution', function (): void {
-    $app = FreshApplication::boot(after: [VaulterDocumentsServiceProvider::class]);
+    $app = FreshApplication::boot(['vaulter.modules.collaboration' => true], after: [VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class]);
     $operations = $app->make(VaulterHttpOperationMap::class);
     $throttled = $app->make(VaulterThrottledRouteMap::class);
 

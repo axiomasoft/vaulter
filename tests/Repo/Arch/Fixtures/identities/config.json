@@ -995,6 +995,91 @@
             "id": "env:VAULTER_WEBHOOKS_MANAGE_ABILITY",
             "kind": "config",
             "reason": "P4.13: the env override is read by the vaulter-webhooks config file of the webhooks package; the name and the default are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.driver",
+            "id": "config:vaulter-collaboration.driver",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.jwt_secret",
+            "id": "config:vaulter-collaboration.hub.jwt_secret",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.timestamp_tolerance",
+            "id": "config:vaulter-collaboration.hub.timestamp_tolerance",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.token_ttl",
+            "id": "config:vaulter-collaboration.hub.token_ttl",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.url",
+            "id": "config:vaulter-collaboration.hub.url",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.webhook_secret",
+            "id": "config:vaulter-collaboration.hub.webhook_secret",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.max_state_bytes",
+            "id": "config:vaulter-collaboration.max_state_bytes",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.broadcast.channel_prefix",
+            "id": "config:vaulter-documents.broadcast.channel_prefix",
+            "kind": "config",
+            "reason": "P5.1: the channel prefix is read by the comment events of the documents and by the collaboration package (rooms, channel authorization): it stays with the documents, outside the collaboration section"
+        },
+        {
+            "change": "removed",
+            "decision": "D22",
+            "id": "config:vaulter-documents.collaboration.enabled",
+            "kind": "config",
+            "reason": "P5.1: collaboration is an opt-in module, switched by vaulter.modules.collaboration (default false); the documents package has no collaboration switch"
+        },
+        {
+            "change": "added",
+            "decision": "D1",
+            "id": "publish:vaulter-collaboration-config",
+            "kind": "config",
+            "reason": "P5.1: publish tag of the collaboration package provider"
+        },
+        {
+            "change": "added",
+            "decision": "D1",
+            "id": "publish:vaulter-collaboration-translations",
+            "kind": "config",
+            "reason": "P5.1: publish tag of the collaboration package provider"
         }
     ],
     "items": [
@@ -1171,39 +1256,17 @@
             }
         },
         {
-            "default": "vaulter.documents",
-            "id": "config:vaulter-documents.collaboration.broadcast.channel_prefix",
-            "owner": "collaboration",
-            "registered_defaults": true,
-            "root": "vaulter-documents",
-            "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
-                "symbol": "<file>"
-            }
-        },
-        {
             "default": {
                 "default": "hocuspocus",
                 "env": "VAULTER_COLLAB_DRIVER"
             },
             "env": "VAULTER_COLLAB_DRIVER",
-            "id": "config:vaulter-documents.collaboration.driver",
+            "id": "config:vaulter-collaboration.driver",
             "owner": "collaboration",
             "registered_defaults": true,
-            "root": "vaulter-documents",
+            "root": "vaulter-collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
-                "symbol": "<file>"
-            }
-        },
-        {
-            "default": false,
-            "id": "config:vaulter-documents.collaboration.enabled",
-            "owner": "collaboration",
-            "registered_defaults": true,
-            "root": "vaulter-documents",
-            "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
@@ -1212,34 +1275,34 @@
                 "env": "VAULTER_COLLAB_SECRET"
             },
             "env": "VAULTER_COLLAB_SECRET",
-            "id": "config:vaulter-documents.collaboration.hub.jwt_secret",
+            "id": "config:vaulter-collaboration.hub.jwt_secret",
             "owner": "collaboration",
             "registered_defaults": true,
-            "root": "vaulter-documents",
+            "root": "vaulter-collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": 300,
-            "id": "config:vaulter-documents.collaboration.hub.timestamp_tolerance",
+            "id": "config:vaulter-collaboration.hub.timestamp_tolerance",
             "owner": "collaboration",
             "registered_defaults": true,
-            "root": "vaulter-documents",
+            "root": "vaulter-collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": 3600,
-            "id": "config:vaulter-documents.collaboration.hub.token_ttl",
+            "id": "config:vaulter-collaboration.hub.token_ttl",
             "owner": "collaboration",
             "registered_defaults": true,
-            "root": "vaulter-documents",
+            "root": "vaulter-collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
@@ -1249,12 +1312,12 @@
                 "env": "VAULTER_COLLAB_URL"
             },
             "env": "VAULTER_COLLAB_URL",
-            "id": "config:vaulter-documents.collaboration.hub.url",
+            "id": "config:vaulter-collaboration.hub.url",
             "owner": "collaboration",
             "registered_defaults": true,
-            "root": "vaulter-documents",
+            "root": "vaulter-collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
@@ -1263,19 +1326,30 @@
                 "env": "VAULTER_COLLAB_WEBHOOK_SECRET"
             },
             "env": "VAULTER_COLLAB_WEBHOOK_SECRET",
-            "id": "config:vaulter-documents.collaboration.hub.webhook_secret",
+            "id": "config:vaulter-collaboration.hub.webhook_secret",
             "owner": "collaboration",
             "registered_defaults": true,
-            "root": "vaulter-documents",
+            "root": "vaulter-collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
         {
             "default": 16777216,
-            "id": "config:vaulter-documents.collaboration.max_state_bytes",
+            "id": "config:vaulter-collaboration.max_state_bytes",
             "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.documents",
+            "id": "config:vaulter-documents.broadcast.channel_prefix",
+            "owner": "documents",
             "registered_defaults": true,
             "root": "vaulter-documents",
             "source": {
@@ -3567,7 +3641,7 @@
         },
         {
             "config_keys": [
-                "vaulter-documents.collaboration.driver"
+                "vaulter-collaboration.driver"
             ],
             "defaults": [
                 "hocuspocus"
@@ -3575,13 +3649,13 @@
             "id": "env:VAULTER_COLLAB_DRIVER",
             "owner": "collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
         {
             "config_keys": [
-                "vaulter-documents.collaboration.hub.jwt_secret"
+                "vaulter-collaboration.hub.jwt_secret"
             ],
             "defaults": [
                 null
@@ -3589,13 +3663,13 @@
             "id": "env:VAULTER_COLLAB_SECRET",
             "owner": "collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
         {
             "config_keys": [
-                "vaulter-documents.collaboration.hub.url"
+                "vaulter-collaboration.hub.url"
             ],
             "defaults": [
                 "ws://localhost:1234"
@@ -3603,13 +3677,13 @@
             "id": "env:VAULTER_COLLAB_URL",
             "owner": "collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
         {
             "config_keys": [
-                "vaulter-documents.collaboration.hub.webhook_secret"
+                "vaulter-collaboration.hub.webhook_secret"
             ],
             "defaults": [
                 null
@@ -3617,7 +3691,7 @@
             "id": "env:VAULTER_COLLAB_WEBHOOK_SECRET",
             "owner": "collaboration",
             "source": {
-                "file": "packages/documents/config/vaulter-documents.php",
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
                 "symbol": "<file>"
             }
         },
@@ -4149,6 +4223,24 @@
             "via": "module:config"
         },
         {
+            "id": "publish:vaulter-collaboration-config",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationModule.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationModule::register"
+            },
+            "via": "module:config"
+        },
+        {
+            "id": "publish:vaulter-collaboration-translations",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/src/VaulterCollaborationServiceProvider.php",
+                "symbol": "Vaulter\\Collaboration\\VaulterCollaborationServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasTranslations"
+        },
+        {
             "id": "publish:vaulter-config",
             "owner": "core",
             "source": {
@@ -4252,6 +4344,7 @@
     "roots": [
         "vaulter",
         "vaulter-azgard",
+        "vaulter-collaboration",
         "vaulter-documents",
         "vaulter-drive",
         "vaulter-filament",

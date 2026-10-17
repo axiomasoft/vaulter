@@ -17,9 +17,16 @@
             ]
         },
         "collaboration": {
-            "exists": false,
+            "composer": "axioma-studio/vaulter-collaboration",
+            "current_require": [
+                "core",
+                "documents",
+                "drive"
+            ],
+            "dir": "packages/collaboration",
+            "exists": true,
             "psr4": {
-                "Vaulter\\Collaboration\\": null
+                "Vaulter\\Collaboration\\": "src/"
             },
             "target_require": [
                 "core",

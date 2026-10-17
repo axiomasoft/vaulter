@@ -4,12 +4,14 @@
         "Vaulter\\Drive\\",
         "Vaulter\\Documents\\",
         "Vaulter\\Documents\\Database\\Factories\\",
+        "Vaulter\\Collaboration\\",
         "Vaulter\\Webhooks\\",
         "Vaulter\\Azgard\\",
         "Vaulter\\Filament\\",
         "path:packages/media/",
         "path:packages/drive/",
         "path:packages/documents/",
+        "path:packages/collaboration/",
         "path:packages/webhooks/",
         "path:packages/azgard/",
         "path:packages/filament/"
@@ -206,6 +208,30 @@
             "why": "architecture#packages (D6): the vaulter-webhooks namespace stays in the webhooks package (outbox consumer, endpoint management, signing, delivery, retries); CLI/HTTP are identity surfaces, not PHP API"
         },
         {
+            "match": "prefix",
+            "value": "Vaulter\\Collaboration\\",
+            "owner": "collaboration",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D1, D6): the vaulter-collaboration namespace stays in the collaboration package (Hocuspocus driver, sessions, hub endpoints); CLI/HTTP are identity surfaces, not PHP API"
+        },
+        {
+            "match": "file",
+            "value": "packages/collaboration/config/vaulter-collaboration.php",
+            "owner": "collaboration",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D1, P5.1): the collaboration section of the configuration is the vaulter-collaboration root of the collaboration package"
+        },
+        {
+            "match": "file",
+            "value": "packages/collaboration/routes/collaboration.php",
+            "owner": "collaboration",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (D1, P5.1): the session and hub routes live in the collaboration package"
+        },
+        {
             "match": "file",
             "value": "packages/webhooks/config/vaulter-webhooks.php",
             "owner": "webhooks",
@@ -399,118 +425,11 @@
         },
         {
             "match": "prefix",
-            "value": "Vaulter\\Documents\\Collaboration\\",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation (p2-design#type-map: documents Collaboration/** goes to collaboration P5)"
-        },
-        {
-            "match": "prefix",
-            "value": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: session creation and hub load/store/authenticate endpoints"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: resolves the hub call (JWT/shared secret)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Http\\Requests\\CreateCollaborationSessionRequest",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: request of the session endpoint"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Http\\Resources\\CollaborationSessionResource",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: resource of the session endpoint"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Providers\\CollaborationRegistrar",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: registrar of the collaboration routes and driver"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Doctor\\CollaborationCheck",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "note": "jwt probe (class_exists JWT) disappears when collaboration requires firebase/php-jwt (P5)",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: JWT/probe check (architecture#code-facts probes JWT)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Exceptions\\CollaborationConfigException",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: thrown for hub/driver misconfiguration"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: thrown when the hub is unavailable"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Enums\\Collaboration\\CollaborationDriverType",
-            "owner": "collaboration",
-            "action": "move",
-            "phase": "P5",
-            "note": "open: DocumentsConfig reads it today; the config section split decides how documents keeps working without collaboration (P5)",
-            "why": "architecture#packages: collaboration (new package) owns the real-time implementation: Hocuspocus driver, sessions, JWT, hub endpoints, revocation: selects the collaboration driver"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Actions\\Collaboration\\PersistCollaborationStateAction",
-            "owner": "documents",
-            "action": "keep",
-            "phase": "stay",
-            "note": "open: written for the hub store path; stays with the aggregate unless collaboration takes the write path (P5)",
-            "why": "source-review#code-facts: the document aggregate writes its binary state (D26 keeps yjs_state with the document); the hub store endpoint calls it"
-        },
-        {
-            "match": "prefix",
             "value": "Vaulter\\Documents\\Data\\Collaboration\\",
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: CollaborationSession and the SPI inputs/refs belong to the documents SPI of collaboration (architecture#packages: documents owns the SPI)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Exceptions\\CollaborationEpochMismatchException",
-            "owner": "documents",
-            "action": "keep",
-            "phase": "stay",
-            "why": "source-review#code-facts: expectedEpoch/state_version are checked by the document state writer (aggregate state, D26)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Documents\\Exceptions\\CollaborationSeedConflictException",
-            "owner": "documents",
-            "action": "keep",
-            "phase": "stay",
-            "why": "source-review#code-facts: seed conflicts are decided by the document state writer (aggregate state, D26)"
+            "why": "current PublicApiSnapshotTest baseline (packages/*/tests/Arch/__snapshots__): not Internal: CollaborationSession belongs to the documents SPI of collaboration (architecture#packages: documents owns the SPI)"
         },
         {
             "match": "file",
@@ -518,7 +437,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "note": "open: collaboration keys (driver, hub, JWT) move to collaboration in P5",
             "why": "architecture#packages: documents section of the configuration stays in vaulter-documents"
         },
         {
@@ -527,7 +445,6 @@
             "owner": "documents",
             "action": "keep",
             "phase": "stay",
-            "note": "open: collaboration routes move to collaboration in P5",
             "why": "architecture#packages: documents routes stay in vaulter-documents"
         },
         {

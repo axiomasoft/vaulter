@@ -1906,8 +1906,8 @@
             "manual": true,
             "owner": "collaboration",
             "source": {
-                "file": "packages/documents/src/Collaboration/CollaborationCallResolver.php",
-                "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
+                "file": "packages/collaboration/src/CollaborationCallResolver.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
             }
         },
         {
@@ -1966,8 +1966,8 @@
             "manual": true,
             "owner": "collaboration",
             "source": {
-                "file": "packages/documents/src/Collaboration/HocuspocusCollaborationDriver.php",
-                "symbol": "Vaulter\\Documents\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
+                "file": "packages/collaboration/src/HocuspocusCollaborationDriver.php",
+                "symbol": "Vaulter\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
             }
         },
         {
@@ -2327,38 +2327,38 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Documents\\Exceptions\\CollaborationEpochMismatchException",
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationEpochMismatchException",
             "id": "problem:collaboration_epoch_mismatch",
             "owner": "collaboration",
             "receipt": "cacheable",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
-                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Documents\\Exceptions\\CollaborationSeedConflictException",
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationSeedConflictException",
             "id": "problem:collaboration_seed_conflict",
             "owner": "collaboration",
             "receipt": "cacheable",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
-                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException",
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUnavailableException",
             "id": "problem:collaboration_unavailable",
             "owner": "collaboration",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
-                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
         },

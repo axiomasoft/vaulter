@@ -155,39 +155,6 @@
             "view": "current"
         },
         {
-            "category": "jwt-optional",
-            "count": 1,
-            "file": "packages/documents/src/Collaboration/CollaborationCallResolver.php",
-            "kind": "probe",
-            "reason": "firebase/php-jwt не runtime require documents: после P5 становится require collaboration",
-            "removed_in": "P5",
-            "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationCallResolver::resolveJwt",
-            "target": "\\Firebase\\JWT\\JWT::class",
-            "view": "current"
-        },
-        {
-            "category": "jwt-optional",
-            "count": 1,
-            "file": "packages/documents/src/Collaboration/HocuspocusCollaborationDriver.php",
-            "kind": "probe",
-            "reason": "firebase/php-jwt не runtime require documents: после P5 становится require collaboration",
-            "removed_in": "P5",
-            "symbol": "Vaulter\\Documents\\Collaboration\\HocuspocusCollaborationDriver::issueSession",
-            "target": "\\Firebase\\JWT\\JWT::class",
-            "view": "current"
-        },
-        {
-            "category": "jwt-optional",
-            "count": 1,
-            "file": "packages/documents/src/Doctor/CollaborationCheck.php",
-            "kind": "probe",
-            "reason": "firebase/php-jwt не runtime require documents: после P5 становится require collaboration",
-            "removed_in": "P5",
-            "symbol": "Vaulter\\Documents\\Doctor\\CollaborationCheck::run",
-            "target": "\\Firebase\\JWT\\JWT::class",
-            "view": "current"
-        },
-        {
             "category": "config-validation",
             "count": 1,
             "file": "packages/documents/src/Export/DocumentExporterRegistry.php",

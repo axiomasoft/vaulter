@@ -89,7 +89,9 @@ final class TestMover
             if ($package === null || $package === 'core') {
                 continue;
             }
-            $from = 'Vaulter\\Tests\\';
+            // A test directory of core uses `Vaulter\Tests\`; one of another package its own `Vaulter\<Package>\Tests\`.
+            $source = self::packageOf($move['from']);
+            $from = $source === null || $source === 'core' ? 'Vaulter\\Tests\\' : 'Vaulter\\'.ucfirst($source).'\\Tests\\';
             $to = 'Vaulter\\'.ucfirst($package).'\\Tests\\';
             foreach ($move['files'] as $file) {
                 if (!str_ends_with($file['from'], '.php')) {
@@ -211,7 +213,7 @@ final class TestMover
      * @param  array<string, array{from: string, to: string, partition: string, new: string}> $files  by old path
      * @return list<LedgerEntry>
      */
-    public static function ledger(Repo $repo, array $suites, array $files, string $decision): array
+    public static function ledger(Repo $repo, array $suites, array $files, string $decision, string $phase = 'P4'): array
     {
         $entries = [];
         $originals = [];
@@ -236,7 +238,7 @@ final class TestMover
                 if ($info['to'] !== $info['from']) {
                     $entry['new_suite'] = $info['to'];
                 }
-                $entries[] = $entry + ['reason' => "the test file moved to {$newPath} (P4 ownership move)", 'decision' => $decision];
+                $entries[] = $entry + ['reason' => "the test file moved to {$newPath} ({$phase} ownership move)", 'decision' => $decision];
             }
         }
 
