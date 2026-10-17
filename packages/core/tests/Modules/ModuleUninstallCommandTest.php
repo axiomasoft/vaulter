@@ -10,8 +10,7 @@ use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-// D36: in P3 the command plans (dry run) and refuses to execute; P4.17 enables --force/--purge on top of the
-// create-migrations that P4.5 split by owner.
+// D36: the plan of the command (a dry run); its execution with --force/--purge is ModuleUninstallTest.
 
 it('plans the removal of a module that ships its migrations in its own package', function (): void {
     $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks'])
@@ -36,14 +35,8 @@ it('refuses the core: it cannot be uninstalled and other modules require it', fu
         ->assertFailed();
 });
 
-it('refuses --force and --purge until the owner migrations are split (P4)', function (string $option): void {
-    $this->artisan('vaulter:module:uninstall', ['module' => 'webhooks', $option => true])
-        ->expectsOutputToContain('the uninstall of the owner migrations is not available yet (P4)')
-        ->assertFailed();
-})->with(['--force', '--purge']);
-
-it('refuses an unknown module', function (): void {
+it('refuses an unknown module as a usage error', function (): void {
     $this->artisan('vaulter:module:uninstall', ['module' => 'nope'])
         ->expectsOutputToContain('No installed module is called "nope"')
-        ->assertFailed();
+        ->assertExitCode(2);
 });

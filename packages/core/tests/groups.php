@@ -19,6 +19,7 @@ return [
         'Idempotency',
         'Events/EventRecorderTest.php',
         'Modules/AcmeModuleContractTest.php',
+        'Modules/ModuleUninstallTest.php',
         'Outbox/OutboxRelayTest.php',
         'Outbox/OutboxWriteTest.php',
         'Doctor/CoreDoctorChecksTest.php',

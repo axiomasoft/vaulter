@@ -12904,6 +12904,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/media/src/Cas/BlobPinReferences.php",
+            "fqcn": "Vaulter\\Media\\Cas\\BlobPinReferences",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Cas\\BlobPinReferences"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/media/src/Cas/BlobPinStore.php",
             "fqcn": "Vaulter\\Media\\Cas\\BlobPinStore",
             "kind": "final-class",
@@ -13604,6 +13618,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Modules/HoldsReferences.php",
+            "fqcn": "Vaulter\\Modules\\HoldsReferences",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\HoldsReferences",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\HoldsReferences"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Modules/InvalidModuleGraph.php",
             "fqcn": "Vaulter\\Modules\\InvalidModuleGraph",
             "kind": "final-class",
@@ -13726,6 +13754,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Modules\\ModuleId",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Modules\\ModuleId"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Modules/ModuleReferences.php",
+            "fqcn": "Vaulter\\Modules\\ModuleReferences",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\ModuleReferences",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\ModuleReferences"
         },
         {
             "action": "keep",

@@ -132,6 +132,12 @@ final readonly class BlobPinStore implements BlobPins
         return $counts;
     }
 
+    /** Whether the pins table exists: before the media schema is installed, or after it is removed, nothing is pinned. */
+    public function installed(): bool
+    {
+        return $this->database->connection()->getSchemaBuilder()->hasTable($this->databaseConfig->table('blob_references'));
+    }
+
     /** Whether any owner pins the blob — the check both GC phases run under the lock. */
     public function isPinned(Blob|int|string $blob): bool
     {

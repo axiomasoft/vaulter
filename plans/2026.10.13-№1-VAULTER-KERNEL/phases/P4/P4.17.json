@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.17",
   "title": "vaulter:module:uninstall: исполнение --force/--purge (D36) с собственными pins",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Команда из P3 получает исполнение: `--force` откатывает миграции только schema-пути владельца; `--purge` (с --force) удаляет строки владельца и его pins `BlobPins::releaseOwner` в транзакции; отказы: установленные зависимые модули, входящие FK чужих таблиц, чужие pins на blobs владельца (media). Тесты сценариев архитектурной матрицы.",
   "why": "D36 перенёс исполнение в P4 после раскладки миграций (P4.5) и pins (P4.7). Hard risk: generic DROP/DELETE чужих таблиц или потеря чужих pins — запрещено (architecture#module-system ревизия 3).",
   "scope": {
@@ -226,6 +226,48 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T05:03:01Z"
+  "result": {
+    "started_at": "2026-10-17T06:40:45Z",
+    "finished_at": "2026-10-17T07:00:16Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "deviations": [
+      "Новый внутренний контракт ModuleReferences + маркер HoldsReferences (media: BlobPinReferences) вместо слота: слоты не резолвятся у выключенного модуля, проверка pins молча пропала бы.",
+      "--force без --purge отказывает, если у модуля есть строки или свои pins; --purge — явное согласие на потерю данных. Exit-коды 0/1/2, неизвестный модуль теперь 2.",
+      "Откат делает сама команда (down() миграций своей папки + удаление из migrations): встроенные rollback/reset выбирают по batch и задевают чужие файлы. Добавлен BlobPinStore::installed(). Media отказывает при любых pins других владельцев.",
+      "Остаточные риски: media --purge оставляет объекты на диске (GC); нет guard от живого трафика; на MySQL purge+rollback не атомарны; pg/mysql-прогоны — PLAN4. Пакетных прогонов нет (D45)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T07:00:16Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T07:00:16Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T07:00:16Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T07:00:16Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T07:00:16Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T07:00:16Z"
 }

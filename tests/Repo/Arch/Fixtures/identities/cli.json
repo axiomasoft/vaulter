@@ -16,6 +16,13 @@
             "reason": "P3.2: dry-run uninstall plan; --force/--purge refuse until P4"
         },
         {
+            "change": "redefined",
+            "decision": "D36",
+            "id": "command:vaulter:module:uninstall",
+            "kind": "cli",
+            "reason": "P4.17: --force rolls back the owner's migrations (refused while its tables hold rows or it keeps pins), --purge (with --force) deletes its rows and releases its own pins; exit 2 on usage (--purge without --force, unknown module)"
+        },
+        {
             "change": "added",
             "decision": "D25",
             "id": "command:vaulter:idempotency:prune",
@@ -828,6 +835,7 @@
             "description": "Plan (dry run) or perform the removal of a Vaulter module's schema",
             "exit_codes": [
                 "FAILURE",
+                "INVALID",
                 "SUCCESS"
             ],
             "hidden": false,

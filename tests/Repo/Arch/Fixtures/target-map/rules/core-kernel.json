@@ -1704,6 +1704,22 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Modules\\HoldsReferences",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#module-system + D36 (P4.17): a module manifest names the class that reads and releases the references other modules keep in its data (media pins, D23)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleReferences",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#module-system + D36 (P4.17): the references between modules no foreign key shows, read and released by vaulter:module:uninstall without the kernel knowing the holder's tables"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Support\\Concerns\\HasStableMorphAlias",
             "owner": "core",
             "action": "keep",

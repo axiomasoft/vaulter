@@ -6,6 +6,7 @@ namespace Vaulter\Media;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Doctor\DoctorCheck;
+use Vaulter\Media\Cas\BlobPinReferences;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Console\GcBlobsCommand;
 use Vaulter\Media\Console\ReconcileBlobsCommand;
@@ -18,6 +19,7 @@ use Vaulter\Media\Providers\SchedulingRegistrar;
 use Vaulter\Media\Schema\MediaSchema;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
+use Vaulter\Modules\HoldsReferences;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\OwnsSchema;
@@ -29,8 +31,14 @@ use Vaulter\Modules\VaulterModule;
  * and storage-driver capabilities. Auto: the drive needs it and it opens no outbound traffic.
  */
 #[Internal]
-final class MediaModule implements OwnsSchema, VaulterModule
+final class MediaModule implements HoldsReferences, OwnsSchema, VaulterModule
 {
+    /** The pins other modules keep on the media's blobs (D23), for vaulter:module:uninstall. */
+    public static function heldReferences(): string
+    {
+        return BlobPinReferences::class;
+    }
+
     public static function ownedSchema(): string
     {
         return MediaSchema::class;
