@@ -64,3 +64,6 @@ P4.17 | docs/reference/commands.md:90, docs/ru/reference/commands.md:91 | «--fo
 P4.17 | media/ModuleUninstall | media --purge оставляет объекты хранилища сиротами (до GC)
 P4.17 | core/ModuleUninstallCommand | purge без guard выключенного модуля/lock — возможны записи при живом трафике
 P4.17 | core/ModuleUninstallCommand | MySQL: DDL коммитится, purge+rollback не атомарны; fresh-app тесты на серверных БД пересмотреть в PLAN4
+P4.18 | core/tests/Modules ModuleUninstallTest, CleanInstallMatrixTest | общий хелпер подмены container/facade root вместо двух копий …In()
+P4.18 | core/tests/Modules/Fixtures/Apps/AppSet.php | docblock providers: string вместо class-string (azgard/filament статически неизвестны)
+P4.18 | CleanInstallMatrixTest | на pgsql/mysql wipe _test БД внутри DatabaseMigrations — проверить в PLAN4 (не запускалось)
