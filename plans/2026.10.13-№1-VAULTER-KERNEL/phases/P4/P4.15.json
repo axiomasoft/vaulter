@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.15",
   "title": "Filament на authorized listing/lookup Operations drive и snapshots (подготовка I9)",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Drive получает авторизованный листинг дисков `Vaulter\\Drive\\Vaulter::drives()` и lookup/Page-методы Operations там, где их нет (p4-design#filament); Filament-ресурсы и Support переходят с Eloquent-моделей на snapshots через `Table::records()`; FilamentBoundaryArchTest запрещает модели/репозитории/actions drive и Eloquent Builder; `consumers.filament_model_reads` пуст.",
   "why": "I9: Filament — внешний вход, обязан идти через авторизованные Operations (source-review#code-facts «Точка входа/ORM»). Hard risk: ослабление exact-visibility (листинг без текущей авторизации до пагинации) — существующие visibility/authorization тесты Filament не меняют ожиданий.",
   "scope": {
@@ -212,6 +212,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T16:58:04Z"
+  "result": {
+    "started_at": "2026-10-17T05:11:25Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    }
+  },
+  "updated_at": "2026-10-17T05:11:25Z"
 }
