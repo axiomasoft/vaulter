@@ -14,3 +14,7 @@ P4.7 | packages/media/tests/Cas/BlobGcPipelineTest.php:13-39 | коммента�
 P4.7 | docs/ (storage-and-blobs, gc, reference/schema, en+ru) | v_blob_references, BlobPins, storage_id, blob_unavailable, RevisionBlobLinks, doctor media.blobs.pins (P4.20 по ledger D23)
 P4.7 | load/app/Console/SeedLoadDatasetCommand.php:~475-545 | сидер устарел до P4.7 (file_version_id/version_no, commit без scope); холодные рёбра вставляются без pins — GC их соберёт
 P4.7 | packages/drive/src/Actions/Files/IngestFileAction.php:51 | docblock «→ version↔blob edge» — теперь edge + pin (RevisionBlobLinks)
+P4.7 | packages/drive/src/Content/RevisionBlobLinks.php | RC2#3: латентный deadlock restore vs GC acquireMany при >1 blob на ревизию; добавить BlobPins::pinMany/assert 1 blob при манифестах
+P4.7 | packages/media/src/Cas/BlobGarbageCollector.php:179 | RC2#2: устаревший комментарий '(possibly partial) object'; StorageDriver::put — зафиксировать атомарность в контракте
+P4.8 | load/app/Console/SeedLoadDatasetCommand.php:20 | load/app (3 files) use nonexistent Vaulter\Enums\Access\GrantLevel (bit-level API gone before P4.8); load not run in PLAN3
+P4.8 | packages/azgard/tests/ArchTest.php | заголовки arch-тестов ('only core') устарели: azgard зависит от drive (Access перенесён); require drive в composer — P4.14

@@ -13,8 +13,8 @@ arch('strict types')
 arch('media never touches the access layer')
     ->expect('Vaulter\Media')
     ->not->toUse([
-        'Vaulter\Access\AccessResolver',
-        'Vaulter\Contracts\Access\GrantAuthoritativeDriver',
+        'Vaulter\Drive\Access\AccessResolver',
+        'Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver',
     ]);
 
 // E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`);

@@ -195,7 +195,7 @@ in a tenant-aware model, that model — not Vaulter — must apply the scope on 
 
 The Drive ACL combines `v_node_grants` with a swappable `PermissionDriver` lane. To bridge your
 app's role system, implement
-[`Vaulter\Contracts\Access\PermissionDriver`](/concepts/architecture#authorization). It is
+[`Vaulter\Drive\Contracts\Access\PermissionDriver`](/concepts/architecture#authorization). It is
 **node-blind**: it never receives a `Node` — only an `Authorizable` actor and an `AccessScope`
 (profile + the drive's owner and id + tenant).
 
@@ -207,8 +207,8 @@ subject-set with the actor's roles/teams (so `v_node_grants` rows addressed to a
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
 final class TeamRoleDriver extends DatabasePermissionDriver
@@ -232,12 +232,12 @@ A fuller driver also answers the role lane and the super-admin override:
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 
 final class AppRoleDriver implements PermissionDriver
 {
@@ -283,9 +283,9 @@ Register it as a named driver and select it:
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'app'),
 
     'permission_drivers' => [
-    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'database' => \Vaulter\Drive\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Drive\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Drive\Access\Drivers\SpatiePermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
     ],
 ],
@@ -521,7 +521,7 @@ It is then reachable at `GET v1/documents/{node}/export/pdf` and via the Vue
 ## Custom share-token shape {#share-token}
 
 By default share tokens are random strings. To mint short, hashed, or prefixed tokens, implement
-`Vaulter\Contracts\Sharing\ShareTokenGenerator` (a token must be unique and fit the token
+`Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator` (a token must be unique and fit the token
 column, ≤ 64 chars):
 
 <!-- snippet: host -->
@@ -529,7 +529,7 @@ column, ≤ 64 chars):
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
 
 final class ShortTokenGenerator implements ShareTokenGenerator
 {

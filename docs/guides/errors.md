@@ -23,7 +23,7 @@ Codes are a stable public contract (AD29).
 
 | Code | HTTP | Exception |
 |:--|:--|:--|
-| `permission_denied` | 403 | `Vaulter\Exceptions\Access\PermissionDeniedException` |
+| `permission_denied` | 403 | `Vaulter\Drive\Exceptions\Access\PermissionDeniedException` |
 | `node_name_conflict` | 409 | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
 | `node_move_cycle` | 409 | `Vaulter\Drive\Exceptions\Nodes\NodeCycleException` |
 | `cross_drive_operation` | 409 | `Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException` |
@@ -60,9 +60,9 @@ Codes are a stable public contract (AD29).
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` |
 | `invalid_node_name` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
 | `invalid_properties` | 422 | `Vaulter\Exceptions\Nodes\InvalidPropertiesException` |
-| `folder_children_limit_exceeded` | 409 | `Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException` |
-| `tree_depth_limit_exceeded` | 409 | `Vaulter\Exceptions\Policy\TreeDepthLimitExceededException` |
-| `file_size_limit_exceeded` | 413 | `Vaulter\Exceptions\Policy\FileSizeLimitExceededException` |
+| `folder_children_limit_exceeded` | 409 | `Vaulter\Drive\Exceptions\Policy\FolderChildrenLimitExceededException` |
+| `tree_depth_limit_exceeded` | 409 | `Vaulter\Drive\Exceptions\Policy\TreeDepthLimitExceededException` |
+| `file_size_limit_exceeded` | 413 | `Vaulter\Drive\Exceptions\Policy\FileSizeLimitExceededException` |
 | `cannot_delete_head_revision` | 409 | `Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException` |
 | `revision_pinned` | 409 | `Vaulter\Exceptions\Drive\RevisionPinnedException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
@@ -70,7 +70,7 @@ Codes are a stable public contract (AD29).
 | `invalid_webhook_signature` | 400 | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
 | `invalid_cursor` | 400 | `Vaulter\Exceptions\Changes\InvalidCursorException` |
 | `cursor_expired` | 410 | `Vaulter\Exceptions\Changes\CursorExpiredException` |
-| `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
+| `validation_failed` | 422 | `Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException` |
 | `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
 | `concurrent_update` | 409 | `Vaulter\Exceptions\Database\ConcurrentUpdateException` |
 | `write_outside_operation` | 500 | `Vaulter\Exceptions\Database\WriteOutsideOperationException` |

@@ -30,8 +30,8 @@ php artisan vendor:publish --tag=vaulter-config
 | `models.file_revision` | `Vaulter\Models\Drive\FileRevision` | core |
 | `models.blob` | `Vaulter\Media\Models\Cas\Blob` | core |
 | `models.file_revision_blob` | `Vaulter\Models\Drive\FileRevisionBlob` | core |
-| `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
-| `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
+| `models.grant` | `Vaulter\Drive\Models\Access\NodeGrant` | core |
+| `models.node_share` | `Vaulter\Drive\Models\Sharing\NodeShare` | core |
 | `vaulter-drive.models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
 | `vaulter-drive.models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
 | `vaulter-documents.models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
@@ -115,9 +115,9 @@ php artisan vendor:publish --tag=vaulter-config
 | Ключ | Env | По умолчанию | Принимает |
 |---|---|---|---|
 | `access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `database` | ключ из `access.permission_drivers` |
-| `access.permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | автономный — авторизует чисто по строкам грантов |
-| `access.permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | драйвер Laravel Gate |
-| `access.permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | драйвер spatie/laravel-permission |
+| `access.permission_drivers.database` | — | `Vaulter\Drive\Access\Drivers\DatabasePermissionDriver` | автономный — авторизует чисто по строкам грантов |
+| `access.permission_drivers.gate` | — | `Vaulter\Drive\Access\Drivers\GatePermissionDriver` | драйвер Laravel Gate |
+| `access.permission_drivers.spatie` | — | `Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` | драйвер spatie/laravel-permission |
 | `access.permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | регистрируется provider установленного `vaulter-azgard` |
 | `access.permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | открытый, **только не для продакшена** |
 
@@ -233,7 +233,7 @@ php artisan vendor:publish --tag=vaulter-config
 
 | Ключ | Env | По умолчанию | Управляет |
 |---|---|---|---|
-| `sharing.token_generator` | — | `Vaulter\Support\RandomShareTokenGenerator` | `ShareTokenGenerator`, чеканящий сырой bearer-токен (хранится только его sha256-хеш) |
+| `sharing.token_generator` | — | `Vaulter\Drive\Support\RandomShareTokenGenerator` | `ShareTokenGenerator`, чеканящий сырой bearer-токен (хранится только его sha256-хеш) |
 | `sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `/share` | Публичная база, из которой собирается URL публичной ссылки |
 | `sharing.prefix_length` | — | `8` | Сколько ведущих символов сырого токена хранится как несекретный `token_prefix` |
 

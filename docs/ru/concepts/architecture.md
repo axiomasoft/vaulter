@@ -266,7 +266,7 @@ arch-тестом — см. [Устранение неполадок](/ru/guides
 4. `granted = max(aclAllow, roleAllow)`, где `roleAllow` приходит от драйвера.
 5. **Финальное вето**: если `deniedBits` покрывает запрошенное право → DENY, независимо от роли.
 
-Права (`Vaulter\Enums\Access\Ability`) отображаются на CRUDS-биты: `View/Download/Comment → READ`,
+Права (`Vaulter\Drive\Enums\Access\Ability`) отображаются на CRUDS-биты: `View/Download/Comment → READ`,
 `Edit → UPDATE`, `Create/Copy → CREATE`, `Move → UPDATE+CREATE`, `Trash/Restore/Delete → DELETE`,
 `Share → SHARE`, `Manage → ALL`.
 

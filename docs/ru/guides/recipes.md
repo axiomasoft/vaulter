@@ -198,7 +198,7 @@ final class Node extends BaseNode
 
 ACL для Drive комбинирует `v_node_grants` со сменной полосой `PermissionDriver`. Чтобы связать
 систему ролей вашего приложения, реализуйте
-[`Vaulter\Contracts\Access\PermissionDriver`](/ru/concepts/architecture#авторизация). Он
+[`Vaulter\Drive\Contracts\Access\PermissionDriver`](/ru/concepts/architecture#авторизация). Он
 **слеп к узлам**: никогда не получает `Node` — только актора `Authorizable` и `AccessScope`
 (профиль + владелец и id диска + тенант).
 
@@ -211,8 +211,8 @@ ACL для Drive комбинирует `v_node_grants` со сменной по
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
 final class TeamRoleDriver extends DatabasePermissionDriver
@@ -236,12 +236,12 @@ final class TeamRoleDriver extends DatabasePermissionDriver
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\Decision;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
+use Vaulter\Drive\Access\ValueObjects\Decision;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Enums\Access\Effect;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
 
 final class AppRoleDriver implements PermissionDriver
 {
@@ -287,9 +287,9 @@ final class AppRoleDriver implements PermissionDriver
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'app'),
 
     'permission_drivers' => [
-    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'database' => \Vaulter\Drive\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Drive\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Drive\Access\Drivers\SpatiePermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
     ],
 ],
@@ -526,7 +526,7 @@ Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 ## Своя форма share-токена {#share-token}
 
 По умолчанию share-токены — случайные строки. Чтобы выпускать короткие, хешированные или
-префиксованные токены, реализуйте `Vaulter\Contracts\Sharing\ShareTokenGenerator` (токен должен
+префиксованные токены, реализуйте `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator` (токен должен
 быть уникальным и умещаться в колонку токена, ≤ 64 символов):
 
 <!-- snippet: host -->
@@ -534,7 +534,7 @@ Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator;
 
 final class ShortTokenGenerator implements ShareTokenGenerator
 {

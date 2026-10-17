@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Http\Controllers\Access\CreateGrantController;
-use Vaulter\Http\Controllers\Access\ListGrantsController;
-use Vaulter\Http\Controllers\Access\RestoreInheritanceController;
-use Vaulter\Http\Controllers\Access\RestrictInheritanceController;
-use Vaulter\Http\Controllers\Access\RevokeGrantController;
+use Vaulter\Drive\Http\Controllers\Access\CreateGrantController;
+use Vaulter\Drive\Http\Controllers\Access\ListGrantsController;
+use Vaulter\Drive\Http\Controllers\Access\RestoreInheritanceController;
+use Vaulter\Drive\Http\Controllers\Access\RestrictInheritanceController;
+use Vaulter\Drive\Http\Controllers\Access\RevokeGrantController;
+use Vaulter\Drive\Http\Controllers\Sharing\CreateShareController;
+use Vaulter\Drive\Http\Controllers\Sharing\DownloadPublicShareController;
+use Vaulter\Drive\Http\Controllers\Sharing\ListPublicShareNodesController;
+use Vaulter\Drive\Http\Controllers\Sharing\ListSharesController;
+use Vaulter\Drive\Http\Controllers\Sharing\RevokeShareController;
+use Vaulter\Drive\Http\Controllers\Sharing\RotateShareController;
+use Vaulter\Drive\Http\Controllers\Sharing\ShowPublicShareController;
+use Vaulter\Drive\Http\Controllers\Sharing\UpdateShareController;
 use Vaulter\Http\Controllers\Activity\ListDriveActivityController;
 use Vaulter\Http\Controllers\Activity\ListNodeActivityController;
 use Vaulter\Http\Controllers\Changes\ListChangesController;
 use Vaulter\Http\Controllers\Changes\ShowChangesStartController;
-use Vaulter\Http\Controllers\Sharing\CreateShareController;
-use Vaulter\Http\Controllers\Sharing\DownloadPublicShareController;
-use Vaulter\Http\Controllers\Sharing\ListPublicShareNodesController;
-use Vaulter\Http\Controllers\Sharing\ListSharesController;
-use Vaulter\Http\Controllers\Sharing\RevokeShareController;
-use Vaulter\Http\Controllers\Sharing\RotateShareController;
-use Vaulter\Http\Controllers\Sharing\ShowPublicShareController;
-use Vaulter\Http\Controllers\Sharing\UpdateShareController;
 use Vaulter\Http\Middleware\ResolveShareToken;
 
 /*

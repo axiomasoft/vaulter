@@ -53,8 +53,8 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 
 Свойство модели объявлено на каждой Drive-модели
 (`Vaulter\Models\Drive\Drive`, `Node`, `File`, `FileRevision`,
-`Vaulter\Media\Models\Cas\Blob`, `Vaulter\Models\Access\NodeGrant`,
-`Vaulter\Models\Sharing\NodeShare`, …) как `int|string|null $tenant_id`.
+`Vaulter\Media\Models\Cas\Blob`, `Vaulter\Drive\Models\Access\NodeGrant`,
+`Vaulter\Drive\Models\Sharing\NodeShare`, …) как `int|string|null $tenant_id`.
 
 ::: tip
 Флаг `tenancy.enabled` — это то, на что должны ориентироваться *ваши* tenant-aware модели и

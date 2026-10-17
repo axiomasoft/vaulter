@@ -214,7 +214,7 @@ $handle->access()->grant($nodeId, new GrantInput(
 ));
 ```
 
-- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Models\Access\NodeGrant`).
+- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Drive\Models\Access\NodeGrant`).
 - **Таблица**: узел, субъект (`type #id`), бейдж роли, область, срок истечения (`Never`, когда null),
   дата создания. Фильтр: роль.
 - **Поля формы**: узел, тип субъекта (зарегистрированный morph-алиас, например `user` / `role` /
@@ -256,7 +256,7 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 //   app(\Vaulter\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
 ```
 
-- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Models\Sharing\NodeShare`).
+- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Drive\Models\Sharing\NodeShare`).
 - **Таблица**: узел, бейдж `token_prefix…`, роль, область, вычисляемый бейдж статуса
   (`Live` / `Revoked` / `Expired` / `Exhausted`), счётчик использований
   (`n / max`, когда есть лимит), срок истечения, дата создания. Фильтр: тернарный `Revoked`.

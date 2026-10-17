@@ -45,7 +45,6 @@
         "nikic/php-parser": "^5.7"
     },
     "suggest": {
-        "spatie/laravel-permission": "Required only when using the 'spatie' host-role driver (^8.0).",
         "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions.",
         "axioma-studio/vaulter-media": "Content-addressed file/blob layer (CAS): the concrete ContentStore/StorageDriver/BlobStore engine behind the Contracts\\Cas seam. Required for Drive file upload/download/versioning.",
         "axioma-studio/vaulter-drive": "File/folder tree behaviour + resumable uploads: StorageManager, the DriveHandle factory, PurgeTrash/SweepUploads. Required for Vaulter::for()/forStorage() and the Drive REST surface.",

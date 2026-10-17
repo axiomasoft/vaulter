@@ -16,3 +16,8 @@ parameters:
         # the swappable Node/Storage/Upload models via the generic Eloquent builder).
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
         - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
+
+        # Shipped test kit: the trait is consumed by Pest `uses()` in tests (this package and core), never inside src.
+        -
+            identifier: trait.unused
+            path: src/Testing/Concerns/ExercisesWideNodeListing.php

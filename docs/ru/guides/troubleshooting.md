@@ -21,7 +21,7 @@ outline: deep
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
 Fix: set config(vaulter.access.permission_driver) to a real driver (database|gate|spatie|azgard)
-or bind your own \Vaulter\Contracts\Access\PermissionDriver.
+or bind your own \Vaulter\Drive\Contracts\Access\PermissionDriver.
 ```
 
 **Почему.** ACL Drive нужна полоса `PermissionDriver`. Открытый драйвер `null` (каждый актор —

@@ -224,7 +224,7 @@ it('tags every core sub-zone through the Pest group zone:<name>, and the groups 
     };
 
     // a small zone and a two-directory zone keep this cheap; the full partition was measured once when the map was written
-    foreach (['core-sharing', 'core-access'] as $zone) {
+    foreach (['core-modules', 'core-operations'] as $zone) {
         $classes = $listed("zone:$zone");
         expect($classes)->not->toBe([]);
         foreach ($classes as $class) {
@@ -248,10 +248,10 @@ it('goes red when a source root loses its zone', function (): void {
 
 it('goes red when a test directory loses its zone', function (): void {
     $broken = z_broken(static function (array &$map): void {
-        $map['zones']['core-access']['tests'] = ['packages/core/tests/Access'];
+        $map['zones']['core-operations']['tests'] = ['packages/core/tests/Operations'];
     });
 
-    expect($broken['problems'])->toContain('test file packages/core/tests/Spatie/SpatieDriverTest.php (core) belongs to no zone');
+    expect($broken['problems'])->toContain('test file packages/core/tests/Idempotency/IdempotencyContractTest.php (core) belongs to no zone');
 });
 
 it('goes red when a test directory is claimed by a zone of another suite', function (): void {

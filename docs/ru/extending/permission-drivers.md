@@ -19,9 +19,9 @@ Core поставляет `database`, `gate` и `spatie`; отдельный м�
 
 ## Контракт PermissionDriver
 
-`Vaulter\Contracts\Access\PermissionDriver`:
+`Vaulter\Drive\Contracts\Access\PermissionDriver`:
 
-<!-- snippet: signature Vaulter\Contracts\Access\PermissionDriver -->
+<!-- snippet: signature Vaulter\Drive\Contracts\Access\PermissionDriver -->
 
 ```php
 interface PermissionDriver
@@ -76,9 +76,9 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 <!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
 
 ```php
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Testing\NullPermissionDriver;
 
 // config/vaulter.php
@@ -97,7 +97,7 @@ use Vaulter\Testing\NullPermissionDriver;
 
 ## Database — полоса по умолчанию, автономная
 
-`Vaulter\Access\Drivers\DatabasePermissionDriver` **не** вводит никакой внешней системы
+`Vaulter\Drive\Access\Drivers\DatabasePermissionDriver` **не** вводит никакой внешней системы
 ролей. Каждое решение — это строка `v_node_grants`, разрешаемая `AccessResolver`; сам драйвер
 лишь добавляет собственную идентичность актора в набор субъектов.
 
@@ -132,7 +132,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 
 ## Gate — встроенная полоса Laravel
 
-`Vaulter\Access\Drivers\GatePermissionDriver` мостит хост, который уже авторизует через
+`Vaulter\Drive\Access\Drivers\GatePermissionDriver` мостит хост, который уже авторизует через
 права (abilities) / политики Gate. Он идёт вместе с фреймворком — ноль дополнительных
 зависимостей.
 
@@ -191,7 +191,7 @@ Gate::define('vaulter.create', fn ($user, array $context) =>
 
 ## Spatie — роли, разрешения и v8 teams
 
-`Vaulter\Access\Drivers\SpatiePermissionDriver` мостит хост на
+`Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` мостит хост на
 `spatie/laravel-permission`, включая фичу **v8 teams**. Он инкапсулирует весь танец переключения
 команд v8, так что тот никогда не протекает в resolver.
 
@@ -249,7 +249,7 @@ Gate::define('vaulter.create', fn ($user, array $context) =>
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 
 SpatiePermissionDriver::forgetCachedPermissions($actor);
 ```

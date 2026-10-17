@@ -19,7 +19,7 @@ outline: deep
 
 ## Анатомия гранта
 
-`Vaulter\Models\Access\NodeGrant` (таблица `v_node_grants`, уникальна по узлу, субъекту и области):
+`Vaulter\Drive\Models\Access\NodeGrant` (таблица `v_node_grants`, уникальна по узлу, субъекту и области):
 
 | Колонка | Тип | Смысл |
 |---|---|---|
@@ -40,7 +40,7 @@ outline: deep
 
 ### Субъект
 
-Грант адресуется `Vaulter\Access\ValueObjects\Subject` — паре `(type, id)`. `type` всегда
+Грант адресуется `Vaulter\Drive\Access\ValueObjects\Subject` — паре `(type, id)`. `type` всегда
 зарегистрированный morph-алиас, никогда не сырой FQCN. Драйвер ролей разворачивает актора в
 список субъектов, чьи гранты применимы (см.
 [`subjectsFor`](/ru/extending/permission-drivers#контракт-permissiondriver)); из этого списка
@@ -49,7 +49,7 @@ Vaulter строит `WHERE (subject_type, subject_id) IN (...)`.
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 
 $user = Subject::ofModel($actor);        // morph-алиас + ключ
 $role = new Subject(type: 'role', id: 'editor');
@@ -72,7 +72,7 @@ $team = Subject::make('team', $teamId);
 
 ### Область + наследование
 
-`Vaulter\Enums\Access\GrantScope` — `item` действует только на узле, где он сидит; `subtree`
+`Vaulter\Drive\Enums\Access\GrantScope` — `item` действует только на узле, где он сидит; `subtree`
 (по умолчанию) вдобавок спускается на потомков во время обхода предков, **до первого узла с
 `inherit_grants = false` включительно** — гранты выше него ниже не проходят. Наследуются вниз только гранты `subtree`
 (`GrantScope::inheritsDownward()`).
@@ -84,17 +84,17 @@ $team = Subject::make('team', $teamId);
 
 ## Запись гранта
 
-`access()->grant()` (поверх `Vaulter\Actions\Access\GrantNodeAccessAction`) сохраняет грант.
+`access()->grant()` (поверх `Vaulter\Drive\Actions\Access\GrantNodeAccessAction`) сохраняет грант.
 Он **идемпотентен** по уникальному ключу гранта: повторная выдача тому же субъекту той же
 области обновляет роль и срок. Запись идёт в транзакции и порождает `NodeGrantCreated`.
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantInput;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Access\ValueObjects\Subject;
+use Vaulter\Drive\Data\Access\GrantInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
 
 $grant = Vaulter::drive($drive)->actingAs($actor)->access()->grant(
     $node,
@@ -135,15 +135,15 @@ $access->restoreInheritance($hr);                                   // снов�
 
 ## Отзыв грантов
 
-`Vaulter\Actions\Access\RevokeNodeAccessAction` удаляет **все** гранты субъекта на узле — обе
+`Vaulter\Drive\Actions\Access\RevokeNodeAccessAction` удаляет **все** гранты субъекта на узле — обе
 области — и возвращает число удалённых. Он порождает `NodeGrantRevoked` только
 тогда, когда что-то реально отозвано (пустой отзыв — тихий no-op). Транзакционный.
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Actions\Access\RevokeNodeAccessAction;
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Drive\Actions\Access\RevokeNodeAccessAction;
+use Vaulter\Drive\Access\ValueObjects\Subject;
 
 $removed = app(RevokeNodeAccessAction::class)->execute(
     node: $node,
@@ -237,15 +237,15 @@ curl -X DELETE https://app.test/api/vaulter/v1/nodes/01J.../grants/01J... \
 
 | Событие | Полезная нагрузка | Когда |
 |---|---|---|
-| `Vaulter\Events\Access\NodeGrantCreated` | `NodeGrant $grant`, `int\|string\|null $actorId` | грант создан или обновлён |
-| `Vaulter\Events\Access\NodeGrantRevoked` | `Node $node`, `Subject $subject`, `int $revoked`, `int\|string\|null $actorId` | гранты субъекта отозваны |
+| `Vaulter\Drive\Events\Access\NodeGrantCreated` | `NodeGrant $grant`, `int\|string\|null $actorId` | грант создан или обновлён |
+| `Vaulter\Drive\Events\Access\NodeGrantRevoked` | `Node $node`, `Subject $subject`, `int $revoked`, `int\|string\|null $actorId` | гранты субъекта отозваны |
 
 Нижестоящий слушатель может инкрементить кэш `acl_version` или записать активность:
 
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Drive\Events\Access\NodeGrantCreated;
 
 Event::listen(function (NodeGrantCreated $event): void {
     Cache::increment("acl_version:{$event->grant->node_id}");

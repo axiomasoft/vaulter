@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Models\Access\NodeGrant;
+use Vaulter\Drive\Models\Sharing\NodeShare;
+use Vaulter\Drive\Support\RandomShareTokenGenerator;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
-use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Content\ScanBackfillRun;
 use Vaulter\Models\Content\ScanEvidenceRecord;
@@ -18,14 +20,12 @@ use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Profiles\DefaultProfile;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
 use Vaulter\Schema\Uuid7Ids;
-use Vaulter\Support\RandomShareTokenGenerator;
 use Vaulter\Testing\NullPermissionDriver;
 use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 

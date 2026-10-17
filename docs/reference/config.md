@@ -35,8 +35,8 @@ Swappable Eloquent models. Point any entry at your own subclass to add behaviour
 | `models.file_revision` | `Vaulter\Models\Drive\FileRevision` | core |
 | `models.blob` | `Vaulter\Media\Models\Cas\Blob` | core |
 | `models.file_revision_blob` | `Vaulter\Models\Drive\FileRevisionBlob` | core |
-| `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
-| `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
+| `models.grant` | `Vaulter\Drive\Models\Access\NodeGrant` | core |
+| `models.node_share` | `Vaulter\Drive\Models\Sharing\NodeShare` | core |
 | `vaulter-drive.models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
 | `vaulter-drive.models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
 | `vaulter-documents.models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
@@ -126,9 +126,9 @@ coexists with host tables.
 | Key | Env | Default | Accepts |
 |---|---|---|---|
 | `access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `database` | a key in `access.permission_drivers` |
-| `access.permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | standalone — authorises purely from grant rows |
-| `access.permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | the Laravel Gate driver |
-| `access.permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | the spatie/laravel-permission driver |
+| `access.permission_drivers.database` | — | `Vaulter\Drive\Access\Drivers\DatabasePermissionDriver` | standalone — authorises purely from grant rows |
+| `access.permission_drivers.gate` | — | `Vaulter\Drive\Access\Drivers\GatePermissionDriver` | the Laravel Gate driver |
+| `access.permission_drivers.spatie` | — | `Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` | the spatie/laravel-permission driver |
 | `access.permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | registered by the installed `vaulter-azgard` provider |
 | `access.permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | open, **non-production only** |
 
@@ -257,7 +257,7 @@ Never use S3 lifecycle/versioning as a blob-deletion mechanism.
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `sharing.token_generator` | — | `Vaulter\Support\RandomShareTokenGenerator` | The `ShareTokenGenerator` minting the raw bearer token (only its sha256 hash is stored) |
+| `sharing.token_generator` | — | `Vaulter\Drive\Support\RandomShareTokenGenerator` | The `ShareTokenGenerator` minting the raw bearer token (only its sha256 hash is stored) |
 | `sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `/share` | The public base a share URL is built from |
 | `sharing.prefix_length` | — | `8` | How many leading chars of the raw token are stored as the non-secret `token_prefix` |
 

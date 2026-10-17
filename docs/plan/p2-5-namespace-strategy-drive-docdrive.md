@@ -271,7 +271,7 @@ Vaulter\DocDrive\Http\Resources\{NodeCommentResource,NodeDocumentVersionResource
 Vaulter\DocDrive\Data\{CreateDocumentNode,CreateNamedVersion,CreateNodeComment,PersistYjsSnapshot,UpdateDocumentContent,CollaborationSession}Data         (было плоские Data\* — §Инвентарь #5; CollaborationSession.php переименовать в CollaborationSessionData.php заодно, устраняя суффиксную непоследовательность — мелкая доп. правка, не блокер)
 ```
 
-**НЕ переезжает**: `Vaulter\Contracts\Access\*`, `Vaulter\Access\AccessResolver` и всё остальное
+**НЕ переезжает**: `Vaulter\Contracts\Access\*`, `Vaulter\Drive\Access\AccessResolver` и всё остальное
 kernel-Access/Sharing/Activity/Webhooks/Panels/Schema — docdrive их только потребляет (T6).
 
 ## (4) Влияние на импорты консюмеров (filament core-only; vue не трогается)

@@ -259,7 +259,7 @@ The algorithm (deny-veto, explicit-beats-inherited):
 4. `granted = max(aclAllow, roleAllow)` where `roleAllow` comes from the driver.
 5. **Final veto**: if `deniedBits` covers the requested ability → DENY, regardless of role.
 
-Abilities (`Vaulter\Enums\Access\Ability`) map to CRUDS bits: `View/Download/Comment → READ`,
+Abilities (`Vaulter\Drive\Enums\Access\Ability`) map to CRUDS bits: `View/Download/Comment → READ`,
 `Edit → UPDATE`, `Create/Copy → CREATE`, `Move → UPDATE+CREATE`, `Trash/Restore/Delete → DELETE`,
 `Share → SHARE`, `Manage → ALL`.
 

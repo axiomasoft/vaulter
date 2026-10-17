@@ -212,7 +212,7 @@ $handle->access()->grant($nodeId, new GrantInput(
 ));
 ```
 
-- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Models\Access\NodeGrant`).
+- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Drive\Models\Access\NodeGrant`).
 - **Table**: node, subject (`type #id`), role badge, scope, expires-at (`Never` when null), created-at.
   Filter: role.
 - **Form fields**: node, subject type (a registered morph alias such as `user` / `role` / `team`),
@@ -254,7 +254,7 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 //   app(\Vaulter\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
 ```
 
-- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Models\Sharing\NodeShare`).
+- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Drive\Models\Sharing\NodeShare`).
 - **Table**: node, `token_prefix…` badge, role, scope, a computed status badge
   (`Live` / `Revoked` / `Expired` / `Exhausted`), use count (`n / max` when
   capped), expires-at, created-at. Filter: a `Revoked` ternary.

@@ -66,9 +66,9 @@ default connection. Tables use the prefix plus their canonical entity name:
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
     'permission_drivers' => [
-        'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-        'gate' => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-        'spatie' => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+        'database' => \Vaulter\Drive\Access\Drivers\DatabasePermissionDriver::class,
+        'gate' => \Vaulter\Drive\Access\Drivers\GatePermissionDriver::class,
+        'spatie' => \Vaulter\Drive\Access\Drivers\SpatiePermissionDriver::class,
         'null' => \Vaulter\Testing\NullPermissionDriver::class,
     ],
     // gate.* and spatie.* retain their ability/permission maps here.
@@ -122,7 +122,7 @@ and the installed Documents handlers.
     'rate_limits' => ['public' => 60, 'uploads' => 120],
 ],
 'sharing' => [
-    'token_generator' => \Vaulter\Support\RandomShareTokenGenerator::class,
+    'token_generator' => \Vaulter\Drive\Support\RandomShareTokenGenerator::class,
     'url_base' => '/share',
     'prefix_length' => 8,
 ],

@@ -121,9 +121,9 @@ curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../shares \
 <!-- snippet: host -->
 
 ```php [PHP]
-use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
 
 // shares() авторизует Ability::Share на узле; Action только выпускает и сохраняет.
 $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new ShareLinkInput(
@@ -210,7 +210,7 @@ async function mint() {
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
 
 Vaulter::drive($owner)->actingAs($user)->shares()->update($node, $share, new ShareLinkUpdate(
     expiresAt: now()->addDay(),
@@ -406,7 +406,7 @@ $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTt
 ```php
 // config/vaulter.php
 'sharing' => [
-    // \Vaulter\Contracts\Sharing\ShareTokenGenerator, выпускающий сырой токен.
+    // \Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator, выпускающий сырой токен.
     // Хранится только его sha256. По умолчанию: RandomShareTokenGenerator (43 символа).
     'token_generator' => RandomShareTokenGenerator::class,
 
@@ -448,8 +448,8 @@ $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTt
 
 | Событие                                        | Когда диспатчится |
 | ---------------------------------------------- | ----------------- |
-| `Vaulter\Events\Sharing\NodeShareCreated`      | Ссылка выпущена. Несёт `NodeShare` + `actorId`. |
-| `Vaulter\Events\Sharing\NodeShareRevoked`      | Ссылка отозвана (только при реальной смене состояния — повторный отзыв тихий). |
+| `Vaulter\Drive\Events\Sharing\NodeShareCreated`      | Ссылка выпущена. Несёт `NodeShare` + `actorId`. |
+| `Vaulter\Drive\Events\Sharing\NodeShareRevoked`      | Ссылка отозвана (только при реальной смене состояния — повторный отзыв тихий). |
 
 Изменение и ротация ссылки пока не эмитят собственного события; конвейер событий 1.0 их
 добавляет.

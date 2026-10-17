@@ -141,7 +141,7 @@ signatures and the binding point you swap it through.
 
 ### Access
 
-#### `Vaulter\Contracts\Access\PermissionDriver`
+#### `Vaulter\Drive\Contracts\Access\PermissionDriver`
 
 The pluggable, per-panel **role lane** the Vaulter-owned (non-swappable)
 `AccessResolver` combines with the `v_node_grants` ACL. It bridges your identity +
@@ -231,7 +231,7 @@ interface AzgardBackedUser extends AzGuardSubject {}
 `User` model satisfies it with no extra method bodies through the
 `AzGuard\Concerns\HasAzGuard` trait, and is a subject model of the AzGuard panel.
 
-#### `Vaulter\Contracts\Access\GrantAuthoritativeDriver`
+#### `Vaulter\Drive\Contracts\Access\GrantAuthoritativeDriver`
 
 An opt-in capability a `PermissionDriver` implements to declare that `v_node_grants` is
 the sole read-visibility authority for that driver instance, so a listing may safely
@@ -604,7 +604,7 @@ interface NodePresenter
 
 ### Sharing
 
-#### `Vaulter\Contracts\Sharing\ShareTokenGenerator`
+#### `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator`
 
 Generates the opaque token for a public share link. A token must be unique and fit the
 token column (≤ 64 chars). Configure the generator at `config('vaulter.sharing.token_generator')`.
@@ -616,7 +616,7 @@ interface ShareTokenGenerator
 }
 ```
 
-The default is `Vaulter\Support\RandomShareTokenGenerator`. See
+The default is `Vaulter\Drive\Support\RandomShareTokenGenerator`. See
 [Recipes → Share token generator](/guides/recipes).
 
 ---

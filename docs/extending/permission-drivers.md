@@ -18,9 +18,9 @@ only an `Authorizable` actor and an `AccessScope` (profile + drive coordinates +
 
 ## The PermissionDriver contract
 
-`Vaulter\Contracts\Access\PermissionDriver`:
+`Vaulter\Drive\Contracts\Access\PermissionDriver`:
 
-<!-- snippet: signature Vaulter\Contracts\Access\PermissionDriver -->
+<!-- snippet: signature Vaulter\Drive\Contracts\Access\PermissionDriver -->
 
 ```php
 interface PermissionDriver
@@ -75,9 +75,9 @@ that implements `PermissionDriver` (config-cache safe — FQCNs only, no closure
 <!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
 
 ```php
-use Vaulter\Access\Drivers\DatabasePermissionDriver;
-use Vaulter\Access\Drivers\GatePermissionDriver;
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Drive\Access\Drivers\GatePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Testing\NullPermissionDriver;
 
 // config/vaulter.php
@@ -96,7 +96,7 @@ throws `MissingPermissionDriverException::unknownDriver()`, and `null` in produc
 
 ## Database — the default, standalone lane
 
-`Vaulter\Access\Drivers\DatabasePermissionDriver` introduces **no** external role
+`Vaulter\Drive\Access\Drivers\DatabasePermissionDriver` introduces **no** external role
 system. Every decision is a `v_node_grants` row resolved by the `AccessResolver`; the
 driver only contributes the actor's own identity to the subject-set.
 
@@ -131,7 +131,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 
 ## Gate — Laravel's built-in lane
 
-`Vaulter\Access\Drivers\GatePermissionDriver` bridges a host that already
+`Vaulter\Drive\Access\Drivers\GatePermissionDriver` bridges a host that already
 authorizes through Gate abilities / policies. It ships with the framework — zero extra
 dependencies.
 
@@ -188,7 +188,7 @@ Gate::define('vaulter.create', fn ($user, array $context) =>
 
 ## Spatie — roles, permissions, and v8 teams
 
-`Vaulter\Access\Drivers\SpatiePermissionDriver` bridges a host running
+`Vaulter\Drive\Access\Drivers\SpatiePermissionDriver` bridges a host running
 `spatie/laravel-permission`, including the **v8 teams** feature. It encapsulates the
 entire v8 team-switch dance so it never leaks into the resolver.
 
@@ -246,7 +246,7 @@ team-scoped permission can't grant a revoked role on the next resolve:
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Drive\Access\Drivers\SpatiePermissionDriver;
 
 SpatiePermissionDriver::forgetCachedPermissions($actor);
 ```

@@ -122,9 +122,9 @@ curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../shares \
 <!-- snippet: host -->
 
 ```php [PHP]
-use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Enums\Access\GrantScope;
+use Vaulter\Drive\Enums\Sharing\ShareAudience;
 
 // shares() authorizes Ability::Share on the node; the Action only mints + persists.
 $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new ShareLinkInput(
@@ -212,7 +212,7 @@ audience ends the link sessions opened before the change.
 <!-- snippet: host -->
 
 ```php
-use Vaulter\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
 
 Vaulter::drive($owner)->actingAs($user)->shares()->update($node, $share, new ShareLinkUpdate(
     expiresAt: now()->addDay(),
@@ -407,7 +407,7 @@ The hardening is in the code, not bolted on:
 ```php
 // config/vaulter.php
 'sharing' => [
-    // The \Vaulter\Contracts\Sharing\ShareTokenGenerator used to mint the raw token.
+    // The \Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator used to mint the raw token.
     // Only its sha256 hash is ever stored. Default: RandomShareTokenGenerator (43 chars).
     'token_generator' => RandomShareTokenGenerator::class,
 
@@ -449,8 +449,8 @@ rows stage atomically with the change. Neither carries the raw token (the persis
 
 | Event                                          | Dispatched when |
 | ---------------------------------------------- | --------------- |
-| `Vaulter\Events\Sharing\NodeShareCreated`      | A link is minted. Carries the `NodeShare` + `actorId`. |
-| `Vaulter\Events\Sharing\NodeShareRevoked`      | A link is revoked (only on a real state change — re-revoke is silent). |
+| `Vaulter\Drive\Events\Sharing\NodeShareCreated`      | A link is minted. Carries the `NodeShare` + `actorId`. |
+| `Vaulter\Drive\Events\Sharing\NodeShareRevoked`      | A link is revoked (only on a real state change — re-revoke is silent). |
 
 Updating and rotating a link emit no event of their own yet; the event pipeline of 1.0 adds
 them.

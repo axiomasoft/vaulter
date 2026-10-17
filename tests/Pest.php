@@ -13,7 +13,6 @@ use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
 use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
 use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
-use Vaulter\Tests\SpatieTestCase;
 use Vaulter\Tests\Support\OpenApi\OpenApiTestCase;
 use Vaulter\Tests\TablePrefixTestCase;
 use Vaulter\Tests\TestCase;
@@ -82,13 +81,11 @@ uses(P83DocumentsTestCase::class, RefreshDatabase::class)->in(
 );
 
 uses(TestCase::class, RefreshDatabase::class)->in(
-    $core.'/Access',
     $core.'/Activity',
     $core.'/Feature',
     $core.'/Providers',
     $core.'/Profiles',
     $core.'/Content',
-    $core.'/Sharing',
     $core.'/Support',
     $core.'/Testing',
     $core.'/Configuration',
@@ -106,13 +103,6 @@ uses(WebhooksTestCase::class, RefreshDatabase::class)->in(
 // The additive sequence carrier owns only its shadow schema and real FK enforcement.
 $ordinarySchemaTests = array_values(array_filter(glob($core.'/Schema/*Test.php'), static fn (string $path): bool => !in_array(basename($path), ['NodeSequenceSchemaTest.php', 'ScanEvidenceSchemaTest.php'], true)));
 uses(TestCase::class, RefreshDatabase::class)->in(...$ordinarySchemaTests);
-
-// The spatie-driver tests boot the package alongside spatie/laravel-permission with
-// the v8 teams feature; kept in their own top-level folder so the Access binding
-// above does not also claim them (Pest forbids two test cases for one path).
-uses(SpatieTestCase::class, RefreshDatabase::class)->in(
-    $core.'/Spatie',
-);
 
 // The activity-feature-OFF tests boot the package with 'activity' disabled so the
 // subscriber is never registered; kept in their own top-level folder so the Activity

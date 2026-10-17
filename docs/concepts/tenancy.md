@@ -53,8 +53,8 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 
 The model property is declared on every Drive model
 (`Vaulter\Models\Drive\Drive`, `Node`, `File`, `FileRevision`,
-`Vaulter\Media\Models\Cas\Blob`, `Vaulter\Models\Access\NodeGrant`,
-`Vaulter\Models\Sharing\NodeShare`, …) as `int|string|null $tenant_id`.
+`Vaulter\Media\Models\Cas\Blob`, `Vaulter\Drive\Models\Access\NodeGrant`,
+`Vaulter\Drive\Models\Sharing\NodeShare`, …) as `int|string|null $tenant_id`.
 
 ::: tip
 The `tenancy.enabled` flag is what *your* tenant-aware models and migrations should

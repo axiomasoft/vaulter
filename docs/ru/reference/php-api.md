@@ -169,7 +169,7 @@ interface PermissionResolver
 **Реализуйте, когда** хотите, чтобы легаси-поверхность `v_documents` делегировала решения
 системе ролей вашего приложения. См. [Рецепты → Свой резолвер](/ru/guides/recipes).
 
-#### `Vaulter\Contracts\Access\PermissionDriver`
+#### `Vaulter\Drive\Contracts\Access\PermissionDriver`
 
 Подключаемая, панель-специфичная **полоса ролей**, которую принадлежащий Vaulter
 (несменяемый) `AccessResolver` комбинирует с ACL `v_node_grants`. Она мостит вашу систему
@@ -544,7 +544,7 @@ interface NodePresenter
 
 ### Sharing
 
-#### `Vaulter\Contracts\Sharing\ShareTokenGenerator`
+#### `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator`
 
 Генерирует непрозрачный токен для публичной ссылки (share). Токен должен быть уникальным и
 помещаться в колонку токена (≤ 64 символов). Генератор задаётся в `config('vaulter.sharing.token_generator')`.
@@ -556,7 +556,7 @@ interface ShareTokenGenerator
 }
 ```
 
-По умолчанию — `Vaulter\Support\RandomShareTokenGenerator`. См.
+По умолчанию — `Vaulter\Drive\Support\RandomShareTokenGenerator`. См.
 [Рецепты → Генератор токенов публичных ссылок](/ru/guides/recipes).
 
 ---
