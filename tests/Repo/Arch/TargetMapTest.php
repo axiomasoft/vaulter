@@ -255,6 +255,17 @@ it('rule engine: lists the Filament reads of Eloquent models once per file, symb
     ]);
 });
 
+it('rule engine: a model owned by Filament itself is no read of a drive model', function (): void {
+    $sources = tm_sources() + [
+        'packages/filament/src/Support/PanelRecord.php' => '<?php namespace Vaulter\Filament\Support; use Illuminate\Database\Eloquent\Model; final class PanelRecord extends Model {}',
+        'packages/filament/src/Resources/DriveResource.php' => '<?php namespace Vaulter\Filament\Resources; use Vaulter\Filament\Support\PanelRecord; final class DriveResource { public function model(): string { return PanelRecord::class; } }',
+    ];
+    $reads = tm_build($sources, tm_rules())['data']['consumers']['filament_model_reads'];
+
+    expect(array_values(array_unique(array_column($reads, 'file'))))->toBe(['packages/filament/src/Resources/NodeResource.php'])
+        ->and(array_values(array_unique(array_column($reads, 'model'))))->toBe(['Vaulter\\Models\\Drive\\Node']);
+});
+
 it('rule engine: output is deterministic and carries no line numbers or absolute paths', function (): void {
     $a = json_encode(tm_build(tm_sources(), tm_rules())['data']);
     $b = json_encode(tm_build(array_reverse(tm_sources(), true), tm_rules())['data']);

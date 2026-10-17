@@ -535,7 +535,7 @@ final class TargetMap
     }
 
     /**
-     * References from packages/filament/src to Eloquent models, deduplicated by file, symbol and model.
+     * References from packages/filament/src to Eloquent models of other packages, deduplicated by file, symbol and model.
      *
      * @param  array<string, string>      $owners fqcn => owner
      * @return list<array<string, mixed>>
@@ -548,7 +548,8 @@ final class TargetMap
                 continue;
             }
             $model = ltrim($reference['target'], '\\');
-            if (!isset($owners[$model]) || !$index->isEloquent($model)) {
+            // A model the panel owns itself (the in-memory record class Filament resources declare) reads no drive table.
+            if (!isset($owners[$model]) || $owners[$model] === 'filament' || !$index->isEloquent($model)) {
                 continue;
             }
             $reads[$reference['file']."\0".$reference['symbol']."\0".$model] = [

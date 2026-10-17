@@ -54,6 +54,23 @@ final class DriveReadRepository
     }
 
     /**
+     * Drives of the current tenant in key order after the given key: the candidate set
+     * of a listing, never an authorization decision.
+     *
+     * @return list<Drive>
+     */
+    public function after(int|string|null $key, int $limit): array
+    {
+        $model = $this->vaulterConfig->model('drive');
+        $query = app(TenancyBoundary::class)->constrain($model::query());
+        if ($key !== null) {
+            $query->where((new $model)->getQualifiedKeyName(), '>', $key);
+        }
+
+        return array_values($query->orderBy((new $model)->getQualifiedKeyName())->limit($limit)->get()->all());
+    }
+
+    /**
      * The storage mounted on a host entity within a panel — the
      * polymorphic owner triple (owner_type, owner_id, panel) is the idempotency
      * key. Returns null when none exists yet (the manager then provisions one).

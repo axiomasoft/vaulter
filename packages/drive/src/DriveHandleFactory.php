@@ -41,6 +41,13 @@ final readonly class DriveHandleFactory implements Factory
         return $drive === null ? null : $this->forDrive($drive);
     }
 
+    public function findById(int|string $id): ?Contract
+    {
+        $drive = $this->container->make(DriveReadRepository::class)->find($id);
+
+        return $drive === null ? null : $this->forDrive($drive);
+    }
+
     public function forDrive(Drive $drive): Contract
     {
         $key = $drive->getRawOriginal($drive->getKeyName());

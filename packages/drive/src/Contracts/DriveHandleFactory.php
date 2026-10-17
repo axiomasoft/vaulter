@@ -16,4 +16,7 @@ interface DriveHandleFactory
     public function forDrive(Drive $drive): DriveHandle;
 
     public function findForOwner(Model $owner, string $profile): ?DriveHandle;
+
+    /** The drive row by key within the current tenant, or null; visibility is the handle's operations' decision. */
+    public function findById(int|string $id): ?DriveHandle;
 }
