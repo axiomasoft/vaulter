@@ -110,6 +110,12 @@
       "note": "collaboration.list"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/2f7cb1e712b28448c2156dd63a732e778e986c323487b3786dda88042c9e8957",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Stand-сценарии работают только с реальными процессами (backend testbench serve на PG, два хаба, Redis); моков backend в них нет.",
     "kill-after-retry: каждое update_id, получившее ack, присутствует в состоянии после SIGKILL всех хабов и перезапуска; two-hubs: состояние содержит обновления обоих хабов; sigterm-drain: после границы drain нет новых receipts, readyz 503 сразу.",
@@ -167,5 +173,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-17T09:08:12Z"
+  "updated_at": "2026-10-18T06:05:33Z"
 }
