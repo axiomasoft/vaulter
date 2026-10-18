@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.11",
   "title": "Ревокация в хабе: control channel, реестр соединений, recheck, read-only/close, проверка update и sync step 2, renew",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`src/control.js` (Redis SUBSCRIBE `vaulter:collab:control` при Redis; `POST /control` с HMAC на management listener), `src/registry.js` (соединения по document_id/subject/jti/scope/drive_id), recheck через backend батчем по drive (global — всех): `none` → close 4403, `read` → read-only (записи отвергаются, данные продолжают приходить), `write` → без изменений; renew за `RENEW_BEFORE_MS` 60 000 до exp, отказ renew → close; `beforeHandleMessage` отвергает y-protocols update, sync step 2 и stateless envelope у read-only/отозванных; таймер expiry сервера сохраняется; метрика `collab_revoked_still_connected`.",
   "why": "D26, collaboration#revocation: WS fanout до backend-вызова не отзывается; проверяться должны и update, и sync-сообщения; при потере control экспозицию ограничивают exp и renew. Hard risks: запись через sync step 2 в обход проверки update; read-revoked продолжает получать данные; renew продлевает власть без проверки; control другого drive закрывает чужие соединения; HTTP /control без подписи.",
   "scope": {
@@ -125,6 +125,16 @@
       "note": "hub.list"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/d82e9848a2b671e91167e76349c77376c812622fb192a12ad585d8dd771a4d6e",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/a28af5a2bb7214138de908f98b9d437579895e8c95bcaaa7f96677435d521d8f",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Проверка записи в beforeHandleMessage покрывает y-protocols messageYjsUpdate и messageYjsSyncStep2 и stateless envelope.",
     "Control применяется только к соединениям своего drive_id (global — ко всем); решение принимает backend (recheck), хаб не выводит права сам.",
@@ -177,6 +187,56 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T09:06:32Z"
+  "result": {
+    "started_at": "2026-10-18T03:18:39Z",
+    "finished_at": "2026-10-18T04:44:38Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "opus",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-11f79f1f2fe21d41623b7b23-P5.11",
+    "notes": "Hub revocation (P5.11, D26). New src/registry.js (live connections indexed by document_id/subject/jti/drive_id from the token claims, room-name fallback; control-mark counters for the authenticate/control race), src/revocation.js (batch recheck through the backend per drive, global = all, <=200 per call under the retry policy, coalesced per drive: none -> close 4403 (4409 generation, 4404 gone, 4001 token), read -> read-only (context mode ro, connection.readOnly, persistence.demote), write -> unchanged; renewal RENEW_BEFORE_MS 60 000 before exp: grant swaps token/exp/jti and re-arms, read scope downgrades, refusal closes (401->4001, 403->4403, 404->4404, 409 epoch->4409, other 4xx->4403), no answer/5xx/429 retried until exp; the server expiry timer stays and moves with renewals; beforeMessage holds read-only and re-closes revoked; collab_revoked_still_connected from the registry), src/control.js (Redis SUBSCRIBE vaulter:collab:control on its own client; POST /control verification: hex HMAC-SHA256 of '{ts}.{body}' with the webhook secret, timestamp tolerance, replay cache; 401 unsigned/stale/wrong, 409 replay, 422 unreadable, 202 accepted), src/tokens.js (JWT claim helpers moved from index.js). Changes: backend.js renew()/recheck(); management.js POST /control (body limit 16 KiB, 413) + instrumented renew/recheck; index.js wiring (control mark in onAuthenticate, track in connected, beforeMessage in beforeHandleMessage, envelope refusal in onStateless, disconnected in onDisconnect, control channel/Redis subscription/shutdown/metrics in boot); config.js VAULTER_COLLAB_RENEW_BEFORE_MS, VAULTER_COLLAB_CONTROL_TOLERANCE_SECONDS, VAULTER_COLLAB_CONTROL_REDIS_URL; metrics.js revocation counters; persistence.js demote(). Tests: test/registry.test.js (8), test/control.test.js (14), test/control-lost.test.js (8, I17 9/15) pass here; test/revocation.test.js (I17 8, in-process Hocuspocus 4.3.0) written but not runnable in this sandbox. Other commands run: npm run check (exit 0); node --test on registry/control/control-lost/management/metrics/config/security (74 pass, 0 fail); node --test test/*.test.js (152 pass, 28 fail, all ERR_MODULE_NOT_FOUND yjs/dotenv/@hocuspocus); scripts/t baseline --write -p hub then scripts/t baseline --compare -p hub (exit 0).\nChanged: packages/collaboration/hub/package.json, packages/collaboration/hub/src/backend.js, packages/collaboration/hub/src/config.js, packages/collaboration/hub/src/control.js, packages/collaboration/hub/src/index.js, packages/collaboration/hub/src/management.js, packages/collaboration/hub/src/metrics.js, packages/collaboration/hub/src/persistence.js, packages/collaboration/hub/src/registry.js, packages/collaboration/hub/src/revocation.js, packages/collaboration/hub/src/tokens.js, packages/collaboration/hub/test/control-lost.test.js, packages/collaboration/hub/test/control.test.js, packages/collaboration/hub/test/registry.test.js, packages/collaboration/hub/test/revocation.test.js, packages/collaboration/hub/test/support/revocation.js, tests/baseline/CHANGES.json, tests/baseline/CHANGES.md, tests/baseline/hub.count, tests/baseline/hub.list",
+    "deviations": [
+      "test/revocation.test.js (I17 scenario 8: writer + reader in an in-process Hocuspocus 4.3.0, mock backend; update, sync step 2 and envelope of a writer rechecked read are refused while room updates still reach it; reader rechecked none closed 4403; another drive's control rechecks nothing) and every existing Yjs/Hocuspocus hub test could not run: yjs, dotenv and @hocuspocus/* do not resolve in this sandbox (root node_modules masked, registry refused), as in P5.7-P5.10. The Hocuspocus behaviour it relies on (readOnly drops messageYjsUpdate and messageYjsSyncStep2 with SyncStatus(false); beforeHandleMessage gets the raw message and the Connection; a throw closes with e.code/e.reason; onDisconnect payload has context/socketId but no connection; handleConnection(socket, request) with readyState/send/close) was checked by reading node_modules/@hocuspocus/server/dist/hocuspocus-server.esm.js 4.3.0. V1 (its node --test part) and V2 are therefore not confirmed by the executor.",
+      "Changed outside scope.write_set: packages/collaboration/hub/package.json. The check script now also runs node --check on the new src files tokens.js, registry.js, revocation.js and control.js; otherwise V1's npm run check would not check them.",
+      "Git incident, undone: to compare a test against a clean tree I ran `git stash`. It failed ('package-lock.json: unsupported file type', a sandbox-masked file), and the `git stash pop` after it applied the owner's pre-existing stash@{0} ('On main: P5.3 partial work of killed manual agent') onto the tree, with conflicts. Recovery: my hub work was backed up and verified identical; the 75 tracked paths the pop touched (2 staged, 73 conflicted, all under docs/, packages/core/tests/Fixtures/Schema/expected/pgsql, packages/documents, tests/Repo/Arch, tests/baseline, tests/suites.json, tests/zones.json) were restored to HEAD; the 3 untracked paths the pop wrote at 08:39:54 (packages/documents/src/State/CheckpointStatus.php, packages/documents/src/State/PendingMarkers.php, packages/documents/tests/Fixtures/PendingDrain/) were deleted; all three are still in stash@{0}^3. stash@{0} is still in the stash list. The owner's uncommitted plans/.../P5.11.json was never touched.",
+      "V3 (scripts/t baseline --compare, all suites) was not run as written: vue discovery needs the npm registry, which this sandbox refuses (as in P5.4-P5.10). The hub baseline was rewritten with scripts/t baseline --write -p hub (hub: 30 files, the four new ones added) and scripts/t baseline --compare -p hub exits 0.",
+      "changed outside the write set: packages/collaboration/hub/package.json"
+    ],
+    "pending": [
+      "For P5.12 (vue-collaboration): a writer made read-only gets no new status message. It learns from `nack {code: forbidden, retry: false}` on its envelopes, and Hocuspocus answers its sync writes with SyncStatus(false). Close codes the client must handle: 4403 forbidden (revoked, or renewal refused), 4409 epoch_changed, 4404 document_gone, 4001 token expired (ask for a new session). The hub renews the token in its own connection context only; the browser provider keeps its original token, so a reconnect after exp gets 4001 and must fetch a new session.",
+      "Docs not updated (D43 docs pass): the new hub env vars VAULTER_COLLAB_RENEW_BEFORE_MS, VAULTER_COLLAB_CONTROL_TOLERANCE_SECONDS and VAULTER_COLLAB_CONTROL_REDIS_URL; POST /control on the management listener (with the backend's control.transport=http, control.http.urls must reach the management port, so VAULTER_COLLAB_MANAGEMENT_HOST cannot stay loopback across hosts); the new metrics collab_control_messages_total{source}, collab_rechecks_total, collab_recheck_failures_total, collab_token_renewals_total, collab_token_renewal_failures_total, collab_revoked_connections_total and collab_downgraded_connections_total. docs/guides/hub.md, the hub README and packages/collaboration/hub/docker-compose.yml do not list them yet."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-18T04:44:38Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.11/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-18T04:44:38Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.11/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-18T04:44:38Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.11/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.11/evidence/V1.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.11/evidence/V2.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.11/evidence/V3.json"
+    ]
+  },
+  "updated_at": "2026-10-18T04:44:38Z"
 }

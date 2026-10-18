@@ -3,10 +3,12 @@ import { Server } from '@hocuspocus/server'
 import { Throttle } from '@hocuspocus/extension-throttle'
 import * as backendModule from './backend.js'
 import { config, isOriginAllowed, validateConfig } from './config.js'
+import { createControlChannel } from './control.js'
 import { createLimits, isWriteMessage, LIMIT } from './limits.js'
 import { createBackendStatus, createManagement, createReadiness, instrumentBackend } from './management.js'
 import { createHubMetrics, roomStats } from './metrics.js'
-import { CLIENT_PROTOCOL, createPersistence, epochChanged } from './persistence.js'
+import { CLIENT_PROTOCOL, createPersistence, epochChanged, NACK } from './persistence.js'
+import { createRevocation } from './revocation.js'
 import {
   closeConnection,
   closeEveryRoom,
@@ -23,6 +25,7 @@ import {
   UPDATE_TOO_LARGE,
 } from './rooms.js'
 import { createShutdown } from './shutdown.js'
+import { decodeTokenClaims, decodeTokenExpiry } from './tokens.js'
 import { createWorker } from './worker.js'
 
 // Vaulter collaboration hub — the external, env-configured Hocuspocus process.
@@ -48,10 +51,16 @@ import { createWorker } from './worker.js'
 //      with a new Y.Doc.
 //   6. The compaction worker (src/worker.js) leases the generations due for a checkpoint — open
 //      room or not, drain requests first — merges each log and publishes the checkpoint.
-//   7. The management listener (src/management.js: /livez, /readyz, /metrics) runs on a port of its
-//      own, on loopback by default; the shutdown coordinator (src/shutdown.js) is the one handler of
-//      SIGTERM/SIGINT — the Server runs with stopOnSignals: false — and drains the hub with
-//      deadlines.
+//   7. The management listener (src/management.js: /livez, /readyz, /metrics, POST /control) runs on
+//      a port of its own, on loopback by default; the shutdown coordinator (src/shutdown.js) is the
+//      one handler of SIGTERM/SIGINT — the Server runs with stopOnSignals: false — and drains the hub
+//      with deadlines.
+//   8. Revocation (src/revocation.js, src/registry.js, src/control.js): every live connection is
+//      registered by drive, document, subject and jti; a control message of the backend (Redis
+//      vaulter:collab:control, or the signed POST /control) has the backend recheck the connections
+//      of its drive — none closes 4403, read makes read-only, write leaves it; each token is renewed
+//      RENEW_BEFORE_MS before it expires (a refusal closes the connection), and the server's expiry
+//      timer closes a connection whose token expired.
 //
 // Started by `vaulter-collaboration-hub serve` (src/cli.js) or `node src/index.js`.
 //
@@ -146,39 +155,6 @@ function readClientProtocol(requestParameters) {
   return String(value ?? '').trim() === String(CLIENT_PROTOCOL) ? CLIENT_PROTOCOL : 1
 }
 
-/**
- * The claims of a JWT, read WITHOUT verifying its signature — the hub never holds the signing
- * secret, and the backend verifies the token on every call. Local bookkeeping only (when to stop
- * accepting messages, which tenant a room counts for once the backend accepted the token); it grants
- * nothing on its own. Malformed → null.
- */
-function decodeTokenClaims(token) {
-  if (typeof token !== 'string') {
-    return null
-  }
-
-  const segments = token.split('.')
-
-  if (segments.length < 2) {
-    return null
-  }
-
-  try {
-    const payload = JSON.parse(Buffer.from(segments[1], 'base64url').toString('utf8'))
-
-    return payload !== null && typeof payload === 'object' ? payload : null
-  } catch {
-    return null
-  }
-}
-
-/** The `exp` (unix seconds) claim of a JWT, unverified (see decodeTokenClaims); missing → null. */
-function decodeTokenExpiry(token) {
-  const exp = decodeTokenClaims(token)?.exp
-
-  return typeof exp === 'number' ? exp : null
-}
-
 /** The refusal of a connection while the hub drains: the client connects to another hub. */
 function drainingRefusal() {
   return Object.assign(new Error(DRAINING.reason), { reason: DRAINING.reason })
@@ -202,7 +178,8 @@ function limitRefusal(limit) {
 /**
  * Close the connection once its token expires (already expired → now). A read-only viewer never
  * appends, so without this its socket would outlive the token. unref() so a pending timer never
- * keeps the process alive on shutdown.
+ * keeps the process alive on shutdown. The hooks arm the expiry through src/revocation.js, which
+ * moves it with every renewal; this one-shot timer is for a token that is never renewed.
  */
 function armExpiryTimer(connection, exp) {
   if (exp === null || typeof connection?.close !== 'function') {
@@ -236,11 +213,21 @@ function tokenExpired() {
  * injectable, like the rest of the persistence options (backendOptions, conf, clock, sleep, random,
  * redisOrigins, serverToken), so the hooks run in tests against a mock backend; `log` receives
  * token-free messages only. `draining()` is the shutdown coordinator's state (no connection gets in
- * while it is true); `limits` (src/limits.js) is shared with the persistence.
+ * while it is true); `limits` (src/limits.js) is shared with the persistence. `revocation`
+ * (src/revocation.js) is made with the same backend unless given; `revocationOptions` (clock,
+ * timers, sleep, registry) tune the one made here.
  */
-export function createHooks({ backend = backendModule, log = console, persistence = null, draining = () => false, limits = null, ...options } = {}) {
+export function createHooks({ backend = backendModule, log = console, persistence = null, draining = () => false, limits = null, revocation = null, revocationOptions = {}, ...options } = {}) {
   const limit = limits ?? persistence?.limits ?? createLimits(options.conf ?? config)
   const store = persistence ?? createPersistence({ backend, log, limits: limit, ...options })
+  const revoke = revocation ?? createRevocation({
+    backend,
+    backendOptions: options.backendOptions ?? {},
+    persistence: store,
+    conf: options.conf ?? config,
+    log,
+    ...revocationOptions,
+  })
 
   /**
    * The upgrade gate, ahead of authentication: nothing gets in while the hub drains; then the Origin
@@ -286,6 +273,9 @@ export function createHooks({ backend = backendModule, log = console, persistenc
       throw tokenExpired()
     }
 
+    // Taken before the backend checks the rights: a control message for the room's drive that comes
+    // after it has the connection rechecked once it is registered (src/registry.js).
+    const controlMark = revoke.registry.mark()
     const result = await backend.authenticate({ token, room: documentName }, options.backendOptions ?? {})
 
     if (!result.allowed) {
@@ -318,15 +308,16 @@ export function createHooks({ backend = backendModule, log = console, persistenc
         target.readOnly = readOnly
       }
     }
-    armExpiryTimer(connection, exp)
 
-    return { token, room: documentName, mode: result.mode, readOnly, protocol, userId: result.userId, exp, tenant }
+    // The expiry timer and the renewal are armed once the live connection is known (connected).
+    return { token, room: documentName, mode: result.mode, readOnly, protocol, userId: result.userId, exp, tenant, controlMark }
   }
 
   /**
    * The live connection is known here: one that came in while the hub started draining is closed
    * 4503, one past a room or tenant limit (connections that got in concurrently) 4429; any other is
-   * registered and closed when its token expires.
+   * registered for revocation (src/revocation.js) — renewed before its token expires, closed when
+   * it expires or the backend revokes it.
    */
   async function connected(payload) {
     const connection = payload?.connection
@@ -346,13 +337,18 @@ export function createHooks({ backend = backendModule, log = console, persistenc
       return
     }
 
-    armExpiryTimer(connection, payload?.context?.exp ?? null)
     await store.connected(payload)
+
+    if (connection) {
+      revoke.track({ connection, context: payload?.context ?? connection.context ?? {}, documentName })
+    }
   }
 
   /**
    * Refuse every message once the connection's token has expired: rights are only re-checked on
-   * the backend calls, so an expired token must not keep editing. Then the limits, from the raw
+   * the backend calls, so an expired token must not keep editing. A connection the backend revoked
+   * is closed again; one it made read-only stays read-only, so Hocuspocus drops its y-protocols
+   * update and sync step 2 (its envelopes are refused in onStateless). Then the limits, from the raw
    * message before Hocuspocus decodes it: a message above its size closes the connection 4413, a
    * writer's sync write past the room's rate 4429. While its room takes no writes (writes stopped,
    * draining, the room at its size limit) a writer's sync writes are dropped (src/persistence.js).
@@ -367,6 +363,10 @@ export function createHooks({ backend = backendModule, log = console, persistenc
       }
 
       throw new Error(TOKEN_EXPIRED.reason)
+    }
+
+    if (connection) {
+      revoke.beforeMessage(connection, update)
     }
 
     const tooLarge = limit.messageLimit(update)
@@ -389,8 +389,36 @@ export function createHooks({ backend = backendModule, log = console, persistenc
     await store.beforeHandleMessage(payload)
   }
 
+  /**
+   * A stateless message: the envelope of a connection the backend made read-only or revoked is
+   * refused here (nack `forbidden`, retry:false) before the persistence sees it; everything else is
+   * the persistence's.
+   */
+  async function onStateless(payload) {
+    const { connection } = payload ?? {}
+
+    if (connection && revoke.mayWrite(connection) === false && !limit.envelopeTooLarge(payload?.payload)) {
+      const message = parseStateless(payload?.payload)
+
+      if (message?.t === 'u') {
+        revoke.refusedEnvelope()
+
+        try {
+          connection.sendStateless?.(JSON.stringify({ t: 'nack', id: typeof message.id === 'string' ? message.id : null, code: NACK.FORBIDDEN, retry: false }))
+        } catch {
+          // The connection is closing.
+        }
+
+        return
+      }
+    }
+
+    await store.onStateless(payload)
+  }
+
   async function onDisconnect(payload) {
     limit.unregister(payload?.documentName ?? payload?.connection?.document?.name, payload?.socketId ?? payload?.connection)
+    revoke.disconnected(payload)
     await store.onDisconnect(payload)
   }
 
@@ -400,12 +428,22 @@ export function createHooks({ backend = backendModule, log = console, persistenc
     connected,
     beforeHandleMessage,
     onLoadDocument: store.onLoadDocument,
-    onStateless: store.onStateless,
+    onStateless,
     onDisconnect,
     afterUnloadDocument: store.afterUnloadDocument,
     persistence: store,
     limits: limit,
+    revocation: revoke,
     isFenced: store.isFenced,
+  }
+}
+
+/** A stateless payload as JSON (null when it is not). */
+function parseStateless(payload) {
+  try {
+    return typeof payload === 'string' ? JSON.parse(payload) : null
+  } catch {
+    return null
   }
 }
 
@@ -461,6 +499,7 @@ async function buildServer({ hooks = null, backend = backendModule, draining = (
   serverHooks.persistence.attach(server.hocuspocus)
   server.vaulterPersistence = serverHooks.persistence
   server.vaulterLimits = serverHooks.limits
+  server.vaulterRevocation = serverHooks.revocation
 
   return server
 }
@@ -509,20 +548,34 @@ async function boot({ processRef = process, exit = (code) => process.exit(code) 
       compacted: ({ seconds }) => metrics.compactionSeconds.observe(seconds),
     },
   })
+  const revocation = server.vaulterRevocation
+  // The control subscriber is a Redis client like the extension's: /readyz requires it ready.
+  const control = createControlChannel({
+    revocation,
+    conf: config,
+    redisFactory: async (url) => {
+      const { default: IORedis } = await import('ioredis')
+      const client = new IORedis(url)
+      redisClients.push(client)
+
+      return client
+    },
+  })
   const readiness = createReadiness({
     websocket: () => server.httpServer?.listening === true,
     backend: status,
-    redis: config.redisUrl ? () => redisClients.length > 0 && redisClients.every((client) => client.status === 'ready') : null,
+    redis: config.redisUrl || config.controlRedisUrl ? () => redisClients.length > 0 && redisClients.every((client) => client.status === 'ready') : null,
     draining,
   })
   const rooms = () => roomStats(server.hocuspocus)
-  metrics.bind({ rooms, persistence, worker, limits: server.vaulterLimits, readiness, draining })
+  metrics.bind({ rooms, persistence, worker, limits: server.vaulterLimits, readiness, draining, revocation })
   const management = createManagement({
     host: config.managementHost,
     port: config.managementPort,
     readiness,
     metrics: () => metrics.render(),
     stats: rooms,
+    control,
   })
 
   coordinator = createShutdown({
@@ -530,7 +583,10 @@ async function boot({ processRef = process, exit = (code) => process.exit(code) 
     closeConnections: () => closeEveryRoom(server.hocuspocus, DRAINING),
     destroy: () => server.destroy(),
     stopWorker: () => worker.stop(),
-    closeManagement: () => management.close(),
+    closeManagement: async () => {
+      revocation.stop()
+      await Promise.all([management.close(), control.close()])
+    },
     onUnflushed: (count) => metrics.shutdownUnflushed.set(count),
     conf: config,
     exit,
@@ -540,7 +596,16 @@ async function boot({ processRef = process, exit = (code) => process.exit(code) 
 
   await management.start()
   // eslint-disable-next-line no-console
-  console.log(`Vaulter collab hub management on http://${config.managementHost}:${config.managementPort} (/livez, /readyz, /metrics)`)
+  console.log(`Vaulter collab hub management on http://${config.managementHost}:${config.managementPort} (/livez, /readyz, /metrics, POST /control)`)
+
+  if (config.controlRedisUrl) {
+    // A failed subscription leaves /readyz red (the client is not ready); signed POST /control and
+    // the token expiry still bound what a lost control message costs.
+    await control.subscribe().catch((error) => {
+      // eslint-disable-next-line no-console
+      console.error(`Vaulter collab hub: the control subscription failed: ${error?.message ?? error}`)
+    })
+  }
   persistence.start()
   await server.listen()
   // eslint-disable-next-line no-console
@@ -550,6 +615,7 @@ async function boot({ processRef = process, exit = (code) => process.exit(code) 
   server.vaulterWorker = worker
   server.vaulterManagement = management
   server.vaulterShutdown = coordinator
+  server.vaulterControl = control
 
   return server
 }

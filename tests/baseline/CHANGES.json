@@ -14449,12 +14449,14 @@
       ]
     },
     "hub": {
-      "count": 26,
+      "count": 30,
       "names": [
         "packages/collaboration/hub/test/collab-expiry.test.js",
         "packages/collaboration/hub/test/compact-cli.test.js",
         "packages/collaboration/hub/test/compaction.test.js",
         "packages/collaboration/hub/test/config.test.js",
+        "packages/collaboration/hub/test/control-lost.test.js",
+        "packages/collaboration/hub/test/control.test.js",
         "packages/collaboration/hub/test/e2e/restore-epoch.e2e.js",
         "packages/collaboration/hub/test/envelope.test.js",
         "packages/collaboration/hub/test/epoch-fence.test.js",
@@ -14469,7 +14471,9 @@
         "packages/collaboration/hub/test/origins.test.js",
         "packages/collaboration/hub/test/readonly.test.js",
         "packages/collaboration/hub/test/redis-extension-wiring.test.js",
+        "packages/collaboration/hub/test/registry.test.js",
         "packages/collaboration/hub/test/retry.test.js",
+        "packages/collaboration/hub/test/revocation.test.js",
         "packages/collaboration/hub/test/schema-parity.test.js",
         "packages/collaboration/hub/test/security.test.js",
         "packages/collaboration/hub/test/shutdown.test.js",

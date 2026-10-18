@@ -68,6 +68,14 @@
 //   VAULTER_COLLAB_MAX_CONNECTIONS_PER_ROOM — connections of one room on this hub (default 100).
 //   VAULTER_COLLAB_MAX_UPDATES_PER_SECOND_PER_ROOM — writes one room takes per second (default 200).
 //
+// Revocation (src/revocation.js, src/control.js):
+//   VAULTER_COLLAB_RENEW_BEFORE_MS          — how long before a token's exp the hub renews it through the backend
+//                                             (default 60000); a refused renewal closes the connection.
+//   VAULTER_COLLAB_CONTROL_TOLERANCE_SECONDS— how far the timestamp of a signed POST /control may be from now
+//                                             (default 300, as the backend's hub.timestamp_tolerance).
+//   VAULTER_COLLAB_CONTROL_REDIS_URL        — the Redis the backend publishes control messages on
+//                                             (vaulter:collab:control); default VAULTER_COLLAB_REDIS_URL.
+//
 // Scaling / ops:
 //   VAULTER_COLLAB_REDIS_URL      — when set, enables the Redis extension (multi-instance sync).
 //   VAULTER_COLLAB_INSTANCE_NAME  — unique name per instance for log correlation.
@@ -240,6 +248,11 @@ export function buildConfig(env = process.env) {
     maxConnectionsPerRoom: int('VAULTER_COLLAB_MAX_CONNECTIONS_PER_ROOM', 100, env),
     maxUpdatesPerSecondPerRoom: int('VAULTER_COLLAB_MAX_UPDATES_PER_SECOND_PER_ROOM', 200, env),
 
+    // Revocation
+    renewBeforeMs: int('VAULTER_COLLAB_RENEW_BEFORE_MS', 60000, env),
+    controlToleranceSeconds: int('VAULTER_COLLAB_CONTROL_TOLERANCE_SECONDS', 300, env),
+    controlRedisUrl: str('VAULTER_COLLAB_CONTROL_REDIS_URL', str('VAULTER_COLLAB_REDIS_URL', undefined, env), env),
+
     // Scaling / ops
     redisUrl: str('VAULTER_COLLAB_REDIS_URL', undefined, env),
     instanceName: str('VAULTER_COLLAB_INSTANCE_NAME', 'vaulter-hocuspocus', env),
@@ -307,6 +320,8 @@ const NUMERIC = Object.freeze([
   { key: 'retryAttemptTimeoutMs', env: 'VAULTER_COLLAB_RETRY_ATTEMPT_TIMEOUT_MS', min: 1, backend: true },
   { key: 'compactionIntervalMs', env: 'VAULTER_COLLAB_COMPACTION_INTERVAL_MS', min: 10, backend: true },
   { key: 'compactionBatch', env: 'VAULTER_COLLAB_COMPACTION_BATCH', min: 1, max: 100, backend: true },
+  { key: 'renewBeforeMs', env: 'VAULTER_COLLAB_RENEW_BEFORE_MS', min: 1000 },
+  { key: 'controlToleranceSeconds', env: 'VAULTER_COLLAB_CONTROL_TOLERANCE_SECONDS', min: 1, max: 3600 },
 ])
 
 function numericProblems(conf, entries) {

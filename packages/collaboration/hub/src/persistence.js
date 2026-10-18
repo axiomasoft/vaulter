@@ -1015,6 +1015,27 @@ export function createPersistence({
     }
   }
 
+  /**
+   * A writer the backend no longer lets write (src/revocation.js made it read-only or closed it): it
+   * is no writer of its room any more — its token is not used for server changes — and stopped
+   * writes never give it its writes back.
+   */
+  function demote(connection) {
+    if (!connection) {
+      return
+    }
+
+    muted.delete(connection)
+
+    for (const room of writers.values()) {
+      for (const [key, writer] of room) {
+        if (writer.connection === connection) {
+          room.delete(key)
+        }
+      }
+    }
+  }
+
   async function afterUnloadDocument({ documentName }) {
     rooms.delete(documentName)
     fenced.delete(documentName)
@@ -1109,6 +1130,7 @@ export function createPersistence({
     reportProtocolMismatch,
     protocolCompatible,
     stopWrites,
+    demote,
     revokedStillConnected,
     attach: bind,
     start: () => ledger.start(),

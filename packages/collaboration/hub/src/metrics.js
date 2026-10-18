@@ -237,9 +237,10 @@ export function createHubMetrics() {
   const shutdownUnflushed = registry.gauge('collab_shutdown_unflushed', 'Pending updates the shutdown deadline left unflushed (0 until a shutdown ends with some).')
   shutdownUnflushed.set(0)
 
-  function bind({ rooms = () => ({ rooms: 0, connections: 0 }), persistence = null, worker = null, limits = null, readiness = null, draining = () => false } = {}) {
+  function bind({ rooms = () => ({ rooms: 0, connections: 0 }), persistence = null, worker = null, limits = null, readiness = null, draining = () => false, revocation = null } = {}) {
     const ledger = () => persistence?.state?.()?.ledger ?? {}
     const workerStats = () => worker?.stats?.() ?? {}
+    const revocationStats = () => revocation?.stats?.() ?? {}
 
     registry.gauge('collab_active_rooms', 'Rooms loaded on this hub.', { collect: () => rooms().rooms })
     registry.gauge('collab_active_connections', 'WebSocket connections of the rooms on this hub.', { collect: () => rooms().connections })
@@ -263,7 +264,22 @@ export function createHubMetrics() {
     registry.counter('collab_checkpoint_conflicts_total', 'Checkpoint publications that lost their compare-and-set (409).', { collect: () => workerStats().conflicts ?? 0 })
     registry.counter('collab_compaction_failures_total', 'Leased generations that could not become a checkpoint.', { collect: () => workerStats().failures ?? 0 })
     registry.gauge('collab_revoked_still_connected', 'Connections whose authority ended (token expired or revoked) that are still open.', {
-      collect: () => persistence?.revokedStillConnected?.() ?? 0,
+      collect: () => (typeof revocation?.revokedStillConnected === 'function' ? revocation.revokedStillConnected() : (persistence?.revokedStillConnected?.() ?? 0)),
+    })
+    registry.counter('collab_control_messages_total', 'Control messages of the backend applied (a recheck followed), by transport.', {
+      collect: () => Object.entries(revocationStats().control ?? {}).map(([source, value]) => ({ labels: { source }, value })),
+    })
+    registry.counter('collab_rechecks_total', 'Connections whose rights the backend rechecked after a control message.', { collect: () => revocationStats().rechecks ?? 0 })
+    registry.counter('collab_recheck_failures_total', 'Recheck calls that got no usable answer (the connections stay bounded by their token\'s expiry).', {
+      collect: () => revocationStats().recheckFailures ?? 0,
+    })
+    registry.counter('collab_token_renewals_total', 'Connection tokens the backend renewed.', { collect: () => revocationStats().renewals ?? 0 })
+    registry.counter('collab_token_renewal_failures_total', 'Renewals that were refused or got no usable answer.', { collect: () => revocationStats().renewalFailures ?? 0 })
+    registry.counter('collab_revoked_connections_total', 'Connections closed because the backend said they may do nothing any more (recheck or renewal).', {
+      collect: () => revocationStats().revoked ?? 0,
+    })
+    registry.counter('collab_downgraded_connections_total', 'Writers made read-only because the backend said they may only read now.', {
+      collect: () => revocationStats().downgraded ?? 0,
     })
     registry.counter('collab_limit_rejections_total', 'Messages, connections and requests refused by a limit, by limit.', {
       collect: () => Object.entries(limits?.rejections?.() ?? {}).map(([limit, value]) => ({ labels: { limit }, value })),

@@ -9,11 +9,13 @@ import { parseRetryAfter } from './retry.js'
 //   - append       → POST {base}/collaboration/hub/append        (one update; the ledger repeats it)
 //   - leaseCompaction   → POST {base}/collaboration/hub/compaction/lease (the compaction worker)
 //   - publishCheckpoint → POST {base}/collaboration/hub/checkpoint       (a merged checkpoint, CAS)
+//   - renew        → POST {base}/collaboration/hub/renew         (a connection's token, by the rights now)
+//   - recheck      → POST {base}/collaboration/hub/recheck       (what connections may do now, after control)
 //
 // Every call names the protocol (X-Vaulter-Collab-Protocol: 2; the backend answers anything else
 // with 409 collaboration_protocol_mismatch). The calls made for a room connection carry two
-// independent proofs, both required by the backend; the compaction calls are the hub's own and
-// carry the signature alone:
+// independent proofs, both required by the backend; the compaction and recheck calls are the hub's
+// own and carry the signature alone:
 //   - the room JWT of the connection the call is made for (Authorization: Bearer) — it names the
 //     user, the room (drive, node, epoch) and the mode; the hub never holds its signing secret;
 //   - an HMAC-SHA256 signature of "{timestamp}.{rawBody}" keyed by the webhook secret
@@ -312,4 +314,50 @@ export async function publishCheckpoint({ document, generation, leaseToken, cove
   }
 
   return { ok: true, status: response.status, checkpointVersion: result.checkpoint_version, markerCleared: result.marker_cleared }
+}
+
+/**
+ * ONE renewal of a connection's token: POST {room} with the current token as the bearer. Resolves
+ * `{ ok: true, status, renewed: {token, room, generation, scope, mode, exp, jti, permissions_version} }`
+ * — the new token, scoped by the rights now — or `{ ok: false, status, code, retryAfterMs }` (403: the
+ * subject may no longer view the document, 404: it is gone, 409 collaboration_epoch_mismatch: its
+ * generation is over, 401: the token is not accepted). Throws when there is no answer.
+ */
+export async function renew({ token, room }, options = {}) {
+  const response = await post('renew', { room }, token, options)
+
+  if (!response.ok) {
+    return refusal(response)
+  }
+
+  const renewed = response.body
+
+  // A 2xx without a usable token is not a renewal; it is tried again as for a 5xx.
+  if (typeof renewed?.token !== 'string' || renewed.token === '' || !Number.isInteger(renewed?.exp)) {
+    return { ok: false, status: 502, code: 'collaboration_invalid_renewal', retryAfterMs: null }
+  }
+
+  return { ok: true, status: response.status, renewed }
+}
+
+/**
+ * ONE recheck of connections after a control message: POST {connections: [{id, token}]} (at most
+ * 200), signed, without a room token. Resolves `{ ok: true, status, results: [{id, access:
+ * none|read|write, reason, jti}] }` in the order asked, or `{ ok: false, status, code, retryAfterMs }`.
+ * Throws when there is no answer.
+ */
+export async function recheck({ connections }, options = {}) {
+  const response = await post('recheck', { connections }, null, options)
+
+  if (!response.ok) {
+    return refusal(response)
+  }
+
+  const results = response.body?.results
+
+  if (!Array.isArray(results)) {
+    return { ok: false, status: 502, code: 'collaboration_invalid_recheck', retryAfterMs: null }
+  }
+
+  return { ok: true, status: response.status, results }
 }
