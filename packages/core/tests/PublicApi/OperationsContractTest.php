@@ -143,8 +143,9 @@ it('matches all seven Operations signatures against the literal normative PHP AP
     $literal = file_get_contents(dirname(__DIR__, 4).'/audits/2026-09-29-stable-audit/opus/05-php-api.md');
     // Plan amendments of the literal 05 interfaces (PLAN2.D40, D41, D45, D47, D48, D62). PLAN2.D44 turns the
     // model, pagination and collection types of every operation into snapshots and Page. PLAN2.D62 (C07)
-    // gives purge and restoreRevision an optional expected sequence: the literal method is replaced.
-    $removed = ['NodeOperations::update', 'TrashOperations::purge', 'FileOperations::restoreRevision'];
+    // gives purge and restoreRevision an optional expected sequence: the literal method is replaced. PLAN3 P6.3 gives
+    // the grant revoke, the inheritance changes and the share update/rotate/revoke an optional expected version.
+    $removed = ['NodeOperations::update', 'TrashOperations::purge', 'FileOperations::restoreRevision', 'AccessOperations::revoke', 'ShareOperations::revoke'];
     $amendments = ['NodeOperations' => '
         public function star(NodeKey $node): Node;
         public function unstar(NodeKey $node): Node;
@@ -159,11 +160,13 @@ it('matches all seven Operations signatures against the literal normative PHP AP
     ', 'TrashOperations' => '
         public function purge(NodeKey $node, ?int $expectedSequence = null): void;
     ', 'AccessOperations' => '
-        public function restrictInheritance(NodeKey $node, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node;
-        public function restoreInheritance(NodeKey $node): Node;
+        public function revoke(NodeKey $node, NodeGrant|int|string $grant, ?int $expectedAccessVersion = null): void;
+        public function restrictInheritance(NodeKey $node, InheritanceRestriction $mode = InheritanceRestriction::Empty, ?int $expectedAccessVersion = null): Node;
+        public function restoreInheritance(NodeKey $node, ?int $expectedAccessVersion = null): Node;
     ', 'ShareOperations' => '
-        public function update(NodeKey $node, NodeShare|int|string $share, ShareLinkUpdate $changes): NodeShare;
-        public function rotate(NodeKey $node, NodeShare|int|string $share): MintedShareLink;
+        public function update(NodeKey $node, NodeShare|int|string $share, ShareLinkUpdate $changes, ?int $expectedVersion = null): NodeShare;
+        public function rotate(NodeKey $node, NodeShare|int|string $share, ?int $expectedVersion = null): MintedShareLink;
+        public function revoke(NodeKey $node, NodeShare|int|string $share, ?int $expectedVersion = null): void;
     '];
     $count = 0;
     foreach (['Drive' => ['NodeOperations', 'FolderOperations', 'FileOperations', 'TrashOperations'], 'Access' => ['AccessOperations'], 'Sharing' => ['ShareOperations'], 'Activity' => ['ActivityOperations']] as $domain => $names) {
@@ -198,6 +201,10 @@ it('matches immutable value constructors and UploadSource factory signatures aga
         if ($name === 'RestoreOptions') {
             // PLAN2.D62 (C07): the trashed node's sequence the caller last saw.
             $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?int $expectedSequence = null';
+        }
+        if ($name === 'MoveOptions') {
+            // PLAN3 P6.2 (CC3): the destination folder's sequence the caller last saw.
+            $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?int $expectedDestinationSequence = null';
         }
         if ($name === 'UploadOptions') {
             // PLAN2.D42: the uploader's own modification time, informational only.

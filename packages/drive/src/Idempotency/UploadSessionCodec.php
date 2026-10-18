@@ -22,6 +22,8 @@ final class UploadSessionCodec implements ReceiptCodec
 {
     public const string KIND = 'drive.upload-session';
 
+    public function __construct(private readonly DriveConfig $config) {}
+
     public function kind(): string
     {
         return self::KIND;
@@ -59,7 +61,7 @@ final class UploadSessionCodec implements ReceiptCodec
         if ($version !== 1) {
             throw new LogicException(sprintf('[Vaulter] The receipt codec %s does not know version %d.', self::KIND, $version));
         }
-        $class = app(DriveConfig::class)->model('upload_session');
+        $class = $this->config->model('upload_session');
 
         return (new $class)->newFromBuilder($body);
     }

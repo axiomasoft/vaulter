@@ -135,12 +135,24 @@ final readonly class NodeResponses
         try {
             return $this->expectedSequence($request, $drive, $nodeId, $ability, $includeTrashed);
         } catch (StaleNodeException|NodeNotFoundException $refusal) {
-            if (ReadIdempotencyKey::key($request) === null) {
-                throw $refusal;
-            }
-            $held = $refusal instanceof StaleNodeException ? $this->located($request, $drive, $nodeId, $includeTrashed)[0]->sequence : null;
+            return $this->replaySentinel($request, $drive, $nodeId, $includeTrashed, $refusal);
+        }
+    }
 
-            return $held === PHP_INT_MAX ? PHP_INT_MAX - 1 : PHP_INT_MAX;
+    /**
+     * For a route whose operation does not compare a matching If-Match again (a new-revision upload session: the
+     * commit at the end does not compare it): null when the tag matches, after the same checks as
+     * {@see expectedSequence()}; the sentinel of {@see expectedSequenceForReplay()} when a keyed retry is stale or its
+     * node gone, so the operation answers it from the receipt or refuses it as stale (and stores that refusal).
+     */
+    public function staleSequenceForReplay(Request $request, DriveHandle $drive, string $nodeId, Ability $ability): ?int
+    {
+        try {
+            $this->expectedSequence($request, $drive, $nodeId, $ability);
+
+            return null;
+        } catch (StaleNodeException|NodeNotFoundException $refusal) {
+            return $this->replaySentinel($request, $drive, $nodeId, false, $refusal);
         }
     }
 
@@ -148,7 +160,9 @@ final readonly class NodeResponses
      * The sequence of the destination folder of a move the caller pinned with `X-Vaulter-Destination-If-Match` (CC3),
      * or null when the header is absent. The tag must equal the caller's current representation of the folder (the
      * drive root when `$destinationId` is null), else 412 node_sequence_mismatch; the move checks the sequence again
-     * under its tree lock.
+     * under its tree lock. A keyed retry repeats the destination tag of the first request, stale once that one
+     * committed: like {@see expectedSequenceForReplay()} it gets a sequence no live folder holds, and the operation
+     * answers it from the receipt or refuses it (and stores that refusal).
      */
     public function expectedDestinationSequence(Request $request, DriveHandle $drive, ?string $destinationId): ?int
     {
@@ -157,16 +171,31 @@ final readonly class NodeResponses
             return null;
         }
         $id = $destinationId ?? $drive->root()->id;
-        [$snapshot, $abilities] = $this->located($request, $drive, $id, false);
-        preg_match_all('/\s*(\*|(?:W\/)?"[^"]*")\s*(?:,|$)/', $header, $matches);
-        $current = (new NodeResource($snapshot, $abilities))->etag();
-        foreach ($matches[1] as $tag) {
-            if (!str_starts_with($tag, 'W/') && hash_equals($current, $tag)) {
-                return $snapshot->sequence;
+        try {
+            [$snapshot, $abilities] = $this->located($request, $drive, $id, false);
+            preg_match_all('/\s*(\*|(?:W\/)?"[^"]*")\s*(?:,|$)/', $header, $matches);
+            $current = (new NodeResource($snapshot, $abilities))->etag();
+            foreach ($matches[1] as $tag) {
+                if (!str_starts_with($tag, 'W/') && hash_equals($current, $tag)) {
+                    return $snapshot->sequence;
+                }
             }
-        }
 
-        throw StaleNodeException::forNode($snapshot->id);
+            throw StaleNodeException::forNode($snapshot->id);
+        } catch (StaleNodeException|NodeNotFoundException $refusal) {
+            return $this->replaySentinel($request, $drive, $id, false, $refusal);
+        }
+    }
+
+    /** The sequence no live node holds, for a keyed retry refused as stale or missing; without a key the refusal stands. */
+    private function replaySentinel(Request $request, DriveHandle $drive, string $nodeId, bool $includeTrashed, StaleNodeException|NodeNotFoundException $refusal): int
+    {
+        if (ReadIdempotencyKey::key($request) === null) {
+            throw $refusal;
+        }
+        $held = $refusal instanceof StaleNodeException ? $this->located($request, $drive, $nodeId, $includeTrashed)[0]->sequence : null;
+
+        return $held === PHP_INT_MAX ? PHP_INT_MAX - 1 : PHP_INT_MAX;
     }
 
     /**

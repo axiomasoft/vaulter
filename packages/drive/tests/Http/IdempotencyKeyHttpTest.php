@@ -155,6 +155,65 @@ it('pins the destination of a move with X-Vaulter-Destination-If-Match', functio
     $this->postJson(V1::url('nodes/'.$file->id.'/move'), ['destination_id' => null], [...V1::ifMatch($file->id), 'X-Vaulter-Destination-If-Match' => $root])->assertOk();
 });
 
+it('replays a move pinned to its destination after the destination changed, and refuses a new key on the stale tag', function (): void {
+    $file = V1::file($this->drive, 'a.txt');
+    $folder = V1::folder($this->drive, 'Target');
+    $headers = [...V1::ifMatch($file->id), 'X-Vaulter-Destination-If-Match' => V1::ifMatch($folder->id)['If-Match'], 'Idempotency-Key' => 'move-pinned'];
+
+    $first = $this->postJson(V1::url('nodes/'.$file->id.'/move'), ['destination_id' => $folder->id], $headers)->assertOk();
+    $this->drive->nodes()->rename($folder->id, 'Target renamed');
+
+    // The same request, headers unchanged: answered from the receipt, not refused by the destination tag.
+    $this->postJson(V1::url('nodes/'.$file->id.'/move'), ['destination_id' => $folder->id], $headers)
+        ->assertOk()->assertHeader('Idempotent-Replayed', 'true')->assertJsonPath('data.sequence', $first->json('data.sequence'));
+    // The destination tag is part of the request: another one under the same key is another request.
+    $this->postJson(V1::url('nodes/'.$file->id.'/move'), ['destination_id' => $folder->id], [...$headers, 'X-Vaulter-Destination-If-Match' => V1::ifMatch($folder->id)['If-Match']])
+        ->assertStatus(422)->assertJsonPath('code', 'idempotency_key_reused');
+
+    $other = V1::file($this->drive, 'b.txt');
+    $this->postJson(V1::url('nodes/'.$other->id.'/move'), ['destination_id' => $folder->id], [...V1::ifMatch($other->id), 'X-Vaulter-Destination-If-Match' => $headers['X-Vaulter-Destination-If-Match'], 'Idempotency-Key' => 'move-pinned-new'])
+        ->assertStatus(412)->assertJsonPath('code', 'node_sequence_mismatch');
+    expect((string) Node::query()->findOrFail($other->id)->parent_id)->not->toBe($folder->id);
+});
+
+it('replays a purge over HTTP although the node is gone, and only for the same caller, key and request', function (): void {
+    $folder = V1::folder($this->drive, 'Gone');
+    $this->drive->nodes()->trash($folder->id);
+    $headers = [...V1::ifMatch($folder->id), 'Idempotency-Key' => 'purge-replay'];
+
+    $this->deleteJson(V1::url('nodes/'.$folder->id), [], $headers)->assertNoContent()->assertHeaderMissing('Idempotent-Replayed');
+    expect(Node::query()->whereKey($folder->id)->exists())->toBeFalse();
+
+    $this->deleteJson(V1::url('nodes/'.$folder->id), [], $headers)->assertNoContent()->assertHeader('Idempotent-Replayed', 'true');
+    $this->deleteJson(V1::url('nodes/'.$folder->id), [], [...$headers, 'Idempotency-Key' => 'purge-other'])->assertNotFound();
+    $this->deleteJson(V1::url('nodes/'.$folder->id), [], ['If-Match' => $headers['If-Match']])->assertNotFound();
+    $this->actingAs(V1::user(2));
+    $this->deleteJson(V1::url('nodes/'.$folder->id), [], $headers)->assertNotFound();
+});
+
+it('refuses a new-revision upload session on a stale If-Match under a new key, and replays the first one', function (): void {
+    $file = V1::file($this->drive, 'a.txt', 'one');
+    $tag = V1::ifMatch($file->id)['If-Match'];
+    $body = ['protocol' => 'tus', 'node_id' => $file->id, 'total_size_bytes' => 3];
+
+    $first = $this->postJson(V1::url('drives/'.$this->driveId.'/uploads'), $body, ['If-Match' => $tag, 'Idempotency-Key' => 'rev-1'])->assertCreated();
+    $this->drive->files()->addRevision($file->id, UploadSource::fromStream(DriveTestHelpers::streamFor('two'), 'a.txt'));
+
+    // The retry of the first request is answered from its receipt although its tag is stale now.
+    $this->postJson(V1::url('drives/'.$this->driveId.'/uploads'), $body, ['If-Match' => $tag, 'Idempotency-Key' => 'rev-1'])
+        ->assertCreated()->assertHeader('Idempotent-Replayed', 'true')->assertJsonPath('data.upload_id', $first->json('data.upload_id'));
+    // A new key does not turn the stale tag into a new session; the refusal is stored under that key.
+    $this->postJson(V1::url('drives/'.$this->driveId.'/uploads'), $body, ['If-Match' => $tag, 'Idempotency-Key' => 'rev-2'])
+        ->assertStatus(412)->assertJsonPath('code', 'node_sequence_mismatch');
+    $this->postJson(V1::url('drives/'.$this->driveId.'/uploads'), $body, ['If-Match' => $tag, 'Idempotency-Key' => 'rev-2'])
+        ->assertStatus(412)->assertHeader('Idempotent-Replayed', 'true');
+    expect(UploadSession::query()->count())->toBe(1);
+
+    // A matching tag still opens a session, and the commit does not compare it again (no persisted expectation).
+    $fresh = $this->postJson(V1::url('drives/'.$this->driveId.'/uploads'), $body, ['If-Match' => V1::ifMatch($file->id)['If-Match'], 'Idempotency-Key' => 'rev-3'])->assertCreated();
+    expect(UploadSession::query()->where('upload_id', $fresh->json('data.upload_id'))->firstOrFail()->metadata['expected_sequence'] ?? null)->toBeNull();
+});
+
 it('replays a copy, a property patch, a trash and a restore', function (): void {
     $file = V1::file($this->drive, 'a.txt');
     $folder = V1::folder($this->drive, 'Into');

@@ -19,7 +19,10 @@ use Vaulter\Drive\Http\Resources\NodeResponses;
  * A session for a new revision of an existing file (node_id) needs If-Match with the
  * file's current tag, so a client does not start sending bytes onto a file that changed
  * under it. The tag is checked when the session is created; the commit at the end does
- * not compare it again.
+ * not compare it again. A keyed retry whose tag went stale (or whose file is gone) reaches
+ * the operation with a sequence no live file holds: it is answered from the receipt of the
+ * first request, or refused as stale and that refusal stored — a new key never opens a
+ * session on a stale tag.
  */
 #[Internal]
 final readonly class CreateUploadController
@@ -34,13 +37,11 @@ final readonly class CreateUploadController
     {
         $nodeId = $request->targetNodeId();
         $create = function (DriveHandle $handle) use ($request, $nodeId): JsonResponse {
-            if ($nodeId !== null) {
-                $this->nodes->expectedSequenceForReplay($request, $handle, $nodeId, Ability::Edit);
-            }
+            $stale = $nodeId === null ? null : $this->nodes->staleSequenceForReplay($request, $handle, $nodeId, Ability::Edit);
 
             return $request->protocol() === UploadProtocol::S3Multipart
-                ? $this->s3->create($request, $handle)
-                : $this->tus->create($request, $handle);
+                ? $this->s3->create($request, $handle, $stale)
+                : $this->tus->create($request, $handle, $stale);
         };
 
         return $this->nodes->withinDrive($request, $drive, $create);

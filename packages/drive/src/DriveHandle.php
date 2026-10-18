@@ -119,7 +119,7 @@ final readonly class DriveHandle implements Contract
 
         return $this->container->make(OperationRunner::class)->write(new OperationSpec('drive.drives.'.$verb, new ModuleId('drive')), $context->operation, static function () use ($context, $locator, $guard, $mapper, $change): DriveSnapshot {
             $root = $locator->find($context, $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
-            $guard->authorize($context, Ability::Manage, $root);
+            $guard->authorizeLifecycle($context, $root);
 
             return $mapper->map($change($context));
         }, $idempotency);

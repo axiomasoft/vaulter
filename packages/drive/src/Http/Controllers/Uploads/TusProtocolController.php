@@ -62,12 +62,12 @@ final class TusProtocolController
     ) {}
 
     /** Create a session (tus Creation): 201 with the tus Location of the session. */
-    public function create(CreateUploadSessionRequest $request, DriveHandle $drive): JsonResponse
+    public function create(CreateUploadSessionRequest $request, DriveHandle $drive, ?int $staleSequence = null): JsonResponse
     {
         $session = UploadsOf::handle($drive)->initiate(new InitiateUploadInput(
             protocol: $request->protocol(), targetParent: $request->parentId(), targetName: $request->name(),
             targetNode: $request->targetNodeId(), expectedSha256: $request->expectedSha256(),
-            totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig, $this->decodeUploadMetadata($request)),
+            totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig, $this->decodeUploadMetadata($request)), expectedSequence: $staleSequence,
         ));
 
         return (new UploadSessionResource($session))

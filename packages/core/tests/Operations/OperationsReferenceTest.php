@@ -57,7 +57,8 @@ it('prints a Markdown table, one row per operation', function (): void {
     $table = trim(Artisan::output());
 
     expect($table)->toStartWith("| Operation | Module | Aggregate | Concurrency | Idempotency | Routes |\n|---|---|---|---|---|---|")
-        ->and($table)->toContain('| `drive.trash.purge` | drive | `drive.node` | `if_match` | `receipt` | `nodes.purge`, `trash.empty` |')
+        ->and($table)->toContain('| `drive.trash.purge` | drive | `drive.node` | `if_match` | `receipt` | `nodes.purge` |')
+        ->and($table)->toContain('| `drive.uploads.append` | drive | `drive.upload` | `state_machine` | `protocol` | `uploads.tus.patch`, `uploads.parts.store` |')
         ->and($table)->toContain('| `drive.access.invalidate` | drive | `drive.node_access` | `natural` | `natural` | — |')
         ->and(substr_count($table, "\n| `"))->toBe(count(operationsJson()));
 });

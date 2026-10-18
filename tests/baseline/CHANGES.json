@@ -13434,7 +13434,7 @@
       ]
     },
     "core": {
-      "count": 550,
+      "count": 551,
       "names": [
         "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_vaulter_drive_package_nowhere__P2__5___D1__I1_blocks_from_P4_16_",
         "P\\Packages\\core\\tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_core_activity_Operations_depend_on_the_drive_package_only_through_the_moved_access_types",
@@ -13606,6 +13606,7 @@
         "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_decodes_the_snapshot_it_encoded",
         "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_encodes_the_scope_tuple_unambiguously_and_the_request_canonically",
         "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_falls_back_to_the_recorded_scope_when_the_node_is_gone__and_denies_once_that_scope_is_closed",
+        "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_fingerprints_a_keyed_HTTP_request_with_an_HMAC_under_the_application_key__the_destination_precondition_included",
         "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_gives_a_composed_write_the_one_receipt_of_its_root",
         "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_lets_a_transport_fingerprint_replace_the_operation_fingerprint",
         "P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_never_caches_an_auth__visibility__validation_or_precondition_refusal\"(Closure Object ()) #1\"",
@@ -14084,7 +14085,7 @@
       ]
     },
     "drive": {
-      "count": 225,
+      "count": 229,
       "names": [
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_keeps_the_event_out_of_the_activity_feed_and_away_from_webhooks__with_the_access_policy_as_its_subject",
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_records_a_drive_wide_change_when_the_drive_is_archived__unarchived_and_deleted",
@@ -14159,6 +14160,7 @@
         "P\\Tests\\Drive\\DriveLifecycleOperationTest::__pest_evaluable_it_starts_the_delete_once_and_leaves_the_drive_absent_to_a_retry",
         "P\\Tests\\Drive\\DrivePurgeTest::__pest_evaluable_it_purges_each_child_of_the_root_as_a_root_operation_of_the_system_actor__drive_purge___D48___one_purge_event_per_child",
         "P\\Tests\\Drive\\DrivePurgeTest::__pest_evaluable_it_purges_the_other_children_and_raises_the_first_refusal_when_one_child_fails__then_converges_on_the_repeat",
+        "P\\Tests\\Drive\\HasDrivesTest::__pest_evaluable_it_deletes_the_drives_of_a_deleted_owner_when_grants_are_switched_off",
         "P\\Tests\\Drive\\HasDrivesTest::__pest_evaluable_it_deletes_the_drives_of_a_deleted_owner_with_vaulter_drive_drives_delete__with__owner",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_detaches_one_edge_with_its_pin__and_all_edges_of_the_given_revisions_only",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_gives_a_new_revision__a_restored_revision_and_a_copy_each_a_pin_of_its_own",
@@ -14210,11 +14212,14 @@
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_refuses_a_malformed_key_before_anything_runs\"dataset \"token list\"\"",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_refuses_a_malformed_key_before_anything_runs\"dataset \"too long\"\"",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_refuses_a_malformed_key_before_anything_runs\"dataset \"unterminated\"\"",
+        "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_refuses_a_new_revision_upload_session_on_a_stale_If_Match_under_a_new_key__and_replays_the_first_one",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_cached_conflict_with_the_same_problem",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_copy__a_property_patch__a_trash_and_a_restore",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_folder_creation_for_the_same_key_and_body\"dataset \"plain token\"\"",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_folder_creation_for_the_same_key_and_body\"dataset \"structured field string\"\"",
+        "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_move_pinned_to_its_destination_after_the_destination_changed__and_refuses_a_new_key_on_the_stale_tag",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_move_whose_If_Match_went_stale_and_refuses_another_destination_under_the_key",
+        "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_purge_over_HTTP_although_the_node_is_gone__and_only_for_the_same_caller__key_and_request",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_rename_of_a_node_that_is_in_the_trash_by_now_instead_of_answering_404",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_rename_whose_If_Match_went_stale_because_the_first_request_committed",
         "P\\Tests\\Http\\IdempotencyKeyHttpTest::__pest_evaluable_it_replays_a_restored_and_a_deleted_revision_and_an_upload_session",

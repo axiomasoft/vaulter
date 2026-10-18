@@ -11,6 +11,7 @@ use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\NotAFileException;
+use Vaulter\Drive\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
@@ -31,6 +32,11 @@ final readonly class InitiateUploadAction
             $this->guard->authorize(context: $context, ability: Ability::Edit, node: $node);
             if ($node->kind !== NodeKind::File) {
                 throw new NotAFileException;
+            }
+            // A stale expectation is refused before any byte is sent (a keyed HTTP retry whose If-Match went stale
+            // arrives here with a sequence no live file holds); a matching one is kept for the commit.
+            if ($input->expectedSequence !== null && $node->sequence !== $input->expectedSequence) {
+                throw StaleNodeException::forNode($node->id);
             }
         } else {
             $this->guard->authorizeCreate(context: $context, parent: $parent ?? throw NodeNotFoundException::forId('root'));

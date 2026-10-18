@@ -47,12 +47,12 @@ final class S3MultipartProtocolController
         private readonly DriveConfig $driveConfig,
     ) {}
 
-    public function create(CreateUploadSessionRequest $request, DriveHandle $drive): JsonResponse
+    public function create(CreateUploadSessionRequest $request, DriveHandle $drive, ?int $staleSequence = null): JsonResponse
     {
         $session = UploadsOf::handle($drive)->initiate(new InitiateUploadInput(
             protocol: UploadProtocol::S3Multipart, targetParent: $request->parentId(), targetName: $request->name(),
             targetNode: $request->targetNodeId(), expectedSha256: $request->expectedSha256(),
-            totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig),
+            totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig), expectedSequence: $staleSequence,
         ));
 
         return (new UploadSessionResource($session))->response()->setStatusCode(201);

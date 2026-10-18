@@ -56,6 +56,7 @@ final readonly class MoveNodeAction
         private NameConflictResolver $names,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private NodeSequence $sequence,
     ) {}
 
     public function execute(DriveContext $context, MoveNodeInput $data): Node
@@ -71,9 +72,9 @@ final readonly class MoveNodeAction
             $current = $this->tree->sync($node, $this->tree->locked($locked, $node->id));
             $into = $this->tree->locked($locked, $intoId);
 
-            app(NodeSequence::class)->assertExpected(locked: $current, expected: $data->expectedSequence);
+            $this->sequence->assertExpected(locked: $current, expected: $data->expectedSequence);
             // CC3: the destination's own precondition, checked under the same tree lock.
-            app(NodeSequence::class)->assertExpected(locked: $into, expected: $data->expectedDestinationSequence);
+            $this->sequence->assertExpected(locked: $into, expected: $data->expectedDestinationSequence);
             if ($current->trashed_at !== null) {
                 throw InvalidDestinationException::trashed($current);
             }
@@ -106,7 +107,7 @@ final readonly class MoveNodeAction
 
             $moved = $this->store->move(node: $current, parentId: $toParentId);
 
-            app(NodeSequence::class)->bump($moved);
+            $this->sequence->bump($moved);
 
             $this->recorder->record(new NodeMoved(
                 node: $moved,

@@ -136,11 +136,13 @@ it('applies the same guard on HTTP grants and conceals hidden nodes', function (
         ->assertJsonPath('data.role', 'commenter')->assertJsonPath('data.role_version', 1)
         ->assertJsonPath('data.subject.id', '2');
     $this->postJson($url, ['subject' => ['type' => AccessTestHelpers::user()->getMorphClass(), 'id' => 3], 'role' => 'editor'])->assertUnprocessable();
-    $this->getJson($url)->assertOk()->assertJsonCount(2, 'data');
-    $this->deleteJson($url.'/'.$created->json('data.id'))->assertNoContent();
-    $this->getJson($url)->assertOk()->assertJsonCount(1, 'data');
+    $access = $this->getJson($url)->assertOk()->assertJsonCount(2, 'data')->json('etag');
+    // A revoke is conditional on the node's access tag from the listing (428 without it).
+    $this->deleteJson($url.'/'.$created->json('data.id'))->assertStatus(428);
+    $this->deleteJson($url.'/'.$created->json('data.id'), [], ['If-Match' => $access])->assertNoContent();
+    $access = $this->getJson($url)->assertOk()->assertJsonCount(1, 'data')->json('etag');
     // A grant id of another node is as unknown as a missing one.
-    $this->deleteJson($url.'/'.$created->json('data.id'))->assertNotFound();
+    $this->deleteJson($url.'/'.$created->json('data.id'), [], ['If-Match' => $access])->assertNotFound();
 });
 
 it('preserves request UUID and ULID correlation for every grant and share mutation', function (): void {

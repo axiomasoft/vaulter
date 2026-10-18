@@ -55,8 +55,11 @@ for a node that is gone (purged, in the trash) the replayed ETag differs from th
 
 **6. The request fingerprint.** An operation fingerprints its input: resource ids, fields, semantic options and
 preconditions, never a correlation id or a clock. The HTTP layer fingerprints the request itself (method,
-route, parameters, query, body, `If-Match`), so a retry is recognized even after its `If-Match` went stale
-because the first request committed.
+route, parameters, query, body, `If-Match`, `X-Vaulter-Destination-If-Match`), so a retry is recognized even
+after its `If-Match` went stale because the first request committed. That fingerprint is an HMAC-SHA-256 under a
+key derived from the application key: a body may carry a secret (a share password), and the stored request hash
+must not let a reader of the receipts table test guesses of it without that key. Rotating the application key
+turns a retry within the TTL into `idempotency_key_reused`.
 
 **7. Retention.** A receipt lives `vaulter.idempotency.ttl_seconds` (24 hours); an expired one counts as absent.
 `vaulter:idempotency:prune` (scheduled daily) deletes expired receipts.

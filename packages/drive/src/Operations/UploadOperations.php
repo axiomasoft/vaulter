@@ -68,7 +68,7 @@ final readonly class UploadOperations
         // Idempotent by key (D25): the receipt is the opened session. A replay needs Edit on the target file (a new
         // revision) or Create in the parent folder (a new file) where they are now.
         $idempotency = new IdempotentWrite(
-            codec: new UploadSessionCodec,
+            codec: new UploadSessionCodec($this->config),
             authorizer: $node === null
                 ? NodeReplayAuthorizer::forCreate($this->context, $this->locator, $this->guard, $parent)
                 : NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $node),
