@@ -163,23 +163,29 @@ Vaulter\Drive\Configuration\DownloadsConfig
   inlineMimeTypes(): array
 
 Vaulter\Drive\Configuration\DriveConfig
+  access(): \Vaulter\Drive\Configuration\AccessConfig
   allowedMimeTypes(): array
   blockedExtensions(): array
+  changes(): \Vaulter\Drive\Configuration\ChangesConfig
   chunkSize(): int
   defaultQuota(): ?int
+  downloads(): \Vaulter\Drive\Configuration\DownloadsConfig
+  featureEnabled(string $feature, ?string $profile = null): bool
   leaseSeconds(): int
+  listing(): \Vaulter\Drive\Configuration\ListingConfig
   maxActiveSessionsPerActor(): int
   maxAttempts(): int
   maxChunkSize(): int
   maxFileSize(): int
   metadataAllowedKeys(): array
   metadataMaxValueLength(): int
-  model(string $key): string
   resumableEnabled(): bool
+  scan(): \Vaulter\Drive\Configuration\ScanConfig
   scanQueue(): string
   scanWork(string $key): int
   scannerTimeoutSeconds(): int
   sessionTtlHours(): int
+  sharing(): \Vaulter\Drive\Configuration\SharingConfig
   trashRetentionDays(): int
   validateScanWork(bool $requireBroker = false): void
 
@@ -197,6 +203,27 @@ Vaulter\Drive\Configuration\SharingConfig
   prefixLength(): int
   tokenGenerator(): string
   urlBase(): string
+
+Vaulter\Drive\Events\Access\EffectivePermissionsChanged
+  activityContext(): array
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Drive\Enums\Events\DriveEventType
+  readonly ?string $driveId
+  readonly ?string $nodeId
+  readonly ?string $tenantId
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Drive\Enums\Access\InvalidationScope $reach
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+  readonly string $profile
+  readonly string $reason
 
 Vaulter\Drive\Events\Access\NodeGrantCreated
   activityContext(): array
@@ -246,6 +273,22 @@ Vaulter\Drive\Events\Access\NodeInheritanceChanged
   readonly \Vaulter\Drive\Models\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly bool $inherits
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Drive\Events\DriveEvent
+  __construct(\Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): ?\Vaulter\Drive\ValueObjects\Events\ActivityTarget
+  data(): array
+  isExternal(): bool
+  journal(): ?\Vaulter\Drive\ValueObjects\Events\JournalEffect
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Events\EventTypeContract
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
