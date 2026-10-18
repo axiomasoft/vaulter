@@ -40,5 +40,5 @@ Route::prefix($routes->versionedPrefix())
         Route::post('webhook-endpoints/{endpoint}/rotate-secret', RotateWebhookSecretController::class)->name('webhook-endpoints.rotate-secret')->middleware(ReadIdempotencyKey::ALIAS);
         Route::delete('webhook-endpoints/{endpoint}', DeleteWebhookEndpointController::class)->name('webhook-endpoints.destroy')->middleware(ReadIdempotencyKey::ALIAS);
         Route::get('webhook-endpoints/{endpoint}/deliveries', ListWebhookDeliveriesController::class)->name('webhook-deliveries.index');
-        Route::post('webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver', RedeliverWebhookController::class)->name('webhook-deliveries.redeliver');
+        Route::post('webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver', RedeliverWebhookController::class)->name('webhook-deliveries.redeliver')->middleware(ReadIdempotencyKey::ALIAS);
     });

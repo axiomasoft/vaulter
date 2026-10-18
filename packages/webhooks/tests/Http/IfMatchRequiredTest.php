@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -104,4 +105,30 @@ it('tags the endpoint with its id and version, and each change raises the versio
     // The first tag is stale now, whichever route it is sent to.
     $this->deleteJson(V1::url('webhook-endpoints/'.$id), [], ['If-Match' => $shown->headers->get('ETag')])->assertStatus(412);
     expect(WebhookEndpoint::query()->whereKey($id)->exists())->toBeTrue();
+});
+
+it('raises the version when the worker switches a failing endpoint off, so a tag read while it was active cannot switch it back on', function (): void {
+    config()->set('vaulter-webhooks.disable_after_days', 5);
+    config()->set('vaulter-webhooks.retry_jitter', 0);
+    config()->set('vaulter-webhooks.retry_schedule', array_fill(0, 40, 60));
+    Http::fake(['https://hooks.test/*' => Http::response('', 500)]);
+    $endpoint = app(VaulterDatabase::class)->write(static fn (): WebhookEndpoint => WebhookTestHelpers::endpoint());
+    $id = $endpoint->getKey();
+    $delivery = app(VaulterDatabase::class)->write(static fn () => WebhookTestHelpers::delivery($endpoint));
+
+    $shown = $this->getJson(V1::url('webhook-endpoints/'.$id))->assertOk()->assertHeader('ETag', webhookTag($id, 0));
+    WebhookTestHelpers::deliver($delivery);
+    expect($endpoint->refresh()->version)->toBe(0);
+    $this->travel(5)->days();
+    $this->travel(1)->seconds();
+    WebhookTestHelpers::deliver($delivery);
+
+    expect($endpoint->refresh()->is_active)->toBeFalse()
+        ->and($endpoint->disabled_reason)->toBe('failing')
+        ->and($endpoint->version)->toBe(1);
+    $this->getJson(V1::url('webhook-endpoints/'.$id))->assertOk()
+        ->assertHeader('ETag', webhookTag($id, 1))->assertJsonPath('data.status', 'disabled');
+    $this->patchJson(V1::url('webhook-endpoints/'.$id), ['is_active' => true], ['If-Match' => $shown->headers->get('ETag')])
+        ->assertStatus(412)->assertJsonPath('code', 'stale_write');
+    expect($endpoint->refresh()->is_active)->toBeFalse()->and($endpoint->disabled_reason)->toBe('failing');
 });

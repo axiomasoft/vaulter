@@ -5575,6 +5575,13 @@
         },
         {
             "change": "redefined",
+            "decision": "D25",
+            "id": "format:receipt-webhook-endpoint",
+            "kind": "protocol",
+            "reason": "RC-P6-2: webhooks.endpoints.redeliver becomes a receipt operation (a keyed retry after the delivery finished again sends nothing); the receipt adds {type: redelivered, redelivered: {id, endpoint_id}}"
+        },
+        {
+            "change": "redefined",
             "decision": "D47",
             "id": "command:vaulter:errors:reference",
             "kind": "cli",

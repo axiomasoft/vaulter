@@ -106,7 +106,7 @@ npm run api:check      # CI: падает, если файл устарел ил
 | `files` | `upload`, `download`, `downloadUrl`, `revisions`, `addRevision`, `downloadRevision`, `restoreRevision`, `setRevisionRetention`, `deleteRevision` |
 | `uploads` | `start` (возобновляемая загрузка tus или S3 multipart), `show` |
 | `documents` | `create`, `content`, `update`, `export`, `revisions`, `revision`, `snapshot`, `setRevisionRetention`, `restoreRevision`, `collaborationSession` |
-| `grants`, `access` | `list`, `create`, `revoke`; `restrictInheritance`, `restoreInheritance` |
+| `grants`, `access` | `list`, `listTagged`, `create`, `revoke`; `restrictInheritance`, `restoreInheritance` |
 | `shares`, `publicShares` | `list`, `create`, `update`, `rotate`, `revoke`; `get`, `nodes`, `downloadUrl` |
 | `comments`, `activity`, `changes` | обсуждения; ленты активности; `start` и `list` ленты изменений |
 
@@ -144,9 +144,25 @@ await client.documents.update(node.id, content, { etag: loaded.etag! })
 клиент отдаёт его как `content.etag` (`null`, если заголовок не виден браузеру: для кросс-доменного API добавьте
 `ETag` в `Access-Control-Expose-Headers`).
 
+То же правило действует для остальных версионируемых ресурсов: диск (`archive`, `unarchive`, `delete`), ссылка доступа
+(`update`, `rotate`, `revoke`) и комментарий (`resolve`, `remove`) отправляют свой `etag`; отзыв гранта и изменение
+наследования — **тег доступа** узла, `etag` из `client.grants.listTagged(nodeId)`:
+
+<!-- snippet: host -->
+
+```ts
+const { etag: accessTag, data: grants } = await client.grants.listTagged(node.id)
+await client.grants.revoke(node.id, grants[0].id, { etag: accessTag })
+await client.shares.rotate(node.id, share.id, { etag: share.etag })
+await client.comments.resolve(node.id, comment.id, { etag: comment.etag })
+```
+
+`useComments`, `useShares` и `useGrants` отправляют тег элемента, который держат (`useGrants` хранит `accessTag` и
+перечитывает список перед отзывом, если собственный грант или отзыв сделал тег устаревшим).
+
 | Ответ | `error.code` | Что значит |
 |-------|--------------|------------|
-| `412` | `node_sequence_mismatch`, `document_state_mismatch` | ресурс изменили после того, как вы его прочитали — прочитайте заново |
+| `412` | `node_sequence_mismatch`, `document_state_mismatch`, `stale_write` | ресурс изменили после того, как вы его прочитали — прочитайте заново |
 | `428` | `precondition_required` | вызов ушёл без `If-Match`: ошибка интеграции, а не состояние, из которого восстанавливаются |
 
 ### Ошибки

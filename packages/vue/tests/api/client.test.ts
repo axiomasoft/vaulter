@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createVaulterClient } from '../../src/api/client'
 import { VaulterApiError } from '../../src/api/errors'
-import { call, emptyResponse, fetchSequence, jsonResponse } from '../support/http'
+import { call, emptyResponse, fetchSequence, jsonResponse, problemResponse } from '../support/http'
 
 const page = (data: unknown[] = []) => ({ data, meta: { next_cursor: null, per_page: 50 } })
 
@@ -61,7 +61,7 @@ describe('createVaulterClient — requests', () => {
   it('resolves a 204 to undefined', async () => {
     const client = createVaulterClient({ fetch: fetchSequence(() => emptyResponse()) })
 
-    await expect(client.comments.remove('1', '7')).resolves.toBeUndefined()
+    await expect(client.comments.remove('1', '7', { etag: '"comment.7.0"' })).resolves.toBeUndefined()
   })
 
   it('maps trash.empty to the purged count', async () => {
@@ -231,6 +231,75 @@ describe('createVaulterClient — preconditions (If-Match)', () => {
     expect(sent.headers['If-Match']).toBe('"5.1.a"')
     expect(sent.body).toBeInstanceOf(FormData)
     expect(sent.headers['Content-Type']).toBeUndefined()
+  })
+})
+
+describe('createVaulterClient — preconditions on drives, grants, inheritance, shares and comments', () => {
+  const node = { data: { id: '5', etag: '"5.2.aaaa"' } }
+
+  it('sends the resource tag verbatim in If-Match for every versioned write', async () => {
+    const fetchMock = fetchSequence(
+      () => jsonResponse({ data: { id: '7', etag: '"drive.7.1"' } }),
+      () => jsonResponse({ data: { id: '7', etag: '"drive.7.2"' } }),
+      () => jsonResponse({ data: { id: '7', etag: '"drive.7.3"' } }),
+      () => emptyResponse(),
+      () => jsonResponse(node),
+      () => jsonResponse(node),
+      () => jsonResponse({ data: { id: 's1', etag: '"share.s1.1"' } }),
+      () => jsonResponse({ data: { id: 's1', token: 'raw', url: 'u', etag: '"share.s1.2"' } }),
+      () => emptyResponse(),
+      () => jsonResponse({ data: { id: 'c1', etag: '"comment.c1.1"' } }),
+      () => emptyResponse(),
+    )
+    const client = createVaulterClient({ fetch: fetchMock })
+
+    await client.drives.archive('7', { etag: '"drive.7.0"' })
+    await client.drives.unarchive('7', { etag: '"drive.7.1"' })
+    await client.drives.delete('7', { etag: '"drive.7.2"' })
+    await client.grants.revoke('5', 'g1', { etag: '"node-access.5.3"' })
+    await client.access.restrictInheritance('5', { etag: '"node-access.5.4"', mode: 'copy_current' })
+    await client.access.restoreInheritance('5', { etag: '"node-access.5.5"' })
+    await client.shares.update('5', 's1', { maxUses: 2 }, { etag: '"share.s1.0"' })
+    await client.shares.rotate('5', 's1', { etag: '"share.s1.1"' })
+    await client.shares.revoke('5', 's1', { etag: '"share.s1.2"' })
+    await client.comments.resolve('5', 'c1', { etag: '"comment.c1.0"' })
+    await client.comments.remove('5', 'c1', { etag: '"comment.c1.1"' })
+
+    const sent = Array.from({ length: 11 }, (_, i) => call(fetchMock, i))
+    expect(sent.map((r) => `${r.method} ${r.url} ${r.headers['If-Match']}`)).toEqual([
+      'POST /api/vaulter/v1/drives/7/archive "drive.7.0"',
+      'POST /api/vaulter/v1/drives/7/unarchive "drive.7.1"',
+      'DELETE /api/vaulter/v1/drives/7 "drive.7.2"',
+      'DELETE /api/vaulter/v1/nodes/5/grants/g1 "node-access.5.3"',
+      'POST /api/vaulter/v1/nodes/5/inheritance/restrict "node-access.5.4"',
+      'POST /api/vaulter/v1/nodes/5/inheritance/restore "node-access.5.5"',
+      'PATCH /api/vaulter/v1/nodes/5/shares/s1 "share.s1.0"',
+      'POST /api/vaulter/v1/nodes/5/shares/s1/rotate "share.s1.1"',
+      'DELETE /api/vaulter/v1/nodes/5/shares/s1 "share.s1.2"',
+      'POST /api/vaulter/v1/nodes/5/comments/c1/resolve "comment.c1.0"',
+      'DELETE /api/vaulter/v1/nodes/5/comments/c1 "comment.c1.1"',
+    ])
+    expect(JSON.parse(sent[4].body as string)).toEqual({ mode: 'copy_current' })
+    expect(JSON.parse(sent[6].body as string)).toEqual({ max_uses: 2 })
+  })
+
+  it('lists the grants with the access tag of the node', async () => {
+    const fetchMock = fetchSequence(() => jsonResponse({ etag: '"node-access.5.3"', data: [{ id: 'g1' }] }))
+    const client = createVaulterClient({ fetch: fetchMock })
+
+    expect(await client.grants.listTagged('5')).toEqual({ etag: '"node-access.5.3"', data: [{ id: 'g1' }] })
+    expect(call(fetchMock).headers['If-Match']).toBeUndefined()
+  })
+
+  it('rejects a stale tag with a 412 stale_write VaulterApiError', async () => {
+    const client = createVaulterClient({
+      fetch: fetchSequence(() => problemResponse({ code: 'stale_write', status: 412, title: 'Stale write', retryable: 'after_refetch' }, 412)),
+    })
+
+    const error = await client.shares.revoke('5', 's1', { etag: '"share.s1.0"' }).catch((caught: unknown) => caught)
+
+    expect(error).toBeInstanceOf(VaulterApiError)
+    expect(error).toMatchObject({ status: 412, code: 'stale_write', isConflict: true, retryable: 'after_refetch' })
   })
 })
 

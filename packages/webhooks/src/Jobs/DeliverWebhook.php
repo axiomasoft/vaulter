@@ -21,6 +21,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
@@ -360,6 +361,9 @@ final class DeliverWebhook implements ShouldQueue
         }
 
         $endpoint->forceFill(['is_active' => false, 'disabled_at' => now(), 'disabled_reason' => 'failing'])->save();
+        // A system switch-off changes the endpoint as a manual one does (D47, CC1): its version rises under the row lock
+        // held here, so an If-Match read while it was active is stale and cannot quietly switch it back on.
+        (new AggregateVersion($this->database))->bump($endpoint, 'version', WebhookEndpoint::AGGREGATE);
 
         // Same outcome as WebhookDeliveryStoreRepository::killOpenForEndpoint(): nothing may be
         // sent afterwards, and dropping the claims fences the jobs still in flight. Written

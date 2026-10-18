@@ -896,7 +896,10 @@ reads included, before the id is looked up. See [Webhooks](/guides/webhooks).
   last HTTP status, or `null`), `created_at`.
 - **Redeliver** a `delivered` or `dead` delivery of an active endpoint; otherwise
   `409 webhook_delivery_not_redeliverable`. Unknown ids answer
-  `404 webhook_endpoint_not_found` / `404 webhook_delivery_not_found`.
+  `404 webhook_endpoint_not_found` / `404 webhook_delivery_not_found`. Send an
+  `Idempotency-Key`: a retry under the same key answers from the receipt
+  (`Idempotent-Replayed`, the delivery as it is now) and sends nothing again; without a key,
+  a repeat after the delivery finished again is a new redelivery.
 
 ---
 

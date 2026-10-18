@@ -26,6 +26,9 @@ tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > do
 tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > reports a missing ETag header as null instead of inventing one
 tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > sends the opaque etag verbatim in If-Match for every node mutation
 tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > takes the document validator from the ETag response header
+tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > lists the grants with the access tag of the node
+tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > rejects a stale tag with a 412 stale_write VaulterApiError
+tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > sends the resource tag verbatim in If-Match for every versioned write
 tests/api/client.test.ts > createVaulterClient — requests > builds download URLs without fetching
 tests/api/client.test.ts > createVaulterClient — requests > creates a folder with a snake_case body
 tests/api/client.test.ts > createVaulterClient — requests > creates a grant with the subject object and a share with snake_case fields
@@ -69,6 +72,9 @@ tests/components.test.ts > VaulterCommentsPanel > mounts and loads the node's co
 tests/composables.test.ts > useComments > appends a created comment and drops a removed one
 tests/composables.test.ts > useComments > appends the next page
 tests/composables.test.ts > useComments > lists a node's comments into reactive state and keeps the cursor
+tests/composables.test.ts > useComments > passes a 412 stale_write through as a VaulterApiError and keeps the thread
+tests/composables.test.ts > useComments > refuses to write a comment it holds no etag for instead of sending it blind
+tests/composables.test.ts > useComments > resolves with the held comment etag and swaps in the raised version
 tests/contract/fixtures.test.ts > openapi examples are assignable to the generated client types > Drive, Grant, Share, FileRevision and the change feed keep their enums
 tests/contract/fixtures.test.ts > openapi examples are assignable to the generated client types > Node: enum values and the shape of a presentation-less node
 tests/contract/fixtures.test.ts > the client returns what the server sent > documents.content keeps the body keys and adds only the etag
@@ -165,6 +171,7 @@ tests/drive-composables.test.ts > useDocument — overlapping saves > an explici
 tests/drive-composables.test.ts > useDocument — overlapping saves > queues a second save behind the first, so it carries the tag the first answered
 tests/drive-composables.test.ts > useDrive > loads the drive
 tests/drive-composables.test.ts > useGrants > lists, prepends a new grant and revokes by id
+tests/drive-composables.test.ts > useGrants > revokes with the held access tag without reloading, and passes a 412 through
 tests/drive-composables.test.ts > useNodes > a missing precondition (428) is an integration error: rethrown, no re-read, no conflict
 tests/drive-composables.test.ts > useNodes > a stale etag (412) > clears the conflict on the next mutation
 tests/drive-composables.test.ts > useNodes > a stale etag (412) > drops the row when the re-read finds the node gone

@@ -23,7 +23,9 @@ use Vaulter\Support\Identity;
  *
  * Add needs Comment. Resolve needs Comment and either authorship or Edit; delete needs View and either authorship or
  * Manage. The receipt records the basis the right was proven on as its scope: a `node` is the Edit or Manage proof, a
- * `node-author` the authorship — which a later change of roles does not take away from the author.
+ * `node-author` the authorship — which a later change of roles does not take away from the author. A cacheable refusal
+ * (`$result` null, e.g. a 412 stale_write) keeps the basis the write proved before it was refused
+ * ({@see self::provedByAuthorship()}), so its replay asks the author for the same right the write did.
  */
 #[Internal]
 final readonly class CommentReplayAuthorizer implements ReplayAuthorizer
@@ -36,7 +38,15 @@ final readonly class CommentReplayAuthorizer implements ReplayAuthorizer
 
     private const string DELETE = 'delete';
 
-    private function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private ProfilePolicy $profiles, private string $verb, private string $node) {}
+    private function __construct(
+        private DriveContext $context,
+        private NodeLocator $locator,
+        private OperationGuard $guard,
+        private ProfilePolicy $profiles,
+        private string $verb,
+        private string $node,
+        private CommentAuthorshipProof $proof = new CommentAuthorshipProof,
+    ) {}
 
     public static function forAdd(DriveContext $context, NodeLocator $locator, OperationGuard $guard, ProfilePolicy $profiles, string $node): self
     {
@@ -65,12 +75,20 @@ final readonly class CommentReplayAuthorizer implements ReplayAuthorizer
             && Identity::stringify($actor->id) === Identity::stringify($authorId);
     }
 
+    /** The write proved its right by authorship (resolve, delete): a refusal stored after it keeps that basis. */
+    public function provedByAuthorship(): void
+    {
+        if ($this->verb !== self::ADD) {
+            $this->proof->proven = true;
+        }
+    }
+
     public function scope(mixed $result): ResourceRef
     {
         return match (true) {
             $result instanceof CommentSnapshot => new ResourceRef($this->verb === self::ADD || !self::isAuthor($this->context, $result->authorType, $result->authorId) ? 'node' : self::AUTHORED, $result->nodeId),
             $result instanceof CommentDeleteReceipt => new ResourceRef($result->byAuthor ? self::AUTHORED : 'node', $result->nodeId),
-            default => new ResourceRef('node', $this->node),
+            default => new ResourceRef($this->proof->proven ? self::AUTHORED : 'node', $this->node),
         };
     }
 

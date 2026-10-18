@@ -65,13 +65,13 @@ async function add(): Promise<void> {
 }
 
 async function replaceToken(share: Share): Promise<void> {
-  const rotated = await rotate(share.id)
+  const rotated = await rotate(share.id, { etag: share.etag })
   copied.value = false
   emit('rotated', rotated)
 }
 
 async function remove(share: Share): Promise<void> {
-  await revoke(share.id)
+  await revoke(share.id, { etag: share.etag })
   emit('revoked', share.id)
 }
 

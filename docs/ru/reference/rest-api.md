@@ -885,7 +885,10 @@ Bearer-ссылки на узел (`vaulter-drive.features.share_links`). Ссы
   или `null`), `created_at`.
 - **Повторная доставка** — для `delivered` или `dead` при активном эндпоинте; иначе
   `409 webhook_delivery_not_redeliverable`. Неизвестные id дают
-  `404 webhook_endpoint_not_found` / `404 webhook_delivery_not_found`.
+  `404 webhook_endpoint_not_found` / `404 webhook_delivery_not_found`. Передавайте
+  `Idempotency-Key`: повтор с тем же ключом отвечает из квитанции (`Idempotent-Replayed`,
+  доставка в текущем состоянии) и ничего не отправляет повторно; без ключа повтор после
+  завершения доставки — это новая переотправка.
 
 ---
 

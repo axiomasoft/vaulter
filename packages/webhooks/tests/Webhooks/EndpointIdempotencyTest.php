@@ -6,6 +6,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -26,7 +27,7 @@ use Vaulter\Webhooks\Testing\WebhookTestHelpers;
  * P6.6 (D25, D47, ID2, ID5, CC1): the endpoint writes are receipt operations. A retry under the same Idempotency-Key
  * returns what the first request answered, even once its If-Match went stale because that request committed, and changes
  * nothing; the signing secret of a registration or a rotation sits in the receipt only as ciphertext; a replay is
- * authorized again by the `manage` ability. A redelivery is natural: the delivery is queued at most once.
+ * authorized again by the `manage` ability. A redelivery is a receipt operation too: a keyed retry sends nothing again.
  */
 beforeEach(function (): void {
     config()->set('vaulter-webhooks.manage_ability', null);
@@ -229,4 +230,42 @@ it('queues a redelivery at most once: a repeat finds the delivery pending and is
     $this->postJson($url)->assertStatus(409)->assertJsonPath('code', 'webhook_delivery_not_redeliverable');
 
     Bus::assertDispatchedTimes(DeliverWebhook::class, 1);
+});
+
+it('answers a keyed retry of a redelivery from its receipt and sends nothing, even once the delivery was delivered again', function (): void {
+    $sent = 0;
+    Http::fake(function () use (&$sent) {
+        $sent++;
+
+        return Http::response('', 200);
+    });
+    $endpoint = endpointFixture();
+    $dead = app(VaulterDatabase::class)->write(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint, ['status' => 'dead', 'attempts' => 10, 'next_retry_at' => null]));
+    $url = V1::url('webhook-endpoints/'.$endpoint->getKey().'/deliveries/'.$dead->getKey().'/redeliver');
+
+    $first = $this->postJson($url, [], ['Idempotency-Key' => 'redeliver-1'])->assertStatus(202)->assertJsonPath('data.status', 'pending');
+    WebhookTestHelpers::deliver($dead);
+    expect($dead->refresh()->status)->toBe('delivered')->and($sent)->toBe(1);
+
+    // The answer of the first request was lost: the retry under the same key replays it and queues nothing.
+    $this->postJson($url, [], ['Idempotency-Key' => 'redeliver-1'])->assertStatus(202)
+        ->assertHeader('Idempotent-Replayed', 'true')
+        ->assertJsonPath('data.id', $first->json('data.id'))
+        ->assertJsonPath('data.status', 'delivered');
+    expect($dead->refresh()->status)->toBe('delivered')->and($dead->attempts)->toBe(1)->and($sent)->toBe(1);
+
+    // A new key is a new redelivery.
+    $this->postJson($url, [], ['Idempotency-Key' => 'redeliver-2'])->assertStatus(202)->assertJsonPath('data.status', 'pending');
+});
+
+it('replays a refused keyed redelivery as the same 409', function (): void {
+    Bus::fake([DeliverWebhook::class]);
+    $endpoint = endpointFixture();
+    $pending = app(VaulterDatabase::class)->write(static fn (): WebhookDelivery => WebhookTestHelpers::delivery($endpoint, ['status' => 'pending']));
+    $url = V1::url('webhook-endpoints/'.$endpoint->getKey().'/deliveries/'.$pending->getKey().'/redeliver');
+
+    $this->postJson($url, [], ['Idempotency-Key' => 'redeliver-409'])->assertStatus(409)->assertJsonPath('code', 'webhook_delivery_not_redeliverable');
+    $this->postJson($url, [], ['Idempotency-Key' => 'redeliver-409'])->assertStatus(409)->assertHeader('Idempotent-Replayed', 'true');
+
+    Bus::assertNotDispatched(DeliverWebhook::class);
 });

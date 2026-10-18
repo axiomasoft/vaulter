@@ -106,7 +106,7 @@ npm run api:check      # CI: fails when the committed file is stale or not track
 | `files` | `upload`, `download`, `downloadUrl`, `revisions`, `addRevision`, `downloadRevision`, `restoreRevision`, `setRevisionRetention`, `deleteRevision` |
 | `uploads` | `start` (resumable tus or S3 multipart), `show` |
 | `documents` | `create`, `content`, `update`, `export`, `revisions`, `revision`, `snapshot`, `setRevisionRetention`, `restoreRevision`, `collaborationSession` |
-| `grants`, `access` | `list`, `create`, `revoke`; `restrictInheritance`, `restoreInheritance` |
+| `grants`, `access` | `list`, `listTagged`, `create`, `revoke`; `restrictInheritance`, `restoreInheritance` |
 | `shares`, `publicShares` | `list`, `create`, `update`, `rotate`, `revoke`; `get`, `nodes`, `downloadUrl` |
 | `comments`, `activity`, `changes` | threads; the activity feeds; `start` and `list` of the change feed |
 
@@ -143,9 +143,25 @@ A method without its `etag` does not type-check. The content of a document carri
 response header, which the client returns as `content.etag` (`null` when the header is not exposed to the browser:
 add `ETag` to `Access-Control-Expose-Headers` on a cross-origin API).
 
+The same rule covers the other versioned resources: a drive (`archive`, `unarchive`, `delete`), a share link
+(`update`, `rotate`, `revoke`) and a comment (`resolve`, `remove`) send their own `etag`; a grant revoke and an
+inheritance change send the node's **access tag**, the `etag` of `client.grants.listTagged(nodeId)`:
+
+<!-- snippet: host -->
+
+```ts
+const { etag: accessTag, data: grants } = await client.grants.listTagged(node.id)
+await client.grants.revoke(node.id, grants[0].id, { etag: accessTag })
+await client.shares.rotate(node.id, share.id, { etag: share.etag })
+await client.comments.resolve(node.id, comment.id, { etag: comment.etag })
+```
+
+`useComments`, `useShares` and `useGrants` send the tag of the item they hold (`useGrants` keeps `accessTag` and
+reloads before a revoke once its own grant or revoke made it stale).
+
 | Answer | `error.code` | What it means |
 |--------|--------------|---------------|
-| `412` | `node_sequence_mismatch`, `document_state_mismatch` | somebody changed the resource since you read it — read it again |
+| `412` | `node_sequence_mismatch`, `document_state_mismatch`, `stale_write` | somebody changed the resource since you read it — read it again |
 | `428` | `precondition_required` | the call went out without `If-Match`: an integration bug, not a state to recover from |
 
 ### Errors

@@ -3211,7 +3211,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.webhook-deliveries.redeliver",
             "openapi": {

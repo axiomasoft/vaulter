@@ -21,7 +21,8 @@ async function submit(body: string): Promise<void> {
 }
 
 async function markResolved(comment: Comment): Promise<void> {
-  const updated = await resolve(comment.id)
+  // Conditional on the version the row shows: a thread changed since rejects with 412 stale_write.
+  const updated = await resolve(comment.id, { etag: comment.etag })
   emit('resolved', updated)
 }
 

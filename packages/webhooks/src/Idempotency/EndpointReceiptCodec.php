@@ -19,7 +19,8 @@ use Vaulter\Webhooks\Data\WebhookEndpointSnapshot;
  * commit field by field (its version is historical); `minted` — the {@see MintedEndpointSecret} of register and
  * rotate_secret, whose raw signing secret is stored only as the application's ciphertext (`encryptString`, APP_KEY:
  * ID5) and decrypted for a replay, which the runner gives only to the same scope digest — the same actor — after its
- * current authorization; `deleted` — the {@see EndpointDeleteReceipt} of delete. Version 1.
+ * current authorization; `deleted` — the {@see EndpointDeleteReceipt} of delete; `redelivered` — the
+ * {@see RedeliveryReceipt} of redeliver (ids only). Version 1.
  */
 #[Internal]
 final readonly class EndpointReceiptCodec implements ReceiptCodec
@@ -44,18 +45,20 @@ final readonly class EndpointReceiptCodec implements ReceiptCodec
     {
         return match (true) {
             $result instanceof EndpointDeleteReceipt => ['type' => 'deleted', 'deleted' => $result->toArray()],
+            $result instanceof RedeliveryReceipt => ['type' => 'redelivered', 'redelivered' => $result->toArray()],
             $result instanceof MintedEndpointSecret => ['type' => 'minted', 'endpoint' => self::endpoint($result->endpoint), 'secret' => $this->encrypter->encryptString($result->secret)],
             $result instanceof WebhookEndpointSnapshot => ['type' => 'endpoint', 'endpoint' => self::endpoint($result)],
-            default => throw new InvalidArgumentException(sprintf('[Vaulter] %s encodes an endpoint, a minted secret or an EndpointDeleteReceipt, %s given.', self::KIND, get_debug_type($result))),
+            default => throw new InvalidArgumentException(sprintf('[Vaulter] %s encodes an endpoint, a minted secret, an EndpointDeleteReceipt or a RedeliveryReceipt, %s given.', self::KIND, get_debug_type($result))),
         };
     }
 
-    public function decode(array $body, int $version): WebhookEndpointSnapshot|MintedEndpointSecret|EndpointDeleteReceipt
+    public function decode(array $body, int $version): WebhookEndpointSnapshot|MintedEndpointSecret|EndpointDeleteReceipt|RedeliveryReceipt
     {
         ReceiptFields::assertVersion($body, $version, self::KIND);
 
         return match ($body['type'] ?? null) {
             'deleted' => EndpointDeleteReceipt::fromArray(ReceiptFields::object($body, 'deleted', self::RECEIPT)),
+            'redelivered' => RedeliveryReceipt::fromArray(ReceiptFields::object($body, 'redelivered', self::RECEIPT)),
             'minted' => new MintedEndpointSecret(
                 endpoint: self::snapshot(ReceiptFields::object($body, 'endpoint', self::RECEIPT)),
                 secret: $this->encrypter->decryptString(ReceiptFields::text($body, 'secret', self::RECEIPT)),
@@ -71,6 +74,8 @@ final readonly class EndpointReceiptCodec implements ReceiptCodec
             // The endpoint is gone: the replay is judged on the recorded scope.
             $result instanceof EndpointDeleteReceipt => null,
             $result instanceof MintedEndpointSecret => new ResourceRef('webhook_endpoint', $result->endpoint->id),
+            // The endpoint must still be there, as for a rotation; the delivery is read again for the answer.
+            $result instanceof RedeliveryReceipt => new ResourceRef('webhook_endpoint', $result->endpointId),
             $result instanceof WebhookEndpointSnapshot => new ResourceRef('webhook_endpoint', $result->id),
             default => throw new InvalidArgumentException(sprintf('[Vaulter] %s has no resource for %s.', self::KIND, get_debug_type($result))),
         };

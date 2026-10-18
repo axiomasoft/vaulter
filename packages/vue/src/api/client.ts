@@ -28,6 +28,7 @@ import type {
   DriveId,
   FileRevision,
   Grant,
+  GrantList,
   IfMatch,
   ListNodesQuery,
   MintedShare,
@@ -72,19 +73,25 @@ export interface ShareAccess {
   password?: string
 }
 
+export interface RestrictInheritanceOptions extends IfMatch {
+  mode?: 'empty' | 'copy_current'
+}
+
 /**
- * The Vaulter REST API v1 by resource. Methods that change a node or a document take the
- * resource's opaque `etag` as a REQUIRED `{ etag }` option and send it as `If-Match`; a stale
- * tag answers `node_sequence_mismatch`/`document_state_mismatch` (412), a missing one
- * `precondition_required` (428).
+ * The Vaulter REST API v1 by resource. Methods that change an existing resource take its opaque
+ * `etag` as a REQUIRED `{ etag }` option and send it as `If-Match`: a node or a document (`node.etag`,
+ * the content ETag), a drive, a share link or a comment (their `etag`), the grants and inheritance of
+ * a node (the access tag, `etag` of `grants.listTagged()`). A stale tag answers 412
+ * (`node_sequence_mismatch`, `document_state_mismatch` or `stale_write`), a missing one
+ * `precondition_required` (428); both reject with a `VaulterApiError`.
  */
 export interface VaulterClient {
   drives: {
     get(driveId: DriveId): Promise<Drive>
-    archive(driveId: DriveId): Promise<Drive>
-    unarchive(driveId: DriveId): Promise<Drive>
+    archive(driveId: DriveId, options: IfMatch): Promise<Drive>
+    unarchive(driveId: DriveId, options: IfMatch): Promise<Drive>
     /** Start deleting a drive (it becomes `deleting`). */
-    delete(driveId: DriveId): Promise<Drive>
+    delete(driveId: DriveId, options: IfMatch): Promise<Drive>
   }
 
   nodes: {
@@ -162,23 +169,27 @@ export interface VaulterClient {
 
   grants: {
     list(nodeId: NodeId): Promise<Grant[]>
+    /** The grants with the node's access tag, the `etag` a revoke or an inheritance change sends. */
+    listTagged(nodeId: NodeId): Promise<GrantList>
     create(nodeId: NodeId, input: CreateGrantInput): Promise<Grant>
-    revoke(nodeId: NodeId, grantId: string): Promise<void>
+    /** Needs the access tag of the node (`grants.listTagged().etag`). */
+    revoke(nodeId: NodeId, grantId: string, options: IfMatch): Promise<void>
   }
 
   access: {
-    restrictInheritance(nodeId: NodeId, options?: { mode?: 'empty' | 'copy_current' }): Promise<Node>
-    restoreInheritance(nodeId: NodeId): Promise<Node>
+    /** Needs the access tag of the node; the answer is the node with its own ETag. */
+    restrictInheritance(nodeId: NodeId, options: RestrictInheritanceOptions): Promise<Node>
+    restoreInheritance(nodeId: NodeId, options: IfMatch): Promise<Node>
   }
 
   shares: {
     list(nodeId: NodeId): Promise<Share[]>
     /** Mint a share link — the response carries the raw token EXACTLY ONCE. */
     create(nodeId: NodeId, input?: CreateShareInput): Promise<MintedShare>
-    update(nodeId: NodeId, shareId: string, input: UpdateShareInput): Promise<Share>
+    update(nodeId: NodeId, shareId: string, input: UpdateShareInput, options: IfMatch): Promise<Share>
     /** Replace the token: the old one stops working at once; the new raw token comes ONCE. */
-    rotate(nodeId: NodeId, shareId: string): Promise<MintedShare>
-    revoke(nodeId: NodeId, shareId: string): Promise<void>
+    rotate(nodeId: NodeId, shareId: string, options: IfMatch): Promise<MintedShare>
+    revoke(nodeId: NodeId, shareId: string, options: IfMatch): Promise<void>
   }
 
   publicShares: {
@@ -190,8 +201,8 @@ export interface VaulterClient {
   comments: {
     list(nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<Comment>>
     add(nodeId: NodeId, input: CreateCommentInput): Promise<Comment>
-    resolve(nodeId: NodeId, commentId: string): Promise<Comment>
-    remove(nodeId: NodeId, commentId: string): Promise<void>
+    resolve(nodeId: NodeId, commentId: string, options: IfMatch): Promise<Comment>
+    remove(nodeId: NodeId, commentId: string, options: IfMatch): Promise<void>
   }
 
   activity: {
@@ -325,9 +336,9 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
   return {
     drives: {
       get: (driveId) => data('GET', `/drives/${driveId}`),
-      archive: (driveId) => data('POST', `/drives/${driveId}/archive`),
-      unarchive: (driveId) => data('POST', `/drives/${driveId}/unarchive`),
-      delete: (driveId) => data('DELETE', `/drives/${driveId}`),
+      archive: (driveId, { etag }) => data('POST', `/drives/${driveId}/archive`, { etag }),
+      unarchive: (driveId, { etag }) => data('POST', `/drives/${driveId}/unarchive`, { etag }),
+      delete: (driveId, { etag }) => data('DELETE', `/drives/${driveId}`, { etag }),
     },
 
     nodes: {
@@ -459,6 +470,7 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
 
     grants: {
       list: (nodeId) => data('GET', `/nodes/${nodeId}/grants`),
+      listTagged: (nodeId) => transport.json<GrantList>('GET', `/nodes/${nodeId}/grants`),
       create: (nodeId, input) =>
         data('POST', `/nodes/${nodeId}/grants`, {
           json: {
@@ -468,13 +480,13 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
             expires_at: input.expiresAt,
           },
         }),
-      revoke: (nodeId, grantId) => send('DELETE', `/nodes/${nodeId}/grants/${grantId}`),
+      revoke: (nodeId, grantId, { etag }) => send('DELETE', `/nodes/${nodeId}/grants/${grantId}`, { etag }),
     },
 
     access: {
-      restrictInheritance: (nodeId, restrictOptions) =>
-        data('POST', `/nodes/${nodeId}/inheritance/restrict`, { json: { mode: restrictOptions?.mode } }),
-      restoreInheritance: (nodeId) => data('POST', `/nodes/${nodeId}/inheritance/restore`),
+      restrictInheritance: (nodeId, { etag, mode }) =>
+        data('POST', `/nodes/${nodeId}/inheritance/restrict`, { json: { mode }, etag }),
+      restoreInheritance: (nodeId, { etag }) => data('POST', `/nodes/${nodeId}/inheritance/restore`, { etag }),
     },
 
     shares: {
@@ -491,7 +503,7 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
           },
         }),
       // `undefined` keys are dropped by JSON, so only the fields given reach the server.
-      update: (nodeId, shareId, input) =>
+      update: (nodeId, shareId, input, { etag }) =>
         data('PATCH', `/nodes/${nodeId}/shares/${shareId}`, {
           json: {
             audience: input.audience,
@@ -499,9 +511,10 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
             expires_at: input.expiresAt,
             max_uses: input.maxUses,
           },
+          etag,
         }),
-      rotate: (nodeId, shareId) => data('POST', `/nodes/${nodeId}/shares/${shareId}/rotate`),
-      revoke: (nodeId, shareId) => send('DELETE', `/nodes/${nodeId}/shares/${shareId}`),
+      rotate: (nodeId, shareId, { etag }) => data('POST', `/nodes/${nodeId}/shares/${shareId}/rotate`, { etag }),
+      revoke: (nodeId, shareId, { etag }) => send('DELETE', `/nodes/${nodeId}/shares/${shareId}`, { etag }),
     },
 
     publicShares: {
@@ -521,8 +534,8 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
         data('POST', `/nodes/${nodeId}/comments`, {
           json: { body: input.body, parent_id: input.parentId, anchor: input.anchor },
         }),
-      resolve: (nodeId, commentId) => data('POST', `/nodes/${nodeId}/comments/${commentId}/resolve`),
-      remove: (nodeId, commentId) => send('DELETE', `/nodes/${nodeId}/comments/${commentId}`),
+      resolve: (nodeId, commentId, { etag }) => data('POST', `/nodes/${nodeId}/comments/${commentId}/resolve`, { etag }),
+      remove: (nodeId, commentId, { etag }) => send('DELETE', `/nodes/${nodeId}/comments/${commentId}`, { etag }),
     },
 
     activity: {

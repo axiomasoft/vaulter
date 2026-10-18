@@ -241,15 +241,37 @@ describe('useGrants', () => {
     const created = { id: 'g2', node_id: '9', subject: { type: 'user', id: '2' }, role: 'writer' }
     const revoke = vi.fn().mockResolvedValue(undefined)
     const create = vi.fn().mockResolvedValue(created)
-    const { vm } = mountWith({ grants: { list: vi.fn().mockResolvedValue([existing]), create, revoke } }, () => useGrants('9'))
+    const listTagged = vi.fn()
+      .mockResolvedValueOnce({ etag: '"node-access.9.0"', data: [existing] })
+      .mockResolvedValueOnce({ etag: '"node-access.9.1"', data: [created, existing] })
+    const { vm } = mountWith({ grants: { listTagged, create, revoke } }, () => useGrants('9'))
 
     await vm.list()
+    expect(vm.accessTag.value).toBe('"node-access.9.0"')
     await vm.grant({ subject: { type: 'user', id: '2' }, role: 'writer' })
     expect(vm.grants.value.map((g) => g.id)).toEqual(['g2', 'g1'])
+    // The grant raised the access version on the server: the held tag is gone.
+    expect(vm.accessTag.value).toBeNull()
 
+    // So the revoke reloads first and sends the fresh access tag.
     await vm.revoke('g1')
-    expect(revoke).toHaveBeenCalledWith('9', 'g1')
+    expect(listTagged).toHaveBeenCalledTimes(2)
+    expect(revoke).toHaveBeenCalledWith('9', 'g1', { etag: '"node-access.9.1"' })
     expect(vm.grants.value.map((g) => g.id)).toEqual(['g2'])
+    expect(vm.accessTag.value).toBeNull()
+  })
+
+  it('revokes with the held access tag without reloading, and passes a 412 through', async () => {
+    const stale = new VaulterApiError({ status: 412, code: 'stale_write' })
+    const revoke = vi.fn().mockRejectedValue(stale)
+    const listTagged = vi.fn().mockResolvedValue({ etag: '"node-access.9.4"', data: [{ id: 'g1' }] })
+    const { vm } = mountWith({ grants: { listTagged, revoke } }, () => useGrants('9'))
+    await vm.list()
+
+    await expect(vm.revoke('g1')).rejects.toBe(stale)
+    expect(listTagged).toHaveBeenCalledTimes(1)
+    expect(revoke).toHaveBeenCalledWith('9', 'g1', { etag: '"node-access.9.4"' })
+    expect(vm.grants.value.map((g) => g.id)).toEqual(['g1'])
   })
 })
 
@@ -270,18 +292,22 @@ describe('useShares', () => {
   })
 
   it('rotates a link (new token once) and forgets the token of a revoked link', async () => {
-    const rotated = { id: 's1', token: 'new.SECRET', url: 'u' }
+    const rotated = { id: 's1', token: 'new.SECRET', url: 'u', etag: '"share.s1.1"' }
     const revoke = vi.fn().mockResolvedValue(undefined)
+    const rotate = vi.fn().mockResolvedValue(rotated)
     const { vm } = mountWith(
-      { shares: { list: vi.fn().mockResolvedValue([{ id: 's1' }]), rotate: vi.fn().mockResolvedValue(rotated), revoke } },
+      { shares: { list: vi.fn().mockResolvedValue([{ id: 's1', etag: '"share.s1.0"' }]), rotate, revoke } },
       () => useShares('9'),
     )
     await vm.list()
 
     await vm.rotate('s1')
+    expect(rotate).toHaveBeenCalledWith('9', 's1', { etag: '"share.s1.0"' })
     expect(vm.lastCreated.value?.token).toBe('new.SECRET')
 
+    // The rotation raised the version: the revoke sends the rotated link's tag.
     await vm.revoke('s1')
+    expect(revoke).toHaveBeenCalledWith('9', 's1', { etag: '"share.s1.1"' })
     expect(vm.lastCreated.value).toBeNull()
     expect(vm.shares.value).toEqual([])
   })

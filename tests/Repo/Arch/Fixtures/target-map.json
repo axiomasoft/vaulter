@@ -4138,6 +4138,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Idempotency/CommentAuthorshipProof.php",
+            "fqcn": "Vaulter\\Documents\\Idempotency\\CommentAuthorshipProof",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Idempotency\\CommentAuthorshipProof"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Idempotency/CommentDeleteReceipt.php",
             "fqcn": "Vaulter\\Documents\\Idempotency\\CommentDeleteReceipt",
             "kind": "final-class",
@@ -17000,6 +17014,20 @@
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\Idempotency\\EndpointReplayAuthorizer"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/Idempotency/RedeliveryReceipt.php",
+            "fqcn": "Vaulter\\Webhooks\\Idempotency\\RedeliveryReceipt",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\Idempotency\\RedeliveryReceipt"
         },
         {
             "action": "keep",

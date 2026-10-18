@@ -18,8 +18,8 @@ uses(TestCase::class);
  * I11 / I12 coverage of the webhooks' operation policies (D47, knowledge p6-design#catalog), for every route of the
  * package: (a) every operation name in src is in the catalog, (b) every mutating v1 route of the package is in exactly
  * one policy, (c) every route of a receipt policy reads the Idempotency-Key and no other route does, (d) every route of
- * an if_match policy is in the 428 table of IfMatchRequiredTest. A redelivery is natural: a repeat finds the delivery
- * pending and is refused (RedeliverWebhookTest), so it carries no key.
+ * an if_match policy is in the 428 table of IfMatchRequiredTest. A redelivery is a receipt operation: once the delivery
+ * finished again only its key tells a retry from a new redelivery (EndpointIdempotencyTest).
  */
 
 /** @return array<string, OperationPolicy> */
@@ -123,7 +123,7 @@ it('(c) reads the Idempotency-Key on every route of a receipt policy and on no o
     expect($missing)->toBe([]);
 });
 
-it('declares the endpoint writes receipt operations on the endpoint version, and the redelivery natural', function (): void {
+it('declares the endpoint writes receipt operations on the endpoint version, and the redelivery a receipt state machine', function (): void {
     $policies = wpcPolicies();
 
     foreach (['update', 'deactivate', 'rotate_secret', 'delete'] as $verb) {
@@ -133,7 +133,8 @@ it('declares the endpoint writes receipt operations on the endpoint version, and
     }
     expect($policies['webhooks.endpoints.register']->idempotency)->toBe(IdempotencyPolicy::Receipt)
         ->and($policies['webhooks.endpoints.register']->concurrency)->toBe(ConcurrencyPolicy::Append)
-        ->and($policies['webhooks.endpoints.redeliver']->idempotency)->toBe(IdempotencyPolicy::Natural);
+        ->and($policies['webhooks.endpoints.redeliver']->idempotency)->toBe(IdempotencyPolicy::Receipt)
+        ->and($policies['webhooks.endpoints.redeliver']->concurrency)->toBe(ConcurrencyPolicy::StateMachine);
 });
 
 it('(d) lists every if_match route of the package in the 428 table of IfMatchRequiredTest', function (): void {

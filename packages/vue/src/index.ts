@@ -3,6 +3,7 @@ export { createVaulterClient, filenameFromDisposition } from './api/client'
 export type {
   NodeMoveOptions,
   NodeRestoreOptions,
+  RestrictInheritanceOptions,
   ShareAccess,
   StartUploadOptions,
   VaulterClient,

@@ -1393,6 +1393,13 @@
             "id": "format:receipt-webhook-endpoint",
             "kind": "protocol",
             "reason": "P6.6: receipt of webhooks.endpoints.register, update, deactivate, rotate_secret and delete; the signing secret of register and rotate_secret only as Crypt ciphertext (ID5), a delete keeps the id and the scope the right was proven in"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "format:receipt-webhook-endpoint",
+            "kind": "protocol",
+            "reason": "RC-P6-2: webhooks.endpoints.redeliver becomes a receipt operation (a keyed retry after the delivery finished again sends nothing); the receipt adds {type: redelivered, redelivered: {id, endpoint_id}}"
         }
     ],
     "items": [
@@ -2293,7 +2300,7 @@
             }
         },
         {
-            "format": "receipt kind webhooks.endpoint-receipt, version 1: JSON {type: endpoint, endpoint: every WebhookEndpointSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version; no secret)} | {type: minted, endpoint: as above, secret: Crypt::encryptString ciphertext of the signing secret} | {type: deleted, deleted: {id, tenant_id, ability}}; a deletion keeps the id and the scope the right was proven in, never the endpoint",
+            "format": "receipt kind webhooks.endpoint-receipt, version 1: JSON {type: endpoint, endpoint: every WebhookEndpointSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version; no secret)} | {type: minted, endpoint: as above, secret: Crypt::encryptString ciphertext of the signing secret} | {type: deleted, deleted: {id, tenant_id, ability}} | {type: redelivered, redelivered: {id, endpoint_id}}; a deletion keeps the id and the scope the right was proven in, never the endpoint; a redelivery keeps the ids of the delivery and its endpoint, never the payload",
             "id": "format:receipt-webhook-endpoint",
             "manual": true,
             "owner": "webhooks",

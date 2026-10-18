@@ -1,7 +1,8 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
 import { useVaulterClient } from './useVaulterClient'
 import { createListGuard } from './listGuard'
-import type { CreateShareInput, MintedShare, NodeId, Share, UpdateShareInput } from '../api/types'
+import { requireTag } from './conflict'
+import type { CreateShareInput, IfMatch, MintedShare, NodeId, Share, UpdateShareInput } from '../api/types'
 
 export interface UseSharesReturn {
   shares: ShallowRef<Share[]>
@@ -12,17 +13,19 @@ export interface UseSharesReturn {
   list: () => Promise<Share[]>
   create: (input?: CreateShareInput) => Promise<MintedShare>
   /** Change expiry, budget, password or audience of a link; its token stays. */
-  update: (shareId: string, input: UpdateShareInput) => Promise<Share>
+  update: (shareId: string, input: UpdateShareInput, options?: Partial<IfMatch>) => Promise<Share>
   /** Replace a link's token; the new raw token is held once in `lastCreated`. */
-  rotate: (shareId: string) => Promise<MintedShare>
-  revoke: (shareId: string) => Promise<void>
+  rotate: (shareId: string, options?: Partial<IfMatch>) => Promise<MintedShare>
+  revoke: (shareId: string, options?: Partial<IfMatch>) => Promise<void>
   /** Forget the last-minted token (so a stale secret never lingers in memory). */
   clearLastCreated: () => void
 }
 
 /**
  * Reactive management of a node's bearer share links. `create` surfaces the raw token
- * EXACTLY ONCE via `lastCreated`; the listed shares never carry it.
+ * EXACTLY ONCE via `lastCreated`; the listed shares never carry it. `update`, `rotate` and
+ * `revoke` send the link's `etag` as If-Match (the held link's, unless one is passed); a link
+ * changed since it was read rejects with a 412 `stale_write` VaulterApiError.
  */
 export function useShares(nodeId: NodeId): UseSharesReturn {
   const client = useVaulterClient()
@@ -61,23 +64,28 @@ export function useShares(nodeId: NodeId): UseSharesReturn {
     return created
   }
 
-  async function update(shareId: string, input: UpdateShareInput): Promise<Share> {
-    const updated = await client.shares.update(nodeId, shareId, input)
+  function tagOf(shareId: string, options?: Partial<IfMatch>): IfMatch {
+    const held = shares.value.find((share) => share.id === shareId)
+    return { etag: requireTag(options?.etag, held?.etag, `share ${shareId}`) }
+  }
+
+  async function update(shareId: string, input: UpdateShareInput, options?: Partial<IfMatch>): Promise<Share> {
+    const updated = await client.shares.update(nodeId, shareId, input, tagOf(shareId, options))
     guard.invalidate()
     shares.value = shares.value.map((share) => (share.id === shareId ? updated : share))
     return updated
   }
 
-  async function rotate(shareId: string): Promise<MintedShare> {
-    const rotated = await client.shares.rotate(nodeId, shareId)
+  async function rotate(shareId: string, options?: Partial<IfMatch>): Promise<MintedShare> {
+    const rotated = await client.shares.rotate(nodeId, shareId, tagOf(shareId, options))
     guard.invalidate()
     lastCreated.value = rotated
     shares.value = shares.value.map((share) => (share.id === shareId ? rotated : share))
     return rotated
   }
 
-  async function revoke(shareId: string): Promise<void> {
-    await client.shares.revoke(nodeId, shareId)
+  async function revoke(shareId: string, options?: Partial<IfMatch>): Promise<void> {
+    await client.shares.revoke(nodeId, shareId, tagOf(shareId, options))
     guard.invalidate()
     shares.value = shares.value.filter((share) => share.id !== shareId)
     if (lastCreated.value?.id === shareId) {

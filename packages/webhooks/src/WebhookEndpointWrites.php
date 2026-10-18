@@ -32,8 +32,8 @@ use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
  * the operation's transaction, and the endpoint (or the endpoint collection) is the scope.
  *
  * A write with a `$fingerprint` takes an Idempotency-Key (D25): the receipt is the {@see EndpointReceiptCodec} result, a
- * signing secret in it only as ciphertext, and a replay is authorized again by the `manage` ability. Without one the
- * write is natural (a redelivery re-arms a delivery at most once, so a repeat is refused, not doubled).
+ * signing secret in it only as ciphertext, and a replay is authorized again by the `manage` ability. A redelivery takes
+ * one too: without a key, a repeat after the delivery finished again is a new redelivery.
  *
  * used by the webhook endpoint controllers
  */

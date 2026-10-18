@@ -102,14 +102,19 @@ final readonly class CommentOperations implements DriveExtension
     public function resolve(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment, ?int $expectedVersion = null): CommentSnapshot
     {
         $nodeId = self::idOf($node);
+        $authorizer = CommentReplayAuthorizer::forResolve($this->context, $this->locator, $this->guard, $this->profiles, $nodeId);
         $idempotency = new IdempotentWrite(
             codec: new CommentReceiptCodec,
-            authorizer: CommentReplayAuthorizer::forResolve($this->context, $this->locator, $this->guard, $this->profiles, $nodeId),
+            authorizer: $authorizer,
             fingerprint: ['node' => $nodeId, 'comment' => self::commentId($comment), 'expected_version' => $expectedVersion],
         );
 
-        return $this->write('resolve', function () use ($node, $comment, $expectedVersion): CommentSnapshot {
-            [, $row] = $this->authorizedForResolve($node, $comment);
+        return $this->write('resolve', function () use ($node, $comment, $expectedVersion, $authorizer): CommentSnapshot {
+            [, $row, $byAuthor] = $this->authorizedForResolve($node, $comment);
+            if ($byAuthor) {
+                // A refusal past this point (412 stale_write) is stored on the authorship it proved, not on Edit.
+                $authorizer->provedByAuthorship();
+            }
 
             return $this->mapper->comment($this->resolve->execute($this->context, new ResolveCommentInput($row, $expectedVersion)));
         }, $idempotency);
@@ -119,14 +124,18 @@ final readonly class CommentOperations implements DriveExtension
     {
         $nodeId = self::idOf($node);
         // The receipt keeps the comment's id, its node and the basis of the right (ID2), never the comment.
+        $authorizer = CommentReplayAuthorizer::forDelete($this->context, $this->locator, $this->guard, $this->profiles, $nodeId);
         $idempotency = new IdempotentWrite(
             codec: new CommentReceiptCodec,
-            authorizer: CommentReplayAuthorizer::forDelete($this->context, $this->locator, $this->guard, $this->profiles, $nodeId),
+            authorizer: $authorizer,
             fingerprint: ['node' => $nodeId, 'comment' => self::commentId($comment), 'expected_version' => $expectedVersion],
         );
 
-        $this->write('delete', function () use ($node, $comment, $expectedVersion): CommentDeleteReceipt {
+        $this->write('delete', function () use ($node, $comment, $expectedVersion, $authorizer): CommentDeleteReceipt {
             [$node, $row, $byAuthor] = $this->authorizedForDelete($node, $comment);
+            if ($byAuthor) {
+                $authorizer->provedByAuthorship();
+            }
             $receipt = new CommentDeleteReceipt(id: Identity::stringify($row->getKey()), nodeId: Identity::stringify($node->getKey()), driveId: Identity::stringify($this->context->driveId()), byAuthor: $byAuthor);
             $this->delete->execute($this->context, new DeleteCommentInput($row, $expectedVersion));
 
@@ -157,16 +166,17 @@ final readonly class CommentOperations implements DriveExtension
         return $this->runner->write(new OperationSpec('documents.comments.'.$verb, new ModuleId('documents')), $this->context->operation, $attempt, $idempotency);
     }
 
-    /** @return array{0: Node, 1: NodeComment} */
+    /** @return array{0: Node, 1: NodeComment, 2: bool} the basis of the right: authorship, else Edit */
     private function authorizedForResolve(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment): array
     {
         $node = $this->node($node, Ability::Comment, OperationKind::Mutation);
         $row = $this->query->comment($node, $comment);
-        if (!$this->isAuthor($row)) {
+        $byAuthor = $this->isAuthor($row);
+        if (!$byAuthor) {
             $this->guard->authorize($this->context, Ability::Edit, $node, OperationKind::Mutation);
         }
 
-        return [$node, $row];
+        return [$node, $row, $byAuthor];
     }
 
     /** @return array{0: Node, 1: NodeComment, 2: bool} the basis of the right: authorship, else Manage */

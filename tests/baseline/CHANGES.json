@@ -14327,7 +14327,7 @@
       ]
     },
     "documents": {
-      "count": 104,
+      "count": 106,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_documents_depends_on_drive_but_never_directly_on_media__D6_",
         "P\\Tests\\Arch\\DocumentStateWriterBoundaryTest::__pest_evaluable_it_writes_the_pending_state_marker_only_in_DocumentStateWriter__D26_",
@@ -14389,6 +14389,8 @@
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_replays_a_content_update__a_checkpoint_and_a_restore_without_a_second_write",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_replays_a_document_creation_once",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_round_trips_the_receipts_and_decodes_only_the_version_it_knows",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_stores_a_refused_resolve_or_delete_of_an_author_on_its_authorship__so_the_retry_replays_the_412_to_a_commenter\"('delete')\"",
+        "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_stores_a_refused_resolve_or_delete_of_an_author_on_its_authorship__so_the_retry_replays_the_412_to_a_commenter\"('resolve')\"",
         "P\\Tests\\Operations\\DocumentIdempotencyTest::__pest_evaluable_it_stores_the_stale_state_of_a_keyed_update_as_a_refusal_and_answers_a_retry_the_same_way",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_contributes_the_document_presenter_and_lifecycle_to_the_drive_slots__and_no_file_handler__PLAN2_P4_3_",
         "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_fills_the_type_and_exporter_registries_from_the_module_contributions__once",
@@ -14482,7 +14484,7 @@
       ]
     },
     "webhooks": {
-      "count": 120,
+      "count": 123,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_domain_exceptions_of_the_webhooks_package_implement_the_HTTP_problem_contract",
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_it_binds_no_route_model_in_the_package",
@@ -14499,7 +14501,7 @@
         "P\\Tests\\Arch\\OperationPolicyCoverageTest::__pest_evaluable_it__b__puts_every_mutating_v1_route_of_the_package_in_exactly_one_policy",
         "P\\Tests\\Arch\\OperationPolicyCoverageTest::__pest_evaluable_it__c__reads_the_Idempotency_Key_on_every_route_of_a_receipt_policy_and_on_no_other",
         "P\\Tests\\Arch\\OperationPolicyCoverageTest::__pest_evaluable_it__d__lists_every_if__match_route_of_the_package_in_the_428_table_of_IfMatchRequiredTest",
-        "P\\Tests\\Arch\\OperationPolicyCoverageTest::__pest_evaluable_it_declares_the_endpoint_writes_receipt_operations_on_the_endpoint_version__and_the_redelivery_natural",
+        "P\\Tests\\Arch\\OperationPolicyCoverageTest::__pest_evaluable_it_declares_the_endpoint_writes_receipt_operations_on_the_endpoint_version__and_the_redelivery_a_receipt_state_machine",
         "P\\Tests\\Arch\\PublicApiSnapshotTest::__pest_evaluable_vaulter_webhooks_configuration_API_matches_the_frozen_golden__P4_13_",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Webhooks_Configuration_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Webhooks_Console_never_uses_the_Testing_namespaces",
@@ -14562,6 +14564,7 @@
         "P\\Tests\\Http\\IfMatchRequiredTest::__pest_evaluable_it_answers_an_unknown_endpoint_404_once_the_caller_may_manage_endpoints\"('webhook-endpoints.destroy')\"",
         "P\\Tests\\Http\\IfMatchRequiredTest::__pest_evaluable_it_answers_an_unknown_endpoint_404_once_the_caller_may_manage_endpoints\"('webhook-endpoints.rotate-secret')\"",
         "P\\Tests\\Http\\IfMatchRequiredTest::__pest_evaluable_it_answers_an_unknown_endpoint_404_once_the_caller_may_manage_endpoints\"('webhook-endpoints.update')\"",
+        "P\\Tests\\Http\\IfMatchRequiredTest::__pest_evaluable_it_raises_the_version_when_the_worker_switches_a_failing_endpoint_off__so_a_tag_read_while_it_was_active_cannot_switch_it_back_on",
         "P\\Tests\\Http\\IfMatchRequiredTest::__pest_evaluable_it_tags_the_endpoint_with_its_id_and_version__and_each_change_raises_the_version_and_the_tag",
         "P\\Tests\\Http\\WebhookExceptionStatusTest::__pest_evaluable_it_renders_each_webhook_exception_with_its_stable_code_and_HTTP_status\"dataset \"blocked outbound address\"\"",
         "P\\Tests\\Http\\WebhookExceptionStatusTest::__pest_evaluable_it_renders_each_webhook_exception_with_its_stable_code_and_HTTP_status\"dataset \"delivery endpoint inactive\"\"",
@@ -14590,6 +14593,7 @@
         "P\\Tests\\Schema\\MassAssignmentHardeningTest::__pest_evaluable_it_rejects_ANY_fill___attribute_on_the_fully__guarded_WebhookDelivery_with_MassAssignmentException__F_P1_8_02_\"dataset \"WebhookDelivery.attempts\"\"",
         "P\\Tests\\Schema\\WebhooksKeyColumnsTest::__pest_evaluable_it_adds_the_webhooks_columns_to_the_key_columns_the_inspector_expects_of_the_whole_installation",
         "P\\Tests\\Schema\\WebhooksKeyColumnsTest::__pest_evaluable_it_declares_the_key_columns_of_its_own_tables_to_the_key_type_check_of_the_kernel",
+        "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_answers_a_keyed_retry_of_a_redelivery_from_its_receipt_and_sends_nothing__even_once_the_delivery_was_delivered_again",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_answers_a_stale_If_Match_with_412_stale__write_and_changes_nothing__under_a_key_too",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_deactivates_once_per_key_and_raises_the_version_once",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_judges_a_deletion_receipt_on_its_recorded_scope__the_tenant_it_was_proven_in__and_the_manage_ability_now",
@@ -14601,14 +14605,18 @@
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_refuses_to_replay_a_rotation_to_a_caller_who_may_no_longer_manage_endpoints",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_registers_once_per_key_and_replays_the_same_secret_from_a_receipt_that_holds_only_its_ciphertext",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_replays_a_deletion_after_the_endpoint_is_gone__on_the_scope_recorded_in_its_receipt",
+        "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_replays_a_refused_keyed_redelivery_as_the_same_409",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_replays_an_update_whose_If_Match_went_stale_because_the_first_request_committed__without_a_second_change",
         "P\\Tests\\Webhooks\\EndpointIdempotencyTest::__pest_evaluable_it_rotates_the_secret_once_per_key__replays_the_same_secret__and_keeps_the_receipt_free_of_it",
         "P\\Tests\\Webhooks\\WebhookEndpointCrudTest::__pest_evaluable_it_answers_an_oversized_endpoint_id_after_the_ability_check__403_without_manage__404_with_it"
       ]
     },
     "vue": {
-      "count": 23,
+      "count": 30,
       "names": [
+        "tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > lists the grants with the access tag of the node",
+        "tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > rejects a stale tag with a 412 stale_write VaulterApiError",
+        "tests/api/client.test.ts > createVaulterClient — preconditions on drives, grants, inheritance, shares and comments > sends the resource tag verbatim in If-Match for every versioned write",
         "tests/api/errors.test.ts > Retry-After > decodes delta-seconds into retryAfterSeconds",
         "tests/api/errors.test.ts > Retry-After > is null without the header",
         "tests/api/errors.test.ts > Retry-After > reads the header of a non-problem response too",
@@ -14623,6 +14631,9 @@
         "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > finds every import shape in a source text",
         "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > imports no yjs, y-*, @hocuspocus/* in src",
         "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > scans the source folder",
+        "tests/composables.test.ts > useComments > passes a 412 stale_write through as a VaulterApiError and keeps the thread",
+        "tests/composables.test.ts > useComments > refuses to write a comment it holds no etag for instead of sending it blind",
+        "tests/composables.test.ts > useComments > resolves with the held comment etag and swaps in the raised version",
         "tests/document-node.test.ts > VaulterDocumentNode > a collaborative document without an installed adapter is edited through the REST autosave",
         "tests/document-node.test.ts > VaulterDocumentNode > does not autosave in collaborative mode: the session persists the edits",
         "tests/document-node.test.ts > VaulterDocumentNode > does not open a session when collaboration is switched off by the prop",
@@ -14631,6 +14642,7 @@
         "tests/document-node.test.ts > VaulterDocumentNode > goes read-only when the session turns read-only (a status error stops local edits)",
         "tests/document-node.test.ts > VaulterDocumentNode > passes the status of the session to the slot and rebinds a replaced document",
         "tests/document-node.test.ts > VaulterDocumentNode > re-reads the content when the session reports a new generation (onEpochChanged)",
+        "tests/drive-composables.test.ts > useGrants > revokes with the held access tag without reloading, and passes a 412 through",
         "tests/plugin.test.ts > VaulterPlugin > provides the collaboration adapter given in the options, and none otherwise"
       ]
     },

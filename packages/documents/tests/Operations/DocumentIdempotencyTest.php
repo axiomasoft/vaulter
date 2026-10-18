@@ -28,6 +28,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Concurrency\StaleWriteException;
 use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
+use Vaulter\Idempotency\IdempotencyStore;
 use Vaulter\Idempotency\ReplayedProblemException;
 
 /**
@@ -184,6 +185,28 @@ it('refuses the replay of a resolution to an actor who lost Comment', function (
 
     expect(fn () => Documents::comments($keyed('resolve'))->resolve($node, $comment->id, 0))->toThrow(PermissionDeniedException::class);
 });
+
+it('stores a refused resolve or delete of an author on its authorship, so the retry replays the 412 to a commenter', function (string $verb): void {
+    [$system, $node, $keyed] = idempotentThread();
+    // User 2 is a commenter: it may resolve and delete its own comment, never another's (no Edit, no Manage).
+    $comment = Documents::comments($keyed('a', 2))->add($node, new AddCommentInput('mine'));
+    Documents::comments($system->actingAs(AccessTestHelpers::user(1)))->resolve($node, $comment->id, 0);
+
+    $write = fn () => $verb === 'resolve'
+        ? Documents::comments($keyed('stale-'.$verb, 2))->resolve($node, $comment->id, 0)
+        : Documents::comments($keyed('stale-'.$verb, 2))->delete($node, $comment->id, 0);
+    expect($write)->toThrow(StaleWriteException::class);
+
+    $scope = app(VaulterDatabase::class)->connection()->table(app(IdempotencyStore::class)->table())->where('operation', 'documents.comments.'.$verb)->value('auth_scope_kind');
+    expect($scope)->toBe('node-author');
+    try {
+        $write();
+        $this->fail('The stored refusal was not replayed.');
+    } catch (ReplayedProblemException $replayed) {
+        expect($replayed->problemCode())->toBe('stale_write')->and($replayed->httpStatus())->toBe(412);
+    }
+    expect(NodeComment::query()->findOrFail($comment->id)->version)->toBe(1);
+})->with(['resolve', 'delete']);
 
 it('round-trips the receipts and decodes only the version it knows', function (): void {
     [$system] = idempotentDocuments();

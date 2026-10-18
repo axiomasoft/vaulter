@@ -605,9 +605,9 @@
                 "file": "packages/webhooks/src/Idempotency/EndpointReceiptCodec.php",
                 "symbol": "Vaulter\\Webhooks\\Idempotency\\EndpointReceiptCodec::encode"
             },
-            "format": "receipt kind webhooks.endpoint-receipt, version 1: JSON {type: endpoint, endpoint: every WebhookEndpointSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version; no secret)} | {type: minted, endpoint: as above, secret: Crypt::encryptString ciphertext of the signing secret} | {type: deleted, deleted: {id, tenant_id, ability}}; a deletion keeps the id and the scope the right was proven in, never the endpoint",
+            "format": "receipt kind webhooks.endpoint-receipt, version 1: JSON {type: endpoint, endpoint: every WebhookEndpointSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version; no secret)} | {type: minted, endpoint: as above, secret: Crypt::encryptString ciphertext of the signing secret} | {type: deleted, deleted: {id, tenant_id, ability}} | {type: redelivered, redelivered: {id, endpoint_id}}; a deletion keeps the id and the scope the right was proven in, never the endpoint; a redelivery keeps the ids of the delivery and its endpoint, never the payload",
             "owner": "webhooks",
-            "why": "D25, D47, ID2, ID5: the stored receipt of webhooks.endpoints.register, update, deactivate, rotate_secret and delete; a replay is authorized by the manage ability now, on the recorded scope (the tenant) when the endpoint is gone"
+            "why": "D25, D47, ID2, ID5: the stored receipt of webhooks.endpoints.register, update, deactivate, rotate_secret, delete and redeliver; a replay is authorized by the manage ability now, on the recorded scope (the tenant) when the endpoint is gone"
         }
     ]
 }

@@ -1018,9 +1018,11 @@ paths:
       tags:
       - webhooks
       summary: Redeliver a failed delivery
+      description: 'Re-arms a delivered or dead delivery of an active endpoint (409 webhook_delivery_not_redeliverable while it is pending or failed, or when the endpoint is inactive). Idempotent by Idempotency-Key: a retry with the same key and request returns 202 with Idempotent-Replayed and the delivery as it is now, and queues nothing, even once the delivery was delivered again; a stored 409 is replayed as such. Without a key, a repeat after the delivery finished again is a new redelivery.'
       parameters:
       - $ref: '#/components/parameters/Endpoint'
       - $ref: '#/components/parameters/Delivery'
+      - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '202':
           description: Accepted
@@ -1031,6 +1033,8 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1043,6 +1047,8 @@ paths:
           $ref: '#/components/responses/Problem404'
         '409':
           $ref: '#/components/responses/Problem409'
+        '422':
+          $ref: '#/components/responses/Problem422'
         '500':
           $ref: '#/components/responses/Problem500'
   /shares/{token}:

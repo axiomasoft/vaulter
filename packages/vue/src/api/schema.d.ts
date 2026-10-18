@@ -336,7 +336,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Redeliver a failed delivery */
+        /**
+         * Redeliver a failed delivery
+         * @description Re-arms a delivered or dead delivery of an active endpoint (409 webhook_delivery_not_redeliverable while it is pending or failed, or when the endpoint is inactive). Idempotent by Idempotency-Key: a retry with the same key and request returns 202 with Idempotent-Replayed and the delivery as it is now, and queues nothing, even once the delivery was delivered again; a stored 409 is replayed as such. Without a key, a repeat after the delivery finished again is a new redelivery.
+         */
         post: operations["webhook-deliveries.redeliver"];
         delete?: never;
         options?: never;
@@ -3093,7 +3096,10 @@ export interface operations {
     "webhook-deliveries.redeliver": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Webhook endpoint id. */
                 endpoint: components["parameters"]["Endpoint"];
@@ -3110,6 +3116,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -3120,6 +3127,7 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            422: components["responses"]["Problem422"];
             500: components["responses"]["Problem500"];
         };
     };
