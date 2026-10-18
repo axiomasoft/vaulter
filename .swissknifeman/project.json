@@ -2,5 +2,5 @@
   "$schema": "urn:swissknifeman:aicore:project-marker:v1",
   "workspace": "axioma",
   "project_id": "vaulter",
-  "plans_store": "legacy"
+  "plans_store": "workspace"
 }
