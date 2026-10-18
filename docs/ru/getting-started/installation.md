@@ -45,7 +45,8 @@ composer require axioma-studio/vaulter-documents
 установка одного `axioma-studio/vaulter-core` имеет смысл только если вы строите собственные модули
 поверх ядра.
 
-Три пакета не входят в метапакет и ставятся по необходимости. Каждый требует `vaulter-drive`:
+Четыре пакета не входят в метапакет и ставятся по необходимости. Каждый требует `vaulter-drive` (коллаборация ещё и
+`vaulter-documents`):
 
 <!-- snippet: shell -->
 
@@ -58,11 +59,15 @@ composer require axioma-studio/vaulter-filament
 
 # Драйвер прав AzGuard
 composer require axioma-studio/vaulter-azgard
+
+# Совместное редактирование в реальном времени (opt-in модуль, см. раздел 3) — требует vaulter-documents
+composer require axioma-studio/vaulter-collaboration
 ```
 
 `vaulter-webhooks` открывает исходящий сетевой трафик, поэтому его модуль выключен, пока вы не включите его в
 `config/vaulter.php` (`'modules' => ['webhooks' => true]`, см. [Модули](/ru/concepts/modules)); таблицы создаёт
-`php artisan migrate` в любом случае.
+`php artisan migrate` в любом случае. `vaulter-collaboration` opt-in по той же причине (сетевой канал и секреты):
+`'modules' => ['collaboration' => true]`, см. раздел 3.
 
 Защищённые HTTP-маршруты по умолчанию требуют аутентификации через `auth:sanctum`. Установите и настройте
 Laravel Sanctum в хосте (`composer require laravel/sanctum`) или задайте
@@ -120,7 +125,7 @@ php artisan migrate
 ::: info Миграции не публикуются
 Каждый пакет запускает миграции своих таблиц прямо из `vendor/`: `vaulter-core` — outbox и ключи
 идемпотентности, `vaulter-media` — блобы и их пины, `vaulter-drive` — таблицы диска, `vaulter-documents` —
-таблицы документов, `vaulter-webhooks` — эндпоинты и доставки. Тега публикации для них нет, поэтому опубликованных копий, которые расходятся с пакетом, не
+таблицы документов, `vaulter-webhooks` — эндпоинты и доставки, `vaulter-collaboration` — журнал обновлений, квитанции и версии прав. Тега публикации для них нет, поэтому опубликованных копий, которые расходятся с пакетом, не
 бывает, а таблица пакета, который вы не ставили, не создаётся. Опубликованный конфиг ложится в
 `config/vaulter.php`.
 :::
@@ -154,20 +159,45 @@ app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 сборки сверх вашего сборщика (Vite и т.п.) не требуется. Vue `^3.4` — peer-зависимость.
 :::
 
-## 3. Сервер совместного редактирования (опционально)
+## 3. Совместное редактирование (опционально)
 
-Редактирование в реальном времени использует драйвер `hocuspocus`
-и небольшой Node.js-хаб Hocuspocus с `Dockerfile` и `docker-compose.yml` в каталоге
-`hocuspocus-server/`:
+Редактирование в реальном времени состоит из трёх частей: Laravel-модуля `axioma-studio/vaulter-collaboration`, Node-хаба
+(`@vaulter/collaboration-hub`, образ `ghcr.io/axiomasoft/vaulter-collaboration-hub`) и браузерного пакета
+`@vaulter/vue-collaboration`. Модуль **opt-in**: включите его в `config/vaulter.php` и задайте URL хаба и два разных
+секрета, иначе приложение с активным модулем не загрузится:
+
+<!-- snippet: host -->
+
+```php
+// config/vaulter.php
+'modules' => [
+    'collaboration' => true,
+],
+```
+
+```dotenv
+VAULTER_COLLAB_URL=wss://collab.example.com
+VAULTER_COLLAB_SECRET=<32+ случайных символа>          # ключ подписи room-токена, только Laravel
+VAULTER_COLLAB_WEBHOOK_SECRET=<другое случайное>       # общий с хабом
+```
+
+Запустите хаб из опубликованного образа (compose-файл — `packages/collaboration/hub/docker-compose.yml`) и установите
+браузерный пакет:
 
 <!-- snippet: shell -->
 
 ```bash
-cp hocuspocus-server/.env.example hocuspocus-server/.env
-docker compose -f hocuspocus-server/docker-compose.yml up -d
+docker run -d --name vaulter-collab -p 127.0.0.1:1234:1234 \
+  -e VAULTER_BACKEND_URL=https://app.example.com \
+  -e VAULTER_COLLAB_ALLOWED_ORIGINS=https://app.example.com \
+  -e VAULTER_COLLAB_WEBHOOK_SECRET="$VAULTER_COLLAB_WEBHOOK_SECRET" \
+  ghcr.io/axiomasoft/vaulter-collaboration-hub:1
+npm install @vaulter/vue-collaboration yjs
 ```
 
-Хаб нужен при включённом совместном редактировании.
+Хаб нужен при включённом совместном редактировании. Конфигурация, протокол, режимы сохранности, выключение модуля и
+обвязка фронтенда — в [Совместном редактировании](/ru/guides/collaboration); контракт окружения хаба, management-эндпоинты
+и остановка — в [Хабе коллаборации](/ru/guides/hub).
 
 ## Проверка установки
 

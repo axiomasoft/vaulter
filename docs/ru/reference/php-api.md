@@ -94,21 +94,6 @@ Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 их к тегированной привязке контейнера `'vaulter.file_handlers'`. См.
 [Recipes → Custom handler](/ru/guides/recipes).
 
-## Совместное редактирование
-
-### `driver(?string $name = null): CollaborationDriver`
-
-Резолв драйвера совместного редактирования. По умолчанию имя —
-`config('vaulter-documents.collaboration.driver')` (`hocuspocus`); класс драйвера
-читается из `config('vaulter-documents.collaboration.driver')` и резолвится через
-контейнер. Неизвестный или несоответствующий драйвер бросает
-`Vaulter\Exceptions\VaulterException`.
-
-```php
-$driver = Vaulter::driver();            // настроенный по умолчанию
-$driver = Vaulter::driver('hocuspocus'); // явный драйвер
-```
-
 ## См. также
 
 - [Справочник конфигурации](/ru/reference/config) — все config-ключи
@@ -136,9 +121,10 @@ $driver = Vaulter::driver('hocuspocus'); // явный драйвер
 | Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | возвращается из `ContentStore::stage()` |
 | Cas | `BlobPins` | контракт media, через который владелец связи с блобом (drive) ставит и снимает пины |
-| Collaboration | `CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` (легаси-путь документов) |
-| Collaboration | `CollaborationDriver` | привязка в контейнере (путь узлов) |
-| Collaboration | `HostUserResolver` | привязка в контейнере |
+| Collaboration | `CollaborationDriver` (documents) | привязка в контейнере, `config('vaulter-collaboration.driver')` |
+| Collaboration | `HostUserResolver` (collaboration) | привязка в контейнере |
+| Collaboration | `CollaborativeState` (documents) | публичный контракт состояния, через который пишет журнал коллаборации (API, не точка расширения) |
+| Collaboration | `PendingStateDrainer` (documents) | реализуется модулем коллаборации; documents вызывает его перед выдачей или заменой pending-документа |
 | Handlers | `FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` |
 | Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` |
 | Sharing | `ShareTokenGenerator` | `config('vaulter-drive.sharing.token_generator')` / `config('vaulter-drive.sharing.token_generator')` |
@@ -377,8 +363,8 @@ interface BlobPins
 
 #### `Vaulter\Documents\Contracts\CollaborationDriver`
 
-Транспорт совместного редактирования в реальном времени по **дереву узлов** (текущий путь).
-Абстрагирует то, как узел-документ (`kind=document`, контент в агрегате `v_documents`)
+Транспорт совместного редактирования в реальном времени по дереву узлов. Контракт живёт в documents; реализация —
+`Vaulter\Collaboration\HocuspocusCollaborationDriver` (конфиг `vaulter-collaboration.driver`). Абстрагирует то, как узел-документ (`kind=document`, контент в агрегате `v_documents`)
 присоединяется для редактирования в реальном времени. Решение об авторизации — **не** задача
 драйвера: контроллер резолвит его через `AccessResolver` и передаёт выданное право внутрь;
 драйвер лишь кодирует его в дескриптор сессии (`readOnly = право не Edit`).
@@ -393,35 +379,13 @@ interface CollaborationDriver
 }
 ```
 
-#### `Vaulter\Documents\Contracts\CollaborationDriver` (легаси)
-
-**Легаси**-транспорт совместного редактирования для документов, привязанный к модели
-`Document`, прикреплённой через `document_id`. Сосуществует с `CollaborationDriver`;
-хост выбирает один и тот же транспорт для обоих через
-`config('vaulter-documents.collaboration.driver')`. Класс драйвера берётся из
-`config('vaulter-documents.collaboration.driver')`.
-
-```php
-interface CollaborationDriver
-{
-    public function type(): CollaborationDriverType;
-
-    public function authorizeChannel(Authenticatable $user, Document $document): bool;
-
-    /** @return array<string, mixed> */
-    public function connectionConfig(Document $document, Authenticatable $user): array;
-
-    public function issueToken(Document $document, Authenticatable $user): string;
-}
-```
-
-#### `Vaulter\Documents\Contracts\HostUserResolver`
+#### `Vaulter\Collaboration\Contracts\HostUserResolver`
 
 Материализует пользователя хоста (`Authorizable`) по id, чтобы серверный вебхук совместного
 редактирования (server-to-server) — который несёт лишь id пользователя, без сессии — мог
 прогнать `AccessResolver` относительно реального актора. Возвращает `null`, когда id ни во
 что не резолвится (тогда вебхук отвечает `allowed=false`, а не открывается наружу). По
-умолчанию `Vaulter\Documents\Collaboration\HostUserResolver` делегирует настроенному auth user-provider;
+умолчанию `Vaulter\Collaboration\HostUserResolver` делегирует настроенному auth user-provider;
 привяжите свой, чтобы переопределить.
 
 ```php
@@ -431,7 +395,18 @@ interface HostUserResolver
 }
 ```
 
-См. [Совместное редактирование → Драйверы](/ru/guides/collaboration).
+#### `Vaulter\Documents\State\CollaborativeState` и `PendingStateDrainer`
+
+Нейтральный контракт состояния, который documents предлагает транспорту (API): `lock($nodeId)` берёт блокировки дерева,
+узла и документа в фиксированном порядке и читает состояние, `markPending()` ставит pending-маркер
+`(поколение, max(seq))` в транзакции append, `publishCheckpoint()` заменяет рабочее состояние одним compare-and-set по
+поколению и версии состояния и снимает маркер, только если чекпоинт его покрывает, а `pendingDocuments()` перечисляет
+документы с маркером. Каждый метод выполняется внутри открытой транзакции Vaulter.
+`PendingStateDrainer::drain(PendingMarker $marker)` (SPI) реализует модуль коллаборации: documents вызывает его вне
+транзакции перед restore, REST replace, чтением контента или экспортом pending-документа, затем сам перечитывает маркер и
+отвечает `409 document_state_pending`, если он всё ещё стоит.
+
+См. [Совместное редактирование](/ru/guides/collaboration).
 
 ---
 

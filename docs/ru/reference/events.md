@@ -152,7 +152,7 @@ no-op и повторно не отдаётся слушателям. Две о�
 ## Трансляция комментариев
 
 Три события комментариев публикуются в `PrivateChannel` с именем
-`{collaboration.channel_prefix}.{nodeId}` (префикс по умолчанию `vaulter.documents`) —
+`{broadcast.channel_prefix}.{nodeId}` (`vaulter-documents.broadcast.channel_prefix`, по умолчанию `vaulter.documents`) —
 ту же комнату, к которой подключаются открытые редакторы для совместной работы.
 
 | Событие | `broadcastAs()` | Ключи `broadcastWith()` |

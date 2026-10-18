@@ -21,8 +21,8 @@ HTML/Markdown — см. [Экспорт](./export.md).
 
 ::: info Документы доступны при установке пакета
 Установите `axioma-studio/vaulter-documents`. Редактирование, ревизии и маршруты
-документов доступны без флага `document_versions`. Коллаборация включается отдельно
-через `vaulter-documents.collaboration.enabled`.
+документов доступны без флага `document_versions`. Совместное редактирование в реальном времени — отдельный opt-in пакет
+`axioma-studio/vaulter-collaboration` ([Совместное редактирование](/ru/guides/collaboration)).
 :::
 
 ## Модель данных
@@ -60,6 +60,7 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 | `checkpoint_state_version` | BIGINT ≥ 0 | `state_version`, захваченный головой. |
 | `content`, `content_hash`, `content_size` | json, char(64), integer | Каноническая JSON-проекция, её хеш и размер в байтах. |
 | `yjs_state`, `yjs_state_size` | binary, integer | Состояние Yjs CRDT (источник истины коллаборации) и его размер. |
+| `pending_generation`, `pending_through_seq` | BIGINT, nullable | Pending-маркер (оба заданы или оба null): сохранённые правки коллаборации этого поколения до этой последовательности журнала ещё не в чекпоинте. Ставится и снимается только через контракт состояния коллаборации; пока он стоит, контент не читается, не экспортируется и не заменяется (`409 document_state_pending`). |
 | `last_checkpoint_at` | timestamp | Когда снят последний чекпоинт. |
 | `created_by`, `updated_by`, метки времени | | Аудит. |
 
@@ -329,8 +330,8 @@ $doc = Documents::in($drive)->update(
 PUT возвращает `200` с новым рабочим состоянием и новым `ETag`; `update()` возвращает новый
 `DocumentSnapshot`. По HTTP запись требует `If-Match` с тегом контента, который вы прочитали: без
 него `428 precondition_required` (как и с `*`), с устаревшим или слабым — `412 document_state_mismatch`
-— например, если хаб коллаборации успел сохранить более новое состояние. Передаётся только JSON
-`content`; бинарное Yjs-состояние пишет хаб. Если сохранение что-то изменило, после коммита выбрасывается
+— например, если хаб коллаборации успел опубликовать более новый чекпоинт. Передаётся только JSON
+`content`; бинарное Yjs-состояние пишут чекпоинты хаба. Если сохранение что-то изменило, после коммита выбрасывается
 `DocumentContentUpdated`: `version` — чекпоинт-голова после сохранения, `created` — снят ли он
 этим сохранением. `actorId` события — действующий пользователь (null для системы).
 
@@ -541,7 +542,7 @@ Purge документа из корзины удаляет его чекпои�
 | Событие | Кем выбрасывается | Полезная нагрузка |
 |---|---|---|
 | `Vaulter\Documents\Events\Documents\DocumentCreated` | создание | `node`, `version` (чекпоинт #1), `stateVersion`, `epoch`, `actorId` |
-| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | автосохранение / store коллаборации (только при изменении) | `node`, `version` (чекпоинт-голова после сохранения), `created` (bool — снят ли чекпоинт этим сохранением), `stateVersion`, `epoch` (после сохранения), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | автосохранение / чекпоинт коллаборации (только при изменении) | `node`, `version` (чекпоинт-голова после сохранения), `created` (bool — снят ли чекпоинт этим сохранением), `stateVersion`, `epoch` (после сохранения), `actorId` |
 | `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | именование / восстановление | `node`, `version`, `stateVersion`, `epoch`, `restored` (bool), `actorId` |
 
 ## Ошибки
@@ -556,7 +557,8 @@ Purge документа из корзины удаляет его чекпои�
 | `Documents\Exceptions\InvalidDocumentContentException` | Корневой узел контента не `{"type":"doc"}`, либо превышает `max_document_size_kb`. |
 | `Documents\Exceptions\DocumentRevisionNotFoundException` | Id ревизии не принадлежит документу узла. |
 | `Documents\Exceptions\StaleDocumentStateException` | `expectedStateVersion` больше не совпадает (`412 document_state_mismatch`). |
-| `Documents\Exceptions\CollaborationEpochMismatchException` | Запись коллаборации из старого поколения комнаты (`409 collaboration_epoch_mismatch`). |
+| `Collaboration\Exceptions\CollaborationEpochMismatchException` | Запись коллаборации из старого поколения комнаты (`409 collaboration_epoch_mismatch`). |
+| `Documents\Exceptions\DocumentStatePendingException` | Сохранённые правки коллаборации ещё не в контенте; чтение, экспорт, замена или восстановление отвергнуты без изменений (`409 document_state_pending`, повторите позже). |
 | `Exceptions\Drive\NodeNameConflictException` | Создание сталкивается с именем соседа. |
 
 ## Дальше

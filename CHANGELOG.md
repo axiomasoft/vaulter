@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Collaboration package and the durability model (PLAN3.P5, ADR-0031)
+
+There are no installations to upgrade (1.0 is the starting point), so identities moved without shims or aliases;
+every moved identity is recorded in `tests/Repo/Arch/Fixtures/identities/changes.json`. Decisions and reasons:
+[ADR-0031](docs/adr/0031-collaboration-package-and-durability.md).
+
+- Added: the package `axioma-studio/vaulter-collaboration` (`Vaulter\Collaboration\`), the Node hub
+  `@vaulter/collaboration-hub` (`packages/collaboration/hub`, image `ghcr.io/axiomasoft/vaulter-collaboration-hub`, git tag
+  `vaulter-collaboration-hub-v*`, workflow `collaboration-hub-image.yml`) and the npm package `@vaulter/vue-collaboration`.
+  The module is opt-in (`vaulter.modules.collaboration`) and needs the hub URL and two different secrets; it requires core,
+  drive and documents, is not part of the `axioma-studio/vaulter` metapackage and has its own split target in
+  `monorepo-split.yml` and `release/packages.json`. Its config file is `vaulter-collaboration`.
+- Added: protocol 2. Every hub call carries `X-Vaulter-Collab-Protocol: 2` (`409 collaboration_protocol_mismatch`
+  otherwise). A client assigns each Yjs update a stable `update_id`, the hub appends it with `POST collaboration/hub/append`
+  and the editor shows *saved* only after the committed receipt. New routes: `append`, `renew`, `recheck`,
+  `compaction/lease`, `checkpoint`; new problem codes `collaboration_protocol_mismatch`, `collaboration_update_mismatch`,
+  `collaboration_update_too_large`, `collaboration_checkpoint_conflict`, `collaboration_draining`.
+- Added: four tables, one create migration each (`0001_01_01_000501` to `…504`): `v_collaboration_heads`,
+  `v_collaboration_updates`, `v_collaboration_receipts` (receipts outlive compaction) and
+  `v_collaboration_permission_versions`; foreign keys point at `v_documents` only.
+- Added: two persistence modes, `buffered` (default) and `durable` (`vaulter-collaboration.mode`, hub
+  `VAULTER_COLLAB_MODE`): bounded pending memory, writes stop in every room past the budget, an acknowledged edit is in the
+  database in both.
+- Added: compaction runs in the hub only (PHP does not merge Yjs): a worker leases due generations, merges and publishes a
+  checkpoint with one compare-and-set; `compact --pending [--deadline=<s>]` runs it once without a WebSocket server (exit
+  `0` nothing left, `1` deadline, `2` usage).
+- Added: documents gains the pending marker `(pending_generation, pending_through_seq)` on `v_documents`, the public state
+  contract `Vaulter\Documents\State\CollaborativeState` and the SPI `PendingStateDrainer`. A document with saved edits that are
+  not in a checkpoint is never read, exported or replaced from its stale state: restore, REST replace, content read, export
+  and `TrashOperations::purge`/`empty` drain it first (`drain.restore_deadline`, default 10 s), else `409 document_state_pending`.
+- Added: `vaulter:collaboration:drain [--deadline] [--release]` (draining flag, checkpoint every pending document, exit
+  `0`/`1`/`2`) and `vaulter:collaboration:prune [--dry-run]` (scheduled daily); `vaulter:module:uninstall collaboration`
+  is refused while a marker is set. Doctor check `collaboration.hub`.
+- Added: bounded revocation. Drive records `drive.access.effective_permissions_changed` (and hosts report with
+  `AccessInvalidation::changed()`); the module keeps a permission version per drive and globally, renews tokens by the
+  rights now (`POST collaboration/hub/renew`) and the ephemeral consumer `collaboration.control` tells the hubs (Redis
+  `vaulter:collab:control` or a signed `POST /control`). `hub.token_ttl` is at most 300 s (default 300, was 3600) and
+  `hub.clock_skew` (default 30) is new: a revoked writer stops no later than `token_ttl + clock_skew` (330 s) even if the
+  control message is lost.
+- Added: the hub's management listener (`VAULTER_COLLAB_MANAGEMENT_HOST`/`_PORT`, default `127.0.0.1:1235`): `/livez`,
+  `/readyz`, `/metrics` (`collab_*`), `/stats`, signed `POST /control`; `SIGTERM`/`SIGINT` drain the hub (readiness red,
+  writes stop, the pending ledger flushes, connections close `4503`); request, room, connection and rate limits.
+- Added: `scripts/collab-stand.sh` (Docker: PostgreSQL, Redis, two hubs; kill after retry, two hubs, `SIGTERM` drain) and
+  `scripts/collab-e2e.sh` on protocol 2; both are written but run outside the fast set. CI lanes for the hub and
+  `vue-collaboration`, and `collaboration` in the matrices and `consumer-isolation`.
+- Changed: config moved with the concept: `vaulter-documents.collaboration.{driver,hub.*,max_state_bytes}` are
+  `vaulter-collaboration.{driver,hub.*,max_state_bytes}`; `vaulter-documents.collaboration.enabled` no longer exists
+  (`vaulter.modules.collaboration`); the room prefix is `vaulter-documents.broadcast.channel_prefix`. The doctor check
+  `documents.collaboration` is `collaboration.hub`.
+- Changed: the room JWT claims are `sub`, `document_id`, `drive_id`, `tenant`, `generation`, `schema_version`, `scope`
+  (`read`|`write`), `permissions_version`, `room`, `iat`, `exp`, `jti`.
+- Changed: the hub's liveness endpoint is `GET /livez` on the management port (`VAULTER_COLLAB_HEALTH_PORT` and
+  `GET /health` are gone), `VAULTER_COLLAB_DEBOUNCE_MS` only delays unloading an idle room (saving is the append), and a
+  connection without `protocol=2` in its query is read-only. The stock provider of `@vaulter/vue-collaboration` does not add
+  the parameter yet: pass it with `createCollaborationAdapter({ providers: { createHocuspocusProvider } })`.
+- Changed: `@vaulter/vue` has no `yjs` or `@hocuspocus/*`; `useCollaboration` and the Yjs transport are in
+  `@vaulter/vue-collaboration`, which plugs in through `VaulterPlugin`'s `collaboration` option.
+- Removed: `POST v1/collaboration/hub/store` and `PersistCollaborationStateAction` (a save is an append with a receipt),
+  `vaulter-documents.collaboration.*`, the `hocuspocus-server` directory and the image/workflow names `vaulter-hocuspocus`
+  and `hocuspocus-image.yml`.
+- Fixed: an append re-checks the drive status under its locks, so an archive or deletion committed after the session opened
+  can no longer be followed by a landed append; a single `collaboration_protocol_mismatch` no longer stops durable hub
+  writes until a restart.
+
 ### Package ownership of schema, models and configuration (PLAN3.P4, ADR-0030)
 
 There are no installations to upgrade (1.0 is the starting point), so identities moved without shims or aliases;

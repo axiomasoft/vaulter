@@ -138,7 +138,8 @@ they are exercised on Postgres in CI so they cannot regress:
   containment queries; other engines store plain `json`/text and skip the gin index.
 - **Binary document state.** The Yjs CRDT snapshot (`yjs_state`) is a binary column. Vaulter
   stores it so it round-trips losslessly on every engine, including Postgres `bytea` (which
-  otherwise truncates binary at the first NUL byte through a plain string bind).
+  otherwise truncates binary at the first NUL byte through a plain string bind). The collaboration update log
+  (`v_collaboration_updates.payload`) is stored the same way.
 
 None of this needs configuration — point Vaulter at Postgres and it applies automatically.
 

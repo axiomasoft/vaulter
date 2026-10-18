@@ -68,7 +68,7 @@ const guideSidebar = [
     collapsed: false,
     items: [
       { text: 'Realtime Collaboration', link: '/guides/collaboration' },
-      { text: 'Hocuspocus Server (Docker)', link: '/guides/hub' },
+      { text: 'Collaboration hub (Docker)', link: '/guides/hub' },
       { text: 'Vue package (@vaulter/vue)', link: '/guides/vue' },
       { text: 'Filament admin plugin', link: '/guides/filament' },
     ],
@@ -122,6 +122,7 @@ const adrSidebar = [
       { text: '0012 — Dedup scope', link: '/adr/0012-dedup-scope' },
       { text: '0013 — Two sharing channels', link: '/adr/0013-two-sharing-channels' },
       { text: '0014 — Legacy DocVault excise', link: '/adr/0014-legacy-docvault-strangler' },
+      { text: '0031 — Collaboration package & durability', link: '/adr/0031-collaboration-package-and-durability' },
     ],
   },
 ]
@@ -193,7 +194,7 @@ const ruGuideSidebar = [
     collapsed: false,
     items: [
       { text: 'Совместное редактирование', link: '/ru/guides/collaboration' },
-      { text: 'Hocuspocus-сервер (Docker)', link: '/ru/guides/hub' },
+      { text: 'Хаб коллаборации (Docker)', link: '/ru/guides/hub' },
       { text: 'Vue-пакет (@vaulter/vue)', link: '/ru/guides/vue' },
       { text: 'Плагин Filament', link: '/ru/guides/filament' },
     ],

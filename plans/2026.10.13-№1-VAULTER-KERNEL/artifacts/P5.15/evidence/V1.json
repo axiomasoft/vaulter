@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261018T060613Z-37eb2a:P5.15:checks.1:V1",
+  "check_id": "V1",
+  "subject": "PLAN3.P5.15",
+  "candidate": {
+    "head": "d0f3f7f9130e705af9c92246e7e1f231622e0b39",
+    "dirty_digest": "a5273ea95d84a4ee54a5a9fc5880340bc156da21f0766d08c9d531d31b5e642d"
+  },
+  "started_at": "2026-10-18T06:53:02Z",
+  "procedure": {
+    "cmd": "ls docs/adr | grep -q '^0031-' && grep -q '0031' docs/adr/index.md",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-18T06:53:02Z"
+}

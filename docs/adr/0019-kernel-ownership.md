@@ -25,7 +25,7 @@ config.
 
 **1. Package set is kept.** Composer packages stay `vaulter-core`, `vaulter-media`, `vaulter-drive`,
 `vaulter-documents`, `vaulter-filament`, `vaulter-azgard`; npm — `@vaulter/vue`; plus
-`hocuspocus-server`. A metapackage **`axioma-studio/vaulter`** (`core + media + drive + documents`)
+the Node hub (now `@vaulter/collaboration-hub`, [ADR-0031](/adr/0031-collaboration-package-and-durability)). A metapackage **`axioma-studio/vaulter`** (`core + media + drive + documents`)
 is added.
 
 **2. Dependencies are honest.** `vaulter-documents` **requires** `vaulter-drive` (N15);

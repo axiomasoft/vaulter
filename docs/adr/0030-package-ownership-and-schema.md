@@ -20,7 +20,7 @@ writes to it and reads it through its own models. A foreign key points from the 
 depends on, never back. The dependency graph is the Composer graph:
 
 ```text
-core  <-  media  <-  drive  <-  documents  <-  collaboration (later)
+core  <-  media  <-  drive  <-  documents  <-  collaboration (ADR-0031)
                       ^   ^   ^
           webhooks  azgard  filament
 ```
@@ -48,7 +48,7 @@ the dependency graph and no migration coordinator is needed:
 | `0001_01_01_0002NN` | drive |
 | `0001_01_01_0003NN` | documents |
 | `0001_01_01_0004NN` | webhooks |
-| `0001_01_01_0005NN` | collaboration (reserved) |
+| `0001_01_01_0005NN` | collaboration ([ADR-0031](/adr/0031-collaboration-package-and-durability)) |
 
 The definitions are schema classes of the owner (`MediaSchema`, `DriveSchema`, `DocumentsSchema`, `WebhooksSchema`);
 core keeps only generic helpers (`Vaulter\Schema\*`: id strategies, host key columns, `SchemaHelpers`, the kernel's own

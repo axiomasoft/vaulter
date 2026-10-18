@@ -45,7 +45,8 @@ Either command also pulls in `axioma-studio/vaulter-core` as a dependency, so a
 plain `composer require axioma-studio/vaulter-core` alone is only useful if you build your own modules
 on the kernel.
 
-Three packages are not in the metapackage and are installed on demand. Each requires `vaulter-drive`:
+Four packages are not in the metapackage and are installed on demand. Each requires `vaulter-drive` (collaboration also
+requires `vaulter-documents`):
 
 <!-- snippet: shell -->
 
@@ -58,11 +59,15 @@ composer require axioma-studio/vaulter-filament
 
 # AzGuard permission driver
 composer require axioma-studio/vaulter-azgard
+
+# Realtime collaboration (opt-in module, see section 3) — requires vaulter-documents
+composer require axioma-studio/vaulter-collaboration
 ```
 
 `vaulter-webhooks` opens outbound network traffic, so its module stays off until you switch it on in
 `config/vaulter.php` (`'modules' => ['webhooks' => true]`, see [Modules](/concepts/modules)); its tables are
-created by `php artisan migrate` either way.
+created by `php artisan migrate` either way. `vaulter-collaboration` is opt-in for the same reason (a network
+channel and secrets): `'modules' => ['collaboration' => true]`, see section 3.
 
 Protected HTTP routes require authentication through `auth:sanctum` by default.
 Install and configure Laravel Sanctum in your host (`composer require laravel/sanctum`),
@@ -120,7 +125,8 @@ php artisan migrate
 ::: info Migrations are not published
 Every package runs the migrations of the tables it owns straight from `vendor/`: `vaulter-core` the
 outbox and idempotency keys, `vaulter-media` the blobs and their pins, `vaulter-drive` the drive tables,
-`vaulter-documents` the document tables, `vaulter-webhooks` the endpoints and deliveries. There is no publish tag for them, so there are no published
+`vaulter-documents` the document tables, `vaulter-webhooks` the endpoints and deliveries, `vaulter-collaboration` the update log,
+receipts and permission versions. There is no publish tag for them, so there are no published
 copies to drift from the package, and a table you did not install a package for is never created. The
 published config lands at `config/vaulter.php`.
 :::
@@ -156,20 +162,45 @@ This globally registers the Drive components (`VaulterDrive`, `VaulterUploader`,
 step beyond your app's own bundler (Vite, etc.). Vue `^3.4` is a peer dependency.
 :::
 
-## 3. Collaboration server (optional)
+## 3. Collaboration (optional)
 
-Realtime editing uses the `hocuspocus` driver and a small Node.js Hocuspocus
-hub, shipped with a `Dockerfile` and `docker-compose.yml` under `hocuspocus-server/`:
+Realtime editing is three pieces: the Laravel module `axioma-studio/vaulter-collaboration`, the Node hub
+(`@vaulter/collaboration-hub`, the image `ghcr.io/axiomasoft/vaulter-collaboration-hub`) and the browser package
+`@vaulter/vue-collaboration`. The module is **opt-in**: enable it in `config/vaulter.php` and give it the hub URL and
+two different secrets, or the application refuses to boot with it active:
+
+<!-- snippet: host -->
+
+```php
+// config/vaulter.php
+'modules' => [
+    'collaboration' => true,
+],
+```
+
+```dotenv
+VAULTER_COLLAB_URL=wss://collab.example.com
+VAULTER_COLLAB_SECRET=<32+ char random>            # room-token signing key, Laravel only
+VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub
+```
+
+Run the hub from the published image (the compose file is `packages/collaboration/hub/docker-compose.yml`) and install the
+browser package:
 
 <!-- snippet: shell -->
 
 ```bash
-cp hocuspocus-server/.env.example hocuspocus-server/.env
-docker compose -f hocuspocus-server/docker-compose.yml up -d
+docker run -d --name vaulter-collab -p 127.0.0.1:1234:1234 \
+  -e VAULTER_BACKEND_URL=https://app.example.com \
+  -e VAULTER_COLLAB_ALLOWED_ORIGINS=https://app.example.com \
+  -e VAULTER_COLLAB_WEBHOOK_SECRET="$VAULTER_COLLAB_WEBHOOK_SECRET" \
+  ghcr.io/axiomasoft/vaulter-collaboration-hub:1
+npm install @vaulter/vue-collaboration yjs
 ```
 
-The hub is required when realtime collaboration is enabled. Details and
-the full env contract are in [Collaboration → Server](/guides/collaboration).
+The hub is required when collaboration is enabled. The configuration, the protocol, the durability modes, switching the
+module off and the frontend wiring are in [Realtime Collaboration](/guides/collaboration); the hub's environment contract,
+management endpoints and shutdown are in [Collaboration hub](/guides/hub).
 
 ## Verify the install
 

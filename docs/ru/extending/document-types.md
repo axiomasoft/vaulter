@@ -162,7 +162,7 @@ it('keeps the document type contract', function (): void {
 выключили (`vaulter-documents.tiptap.extra_nodes`), всё равно открывается — неизвестные части
 опускаются. Сохранить такой вид обратно значило бы удалить их навсегда, поэтому документ
 доступен только для чтения: `DocumentSnapshot::$editable = false`, совместная работа
-открывается только на чтение (authenticate хаба отвечает `readOnly: true`, а его store — 409), а
+открывается только на чтение (сессия `mode: ro`, поэтому authenticate хаба отвечает read-only, а его append отвергаются), а
 `update()` отвечает `409 document_content_degraded`. Включите
 расширение снова (или восстановите ревизию без него) — документ снова редактируемый.
 

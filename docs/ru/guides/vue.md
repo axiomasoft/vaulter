@@ -20,8 +20,9 @@ npm install @vaulter/vue
 ```
 
 ::: tip Peer-зависимости
-Peer-зависимости: `vue@^3.4`, `yjs@^13.6` и `@tiptap/pm@^3`. Транспорт совместного редактирования тянет
-`@hocuspocus/provider`; сам редактор (TipTap, Univer, …) — ваш, см. [viewer'ы](#viewer-ы).
+Peer-зависимости: `vue@^3.4` и `@tiptap/pm@^3`. В `@vaulter/vue` нет Yjs: редактирование в реальном времени — отдельный пакет
+`@vaulter/vue-collaboration` (peer-зависимости `yjs@^13.6` и `@vaulter/vue`, зависит от `@hocuspocus/provider`); сам редактор
+(TipTap, Univer, …) — ваш, см. [viewer'ы](#viewer-ы).
 :::
 
 ## Настройка
@@ -237,7 +238,6 @@ app.use(VaulterPlugin, {
 | `useComments(nodeId)` | обсуждение |
 | `useDocument(nodeId)` | загрузка, отложенное автосохранение, `conflict`, экспорт |
 | `useRevisions(nodeId)` | история документа: `snapshot`, `setRetention`, `restore` |
-| `useCollaboration(nodeId)` | сессия реального времени (ниже) |
 
 **Мутации принимают узел, а не его id**, потому что сервер сравнивает его `etag`:
 
@@ -260,9 +260,15 @@ await rename(node, 'new name')       // отправляет If-Match: node.etag
 
 ### Совместное редактирование
 
-`useCollaboration(nodeId, { supportedSchemaVersion, onEpochChanged })` запрашивает сессию
-(`documents.collaborationSession`) и открывает провайдер Hocuspocus на `Y.Doc`, который вы привязываете расширением
-Collaboration из TipTap. Содержимое всегда приходит от хаба — не заполняйте редактор сами.
+Редактирование в реальном времени находится не в `@vaulter/vue`: пакет определяет шов (`VaulterCollaborationKey`, типы
+`CollaborationAdapter`, `CollaborationHandle` и `CollaborationStatus`) и путь REST-автосохранения. Установите
+`@vaulter/vue-collaboration` и передайте `createCollaborationAdapter()` опцией `collaboration` в `VaulterPlugin`;
+`VaulterDocumentNode` тогда открывает сессию для коллаборативных типов документов и возвращается к автосохранению только
+когда модуль не предлагается (`404` или `409 collaboration_unavailable`). Его `useCollaboration(nodeId, { client,
+supportedSchemaVersion, onEpochChanged })` запрашивает сессию (`documents.collaborationSession`), открывает провайдер
+Hocuspocus на `Y.Doc`, который вы привязываете расширением Collaboration из TipTap, и сообщает статус сохранения
+`status` (`synchronized`, `pending`, `saved`, `error` — `saved` делает только квитанция бэкенда). Содержимое всегда
+приходит от хаба — не заполняйте редактор сами.
 
 - `readOnly` истинно для сессии `ro` **или** если схема сервера новее `supportedSchemaVersion` (`schemaOutdated`):
   монтируйте редактор с `editable: false` и попросите пользователя обновить приложение.
@@ -271,8 +277,7 @@ Collaboration из TipTap. Содержимое всегда приходит о
 - `4001` (токен истёк) и `4403` (право на запись потеряно) обновляют сессию; `4422` не повторяется.
 
 `connect()`, который перехватил другой `connect()`/`disconnect()`, отклоняется с `CollaborationCancelledError` — это не сбой сессии.
-
-`createCollaborationSession(client, nodeId, options)` делает то же один раз, без логики переоткрытия.
+Обвязка, члены и очередь обновлений — в [Совместном редактировании](/ru/guides/collaboration#обвязка-фронтенда-vaulter-vue-collaboration).
 
 ## Компоненты
 
@@ -377,5 +382,5 @@ app.use(VaulterPlugin, { viewers: { 'vaulter/tiptap': () => import('./AppDocumen
 - [Справочник REST API](/ru/reference/rest-api) — контракт, из которого генерируется этот пакет.
 - [Файлы и папки](/ru/concepts/nodes-and-revisions) — маршруты Drive за этими composable-функциями.
 - [Авторизация](/ru/concepts/access-model) — права, на которых гейтятся компоненты.
-- [Совместное редактирование в реальном времени](/ru/guides/collaboration) — Yjs-транспорт, который открывает `useCollaboration`.
+- [Совместное редактирование в реальном времени](/ru/guides/collaboration) — Yjs-транспорт, который открывает `@vaulter/vue-collaboration`.
 - [Руководство по обновлению](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md) — что изменилось по сравнению с пакетом до v1.

@@ -41,22 +41,25 @@ $file = $drive->files()->upload(UploadSource::fromString('hello', 'hello.txt'), 
 | `axioma-studio/vaulter-core` | the kernel: modules, operations, events and outbox, idempotency, errors |
 | `axioma-studio/vaulter-media` | content-addressed storage and the blob pins |
 | `axioma-studio/vaulter-drive` | folders, files, uploads (tus/S3), access, sharing, activity; the `Vaulter` entry point |
-| `axioma-studio/vaulter-documents` | editor, versions, comments, collaboration (opt-in) |
+| `axioma-studio/vaulter-documents` | editor, versions, comments, export |
+| `axioma-studio/vaulter-collaboration` | realtime editing with committed save receipts (opt-in module); the Node hub lives in `packages/collaboration/hub` |
 | `axioma-studio/vaulter-webhooks` | outbound webhooks (opt-in module) |
 | `axioma-studio/vaulter-azgard` | AzGuard permission resolver |
 | `axioma-studio/vaulter-filament` | Filament admin (optional, Laravel 13) |
 | `axioma-studio/vaulter` | metapackage: core, media, drive and documents |
 | `@vaulter/vue` | TypeScript / Vue 3 client and components |
+| `@vaulter/vue-collaboration` | the browser side of realtime editing: update queue and save status |
 
-Each package owns its tables, models and config file (`vaulter-<package>`); webhooks, azgard and filament are
-installed separately. See [ADR-0030](docs/adr/0030-package-ownership-and-schema.md). The optional collaboration hub
-lives in `hocuspocus-server/`.
+Each package owns its tables, models and config file (`vaulter-<package>`); webhooks, collaboration, azgard and
+filament are installed separately. See [ADR-0030](docs/adr/0030-package-ownership-and-schema.md) and
+[ADR-0031](docs/adr/0031-collaboration-package-and-durability.md). The optional collaboration hub (Node, Docker image
+`ghcr.io/axiomasoft/vaulter-collaboration-hub`) lives in `packages/collaboration/hub/`.
 
 ## Documentation
 
 - [Quick start](docs/getting-started/quick-start.md) · [Installation](docs/getting-started/installation.md)
 - [Concepts](docs/concepts/architecture.md) · [Glossary](docs/concepts/glossary.md)
-- [Guides](docs/guides/uploads.md) · [Extending](docs/extending/profiles.md)
+- [Guides](docs/guides/uploads.md) · [Extending](docs/extending/profiles.md) · [Realtime collaboration](docs/guides/collaboration.md)
 - [Operations runbooks](docs/guides/operations.md) · [Security](docs/security/threat-model.md)
 - [Contributing](CONTRIBUTING.md) · [Upgrading](UPGRADE.md)
 
@@ -68,13 +71,15 @@ vaulter/
 │   ├── core/                  # axioma-studio/vaulter-core — the kernel (Vaulter\)
 │   ├── media/                 # axioma-studio/vaulter-media — content-addressed (CAS) file/blob layer (Vaulter\Media\)
 │   ├── drive/                 # axioma-studio/vaulter-drive — folders/files, uploads, access, sharing (Vaulter\Drive\)
-│   ├── documents/             # axioma-studio/vaulter-documents — TipTap/Yjs editing, versions, comments
+│   ├── documents/             # axioma-studio/vaulter-documents — TipTap/Yjs documents, versions, comments
+│   ├── collaboration/         # axioma-studio/vaulter-collaboration — realtime editing (Vaulter\Collaboration\)
+│   │   └── hub/               # @vaulter/collaboration-hub — the Node Hocuspocus hub (+ Docker)
 │   ├── webhooks/              # axioma-studio/vaulter-webhooks — outbound webhooks (Vaulter\Webhooks\)
 │   ├── azgard/                # axioma-studio/vaulter-azgard — AzGuard permission driver
 │   ├── vaulter/               # axioma-studio/vaulter — metapackage
 │   ├── vue/                   # @vaulter/vue — TypeScript Vue 3 client, composables & components
+│   ├── vue-collaboration/     # @vaulter/vue-collaboration — Yjs transport, update queue, save status
 │   └── filament/              # axioma-studio/vaulter-filament — Filament 5 admin (Vaulter\Filament\)
-├── hocuspocus-server/    # optional Node Hocuspocus collaboration hub (+ Docker)
 ├── docs/                 # VitePress developer documentation
 └── (pint, phpstan, rector, pest, Makefile, CI…)
 ```

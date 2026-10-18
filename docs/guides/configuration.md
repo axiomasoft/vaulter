@@ -217,7 +217,7 @@ upload tables exist independently of this setting. Name rules, folder limits and
 per-profile file size limit live in the profile's drive policy (see
 [Drive → Names, limits, stars and properties](/concepts/nodes-and-revisions)). See [Uploads](/guides/uploads) and [Trash](/guides/trash).
 
-## Documents: content, revisions, comments and collaboration
+## Documents: content, revisions and comments
 
 <!-- snippet: config -->
 
@@ -227,18 +227,7 @@ per-profile file size limit live in the profile's drive policy (see
 'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
 'comments' => ['enabled' => true],
 'exporters' => [\Vaulter\Documents\Export\HtmlExporter::class, \Vaulter\Documents\Export\MarkdownExporter::class],
-'collaboration' => [
-    'enabled' => false,
-    'driver' => 'hocuspocus',
-    'hub' => [
-        'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
-        'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-        'token_ttl' => 3600,
-        'timestamp_tolerance' => 300,
-    ],
-    'broadcast' => ['channel_prefix' => 'vaulter.documents'],
-],
+'broadcast' => ['channel_prefix' => 'vaulter.documents'],
 'models' => [
     'document_revision' => \Vaulter\Documents\Models\Revisions\DocumentRevision::class,
     'node_comment' => \Vaulter\Documents\Models\Comments\NodeComment::class,
@@ -248,15 +237,23 @@ per-profile file size limit live in the profile's drive policy (see
 Installing `vaulter-documents` enables document editing and revisions. Blobs and file
 revisions are always enabled.
 Comments now default to **true**; set `vaulter-documents.comments.enabled = false`
-to disable them. Collaboration remains opt-in. When enabled, both hub secrets must be present and distinct:
-production boot fails otherwise; development and testing log a warning.
+to disable them. `broadcast.channel_prefix` is the namespace of the comment channels and of the collaboration rooms.
 
 `exporters` is a list of exporter class names. Custom TipTap allow-lists live in
 `vaulter-documents.tiptap.*`. `vaulter-documents.types` lists the registered
 [document type](/extending/document-types) classes. A list without a rich-text type (`['markdown']`) leaves the default
 `vaulter-documents.default_type` (`vaulter/rich-text`) unregistered, and boot fails until you set it
 to a registered key such as `vaulter/markdown`.
-See [Collaboration](/guides/collaboration) and [Export](/guides/export).
+See [Export](/guides/export).
+
+## Collaboration {#collaboration}
+
+Realtime editing is the separate, opt-in package `axioma-studio/vaulter-collaboration` with the config file
+`config/vaulter-collaboration.php` (publish tag `vaulter-collaboration-config`). It is active only when
+`vaulter.modules.collaboration` is `true`; then the hub URL (`hub.url`) and both secrets (`hub.jwt_secret`,
+`hub.webhook_secret`, present and different) are required — the application does not boot without them. The keys
+(`hub.*`, `control.*`, `mode`, `limits.*`, `compaction.*`, `drain.*`, `retention.*`, `schedule.*`) are listed in
+[Realtime Collaboration → Config](/guides/collaboration#config).
 
 ## Typed access
 

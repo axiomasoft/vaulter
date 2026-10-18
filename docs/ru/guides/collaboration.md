@@ -1,111 +1,195 @@
 ---
 title: Совместное редактирование
-description: Совместное редактирование документов в реальном времени на Yjs и внешнем хабе Hocuspocus — сессия, ограждение по поколению (epoch), загрузка и сидирование на сервере, отказы записи, read-only и обвязка @vaulter/vue.
+description: Совместное редактирование документов в реальном времени пакетом vaulter-collaboration на Yjs и хабе коллаборации — установка, конфиг vaulter-collaboration, протокол 2 с подтверждённой квитанцией, режимы buffered и durable, компактация, состояние pending, ревокация, drain и обвязка @vaulter/vue-collaboration.
 outline: deep
 ---
 
 # Совместное редактирование
 
-Vaulter редактирует **узлы-документы** (`kind = document`, контент в агрегате `v_documents`)
-совместно в реальном времени. Бесконфликтное слияние обеспечивает **Yjs** — бинарное
-CRDT-состояние является **источником истины**, JSON TipTap — его проекция. Транспорт —
-внешний хаб **Hocuspocus** (`hocuspocus-server/`) за контрактом
-[`CollaborationDriver`](#расширение).
+Vaulter редактирует **узлы-документы** (`kind = document`, контент в агрегате `v_documents`) совместно в реальном
+времени. Бесконфликтное слияние обеспечивает **Yjs**: бинарные обновления — **источник истины**, JSON TipTap —
+проекция чекпоинта. Коллаборация — отдельный пакет, три части ставятся вместе:
 
-Reverb для совместного редактирования Yjs удалён: `vaulter-documents.collaboration.driver =
-reverb` теперь даёт `InvalidConfigurationException`. Broadcast-каналы комментариев и их
-проверки доступа сохраняются.
+| Часть | Что это |
+|---|---|
+| `axioma-studio/vaulter-collaboration` | Laravel-модуль (`Vaulter\Collaboration\`): эндпоинт сессии, room-токен, протокол хаба, журнал обновлений, команды drain и prune. Opt-in. |
+| `@vaulter/collaboration-hub` | Node-хаб (Hocuspocus + Yjs), поставляется образом `ghcr.io/axiomasoft/vaulter-collaboration-hub` — см. [Хаб коллаборации](/ru/guides/hub). |
+| `@vaulter/vue-collaboration` | Браузерная часть: конверты обновлений, очередь повторов, статус сохранения — [ниже](#обвязка-фронтенда-vaulter-vue-collaboration). |
+
+Пакет documents хранит агрегат и контракт (`CollaborationDriver`, `SupportsCollaboration`); кода хаба в нём нет. Решение и
+его причины — [ADR-0031](/adr/0031-collaboration-package-and-durability).
+
+Reverb для совместного редактирования Yjs удалён: `driver = reverb` даёт `InvalidConfigurationException`. Broadcast-каналы
+комментариев и их проверки доступа сохраняются.
+
+## Установка и включение
+
+<!-- snippet: shell -->
+
+```bash
+composer require axioma-studio/vaulter-collaboration
+```
+
+Модуль **opt-in** (он открывает сетевой канал и требует секреты). Включите его и задайте URL хаба и оба секрета; активный
+модуль без них не даёт приложению загрузиться, а `vaulter:doctor` называет, чего не хватает:
+
+<!-- snippet: host -->
+
+```php
+// config/vaulter.php
+'modules' => [
+    'collaboration' => true,
+],
+```
+
+```dotenv
+VAULTER_COLLAB_URL=wss://collab.example.com
+VAULTER_COLLAB_SECRET=<32+ случайных символа>          # ключ подписи room-токена, только Laravel
+VAULTER_COLLAB_WEBHOOK_SECRET=<другое случайное>       # общий с хабом, подписывает каждый вызов хаба
+```
+
+`php artisan migrate` создаёт таблицы модуля (`v_collaboration_heads`, `v_collaboration_updates`,
+`v_collaboration_receipts`, `v_collaboration_permission_versions`) и подключает его маршруты. Без модуля документы
+редактируются по одному обычными эндпоинтами контента. Токены подписывает `firebase/php-jwt` — зависимость пакета.
 
 ## Конфигурация
 
-Все ключи находятся под `config('vaulter-documents.collaboration')`:
+Файл — `config/vaulter-collaboration.php` (тег публикации `vaulter-collaboration-config`):
 
 <!-- snippet: config -->
 
 ```php
-// config/vaulter-documents.php
-'collaboration' => [
-    'enabled' => false,
+// config/vaulter-collaboration.php
+return [
     'driver' => 'hocuspocus',
     'hub' => [
         'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
         'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
         'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-        'token_ttl' => 3600,
+        'token_ttl' => 300,
+        'clock_skew' => 30,
         'timestamp_tolerance' => 300,
     ],
+    'control' => [
+        'transport' => env('VAULTER_COLLAB_CONTROL_TRANSPORT', 'none'),
+    ],
     'max_state_bytes' => 16777216,
-    'broadcast' => ['channel_prefix' => 'vaulter.documents'],
-],
+    'mode' => env('VAULTER_COLLAB_MODE', 'buffered'),
+];
 ```
 
 | Ключ | Env | По умолчанию | Назначение |
 |---|---|---|---|
-| `enabled` | — | `false` | Opt-in. Выключено: маршруты не смонтированы, `collaborationSession()` отвечает `409 collaboration_unavailable`. |
 | `driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Единственный транспорт; `reverb` отвергается. |
-| `broadcast.channel_prefix` | — | `vaulter.documents` | Пространство имён комнат: `<prefix>.<driveId>.<nodeId>.<epoch>`. |
-| `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | WebSocket-URL хаба для клиента. |
-| `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(не задан)* | Ключ HS256 для выпуска и проверки room-JWT. Только на стороне Laravel. |
-| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Ключ HMAC-подписи тела каждого вызова хаба. Общий с хабом; должен отличаться от `jwt_secret` — одинаковые значения дают `InvalidConfigurationException` при загрузке приложения в любом окружении (этот секрет есть у хаба, и при совпадении он смог бы подписать room-токен любого пользователя). |
-| `hub.token_ttl` | — | `3600` | Срок жизни room-JWT в секундах, от 1 до 3600 (иначе `InvalidConfigurationException`). Права перепроверяются при каждом вызове хаба, поэтому токен не живёт дольше часа. |
-| `hub.timestamp_tolerance` | — | `300` | Допустимый сдвиг часов подписанного вызова и окно защиты от повтора. |
-| `max_state_bytes` | — | `16777216` | Максимальный бинарный Yjs-state одной записи (`413 document_state_too_large`). |
+| `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | WebSocket-URL хаба для клиента (в продакшне `wss://`). |
+| `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(не задан)* | Ключ HS256 для выпуска и проверки room-токена. Только на стороне Laravel. |
+| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Ключ HMAC-подписи тела каждого вызова хаба и канала control. Общий с хабом; должен отличаться от `jwt_secret` — одинаковые значения дают `InvalidConfigurationException` при загрузке (этот секрет есть у хаба, и при совпадении он смог бы подписать room-токен любого пользователя). |
+| `hub.token_ttl` | — | `300` | Срок жизни room-токена в секундах, от 1 до **300** (иначе `InvalidConfigurationException`). Ограничивает [экспозицию](#ревокация-и-граница-экспозиции) при потере control-сообщения. |
+| `hub.clock_skew` | — | `30` | Допустимый сдвиг часов для `exp` токена, от 0 до 60 секунд — у хаба и у бэкенда. Не допуск подписи запроса. |
+| `hub.timestamp_tolerance` | — | `300` | Допустимый сдвиг часов *подписанного вызова хаба* и окно защиты от повтора. |
+| `control.transport` | `VAULTER_COLLAB_CONTROL_TRANSPORT` | `none` | Как смена прав сразу доходит до хабов: `redis`, `http` или `none`. |
+| `control.redis.connection` | `VAULTER_COLLAB_CONTROL_REDIS` | `default` | Redis-соединение, публикующее в `vaulter:collab:control`. |
+| `control.http.urls` | `VAULTER_COLLAB_CONTROL_URLS` | *(пусто)* | Management-URL хабов через запятую (`http://hub-1:1235`). |
+| `control.http.timeout` | — | `2` | Секунд на один control POST. |
+| `max_state_bytes` | — | `16777216` | Максимальный бинарный Yjs-state одного чекпоинта или seed (`413`). |
+| `mode` | `VAULTER_COLLAB_MODE` | `buffered` | `buffered` или `durable` — [когда правка считается сохранённой](#сохранено-значит-квитанция). Здесь проверяется при загрузке; режим исполняет хаб по своему `VAULTER_COLLAB_MODE`, поэтому задайте оба одинаково. |
+| `limits.update_bytes` | — | `1048576` | Максимальное декодированное Yjs-обновление одного append. |
+| `limits.request_bytes` | — | `2097152` | Максимальное тело запроса append; проверяется до декодирования. |
+| `compaction.trigger_updates` / `trigger_bytes` / `trigger_age` | — | `500` / `1048576` / `600` | Поколение подлежит компактации при стольких записях журнала, байтах или секундах с самой старой записи. Запрос drain подходит всегда. |
+| `compaction.lease_ttl` | — | `60` | Секунд, на которые хаб берёт lease поколения. |
+| `drain.restore_deadline` | — | `10` | Секунд, которые restore, REST replace, чтение контента или экспорт *pending*-документа ждут компактации хабом, прежде чем ответить `409 document_state_pending`. |
+| `drain.cache_store` | — | `null` (store по умолчанию) | Cache-store флага draining; должен быть общим для всех PHP-процессов (не `array`/`null`). |
+| `drain.max_append_tx` | — | `5` | Самая долгая транзакция append; drain сообщает итог не раньше этого срока после выставления флага. |
+| `retention.retired_generation_days` | — | `7` | Дней, которые журнал и квитанции закрытого поколения живут после того, как мог прийти его последний токен и повтор. |
+| `schedule.collaboration_prune` | — | `dailyAt:03:40` | Расписание `vaulter:collaboration:prune` (грамматика и переключатель `vaulter.schedule.enabled` те же, что у расписания ядра). |
+
+Полный сгенерированный список — в [справочнике конфигурации](/ru/reference/config). Имя комнаты —
+`<prefix>.<driveId>.<nodeId>.<поколение>`, префикс — `vaulter-documents.broadcast.channel_prefix` (по умолчанию
+`vaulter.documents`).
 
 ::: warning Коллаборация включается отдельно
-Включите `vaulter-documents.collaboration.enabled`, установите `firebase/php-jwt` и задайте
-оба секрета хаба — заданные и разные (одинаковые значения не дадут загрузиться). Кэш защиты
-от повтора подписанных вызовов живёт в `Cache`-store приложения: в продакшне нужен общий для
-всех инстансов store (Redis, database), а не `array` или `file`.
+Включите `vaulter.modules.collaboration` и задайте оба секрета — заданные и разные. Кэш защиты от повтора подписанных
+вызовов и флаг draining живут в `Cache`-store приложения: в продакшне нужен общий для всех инстансов store (Redis,
+database), а не `array` или `file`.
 :::
+
+## Сохранено значит квитанция
+
+Синхронизация Yjs — **не** подтверждение сохранения. Протокол 2 разделяет *доставлено* и *сохранено*:
+
+1. Клиент даёт каждому локальному Yjs-обновлению стабильный `update_id` (UUID), заворачивает его в *конверт*
+   `{generation, update_id, sha256, binary}` и держит в ограниченной очереди повторов.
+2. Хаб добавляет обновление в журнал вызовом `POST collaboration/hub/append`. Бэкенд проверяет права на этот момент,
+   вставляет обновление и **квитанцию** в одной транзакции и ставит [pending-маркер](#компактация-и-состояние-pending)
+   документа.
+3. Только после commit хаб отвечает клиенту `{t: "ack", id, seq, g}`. Повтор того же `update_id` (переподключение, таймаут
+   после commit) возвращает тот же `seq` и не создаёт вторую правку. Тот же `update_id` с другими байтами —
+   `422 collaboration_update_mismatch`.
+
+Редактор показывает правду: **synchronized** (подключён и в такте с хабом), **pending** (локальные правки без квитанции) и
+**saved** (у каждого локального обновления есть квитанция). Отказ или переполнение очереди — **error**, но не saved.
+
+| Режим | Правка доходит до других клиентов | Она *сохранена* | Недоступный бэкенд | Что теряет kill хаба |
+|---|---|---|---|---|
+| `buffered` (по умолчанию) | сразу, до append | после квитанции | pending-байты остаются в памяти, ограничены на комнату и на всё; за границей **все** комнаты перестают принимать записи, пока журнал не разгрузится | обновления без квитанции; RPO **не** ограничен debounce |
+| `durable` | сразу, но подтверждается только после commit | после квитанции | пока append падают, записи останавливаются во всех комнатах; новые конверты отвергаются с `retry: true` и остаются в очереди клиента | ничего из подтверждённого |
+
+Подтверждённая правка в обоих режимах лежит в базе. Память хаба ограничена `VAULTER_COLLAB_PENDING_BUDGET_BYTES` (все
+комнаты) и `VAULTER_COLLAB_PENDING_ROOM_BUDGET_BYTES` (одна комната); хаб сообщает каждому соединению
+`{t: "status", mode, writes: "open" | "stopped", reason}`, чтобы редактор показал причину остановки (`draining`,
+`pending_budget`, `backend_unavailable`, `protocol_mismatch`, `document_too_large`).
+
+Вызовы хаба к бэкенду повторяются с full jitter (база 100 мс, потолок 2 с, не более 5 попыток, 10 с в сумме, 2 с на
+попытку; `Retry-After` ответа `429` учитывается). Сетевые ошибки, `5xx` и `429` повторяются; ошибки авторизации, валидации
+и поколения — нет.
 
 ## Поколения: epoch
 
-У каждого документа есть **поколение коллаборации** (`v_documents.collab_epoch`). Оно растёт,
-когда рабочее состояние заменяется не из комнаты:
+У каждого документа есть **поколение коллаборации** (`v_documents.collab_epoch`). Оно сдвигается, когда рабочее состояние
+заменяют вне комнаты:
 
 - `restore()` ревизии;
-- `update()` коллаборативного документа, у которого уже есть Yjs-state (замена JSON через
-  API/PHP — Yjs-state сбрасывается, следующая комната сидируется из нового JSON).
+- `update()` коллаборативного документа, у которого уже есть Yjs-state (замена JSON через API/PHP — Yjs-state
+  сбрасывается, следующая комната сидируется из нового JSON).
 
-Поколение входит в имя комнаты, токен и каждую запись. Это **storage fence**: запись несёт
-epoch комнаты и сравнивается с `collab_epoch` на строке документа под `FOR UPDATE`; restore
-меняет epoch под той же блокировкой. Поэтому запись комнаты, открытой до restore, либо
-коммитится до него (и заменяется им), либо отвергается `409 collaboration_epoch_mismatch` —
-как бы поздно ни сработал debounce хаба, она никогда не ляжет поверх восстановленного
-документа. Отменить debounce нельзя; fence делает это ненужным.
+Поколение входит в имя комнаты, токен и каждое обновление. Это **ограждение хранилища**: append несёт своё поколение и
+сравнивается с текущим под блокировками документа, поэтому обновление комнаты, открытой до restore, либо фиксируется до
+него (и попадает в снимок restore), либо отвергается `409 collaboration_epoch_mismatch`. Квитанции закрытого поколения
+хранятся окно повторов, затем их удаляет `vaulter:collaboration:prune`.
 
-Хаб не узнаёт о restore до следующей записи этой комнаты (не позже
-`VAULTER_COLLAB_MAX_DEBOUNCE_MS` после следующей правки). Тогда он закрывает комнату кодом
-**4409** `epoch_changed`; клиенты открывают новую сессию и **новый** `Y.Doc`.
+Хаб узнаёт о restore при следующем вызове по этой комнате и закрывает её кодом **4409** `epoch_changed`; клиенты открывают
+новую сессию и **новый** `Y.Doc`.
 
 ## Поток подключения
 
 ```
-Vue client ──POST /api/vaulter/v1/documents/{node}/collaboration/session {schema_version?}──▶ Laravel
+Vue-клиент ──POST /api/vaulter/v1/documents/{node}/collaboration/session {schema_version?}──▶ Laravel
             ◀──────────────── CollaborationSession (room, epoch, mode, token) ─┘
             │
             ▼
-      ws to the hub, document name = room, token = room JWT
-            │   onAuthenticate ──▶ POST v1/collaboration/hub/authenticate   (live mode)
-            │   onLoadDocument ──▶ POST v1/collaboration/hub/load           (Yjs state, or JSON to seed once)
-            │   onStoreDocument ─▶ POST v1/collaboration/hub/store          (behind the epoch fence)
+      ws к хабу (…?protocol=2), имя документа = room, токен = room JWT
+            │   onAuthenticate ─▶ POST v1/collaboration/hub/authenticate
+            │   onLoadDocument ─▶ POST v1/collaboration/hub/load        (чекпоинт + зафиксированный хвост, или JSON для одноразового seed)
+            │   каждое обновление ─▶ POST v1/collaboration/hub/append   (→ квитанция → ack клиенту)
+            │   до истечения  ─▶ POST v1/collaboration/hub/renew
 ```
 
-1. Клиент вызывает `POST {prefix}/v1/documents/{node}/collaboration/session` (`201`), при желании
-   передавая `schema_version` своего редактора. Маршрут зарегистрирован всегда; выключенную
-   коллаборацию отклоняет операция.
-2. `DocumentOperations::collaborationSession($document, $clientSchemaVersion)` находит узел,
-   авторизует `View` (невидимый узел — `404 node_not_found`) и выбирает режим. Сессия
-   **read-write**, только если выполнено всё:
+1. Клиент вызывает `POST {prefix}/v1/documents/{node}/collaboration/session` (`201`), при желании передавая
+   `schema_version`, которую поддерживает редактор. Маршрут существует только при активном модуле; неактивный модуль
+   отвечает `404`, а `409 collaboration_unavailable` — документированный ответ «здесь не предлагается».
+2. `DocumentOperations::collaborationSession($document, $clientSchemaVersion)` находит узел, авторизует `View` (узел,
+   который актор не видит, даёт `404 node_not_found`) и решает режим. Сессия **read-write**, только если выполнено всё:
    - у актора есть `Edit`;
-   - тип документа установлен, а контент читается без потерь в схеме, которую эта установка
-     пишет;
-   - версия схемы клиента не задана или совпадает с версией типа;
-   - диск активен (архивный — read-only).
-
-   Выключенная коллаборация или тип без `SupportsCollaboration` — `409
-   collaboration_unavailable`.
+   - тип документа установлен, а его контент читается без потерь в схеме, которую эта установка пишет;
+   - версия схемы клиента отсутствует или равна версии типа;
+   - диск активен (архивный диск — только чтение).
 3. Драйвер выпускает [сессию](#дескриптор-сессии).
+
+::: warning Подключайтесь с `protocol=2`
+Хаб считает соединение, в URL которого нет `?protocol=2`, клиентом протокола 1 и делает его **read-only**. Встроенный
+транспорт `@vaulter/vue-collaboration` открывает провайдер с `url` сессии как есть, поэтому, пока он сам не добавляет
+параметр, передайте его через переопределение `createHocuspocusProvider` в `createCollaborationAdapter({ providers })`.
+:::
 
 ### Дескриптор сессии
 
@@ -123,157 +207,222 @@ Vue client ──POST /api/vaulter/v1/documents/{node}/collaboration/session {sc
 }
 ```
 
-Токен — JWT HS256 с claims `sub` (пользователь), `node`, `drive`, `tenant`, `epoch`,
-`schema_version`, `mode` (`rw`|`ro`), `room`, `iat` и `exp`. Комната повторяет диск, узел и
-epoch, поэтому токен привязан к одному поколению одного документа.
+Токен — HS256 JWT с claims `sub` (пользователь), `document_id`, `drive_id`, `tenant`, `generation`, `schema_version`,
+`scope` (`read`|`write`), `permissions_version` (`{drive, global}`), `room`, `iat`, `exp` (= `iat` + `hub.token_ttl`) и
+`jti`. Комната повторяет диск, документ и поколение, поэтому токен привязан к одному поколению одного документа.
 
-## Протокол хаба (сервер-к-серверу)
+## Протокол хаба (сервер-сервер)
 
-Эндпоинты хаба живут под `{prefix}/v1/collaboration/hub/` на собственном стеке middleware
-(`routes.middleware.hub`, `throttle:vaulter-public`) и идут без auth-middleware Laravel — только
-через `ResolveCollaborationCall`, который требует **оба** барьера. Они существуют, только пока
-включён `vaulter-documents.collaboration.enabled`; иначе отвечают `404 route_not_found`:
+Эндпоинты хаба живут под `{prefix}/v1/collaboration/hub/` на собственном стеке middleware (`routes.middleware.hub`,
+`throttle:vaulter-public`) и не несут Laravel-аутентификации. Каждый вызов обязан говорить на **протоколе 2** —
+заголовок `X-Vaulter-Collab-Protocol: 2`; иначе `409 collaboration_protocol_mismatch` до чтения тела — и каждый ответ его
+повторяет. Эндпоинты существуют только при активном модуле.
 
-- room-JWT в `Authorization: Bearer` (подпись и `exp`; комната разбирается и совпадает с
-  claims `node`/`drive`/`epoch`);
-- HMAC-SHA256 подпись `"{timestamp}.{rawBody}"` ключом `hub.webhook_secret` в
-  `X-Vaulter-Collab-Timestamp` + `X-Vaulter-Collab-Signature`. Устаревшая метка времени и
-  повтор подписи отвергаются. Хаб кладёт в каждое тело случайный `nonce`, поэтому два
-  настоящих вызова с одинаковой нагрузкой никогда не делят подпись.
+- Вызовы комнаты (`authenticate`, `load`, `append`, `renew`) несут room-JWT в `Authorization: Bearer` (подпись и `exp`
+  проверяются; комната должна совпадать с claims) **и** HMAC-SHA256 подпись `"{timestamp}.{rawBody}"` ключом
+  `hub.webhook_secret` в `X-Vaulter-Collab-Timestamp` + `X-Vaulter-Collab-Signature`. Устаревшая метка времени и повтор
+  подписи отвергаются; хаб кладёт в каждое тело случайный `nonce`.
+- Собственные вызовы хаба (`compaction/lease`, `checkpoint`, `recheck`) касаются не одного соединения комнаты, поэтому их
+  аутентифицирует одна подпись тела; `recheck` проверяет каждый токен, который называет.
 
-Иначе — `401 actor_required` в виде `application/problem+json`. Общий секрет сам по себе больше не
-является личностью. Любой отказ на этих маршрутах — `401`, `403`, `409`, `413`, `422` — это
-problem-тело со стабильным `code`; сам протокол не изменился.
+Иначе — `401 actor_required` как `application/problem+json`. Любой отказ несёт стабильный problem `code`
+([Ошибки](/ru/guides/errors)). Каждый вызов перечитывает то, для чего выпущен токен: узел существует, не в корзине,
+принадлежит диску и тенанту токена, поколение текущее, права субъекта — **на этот момент**.
 
-Каждый вызов перечитывает живое состояние: узел существует, не в корзине, принадлежит диску
-и тенанту токена, диск активен или в архиве, epoch комнаты текущий, права пользователя —
-**на этот момент**. Отзыв `Edit` действует на следующем вызове хаба (мгновенное отключение
-на каждом инстансе — позднейшая возможность).
-
-| Эндпоинт | Хук хаба | Тело | Ответ |
+| Эндпоинт | Использование хабом | Тело | Ответ |
 |---|---|---|---|
-| `POST v1/collaboration/hub/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`; `allowed:false`, если пользователь потерял `View`; `409 collaboration_epoch_mismatch` для прошлого поколения. |
-| `POST v1/collaboration/hub/load` | `onLoadDocument` | `{ room }` | `{ state, content, epoch, schemaVersion, stateVersion, type }` — `state` это base64 Yjs-state, либо `null` и JSON `content` для однократного сидирования. |
-| `POST v1/collaboration/hub/store` | `onStoreDocument` | `{ room, state, content, seed?, state_version? }` | `{ changed, epoch, state_version, yjs_state_size }`. `state_version` отправляется только с seed (см. ниже). |
+| `POST collaboration/hub/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`. |
+| `POST collaboration/hub/load` | `onLoadDocument` | `{ room }` | `{ generation, schema_version, type, state_version, checkpoint, checkpoint_seq, head_seq, content, tail[] }` — base64-чекпоинт и зафиксированный хвост `(checkpoint_seq, head_seq]` для проигрывания; пока у поколения нет записей, `content` — JSON для seed. |
+| `POST collaboration/hub/append` | каждое обновление | `{ room, generation, update_id, sha256, payload, origin?, seed_state_version? }` | Зафиксированная квитанция `{ generation, update_id, seq, sha256, persisted: true, permissions_stale }`. `503 collaboration_draining`, пока идёт drain. |
+| `POST collaboration/hub/renew` | до `exp` | `{ room }` | Новый токен `{ token, room, generation, scope, mode, exp, jti, permissions_version }` по правам на этот момент. |
+| `POST collaboration/hub/recheck` | после control-сообщения | `{ connections[] }` (до 200) | По каждому соединению `none` / `read` / `write` с причиной. |
+| `POST collaboration/hub/compaction/lease` | воркер компактации | `{ hub_id, max? }` | До `max` lease: чекпоинт, версия, хвост и токен lease. |
+| `POST collaboration/hub/checkpoint` | воркер компактации | `{ document, generation, lease_token, covered_from, covered_through, expected_checkpoint_version, state, content }` | `{ checkpoint_version, marker_cleared }` или `409 collaboration_checkpoint_conflict`. |
 
-Правила `collaboration/hub/store`:
+Правила `append`:
 
-- read-only токен, пользователь без `Edit` сейчас, архивный диск или токен другой версии
+- права проверяются при **каждом** append; read-only токен, пользователь без `Edit` сейчас, архивный диск или другая версия
   схемы — `403`;
-- epoch комнаты — это fence: `409 collaboration_epoch_mismatch`;
-- `seed: true` пишется, только пока у документа нет Yjs-state: иначе `409
-  collaboration_seed_conflict`, поэтому два инстанса хаба никогда не сидируют оба;
-- seed несёт также `state_version`, который вернул `collaboration/hub/load`, и пишется, только пока
-  документ всё ещё на нём. REST `update()` документа **без** Yjs-state не двигает epoch, и без
-  этого предусловия seed, построенный из JSON, прочитанного хабом ранее, затёр бы более
-  новый текст. Сдвинувшаяся версия — тот же `409 collaboration_seed_conflict` (с
-  `context.expected_state_version` / `actual_state_version`); хаб загружает документ заново и
-  сидирует из актуального JSON. Некорректный `state_version` — `422`;
-- `content` обязателен для типа, чей `projectFromState()` возвращает `null` (оба встроенных
-  типа): хаб отправляет `TiptapTransformer.fromYdoc(document, 'default')`. Его разбирает кодек
-  типа с лимитом размера (`422 invalid_document_content`);
-- state больше `max_state_bytes` — `413 document_state_too_large`;
-- контент, который эта установка не может сохранить обратно, сохраняет свои `409
-  document_type_unavailable` / `document_content_degraded`, как и автосохранение.
+- payload больше `limits.update_bytes` или тело больше `limits.request_bytes` — `413 collaboration_update_too_large`,
+  решается по длине до декодирования; `sha256` payload проверяется, ему не доверяют;
+- **seed** хаба для пустого поколения — первая запись журнала; он несёт `seed_state_version` — `state_version`, который
+  вернул `load`, и добавляется, только пока у поколения нет ни записей, ни чекпоинта, а версия состояния документа всё ещё
+  равна ей, иначе `409 collaboration_seed_conflict` (два хаба никогда не сидируют оба, а REST-обновление между load и seed
+  не затирается);
+- `permissions_stale: true` в квитанции говорит хабу, что токен старше смены прав; сам append проверен по правам на этот
+  момент.
 
-### Когда бэкенд отказывает в записи
+### Когда бэкенд отказывает
 
-Хаб никогда не считает отказанную запись сохранённой. После повторов для сетевых ошибок,
-`5xx` и `408`/`425`/`429` остаются ответы, которые повтор не изменит:
+Хаб никогда не считает отказанный append сохранённым. После повторов остаются ответы, которые повтор не изменит:
 
 | Ответ | Смысл | Что делает хаб | Код закрытия (реакция клиента) |
 |---|---|---|---|
 | `409 collaboration_epoch_mismatch` / `collaboration_seed_conflict` | Поколение комнаты закончилось | Ограждает комнату, отбрасывает её следующие записи | **4409** `epoch_changed` — новая сессия, **новый** `Y.Doc` |
 | `404` | Документ удалён | Ограждает комнату | **4404** `document_gone` |
-| `401` | Токен последнего писателя истёк | Закрывает комнату, держит состояние в памяти, бросает исключение | **4001** `Collaboration token expired` — новая сессия, тот же `Y.Doc` |
-| `403` | Последний писатель потерял `Edit` (или диск в архиве) | Закрывает комнату, держит состояние в памяти, бросает исключение | **4403** `forbidden` — новая сессия (теперь read-only), тот же `Y.Doc` |
-| `413`, `422` | Состояние слишком велико / проекция не является валидным контентом | Логирует, закрывает комнату, держит состояние в памяти, бросает исключение | **4422** `store_refused` — клиент **не** переоткрывает; выставляется `error` |
+| `401` | Токен писателя истёк | Закрывает комнату | **4001** `Collaboration token expired` — новая сессия, тот же `Y.Doc` |
+| `403` | Писатель потерял `Edit` (или диск в архиве) | Закрывает соединение | **4403** `forbidden` — новая сессия (теперь read-only), тот же `Y.Doc` |
+| `413`, `422` | Обновление слишком велико / невалидно | Отбрасывает запись, закрывает комнату | **4422** `store_refused` — клиент **не** переоткрывает; выставляется `error` |
+| *(хаб останавливается)* | Хаб в drain | Останавливает записи, сбрасывает, закрывает | **4503** `draining` — переподключиться к другому хабу |
 
-«Держит состояние в памяти и бросает исключение» значит, что Hocuspocus не считает состояние
-сохранённым: документ остаётся загруженным и сохраняется снова при следующем изменении или
-когда подключается писатель с валидным токеном (клиент сохраняет свой `Y.Doc` и досинхронизирует
-его). Комната, закрытая с `4001`/`4403`, не ограждается, поэтому следующая запись пробуется.
+Конверт, который хаб не смог принять, получает `nack {id, code, retry}`; при `retry: true` он остаётся в очереди клиента.
 
 ### Загрузка и сидирование — только на хабе
 
-`onLoadDocument` хаба применяет сохранённый Yjs-state. Документ без него (новый или только что
-восстановленный до ревизии без состояния) строится из JSON **один раз** на сервере через
-`@hocuspocus/transformer` и схему TipTap хаба (`hocuspocus-server/src/schema.js`) и
-сохраняется с `seed: true` до того, как его увидит любой клиент.
+`onLoadDocument` хаба проигрывает чекпоинт и зафиксированный хвост. Поколение без чекпоинта и журнала (новое или только
+что восстановленное до ревизии без состояния) строится из JSON **один раз** на сервере через `@hocuspocus/transformer` и
+схему TipTap хаба (`packages/collaboration/hub/src/schema.js`) и добавляется первой записью журнала до того, как его увидит
+клиент. Seed fail-closed:
 
-Seed строится fail-closed:
+- **Ничего не режется молча.** ProseMirror отбрасывает атрибуты, которых нет в схеме. Документ, чей JSON схема хаба не
+  вместит целиком — как правило, атрибут хоста, разрешённый `vaulter-documents.tiptap.extra_attributes` без соответствующего
+  расширения хаба — отвергается (`seed refused` с именем `node.attribute`, но не значением). Добавьте расширение в хаб
+  (см. [Хаб коллаборации](/ru/guides/hub)).
+- **Первое read-only подключение ждёт.** Read-only подключение к документу без состояния отвергается — хаб не должен
+  кэшировать пустой документ, который первый писатель затем спроецирует поверх сохранённого JSON.
+- **Изменившийся документ сидируется заново.** На `collaboration_seed_conflict` хаб загружает заново (не более трёх
+  попыток).
 
-- **Ничего не обрезается молча.** Схема TipTap хаба знает только расширения из
-  `hocuspocus-server/src/schema.js`; ProseMirror отбрасывает атрибуты, которых не объявляет.
-  Документ, чей JSON схема не удержала бы целиком — обычно атрибут хоста,
-  разрешённый `vaulter-documents.tiptap.extra_attributes` без соответствующего расширения
-  хаба, — отклоняется (`seed refused` с именем `узел.атрибут`, но не значением), а не
-  сидируется и сохраняется обратно без него. Добавьте расширение в хаб (см.
-  [Хаб Hocuspocus](/ru/guides/hub)).
-- **Первое read-only подключение ждёт.** С Redis (несколько инстансов хаба делят один `Y.Doc`
-  комнаты) read-only подключение к документу, у которого ещё нет Yjs-state, отклоняется: хаб не
-  должен кэшировать пустой документ, поверх которого первый писатель спроецирует сохранённый
-  JSON. Наблюдатель повторяет попытку, когда писатель уже открыл документ. Без Redis наблюдатель
-  видит собственную копию.
-- **Изменившийся документ сидируется заново.** При `collaboration_seed_conflict` хаб
-  загружает документ снова: состояние другого инстанса побеждает; иначе сидирует из актуального
-  JSON (не более трёх попыток).
-
-::: danger Никогда не сидируйте на клиенте
-В коллаборативном режиме **не** вызывайте `setContent()` редактора и не вставляйте JSON в
-`Y.Doc`: два клиента, конвертирующие один JSON, создают разные Yjs-вставки, и слияние
-покажет контент дважды. `VaulterDocumentNode` поэтому передаёт редактору `content: null`.
+::: danger Никогда не сидируйте в клиенте
+В коллаборативном режиме **не** вызывайте `setContent()` редактора (и не вставляйте JSON в `Y.Doc`). Два клиента,
+конвертирующие один JSON, создают разные Yjs-вставки, и после слияния контент задвоится. По этой причине
+`VaulterDocumentNode` передаёт редактору `content: null` в коллаборативном режиме.
 :::
 
-### Read-only
+### Только чтение
 
-Read-only проверяется дважды: хаб помечает `ro`-соединение read-only (Hocuspocus отбрасывает
-его изменения) и не пишет в read-only контексте, а бэкенд отвергает запись с `ro`-токеном.
-После истечения токена хаб отвергает каждое сообщение и закрывает соединение кодом `4001`;
-клиент запрашивает новую сессию. Провайдер, переподключающийся с уже истёкшим токеном (ноутбук
-проспал дольше `token_ttl`), получает отказ на аутентификации с той же причиной
-`Collaboration token expired`, поэтому клиент обновляет сессию, а не остаётся отключённым.
+Read-only обеспечивается дважды: хаб помечает `ro`-соединение read-only (Hocuspocus отбрасывает его обновления), а
+бэкенд отвергает append под `read`-токеном. Когда токен истёк и не продлён, хаб отвергает любое сообщение и закрывает
+соединение кодом `4001`; провайдер, переподключившийся с истёкшим токеном, получает отказ при аутентификации с причиной
+`Collaboration token expired`, и клиент обновляет сессию.
 
-## Развёртывание `hocuspocus-server`
+## Компактация и состояние pending
 
-Контракт окружения, Docker и health-эндпоинты — на странице
-[Хаб Hocuspocus](/ru/guides/hub). На стороне Laravel:
+Журнал только на добавление сворачивается в **чекпоинт** (слитый Yjs-state и его JSON-проекция, хранятся на документе
+пакетом documents) хабом. PHP Yjs не мержит.
 
-```dotenv
-VAULTER_COLLAB_DRIVER=hocuspocus
-VAULTER_COLLAB_URL=wss://collab.example.com
-VAULTER_COLLAB_SECRET=<32+ символов случайных>     # ключ room-JWT, только Laravel
-VAULTER_COLLAB_WEBHOOK_SECRET=<другой случайный>   # общий с хабом, подписывает вызовы
+- Поколение с некомпактированными записями несёт **pending-маркер** на документе (`v_documents.pending_generation`,
+  `pending_through_seq`): сохранённые правки лежат в журнале, а сохранённые JSON и бинарный чекпоинт устарели.
+- Воркер компактации хаба берёт lease на подлежащие поколения (см. `compaction.*`), сливает чекпоинт и хвост и публикует
+  одним compare-and-set; успех удаляет только payload этого поколения до покрытой последовательности и снимает маркер,
+  когда он покрыт. Пришедший тем временем append остаётся; проигравшая компактация ничего не удаляет.
+- Документ с маркером **никогда** не читается, не экспортируется и не заменяется из устаревшего состояния. Restore, REST
+  replace, чтение контента, экспорт, `TrashOperations::purge`/`empty` сначала делают **drain**: хаб просят скомпактировать
+  это поколение до `drain.restore_deadline` секунд. Если хаба нет или срок вышел, ответ `409 document_state_pending`
+  (retryable `with_backoff`), и ничего не меняется: сохранённые квитанции не теряются, поколение остаётся открытым.
+  Retention и шаг purge при удалении диска не могут сделать drain заранее: для pending-документа они отказывают тем же
+  кодом, пока воркер не снимет маркер, а затем успешно проходят при следующем запуске.
+- `vaulter.modules.collaboration = false`, выставленный напрямую, не компактирует, а закрывается fail-closed: только
+  pending-документы отвечают `409 document_state_pending`. Используйте управляемый drain ниже.
+
+Одноразовое восстановление без WebSocket-сервера (авария, окно обслуживания):
+
+<!-- snippet: shell -->
+
+```bash
+docker run --rm --env-file hub.env ghcr.io/axiomasoft/vaulter-collaboration-hub:1 compact --pending --deadline=120
 ```
 
-## Фронтенд (`@vaulter/vue`)
+Код `0`: бэкенд сообщает, что подлежащих компактации поколений не осталось. Код `1`: срок вышел; pending-документы
+перечислены в stderr, команду можно повторить. Код `2`: ошибка использования или конфигурации.
 
-`useCollaboration` получает сессию, открывает `@hocuspocus/provider` на свежем `Y.Doc` и
-обрабатывает терминальные закрытия хаба:
+## Ревокация и граница экспозиции
 
-- **4409 `epoch_changed`** — провайдер и старый `Y.Doc` уничтожаются, запрашивается новая
-  сессия, и `doc` **заменяется** новым `Y.Doc`. Перепривяжите редактор; никогда не переносите
-  содержимое старого документа.
-- **4001** (токен истёк, в том числе как отказ аутентификации с истёкшим токеном) и
-  **4403** `forbidden` (писатель потерял `Edit`; новая сессия приходит read-only) —
-  запрашивается новая сессия; `Y.Doc` сохраняется, пока комната того же поколения.
-- **4422** `store_refused` — бэкенд отказал самому состоянию документа (`413`/`422`), и новая
-  сессия получила бы тот же отказ: ничего не переоткрывается, выставляется `error`, редактор
-  остаётся отключённым.
+Писатель, потерявший доступ, должен перестать писать. Drive фиксирует каждое изменение эффективных прав как durable-событие
+`drive.access.effective_permissions_changed` (создание/отзыв grant, смена наследования, создание/отзыв/изменение/ротация
+share, move/trash/restore/purge узла, archive/unarchive/delete диска); хост сообщает о смене роли, политики или тенанта
+через `AccessInvalidation::changed()`. Модуль коллаборации в той же транзакции увеличивает монотонную версию прав диска
+(или `global`), и дальше:
+
+- каждый **append** проверяет права на этот момент; отозванный писатель сразу получает `403`;
+- хаб **продлевает** токен до истечения (`VAULTER_COLLAB_RENEW_BEFORE_MS`, по умолчанию 60 с); продление снова проверяет
+  права — потерявший `Edit` продлевается как read-only, без `View` — отказ и закрытие соединения;
+- при `control.transport` = `redis` или `http` эфемерный consumer шлёт хабам **control-сообщение**, и они перепроверяют
+  соединения этого диска (`none` → закрытие `4403`, `read` → read-only, `write` → без изменений). Проверка покрывает
+  sync step 2, y-protocols updates и stateless-конверты. После повторного включения control-сообщения не проигрываются.
+
+**Граница экспозиции.** Если control-сообщение потеряно (или `control.transport` = `none`), отозванный писатель
+останавливается не позже `hub.token_ttl + hub.clock_skew` после выпуска его последнего токена — **330 с** по умолчанию.
+Продление без проверки прав границу не сдвигает. При доставленном control-сообщении граница — время доставки плюс одна
+перепроверка.
+
+## Выключение модуля
+
+Не удаляйте модуль, пока у документов есть сохранённые правки, которых нет в чекпоинте:
+
+<!-- snippet: shell -->
+
+```bash
+php artisan vaulter:collaboration:drain --deadline=60
+```
+
+Команда выставляет флаг draining (каждый append отвечает `503 collaboration_draining`, retryable), просит хаб
+скомпактировать все pending-документы и ждёт. Код `0`: pending-документов нет — переключите
+`vaulter.modules.collaboration` в `false` или выполните `vaulter:module:uninstall collaboration`. Код `1`: документы всё
+ещё pending (хаба нет, срок вышел); они перечислены, ничего не потеряно. `--release` снимает флаг; **после повторного
+включения выполните его**, потому что флаг переживает активацию модуля и append отвечает `503`, пока он стоит
+(`vaulter:doctor` сообщает `collaboration.draining`). `vaulter:module:uninstall collaboration` отказывает, пока есть маркер.
+
+`vaulter:collaboration:prune [--dry-run]` удаляет журнал и квитанции закрытых поколений после льготного срока
+(`hub.token_ttl` + горизонт повторов + `retention.retired_generation_days`); он запускается по расписанию ежедневно, см.
+`schedule.collaboration_prune`.
+
+## Эксплуатация хаба
+
+Management-listener хаба (`/livez`, `/readyz`, `/metrics`, `/stats`, подписанный `POST /control`) и drain по `SIGTERM`
+описаны в [Хабе коллаборации](/ru/guides/hub#management-listener). Проверка `vaulter:doctor` `collaboration.hub`
+сообщает об отсутствующих или одинаковых секретах, URL не `wss://` в продакшне, сроке токена больше 300 с, непригодном
+cache-store для drain и действующем drain.
+
+Стенд сценариев отказа (kill после повтора, два хаба, drain по `SIGTERM`) — `scripts/collab-stand.sh`; ему нужен Docker, в
+быстрый набор тестов он не входит. `scripts/collab-e2e.sh` — сквозной прогон с одним хабом.
+
+## Обвязка фронтенда (`@vaulter/vue-collaboration`)
+
+В `@vaulter/vue` Yjs нет: там определён шов (`VaulterCollaborationKey`, тип `CollaborationAdapter`) и REST-автосохранение.
+Реализация реального времени — `@vaulter/vue-collaboration` (peer-зависимости `vue`, `yjs`, `@vaulter/vue`;
+`@hocuspocus/provider` — его зависимость). Установите его и передайте плагину:
+
+<!-- snippet: host -->
+
+```ts
+import { createApp } from 'vue'
+import { VaulterPlugin } from '@vaulter/vue'
+import { createCollaborationAdapter } from '@vaulter/vue-collaboration'
+
+createApp(App).use(VaulterPlugin, {
+  baseUrl: '/api/vaulter',
+  collaboration: createCollaborationAdapter(),
+})
+```
+
+При установленном адаптере `VaulterDocumentNode` открывает сессию для коллаборативных типов документов и возвращается к
+REST-автосохранению **только** если запрос сессии ответил `404` или `409 collaboration_unavailable`. Без адаптера каждый
+документ идёт по пути автосохранения.
+
+`useCollaboration` из `@vaulter/vue-collaboration` запрашивает сессию, открывает `@hocuspocus/provider` поверх свежего
+`Y.Doc`, ставит каждое локальное обновление в очередь как конверт до его ack и обрабатывает терминальные закрытия хаба:
+
+- **4409 `epoch_changed`** — провайдер и старый `Y.Doc` уничтожаются, запрашивается новая сессия, а `doc` **заменяется**
+  новым `Y.Doc`. Перепривяжите редактор; никогда не копируйте содержимое старого документа.
+- **4001** (токен истёк) и **4403** `forbidden` (писатель потерял `Edit`; новая сессия приходит read-only) — запрашивается
+  новая сессия; `Y.Doc` сохраняется, пока комната того же поколения.
+- **4422** `store_refused` — бэкенд отверг само обновление, поэтому новая сессия снова будет отвергнута: ничего не
+  переоткрывается, выставляется `error`, редактор остаётся read-only.
 
 <!-- snippet: host -->
 
 ```ts
 import { watch } from 'vue'
-import { useCollaboration } from '@vaulter/vue'
+import { useCollaboration } from '@vaulter/vue-collaboration'
 import { Editor } from '@tiptap/vue-3'
 import Collaboration from '@tiptap/extension-collaboration'
 
-const collab = useCollaboration(nodeId, { supportedSchemaVersion: 1 })
+const collab = useCollaboration(nodeId, { client, supportedSchemaVersion: 1 })
 await collab.connect()
 
 let editor = makeEditor()
-// A restore replaced the room: rebuild the editor on the new document.
+// Restore заменил комнату: пересоберите редактор на новом документе.
 watch(collab.doc, () => { editor.destroy(); editor = makeEditor() })
 
 function makeEditor() {
@@ -283,28 +432,31 @@ function makeEditor() {
   })
 }
 
-// on unmount
-collab.disconnect()
+// при размонтировании
+collab.dispose()
 ```
 
 | Член | Тип | Примечание |
 |---|---|---|
 | `doc` | `ShallowRef<Y.Doc>` | Документ для привязки; заменяется при `epoch_changed`. |
-| `session` | `Ref<NodeCollaborationSession \| null>` | Текущая сессия (room, epoch, mode, версия схемы). |
-| `connecting` / `connected` | `Ref<boolean>` | Рукопожатие в процессе / живое соединение провайдера. |
-| `readOnly` | `Ref<boolean>` | `mode: 'ro'` или схема сессии новее `supportedSchemaVersion`. |
+| `session` | `ShallowRef<NodeCollaborationSession \| null>` | Текущая сессия (комната, epoch, режим, версия схемы). |
+| `status` | `Ref<'synchronized' \| 'pending' \| 'saved' \| 'error'>` | `saved` делает только ack бэкенда. |
+| `connecting` / `connected` | `Ref<boolean>` | Рукопожатие идёт / живое соединение провайдера. |
+| `readOnly` | `ComputedRef<boolean>` | `mode: 'ro'`, схема новее `supportedSchemaVersion` или сессия, не способная сберечь правки. |
 | `schemaOutdated` | `Ref<boolean>` | Документ в более новой схеме, чем поддерживает редактор — попросите пользователя обновить приложение. |
 | `collaborators` | `Ref<Collaborator[]>` | Удалённые участники из awareness. |
-| `error` | `Ref<unknown>` | Любая ошибка получения сессии (и `store_refused`). |
-| `fetchSession()` / `connect()` / `disconnect()` | | Только сессия / сессия и провайдер / остановка (идемпотентна). |
+| `error` | `Ref<unknown>` | Любая ошибка запроса сессии или сохранения. |
+| `connect()` / `disconnect()` / `dispose()` | | Сессия и провайдер / закрыть соединение, сохранив очередь / закрыть и сбросить очередь. |
+
+По умолчанию очередь вмещает 1000 обновлений / 8 МиБ (`envelope: { maxQueuedUpdates, maxQueuedBytes }`); переполнение
+переводит статус в `error`. Пакет экспортирует и строительные блоки: `createEnvelopeQueue`, `deriveStatus`, `sha256Hex`,
+`fetchCollaborationSession` и `openCollaborationTransport`.
 
 ### `VaulterDocumentNode`
 
-Когда выбранный handler коллаборативный (`capabilities.collaborative === true`) и
-коллаборация включена, `VaulterDocumentNode` открывает сессию через `useCollaboration` и
-передаёт редактору `collaborative: true`, `content: null`, `ydoc` (заменяется после restore —
-перепривязывайте при изменении), присутствие и состояние соединения. Иначе используется путь
-автосохранения.
+Когда выбранный обработчик коллаборативный (`capabilities.collaborative === true`), адаптер установлен и модуль активен,
+`VaulterDocumentNode` открывает сессию и передаёт редактору `collaborative: true`, `content: null`, `ydoc` (заменяется
+после restore — перепривяжите по изменению), присутствие и статус сохранения. Иначе используется путь автосохранения.
 
 <!-- snippet: host -->
 
@@ -318,27 +470,23 @@ collab.disconnect()
 />
 ```
 
-- `collaboration` (по умолчанию `true`) — `false` принудительно включает автосохранение.
-- `collaboration-providers` — подмена `createHocuspocusProvider`.
-- `supported-schema-version` — отправляется с запросом сессии; документ в более новой схеме
-  открывается read-only и вызывает `schema-outdated`.
-- На автосохранение компонент переходит **только** если запрос сессии ответил `409
-  collaboration_unavailable` (коллаборация выключена или тип не умеет коллаборацию —
-  документированный контракт). Любая другая ошибка (сеть, `429`, `5xx`, `403`) оставляет
-  редактор **read-only** на загруженном контенте и вызывает `collaboration-failed`:
-  автосохранение в документ с Yjs-state сдвинуло бы его epoch, сбросило state и выбросило бы
-  остальных участников. Для повтора вызовите `load()` (он экспонируется); состояние отдаёт
-  `sessionFailed`.
+- `collaboration` (по умолчанию `true`) — `false` принудительно включает путь автосохранения.
+- `supported-schema-version` — передаётся с запросом сессии; более новая схема документа открывается read-only и
+  вызывает `schema-outdated`.
+- Любой отказ сессии, кроме «не предлагается» (сеть, `429`, `5xx`, `403`), оставляет редактор **read-only** на
+  загруженном контенте и вызывает `collaboration-failed`: автосохранение в документ с Yjs-state сдвинуло бы его поколение,
+  сбросило состояние и выбросило бы всех остальных участников. Для повтора вызовите `load()` (экспонируется).
 
 ## Расширение
 
-Транспорт — один шов: case в `CollaborationDriverType` и реализация `CollaborationDriver`.
-`issueSession($node, $epoch, $schemaVersion, $writable, $actorId)` лишь кодирует решение,
-которое принял `collaborationSession()`; сам он никогда не авторизует.
+Транспорт — один шов: case `CollaborationDriverType` и реализация `CollaborationDriver` (контракт живёт в documents).
+`issueSession($node, $epoch, $schemaVersion, $writable, $actorId)` лишь кодирует решение `collaborationSession()` и
+никогда не авторизует.
 
-## Дальше
+## См. также
 
-- [Хаб Hocuspocus](/ru/guides/hub)
-- [Ошибки](/ru/guides/errors) — `collaboration_*` и `document_state_too_large`
-- [ADR-0001 — Транспорт совместного редактирования](/adr/0001-collaboration-transport)
-- [Авторизация](/ru/guides/abilities) — как `View` / `Comment` / `Edit` соотносятся с чтением и записью
+- [Хаб коллаборации](/ru/guides/hub)
+- [Ошибки](/ru/guides/errors) — `collaboration_*` и `document_state_pending`
+- [ADR-0031 — Пакет коллаборации и модель сохранности](/adr/0031-collaboration-package-and-durability)
+- [ADR-0001 — Транспорт коллаборации](/adr/0001-collaboration-transport)
+- [Авторизация](/ru/guides/abilities) — как `View` / `Comment` / `Edit` соответствуют чтению и записи

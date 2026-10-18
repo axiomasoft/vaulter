@@ -2,7 +2,7 @@
 
 Records of the significant architectural decisions behind Vaulter.
 
-- [ADR-0001 — Collaboration transport](/adr/0001-collaboration-transport)
+- [ADR-0001 — Collaboration transport](/adr/0001-collaboration-transport) — _accepted; placement and persistence replaced by ADR-0031_
 - [ADR-0002 — Authorization delegation](/adr/0002-authorization-delegation) — _refined by ADR-0007_
 - [ADR-0003 — Embeddability & data model](/adr/0003-embeddability-data-model) — _superseded by ADR-0009 / ADR-0011_
 - [ADR-0004 — Content format & versioning](/adr/0004-content-format)
@@ -31,3 +31,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0028 — Extension slots and the operation pipeline](/adr/0028-extension-slots-and-operation-pipeline) — _accepted; builds on ADR-0027_
 - [ADR-0029 — Idempotency](/adr/0029-idempotency) — _accepted; builds on ADR-0028_
 - [ADR-0030 — Package ownership of schema, models and configuration](/adr/0030-package-ownership-and-schema) — _accepted; builds on ADR-0027_
+- [ADR-0031 — The collaboration package and the durability model](/adr/0031-collaboration-package-and-durability) — _accepted; builds on ADR-0030; replaces ADR-0001 in part_

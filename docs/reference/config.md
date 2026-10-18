@@ -404,22 +404,26 @@ pair fail at boot; the set freezes after boot.
 Add your own (PDF, DOCX, …) here or via `Documents::exporters()->register()`. See
 [Recipes → Custom export](/guides/recipes).
 
-## Collaboration — `vaulter-documents.collaboration.*`
+## Collaboration — `vaulter-collaboration.*`
 
-Yjs is the source of truth; TipTap JSON is the derived projection. The transport is
-swappable behind the driver.
+The `axioma-studio/vaulter-collaboration` package has a config file of its own (publish tag `vaulter-collaboration-config`)
+and is an opt-in module: it is active only when `vaulter.modules.collaboration` is `true` and then needs the hub URL and
+both secrets. Yjs updates are the source of truth; TipTap JSON is the projection of a checkpoint.
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `vaulter-documents.collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | `hocuspocus` |
-| `vaulter-documents.collaboration.broadcast.channel_prefix` | — | `vaulter.documents` | The room namespace; a room is always `prefix.nodeId` |
-| `vaulter-documents.collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | Shared secret the Node hub presents on the S2S webhook endpoints. Required for signed webhook bodies when collaboration is enabled |
-| `vaulter-documents.collaboration.hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL |
-| `vaulter-documents.collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | Room-JWT signing key **and** the key the webhooks verify a JWT against |
-| `vaulter-documents.collaboration.hub.token_ttl` | — | `3600` | Room-JWT TTL (seconds) |
+| `vaulter-collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | The transport (`hocuspocus` only) |
+| `vaulter-collaboration.hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL |
+| `vaulter-collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | Room-token signing key, Laravel only |
+| `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | Shared secret of the HMAC body signature of every hub call; must differ from `jwt_secret` |
+| `vaulter-collaboration.hub.token_ttl` | — | `300` | Room-token TTL (seconds, at most 300): the exposure bound of a lost control message |
+| `vaulter-collaboration.hub.clock_skew` | — | `30` | Tolerated clock difference on a token's `exp` (seconds, 0–60) |
+| `vaulter-collaboration.mode` | `VAULTER_COLLAB_MODE` | `buffered` | `buffered` or `durable` |
+| `vaulter-collaboration.control.transport` | `VAULTER_COLLAB_CONTROL_TRANSPORT` | `none` | `redis`, `http` or `none` |
+| `vaulter-collaboration.drain.restore_deadline` | — | `10` | Seconds a restore waits for the hub to compact a pending document |
 
-See [Collaboration → Overview](/guides/collaboration) and
-[Collaboration → Server](/guides/collaboration).
+Every key, with its default and purpose, is in [Realtime Collaboration → Config](/guides/collaboration#config) and in the
+generated list below. The room namespace is `vaulter-documents.broadcast.channel_prefix`.
 
 ## See also
 
@@ -432,8 +436,8 @@ See [Collaboration → Overview](/guides/collaboration) and
 | Key | Default |
 |---|---|
 | `vaulter-documents.comments.enabled` | `true` |
-| `vaulter-documents.collaboration.enabled` | `false` |
-| `vaulter-documents.collaboration.hub.timestamp_tolerance` | `300` seconds |
+| `vaulter.modules.collaboration` | `false` (opt-in; [Realtime Collaboration](/guides/collaboration)) |
+| `vaulter-collaboration.hub.timestamp_tolerance` | `300` seconds |
 | `vaulter-documents.tiptap.extra_nodes` | `[]` |
 | `vaulter-documents.tiptap.extra_marks` | `[]` |
 | `vaulter-documents.tiptap.extra_attributes` | `[]` |

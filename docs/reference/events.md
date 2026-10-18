@@ -150,7 +150,7 @@ Every constructor ends with `ActorRef $actor, string $correlationId, ?string $ev
 ## Comment broadcasts
 
 The three comment events publish to a `PrivateChannel` named
-`{collaboration.channel_prefix}.{nodeId}` (default prefix `vaulter.documents`) — the
+`{broadcast.channel_prefix}.{nodeId}` (`vaulter-documents.broadcast.channel_prefix`, default `vaulter.documents`) — the
 same room open editors join for collaboration.
 
 | Event | `broadcastAs()` | `broadcastWith()` keys |

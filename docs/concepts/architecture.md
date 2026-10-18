@@ -117,8 +117,9 @@ any handler's content (`TipTapContent` and friends live in `vaulter-documents`).
 
 ## Domain structure
 
-Ownership follows the Composer graph (`core <- media <- drive <- documents`; `webhooks`, `azgard` and `filament` build
-on `drive`) and is recorded in [ADR-0030](/adr/0030-package-ownership-and-schema). **`axioma-studio/vaulter-core`**
+Ownership follows the Composer graph (`core <- media <- drive <- documents <- collaboration`; `webhooks`, `azgard` and
+`filament` build on `drive`) and is recorded in [ADR-0030](/adr/0030-package-ownership-and-schema) and
+[ADR-0031](/adr/0031-collaboration-package-and-durability). **`axioma-studio/vaulter-core`**
 (namespace `Vaulter\`) is the kernel only: it contains no domain table, model or service of a module.
 
 | Directory (core) | Responsibility |
@@ -137,16 +138,18 @@ on `drive`) and is recorded in [ADR-0030](/adr/0030-package-ownership-and-schema
 |---|---|---|
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | `v_blobs` and `v_blob_references` (the pins), the CAS contracts and engine (`Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`, `Contracts\Cas\BlobPins`), `vaulter:blobs:gc` and `vaulter:blobs:reconcile`. |
 | `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | The entry point `Vaulter\Drive\Vaulter` (facade `Vaulter\Drive\Facades\Vaulter`, alias `Vaulter`), `DriveHandle`, the Actions and Events, access (`AccessResolver`, the permission drivers), sharing, activity, change journal, quotas, uploads, scan state, profiles, file handlers and the drive tables, routes, commands and doctor checks. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the document type registry (`Types\*`), the document presenter, export, the node-collaboration session service, the content shapes (`Content\OpaqueContent`, `Content\TipTap\*`). |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the document type registry (`Types\*`), the document presenter, export, the collaboration contracts (`CollaborationDriver`, `SupportsCollaboration`) and the neutral state contract `State\CollaborativeState` with the pending marker, the content shapes (`Content\OpaqueContent`, `Content\TipTap\*`). |
+| `axioma-studio/vaulter-collaboration` | `Vaulter\Collaboration\` | Realtime editing: the session endpoint and room token, the hub protocol 2 (`authenticate`, `load`, `append`, `renew`, `recheck`, compaction lease and checkpoint), the update log, receipts and permission versions (`v_collaboration_*`), the drain and prune commands, the control consumer. The hub `@vaulter/collaboration-hub` (Node) lives in `packages/collaboration/hub`. Opt-in. |
 | `axioma-studio/vaulter-webhooks` | `Vaulter\Webhooks\` | Outbound webhooks: endpoints, `WebhookFanoutConsumer` (the `webhooks.fanout` outbox consumer), `WebhookSigner`, the URL guard, retries, the admin HTTP and `vaulter:webhooks:*` commands. Opt-in. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin, built on the drive's authorized Operations. |
 | `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | The AzGuard permission driver, guard contract, permission map, real adapter and test fake. |
+| `@vaulter/vue-collaboration` | — | The browser side of collaboration (npm): update envelopes, the retry queue, the save status; plugs into `@vaulter/vue` through its `collaboration` adapter. The only package with `yjs` and `@hocuspocus/provider`. |
 | `@vaulter/vue` | — | The Drive UI + composables (npm). `src/api` imports no Vue, editor or realtime packages and nothing from `src/` outside `src/api` (arch test `packages/vue/tests/arch/api-no-vue.test.ts`). |
 
-The metapackage `axioma-studio/vaulter` installs core, media, drive and documents; webhooks, azgard and filament are
-installed separately (see [Installation](/getting-started/installation)). Each package ships its own migrations
+The metapackage `axioma-studio/vaulter` installs core, media, drive and documents; webhooks, collaboration, azgard and
+filament are installed separately (see [Installation](/getting-started/installation)). Each package ships its own migrations
 (not published), its own config file (`vaulter`, `vaulter-media`, `vaulter-drive`, `vaulter-documents`,
-`vaulter-webhooks`, `vaulter-azgard`, `vaulter-filament`) and its own test kit.
+`vaulter-webhooks`, `vaulter-collaboration`, `vaulter-azgard`, `vaulter-filament`) and its own test kit.
 
 ## The Drive handle
 
@@ -302,11 +305,14 @@ another scope's bytes ([ADR-0012](/adr/0012-dedup-scope)). See the
 
 ## Realtime collaboration
 
-Yjs is the source of truth; TipTap JSON is the derived projection. The transport is swappable
-behind `CollaborationDriver` ([ADR-0001](/adr/0001-collaboration-transport)):
+Yjs updates are the source of truth; TipTap JSON is the projection of a checkpoint. Collaboration is the opt-in package
+`vaulter-collaboration` ([ADR-0031](/adr/0031-collaboration-package-and-durability); the transport choice is
+[ADR-0001](/adr/0001-collaboration-transport)); documents keeps the aggregate and the `CollaborationDriver` contract:
 
-- **`hocuspocus`** — an external Node hub (`hocuspocus-server/`). The client connects with a
-  signed room JWT; the hub calls back into the `v1/collaboration/hub/{authenticate,load,store}` endpoints.
+- **`hocuspocus`** — the Node hub `@vaulter/collaboration-hub`. The client connects with a signed room JWT; the hub calls back
+  into the protocol 2 endpoints (`v1/collaboration/hub/{authenticate,load,append,renew,recheck}` and the compaction
+  `lease`/`checkpoint`). A save is an `append` that returns a committed receipt; the hub folds the log into a checkpoint.
+  Neither the drive nor documents depends on it. See [Realtime Collaboration](/guides/collaboration).
 
 ## Extension points
 
@@ -317,7 +323,7 @@ Every seam a host plugs into, and where it is documented:
 | `Vaulter\Drive\Contracts\Access\PermissionDriver` | `config('vaulter-drive.access.permission_driver')` | [Recipes — custom permission driver](/guides/recipes#permission-driver) |
 | `Vaulter\Azgard\Contracts\AzgardGuard` | config key `vaulter-azgard.guard` (default: the bridge's adapter) | [Troubleshooting — Azgard morphs](/guides/troubleshooting#azgard-morphs) |
 | `Vaulter\Media\Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Recipes — swap to S3](/guides/recipes#s3-disk) |
-| `Vaulter\Documents\Contracts\CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport) |
+| `Vaulter\Documents\Contracts\CollaborationDriver` | `config('vaulter-collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport), [ADR-0031](/adr/0031-collaboration-package-and-durability) |
 | `Vaulter\Drive\Contracts\Handlers\FileHandler` | `config('vaulter-drive.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guides/recipes#format-handler) |
 | `Vaulter\Documents\Contracts\DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` | [ADR-0004](/adr/0004-content-format) |
 | `Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator` | `config('vaulter-drive.sharing.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
@@ -349,9 +355,10 @@ The reasoning behind every choice above lives in the [ADRs](/adr/). The full set
 | [0028](/adr/0028-extension-slots-and-operation-pipeline) | Extension slots and the operation pipeline. | accepted |
 | [0029](/adr/0029-idempotency) | `Idempotency-Key` receipts written in the transaction of the mutation. | accepted |
 | [0030](/adr/0030-package-ownership-and-schema) | One owner per table, model and config root; pins; per-package migrations and test kits. | accepted |
+| [0031](/adr/0031-collaboration-package-and-durability) | The collaboration package; protocol 2 receipts, buffered/durable modes, hub-only compaction, the pending state, revocation bound, drain. | accepted |
 
 Supersession chains to keep in mind: **0003 → 0009 / 0011** (embeddability mechanics), **0002 → 0007** (authorization
-delegation) and **0019 → 0027 → 0030** (who owns what).
+delegation), **0019 → 0027 → 0030** (who owns what) and **0001 → 0031** (collaboration persistence and placement).
 
 ## Next
 

@@ -20,8 +20,8 @@ HTML/Markdown, see [Export](./export.md).
 
 ::: info Documents are enabled by installing the package
 Install `axioma-studio/vaulter-documents`. Editing, revisions and document routes
-are available without a `document_versions` flag. Enable real-time collaboration
-separately with `vaulter-documents.collaboration.enabled`.
+are available without a `document_versions` flag. Real-time collaboration is the separate, opt-in package
+`axioma-studio/vaulter-collaboration` ([Realtime Collaboration](/guides/collaboration)).
 :::
 
 ## The data model
@@ -59,6 +59,7 @@ deleting it (SQLite: see [Database compatibility](/reference/compatibility)).
 | `checkpoint_state_version` | BIGINT ≥ 0 | The `state_version` the head captured. |
 | `content`, `content_hash`, `content_size` | json, char(64), integer | The canonical JSON projection, its hash and byte size. |
 | `yjs_state`, `yjs_state_size` | binary, integer | The Yjs CRDT state (collaboration source of truth) and its size. |
+| `pending_generation`, `pending_through_seq` | BIGINT, nullable | The pending marker (both set or both null): saved collaboration edits of that generation through that log sequence are not in the checkpoint yet. Set and cleared only through the collaboration state contract; while set the content is neither read, exported nor replaced (`409 document_state_pending`). |
 | `last_checkpoint_at` | timestamp | When the last checkpoint was taken. |
 | `created_by`, `updated_by`, timestamps | | Audit. |
 
@@ -327,8 +328,8 @@ $doc = Documents::in($drive)->update(
 The PUT returns `200` with the new working state and its new `ETag`; `update()` returns the new
 `DocumentSnapshot`. Over HTTP the write needs `If-Match` with the content tag you read: without it
 `428 precondition_required` (so does `*`), with a stale or weak one `412 document_state_mismatch`
-— for instance after the collaboration hub stored a newer state in between. Only the JSON
-`content` travels; the binary Yjs state is written by the hub. When the save changed something the action fires `DocumentContentUpdated` after
+— for instance after the collaboration hub published a newer checkpoint in between. Only the JSON
+`content` travels; the binary Yjs state is written by the hub's checkpoints. When the save changed something the action fires `DocumentContentUpdated` after
 commit: `version` is the head checkpoint after the save and `created` tells whether this save
 took it. The event's `actorId` is the acting user (null for the system).
 
@@ -538,7 +539,7 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 | Event | Fired by | Payload |
 |---|---|---|
 | `Vaulter\Documents\Events\Documents\DocumentCreated` | create | `node`, `version` (checkpoint #1), `stateVersion`, `epoch`, `actorId` |
-| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | autosave / collaboration store (only when something changed) | `node`, `version` (the head checkpoint after the save), `created` (bool — this save took a checkpoint), `stateVersion`, `epoch` (after the save), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | autosave / collaboration checkpoint (only when something changed) | `node`, `version` (the head checkpoint after the save), `created` (bool — this save took a checkpoint), `stateVersion`, `epoch` (after the save), `actorId` |
 | `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | named / restore | `node`, `version`, `stateVersion`, `epoch`, `restored` (bool), `actorId` |
 
 ## Errors
@@ -553,7 +554,8 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 | `Documents\Exceptions\InvalidDocumentContentException` | The root content node is not `{"type":"doc"}`, or it exceeds `max_document_size_kb`. |
 | `Documents\Exceptions\DocumentRevisionNotFoundException` | A revision id that does not belong to the node's document. |
 | `Documents\Exceptions\StaleDocumentStateException` | `expectedStateVersion` no longer matches (`412 document_state_mismatch`). |
-| `Documents\Exceptions\CollaborationEpochMismatchException` | A collaboration write from an older room generation (`409 collaboration_epoch_mismatch`). |
+| `Collaboration\Exceptions\CollaborationEpochMismatchException` | A collaboration write from an older room generation (`409 collaboration_epoch_mismatch`). |
+| `Documents\Exceptions\DocumentStatePendingException` | Saved collaboration edits are not in the content yet; the read, export, replace or restore was refused untouched (`409 document_state_pending`, retry later). |
 | `Exceptions\Drive\NodeNameConflictException` | A create collides with a sibling name. |
 
 ## Next

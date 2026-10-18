@@ -30,8 +30,9 @@ fail a save, and saving does not fail a rename.
 | copy a document | source 0; copy 0 | source 0; copy 1 | source 0; copy 0 | — |
 | update the content (JSON) | 0 | +1 | +1 if the document has Yjs state | `expectedStateVersion` |
 | update with identical content | 0 | 0 | 0 | checked first, so a stale expectation is still refused |
-| collaboration seed | 0 | +1 | 0 | `expectedEpoch`, `yjs_state IS NULL` and the `state_version` the hub read in `collaboration/hub/load` (`409 collaboration_seed_conflict`) |
-| collaboration store | 0 | +1 when the state changed | 0 | `expectedEpoch` (`409`) |
+| collaboration seed (the first log record) | 0 | 0 | 0 | the generation has no record and no checkpoint, and the `state_version` the hub read in `collaboration/hub/load` is still current (`409 collaboration_seed_conflict`) |
+| collaboration append | 0 | 0 | 0 | the generation is current (`409 collaboration_epoch_mismatch`); sets the pending marker, no state version moves |
+| collaboration checkpoint | 0 | +1 when the state changed | 0 | the generation, `expected_checkpoint_version` (the state version) and the covered range (`409 collaboration_checkpoint_conflict`) |
 | restore a document revision | 0 | +1 | +1 | `expectedStateVersion` |
 | snapshot (named checkpoint) | 0 | 0 | 0 | — |
 | pin a document revision, export | 0 | 0 | 0 | — |
@@ -43,8 +44,8 @@ consumer can order content events without reading the row again.
 A JSON update of a document **without** Yjs state moves `state_version` but not the epoch (there
 is no room to make stale). That is why a seed cannot rely on the epoch alone: the hub reads the
 JSON in `collaboration/hub/load` and seeds it later, and an update in between would be overwritten by a
-seed built from the old text. The seed therefore carries the loaded `state_version` and the
-write compares it under the document lock; a moved version is `409 collaboration_seed_conflict`
+seed built from the old text. The seed (appended as the first record of the log) therefore carries the loaded
+`state_version` as `seed_state_version` and the write compares it under the document lock; a moved version is `409 collaboration_seed_conflict`
 (`context.expected_state_version`, `actual_state_version`), after which the hub loads again and
 seeds from the current JSON.
 
@@ -61,7 +62,7 @@ REST v1 exposes these as strong ETags (see the [REST reference](/reference/rest-
 - Document content: `"{documentId}.{epoch}.{stateVersion}"`; its body depends on no caller,
   so the generation is enough. A mismatch is `412 document_state_mismatch`.
 - A CRDT room has no `If-Match`. Merging concurrent edits is the room's job; the hub is fenced by
-  the epoch alone, and a store of a past generation is answered with `409`.
+  the epoch alone, and an append of a past generation is answered with `409`.
 
 A conditional route runs in this order: authenticate → resolve the drive/node (tenant-scoped)
 → find the node as the caller (no `view` → `404`; no ability for the mutation → `403`) → build

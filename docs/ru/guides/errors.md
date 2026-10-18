@@ -138,7 +138,7 @@ middleware операции вызвал `$next` не ровно один раз
 ## unknown-collaboration-driver
 
 `VaulterException` из `CollaborationDriverManager`: выберите `hocuspocus` в
-`vaulter-documents.collaboration.driver`. Удалённый драйвер `reverb` даёт
+`vaulter-collaboration.driver`. Удалённый драйвер `reverb` даёт
 `InvalidConfigurationException` с явным сообщением.
 
 ## missing-jwt
@@ -179,15 +179,57 @@ middleware операции вызвал `$next` не ровно один раз
 ## collaboration-unavailable
 
 `collaboration_unavailable` (409) — `collaborationSession()` или вызов хаба для документа, который
-нельзя редактировать совместно: выключен `vaulter-documents.collaboration.enabled`
-(`context.reason = disabled`) или тип документа не реализует `SupportsCollaboration`
+нельзя редактировать совместно: модуль выключен (`vaulter.modules.collaboration`, `context.reason = disabled`;
+маршрут неактивного модуля — обычный `404`) или тип документа не реализует `SupportsCollaboration`
 (`unsupported_type`). Редактируйте через `DocumentOperations::update()`.
 
 ## document-state-too-large
 
-`document_state_too_large` (413) — запись хаба несла бинарный Yjs-state больше
-`vaulter-documents.collaboration.max_state_bytes` (по умолчанию 16 МиБ). Ничего не записано.
+`document_state_too_large` (413) — чекпоинт или seed несли бинарный Yjs-state больше
+`vaulter-collaboration.max_state_bytes` (по умолчанию 16 МиБ). Ничего не записано.
 Поднимите лимит или разделите документ.
+
+## document-state-pending
+
+`document_state_pending` (409, retryable `with_backoff`) — у документа есть сохранённые правки коллаборации, которых ещё
+нет в его контенте. Чтение, экспорт, замена, восстановление или purge контента сначала просят realtime-транспорт внести
+их; если он не активен или не успевает к сроку, запрос отвергается без изменений. Повторите позже; убедитесь, что модуль
+коллаборации и его хаб работают. `drain.restore_deadline` (`vaulter-collaboration`, по умолчанию 10 с) — сколько запрос ждёт
+хаб; если хаб недоступен, почините его или выполните `compact --pending` образа хаба (см.
+[Совместное редактирование](/ru/guides/collaboration#компактация-и-состояние-pending)). Retention и шаг purge при
+удалении диска отвечают тем же кодом для такого документа, пока маркер не снят.
+
+## collaboration-protocol-mismatch
+
+`collaboration_protocol_mismatch` (409) — вызов хаба не нёс `X-Vaulter-Collab-Protocol: 2` или нёс другую версию. Ничего
+не прочитано. Хаб и бэкенд должны говорить на одном протоколе: обновите отстающий (образ `vaulter-collaboration-hub` и
+`vaulter-collaboration` выпускаются вместе). Хаб, увидевший этот ответ, останавливает durable-записи и показывает
+`protocol` в `/readyz`, пока бэкенд снова не ответит `2xx`.
+
+## collaboration-checkpoint-conflict
+
+`collaboration_checkpoint_conflict` (409, retryable `after_refetch`) — компактация хаба проиграла compare-and-set:
+`context.reason` — `lease` (поколение ему больше не принадлежит), `coverage` (покрываемого диапазона нет в журнале) или
+`checkpoint_version` (раньше опубликован другой чекпоинт). Ничего не записано и не удалено. Хаб берёт lease заново.
+
+## collaboration-update-mismatch
+
+`collaboration_update_mismatch` (422) — обновление с этим `update_id` уже зафиксировано, но с другими байтами.
+`update_id` называет ровно одно обновление; повтор обязан нести тот же payload. Клиент, переиспользующий id, ошибочен.
+
+## collaboration-update-too-large
+
+`collaboration_update_too_large` (413) — тело append, checkpoint или recheck (или его payload) больше лимита,
+`vaulter-collaboration.limits.update_bytes` / `limits.request_bytes` / `max_state_bytes`; решается по длине до любого
+декодирования. Ничего не записано. Держите обновления ниже лимитов или поднимите их вместе с
+`VAULTER_COLLAB_MAX_UPDATE_BYTES`, `VAULTER_COLLAB_MAX_REQUEST_BYTES` и `VAULTER_COLLAB_MAX_DOCUMENT_BYTES` хаба.
+
+## collaboration-draining
+
+`collaboration_draining` (503, retryable `with_backoff`) — `vaulter:collaboration:drain` выставил флаг draining, поэтому
+журнал отвергает новые обновления, пока сохранённые компактируются. Хаб хранит обновление и повторяет его. После
+повторного включения модуля выполните `php artisan vaulter:collaboration:drain --release`; `vaulter:doctor` показывает
+флаг как `collaboration.draining`.
 
 ## invalid-node-name
 

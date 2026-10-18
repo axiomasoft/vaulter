@@ -18,7 +18,7 @@ php artisan vaulter:doctor --production
 - [ ] Драйвер прав настоящий — не `null` (`core.access.*`).
 - [ ] Сканирование **обязательно** для загрузок и политика актуальна (`drive.scan.policy`).
 - [ ] Доставка вебхуков идёт через URL guard; `vaulter-webhooks.delivery.allowed_ip_ranges` задавайте только необходимым.
-- [ ] Совместная работа, если включена: хаб по `wss://`, разные `jwt_secret` и `webhook_secret`, короткий `token_ttl` (`documents.collaboration*`).
+- [ ] Совместная работа, если включена: хаб по `wss://`, разные `jwt_secret` и `webhook_secret`, `token_ttl` ≤ 300 с, общий `drain.cache_store`, management-порт хаба закрыт от публичных сетей (`collaboration.hub`).
 - [ ] Кеш общий и поддерживает атомарные блокировки (`core.cache`).
 - [ ] Драйвер очереди не `sync` (`core.queue`).
 - [ ] `vaulter-drive.downloads.direct_ttl_seconds` как можно короче, либо `delivery_mode` равен `strict`.

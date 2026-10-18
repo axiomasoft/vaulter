@@ -53,9 +53,14 @@ Codes are a stable public contract (AD29).
 | `comment_not_found` | 404 | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
 | `document_state_mismatch` | 412 | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
 | `document_state_pending` | 409 | `Vaulter\Documents\Exceptions\DocumentStatePendingException` |
-| `collaboration_epoch_mismatch` | 409 | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
-| `collaboration_seed_conflict` | 409 | `Vaulter\Documents\Exceptions\CollaborationSeedConflictException` |
-| `collaboration_unavailable` | 409 | `Vaulter\Documents\Exceptions\CollaborationUnavailableException` |
+| `collaboration_epoch_mismatch` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException` |
+| `collaboration_seed_conflict` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException` |
+| `collaboration_unavailable` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationUnavailableException` |
+| `collaboration_protocol_mismatch` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationProtocolMismatchException` |
+| `collaboration_checkpoint_conflict` | 409 | `Vaulter\Collaboration\Exceptions\CollaborationCheckpointConflictException` |
+| `collaboration_update_mismatch` | 422 | `Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException` |
+| `collaboration_update_too_large` | 413 | `Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException` |
+| `collaboration_draining` | 503 | `Vaulter\Collaboration\Exceptions\CollaborationDrainingException` |
 | `document_state_too_large` | 413 | `Vaulter\Documents\Exceptions\DocumentStateTooLargeException` |
 | `unknown_export_format` | 422 | `Vaulter\Documents\Exceptions\UnknownExportFormatException` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` |
@@ -172,7 +177,10 @@ would delete them; the document is read-only until the extension is enabled agai
 `document_state_pending` (409, retryable `with_backoff`) — the document has collaboration edits that are
 saved but not in its content yet. Reading, exporting, replacing, restoring or purging the content first asks
 the realtime transport to bring them in; when it is not active or misses its deadline, the request is
-refused untouched. Retry later; make sure the collaboration module and its hub run.
+refused untouched. Retry later; make sure the collaboration module and its hub run. `drain.restore_deadline`
+(`vaulter-collaboration`, default 10 s) is how long a request waits for the hub; with the hub down, repair it or run
+`compact --pending` of the hub image (see [Realtime Collaboration](/guides/collaboration#compaction-and-the-pending-state)).
+Retention and the purge step of a drive delete answer the same code for such a document until the marker is cleared.
 
 ## registry-frozen
 
@@ -296,7 +304,7 @@ received a list or a scalar. Send an object. A content above the type's `maxSize
 
 ## unknown-collaboration-driver
 
-`VaulterException` from `CollaborationDriverManager` — `config('vaulter-documents.collaboration.driver')`
+`VaulterException` from `CollaborationDriverManager` — `config('vaulter-collaboration.driver')`
 is not one of the registered `CollaborationDriverType` cases (`hocuspocus`). Set it
 to a valid transport name. The removed `reverb` driver is an `InvalidConfigurationException`
 that says so.
@@ -313,7 +321,7 @@ environment.
 
 ## collab-webhook-unconfigured
 
-The hub endpoints (`collaboration/hub/authenticate`, `load` and `store`) need both
+The hub endpoints (`collaboration/hub/authenticate`, `load`, `append`, `renew` and the rest) need both
 `VAULTER_COLLAB_SECRET` (the room JWT key) and `VAULTER_COLLAB_WEBHOOK_SECRET` (the body
 signature key); with either missing every hub call is `401`. Set both, different from each
 other, on Laravel, and the webhook secret on the hub too.
@@ -555,15 +563,47 @@ would merge into duplicated content. The hub loads the stored state instead.
 ## collaboration-unavailable
 
 `collaboration_unavailable` (409) — `collaborationSession()` or a hub call for a document that
-cannot be edited collaboratively: `vaulter-documents.collaboration.enabled` is off
-(`context.reason = disabled`), or the document's type does not implement
+cannot be edited collaboratively: the module is off (`vaulter.modules.collaboration`, `context.reason = disabled`; a
+route of an inactive module is a plain `404`), or the document's type does not implement
 `SupportsCollaboration` (`unsupported_type`). Edit it through `DocumentOperations::update()`.
 
 ## document-state-too-large
 
-`document_state_too_large` (413) — a hub store carried a binary Yjs state above
-`vaulter-documents.collaboration.max_state_bytes` (default 16 MiB). Nothing was written. Raise the
+`document_state_too_large` (413) — a checkpoint or seed carried a binary Yjs state above
+`vaulter-collaboration.max_state_bytes` (default 16 MiB). Nothing was written. Raise the
 limit or split the document.
+
+## collaboration-protocol-mismatch
+
+`collaboration_protocol_mismatch` (409) — a hub call did not carry `X-Vaulter-Collab-Protocol: 2`, or carried another
+version. Nothing was read. The hub and the backend must speak the same protocol: upgrade the one that is behind (the hub
+image `vaulter-collaboration-hub` and `vaulter-collaboration` are released together). A hub that sees this stops durable
+writes and reports `protocol` in `/readyz` until the backend answers `2xx` again.
+
+## collaboration-checkpoint-conflict
+
+`collaboration_checkpoint_conflict` (409, retryable `after_refetch`) — the hub's compaction lost its compare-and-set:
+`context.reason` is `lease` (it no longer holds the generation), `coverage` (the covered range is not in the log) or
+`checkpoint_version` (another checkpoint was published first). Nothing was written or deleted. The hub leases again.
+
+## collaboration-update-mismatch
+
+`collaboration_update_mismatch` (422) — an update with this `update_id` was already committed, with other bytes. An
+`update_id` names exactly one update; a retry must repeat the same payload. A client that reuses ids is buggy.
+
+## collaboration-update-too-large
+
+`collaboration_update_too_large` (413) — an append, checkpoint or recheck body (or its payload) is above the limit,
+`vaulter-collaboration.limits.update_bytes` / `limits.request_bytes` / `max_state_bytes`, decided from the length before
+anything was decoded. Nothing was written. Keep updates below the limits or raise them together with the hub's
+`VAULTER_COLLAB_MAX_UPDATE_BYTES`, `VAULTER_COLLAB_MAX_REQUEST_BYTES` and `VAULTER_COLLAB_MAX_DOCUMENT_BYTES`.
+
+## collaboration-draining
+
+`collaboration_draining` (503, retryable `with_backoff`) — `vaulter:collaboration:drain` set the draining flag, so the log
+refuses new updates while the saved ones are checkpointed. The hub keeps the update and retries it. After the module is
+switched on again run `php artisan vaulter:collaboration:drain --release`; `vaulter:doctor` reports the flag as
+`collaboration.draining`.
 
 ## write-outside-operation
 

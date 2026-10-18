@@ -21,4 +21,7 @@ title: Glossary
 | **Delivery** | One attempt series of sending one event to one webhook endpoint. |
 | **Scan obligation** | The durable duty to obtain a malware-scan verdict for a file revision. |
 | **Inspector** | An `UploadInspector` that checks an upload before it is accepted. |
-| **Hub** | The optional Hocuspocus server for real-time collaboration. |
+| **Hub** | The optional Node service (`@vaulter/collaboration-hub`, Hocuspocus + Yjs) that serves real-time collaboration through the `vaulter-collaboration` module. |
+| **Receipt** | The backend's committed acknowledgement of one collaboration update; only a receipt makes an edit *saved*. |
+| **Checkpoint** | The merged Yjs state and JSON projection the hub publishes from the update log; the log up to it is then deleted. |
+| **Pending marker** | `(generation, through_seq)` on a document whose saved collaboration edits are not in a checkpoint yet; the content is not served or replaced meanwhile (`document_state_pending`). |
