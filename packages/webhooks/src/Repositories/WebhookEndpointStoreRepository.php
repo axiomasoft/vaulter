@@ -43,6 +43,7 @@ final readonly class WebhookEndpointStoreRepository
             'signing_secret' => $signingSecret,
             'is_active' => $isActive,
             'failure_count' => 0,
+            'version' => 0,
             'tenant_id' => $tenantId,
             'drive_id' => $driveId,
         ]);

@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks\Http\Controllers\Webhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Attributes\Internal;
+use Vaulter\Webhooks\Data\WebhookEndpointSnapshot;
 use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;
 use Vaulter\Webhooks\Http\Resources\Webhooks\WebhookEndpointResource;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -22,6 +23,8 @@ final readonly class ShowWebhookEndpointController
         Gate::authorize('viewAny', WebhookEndpoint::class);
         $model = $this->endpoints->find($endpoint) ?? throw WebhookEndpointNotFoundException::forId($endpoint);
 
-        return (new WebhookEndpointResource($model))->response();
+        $resource = new WebhookEndpointResource(WebhookEndpointSnapshot::of($model));
+
+        return $resource->response()->setEtag($resource->etag());
     }
 }

@@ -231,7 +231,10 @@ export interface paths {
         /** List webhook endpoints */
         get: operations["webhook-endpoints.index"];
         put?: never;
-        /** Register a webhook endpoint (secret returned once) */
+        /**
+         * Register a webhook endpoint (secret returned once)
+         * @description An append: no If-Match. The signing secret is returned once and kept in the receipt only as ciphertext. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response, secret included, with Idempotent-Replayed.
+         */
         post: operations["webhook-endpoints.store"];
         delete?: never;
         options?: never;
@@ -246,15 +249,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Show a webhook endpoint */
+        /**
+         * Show a webhook endpoint
+         * @description The ETag header carries the tag of the endpoint (its version), the If-Match of a conditional write.
+         */
         get: operations["webhook-endpoints.show"];
         put?: never;
         post?: never;
-        /** Delete a webhook endpoint */
+        /**
+         * Delete a webhook endpoint
+         * @description Requires If-Match with the ETag of the endpoint (428 precondition_required without it or with `*`, 412 stale_write when it changed or was deleted since). Checked after authorization: a caller without access gets 403/404, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         delete: operations["webhook-endpoints.destroy"];
         options?: never;
         head?: never;
-        /** Update a webhook endpoint */
+        /**
+         * Update a webhook endpoint
+         * @description Requires If-Match with the ETag of the endpoint (428 precondition_required without it or with `*`, 412 stale_write when it changed or was deleted since). Checked after authorization: a caller without access gets 403/404, never a tag comparison. The update raises the endpoint version. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         patch: operations["webhook-endpoints.update"];
         trace?: never;
     };
@@ -267,7 +279,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Deactivate a webhook endpoint */
+        /**
+         * Deactivate a webhook endpoint
+         * @description Requires If-Match with the ETag of the endpoint (428 precondition_required without it or with `*`, 412 stale_write when it changed or was deleted since). Checked after authorization: a caller without access gets 403/404, never a tag comparison. The deactivation raises the endpoint version. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         post: operations["webhook-endpoints.deactivate"];
         delete?: never;
         options?: never;
@@ -284,7 +299,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rotate the signing secret (new secret returned once) */
+        /**
+         * Rotate the signing secret (new secret returned once)
+         * @description Requires If-Match with the ETag of the endpoint (428 precondition_required without it or with `*`, 412 stale_write when it changed or was deleted since). Checked after authorization: a caller without access gets 403/404, never a tag comparison. The rotation raises the endpoint version; the new secret is kept in the receipt only as ciphertext. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         post: operations["webhook-endpoints.rotate-secret"];
         delete?: never;
         options?: never;
@@ -1640,6 +1658,10 @@ export interface components {
             status: "active" | "disabled";
             /** Format: date-time */
             disabled_at: string | null;
+            /** @description Raised by update, deactivation, secret rotation. */
+            version: number;
+            /** @description The endpoint's tag (the ETag of its responses); send it back verbatim as If-Match. */
+            etag: string;
             /** Format: date-time */
             created_at: string;
             /** @description Signing secret; only in store and rotate-secret responses. */
@@ -2809,6 +2831,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2839,7 +2863,8 @@ export interface operations {
                 headers: {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
-                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Cache-Control": components["headers"]["CacheControlRevalidate"];
+                    ETag: components["headers"]["ETagRequired"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2855,7 +2880,12 @@ export interface operations {
     "webhook-endpoints.destroy": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Webhook endpoint id. */
                 endpoint: components["parameters"]["Endpoint"];
@@ -2870,6 +2900,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -2877,13 +2908,21 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "webhook-endpoints.update": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Webhook endpoint id. */
                 endpoint: components["parameters"]["Endpoint"];
@@ -2907,6 +2946,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2916,14 +2957,21 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "webhook-endpoints.deactivate": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Webhook endpoint id. */
                 endpoint: components["parameters"]["Endpoint"];
@@ -2938,6 +2986,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2947,13 +2997,21 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "webhook-endpoints.rotate-secret": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Webhook endpoint id. */
                 endpoint: components["parameters"]["Endpoint"];
@@ -2974,6 +3032,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2983,7 +3043,9 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };

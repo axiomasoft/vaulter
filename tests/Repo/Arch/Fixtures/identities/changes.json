@@ -5558,6 +5558,20 @@
             "id": "format:receipt-comment",
             "kind": "protocol",
             "reason": "P6.5: receipt of documents.comments.add, resolve and delete (a delete keeps ids and the basis of the right only)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "column:v_webhook_endpoints.version",
+            "kind": "schema",
+            "reason": "P6.6: the endpoint's own version (counterColumn); update, deactivate, rotate_secret and delete are conditional on it (CC1, CC2)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-webhook-endpoint",
+            "kind": "protocol",
+            "reason": "P6.6: receipt of webhooks.endpoints.register, update, deactivate, rotate_secret and delete; the signing secret of register and rotate_secret only as Crypt ciphertext (ID5), a delete keeps the id and the scope the right was proven in"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

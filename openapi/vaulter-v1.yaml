@@ -699,6 +699,7 @@ paths:
       tags:
       - webhooks
       summary: Register a webhook endpoint (secret returned once)
+      description: 'An append: no If-Match. The signing secret is returned once and kept in the receipt only as ciphertext. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response, secret included, with Idempotent-Replayed.'
       requestBody:
         required: true
         content:
@@ -730,6 +731,10 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -750,6 +755,7 @@ paths:
       tags:
       - webhooks
       summary: Show a webhook endpoint
+      description: 'The ETag header carries the tag of the endpoint (its version), the If-Match of a conditional write.'
       parameters:
       - $ref: '#/components/parameters/Endpoint'
       responses:
@@ -761,7 +767,9 @@ paths:
             X-Request-Id:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
-              $ref: '#/components/headers/CacheControlStore'
+              $ref: '#/components/headers/CacheControlRevalidate'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
           content:
             application/json:
               schema:
@@ -779,8 +787,11 @@ paths:
       tags:
       - webhooks
       summary: Update a webhook endpoint
+      description: 'Requires If-Match with the ETag of the endpoint (428 precondition_required without it or with `*`, 412 stale_write when it changed or was deleted since). Checked after authorization: a caller without access gets 403/404, never a tag comparison. The update raises the endpoint version. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.'
       parameters:
       - $ref: '#/components/parameters/Endpoint'
+      - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -810,6 +821,10 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -820,8 +835,12 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
         '422':
           $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
         '500':
           $ref: '#/components/responses/Problem500'
     delete:
@@ -829,8 +848,11 @@ paths:
       tags:
       - webhooks
       summary: Delete a webhook endpoint
+      description: 'Requires If-Match with the ETag of the endpoint (428 precondition_required without it or with `*`, 412 stale_write when it changed or was deleted since). Checked after authorization: a caller without access gets 403/404, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.'
       parameters:
       - $ref: '#/components/parameters/Endpoint'
+      - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '204':
           description: No content
@@ -841,12 +863,20 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
         '500':
           $ref: '#/components/responses/Problem500'
   /webhook-endpoints/{endpoint}/deactivate:
@@ -855,8 +885,11 @@ paths:
       tags:
       - webhooks
       summary: Deactivate a webhook endpoint
+      description: 'Requires If-Match with the ETag of the endpoint (428 precondition_required without it or with `*`, 412 stale_write when it changed or was deleted since). Checked after authorization: a caller without access gets 403/404, never a tag comparison. The deactivation raises the endpoint version. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.'
       parameters:
       - $ref: '#/components/parameters/Endpoint'
+      - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '200':
           description: OK
@@ -867,6 +900,10 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -877,6 +914,12 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
         '500':
           $ref: '#/components/responses/Problem500'
   /webhook-endpoints/{endpoint}/rotate-secret:
@@ -885,8 +928,11 @@ paths:
       tags:
       - webhooks
       summary: Rotate the signing secret (new secret returned once)
+      description: 'Requires If-Match with the ETag of the endpoint (428 precondition_required without it or with `*`, 412 stale_write when it changed or was deleted since). Checked after authorization: a caller without access gets 403/404, never a tag comparison. The rotation raises the endpoint version; the new secret is kept in the receipt only as ciphertext. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.'
       parameters:
       - $ref: '#/components/parameters/Endpoint'
+      - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: false
         content:
@@ -908,6 +954,10 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -918,8 +968,12 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
         '422':
           $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
         '500':
           $ref: '#/components/responses/Problem500'
   /webhook-endpoints/{endpoint}/deliveries:
@@ -5689,6 +5743,8 @@ components:
       - events
       - status
       - disabled_at
+      - version
+      - etag
       - created_at
       properties:
         id:
@@ -5714,6 +5770,13 @@ components:
           - 'null'
           format: date-time
           pattern: Z$
+        version:
+          type: integer
+          minimum: 0
+          description: Raised by update, deactivation, secret rotation.
+        etag:
+          type: string
+          description: The endpoint's tag (the ETag of its responses); send it back verbatim as If-Match.
         created_at:
           type: string
           format: date-time

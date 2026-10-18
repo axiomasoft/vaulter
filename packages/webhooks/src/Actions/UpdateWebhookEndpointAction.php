@@ -8,6 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Support\Identity;
@@ -39,14 +40,17 @@ final readonly class UpdateWebhookEndpointAction
         private VaulterDatabase $database,
         private TenancyBoundary $tenancy,
         private DriveReadRepository $drives,
+        private AggregateVersion $versions,
     ) {}
 
-    public function execute(WebhookEndpoint $endpoint, UpdateWebhookEndpointInput $data): WebhookEndpoint
+    public function execute(WebhookEndpoint $endpoint, UpdateWebhookEndpointInput $data, ?int $expectedVersion = null): WebhookEndpoint
     {
-        return $this->database->transaction(function () use ($endpoint, $data): WebhookEndpoint {
+        return $this->database->transaction(function () use ($endpoint, $data, $expectedVersion): WebhookEndpoint {
             // Decide from the row as it is now, not from the copy the caller loaded earlier: a
             // stale "inactive" copy would skip killing the deliveries created since.
             $endpoint->setRawAttributes($endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail()->getAttributes(), sync: true);
+            // CC1: the version the caller read is compared on the locked row.
+            $this->versions->assertExpected($endpoint, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
             $wasActive = $endpoint->is_active;
 
             $this->endpoints->update(
@@ -61,6 +65,8 @@ final readonly class UpdateWebhookEndpointAction
             if ($wasActive && $data->isActive === false) {
                 $this->deliveries->killOpenForEndpoint(endpointId: Identity::stringify($endpoint->getKey()), reason: 'endpoint_disabled');
             }
+
+            $this->versions->bump($endpoint, 'version', WebhookEndpoint::AGGREGATE);
 
             return $endpoint;
         });

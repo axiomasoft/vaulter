@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks;
 
 use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
@@ -13,18 +14,26 @@ use Throwable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
 use Vaulter\ValueObjects\Operations\ScopeRef;
 use Vaulter\ValueObjects\Operations\TenantRef;
 use Vaulter\Webhooks\Exceptions\WebhookEndpointNotFoundException;
+use Vaulter\Webhooks\Idempotency\EndpointReceiptCodec;
+use Vaulter\Webhooks\Idempotency\EndpointReplayAuthorizer;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
+use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
 
 /**
  * The webhook endpoint management writes (`webhooks.endpoints.<verb>`) as operations of the
  * webhooks module: the request's user acts, the `manage` ability on endpoints is checked inside
  * the operation's transaction, and the endpoint (or the endpoint collection) is the scope.
+ *
+ * A write with a `$fingerprint` takes an Idempotency-Key (D25): the receipt is the {@see EndpointReceiptCodec} result, a
+ * signing secret in it only as ciphertext, and a replay is authorized again by the `manage` ability. Without one the
+ * write is natural (a redelivery re-arms a delivery at most once, so a repeat is refused, not doubled).
  *
  * used by the webhook endpoint controllers
  */
@@ -35,15 +44,18 @@ final readonly class WebhookEndpointWrites
         private OperationRunner $runner,
         private HttpOperationContextFactory $contexts,
         private TenancyBoundary $tenancy,
+        private WebhookEndpointReadRepository $endpoints,
+        private Encrypter $encrypter,
     ) {}
 
     /**
      * @template T
      *
-     * @param  Closure(): T $attempt
+     * @param  Closure(): T              $attempt
+     * @param  array<string, mixed>|null $fingerprint the semantic request of a keyed write: ids, input, the expected version
      * @return T
      */
-    public function write(Request $request, string $verb, ?string $endpoint, Closure $attempt): mixed
+    public function write(Request $request, string $verb, ?string $endpoint, Closure $attempt, ?array $fingerprint = null): mixed
     {
         if (!$request->user() instanceof Authorizable) {
             // Without a user the ability check answers first, as it always did.
@@ -68,6 +80,10 @@ final readonly class WebhookEndpointWrites
             Gate::authorize('manage', WebhookEndpoint::class);
 
             return $attempt();
-        });
+        }, $fingerprint === null ? null : new IdempotentWrite(
+            codec: new EndpointReceiptCodec($this->encrypter),
+            authorizer: new EndpointReplayAuthorizer($this->endpoints, $this->tenancy, $endpoint ?? 'new'),
+            fingerprint: $fingerprint,
+        ));
     }
 }

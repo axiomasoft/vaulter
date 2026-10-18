@@ -41,6 +41,7 @@ use Vaulter\Webhooks\Configuration\WebhooksConfig;
  * @property Carbon|null        $failing_since
  * @property Carbon|null        $disabled_at
  * @property string|null        $disabled_reason
+ * @property int                $version
  * @property int|string|null    $tenant_id
  * @property int|string|null    $drive_id
  * @property Carbon|null        $created_at
@@ -51,6 +52,9 @@ use Vaulter\Webhooks\Configuration\WebhooksConfig;
 #[Internal]
 class WebhookEndpoint extends Model
 {
+    /** The aggregate of the operation catalogue the refusal of a stale endpoint write names (D47). */
+    public const string AGGREGATE = 'webhooks.endpoint';
+
     use GuardsWrites;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
@@ -146,6 +150,7 @@ class WebhookEndpoint extends Model
             'failure_count' => 'integer',
             'failing_since' => 'datetime',
             'disabled_at' => 'datetime',
+            'version' => 'integer',
         ];
     }
 }

@@ -5631,6 +5631,15 @@
                     "collation": "default"
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "created_at",
                     "type": "timestamp(0) without time zone",
                     "not_null": false,
@@ -5685,6 +5694,13 @@
                 "custom_webhook_endpoints_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_endpoints_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((version >= 0))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true

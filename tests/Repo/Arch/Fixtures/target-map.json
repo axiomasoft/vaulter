@@ -16542,6 +16542,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/webhooks/src/Data/MintedEndpointSecret.php",
+            "fqcn": "Vaulter\\Webhooks\\Data\\MintedEndpointSecret",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\Data\\MintedEndpointSecret"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/webhooks/src/Data/RegisterWebhookEndpointInput.php",
             "fqcn": "Vaulter\\Webhooks\\Data\\RegisterWebhookEndpointInput",
             "kind": "final-class",
@@ -16594,6 +16608,20 @@
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\Data\\UpdateWebhookEndpointInput"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/Data/WebhookEndpointSnapshot.php",
+            "fqcn": "Vaulter\\Webhooks\\Data\\WebhookEndpointSnapshot",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\Data\\WebhookEndpointSnapshot"
         },
         {
             "action": "keep",
@@ -16892,6 +16920,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/webhooks/src/Http/Resources/Webhooks/EndpointPreconditions.php",
+            "fqcn": "Vaulter\\Webhooks\\Http\\Resources\\Webhooks\\EndpointPreconditions",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\Http\\Resources\\Webhooks\\EndpointPreconditions"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/webhooks/src/Http/Resources/Webhooks/WebhookDeliveryResource.php",
             "fqcn": "Vaulter\\Webhooks\\Http\\Resources\\Webhooks\\WebhookDeliveryResource",
             "kind": "final-class",
@@ -16916,6 +16958,48 @@
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\Http\\Resources\\Webhooks\\WebhookEndpointResource"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/Idempotency/EndpointDeleteReceipt.php",
+            "fqcn": "Vaulter\\Webhooks\\Idempotency\\EndpointDeleteReceipt",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\Idempotency\\EndpointDeleteReceipt"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/Idempotency/EndpointReceiptCodec.php",
+            "fqcn": "Vaulter\\Webhooks\\Idempotency\\EndpointReceiptCodec",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\Idempotency\\EndpointReceiptCodec"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/Idempotency/EndpointReplayAuthorizer.php",
+            "fqcn": "Vaulter\\Webhooks\\Idempotency\\EndpointReplayAuthorizer",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\Idempotency\\EndpointReplayAuthorizer"
         },
         {
             "action": "keep",

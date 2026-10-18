@@ -162,7 +162,7 @@ it('accepts and returns drive_id over HTTP', function (): void {
     ])->assertStatus(422);
 
     $other = AccessTestHelpers::storage();
-    $this->patchJson('api/vaulter/v1/webhook-endpoints/'.$created->json('data.id'), ['drive_id' => (string) $other->getKey()])
+    $this->patchJson('api/vaulter/v1/webhook-endpoints/'.$created->json('data.id'), ['drive_id' => (string) $other->getKey()], ['If-Match' => $created->headers->get('ETag')])
         ->assertOk()
         ->assertJsonPath('data.drive_id', (string) $other->getKey());
 });

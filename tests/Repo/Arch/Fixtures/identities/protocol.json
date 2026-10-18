@@ -1386,6 +1386,13 @@
             "id": "format:receipt-comment",
             "kind": "protocol",
             "reason": "P6.5: receipt of documents.comments.add, resolve and delete (a delete keeps ids and the basis of the right only)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-webhook-endpoint",
+            "kind": "protocol",
+            "reason": "P6.6: receipt of webhooks.endpoints.register, update, deactivate, rotate_secret and delete; the signing secret of register and rotate_secret only as Crypt ciphertext (ID5), a delete keeps the id and the scope the right was proven in"
         }
     ],
     "items": [
@@ -2056,7 +2063,7 @@
             }
         },
         {
-            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version), comment (comment id, v_node_comments.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
+            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version), comment (comment id, v_node_comments.version), webhook-endpoint (endpoint id, v_webhook_endpoints.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
             "id": "format:etag-versioned",
             "manual": true,
             "owner": "drive",
@@ -2283,6 +2290,16 @@
             "source": {
                 "file": "packages/drive/src/Idempotency/UploadSessionCodec.php",
                 "symbol": "Vaulter\\Drive\\Idempotency\\UploadSessionCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind webhooks.endpoint-receipt, version 1: JSON {type: endpoint, endpoint: every WebhookEndpointSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version; no secret)} | {type: minted, endpoint: as above, secret: Crypt::encryptString ciphertext of the signing secret} | {type: deleted, deleted: {id, tenant_id, ability}}; a deletion keeps the id and the scope the right was proven in, never the endpoint",
+            "id": "format:receipt-webhook-endpoint",
+            "manual": true,
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/webhooks/src/Idempotency/EndpointReceiptCodec.php",
+                "symbol": "Vaulter\\Webhooks\\Idempotency\\EndpointReceiptCodec::encode"
             }
         },
         {

@@ -1120,6 +1120,7 @@
             "serial"
           ],
           "files": [
+            "packages/webhooks/tests/Concurrency/EndpointVersionRaceTest.php",
             "packages/webhooks/tests/Concurrency/WebhookAutoDisableRaceTest.php",
             "packages/webhooks/tests/Events/WebhookAutoDisableCommitTest.php"
           ]
@@ -1142,6 +1143,7 @@
             "packages/webhooks/tests/Configuration/WebhooksConfigTest.php",
             "packages/webhooks/tests/Console/SchedulingRegistrarTest.php",
             "packages/webhooks/tests/Feature/PruneWebhooksTest.php",
+            "packages/webhooks/tests/Http/IfMatchRequiredTest.php",
             "packages/webhooks/tests/Http/WebhookEndpointsV1Test.php",
             "packages/webhooks/tests/Http/WebhookExceptionStatusTest.php",
             "packages/webhooks/tests/Http/WebhooksProblemCodesTest.php",
@@ -1151,6 +1153,7 @@
             "packages/webhooks/tests/Schema/WebhooksKeyColumnsTest.php",
             "packages/webhooks/tests/Webhooks/ConcurrentDeliveryTest.php",
             "packages/webhooks/tests/Webhooks/DeliverWebhookTest.php",
+            "packages/webhooks/tests/Webhooks/EndpointIdempotencyTest.php",
             "packages/webhooks/tests/Webhooks/OutboundUrlGuardTest.php",
             "packages/webhooks/tests/Webhooks/OutboxStagingTest.php",
             "packages/webhooks/tests/Webhooks/OutboxTransactionTest.php",
@@ -1184,6 +1187,7 @@
             "serial"
           ],
           "files": [
+            "packages/webhooks/tests/Arch/OperationPolicyCoverageTest.php",
             "packages/webhooks/tests/Observability/Tracing/WebhookPipelineTracingTest.php"
           ]
         }
@@ -1670,6 +1674,7 @@
             "packages/collaboration/tests/Arch/BoundaryTest.php",
             "packages/collaboration/tests/Arch/HttpV1ArchTest.php",
             "packages/collaboration/tests/Arch/I17ScenarioMapTest.php",
+            "packages/collaboration/tests/Arch/OperationPolicyCoverageTest.php",
             "packages/collaboration/tests/Arch/TestingBoundaryTest.php"
           ]
         },

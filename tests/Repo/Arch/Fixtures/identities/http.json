@@ -3243,7 +3243,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.webhook-endpoints.deactivate",
             "openapi": {
@@ -3275,7 +3276,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.webhook-endpoints.destroy",
             "openapi": {
@@ -3339,7 +3341,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.webhook-endpoints.rotate-secret",
             "openapi": {
@@ -3403,7 +3406,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.webhook-endpoints.store",
             "openapi": {
@@ -3435,7 +3439,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.webhook-endpoints.update",
             "openapi": {

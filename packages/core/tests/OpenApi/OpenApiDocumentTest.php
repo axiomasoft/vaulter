@@ -38,6 +38,10 @@ const IF_MATCH_OPERATIONS = [
     'shares.destroy',
     'shares.rotate',
     'shares.update',
+    'webhook-endpoints.deactivate',
+    'webhook-endpoints.destroy',
+    'webhook-endpoints.rotate-secret',
+    'webhook-endpoints.update',
 ];
 
 /** The single resources that answer a matching If-None-Match with 304. */

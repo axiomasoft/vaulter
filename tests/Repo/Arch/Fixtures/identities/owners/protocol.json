@@ -352,12 +352,12 @@
         {
             "id": "format:etag-versioned",
             "owner": "drive",
-            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version), comment (comment id, v_node_comments.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
+            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version), comment (comment id, v_node_comments.version), webhook-endpoint (endpoint id, v_webhook_endpoints.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
             "source": {
                 "file": "packages/core/src/Http/Support/RepresentationTag.php",
                 "symbol": "Vaulter\\Http\\Support\\RepresentationTag::versioned"
             },
-            "why": "D47 (CC2): validator of the aggregates with a version of their own; If-Match of grants.destroy, access.inheritance.*, shares.update/rotate/destroy, drives.archive/unarchive/destroy, and (kind comment, owner documents) comments.resolve/destroy (412 stale_write)"
+            "why": "D47 (CC2): validator of the aggregates with a version of their own; If-Match of grants.destroy, access.inheritance.*, shares.update/rotate/destroy, drives.archive/unarchive/destroy, and (kind comment, owner documents) comments.resolve/destroy, and (kind webhook-endpoint, owner webhooks) webhook-endpoints.update/deactivate/rotate-secret/destroy (412 stale_write)"
         },
         {
             "id": "format:if-match",
@@ -598,6 +598,16 @@
             "format": "receipt kind documents.comment-receipt, version 1: JSON {type: comment, comment: every CommentSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version)} | {type: deleted, deleted: {id, node_id, drive_id, by_author}}; a deletion keeps the basis of the right (author or Manage), never the comment",
             "owner": "documents",
             "why": "D25, D47, ID2: the stored receipt of documents.comments.*; a delete replay is authorized by the recorded basis (scope kind node | node-author) now"
+        },
+        {
+            "id": "format:receipt-webhook-endpoint",
+            "source": {
+                "file": "packages/webhooks/src/Idempotency/EndpointReceiptCodec.php",
+                "symbol": "Vaulter\\Webhooks\\Idempotency\\EndpointReceiptCodec::encode"
+            },
+            "format": "receipt kind webhooks.endpoint-receipt, version 1: JSON {type: endpoint, endpoint: every WebhookEndpointSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version; no secret)} | {type: minted, endpoint: as above, secret: Crypt::encryptString ciphertext of the signing secret} | {type: deleted, deleted: {id, tenant_id, ability}}; a deletion keeps the id and the scope the right was proven in, never the endpoint",
+            "owner": "webhooks",
+            "why": "D25, D47, ID2, ID5: the stored receipt of webhooks.endpoints.register, update, deactivate, rotate_secret and delete; a replay is authorized by the manage ability now, on the recorded scope (the tenant) when the endpoint is gone"
         }
     ]
 }

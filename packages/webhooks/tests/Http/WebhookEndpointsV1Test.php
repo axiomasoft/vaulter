@@ -41,7 +41,7 @@ it('rotates the signing secret and returns the new one once', function (): void 
     $endpoint = webhookFixture(static fn () => WebhookTestHelpers::endpoint());
     $old = $endpoint->signing_secret;
 
-    $rotated = $this->postJson(V1::url('webhook-endpoints/'.$endpoint->getKey().'/rotate-secret'), ['overlap_seconds' => 600])
+    $rotated = $this->postJson(V1::url('webhook-endpoints/'.$endpoint->getKey().'/rotate-secret'), ['overlap_seconds' => 600], ['If-Match' => webhookTag($endpoint->getKey())])
         ->assertOk()
         ->assertJsonPath('data.id', (string) $endpoint->getKey());
 
@@ -49,7 +49,7 @@ it('rotates the signing secret and returns the new one once', function (): void 
         ->and($endpoint->fresh()->signing_secret)->toBe($rotated->json('data.secret'))
         ->and($endpoint->fresh()->previous_signing_secret)->toBe($old)
         ->and($rotated->headers->get('Cache-Control'))->toContain('no-store');
-    $this->postJson(V1::url('webhook-endpoints/'.$endpoint->getKey().'/rotate-secret'), ['overlap_seconds' => -1])->assertUnprocessable();
+    $this->postJson(V1::url('webhook-endpoints/'.$endpoint->getKey().'/rotate-secret'), ['overlap_seconds' => -1], ['If-Match' => webhookTag($endpoint->getKey())])->assertUnprocessable();
 });
 
 it('pages the deliveries of one endpoint only', function (): void {

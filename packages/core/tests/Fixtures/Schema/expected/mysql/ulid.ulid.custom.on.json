@@ -8662,6 +8662,16 @@
                     "generation": ""
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
                     "name": "created_at",
                     "type": "timestamp",
                     "nullable": "YES",
@@ -8776,6 +8786,11 @@
                 }
             },
             "constraints": {
+                "custom_webhook_endpoints_chk_1": {
+                    "type": "check",
+                    "clause": "(`version` >= 0)",
+                    "enforced": "YES"
+                },
                 "custom_webhook_endpoints_drive_id_foreign": {
                     "type": "foreign key",
                     "ref_table": "custom_drives",
@@ -8789,7 +8804,7 @@
                     ]
                 }
             },
-            "create_sql": "CREATE TABLE `custom_webhook_endpoints` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `events` json NOT NULL,\n  `signing_secret` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `previous_signing_secret` text COLLATE utf8mb4_unicode_ci,\n  `previous_secret_expires_at` timestamp NULL DEFAULT NULL,\n  `is_active` tinyint(1) NOT NULL DEFAULT '1',\n  `last_triggered_at` timestamp NULL DEFAULT NULL,\n  `failure_count` int unsigned NOT NULL DEFAULT '0',\n  `failing_since` timestamp NULL DEFAULT NULL,\n  `disabled_at` timestamp NULL DEFAULT NULL,\n  `disabled_reason` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `drive_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `custom_webhook_endpoints_active_tenant_idx` (`is_active`,`tenant_id`),\n  KEY `custom_webhook_endpoints_is_active_index` (`is_active`),\n  KEY `custom_webhook_endpoints_tenant_id_index` (`tenant_id`),\n  KEY `custom_webhook_endpoints_drive_id_index` (`drive_id`),\n  CONSTRAINT `custom_webhook_endpoints_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `custom_drives` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `custom_webhook_endpoints` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `events` json NOT NULL,\n  `signing_secret` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `previous_signing_secret` text COLLATE utf8mb4_unicode_ci,\n  `previous_secret_expires_at` timestamp NULL DEFAULT NULL,\n  `is_active` tinyint(1) NOT NULL DEFAULT '1',\n  `last_triggered_at` timestamp NULL DEFAULT NULL,\n  `failure_count` int unsigned NOT NULL DEFAULT '0',\n  `failing_since` timestamp NULL DEFAULT NULL,\n  `disabled_at` timestamp NULL DEFAULT NULL,\n  `disabled_reason` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `version` bigint NOT NULL DEFAULT '0',\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `drive_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `custom_webhook_endpoints_active_tenant_idx` (`is_active`,`tenant_id`),\n  KEY `custom_webhook_endpoints_is_active_index` (`is_active`),\n  KEY `custom_webhook_endpoints_tenant_id_index` (`tenant_id`),\n  KEY `custom_webhook_endpoints_drive_id_index` (`drive_id`),\n  CONSTRAINT `custom_webhook_endpoints_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `custom_drives` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_webhook_endpoints_chk_1` CHECK ((`version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         }
     },
     "preset": "ulid.ulid.custom.on",
