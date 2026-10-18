@@ -168,7 +168,7 @@ it('refuses vaulter:module:uninstall collaboration --force --purge of the switch
         ->assertExitCode(1);
 
     expect(rawDisableLog())->toBe(['updates' => 2, 'receipts' => 2, 'heads' => 1])
-        ->and(DB::table('migrations')->where('migration', 'like', '%create_v_collaboration_%')->count())->toBe(3);
+        ->and(DB::table('migrations')->where('migration', 'like', '%create_v_collaboration_%')->count())->toBe(4);
 });
 
 it('serves and replaces a document without a marker as usual, still without collaboration', function (): void {

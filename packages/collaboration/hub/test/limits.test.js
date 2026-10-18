@@ -428,6 +428,7 @@ test('a repeated sync step 2 counts none of the deletions the room applied alrea
 
   // Measured on a twin of the room: the state, and the delete set a diff of it keeps whole.
   const twin = new Y.Doc()
+  twin.clientID = 1613605099
   twin.getText('t').insert(0, 'checkpoint')
   Y.applyUpdate(twin, fragmented(twin))
   const held = Y.encodeStateAsUpdate(twin).length
@@ -438,6 +439,7 @@ test('a repeated sync step 2 counts none of the deletions the room applied alrea
   // The limit leaves room for a quarter of that delete set again, not for all of it.
   const room = await loadedRoom(t, { conf: { maxDocumentBytes: held + Math.floor(deletions / 4), maxUpdateBytes: held } })
   const writer = await room.connect()
+  room.document.clientID = 1613605099
   Y.applyUpdate(room.document, fragmented(room.document), { source: 'connection' })
 
   await room.persistence.beforeHandleMessage({ connection: writer, update: syncMessage(Y.encodeStateAsUpdate(room.document)), documentName: ROOM })
@@ -450,6 +452,7 @@ test('a repeated sync step 2 counts none of the deletions the room applied alrea
   // ranges of three characters, of which the room has applied two each — 500 single deletions it has not (about half of
   // the first delete set, past the quarter the limit leaves).
   const client = new Y.Doc()
+  client.clientID = 1613605099 // fixed: the width of a random id's varint moves the size of this update by a thousand bytes
   Y.applyUpdate(client, Y.encodeStateAsUpdate(room.document))
   client.transact(() => {
     for (let index = 0; index < 500; index++) {

@@ -109,6 +109,7 @@ export function testConf(overrides = {}) {
  */
 export async function loadedRoom(t, { handlers = {}, conf = {}, time = virtualTime(), options = {}, direct = false } = {}) {
   const base = new Y.Doc()
+  base.clientID = 1613605099 // fixed: a random id changes the encoded sizes the limit tests measure
   base.getText('t').insert(0, 'checkpoint')
   const checkpoint = Buffer.from(Y.encodeStateAsUpdate(base)).toString('base64')
   base.destroy()

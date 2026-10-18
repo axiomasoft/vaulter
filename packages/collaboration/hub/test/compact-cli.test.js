@@ -142,7 +142,9 @@ test('compact --pending does not settle on an empty lease answer while the backe
 test('compact --pending exits 1 at the deadline when the backend refuses every lease call', async (t) => {
   const { env } = await backend(t, { 'compaction/lease': () => ({ status: 401, body: { code: 'unauthenticated' } }) })
 
-  const run = await runCli(['compact', '--pending', '--deadline=1'], env)
+  // 3 s, not 1: on a loaded machine the process may spend the whole first second starting, and the lease call is then
+  // bounded by the few milliseconds left ("no answer") instead of reaching the backend.
+  const run = await runCli(['compact', '--pending', '--deadline=3'], env)
 
   assert.equal(run.code, 1)
   assert.match(run.stderr, /the last lease call failed: 401 unauthenticated/)

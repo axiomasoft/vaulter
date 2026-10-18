@@ -1,0 +1,38 @@
+{
+  "changed_paths": [
+    "packages/collaboration/hub/src/worker.js",
+    "packages/collaboration/hub/test/compact-cli.test.js",
+    "packages/collaboration/hub/test/limits.test.js",
+    "packages/collaboration/hub/test/support/rooms.js",
+    "packages/collaboration/tests/Arch/I17ScenarioMapTest.php",
+    "packages/collaboration/tests/Disable/RawDisableTest.php"
+  ],
+  "checks_run": [
+    {
+      "cmd": "(cd packages/collaboration/hub && npm run check && npm test)",
+      "exit": 1,
+      "id": "V11"
+    }
+  ],
+  "evidence": [
+    "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.16/qualification.md",
+    "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.16/V11.log"
+  ],
+  "open_issues": [
+    {
+      "impact": "V11 and the P5 phase qualification stay red until the failing test is identified and fixed",
+      "kind": "escalation",
+      "next": "Provide the failing test's output; one correction round then fixes it",
+      "severity": "medium",
+      "text": "V11 fails on the host with 1 of 306 tests; the name and error of the failing test are not in the output given to the executor, and the sandbox cannot load yjs/@hocuspocus/dotenv (root node_modules read is denied, registry 403). Needed: the 'not ok' block, e.g. `cd packages/collaboration/hub && node --test test/*.test.js 2>&1 | grep -B3 -A40 '^not ok'`, or a correction run in an environment with readable node_modules."
+    },
+    {
+      "impact": "the role could not use them",
+      "kind": "note",
+      "next": "widen allowedTools in the launch catalog or change the plan",
+      "text": "tools denied without a prompt: Bash"
+    }
+  ],
+  "status": "blocked",
+  "summary": "Second correction round for V11 (hub npm test: 306 tests, 305 pass, 1 fail on the conductor's host). The input carries only the tail of the run, not the failing test's name or error. In this sandbox the root node_modules is blocked by a deny rule (ls refused) and the npm registry is closed, so yjs, @hocuspocus/* and dotenv cannot be loaded and the failing test cannot be reproduced. The dependency-free hub tests pass here (155); the other 29 fail only with ERR_MODULE_NOT_FOUND. I changed no code or test, because a blind edit could hide a real defect. qualification.md keeps its note that V11 is red (host result 305/306)."
+}

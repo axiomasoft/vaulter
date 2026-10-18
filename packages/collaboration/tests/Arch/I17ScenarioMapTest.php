@@ -53,7 +53,7 @@ it('gives every scenario known lanes and files, each file existing', function ()
         foreach ($entry['files'] as $file) {
             $path = str_starts_with($file, 'packages/') ? $monorepo.'/'.$file : $root.'/'.$file;
 
-            if (str_starts_with($file, 'packages/') && ! $inMonorepo) {
+            if (str_starts_with($file, 'packages/') && !$inMonorepo) {
                 continue;
             }
 

@@ -173,6 +173,11 @@
       "note": "Fast-квалификация P5."
     }
   ],
+  "closed": {
+    "at": "2026-10-18T07:19:46Z",
+    "result": "done_with_deviations",
+    "summary": "16 item(s): 16 done_with_deviations"
+  },
   "sections": [
     {
       "id": "design-inputs",

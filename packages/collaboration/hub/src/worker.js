@@ -423,7 +423,8 @@ export function createWorker({
         if (pass.entries >= batch) {
           continue
         }
-      } else {
+      } else if (failure === null || clock() < deadlineAt) {
+        // A pass the deadline cut short says nothing new: keep the failure the backend really gave.
         failure = pass
       }
 

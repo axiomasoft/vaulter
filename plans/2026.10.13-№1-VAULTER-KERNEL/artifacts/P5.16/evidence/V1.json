@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261018T065313Z-e4a748:P5.16:checks.1:V1",
+  "check_id": "V1",
+  "subject": "PLAN3.P5.16",
+  "candidate": {
+    "head": "d2367c36de597ec4a2d35cdef6afbd77cd6eb7fd",
+    "dirty_digest": "e213d3c46e5c1715122acea78088e9e2adca7dece82ad621d5f4c95d986841e0"
+  },
+  "started_at": "2026-10-18T07:01:45Z",
+  "procedure": {
+    "cmd": "scripts/t sqlite -p collaboration tests/Module tests/Collaboration tests/Persistence tests/Restore tests/Disable tests/Revocation tests/Http tests/Arch tests/Console tests/Document tests/Configuration tests/Providers",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-18T07:02:15Z"
+}
