@@ -17,6 +17,7 @@ return [
         'Cas/BlobFindOrCreateTest.php',
         'Cas/BlobGarbageCollectorTest.php',
         'Cas/BlobGcBatchTest.php',
+        'Cas/BlobGcCriteriaTest.php',
         'Cas/BlobGcPipelineTest.php',
         'Cas/BlobOrphanPruneTest.php',
         'Cas/BlobOrphanSweepTest.php',
