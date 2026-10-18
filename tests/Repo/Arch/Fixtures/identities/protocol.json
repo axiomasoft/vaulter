@@ -1309,6 +1309,34 @@
             "id": "problem:stale_write",
             "kind": "protocol",
             "reason": "P6.1: 412, retryable after_refetch, receipt cacheable — the If-Match of a write names a version of an aggregate that is no longer current (Vaulter\\Exceptions\\Concurrency\\StaleWriteException, meta aggregate/id); nodes and documents keep their own codes"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:header-destination-if-match",
+            "kind": "protocol",
+            "reason": "P6.2: optional destination precondition of a move (CC3)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-purge",
+            "kind": "protocol",
+            "reason": "P6.2: receipt of nodes.purge, files.delete_revision and trash.empty (ids and authorization scope)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-revision-snapshot",
+            "kind": "protocol",
+            "reason": "P6.2: receipt of files.restore_revision"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-upload-session",
+            "kind": "protocol",
+            "reason": "P6.2: receipt of uploads.initiate"
         }
     ],
     "items": [
@@ -2009,6 +2037,16 @@
             }
         },
         {
+            "format": "X-Vaulter-Destination-If-Match request header of a move: the strong ETag of the destination folder as the caller reads it (the drive root for a null destination); a mismatch answers 412 node_sequence_mismatch and the folder sequence is checked again under the tree lock; part of the move fingerprint",
+            "id": "format:header-destination-if-match",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Http/Resources/NodeResponses.php",
+                "symbol": "Vaulter\\Drive\\Http\\Resources\\NodeResponses::DESTINATION_IF_MATCH"
+            }
+        },
+        {
             "format": "Idempotency-Key request header: one Structured Field String (\"…\", \\\" and \\\\ escapes) or one token of visible ASCII without commas; 1-255 bytes, never trimmed or case-folded; Idempotent-Replayed: true on a replayed response",
             "id": "format:header-idempotency-key",
             "manual": true,
@@ -2069,7 +2107,7 @@
             }
         },
         {
-            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.invalidate, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
+            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.invalidate, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.empty, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
             "id": "format:operation-name",
             "manual": true,
             "owner": "core",
@@ -2096,6 +2134,36 @@
             "source": {
                 "file": "packages/core/src/Idempotency/IdempotencyClaim.php",
                 "symbol": "Vaulter\\Idempotency\\IdempotencyClaim::REFUSAL"
+            }
+        },
+        {
+            "format": "receipt kind drive.purge-receipt, version 1: JSON {kind: node|revision|trash, id, drive_id, scope_node_id, ability, count}; ids and the authorization scope only, never content",
+            "id": "format:receipt-purge",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Idempotency/PurgeReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\PurgeReceiptCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind drive.revision-snapshot, version 1: JSON of every FileRevisionSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP)",
+            "id": "format:receipt-revision-snapshot",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Idempotency/RevisionReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\RevisionReceiptCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind drive.upload-session, version 1: JSON {id, upload_id, drive_id, protocol, status, received_bytes, total_size_bytes, chunk_size, mime_type, target_node_id, target_parent_id, target_name, expires_at}; no staged bytes, storage key or blob",
+            "id": "format:receipt-upload-session",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Idempotency/UploadSessionCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\UploadSessionCodec::encode"
             }
         },
         {

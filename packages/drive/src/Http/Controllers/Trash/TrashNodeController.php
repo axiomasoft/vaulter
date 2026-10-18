@@ -12,7 +12,7 @@ use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
-/** Move a node and its subtree to the trash (Trash); If-Match is required. */
+/** Move a node and its subtree to the trash (Trash); If-Match is required; idempotent by Idempotency-Key. */
 #[Internal]
 final readonly class TrashNodeController
 {
@@ -21,7 +21,7 @@ final readonly class TrashNodeController
     public function __invoke(Request $request, string $node): JsonResponse
     {
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
-        $expected = $this->nodes->expectedSequence($request, $drive, $node, Ability::Trash);
+        $expected = $this->nodes->expectedSequenceForReplay($request, $drive, $node, Ability::Trash);
 
         return $this->nodes->respond($drive, $drive->nodes()->trash($node, $expected));
     }

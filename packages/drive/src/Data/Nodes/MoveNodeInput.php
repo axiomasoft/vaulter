@@ -13,5 +13,5 @@ use Vaulter\Drive\Models\Node;
 final readonly class MoveNodeInput
 {
     #[Internal]
-    public function __construct(public Node $node, public ?Node $into = null, public ?int $expectedSequence = null, public OnNameConflict $onConflict = OnNameConflict::Fail) {}
+    public function __construct(public Node $node, public ?Node $into = null, public ?int $expectedSequence = null, public OnNameConflict $onConflict = OnNameConflict::Fail, public ?int $expectedDestinationSequence = null) {}
 }

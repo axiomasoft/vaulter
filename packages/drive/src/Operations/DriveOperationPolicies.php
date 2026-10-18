@@ -30,7 +30,9 @@ final class DriveOperationPolicies implements OperationPolicySource
             'drive.nodes.unstar' => new OperationPolicy('drive.node_user_state', ConcurrencyPolicy::Natural, IdempotencyPolicy::Natural, ['nodes.unstar']),
             'drive.nodes.trash' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['nodes.trash']),
             'drive.trash.restore' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['nodes.restore']),
-            'drive.trash.purge' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['nodes.purge', 'trash.empty']),
+            'drive.trash.purge' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['nodes.purge']),
+            // Emptying the trash is one keyed operation holding every root purge; it is absolute (what is in the trash goes), so it has no version.
+            'drive.trash.empty' => new OperationPolicy('drive.node', ConcurrencyPolicy::Natural, IdempotencyPolicy::Receipt, ['trash.empty']),
             // A direct upload and a direct new revision of a file run in one operation of their own (FileOperations).
             'drive.files.upload' => new OperationPolicy('drive.node', ConcurrencyPolicy::Append, IdempotencyPolicy::Receipt, ['files.store']),
             'drive.files.add_revision' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['files.revisions.store']),

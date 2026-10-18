@@ -74,7 +74,7 @@ final readonly class NodeOperations implements Contract
 
     public function rename(NodeSnapshot|string|int $node, string $name, ?int $expectedSequence = null): NodeSnapshot
     {
-        $nodeId = $node instanceof NodeSnapshot ? $node->id : (string) $node;
+        $nodeId = self::idOf($node);
         // Idempotent by key (D25): the receipt is the snapshot; a replay needs Edit on the node where it is now.
         $idempotency = new IdempotentWrite(
             codec: new NodeSnapshotCodec,
@@ -87,25 +87,42 @@ final readonly class NodeOperations implements Contract
 
     public function move(NodeSnapshot|string|int $node, NodeSnapshot|string|int|null $destination, ?MoveOptions $options = null): NodeSnapshot
     {
+        $options ??= new MoveOptions;
+        $nodeId = self::idOf($node);
+        // Idempotent by key (D25): a replay needs Move on the node where it is now and Create in the folder it is in now
+        // (architecture#operation-chains), so a node moved on into a folder the actor cannot see is refused, not replayed.
+        $idempotency = new IdempotentWrite(
+            codec: new NodeSnapshotCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Move, $nodeId, alsoCreate: true),
+            fingerprint: ['node' => $nodeId, 'destination' => $destination === null ? null : self::idOf($destination), 'on_conflict' => $options->onConflict->value, 'expected_sequence' => $options->expectedSequence, 'expected_destination_sequence' => $options->expectedDestinationSequence],
+        );
+
         return $this->write('move', function () use ($node, $destination, $options): NodeSnapshot {
             $node = $this->authorized($node, Ability::Move);
             $parent = $this->destination($destination);
-            $options ??= new MoveOptions;
 
-            return $this->snapshot($this->moveAction->execute($this->context, new MoveNodeInput($node, $parent, $options->expectedSequence, $options->onConflict)));
-        });
+            return $this->snapshot($this->moveAction->execute($this->context, new MoveNodeInput($node, $parent, $options->expectedSequence, $options->onConflict, $options->expectedDestinationSequence)));
+        }, $idempotency);
     }
 
     public function copy(NodeSnapshot|string|int $node, NodeSnapshot|string|int|null $destination = null, ?CopyOptions $options = null): NodeSnapshot
     {
+        $options ??= new CopyOptions;
+        $destinationId = $destination === null ? null : self::idOf($destination);
+        // Idempotent by key (D25): the receipt is the copy's snapshot; a replay needs Create in the folder the copy is in now.
+        $idempotency = new IdempotentWrite(
+            codec: new NodeSnapshotCodec,
+            authorizer: NodeReplayAuthorizer::forCreate($this->context, $this->locator, $this->guard, $destinationId),
+            fingerprint: ['node' => self::idOf($node), 'destination' => $destinationId, 'name' => $options->name, 'on_conflict' => $options->onConflict->value],
+        );
+
         return $this->write('copy', function () use ($node, $destination, $options): NodeSnapshot {
             $node = $this->authorized($node, Ability::Copy);
             $parent = $this->destination($destination);
-            $options ??= new CopyOptions;
             $authorized = $this->guard->copyableSubtree($this->context, $node, $this->nodes->subtree($node));
 
             return $this->snapshot($this->copyAction->execute($this->context, new CopyNodeInput($node, $parent, $options->name, $options->onConflict, $authorized)));
-        });
+        }, $idempotency);
     }
 
     public function star(NodeSnapshot|string|int $node): NodeSnapshot
@@ -136,12 +153,27 @@ final readonly class NodeOperations implements Contract
      */
     public function setProperties(NodeSnapshot|string|int $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->write('set_properties', fn (): NodeSnapshot => $this->snapshot($this->propertiesAction->execute($this->context, new SetNodePropertiesInput($this->authorized($node, Ability::Edit), $namespace, $set, $unset, $expectedSequence))));
+        $nodeId = self::idOf($node);
+        $idempotency = new IdempotentWrite(
+            codec: new NodeSnapshotCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
+            fingerprint: ['node' => $nodeId, 'namespace' => $namespace, 'set' => $set, 'unset' => $unset, 'expected_sequence' => $expectedSequence],
+        );
+
+        return $this->write('set_properties', fn (): NodeSnapshot => $this->snapshot($this->propertiesAction->execute($this->context, new SetNodePropertiesInput($this->authorized($node, Ability::Edit), $namespace, $set, $unset, $expectedSequence))), $idempotency);
     }
 
     public function trash(NodeSnapshot|string|int $node, ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->write('trash', fn (): NodeSnapshot => $this->snapshot($this->trashAction->execute($this->context, new TrashNodeInput($this->authorized($node, Ability::Trash), $expectedSequence))));
+        $nodeId = self::idOf($node);
+        // The node is in the trash once the first attempt committed: a replay looks it up there.
+        $idempotency = new IdempotentWrite(
+            codec: new NodeSnapshotCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Trash, $nodeId, includeTrashed: true),
+            fingerprint: ['node' => $nodeId, 'expected_sequence' => $expectedSequence],
+        );
+
+        return $this->write('trash', fn (): NodeSnapshot => $this->snapshot($this->trashAction->execute($this->context, new TrashNodeInput($this->authorized($node, Ability::Trash), $expectedSequence))), $idempotency);
     }
 
     public function abilities(NodeSnapshot|string|int $node): NodeAbilities
@@ -167,6 +199,11 @@ final readonly class NodeOperations implements Contract
     private function write(string $verb, Closure $attempt, ?IdempotentWrite $idempotency = null): mixed
     {
         return $this->runner->write(new OperationSpec('drive.nodes.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt, $idempotency);
+    }
+
+    private static function idOf(NodeSnapshot|string|int $node): string
+    {
+        return $node instanceof NodeSnapshot ? $node->id : (string) $node;
     }
 
     private function snapshot(Node $node): NodeSnapshot

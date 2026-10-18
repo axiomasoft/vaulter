@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Idempotency;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Operations\OperationKind;
@@ -34,6 +35,10 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
         private OperationGuard $guard,
         private ?Ability $ability,
         private ?string $requestScope,
+        private OperationKind $kind = OperationKind::Mutation,
+        private bool $includeTrashed = false,
+        private bool $alsoCreate = false,
+        private bool $driveOnly = false,
     ) {}
 
     /** A replay of folders.create: Create in the folder that holds the created node now (`$parent` for a refusal). */
@@ -42,10 +47,22 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
         return new self($context, $locator, $guard, null, $parent);
     }
 
-    /** A replay of a write on `$node` that needs `$ability` on it (rename: Edit). */
-    public static function forNode(DriveContext $context, NodeLocator $locator, OperationGuard $guard, Ability $ability, string $node): self
+    /**
+     * A replay of a write on `$node` that needs `$ability` on it (rename: Edit).
+     *
+     * @param OperationKind $kind           the kind the write itself authorizes as (a purge is not gated like a content mutation)
+     * @param bool          $includeTrashed the node may be in the trash by now (a trashed node, a restore)
+     * @param bool          $alsoCreate     the node must also be creatable where it is now (a move: Move on it and Create in its new folder)
+     */
+    public static function forNode(DriveContext $context, NodeLocator $locator, OperationGuard $guard, Ability $ability, string $node, OperationKind $kind = OperationKind::Mutation, bool $includeTrashed = false, bool $alsoCreate = false): self
     {
-        return new self($context, $locator, $guard, $ability, $node);
+        return new self($context, $locator, $guard, $ability, $node, $kind, $includeTrashed, $alsoCreate);
+    }
+
+    /** A replay of a write that is about the drive's visible trash as a whole (trash.empty): the receipt's tuple already binds actor and drive. */
+    public static function forDrive(DriveContext $context, NodeLocator $locator, OperationGuard $guard): self
+    {
+        return new self($context, $locator, $guard, null, null, driveOnly: true);
     }
 
     public function scope(mixed $result): ResourceRef
@@ -53,12 +70,21 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
         if ($result instanceof NodeSnapshot) {
             return $result->parentId === null ? $this->drive() : new ResourceRef('node', $result->parentId);
         }
+        if ($result instanceof PurgeReceipt) {
+            return $result->scopeNodeId === null ? $this->drive() : new ResourceRef('node', $result->scopeNodeId);
+        }
+        if ($result instanceof FileRevisionSnapshot) {
+            return new ResourceRef('node', $result->fileNodeId);
+        }
 
         return $this->requestScope === null ? $this->drive() : new ResourceRef('node', $this->requestScope);
     }
 
     public function authorize(?ResourceRef $resource, ?ResourceRef $scope): void
     {
+        if ($this->driveOnly) {
+            return;
+        }
         $node = $resource?->kind === 'node' ? $this->find($resource->id) : null;
         if ($node !== null) {
             if ($this->ability === null) {
@@ -67,7 +93,10 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
 
                 return;
             }
-            $this->guard->authorize($this->context, $this->ability, $node, OperationKind::Mutation);
+            $this->guard->authorize($this->context, $this->ability, $node, $this->kind);
+            if ($this->alsoCreate) {
+                $this->guard->authorizeCreate($this->context, $node->parent_id === null ? $node : $this->locator->find($this->context, $node->parent_id));
+            }
 
             return;
         }
@@ -78,13 +107,13 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
 
             return;
         }
-        $this->guard->authorize($this->context, $this->ability, $container, OperationKind::Mutation);
+        $this->guard->authorize($this->context, $this->ability, $container, $this->kind);
     }
 
     private function find(string $id): ?Node
     {
         try {
-            return $this->locator->find($this->context, $id);
+            return $this->locator->find($this->context, $id, includeTrashed: $this->includeTrashed);
         } catch (NodeNotFoundException) {
             return null;
         }

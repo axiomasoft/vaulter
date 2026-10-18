@@ -5453,6 +5453,34 @@
             "id": "problem:stale_write",
             "kind": "protocol",
             "reason": "P6.1: 412, retryable after_refetch, receipt cacheable — the If-Match of a write names a version of an aggregate that is no longer current (Vaulter\\Exceptions\\Concurrency\\StaleWriteException, meta aggregate/id); nodes and documents keep their own codes"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:header-destination-if-match",
+            "kind": "protocol",
+            "reason": "P6.2: optional destination precondition of a move (CC3)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-purge",
+            "kind": "protocol",
+            "reason": "P6.2: receipt of nodes.purge, files.delete_revision and trash.empty (ids and authorization scope)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-revision-snapshot",
+            "kind": "protocol",
+            "reason": "P6.2: receipt of files.restore_revision"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-upload-session",
+            "kind": "protocol",
+            "reason": "P6.2: receipt of uploads.initiate"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

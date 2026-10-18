@@ -35,7 +35,7 @@ final readonly class CreateUploadController
         $nodeId = $request->targetNodeId();
         $create = function (DriveHandle $handle) use ($request, $nodeId): JsonResponse {
             if ($nodeId !== null) {
-                $this->nodes->expectedSequence($request, $handle, $nodeId, Ability::Edit);
+                $this->nodes->expectedSequenceForReplay($request, $handle, $nodeId, Ability::Edit);
             }
 
             return $request->protocol() === UploadProtocol::S3Multipart

@@ -442,7 +442,7 @@
         {
             "id": "format:operation-name",
             "owner": "core",
-            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.invalidate, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
+            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.invalidate, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.empty, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
             "source": {
                 "file": "packages/core/src/Operations/OperationSpec.php",
                 "symbol": "Vaulter\\Operations\\OperationSpec::__construct"
@@ -478,6 +478,46 @@
             "format": "receipt kind drive.node-snapshot, version 1: JSON of every NodeSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; file/document/viewer heads or null)",
             "owner": "drive",
             "why": "D25: the stored receipt of folders.create and nodes.rename, decoded on a replay"
+        },
+        {
+            "id": "format:header-destination-if-match",
+            "source": {
+                "file": "packages/drive/src/Http/Resources/NodeResponses.php",
+                "symbol": "Vaulter\\Drive\\Http\\Resources\\NodeResponses::DESTINATION_IF_MATCH"
+            },
+            "format": "X-Vaulter-Destination-If-Match request header of a move: the strong ETag of the destination folder as the caller reads it (the drive root for a null destination); a mismatch answers 412 node_sequence_mismatch and the folder sequence is checked again under the tree lock; part of the move fingerprint",
+            "owner": "drive",
+            "why": "D47 (CC3): the optional precondition of a move on its destination"
+        },
+        {
+            "id": "format:receipt-purge",
+            "source": {
+                "file": "packages/drive/src/Idempotency/PurgeReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\PurgeReceiptCodec::encode"
+            },
+            "format": "receipt kind drive.purge-receipt, version 1: JSON {kind: node|revision|trash, id, drive_id, scope_node_id, ability, count}; ids and the authorization scope only, never content",
+            "owner": "drive",
+            "why": "D25 (ID2): the stored receipt of nodes.purge, files.delete_revision and trash.empty; a replay checks the recorded ability in the recorded scope"
+        },
+        {
+            "id": "format:receipt-revision-snapshot",
+            "source": {
+                "file": "packages/drive/src/Idempotency/RevisionReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\RevisionReceiptCodec::encode"
+            },
+            "format": "receipt kind drive.revision-snapshot, version 1: JSON of every FileRevisionSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP)",
+            "owner": "drive",
+            "why": "D25: the stored receipt of files.restore_revision, decoded on a replay"
+        },
+        {
+            "id": "format:receipt-upload-session",
+            "source": {
+                "file": "packages/drive/src/Idempotency/UploadSessionCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\UploadSessionCodec::encode"
+            },
+            "format": "receipt kind drive.upload-session, version 1: JSON {id, upload_id, drive_id, protocol, status, received_bytes, total_size_bytes, chunk_size, mime_type, target_node_id, target_parent_id, target_name, expires_at}; no staged bytes, storage key or blob",
+            "owner": "drive",
+            "why": "D25: the stored receipt of uploads.initiate, decoded on a replay"
         },
         {
             "id": "format:receipt-problem",

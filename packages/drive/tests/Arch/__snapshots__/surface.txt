@@ -397,9 +397,11 @@ Vaulter\Drive\Data\ListOptions api since 1.0 final readonly class
   public function sort(Vaulter\Drive\Enums\NodeSort $sort, bool $descending = false): self
 
 Vaulter\Drive\Data\MoveOptions api since 1.0 final readonly class
+  public ?int $expectedDestinationSequence
   public ?int $expectedSequence
   public Vaulter\Drive\Enums\OnNameConflict $onConflict
-  public function __construct(?int $expectedSequence = null, Vaulter\Drive\Enums\OnNameConflict $onConflict = \Vaulter\Drive\Enums\OnNameConflict::Fail)
+  public function __construct(?int $expectedSequence = null, Vaulter\Drive\Enums\OnNameConflict $onConflict = \Vaulter\Drive\Enums\OnNameConflict::Fail, ?int $expectedDestinationSequence = null)
+  public function expectedDestinationSequence(?int $expectedDestinationSequence): self
   public function expectedSequence(?int $expectedSequence): self
   public static function make(): self
   public function onConflict(Vaulter\Drive\Enums\OnNameConflict $onConflict): self
@@ -418,6 +420,7 @@ Vaulter\Drive\Data\Nodes\CreateFolderInput api since 1.0 final readonly class
   public Vaulter\Drive\Models\Drive $storage
 
 Vaulter\Drive\Data\Nodes\MoveNodeInput api since 1.0 final readonly class
+  public ?int $expectedDestinationSequence
   public ?int $expectedSequence
   public ?Vaulter\Drive\Models\Node $into
   public Vaulter\Drive\Models\Node $node

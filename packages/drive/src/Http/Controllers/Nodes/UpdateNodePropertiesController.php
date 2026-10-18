@@ -12,7 +12,7 @@ use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Drive\Http\Support\HttpOperationContextFactory;
 use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
-/** Patch one property namespace of a node (Edit); If-Match is required. */
+/** Patch one property namespace of a node (Edit); If-Match is required; idempotent by Idempotency-Key. */
 #[Internal]
 final readonly class UpdateNodePropertiesController
 {
@@ -21,7 +21,7 @@ final readonly class UpdateNodePropertiesController
     public function __invoke(UpdateNodePropertiesRequest $request, string $node): JsonResponse
     {
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
-        $expected = $this->nodes->expectedSequence($request, $drive, $node, Ability::Edit);
+        $expected = $this->nodes->expectedSequenceForReplay($request, $drive, $node, Ability::Edit);
 
         return $this->nodes->respond($drive, $drive->nodes()->setProperties($node, $request->propertyNamespace(), $request->set(), $request->unset(), $expected));
     }

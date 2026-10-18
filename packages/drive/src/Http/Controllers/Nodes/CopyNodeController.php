@@ -14,7 +14,7 @@ use Vaulter\Drive\Http\Support\HttpResourceResolver;
 
 /**
  * Copy a node (Copy on the source, Create in the destination). The source is not
- * changed, so no If-Match is asked for; the copy is a new node.
+ * changed, so no If-Match is asked for; the copy is a new node. Idempotent by Idempotency-Key.
  */
 #[Internal]
 final readonly class CopyNodeController

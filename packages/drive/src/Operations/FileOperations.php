@@ -39,12 +39,18 @@ use Vaulter\Drive\Enums\Operations\OperationKind;
 use Vaulter\Drive\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\NotAFileException;
+use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;
+use Vaulter\Drive\Idempotency\PurgeReceipt;
+use Vaulter\Drive\Idempotency\PurgeReceiptCodec;
+use Vaulter\Drive\Idempotency\RevisionReceiptCodec;
 use Vaulter\Drive\Models\FileRevision;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Support\TreeGuard;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
+use Vaulter\Support\Identity;
 
 #[Api]
 final readonly class FileOperations implements Contract
@@ -103,21 +109,42 @@ final readonly class FileOperations implements Contract
 
     public function restoreRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision, ?int $expectedSequence = null): FileRevisionSnapshot
     {
+        $fileId = $file instanceof NodeSnapshot ? $file->id : (string) $file;
+        // Idempotent by key (D25): the receipt is the new head revision; a replay needs Edit on the file where it is now.
+        $idempotency = new IdempotentWrite(
+            codec: new RevisionReceiptCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $fileId),
+            fingerprint: ['file' => $fileId, 'revision' => $revision instanceof FileRevisionSnapshot ? $revision->id : (string) $revision, 'expected_sequence' => $expectedSequence],
+        );
+
         return $this->write('restore_revision', function () use ($file, $revision, $expectedSequence): FileRevisionSnapshot {
             $node = $this->file($file, Ability::Edit);
 
             return $this->revisions->map($this->restore->execute($this->context, new RestoreFileRevisionInput($node, $this->revision($node, $revision), $expectedSequence)), $node->file()->firstOrFail());
-        });
+        }, $idempotency);
     }
 
     public function deleteRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): void
     {
-        $this->write('delete_revision', function () use ($file, $revision): void {
+        $fileId = $file instanceof NodeSnapshot ? $file->id : (string) $file;
+        // Idempotent by key (D25): the receipt keeps the revision id and the file it hung under (ID2); a replay checks
+        // Manage on that file, because the revision itself is gone.
+        $idempotency = new IdempotentWrite(
+            codec: new PurgeReceiptCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Manage, $fileId, OperationKind::Purge),
+            fingerprint: ['file' => $fileId, 'revision' => $revision instanceof FileRevisionSnapshot ? $revision->id : (string) $revision],
+        );
+
+        $this->write('delete_revision', function () use ($file, $revision): PurgeReceipt {
             // Permanent removal of stored data: authorized like a purge, without the
             // upload/egress profile gates.
             $node = $this->file($file, Ability::Manage, OperationKind::Purge);
-            $this->deleteRevision->execute($this->context, $node, $this->revision($node, $revision));
-        });
+            $target = $this->revision($node, $revision);
+            $receipt = new PurgeReceipt(kind: PurgeReceipt::REVISION, id: Identity::stringify($target->getKey()), driveId: (string) $this->context->driveId(), scopeNodeId: (string) $node->id, ability: Ability::Manage->value);
+            $this->deleteRevision->execute($this->context, $node, $target);
+
+            return $receipt;
+        }, $idempotency);
     }
 
     public function setRevisionRetention(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision, bool $keepForever): FileRevisionSnapshot
@@ -143,9 +170,9 @@ final readonly class FileOperations implements Contract
      * @param  Closure(): T $attempt
      * @return T
      */
-    private function write(string $verb, Closure $attempt): mixed
+    private function write(string $verb, Closure $attempt, ?IdempotentWrite $idempotency = null): mixed
     {
-        return $this->runner->write(new OperationSpec('drive.files.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
+        return $this->runner->write(new OperationSpec('drive.files.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt, $idempotency);
     }
 
     private function file(Node|NodeSnapshot|int|string $key, Ability $ability, ?OperationKind $operation = null): Node

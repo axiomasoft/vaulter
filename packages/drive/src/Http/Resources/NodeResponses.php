@@ -24,6 +24,7 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Queries\NodeBrowserQuery;
 use Vaulter\Http\Middleware\AssignCorrelationId;
+use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Support\Preconditions;
 
@@ -42,6 +43,9 @@ use Vaulter\Http\Support\Preconditions;
 #[Internal]
 final readonly class NodeResponses
 {
+    /** The optional precondition on the destination folder of a move (CC3). */
+    public const string DESTINATION_IF_MATCH = 'X-Vaulter-Destination-If-Match';
+
     public function __construct(
         private NodeLocator $locator,
         private NodeSnapshotMapper $mapper,
@@ -117,6 +121,52 @@ final readonly class NodeResponses
         }
 
         return $snapshot->sequence;
+    }
+
+    /**
+     * {@see expectedSequence()} for the route of a receipt operation (D25): a retry under its Idempotency-Key repeats
+     * the If-Match of the first request, stale once that one committed — and its node may be in the trash or gone
+     * from the caller's view since. The operation answers it from the receipt, or — without one — refuses it as stale
+     * or missing and stores that refusal. It gets a sequence no live node holds: PHP_INT_MAX, or the one below it for
+     * a node that holds PHP_INT_MAX itself. Without a key the refusal stands.
+     */
+    public function expectedSequenceForReplay(Request $request, DriveHandle $drive, string $nodeId, Ability $ability, bool $includeTrashed = false): int
+    {
+        try {
+            return $this->expectedSequence($request, $drive, $nodeId, $ability, $includeTrashed);
+        } catch (StaleNodeException|NodeNotFoundException $refusal) {
+            if (ReadIdempotencyKey::key($request) === null) {
+                throw $refusal;
+            }
+            $held = $refusal instanceof StaleNodeException ? $this->located($request, $drive, $nodeId, $includeTrashed)[0]->sequence : null;
+
+            return $held === PHP_INT_MAX ? PHP_INT_MAX - 1 : PHP_INT_MAX;
+        }
+    }
+
+    /**
+     * The sequence of the destination folder of a move the caller pinned with `X-Vaulter-Destination-If-Match` (CC3),
+     * or null when the header is absent. The tag must equal the caller's current representation of the folder (the
+     * drive root when `$destinationId` is null), else 412 node_sequence_mismatch; the move checks the sequence again
+     * under its tree lock.
+     */
+    public function expectedDestinationSequence(Request $request, DriveHandle $drive, ?string $destinationId): ?int
+    {
+        $header = $request->headers->get(self::DESTINATION_IF_MATCH);
+        if ($header === null || trim($header) === '') {
+            return null;
+        }
+        $id = $destinationId ?? $drive->root()->id;
+        [$snapshot, $abilities] = $this->located($request, $drive, $id, false);
+        preg_match_all('/\s*(\*|(?:W\/)?"[^"]*")\s*(?:,|$)/', $header, $matches);
+        $current = (new NodeResource($snapshot, $abilities))->etag();
+        foreach ($matches[1] as $tag) {
+            if (!str_starts_with($tag, 'W/') && hash_equals($current, $tag)) {
+                return $snapshot->sequence;
+            }
+        }
+
+        throw StaleNodeException::forNode($snapshot->id);
     }
 
     /**

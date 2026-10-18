@@ -27,10 +27,15 @@ use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\RestoreDestinationChangedException;
 use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;
+use Vaulter\Drive\Idempotency\NodeSnapshotCodec;
+use Vaulter\Drive\Idempotency\PurgeReceipt;
+use Vaulter\Drive\Idempotency\PurgeReceiptCodec;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Queries\ListTrashQuery;
 use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
@@ -60,6 +65,13 @@ final readonly class TrashOperations implements Contract
     public function restore(NodeSnapshot|string|int $node, ?RestoreOptions $options = null): NodeSnapshot
     {
         $options ??= new RestoreOptions;
+        $nodeId = self::idOf($node);
+        // Idempotent by key (D25): the receipt is the restored node's snapshot; a replay needs Restore on it where it is now.
+        $idempotency = new IdempotentWrite(
+            codec: new NodeSnapshotCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Restore, $nodeId, includeTrashed: true),
+            fingerprint: ['node' => $nodeId, 'destination' => $options->destination === null ? null : self::idOf($options->destination), 'on_conflict' => $options->onConflict->value, 'expected_sequence' => $options->expectedSequence],
+        );
         for ($attempt = 0; $attempt < 3; $attempt++) {
             try {
                 return $this->write('restore', function () use ($node, $options): NodeSnapshot {
@@ -74,7 +86,7 @@ final readonly class TrashOperations implements Contract
 
                     return $this->mapper->map($this->restoreAction->execute(context: $this->context,
                         data: new RestoreNodeInput(node: $source, destination: $destination, onConflict: $options->onConflict, expectedSequence: $options->expectedSequence)), $this->context->actor->ref());
-                });
+                }, $idempotency);
             } catch (RestoreDestinationChangedException $exception) {
                 if ($attempt === 2) {
                     throw $exception;
@@ -86,15 +98,26 @@ final readonly class TrashOperations implements Contract
 
     public function purge(NodeSnapshot|string|int $node, ?int $expectedSequence = null): void
     {
+        $nodeId = self::idOf($node);
+        // Idempotent by key (D25): the receipt keeps the id and the scope the right to purge was proven in (ID2); a
+        // replay checks Delete in that scope, since the node itself is gone.
+        $idempotency = new IdempotentWrite(
+            codec: new PurgeReceiptCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Delete, $nodeId, OperationKind::Purge, includeTrashed: true),
+            fingerprint: ['node' => $nodeId, 'expected_sequence' => $expectedSequence],
+        );
         $source = null;
         try {
-            $this->write('purge', function () use ($node, $expectedSequence, &$source): void {
+            $this->write('purge', function () use ($node, $expectedSequence, &$source): PurgeReceipt {
                 $source = null;
                 $located = $this->locator->find(context: $this->context, key: $node, includeTrashed: true);
                 $this->guard->authorize(context: $this->context, ability: Ability::Delete, node: $located, operation: OperationKind::Purge);
                 $source = $located;
+                $receipt = new PurgeReceipt(kind: PurgeReceipt::NODE, id: (string) $located->id, driveId: (string) $this->context->driveId(), scopeNodeId: $located->parent_id === null ? null : (string) $located->parent_id, ability: Ability::Delete->value);
                 $this->purgeAction->execute(context: $this->context, data: new PurgeNodeInput(node: $located, expectedSequence: $expectedSequence));
-            });
+
+                return $receipt;
+            }, $idempotency);
         } catch (Throwable $exception) {
             // Only a failure of the purge itself is logged: a node that is not found or
             // not allowed answers the caller without an error log.
@@ -106,6 +129,28 @@ final readonly class TrashOperations implements Contract
     }
 
     public function empty(): int
+    {
+        // Idempotent by key (D25): the keyed call is one operation of its own that holds every root purge, so its
+        // receipt is the count and a retry never purges what a later upload put into the trash. Without a key every
+        // root stays its own atomic operation, as before.
+        if ($this->context->idempotencyKey !== null) {
+            $idempotency = new IdempotentWrite(
+                codec: new PurgeReceiptCodec,
+                authorizer: NodeReplayAuthorizer::forDrive($this->context, $this->locator, $this->guard),
+                fingerprint: ['drive' => (string) $this->context->driveId()],
+            );
+
+            return $this->runner->write(new OperationSpec('drive.trash.empty', new ModuleId('drive')), $this->context->operation, function (): PurgeReceipt {
+                $count = $this->purgeRoots();
+
+                return new PurgeReceipt(kind: PurgeReceipt::TRASH, id: (string) $this->context->driveId(), driveId: (string) $this->context->driveId(), scopeNodeId: null, ability: Ability::Delete->value, count: $count);
+            }, $idempotency)->count;
+        }
+
+        return $this->purgeRoots();
+    }
+
+    private function purgeRoots(): int
     {
         // Materialize before commits remove rows; every root owns one atomic operation.
         // Newest root first: a folder trashed after its already-trashed child comes before that child, so purging it takes the
@@ -148,9 +193,14 @@ final readonly class TrashOperations implements Contract
      * @param  Closure(): T $attempt
      * @return T
      */
-    private function write(string $verb, Closure $attempt): mixed
+    private function write(string $verb, Closure $attempt, ?IdempotentWrite $idempotency = null): mixed
     {
-        return $this->runner->write(new OperationSpec('drive.trash.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
+        return $this->runner->write(new OperationSpec('drive.trash.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt, $idempotency);
+    }
+
+    private static function idOf(NodeSnapshot|string|int $node): string
+    {
+        return $node instanceof NodeSnapshot ? $node->id : (string) $node;
     }
 
     private function reportFailure(Node $root, Throwable $exception): void

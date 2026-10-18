@@ -300,8 +300,8 @@ it('refuses a key on a write that does not declare idempotency, before it runs',
     [$drive] = idemDrive();
     $folder = Vaulter::drive($drive)->actingAs(AccessTestHelpers::user())->folders()->create('Stay');
 
-    expect(fn () => idemHandle($drive, 'move-1')->nodes()->trash($folder->id))->toThrow(InvalidArgumentException::class, 'does not accept an idempotency key');
-    expect(Node::query()->findOrFail($folder->id)->trashed_at)->toBeNull();
+    expect(fn () => idemHandle($drive, 'star-1')->nodes()->star($folder->id))->toThrow(InvalidArgumentException::class, 'does not accept an idempotency key');
+    expect(Vaulter::drive($drive)->actingAs(AccessTestHelpers::user())->nodes()->find($folder->id)->viewer?->starred)->toBeFalse();
 });
 
 it('gives a composed write the one receipt of its root', function (): void {

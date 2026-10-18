@@ -25,7 +25,7 @@ final readonly class PurgeNodeController
     public function __invoke(Request $request, string $node): Response
     {
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
-        $expected = $this->nodes->expectedSequence($request, $drive, $node, Ability::Delete, includeTrashed: true);
+        $expected = $this->nodes->expectedSequenceForReplay($request, $drive, $node, Ability::Delete, includeTrashed: true);
         $drive->trash()->purge($node, $expected);
 
         return new Response(status: 204);
