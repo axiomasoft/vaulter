@@ -1400,6 +1400,20 @@
             "id": "format:receipt-webhook-endpoint",
             "kind": "protocol",
             "reason": "RC-P6-2: webhooks.endpoints.redeliver becomes a receipt operation (a keyed retry after the delivery finished again sends nothing); the receipt adds {type: redelivered, redelivered: {id, endpoint_id}}"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.integrity_checked_at",
+            "kind": "protocol",
+            "reason": "P6.9: UTC timestamp cast of the new column"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.integrity_failed_at",
+            "kind": "protocol",
+            "reason": "P6.9: UTC timestamp cast of the new column"
         }
     ],
     "items": [
@@ -3870,6 +3884,28 @@
             "source": {
                 "file": "packages/drive/src/Models/Uploads/UploadSession.php",
                 "symbol": "Vaulter\\Drive\\Models\\Uploads\\UploadSession::casts"
+            }
+        },
+        {
+            "attribute": "integrity_checked_at",
+            "cast": "Vaulter\\Media\\Support\\UtcDateTimeCast",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.integrity_checked_at",
+            "model": "Vaulter\\Media\\Models\\Cas\\Blob",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/src/Models/Cas/Blob.php",
+                "symbol": "Vaulter\\Media\\Models\\Cas\\Blob::casts"
+            }
+        },
+        {
+            "attribute": "integrity_failed_at",
+            "cast": "Vaulter\\Media\\Support\\UtcDateTimeCast",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.integrity_failed_at",
+            "model": "Vaulter\\Media\\Models\\Cas\\Blob",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/src/Models/Cas/Blob.php",
+                "symbol": "Vaulter\\Media\\Models\\Cas\\Blob::casts"
             }
         },
         {

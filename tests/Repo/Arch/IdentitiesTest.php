@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D1', 'D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D26', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40', 'D46', 'D47'];
+const ID_ACCEPTED_DECISIONS = ['D1', 'D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D26', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40', 'D46', 'D47', 'D49'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -395,7 +395,7 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(34)
+        expect(count($items))->toBe(35)
             ->and($items['command:vaulter:operations']['owner'])->toBe('core')
             ->and($items['command:vaulter:collaboration:prune']['owner'])->toBe('collaboration')
             ->and($items['command:vaulter:collaboration:drain']['owner'])->toBe('collaboration')

@@ -516,6 +516,22 @@
                     "hidden": 0
                 },
                 {
+                    "name": "integrity_checked_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "integrity_failed_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "storage_version",
                     "type": "varchar",
                     "notnull": 0,
@@ -646,6 +662,19 @@
                     ],
                     "sql": "CREATE INDEX \"v_blobs_gc_idx\" on \"v_blobs\" (\"status\", \"ref_count\", \"delete_after_at\")"
                 },
+                "v_blobs_integrity_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "integrity_checked_at",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"v_blobs_integrity_idx\" on \"v_blobs\" (\"integrity_checked_at\")"
+                },
                 "v_blobs_scope_sha_uniq": {
                     "unique": 1,
                     "origin": "c",
@@ -718,7 +747,7 @@
                 }
             },
             "foreign_keys": [],
-            "create_sql": "CREATE TABLE \"v_blobs\" (\"id\" varchar not null, \"tenant_id\" varchar, \"storage_id\" varchar, \"hash_algo\" varchar not null default 'sha256', \"sha256\" varchar not null, \"size_bytes\" integer not null, \"disk\" varchar not null default 'default', \"storage_key\" varchar not null, \"status\" varchar not null default 'pending', \"ref_count\" integer not null default '0', \"dedup_scope\" varchar not null default 'tenant', \"quarantined_at\" datetime, \"storage_version\" varchar, \"etag\" varchar, \"md5\" varchar, \"crc32c\" varchar, \"chunked\" tinyint(1) not null default '0', \"encryption_key_id\" varchar, \"first_seen_at\" datetime not null default CURRENT_TIMESTAMP, \"committed_at\" datetime, \"delete_after_at\" datetime, \"scope_key\" varchar not null, primary key (\"id\"))"
+            "create_sql": "CREATE TABLE \"v_blobs\" (\"id\" varchar not null, \"tenant_id\" varchar, \"storage_id\" varchar, \"hash_algo\" varchar not null default 'sha256', \"sha256\" varchar not null, \"size_bytes\" integer not null, \"disk\" varchar not null default 'default', \"storage_key\" varchar not null, \"status\" varchar not null default 'pending', \"ref_count\" integer not null default '0', \"dedup_scope\" varchar not null default 'tenant', \"quarantined_at\" datetime, \"integrity_checked_at\" datetime, \"integrity_failed_at\" datetime, \"storage_version\" varchar, \"etag\" varchar, \"md5\" varchar, \"crc32c\" varchar, \"chunked\" tinyint(1) not null default '0', \"encryption_key_id\" varchar, \"first_seen_at\" datetime not null default CURRENT_TIMESTAMP, \"committed_at\" datetime, \"delete_after_at\" datetime, \"scope_key\" varchar not null, primary key (\"id\"))"
         },
         "v_collaboration_heads": {
             "columns": [

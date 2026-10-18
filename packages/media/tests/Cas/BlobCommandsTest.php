@@ -35,8 +35,8 @@ it('vaulter:blobs:gc --pending подметает упавший staging', funct
     $store = app(BlobStore::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('half upload'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    // A crashed staging: pending, old, no edge.
-    $blob->forceFill(['status' => BlobStatus::Pending, 'first_seen_at' => now()->subDay()])->save();
+    // A crashed staging: pending, older than the orphan grace (24h by default, P6.8), no edge.
+    $blob->forceFill(['status' => BlobStatus::Pending, 'first_seen_at' => now()->subDays(2)])->save();
 
     $this->artisan('vaulter:blobs:gc', ['--pending' => true])
         ->assertSuccessful();

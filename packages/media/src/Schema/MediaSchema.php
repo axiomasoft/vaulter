@@ -88,6 +88,10 @@ final class MediaSchema implements ModuleSchema
         $table->bigInteger('ref_count')->default(0);
         $table->string('dedup_scope', 8)->default('tenant');
         $table->timestamp('quarantined_at')->nullable();
+        // The integrity scrub (D49): when the bytes were last verified, and since when they are known to be wrong.
+        // Media's own state, apart from the drive's scan quarantine.
+        $table->timestamp('integrity_checked_at')->nullable();
+        $table->timestamp('integrity_failed_at')->nullable();
         $table->string('storage_version', 255)->nullable();
         $table->string('etag', 64)->nullable();
         $table->string('md5', 64)->nullable();
@@ -105,6 +109,8 @@ final class MediaSchema implements ModuleSchema
 
         // GC scan support: committed orphans past their grace deadline.
         $table->index(['status', 'ref_count', 'delete_after_at'], $name.'_gc_idx');
+        // Scrub scan support: the least recently verified blobs first.
+        $table->index('integrity_checked_at', $name.'_integrity_idx');
     }
 
     /**

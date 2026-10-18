@@ -2015,6 +2015,27 @@
             "id": "column:v_webhook_endpoints.version",
             "kind": "schema",
             "reason": "P6.6: the endpoint's own version (counterColumn); update, deactivate, rotate_secret and delete are conditional on it (CC1, CC2)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "column:v_blobs.integrity_checked_at",
+            "kind": "schema",
+            "reason": "P6.9: when the integrity scrub last verified the bytes of the blob (null: never); the scrub queue takes the never checked first, then the oldest"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "column:v_blobs.integrity_failed_at",
+            "kind": "schema",
+            "reason": "P6.9: since when the scrub knows the object of the blob is missing or has another size or sha256 (null: intact); Blob::isIntact() is false while set and an ingest of the same bytes lifts it"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "index:v_blobs.v_blobs_integrity_idx",
+            "kind": "schema",
+            "reason": "P6.9: the scrub queue order (integrity_checked_at)"
         }
     ],
     "engines": [
@@ -3286,6 +3307,58 @@
                     }
                 }
             }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_blobs.integrity_checked_at",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+                "symbol": "v_blobs"
+            },
+            "table": "v_blobs"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_blobs.integrity_failed_at",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+                "symbol": "v_blobs"
+            },
+            "table": "v_blobs"
         },
         {
             "engines": {
@@ -24841,6 +24914,36 @@
         },
         {
             "engines": {
+                "mysql": {
+                    "columns": [
+                        "integrity_checked_at"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(integrity_checked_at)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "integrity_checked_at"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_blobs.v_blobs_integrity_idx",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/database/migrations/0001_01_01_000101_create_v_blobs_table.php",
+                "symbol": "v_blobs"
+            },
+            "table": "v_blobs"
+        },
+        {
+            "engines": {
                 "pgsql": {
                     "definition": "(id)",
                     "method": "btree",
@@ -31141,6 +31244,8 @@
                 "ref_count",
                 "dedup_scope",
                 "quarantined_at",
+                "integrity_checked_at",
+                "integrity_failed_at",
                 "storage_version",
                 "etag",
                 "md5",
@@ -31160,7 +31265,9 @@
                     "columns": {
                         "bigint.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31168,7 +31275,9 @@
                         },
                         "bigint.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31176,7 +31285,9 @@
                         },
                         "bigint.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31184,7 +31295,9 @@
                         },
                         "bigint.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31192,7 +31305,9 @@
                         },
                         "bigint.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31200,7 +31315,9 @@
                         },
                         "bigint.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31208,7 +31325,9 @@
                         },
                         "bigint.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31216,7 +31335,9 @@
                         },
                         "bigint.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31224,7 +31345,9 @@
                         },
                         "bigint.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31232,7 +31355,9 @@
                         },
                         "bigint.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31240,7 +31365,9 @@
                         },
                         "bigint.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31248,7 +31375,9 @@
                         },
                         "bigint.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31256,7 +31385,9 @@
                         },
                         "bigint.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31264,7 +31395,9 @@
                         },
                         "bigint.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31272,7 +31405,9 @@
                         },
                         "bigint.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31280,7 +31415,9 @@
                         },
                         "bigint.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31288,7 +31425,9 @@
                         },
                         "ulid.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31296,7 +31435,9 @@
                         },
                         "ulid.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31304,7 +31445,9 @@
                         },
                         "ulid.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31312,7 +31455,9 @@
                         },
                         "ulid.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31320,7 +31465,9 @@
                         },
                         "ulid.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31328,7 +31475,9 @@
                         },
                         "ulid.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31336,7 +31485,9 @@
                         },
                         "ulid.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31344,7 +31495,9 @@
                         },
                         "ulid.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31352,7 +31505,9 @@
                         },
                         "ulid.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31360,7 +31515,9 @@
                         },
                         "ulid.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31368,7 +31525,9 @@
                         },
                         "ulid.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31376,7 +31535,9 @@
                         },
                         "ulid.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31384,7 +31545,9 @@
                         },
                         "ulid.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31392,7 +31555,9 @@
                         },
                         "ulid.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31400,7 +31565,9 @@
                         },
                         "ulid.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31408,7 +31575,9 @@
                         },
                         "ulid.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31416,7 +31585,9 @@
                         },
                         "uuid7.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31424,7 +31595,9 @@
                         },
                         "uuid7.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31432,7 +31605,9 @@
                         },
                         "uuid7.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31440,7 +31615,9 @@
                         },
                         "uuid7.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31448,7 +31625,9 @@
                         },
                         "uuid7.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31456,7 +31635,9 @@
                         },
                         "uuid7.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31464,7 +31645,9 @@
                         },
                         "uuid7.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31472,7 +31655,9 @@
                         },
                         "uuid7.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31480,7 +31665,9 @@
                         },
                         "uuid7.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31488,7 +31675,9 @@
                         },
                         "uuid7.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31496,7 +31685,9 @@
                         },
                         "uuid7.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31504,7 +31695,9 @@
                         },
                         "uuid7.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31512,7 +31705,9 @@
                         },
                         "uuid7.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31520,7 +31715,9 @@
                         },
                         "uuid7.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31528,7 +31725,9 @@
                         },
                         "uuid7.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31536,7 +31735,9 @@
                         },
                         "uuid7.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31548,7 +31749,9 @@
                     "columns": {
                         "bigint.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31556,7 +31759,9 @@
                         },
                         "bigint.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31564,7 +31769,9 @@
                         },
                         "bigint.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31572,7 +31779,9 @@
                         },
                         "bigint.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31580,7 +31789,9 @@
                         },
                         "bigint.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31588,7 +31799,9 @@
                         },
                         "bigint.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31596,7 +31809,9 @@
                         },
                         "bigint.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31604,7 +31819,9 @@
                         },
                         "bigint.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31612,7 +31829,9 @@
                         },
                         "bigint.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31620,7 +31839,9 @@
                         },
                         "bigint.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31628,7 +31849,9 @@
                         },
                         "bigint.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31636,7 +31859,9 @@
                         },
                         "bigint.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31644,7 +31869,9 @@
                         },
                         "bigint.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31652,7 +31879,9 @@
                         },
                         "bigint.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31660,7 +31889,9 @@
                         },
                         "bigint.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31668,7 +31899,9 @@
                         },
                         "bigint.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31676,7 +31909,9 @@
                         },
                         "ulid.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31684,7 +31919,9 @@
                         },
                         "ulid.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31692,7 +31929,9 @@
                         },
                         "ulid.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31700,7 +31939,9 @@
                         },
                         "ulid.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31708,7 +31949,9 @@
                         },
                         "ulid.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31716,7 +31959,9 @@
                         },
                         "ulid.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31724,7 +31969,9 @@
                         },
                         "ulid.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31732,7 +31979,9 @@
                         },
                         "ulid.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31740,7 +31989,9 @@
                         },
                         "ulid.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31748,7 +31999,9 @@
                         },
                         "ulid.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31756,7 +32009,9 @@
                         },
                         "ulid.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31764,7 +32019,9 @@
                         },
                         "ulid.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31772,7 +32029,9 @@
                         },
                         "ulid.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31780,7 +32039,9 @@
                         },
                         "ulid.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31788,7 +32049,9 @@
                         },
                         "ulid.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31796,7 +32059,9 @@
                         },
                         "ulid.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31804,7 +32069,9 @@
                         },
                         "uuid7.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31812,7 +32079,9 @@
                         },
                         "uuid7.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31820,7 +32089,9 @@
                         },
                         "uuid7.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31828,7 +32099,9 @@
                         },
                         "uuid7.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31836,7 +32109,9 @@
                         },
                         "uuid7.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31844,7 +32119,9 @@
                         },
                         "uuid7.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31852,7 +32129,9 @@
                         },
                         "uuid7.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31860,7 +32139,9 @@
                         },
                         "uuid7.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31868,7 +32149,9 @@
                         },
                         "uuid7.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31876,7 +32159,9 @@
                         },
                         "uuid7.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31884,7 +32169,9 @@
                         },
                         "uuid7.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31892,7 +32179,9 @@
                         },
                         "uuid7.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31900,7 +32189,9 @@
                         },
                         "uuid7.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31908,7 +32199,9 @@
                         },
                         "uuid7.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31916,7 +32209,9 @@
                         },
                         "uuid7.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31924,7 +32219,9 @@
                         },
                         "uuid7.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31936,7 +32233,9 @@
                     "columns": {
                         "bigint.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31944,7 +32243,9 @@
                         },
                         "bigint.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31952,7 +32253,9 @@
                         },
                         "bigint.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31960,7 +32263,9 @@
                         },
                         "bigint.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31968,7 +32273,9 @@
                         },
                         "bigint.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31976,7 +32283,9 @@
                         },
                         "bigint.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31984,7 +32293,9 @@
                         },
                         "bigint.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -31992,7 +32303,9 @@
                         },
                         "bigint.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32000,7 +32313,9 @@
                         },
                         "bigint.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32008,7 +32323,9 @@
                         },
                         "bigint.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32016,7 +32333,9 @@
                         },
                         "bigint.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32024,7 +32343,9 @@
                         },
                         "bigint.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32032,7 +32353,9 @@
                         },
                         "bigint.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32040,7 +32363,9 @@
                         },
                         "bigint.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32048,7 +32373,9 @@
                         },
                         "bigint.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32056,7 +32383,9 @@
                         },
                         "bigint.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32064,7 +32393,9 @@
                         },
                         "ulid.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32072,7 +32403,9 @@
                         },
                         "ulid.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32080,7 +32413,9 @@
                         },
                         "ulid.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32088,7 +32423,9 @@
                         },
                         "ulid.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32096,7 +32433,9 @@
                         },
                         "ulid.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32104,7 +32443,9 @@
                         },
                         "ulid.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32112,7 +32453,9 @@
                         },
                         "ulid.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32120,7 +32463,9 @@
                         },
                         "ulid.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32128,7 +32473,9 @@
                         },
                         "ulid.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32136,7 +32483,9 @@
                         },
                         "ulid.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32144,7 +32493,9 @@
                         },
                         "ulid.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32152,7 +32503,9 @@
                         },
                         "ulid.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32160,7 +32513,9 @@
                         },
                         "ulid.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32168,7 +32523,9 @@
                         },
                         "ulid.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32176,7 +32533,9 @@
                         },
                         "ulid.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32184,7 +32543,9 @@
                         },
                         "ulid.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32192,7 +32553,9 @@
                         },
                         "uuid7.bigint.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32200,7 +32563,9 @@
                         },
                         "uuid7.bigint.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32208,7 +32573,9 @@
                         },
                         "uuid7.bigint.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32216,7 +32583,9 @@
                         },
                         "uuid7.bigint.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32224,7 +32593,9 @@
                         },
                         "uuid7.string.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32232,7 +32603,9 @@
                         },
                         "uuid7.string.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32240,7 +32613,9 @@
                         },
                         "uuid7.string.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32248,7 +32623,9 @@
                         },
                         "uuid7.string.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32256,7 +32633,9 @@
                         },
                         "uuid7.ulid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32264,7 +32643,9 @@
                         },
                         "uuid7.ulid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32272,7 +32653,9 @@
                         },
                         "uuid7.ulid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32280,7 +32663,9 @@
                         },
                         "uuid7.ulid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32288,7 +32673,9 @@
                         },
                         "uuid7.uuid.custom.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32296,7 +32683,9 @@
                         },
                         "uuid7.uuid.custom.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32304,7 +32693,9 @@
                         },
                         "uuid7.uuid.v.off": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"
@@ -32312,7 +32703,9 @@
                         },
                         "uuid7.uuid.v.on": {
                             "added": [
-                                "storage_id"
+                                "storage_id",
+                                "integrity_checked_at",
+                                "integrity_failed_at"
                             ],
                             "removed": [
                                 "drive_id"

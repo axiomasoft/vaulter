@@ -10,8 +10,10 @@ use Vaulter\Media\Cas\BlobPinReferences;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Console\GcBlobsCommand;
 use Vaulter\Media\Console\ReconcileBlobsCommand;
+use Vaulter\Media\Console\ScrubBlobsCommand;
 use Vaulter\Media\Contracts\Cas\ContentScanner;
 use Vaulter\Media\Contracts\Cas\StorageDriver;
+use Vaulter\Media\Doctor\BlobIntegrityCheck;
 use Vaulter\Media\Doctor\BlobPinsCheck;
 use Vaulter\Media\Http\Problems\MediaProblemCodes;
 use Vaulter\Media\Providers\BindingsRegistrar;
@@ -71,7 +73,7 @@ final class MediaModule implements HoldsReferences, OwnsSchema, VaulterModule
             ->schema(dirname(__DIR__).'/database/migrations')
             ->bindings(BindingsRegistrar::class)
             ->problems(MediaProblemCodes::class)
-            ->commands(GcBlobsCommand::class, ReconcileBlobsCommand::class)
+            ->commands(GcBlobsCommand::class, ReconcileBlobsCommand::class, ScrubBlobsCommand::class)
             ->schedule(SchedulingRegistrar::class)
             // The scanner the host names in `vaulter-drive.scan.scanner`; none configured means no scanning.
             ->defineCapability(ContentScanner::class, Cardinality::OptionalSingle)
@@ -80,6 +82,8 @@ final class MediaModule implements HoldsReferences, OwnsSchema, VaulterModule
             ->defineCapability(StorageDriver::class, Cardinality::RequiredSingle)
             ->providesFromConfig(StorageDriver::class, 'vaulter-media.storage_driver', FlysystemStorageDriver::class)
             // The pins per owner type, warning about owners whose module is not active (D23).
-            ->slot(DoctorCheck::class, BlobPinsCheck::class, 'media.blobs.pins', key: 'media.blobs.pins');
+            ->slot(DoctorCheck::class, BlobPinsCheck::class, 'media.blobs.pins', key: 'media.blobs.pins')
+            // The blobs the integrity scrub marked as damaged (D49).
+            ->slot(DoctorCheck::class, BlobIntegrityCheck::class, 'media.blobs.integrity', key: 'media.blobs.integrity');
     }
 }

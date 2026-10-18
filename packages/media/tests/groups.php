@@ -26,6 +26,8 @@ return [
         'Cas/BlobPinTransactionTest.php',
         'Cas/BlobReconcilerTest.php',
         'Cas/BlobScopeKeyTest.php',
+        'Cas/BlobScrubHealTest.php',
+        'Cas/BlobScrubTest.php',
         'Cas/CasPromoteAtomicTest.php',
         'Cas/ColdMutationSurvivorTest.php',
         'Cas/CommandOutputContractTest.php',

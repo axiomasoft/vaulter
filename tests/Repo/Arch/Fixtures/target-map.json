@@ -14258,6 +14258,20 @@
             "target_fqcn": "Vaulter\\Media\\Cas\\BlobReconciler"
         },
         {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Cas/BlobScrubber.php",
+            "fqcn": "Vaulter\\Media\\Cas\\BlobScrubber",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Cas\\BlobScrubber"
+        },
+        {
             "action": "split",
             "eloquent": false,
             "file": "packages/media/src/Cas/BlobStore.php",
@@ -14368,6 +14382,20 @@
             "rule": "other-packages:prefix:Vaulter\\Media\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Media\\Console\\ReconcileBlobsCommand"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Console/ScrubBlobsCommand.php",
+            "fqcn": "Vaulter\\Media\\Console\\ScrubBlobsCommand",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Console\\ScrubBlobsCommand"
         },
         {
             "action": "keep",
@@ -14550,6 +14578,20 @@
             "rule": "other-packages:prefix:Vaulter\\Media\\",
             "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Media\\Contracts\\Cas\\StorageDriver"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/media/src/Doctor/BlobIntegrityCheck.php",
+            "fqcn": "Vaulter\\Media\\Doctor\\BlobIntegrityCheck",
+            "kind": "final-class",
+            "note": null,
+            "owner": "media",
+            "package": "media",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Media\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Media\\Doctor\\BlobIntegrityCheck"
         },
         {
             "action": "keep",

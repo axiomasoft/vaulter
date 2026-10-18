@@ -288,6 +288,8 @@
         "packages/media/tests/Cas/BlobPinStatusTest.php",
         "packages/media/tests/Cas/BlobPinTransactionTest.php",
         "packages/media/tests/Cas/BlobReconcilerTest.php",
+        "packages/media/tests/Cas/BlobScrubHealTest.php",
+        "packages/media/tests/Cas/BlobScrubTest.php",
         "packages/media/tests/Cas/BlobScopeKeyTest.php",
         "packages/media/tests/Cas/CasPromoteAtomicTest.php",
         "packages/media/tests/Cas/ColdMutationSurvivorTest.php",

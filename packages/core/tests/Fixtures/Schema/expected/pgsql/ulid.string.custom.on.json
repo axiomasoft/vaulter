@@ -349,6 +349,24 @@
                     "collation": null
                 },
                 {
+                    "name": "integrity_checked_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "integrity_failed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "storage_version",
                     "type": "character varying(255)",
                     "not_null": false,
@@ -442,6 +460,7 @@
             "indexes": {
                 "custom_blobs_encryption_key_id_index": "CREATE INDEX custom_blobs_encryption_key_id_index ON public.custom_blobs USING btree (encryption_key_id)",
                 "custom_blobs_gc_idx": "CREATE INDEX custom_blobs_gc_idx ON public.custom_blobs USING btree (status, ref_count, delete_after_at)",
+                "custom_blobs_integrity_idx": "CREATE INDEX custom_blobs_integrity_idx ON public.custom_blobs USING btree (integrity_checked_at)",
                 "custom_blobs_pkey": "CREATE UNIQUE INDEX custom_blobs_pkey ON public.custom_blobs USING btree (id)",
                 "custom_blobs_scope_sha_uniq": "CREATE UNIQUE INDEX custom_blobs_scope_sha_uniq ON public.custom_blobs USING btree (scope_key, sha256)",
                 "custom_blobs_size_bytes_index": "CREATE INDEX custom_blobs_size_bytes_index ON public.custom_blobs USING btree (size_bytes)",

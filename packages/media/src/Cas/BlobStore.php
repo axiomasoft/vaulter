@@ -78,12 +78,31 @@ final readonly class BlobStore implements BlobStoreContract
                 );
             }
 
-            // Promotion is idempotent; a rollback leaves bytes for reconciliation.
-            if ($result['created'] || !$this->content->exists($result['blob']->storage_key, $result['blob']->disk)) {
-                $this->content->promote(staged: $staged, key: $result['blob']->storage_key, disk: $result['blob']->disk);
+            $blob = $result['blob'];
+
+            // The scrub marked this blob (D49): its object is missing or wrong. The staged bytes are hashed here and
+            // match the row's digest and size, so the object is rewritten — removed first, as the conditional promote
+            // would keep the bad one — and the mark is lifted, all under the lock. A failure rolls the mark back.
+            $heal = !$result['created'] && $blob->integrity_failed_at !== null;
+            if ($heal) {
+                $this->content->delete($blob->storage_key, $blob->disk);
             }
 
-            return $result['blob'];
+            // Promotion is idempotent; a rollback leaves bytes for reconciliation.
+            if ($result['created'] || $heal || !$this->content->exists($blob->storage_key, $blob->disk)) {
+                $this->content->promote(staged: $staged, key: $blob->storage_key, disk: $blob->disk);
+            }
+
+            if ($heal) {
+                // The mark is lifted only for an object that is there.
+                if (!$this->content->exists($blob->storage_key, $blob->disk)) {
+                    throw new RuntimeException('[Vaulter] Blob ['.Identity::stringify($blob->getKey()).'] was not healed: the object is still missing after the rewrite, the integrity mark stays.');
+                }
+
+                $this->blobs->clearIntegrity($blob);
+            }
+
+            return $blob;
         });
     }
 

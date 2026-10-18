@@ -1234,6 +1234,48 @@
             "id": "env:VAULTER_COLLAB_CONTROL_URLS",
             "kind": "config",
             "reason": "P5.10: env of vaulter-collaboration.control.http.urls"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.limit",
+            "kind": "config",
+            "reason": "P6.9: most blobs one scrub run visits (default 100)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.max_bytes",
+            "kind": "config",
+            "reason": "P6.9: bytes after which a scrub run stops (null: no byte budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.max_seconds",
+            "kind": "config",
+            "reason": "P6.9: seconds after which a scrub run stops (null: no time budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_LIMIT",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.limit"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_MAX_BYTES",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.max_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_MAX_SECONDS",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.max_seconds"
         }
     ],
     "items": [
@@ -3191,6 +3233,49 @@
             }
         },
         {
+            "default": {
+                "default": 100,
+                "env": "VAULTER_SCRUB_LIMIT"
+            },
+            "env": "VAULTER_SCRUB_LIMIT",
+            "id": "config:vaulter-media.scrub.limit",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_SCRUB_MAX_BYTES"
+            },
+            "env": "VAULTER_SCRUB_MAX_BYTES",
+            "id": "config:vaulter-media.scrub.max_bytes",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_SCRUB_MAX_SECONDS"
+            },
+            "env": "VAULTER_SCRUB_MAX_SECONDS",
+            "id": "config:vaulter-media.scrub.max_seconds",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "default": "Vaulter\\Media\\Cas\\FlysystemStorageDriver",
             "id": "config:vaulter-media.storage_driver",
             "owner": "media",
@@ -4373,6 +4458,48 @@
             "owner": "core",
             "source": {
                 "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.scrub.limit"
+            ],
+            "defaults": [
+                100
+            ],
+            "id": "env:VAULTER_SCRUB_LIMIT",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.scrub.max_bytes"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_SCRUB_MAX_BYTES",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.scrub.max_seconds"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_SCRUB_MAX_SECONDS",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
                 "symbol": "<file>"
             }
         },

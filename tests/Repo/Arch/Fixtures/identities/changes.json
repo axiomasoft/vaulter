@@ -5586,6 +5586,90 @@
             "id": "command:vaulter:errors:reference",
             "kind": "cli",
             "reason": "P6.7: --openapi prints the x-vaulter-problems table and the sorted code examples of the Problem schema of openapi/vaulter-v1.yaml, writing nothing; exit 0"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "column:v_blobs.integrity_checked_at",
+            "kind": "schema",
+            "reason": "P6.9: when the integrity scrub last verified the bytes of the blob (null: never); the scrub queue takes the never checked first, then the oldest"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "column:v_blobs.integrity_failed_at",
+            "kind": "schema",
+            "reason": "P6.9: since when the scrub knows the object of the blob is missing or has another size or sha256 (null: intact); Blob::isIntact() is false while set and an ingest of the same bytes lifts it"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "index:v_blobs.v_blobs_integrity_idx",
+            "kind": "schema",
+            "reason": "P6.9: the scrub queue order (integrity_checked_at)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.integrity_checked_at",
+            "kind": "protocol",
+            "reason": "P6.9: UTC timestamp cast of the new column"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.integrity_failed_at",
+            "kind": "protocol",
+            "reason": "P6.9: UTC timestamp cast of the new column"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "command:vaulter:blobs:scrub",
+            "kind": "cli",
+            "reason": "P6.9: integrity scrub of the CAS: {--limit} {--max-bytes} {--max-seconds} {--scope} {--dry-run}; never deletes or writes the drive; exit 0 intact, 1 failures found or objects unreadable, 2 invalid option; metrics vaulter_blobs_scrub_checked_total, vaulter_blobs_scrub_bytes_total, vaulter_blobs_scrub_failed_total{reason=missing|size|digest}; not scheduled"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.limit",
+            "kind": "config",
+            "reason": "P6.9: most blobs one scrub run visits (default 100)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.max_bytes",
+            "kind": "config",
+            "reason": "P6.9: bytes after which a scrub run stops (null: no byte budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.max_seconds",
+            "kind": "config",
+            "reason": "P6.9: seconds after which a scrub run stops (null: no time budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_LIMIT",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.limit"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_MAX_BYTES",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.max_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_MAX_SECONDS",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.max_seconds"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",
