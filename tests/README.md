@@ -17,6 +17,7 @@ Pest on Orchestra Testbench (PHP), `node --test` (hub) and Vitest (vue). Every s
 | `repo` | repo root | `tests/Repo`: the harness itself (runner, selector, zone map, groups) |
 | `hub` | `packages/collaboration/hub` | Node tests of the collaboration hub (not Pest) |
 | `vue` | `packages/vue` | the TypeScript client (not Pest) |
+| `vue-collaboration` | `packages/vue-collaboration` | the Yjs/Hocuspocus adapter of the client: envelopes, queue, save status (Vitest, not Pest); uses `vue` |
 | `load` | repo root | `load/tests`; **explicit only** (`-p load` or `stand`), never in `all` |
 
 Paths are repo-relative for `core`, `load` and `repo`, package-relative for the others. Zones of the core suite and

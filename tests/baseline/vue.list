@@ -53,6 +53,12 @@ tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > detects the f
 tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > finds every import shape in a source text
 tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > imports only itself and framework-neutral packages
 tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > scans the api folder
+tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > declares none of them as a dependency, peer or optional dependency
+tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > detects the forbidden shapes
+tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > does not externalize them in the library build either
+tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > finds every import shape in a source text
+tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > imports no yjs, y-*, @hocuspocus/* in src
+tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > scans the source folder
 tests/components.test.ts > VaulterCommentsPanel > announces a failed load and offers the next page
 tests/components.test.ts > VaulterCommentsPanel > does not auto-load when autoLoad is false
 tests/components.test.ts > VaulterCommentsPanel > mounts and loads the node's comments on mount
@@ -67,14 +73,22 @@ tests/contract/fixtures.test.ts > the client returns what the server sent > node
 tests/contract/problem.test.ts > problem+json examples > 412 becomes node_sequence_mismatch with the request id and the node in meta
 tests/contract/problem.test.ts > problem+json examples > 422 keeps the field errors map
 tests/contract/problem.test.ts > problem+json examples > 428 becomes precondition_required naming the missing header
+tests/document-node.test.ts > VaulterDocumentNode > a collaborative document without an installed adapter is edited through the REST autosave
 tests/document-node.test.ts > VaulterDocumentNode > a successful session clears an earlier failure, so the editor is no longer read-only
 tests/document-node.test.ts > VaulterDocumentNode > accepts a host-provided editor component through the slot using h()
 tests/document-node.test.ts > VaulterDocumentNode > autosaves with the loaded ETag and reports a lost race (412) through the conflict slot and event
+tests/document-node.test.ts > VaulterDocumentNode > does not autosave in collaborative mode: the session persists the edits
+tests/document-node.test.ts > VaulterDocumentNode > does not open a session when collaboration is switched off by the prop
+tests/document-node.test.ts > VaulterDocumentNode > ends the session when the component unmounts, and a session that answers afterwards
 tests/document-node.test.ts > VaulterDocumentNode > falls back to the autosave path ONLY when the session endpoint says collaboration_unavailable
+tests/document-node.test.ts > VaulterDocumentNode > falls back to the autosave path when the module route answers 404
+tests/document-node.test.ts > VaulterDocumentNode > goes read-only when the session turns read-only (a status error stops local edits)
 tests/document-node.test.ts > VaulterDocumentNode > is read-only for a caller without the edit ability, and ignores edits
 tests/document-node.test.ts > VaulterDocumentNode > mounts the editor in COLLABORATIVE mode for a collaborative document
 tests/document-node.test.ts > VaulterDocumentNode > mounts the slot editor with the loaded content for a non-collaborative document
 tests/document-node.test.ts > VaulterDocumentNode > opens a document in a newer schema read-only and asks to update the application
+tests/document-node.test.ts > VaulterDocumentNode > passes the status of the session to the slot and rebinds a replaced document
+tests/document-node.test.ts > VaulterDocumentNode > re-reads the content when the session reports a new generation (onEpochChanged)
 tests/document-node.test.ts > VaulterDocumentNode > renders the fallback note when no editor is mounted in the slot
 tests/document-node.test.ts > VaulterDocumentNode > respects a read-only collaboration session
 tests/document-node.test.ts > VaulterDocumentNode > shows a load failure in the error region
@@ -207,27 +221,6 @@ tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy 
 tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > question mark → why?
 tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > trailing dot → a.txt.
 tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > trailing space → a.txt 
-tests/node-collaboration.test.ts > createCollaborationSession > a server schema newer than the editor supports is read-only with a warning flag
-tests/node-collaboration.test.ts > createCollaborationSession > does not ask for a schema check when the editor declares no version
-tests/node-collaboration.test.ts > createCollaborationSession > opens a ro session read-only, so the editor must be editable: false
-tests/node-collaboration.test.ts > createCollaborationSession > requests the session of the node and opens the transport on a fresh Y.Doc
-tests/node-collaboration.test.ts > openCollaborationTransport > builds a hocuspocus session with mapped params and lifts awareness
-tests/node-collaboration.test.ts > openCollaborationTransport > is read-only for a ro session
-tests/node-collaboration.test.ts > openCollaborationTransport > reads the hub's terminal closes
-tests/node-collaboration.test.ts > useCollaboration > connect() during an epoch reopen leaves exactly one live provider (the reopen is discarded)
-tests/node-collaboration.test.ts > useCollaboration > disconnect() during a reopen cancels it: no provider is opened afterwards
-tests/node-collaboration.test.ts > useCollaboration > does not call onEpochChanged for a token renewal
-tests/node-collaboration.test.ts > useCollaboration > fetches the session and opens the provider on its Y.Doc
-tests/node-collaboration.test.ts > useCollaboration > is read-only for a ro session
-tests/node-collaboration.test.ts > useCollaboration > on 4403 forbidden renews the session (read-only now) on the same Y.Doc
-tests/node-collaboration.test.ts > useCollaboration > on 4409 epoch_changed destroys the provider and Y.Doc and reopens on a NEW Y.Doc
-tests/node-collaboration.test.ts > useCollaboration > on 4422 store_refused does not reopen: it reports an error and stays disconnected
-tests/node-collaboration.test.ts > useCollaboration > on epoch_changed lets the host re-read the content once the new Y.Doc is in place
-tests/node-collaboration.test.ts > useCollaboration > on token expiry renews the session and keeps the Y.Doc of the same room
-tests/node-collaboration.test.ts > useCollaboration > sends the supported schema version and opens a newer schema read-only
-tests/node-collaboration.test.ts > useCollaboration > surfaces a session-fetch error
-tests/node-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > a superseded connect() rejects with a cancellation the caller can tell from a failure
-tests/node-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > opens the new room on a NEW Y.Doc and lets the host re-read the content
 tests/ordering.test.ts > late list responses never replace a newer local state > useActivity: an older refresh answering last does not replace the newer one; loadMore is single-flight
 tests/ordering.test.ts > late list responses never replace a newer local state > useComments: a refresh from before an add does not drop the new comment, and loadMore is single-flight
 tests/ordering.test.ts > late list responses never replace a newer local state > useGrants: a list from before a grant keeps the new grant
@@ -256,10 +249,9 @@ tests/plugin.test.ts > VaulterPlugin > merges host viewers and replaces a built-
 tests/plugin.test.ts > VaulterPlugin > passes i18n options through: the ru locale and message overrides
 tests/plugin.test.ts > VaulterPlugin > provide helpers wire a client and a registry into an app by hand
 tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the six built-in keys, and i18n
+tests/plugin.test.ts > VaulterPlugin > provides the collaboration adapter given in the options, and none otherwise
 tests/plugin.test.ts > VaulterPlugin > registers every component globally
 tests/plugin.test.ts > VaulterPlugin > uses the client given in the options instead of building one
-tests/provider-contract.test.ts > @hocuspocus/provider v4 public contract used by defaultHocuspocusProvider > exposes the `isSynced` getter and emits `synced`/`disconnect` by those names
-tests/provider-contract.test.ts > defaultHocuspocusProvider against the real @hocuspocus/provider v4 > builds a live session through the default (non-mocked) path
 tests/recipes/documents.recipe.test.ts > documents guide > autosaves, flushes and saves with the loaded ETag
 tests/recipes/documents.recipe.test.ts > documents guide > creates a document through the client
 tests/recipes/documents.recipe.test.ts > documents guide > lists the revisions

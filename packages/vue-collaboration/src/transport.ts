@@ -1,7 +1,7 @@
 import { ref, type Ref } from 'vue'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import type { Doc as YDoc } from 'yjs'
-import type { CollaborationSession } from '../api/types'
+import type { CollaborationSession, Collaborator } from '@vaulter/vue'
 
 /**
  * Turns a backend {@link CollaborationSession} into a live Hocuspocus transport bound
@@ -31,12 +31,7 @@ export const FORBIDDEN_REASON = 'forbidden'
 export const STORE_REFUSED_CODE = 4422
 export const STORE_REFUSED_REASON = 'store_refused'
 
-/** One remote participant lifted from the awareness states (best-effort shape). */
-export interface Collaborator {
-  clientId: number
-  user?: { id?: string | number, name?: string, color?: string } & Record<string, unknown>
-  [field: string]: unknown
-}
+export type { Collaborator }
 
 /** A minimal Yjs awareness surface (the slice of `@hocuspocus/provider`.awareness we read). */
 export interface AwarenessLike {
@@ -63,6 +58,12 @@ export interface CollaborationProviderHandle {
   onEnd?: (handler: (end: CollaborationEnd) => void) => () => void
   /** Whether the transport reports itself connected right now (best-effort). */
   isConnected?: () => boolean
+  /** Send a stateless message (a string) to the hub: the update envelopes go this way. */
+  sendStateless?: (payload: string) => void
+  /** Subscribe to the stateless messages of the hub (acks, nacks, status); returns a disposer. */
+  onStateless?: (handler: (payload: string) => void) => () => void
+  /** The transaction origin this transport applies remote changes to the document with. */
+  remoteOrigin?: unknown
   destroy: () => void
 }
 
@@ -91,6 +92,10 @@ export interface CollaborationTransportHandle {
   provider: CollaborationProviderHandle
   /** Call `handler` when the hub ends this session; returns a disposer. */
   onEnd: (handler: (end: CollaborationEnd) => void) => () => void
+  /** Send a stateless message to the hub (a no-op for a transport without the channel). */
+  sendStateless: (payload: string) => void
+  /** Call `handler` with each stateless message of the hub; returns a disposer. */
+  onStateless: (handler: (payload: string) => void) => () => void
   /** Tear down the provider + listeners. */
   destroy: () => void
 }
@@ -130,6 +135,18 @@ function defaultHocuspocusProvider(args: {
   return {
     awareness: provider.awareness as unknown as AwarenessLike | null,
     isConnected: () => provider.isSynced,
+    sendStateless: (payload) => provider.sendStateless(payload),
+    onStateless: (handler) => {
+      const onMessage = (payload: { payload?: string }): void => {
+        if (typeof payload?.payload === 'string') {
+          handler(payload.payload)
+        }
+      }
+      provider.on('stateless', onMessage)
+      return () => provider.off('stateless', onMessage)
+    },
+    // The provider applies the hub's changes to the document with itself as the transaction origin.
+    remoteOrigin: provider,
     onConnectionChange: (handler) => {
       const onSynced = (): void => handler(true)
       const onDisconnect = (): void => handler(false)
@@ -202,17 +219,27 @@ export function openCollaborationTransport(
   }
   awareness?.on('change', onAwareness)
 
-  const endDisposers: Array<() => void> = []
+  const disposers: Array<() => void> = []
 
   function onEnd(handler: (end: CollaborationEnd) => void): () => void {
     const dispose = handle.onEnd?.(handler) ?? (() => {})
-    endDisposers.push(dispose)
+    disposers.push(dispose)
     return dispose
+  }
+
+  function onStateless(handler: (payload: string) => void): () => void {
+    const dispose = handle.onStateless?.(handler) ?? (() => {})
+    disposers.push(dispose)
+    return dispose
+  }
+
+  function sendStateless(payload: string): void {
+    handle.sendStateless?.(payload)
   }
 
   function destroy(): void {
     disposeConnection?.()
-    for (const dispose of endDisposers.splice(0)) {
+    for (const dispose of disposers.splice(0)) {
       dispose()
     }
     awareness?.off('change', onAwareness)
@@ -226,6 +253,8 @@ export function openCollaborationTransport(
     collaborators,
     provider: handle,
     onEnd,
+    sendStateless,
+    onStateless,
     destroy,
   }
 }

@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261018T053438Z-6fa620:P5.12:checks.2:V3",
+  "check_id": "V3",
+  "subject": "PLAN3.P5.12",
+  "candidate": {
+    "head": "f04442a612a1b9c7fc23fb115f47976ae004d163",
+    "dirty_digest": "7f9a6bd37eb50f264dc8b4ed28fe25c12de271c876443eb536cc5a0b984c3c8f"
+  },
+  "started_at": "2026-10-18T06:00:39Z",
+  "procedure": {
+    "cmd": "npm --prefix packages/vue-collaboration run typecheck && npm --prefix packages/vue-collaboration test",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-18T06:00:46Z"
+}

@@ -473,9 +473,15 @@ it('plans a core sub-zone change by group and pulls the dependent sub-zones and 
 });
 
 it('plans a Node or load change for its own suite only', function (): void {
-    foreach ([['packages/collaboration/hub/src/index.js', 'hub'], ['packages/vue/src/plugin.ts', 'vue'], ['load/app/Foo.php', 'load']] as [$path, $suite]) {
+    // @vaulter/vue-collaboration builds on the types of @vaulter/vue, so a vue change reaches its tests as well
+    foreach ([
+        ['packages/collaboration/hub/src/index.js', ['hub']],
+        ['packages/vue/src/plugin.ts', ['vue', 'vue-collaboration']],
+        ['packages/vue-collaboration/src/envelope.ts', ['vue-collaboration']],
+        ['load/app/Foo.php', ['load']],
+    ] as [$path, $affected]) {
         [$code, $plan] = s_select(["--paths=$path"]);
-        expect($code)->toBe(0, $path)->and($plan['affected'])->toBe([$suite], $path);
+        expect($code)->toBe(0, $path)->and($plan['affected'])->toBe($affected, $path);
     }
     [, $hub] = s_select(['--paths=packages/collaboration/hub/src/index.js']);
     expect(s_runs($hub))->toBe(['scripts/t -p hub']);

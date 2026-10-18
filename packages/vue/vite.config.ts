@@ -3,8 +3,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import dts from 'vite-plugin-dts'
 
-// Library build: type-check + emit declarations, externalize Vue (and the
-// optional realtime/editor stack used from M3 onward), ship ES + UMD bundles.
+// Library build: type-check + emit declarations, externalize Vue (and the editor stack),
+// ship ES + UMD bundles. The realtime stack lives in @vaulter/vue-collaboration.
 export default defineConfig({
   plugins: [
     vue(),
@@ -22,13 +22,11 @@ export default defineConfig({
       fileName: 'vaulter-vue',
     },
     rollupOptions: {
-      external: ['vue', 'yjs', /^@tiptap\//, /^@hocuspocus\//],
+      external: ['vue', /^@tiptap\//],
       output: {
         exports: 'named',
         globals: {
           'vue': 'Vue',
-          'yjs': 'Y',
-          '@hocuspocus/provider': 'Hocuspocus',
         },
       },
     },

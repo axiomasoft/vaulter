@@ -12990,6 +12990,198 @@
       "new_suite": "hub",
       "reason": "the hub moved to packages/collaboration/hub (P5.2 ownership move; test file unchanged)",
       "decision": "D1"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > createCollaborationSession > a server schema newer than the editor supports is read-only with a warning flag",
+      "replacement": [
+        "tests/adapter.test.ts > createCollaborationAdapter > a server schema newer than the editor supports is read-only with a warning flag"
+      ],
+      "new_suite": "vue-collaboration",
+      "reason": "createCollaborationSession is gone: a session without the update queue saves nothing durably; the same assertions run on createCollaborationAdapter().open() in @vaulter/vue-collaboration (P5.12)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > createCollaborationSession > does not ask for a schema check when the editor declares no version",
+      "replacement": [
+        "tests/adapter.test.ts > createCollaborationAdapter > does not ask for a schema check when the editor declares no version"
+      ],
+      "new_suite": "vue-collaboration",
+      "reason": "createCollaborationSession is gone: a session without the update queue saves nothing durably; the same assertions run on createCollaborationAdapter().open() in @vaulter/vue-collaboration (P5.12)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > createCollaborationSession > opens a ro session read-only, so the editor must be editable: false",
+      "replacement": [
+        "tests/adapter.test.ts > createCollaborationAdapter > opens a ro session read-only, so the editor must be editable: false"
+      ],
+      "new_suite": "vue-collaboration",
+      "reason": "createCollaborationSession is gone: a session without the update queue saves nothing durably; the same assertions run on createCollaborationAdapter().open() in @vaulter/vue-collaboration (P5.12)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > createCollaborationSession > requests the session of the node and opens the transport on a fresh Y.Doc",
+      "replacement": [
+        "tests/adapter.test.ts > createCollaborationAdapter > requests the session of the node with the host client and opens the provider on a fresh document"
+      ],
+      "new_suite": "vue-collaboration",
+      "reason": "createCollaborationSession is gone: a session without the update queue saves nothing durably; the same assertions run on createCollaborationAdapter().open() in @vaulter/vue-collaboration (P5.12)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > openCollaborationTransport > builds a hocuspocus session with mapped params and lifts awareness",
+      "new": "tests/use-collaboration.test.ts > openCollaborationTransport > builds a hocuspocus session with mapped params and lifts awareness",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > openCollaborationTransport > is read-only for a ro session",
+      "new": "tests/use-collaboration.test.ts > openCollaborationTransport > is read-only for a ro session",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > openCollaborationTransport > reads the hub's terminal closes",
+      "new": "tests/use-collaboration.test.ts > openCollaborationTransport > reads the hub's terminal closes",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > connect() during an epoch reopen leaves exactly one live provider (the reopen is discarded)",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > connect() during an epoch reopen leaves exactly one live provider (the reopen is discarded)",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > disconnect() during a reopen cancels it: no provider is opened afterwards",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > disconnect() during a reopen cancels it: no provider is opened afterwards",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > does not call onEpochChanged for a token renewal",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > does not call onEpochChanged for a token renewal",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > fetches the session and opens the provider on its Y.Doc",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > fetches the session and opens the provider on its Y.Doc",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > is read-only for a ro session",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > is read-only for a ro session",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > on 4403 forbidden renews the session (read-only now) on the same Y.Doc",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > on 4403 forbidden renews the session (read-only now) on the same Y.Doc",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > on 4409 epoch_changed destroys the provider and Y.Doc and reopens on a NEW Y.Doc",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > on 4409 epoch_changed destroys the provider and Y.Doc and reopens on a NEW Y.Doc",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > on 4422 store_refused does not reopen: it reports an error and stays disconnected",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > on 4422 store_refused does not reopen: it reports an error and stays disconnected",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > on epoch_changed lets the host re-read the content once the new Y.Doc is in place",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > on epoch_changed lets the host re-read the content once the new Y.Doc is in place",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > on token expiry renews the session and keeps the Y.Doc of the same room",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > on token expiry renews the session and keeps the Y.Doc of the same room",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > sends the supported schema version and opens a newer schema read-only",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > sends the supported schema version and opens a newer schema read-only",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration > surfaces a session-fetch error",
+      "new": "tests/use-collaboration.test.ts > useCollaboration > surfaces a session-fetch error",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > a superseded connect() rejects with a cancellation the caller can tell from a failure",
+      "new": "tests/use-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > a superseded connect() rejects with a cancellation the caller can tell from a failure",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/node-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > opens the new room on a NEW Y.Doc and lets the host re-read the content",
+      "new": "tests/use-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > opens the new room on a NEW Y.Doc and lets the host re-read the content",
+      "new_suite": "vue-collaboration",
+      "reason": "the collaboration composable and transport moved to packages/vue-collaboration (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/provider-contract.test.ts > @hocuspocus/provider v4 public contract used by defaultHocuspocusProvider > exposes the `isSynced` getter and emits `synced`/`disconnect` by those names",
+      "new": "tests/provider-contract.test.ts > @hocuspocus/provider v4 public contract used by defaultHocuspocusProvider > exposes the `isSynced` getter and emits `synced`/`disconnect` by those names",
+      "new_suite": "vue-collaboration",
+      "reason": "the Hocuspocus provider contract test moved to packages/vue-collaboration with the transport (P5.12; the test is unchanged)",
+      "decision": "D15"
+    },
+    {
+      "suite": "vue",
+      "old": "tests/provider-contract.test.ts > defaultHocuspocusProvider against the real @hocuspocus/provider v4 > builds a live session through the default (non-mocked) path",
+      "new": "tests/provider-contract.test.ts > defaultHocuspocusProvider against the real @hocuspocus/provider v4 > builds a live session through the default (non-mocked) path",
+      "new_suite": "vue-collaboration",
+      "reason": "the Hocuspocus provider contract test moved to packages/vue-collaboration with the transport (P5.12; the test is unchanged)",
+      "decision": "D15"
     }
   ],
   "additions": {
@@ -14190,12 +14382,27 @@
       ]
     },
     "vue": {
-      "count": 4,
+      "count": 19,
       "names": [
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > detects the forbidden shapes",
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > finds every import shape in a source text",
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > imports only itself and framework-neutral packages",
-        "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > scans the api folder"
+        "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > scans the api folder",
+        "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > declares none of them as a dependency, peer or optional dependency",
+        "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > detects the forbidden shapes",
+        "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > does not externalize them in the library build either",
+        "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > finds every import shape in a source text",
+        "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > imports no yjs, y-*, @hocuspocus/* in src",
+        "tests/arch/no-collab-deps.test.ts > @vaulter/vue has no collaboration stack (D15) > scans the source folder",
+        "tests/document-node.test.ts > VaulterDocumentNode > a collaborative document without an installed adapter is edited through the REST autosave",
+        "tests/document-node.test.ts > VaulterDocumentNode > does not autosave in collaborative mode: the session persists the edits",
+        "tests/document-node.test.ts > VaulterDocumentNode > does not open a session when collaboration is switched off by the prop",
+        "tests/document-node.test.ts > VaulterDocumentNode > ends the session when the component unmounts, and a session that answers afterwards",
+        "tests/document-node.test.ts > VaulterDocumentNode > falls back to the autosave path when the module route answers 404",
+        "tests/document-node.test.ts > VaulterDocumentNode > goes read-only when the session turns read-only (a status error stops local edits)",
+        "tests/document-node.test.ts > VaulterDocumentNode > passes the status of the session to the slot and rebinds a replaced document",
+        "tests/document-node.test.ts > VaulterDocumentNode > re-reads the content when the session reports a new generation (onEpochChanged)",
+        "tests/plugin.test.ts > VaulterPlugin > provides the collaboration adapter given in the options, and none otherwise"
       ]
     },
     "collaboration": {
@@ -14487,6 +14694,54 @@
         "packages/collaboration/hub/test/webhook.test.js",
         "packages/collaboration/hub/test/websocket-hardening.test.js",
         "packages/collaboration/hub/test/worker.test.js"
+      ]
+    },
+    "vue-collaboration": {
+      "count": 43,
+      "names": [
+        "tests/adapter.test.ts > createCollaborationAdapter > end() is idempotent and stops the session",
+        "tests/adapter.test.ts > createCollaborationAdapter > hands out the new document when the hub ends the generation, and tells the editor to re-read",
+        "tests/adapter.test.ts > createCollaborationAdapter > prefers the client given to the adapter over the one the editor passes",
+        "tests/adapter.test.ts > createCollaborationAdapter > rejects with the error of the session request, so the editor can fall back to the REST autosave",
+        "tests/adapter.test.ts > createCollaborationAdapter > reports the save status of the session: saved only after the ack of the backend",
+        "tests/envelope.test.ts > envelope queue > a nack with retry:false fails the queue, keeps the update unsaved and stops taking edits",
+        "tests/envelope.test.ts > envelope queue > a nack with retry:true keeps the update and sends it again after a growing delay",
+        "tests/envelope.test.ts > envelope queue > an ack removes the update, and only then is the queue acknowledged and empty",
+        "tests/envelope.test.ts > envelope queue > answers false for a message that is not of the envelope protocol",
+        "tests/envelope.test.ts > envelope queue > does not mint a new id when it sends the queue again",
+        "tests/envelope.test.ts > envelope queue > does not wrap the changes the transport applied from the hub",
+        "tests/envelope.test.ts > envelope queue > encodes bytes as base64 in chunks (an update larger than one chunk)",
+        "tests/envelope.test.ts > envelope queue > fails on too many queued bytes, also for a single update larger than the limit",
+        "tests/envelope.test.ts > envelope queue > fails on too many queued updates and stops taking edits",
+        "tests/envelope.test.ts > envelope queue > gives every local update its own UUID v4 by default",
+        "tests/envelope.test.ts > envelope queue > holds the updates until the transport is ready, then sends them oldest first",
+        "tests/envelope.test.ts > envelope queue > ignores a duplicate ack, an ack of an unknown id and an ack of another generation",
+        "tests/envelope.test.ts > envelope queue > makes a UUID v4 where crypto.randomUUID is missing (an insecure context)",
+        "tests/envelope.test.ts > envelope queue > sends the unacknowledged updates again with the SAME ids after a drop and a reconnect",
+        "tests/envelope.test.ts > envelope queue > stops listening to the document and drops the queue when destroyed",
+        "tests/envelope.test.ts > envelope queue > waits while the hub takes no writes and sends the queue when it opens them again",
+        "tests/envelope.test.ts > envelope queue > wraps a local update in an envelope with an id, the generation, its sha256 and base64",
+        "tests/provider-contract.test.ts > @hocuspocus/provider v4 public contract used by defaultHocuspocusProvider > has the stateless channel the envelopes use: sendStateless and the `stateless` event",
+        "tests/provider-contract.test.ts > defaultHocuspocusProvider against the real @hocuspocus/provider v4 > delivers a stateless message of the hub as its payload string",
+        "tests/sha256.test.ts > sha256Hex > matches node:crypto around the block and padding boundaries and for a large update",
+        "tests/sha256.test.ts > sha256Hex > matches the known vectors",
+        "tests/status.test.ts > save status > a sync alone never gives saved",
+        "tests/status.test.ts > save status > is error whenever the queue failed, whatever else is true",
+        "tests/status.test.ts > save status > is pending before the first sync",
+        "tests/status.test.ts > save status > is pending while a local update has no ack, synced or not",
+        "tests/status.test.ts > save status > is saved only after an ack with an empty queue",
+        "tests/status.test.ts > save status > is synchronized when the provider synced and nothing of ours is in flight",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > a full queue is an error: the editor is read-only and no further update is queued",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > a nack the client may not repeat is an error and read-only",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > a refused state (4422) is an error status as well",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > dispose() closes the connection and stops queueing",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > does not queue what the provider applied from the hub",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > drops the queue with the document when the generation ends: old updates are never sent to the new one",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > is pending before the provider synced, and a sync alone never gives saved",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > keeps the queue across a token renewal: the new provider gets the same ids",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > sends each local update to the hub in an envelope, and only the ack makes it saved",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > sends the unacknowledged updates again with the same ids when the provider reconnects",
+        "tests/use-collaboration.test.ts > useCollaboration — update envelopes > waits while the hub stops writes and sends when it opens them"
       ]
     }
   }

@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261018T053438Z-6fa620:P5.12:checks.1:V5",
+  "check_id": "V5",
+  "subject": "PLAN3.P5.12",
+  "candidate": {
+    "head": "f04442a612a1b9c7fc23fb115f47976ae004d163",
+    "dirty_digest": "6f9cb9d63942a4c7b23e01d5f6d375152f3d2a00d445b184b31dcb9f825d2ea3"
+  },
+  "started_at": "2026-10-18T05:55:56Z",
+  "procedure": {
+    "cmd": "scripts/t sqlite -p repo tests/Repo/ZonesMapTest.php tests/Repo/TestGroupsTest.php",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-18T05:56:02Z"
+}

@@ -48,36 +48,16 @@ export { useDocument } from './composables/useDocument'
 export type { UseDocumentOptions, UseDocumentReturn } from './composables/useDocument'
 export { useRevisions } from './composables/useRevisions'
 export type { UseRevisionsReturn } from './composables/useRevisions'
-export { CollaborationCancelledError, useCollaboration } from './composables/useCollaboration'
-export type { UseCollaborationOptions, UseCollaborationReturn } from './composables/useCollaboration'
 
-// Collaboration transport
-export { createCollaborationSession, fetchCollaborationSession } from './collaboration/session'
+// Collaboration seam (the implementation is @vaulter/vue-collaboration)
+export { VaulterCollaborationKey } from './collaboration-adapter'
 export type {
-  CollaborationOptions,
-  CollaborationSessionHandle,
-  ResolvedCollaborationSession,
-} from './collaboration/session'
-export {
-  EPOCH_CHANGED_CODE,
-  EPOCH_CHANGED_REASON,
-  FORBIDDEN_CODE,
-  FORBIDDEN_REASON,
-  STORE_REFUSED_CODE,
-  STORE_REFUSED_REASON,
-  TOKEN_EXPIRED_CODE,
-  TOKEN_EXPIRED_REASON,
-  openCollaborationTransport,
-  sessionEnd,
-} from './collaboration/transport'
-export type {
-  AwarenessLike,
-  CollaborationEnd,
-  CollaborationProviderHandle,
-  CollaborationTransportHandle,
-  CollaborationTransportOptions,
+  CollaborationAdapter,
+  CollaborationHandle,
+  CollaborationOpenOptions,
+  CollaborationStatus,
   Collaborator,
-} from './collaboration/transport'
+} from './collaboration-adapter'
 
 // Components
 export { default as VaulterBreadcrumb } from './components/VaulterBreadcrumb.vue'

@@ -1620,6 +1620,7 @@ export interface components {
             update_id: string;
             seq: number;
             sha256: string;
+            /** @constant */
             persisted: true;
             /** @description True when the token predates a change of its drive's or of every drive's permissions (D46). The append was allowed by the rights now; the hub renews the token. */
             permissions_stale: boolean;

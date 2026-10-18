@@ -2088,6 +2088,22 @@
         "list"
       ],
       "partitions": []
+    },
+    "vue-collaboration": {
+      "kind": "node",
+      "cwd": "packages/vue-collaboration",
+      "command": [
+        "npm",
+        "test",
+        "--"
+      ],
+      "default": true,
+      "discovery": [
+        "npx",
+        "vitest",
+        "list"
+      ],
+      "partitions": []
     }
   },
   "stand": [

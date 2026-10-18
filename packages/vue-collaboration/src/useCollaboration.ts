@@ -1,14 +1,15 @@
-import { ref, shallowRef, watch, type Ref, type ShallowRef } from 'vue'
+import { computed, ref, shallowRef, watch, type ComputedRef, type Ref, type ShallowRef } from 'vue'
 import { Doc as YDoc } from 'yjs'
-import { useVaulterClient } from './useVaulterClient'
-import { fetchCollaborationSession, type CollaborationOptions } from '../collaboration/session'
+import type { CollaborationSession, CollaborationStatus, NodeId, VaulterClient } from '@vaulter/vue'
+import { createEnvelopeQueue, type EnvelopeQueue, type EnvelopeQueueOptions } from './envelope'
+import { fetchCollaborationSession, type CollaborationOptions } from './session'
+import { deriveStatus } from './status'
 import {
   openCollaborationTransport,
   type Collaborator,
   type CollaborationEnd,
   type CollaborationTransportHandle,
-} from '../collaboration/transport'
-import type { CollaborationSession, NodeId } from '../api/types'
+} from './transport'
 
 /** A connect() was overtaken by a newer connect()/reopen/disconnect(): not a failure of the session. */
 export class CollaborationCancelledError extends Error {
@@ -18,13 +19,23 @@ export class CollaborationCancelledError extends Error {
   }
 }
 
+/** The knobs of the update queue (src/envelope.ts); the defaults are 1000 updates and 8 MiB. */
+export type EnvelopeSettings = Pick<
+  EnvelopeQueueOptions,
+  'maxQueuedUpdates' | 'maxQueuedBytes' | 'newId' | 'hash' | 'schedule'
+>
+
 export interface UseCollaborationOptions extends CollaborationOptions {
+  /** The API client that asks for the session. */
+  client: VaulterClient
   /**
    * Called after the hub ended the room's generation (`epoch_changed`, a restore) and a new
    * `Y.Doc` replaced the old one. The document's ETag carries the epoch, so the host re-reads
    * the content here (`useDocument().load()`) before the next save.
    */
   onEpochChanged?: () => void | Promise<void>
+  /** The update queue settings. */
+  envelope?: EnvelopeSettings
 }
 
 export interface UseCollaborationReturn {
@@ -42,18 +53,25 @@ export interface UseCollaborationReturn {
   connecting: Ref<boolean>
   /** A live connection flag (first-handshake/disconnect from the provider). */
   connected: Ref<boolean>
-  /** Whether writes are disallowed: a read-only session or an outdated editor schema. */
-  readOnly: Ref<boolean>
+  /**
+   * Whether writes are disallowed: a read-only session, an outdated editor schema, or a session
+   * that cannot keep the edits safe (the update queue failed, the backend refused the state).
+   */
+  readOnly: ComputedRef<boolean>
   /** True when the session's schema is newer than `supportedSchemaVersion`. */
   schemaOutdated: Ref<boolean>
+  /** The save status of the local edits; only the backend's ack makes it `saved`. */
+  status: Ref<CollaborationStatus>
   /** The remote participants (awareness); empty when the transport has no presence. */
   collaborators: Ref<Collaborator[]>
-  /** Any error from the session fetch / build. */
+  /** Any error from the session fetch / build / save. */
   error: Ref<unknown>
   /** Fetch the session AND open the Yjs provider. Resolves to the live handle. */
   connect: () => Promise<CollaborationTransportHandle>
-  /** Tear down the live session (idempotent). */
+  /** Close the live connection (idempotent). Unacknowledged updates stay queued for the next connect(). */
   disconnect: () => void
+  /** Close the connection AND drop the update queue: the end of this composable's life. */
+  dispose: () => void
 }
 
 /**
@@ -65,25 +83,32 @@ export interface UseCollaborationReturn {
  *     never merged into the restored document; `onEpochChanged` then lets the host re-read
  *     the content (and its ETag);
  *   - 4001 (token expired) and 4403 (the writer lost the right to write): a new session is
- *     fetched (read-only after 4403); the `Y.Doc` is kept while the room is the same generation;
+ *     fetched (read-only after 4403); the `Y.Doc` and the update queue are kept while the room
+ *     is the same generation, so unacknowledged updates are sent again with their own ids;
  *   - 4422 `store_refused` (the backend refused the state itself): NOT reopened — the same
  *     state would be refused again; `error` is set and the editor stays disconnected.
  *
- * The content always comes from the hub; do not seed the editor in collaborative mode. Mount a
- * read-only editor while `readOnly` is true; call `disconnect()` on unmount.
+ * Every local update goes to the hub in an envelope with its own id and stays queued until the
+ * backend's ack (src/envelope.ts); `status` is `saved` only then. The content always comes from
+ * the hub; do not seed the editor in collaborative mode. Mount a read-only editor while
+ * `readOnly` is true; call `dispose()` on unmount.
  */
-export function useCollaboration(nodeId: NodeId, options: UseCollaborationOptions = {}): UseCollaborationReturn {
-  const client = useVaulterClient()
+export function useCollaboration(nodeId: NodeId, options: UseCollaborationOptions): UseCollaborationReturn {
+  const client = options.client
 
   const doc = shallowRef(new YDoc())
   const session = shallowRef<CollaborationSession | null>(null)
   const handle = shallowRef<CollaborationTransportHandle | null>(null)
   const connecting = ref(false)
   const connected = ref(false)
-  const readOnly = ref(false)
+  const sessionReadOnly = ref(false)
+  const queueFailed = ref(false)
+  const refused = ref(false)
   const schemaOutdated = ref(false)
+  const status = ref<CollaborationStatus>('pending')
   const collaborators = ref<Collaborator[]>([])
   const error = ref<unknown>(null)
+  const readOnly = computed(() => sessionReadOnly.value || queueFailed.value || refused.value)
 
   let stopWatchers: Array<() => void> = []
   // Every connect(), reopen and disconnect() starts a new generation. A session answer that
@@ -92,6 +117,42 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
   // The hub ended the room's generation (a restore): whoever opens the next session — the reopen
   // or a connect() that overtook it — must do it on a new Y.Doc, and the host re-reads the content.
   let freshDocPending = false
+  // The queue belongs to one document of one generation; it outlives the transports of that room.
+  let queue: EnvelopeQueue | null = null
+  let queueDoc: YDoc | null = null
+
+  function refreshStatus(): void {
+    queueFailed.value = queue?.failure != null
+    status.value = deriveStatus({
+      synced: connected.value,
+      pending: queue?.pendingCount ?? 0,
+      acknowledged: queue?.acknowledged ?? false,
+      failed: queueFailed.value || refused.value,
+    })
+  }
+
+  function dropQueue(): void {
+    queue?.destroy()
+    queue = null
+    queueDoc = null
+  }
+
+  /** The queue of the current document and generation (a new one when the document was replaced). */
+  function queueFor(epoch: number): EnvelopeQueue {
+    if (queue !== null && queueDoc === doc.value && queue.generation === epoch) {
+      return queue
+    }
+    dropQueue()
+    queue = createEnvelopeQueue({
+      ...options.envelope,
+      doc: doc.value,
+      generation: epoch,
+      onChange: refreshStatus,
+    })
+    queueDoc = doc.value
+
+    return queue
+  }
 
   /** The session for generation `mine`, or null when a newer connect()/reopen/disconnect() took over. */
   async function resolveSession(mine: number): Promise<CollaborationSession | null> {
@@ -106,7 +167,7 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
       }
       session.value = resolved.session
       schemaOutdated.value = resolved.schemaOutdated
-      readOnly.value = resolved.readOnly
+      sessionReadOnly.value = resolved.readOnly
       return resolved.session
     } catch (caught) {
       if (mine === generation) {
@@ -125,28 +186,41 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
       stop()
     }
     stopWatchers = []
+    // Nothing is sent to a transport that is going away; the queue keeps what is not acknowledged.
+    queue?.bind(null)
     handle.value?.destroy()
     handle.value = null
     connected.value = false
     collaborators.value = []
+    refreshStatus()
   }
 
   function resetDoc(): void {
+    dropQueue()
     doc.value.destroy()
     doc.value = new YDoc()
   }
 
   function open(resolved: CollaborationSession): CollaborationTransportHandle {
     const live = openCollaborationTransport(resolved, { doc: doc.value, ...options.providers })
+    const updates = queueFor(resolved.epoch)
 
+    updates.bind({ send: live.sendStateless, remoteOrigin: live.provider.remoteOrigin })
     handle.value = live
     connected.value = live.connected.value
     collaborators.value = live.collaborators.value
     stopWatchers.push(
-      watch(live.connected, (value) => { connected.value = value }),
+      watch(live.connected, (value) => {
+        connected.value = value
+        updates.setReady(value)
+        refreshStatus()
+      }, { flush: 'sync' }),
       watch(live.collaborators, (value) => { collaborators.value = value }),
+      live.onStateless((message) => { updates.receive(message) }),
       live.onEnd((end) => { void reopen(end) }),
     )
+    updates.setReady(connected.value)
+    refreshStatus()
 
     return live
   }
@@ -160,7 +234,9 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
     }
 
     if (end === 'store_refused') {
+      refused.value = true
       error.value = new Error('The collaboration hub could not save this document (the backend refused its state).')
+      refreshStatus()
       return
     }
 
@@ -185,6 +261,7 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
 
   async function connect(): Promise<CollaborationTransportHandle> {
     const mine = ++generation
+    const previousRoom = session.value?.room
     teardown()
     const resolved = await resolveSession(mine)
     if (resolved === null) {
@@ -194,7 +271,8 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
 
     const epochReset = freshDocPending
     freshDocPending = false
-    if (epochReset) {
+    refused.value = false
+    if (epochReset || (previousRoom !== undefined && resolved.room !== previousRoom)) {
       resetDoc()
     }
     const live = open(resolved)
@@ -210,6 +288,12 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
     teardown()
   }
 
+  function dispose(): void {
+    disconnect()
+    dropQueue()
+    refreshStatus()
+  }
+
   return {
     doc,
     session,
@@ -218,9 +302,11 @@ export function useCollaboration(nodeId: NodeId, options: UseCollaborationOption
     connected,
     readOnly,
     schemaOutdated,
+    status,
     collaborators,
     error,
     connect,
     disconnect,
+    dispose,
   }
 }

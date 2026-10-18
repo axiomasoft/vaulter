@@ -171,6 +171,12 @@
             "src": ["packages/vue"],
             "tests": ["packages/vue/tests"],
             "uses": []
+        },
+        "vue-collaboration": {
+            "suite": "vue-collaboration",
+            "src": ["packages/vue-collaboration"],
+            "tests": ["packages/vue-collaboration/tests"],
+            "uses": ["vue"]
         }
     },
     "harness": [
@@ -239,7 +245,11 @@
         {"path": "packages/vue/package.json", "zones": ["vue"]},
         {"path": "packages/vue/vite.config.ts", "zones": ["vue"]},
         {"path": "packages/vue/tsconfig.json", "zones": ["vue"]},
-        {"path": "packages/vue/tests/support", "zones": ["vue"]}
+        {"path": "packages/vue/tests/support", "zones": ["vue"]},
+        {"path": "packages/vue-collaboration/package.json", "zones": ["vue-collaboration"]},
+        {"path": "packages/vue-collaboration/vite.config.ts", "zones": ["vue-collaboration"]},
+        {"path": "packages/vue-collaboration/tsconfig.json", "zones": ["vue-collaboration"]},
+        {"path": "packages/vue-collaboration/tests/support", "zones": ["vue-collaboration"]}
     ],
     "database": [
         "packages/core/tests/Schema",

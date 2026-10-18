@@ -1,37 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import { Doc as YDoc } from 'yjs'
-import { openCollaborationTransport } from '../src/collaboration/transport'
-import type { CollaborationSession } from '../src/api/types'
+import { openCollaborationTransport } from '../src/transport'
+import { hocuspocusSession } from './support/fakes'
 
 // F-P4.5-02 — the @hocuspocus/provider 2.x → 4.x bump. Every other collaboration
 // test injects a mock `createHocuspocusProvider`, so none of them exercise the real
 // v4 API that `defaultHocuspocusProvider` depends on. These tests pin that contract
-// against the REAL package: the `isSynced` getter and the `synced`/`disconnect`
-// event names. If a future v4/v5 bump renames either, these go red — instead of the
-// collaboration UI silently sticking on perpetually-(dis)connected with green CI.
+// against the REAL package: the `isSynced` getter, the `synced`/`disconnect`/`stateless`
+// event names and `sendStateless`. If a future v4/v5 bump renames either, these go red —
+// instead of the collaboration UI silently sticking on perpetually-(dis)connected, or the
+// update envelopes never leaving the client, with green CI.
 
-function hocuspocusSession(): CollaborationSession {
-  return {
-    driver: 'hocuspocus',
-    room: 'vaulter.documents.7.42.0',
-    node_id: '42',
-    drive_id: '7',
-    epoch: 0,
-    schema_version: 1,
-    mode: 'rw',
-    token: 'jwt-token',
-    // Unroutable on purpose: the provider never establishes a live socket in the
-    // sandbox; we only assert the synchronous construction/getter/awareness contract.
-    url: 'ws://127.0.0.1:1',
-  }
+// Unroutable on purpose: the provider never establishes a live socket in the
+// sandbox; we only assert the synchronous construction/getter/awareness contract.
+// `emit` is protected in the typings; the provider is an EventEmitter and this is how it raises its events.
+const emitOn = (provider: unknown, event: string, payload: unknown): void => {
+  (provider as { emit: (name: string, data: unknown) => void }).emit(event, payload)
 }
+
+const unroutable = () => hocuspocusSession({ url: 'ws://127.0.0.1:1' })
 
 describe('defaultHocuspocusProvider against the real @hocuspocus/provider v4', () => {
   it('builds a live session through the default (non-mocked) path', () => {
     // No `createHocuspocusProvider` override → the production default factory runs
     // against the real HocuspocusProvider constructor.
-    const handle = openCollaborationTransport(hocuspocusSession(), { doc: new YDoc() })
+    const handle = openCollaborationTransport(unroutable(), { doc: new YDoc() })
 
     // `isConnected()` reads the real `provider.isSynced` getter — a boolean, not
     // `undefined` (which is what a renamed/removed getter would yield).
@@ -41,8 +35,24 @@ describe('defaultHocuspocusProvider against the real @hocuspocus/provider v4', (
     // Real v4 exposes an awareness instance we lift collaborators from.
     expect(handle.provider.awareness).toBeTruthy()
 
+    // The envelope channel and the origin of the hub's changes exist on the real provider.
+    expect(typeof handle.provider.sendStateless).toBe('function')
+    expect(typeof handle.provider.onStateless).toBe('function')
+    expect(handle.provider.remoteOrigin).toBeTruthy()
+
     // Subscribing/tearing down against the real emitter must not throw.
     expect(() => handle.destroy()).not.toThrow()
+  })
+
+  it('delivers a stateless message of the hub as its payload string', () => {
+    const handle = openCollaborationTransport(unroutable(), { doc: new YDoc() })
+    const received: string[] = []
+    handle.onStateless((payload) => received.push(payload))
+
+    emitOn(handle.provider.remoteOrigin, 'stateless', { payload: '{"t":"ack","id":"a"}' })
+
+    expect(received).toEqual(['{"t":"ack","id":"a"}'])
+    handle.destroy()
   })
 })
 
@@ -92,6 +102,27 @@ describe('@hocuspocus/provider v4 public contract used by defaultHocuspocusProvi
       provider.off('disconnect', onDisconnect)
     }).not.toThrow()
 
+    provider.destroy()
+  })
+
+  it('has the stateless channel the envelopes use: sendStateless and the `stateless` event', () => {
+    const provider = new HocuspocusProvider({
+      url: 'ws://127.0.0.1:1',
+      name: 'vaulter.documents.42',
+      token: 'jwt-token',
+      document: new YDoc(),
+      connect: false,
+    } as ConstructorParameters<typeof HocuspocusProvider>[0])
+
+    expect(typeof provider.sendStateless).toBe('function')
+
+    const seen: string[] = []
+    const onStateless = (event: { payload: string }): void => { seen.push(event.payload) }
+    provider.on('stateless', onStateless)
+    emitOn(provider, 'stateless', { payload: 'x' })
+    provider.off('stateless', onStateless)
+
+    expect(seen).toEqual(['x'])
     provider.destroy()
   })
 })

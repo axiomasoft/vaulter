@@ -1,0 +1,66 @@
+tests/adapter.test.ts > createCollaborationAdapter > a server schema newer than the editor supports is read-only with a warning flag
+tests/adapter.test.ts > createCollaborationAdapter > does not ask for a schema check when the editor declares no version
+tests/adapter.test.ts > createCollaborationAdapter > end() is idempotent and stops the session
+tests/adapter.test.ts > createCollaborationAdapter > hands out the new document when the hub ends the generation, and tells the editor to re-read
+tests/adapter.test.ts > createCollaborationAdapter > opens a ro session read-only, so the editor must be editable: false
+tests/adapter.test.ts > createCollaborationAdapter > prefers the client given to the adapter over the one the editor passes
+tests/adapter.test.ts > createCollaborationAdapter > rejects with the error of the session request, so the editor can fall back to the REST autosave
+tests/adapter.test.ts > createCollaborationAdapter > reports the save status of the session: saved only after the ack of the backend
+tests/adapter.test.ts > createCollaborationAdapter > requests the session of the node with the host client and opens the provider on a fresh document
+tests/envelope.test.ts > envelope queue > a nack with retry:false fails the queue, keeps the update unsaved and stops taking edits
+tests/envelope.test.ts > envelope queue > a nack with retry:true keeps the update and sends it again after a growing delay
+tests/envelope.test.ts > envelope queue > an ack removes the update, and only then is the queue acknowledged and empty
+tests/envelope.test.ts > envelope queue > answers false for a message that is not of the envelope protocol
+tests/envelope.test.ts > envelope queue > does not mint a new id when it sends the queue again
+tests/envelope.test.ts > envelope queue > does not wrap the changes the transport applied from the hub
+tests/envelope.test.ts > envelope queue > encodes bytes as base64 in chunks (an update larger than one chunk)
+tests/envelope.test.ts > envelope queue > fails on too many queued bytes, also for a single update larger than the limit
+tests/envelope.test.ts > envelope queue > fails on too many queued updates and stops taking edits
+tests/envelope.test.ts > envelope queue > gives every local update its own UUID v4 by default
+tests/envelope.test.ts > envelope queue > holds the updates until the transport is ready, then sends them oldest first
+tests/envelope.test.ts > envelope queue > ignores a duplicate ack, an ack of an unknown id and an ack of another generation
+tests/envelope.test.ts > envelope queue > makes a UUID v4 where crypto.randomUUID is missing (an insecure context)
+tests/envelope.test.ts > envelope queue > sends the unacknowledged updates again with the SAME ids after a drop and a reconnect
+tests/envelope.test.ts > envelope queue > stops listening to the document and drops the queue when destroyed
+tests/envelope.test.ts > envelope queue > waits while the hub takes no writes and sends the queue when it opens them again
+tests/envelope.test.ts > envelope queue > wraps a local update in an envelope with an id, the generation, its sha256 and base64
+tests/provider-contract.test.ts > @hocuspocus/provider v4 public contract used by defaultHocuspocusProvider > exposes the `isSynced` getter and emits `synced`/`disconnect` by those names
+tests/provider-contract.test.ts > @hocuspocus/provider v4 public contract used by defaultHocuspocusProvider > has the stateless channel the envelopes use: sendStateless and the `stateless` event
+tests/provider-contract.test.ts > defaultHocuspocusProvider against the real @hocuspocus/provider v4 > builds a live session through the default (non-mocked) path
+tests/provider-contract.test.ts > defaultHocuspocusProvider against the real @hocuspocus/provider v4 > delivers a stateless message of the hub as its payload string
+tests/sha256.test.ts > sha256Hex > matches node:crypto around the block and padding boundaries and for a large update
+tests/sha256.test.ts > sha256Hex > matches the known vectors
+tests/status.test.ts > save status > a sync alone never gives saved
+tests/status.test.ts > save status > is error whenever the queue failed, whatever else is true
+tests/status.test.ts > save status > is pending before the first sync
+tests/status.test.ts > save status > is pending while a local update has no ack, synced or not
+tests/status.test.ts > save status > is saved only after an ack with an empty queue
+tests/status.test.ts > save status > is synchronized when the provider synced and nothing of ours is in flight
+tests/use-collaboration.test.ts > openCollaborationTransport > builds a hocuspocus session with mapped params and lifts awareness
+tests/use-collaboration.test.ts > openCollaborationTransport > is read-only for a ro session
+tests/use-collaboration.test.ts > openCollaborationTransport > reads the hub's terminal closes
+tests/use-collaboration.test.ts > useCollaboration > connect() during an epoch reopen leaves exactly one live provider (the reopen is discarded)
+tests/use-collaboration.test.ts > useCollaboration > disconnect() during a reopen cancels it: no provider is opened afterwards
+tests/use-collaboration.test.ts > useCollaboration > does not call onEpochChanged for a token renewal
+tests/use-collaboration.test.ts > useCollaboration > fetches the session and opens the provider on its Y.Doc
+tests/use-collaboration.test.ts > useCollaboration > is read-only for a ro session
+tests/use-collaboration.test.ts > useCollaboration > on 4403 forbidden renews the session (read-only now) on the same Y.Doc
+tests/use-collaboration.test.ts > useCollaboration > on 4409 epoch_changed destroys the provider and Y.Doc and reopens on a NEW Y.Doc
+tests/use-collaboration.test.ts > useCollaboration > on 4422 store_refused does not reopen: it reports an error and stays disconnected
+tests/use-collaboration.test.ts > useCollaboration > on epoch_changed lets the host re-read the content once the new Y.Doc is in place
+tests/use-collaboration.test.ts > useCollaboration > on token expiry renews the session and keeps the Y.Doc of the same room
+tests/use-collaboration.test.ts > useCollaboration > sends the supported schema version and opens a newer schema read-only
+tests/use-collaboration.test.ts > useCollaboration > surfaces a session-fetch error
+tests/use-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > a superseded connect() rejects with a cancellation the caller can tell from a failure
+tests/use-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > opens the new room on a NEW Y.Doc and lets the host re-read the content
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > a full queue is an error: the editor is read-only and no further update is queued
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > a nack the client may not repeat is an error and read-only
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > a refused state (4422) is an error status as well
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > dispose() closes the connection and stops queueing
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > does not queue what the provider applied from the hub
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > drops the queue with the document when the generation ends: old updates are never sent to the new one
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > is pending before the provider synced, and a sync alone never gives saved
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > keeps the queue across a token renewal: the new provider gets the same ids
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > sends each local update to the hub in an envelope, and only the ack makes it saved
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > sends the unacknowledged updates again with the same ids when the provider reconnects
+tests/use-collaboration.test.ts > useCollaboration — update envelopes > waits while the hub stops writes and sends when it opens them

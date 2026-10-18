@@ -1,11 +1,5 @@
-import { Doc as YDoc } from 'yjs'
-import type { VaulterClient } from '../api/client'
-import type { CollaborationSession, NodeId } from '../api/types'
-import {
-  openCollaborationTransport,
-  type CollaborationTransportHandle,
-  type CollaborationTransportOptions,
-} from './transport'
+import type { CollaborationSession, NodeId, VaulterClient } from '@vaulter/vue'
+import type { CollaborationTransportOptions } from './transport'
 
 export interface CollaborationOptions {
   /**
@@ -26,11 +20,6 @@ export interface ResolvedCollaborationSession {
   readOnly: boolean
 }
 
-export interface CollaborationSessionHandle extends CollaborationTransportHandle, ResolvedCollaborationSession {
-  /** The Yjs document the editor binds to (bind it with the Collaboration extension). */
-  doc: YDoc
-}
-
 /** Ask the backend for a session (`POST documents/{node}/collaboration/session`) and judge its mode and schema. */
 export async function fetchCollaborationSession(
   client: VaulterClient,
@@ -45,21 +34,4 @@ export async function fetchCollaborationSession(
     && session.schema_version > options.supportedSchemaVersion
 
   return { session, schemaOutdated, readOnly: session.mode !== 'rw' || schemaOutdated }
-}
-
-/**
- * Fetch a session and open the realtime transport over a fresh `Y.Doc` (or the one given).
- * The room's content always comes from the hub: never seed the doc or the editor in
- * collaborative mode — a client-side seed merges into duplicated content.
- */
-export async function createCollaborationSession(
-  client: VaulterClient,
-  nodeId: NodeId,
-  options: CollaborationOptions & { doc?: YDoc } = {},
-): Promise<CollaborationSessionHandle> {
-  const resolved = await fetchCollaborationSession(client, nodeId, options)
-  const doc = options.doc ?? new YDoc()
-  const transport = openCollaborationTransport(resolved.session, { doc, ...options.providers })
-
-  return { ...transport, ...resolved, readOnly: resolved.readOnly, doc }
 }

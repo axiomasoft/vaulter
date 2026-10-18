@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.12",
   "title": "@vaulter/vue-collaboration (envelope, очередь, ack, статусы) и @vaulter/vue без yjs/@hocuspocus",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Новый `packages/vue-collaboration` (`@vaulter/vue-collaboration`): перенос `packages/vue/src/collaboration/{session,transport}.ts` и `composables/useCollaboration.ts`, `src/envelope.ts` (UUID на локальное обновление, ограниченная очередь, ack/nack, resend с теми же id), `src/status.ts` (synchronized/pending/saved/error; sync не даёт saved), `src/adapter.ts` (`createCollaborationAdapter`). `@vaulter/vue`: `src/collaboration-adapter.ts` (типы, injection key, опция плагина), VaulterDocumentNode через адаптер (нет адаптера/404/409 → REST autosave), удалены зависимость `@hocuspocus/provider` и peer `yjs`, экспорты обновлены; arch-тест без collab-импортов; suites/zones/workspaces; baseline vue пересобран.",
   "why": "D15, D1, D26 (клиентская часть протокола 2): `@vaulter/vue` не тянет yjs/@hocuspocus в бандл; saved — только по backend ack. Hard risks: UI показывает saved по sync-сообщению; новый update_id при reconnect (14, дубли); неограниченная очередь; редактор без коллаборации перестаёт сохранять через REST.",
   "scope": {
@@ -140,6 +140,16 @@
       "note": "vue.list, vue-collaboration.list, original/vue-collaboration.*"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/e80cfeafb75716d53f4788544eb24cf8f4ea0274dde4fa7061eee6a4584bdc5d",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/c60b00be8a543205e9eeb7867598bef1a003b37e0409520f9279e98f36c05f6e",
+      "role": "input"
+    }
+  ],
   "rules": [
     "packages/vue/src не импортирует `yjs`, `y-*`, `@hocuspocus/*`; packages/vue/package.json без dependency `@hocuspocus/provider` и peer `yjs`.",
     "Статус saved выставляется только при пустой очереди и полученном ack последнего update_id; sync/synced provider-а даёт максимум synchronized.",
@@ -203,6 +213,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T09:04:32Z"
+  "result": {
+    "started_at": "2026-10-18T06:05:02Z",
+    "finished_at": "2026-10-18T06:05:03Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "79601fd9-c3f2-4ff9-bedc-75c0fc94fad5"
+    },
+    "notes": "Исполнитель sonnet/high заблокирован песочницей (api:generate, package-lock); выполнено наблюдателем на хосте, V1–V6 зелёные",
+    "deviations": [
+      "schema.d.ts и package-lock.json регенерированы вне исполнителя"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-18T06:05:03Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-18T06:05:03Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-18T06:05:03Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-18T06:05:03Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-18T06:05:03Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-18T06:05:03Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-18T06:05:03Z"
 }

@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261018T053438Z-6fa620:P5.12:checks.1:V4",
+  "check_id": "V4",
+  "subject": "PLAN3.P5.12",
+  "candidate": {
+    "head": "f04442a612a1b9c7fc23fb115f47976ae004d163",
+    "dirty_digest": "6f9cb9d63942a4c7b23e01d5f6d375152f3d2a00d445b184b31dcb9f825d2ea3"
+  },
+  "started_at": "2026-10-18T05:55:56Z",
+  "procedure": {
+    "cmd": "! grep -rnE \"from '(yjs|y-[a-z-]+|@hocuspocus/[a-z-]+)'\" packages/vue/src && jq -e '((.dependencies // {}) | has(\"@hocuspocus/provider\") | not) and ((.peerDependencies // {}) | has(\"yjs\") | not)' packages/vue/package.json",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-18T05:55:56Z"
+}

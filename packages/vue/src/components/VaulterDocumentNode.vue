@@ -1,25 +1,26 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { VaulterApiError } from '../api/errors'
 import type { DocumentBody, Node } from '../api/types'
-import { CollaborationCancelledError, useCollaboration } from '../composables/useCollaboration'
+import { VaulterCollaborationKey, type CollaborationHandle } from '../collaboration-adapter'
 import { useDocument } from '../composables/useDocument'
-import type { CollaborationOptions } from '../collaboration/session'
+import { useVaulterClient } from '../composables/useVaulterClient'
 
 // The headless editing shell of a document node (the built-in `vaulter/tiptap` viewer): it
-// loads the head content with its ETag, runs the debounced autosave, and — when the node's
-// presentation says it is collaborative and collaboration is enabled — opens a Yjs session.
-// The EDITOR is the host's: fill the default slot (or register your own viewer under the
-// key), bind `ydoc` to TipTap via the Collaboration extension in collaborative mode, and
-// call `set-content` otherwise.
+// loads the head content with its ETag, runs the debounced autosave, and — when the host installed
+// a collaboration adapter (`@vaulter/vue-collaboration`) and the node's presentation says it is
+// collaborative — opens a realtime session through it. The EDITOR is the host's: fill the default
+// slot (or register your own viewer under the key), bind `ydoc` to TipTap via the Collaboration
+// extension in collaborative mode, and call `set-content` otherwise.
 //
-// In collaborative mode the debounced autosave is bypassed (the hub persists the Yjs state)
-// and the slot gets NO `content`: the hub seeds the room once on the server, and an editor
-// that also set the JSON would duplicate it. When the hub ends the room's generation (a
-// restore), `ydoc` is replaced by a new document — rebind to it — and the content (and its
-// ETag) is re-read. Without collaboration the autosave path is used, but ONLY when the
-// session endpoint answers 409 collaboration_unavailable (the contract for "not offered
-// here"). Any other session failure (network, 429, 5xx) leaves the editor read-only and emits
+// Without an adapter, or when the adapter answers 404 (the route of an inactive module) or
+// 409 collaboration_unavailable, the autosave path runs with the document's `state_version`.
+//
+// In collaborative mode the debounced autosave is bypassed (the hub persists the updates) and the
+// slot gets NO `content`: the hub seeds the room once on the server, and an editor that also set
+// the JSON would duplicate it. When the hub ends the room's generation (a restore), `ydoc` is
+// replaced by a new document — rebind to it — and the content (and its ETag) is re-read. Any
+// other session failure (network, 429, 5xx) leaves the editor read-only and emits
 // `collaboration-failed`: autosaving into a document that has a Yjs state would reset it and
 // throw the other participants out.
 const props = withDefaults(
@@ -29,12 +30,10 @@ const props = withDefaults(
     autoLoad?: boolean
     debounceMs?: number
     /**
-     * Enable realtime collaboration when the node's presentation declares it
-     * (`capabilities.collaborative`). Default true — set false to force the autosave path.
+     * Use realtime collaboration when an adapter is installed and the node's presentation
+     * declares it (`capabilities.collaborative`). Default true — set false to force the autosave path.
      */
     collaboration?: boolean
-    /** Provider factory override for the collaboration session. */
-    collaborationProviders?: CollaborationOptions['providers']
     /**
      * The document schema version the host's editor supports. A collaboration session in a
      * newer schema opens read-only and emits `schema-outdated`.
@@ -46,7 +45,6 @@ const props = withDefaults(
     autoLoad: true,
     debounceMs: 800,
     collaboration: true,
-    collaborationProviders: () => ({}),
     supportedSchemaVersion: undefined,
   },
 )
@@ -71,34 +69,52 @@ const { content, loading, saving, error, conflict, load: loadContent, setContent
   { debounceMs: props.debounceMs },
 )
 
-// The collaboration session is created lazily — only when the node is collaborative AND
-// collaboration is enabled.
-const collab = useCollaboration(props.node.id, {
-  providers: props.collaborationProviders,
-  supportedSchemaVersion: props.supportedSchemaVersion,
-  onEpochChanged: async () => {
-    await loadContent()
-  },
-})
+const client = useVaulterClient()
+const adapter = inject(VaulterCollaborationKey, null)
+
+// The collaboration session is opened lazily — only when an adapter is installed, the node is
+// collaborative AND collaboration is enabled.
+const session = shallowRef<CollaborationHandle | null>(null)
 const collaborative = ref(false)
 
 /** The session could not be opened for a reason that does not make autosave safe. */
 const sessionFailed = ref(false)
 
-/** The documented answer for "realtime editing is not offered here": 409 collaboration_unavailable. */
+// Every load() and the unmount start a new generation: a session answer that belongs to an older
+// one is dropped (its session ended), or it would stay open next to the live one.
+let loadGeneration = 0
+
+/**
+ * The documented answers for "realtime editing is not offered here": 409 collaboration_unavailable,
+ * or 404 (the route of a module that is not active).
+ */
 function collaborationUnavailable(caught: unknown): boolean {
-  return caught instanceof VaulterApiError && caught.status === 409 && caught.code === 'collaboration_unavailable'
+  return caught instanceof VaulterApiError
+    && (caught.status === 404 || (caught.status === 409 && caught.code === 'collaboration_unavailable'))
 }
+
+function endSession(): void {
+  session.value?.end()
+  session.value = null
+}
+
+// Collaborative with no live session (it is being reopened): nothing may be typed meanwhile.
+const sessionReadOnly = computed<boolean>(() =>
+  collaborative.value && (session.value === null || session.value.readOnly.value))
 
 /** Read-only is forced by the prop, the caller's abilities, a failed session, or a read-only session. */
 const isReadonly = computed<boolean>(() =>
   props.readonly
   || !props.node.abilities.edit
   || sessionFailed.value
-  || (collaborative.value && collab.readOnly.value))
+  || sessionReadOnly.value)
+
+const connected = computed<boolean>(() => session.value?.connected?.value ?? false)
+const collaborators = computed(() => session.value?.collaborators?.value ?? [])
+const status = computed(() => session.value?.status.value ?? null)
 
 function onChange(next: DocumentBody): void {
-  // In collaborative mode the Yjs session persists changes (no client autosave); in
+  // In collaborative mode the realtime session persists changes (no client autosave); in
   // read-only mode there is nothing to persist.
   if (isReadonly.value || collaborative.value) {
     return
@@ -117,22 +133,35 @@ async function persist(): Promise<void> {
 }
 
 async function loadAll(): Promise<void> {
+  const mine = ++loadGeneration
   sessionFailed.value = false
+  endSession()
 
-  if (props.collaboration && props.node.presentation?.capabilities.collaborative === true) {
+  if (adapter !== null && props.collaboration && props.node.presentation?.capabilities.collaborative === true) {
     try {
-      await collab.connect()
-      sessionFailed.value = false
-      collaborative.value = true
-      emit('collaborating', collab.readOnly.value)
-      if (collab.schemaOutdated.value && collab.session.value) {
-        emit('schema-outdated', collab.session.value.schema_version)
-      }
-    } catch (caught) {
-      // A newer load() took the connection over: it decides, this one just stops.
-      if (caught instanceof CollaborationCancelledError) {
+      const opened = await adapter.open(props.node.id, {
+        client,
+        supportedSchemaVersion: props.supportedSchemaVersion,
+        onEpochChanged: async () => {
+          await loadContent()
+        },
+      })
+      if (mine !== loadGeneration) {
+        // A newer load() (or the unmount) took over: it decides, this one just stops.
+        opened.end()
         return
       }
+      session.value = opened
+      collaborative.value = true
+      emit('collaborating', opened.readOnly.value)
+      if (opened.schemaOutdated?.value === true && opened.schemaVersion?.value != null) {
+        emit('schema-outdated', opened.schemaVersion.value)
+      }
+    } catch (caught) {
+      if (mine !== loadGeneration) {
+        return
+      }
+
       collaborative.value = false
 
       if (!collaborationUnavailable(caught)) {
@@ -158,7 +187,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  collab.disconnect()
+  loadGeneration += 1
+  endSession()
 })
 
 defineExpose({
@@ -171,8 +201,9 @@ defineExpose({
   conflict,
   collaborative,
   sessionFailed,
-  connected: collab.connected,
-  collaborators: collab.collaborators,
+  connected,
+  collaborators,
+  status,
 })
 </script>
 
@@ -192,9 +223,10 @@ defineExpose({
       :set-content="onChange"
       :flush="persist"
       :collaborative="collaborative"
-      :ydoc="collaborative ? collab.doc.value : null"
-      :connected="collab.connected.value"
-      :collaborators="collab.collaborators.value"
+      :ydoc="collaborative ? session?.doc ?? null : null"
+      :connected="connected"
+      :collaborators="collaborators"
+      :status="status"
       :conflict="conflict"
     >
       <!-- Fallback: no editor was mounted in the slot. -->
