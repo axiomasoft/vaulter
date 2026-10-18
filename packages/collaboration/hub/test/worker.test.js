@@ -335,6 +335,93 @@ test('drain() reports the documents still pending when the deadline passes', asy
   assert.equal(run.remaining[0].markerCleared, false)
 })
 
+/** A lease answer with the backend's report: `total` generations still due, the first of them `named` (document:generation). */
+function reported(body, total, named = []) {
+  return { status: 200, body, headers: { 'X-Vaulter-Collab-Pending': String(total), 'X-Vaulter-Collab-Pending-Documents': named.join(',') } }
+}
+
+test('drain() does not settle on an empty answer while the backend reports a generation another hub holds the lease of', async (t) => {
+  const time = virtualTime()
+  const startedAt = time.clock()
+  // Another hub holds the lease of 42 and publishes its checkpoint after 5 s.
+  const { mock, worker } = await workerFor(t, {
+    'compaction/lease': () => (time.clock() - startedAt >= 5000 ? reported([], 0) : reported([], 1, ['42:3'])),
+  }, { time })
+
+  const run = await worker.drain({ deadlineMs: 60_000 })
+
+  assert.equal(run.drained, true)
+  assert.ok(time.clock() - startedAt >= 5000, `settled after ${time.clock() - startedAt} ms`)
+  assert.ok(leaseCalls(mock).every((call) => call.body.report === true), 'every lease call of the drain asks for the report')
+})
+
+test('drain() names what the backend still reports due at the deadline, and counts what it did not name', async (t) => {
+  const { worker } = await workerFor(t, { 'compaction/lease': () => reported([], 3, ['42:3']) })
+
+  const run = await worker.drain({ deadlineMs: 5000 })
+
+  assert.equal(run.drained, false)
+  assert.deepEqual(run.remaining, [{ document: '42', generation: 3, outcome: OUTCOME.NOT_LEASED }])
+  assert.equal(run.unnamed, 2)
+})
+
+test('drain() settles a publication whose answer was lost by the report: the retry\'s 409 (the lease is spent) leaves nothing due', async (t) => {
+  const { mock, worker } = await workerFor(t, {
+    // The report is taken with the lease, before the publication.
+    'compaction/lease': (call, n) => (n === 1 ? reported([leaseEntry('42')], 1, ['42:3']) : reported([], 0)),
+    // The first publication commits, its answer never arrives; the retry finds the lease spent.
+    checkpoint: (call, n) => (n === 1 ? { hang: true } : problem(409, CHECKPOINT_CONFLICT)),
+  }, { conf: { webhookTimeoutMs: 200 } })
+
+  const run = await worker.drain({ deadlineMs: 60_000 })
+
+  assert.equal(checkpoints(mock).length, 2)
+  assert.equal(run.drained, true, 'not kept pending until the deadline')
+  assert.deepEqual(run.remaining, [])
+  assert.equal(leaseCalls(mock).length, 2)
+})
+
+test('drain() takes what its pass cleared off the report taken with the lease: no second lease call is needed', async (t) => {
+  const { mock, worker } = await workerFor(t, { 'compaction/lease': () => reported([leaseEntry('42')], 1, ['42:3']), checkpoint: published(true) })
+
+  const run = await worker.drain({ deadlineMs: 60_000 })
+
+  assert.equal(run.drained, true)
+  assert.equal(run.published, 1)
+  assert.equal(leaseCalls(mock).length, 1)
+})
+
+test('the deadline bounds the lease call: a backend that does not answer is given up at the deadline', async (t) => {
+  const { worker } = await workerFor(t, { 'compaction/lease': () => ({ hang: true }) })
+  const startedAt = Date.now()
+
+  const run = await worker.drain({ deadlineMs: 300 })
+
+  assert.equal(run.drained, false)
+  assert.ok(Date.now() - startedAt < 1500, `gave up after ${Date.now() - startedAt} ms, not after the 2 s attempt timeout`)
+  assert.match(String(run.failure.error?.message), /timed out after 300 ms/)
+})
+
+test('the deadline stops the publications of a pass: what it cuts short is not published, and named', async (t) => {
+  const time = virtualTime()
+  const { mock, worker } = await workerFor(t, {
+    'compaction/lease': () => reported([leaseEntry('first'), leaseEntry('second')], 2, ['first:3', 'second:3']),
+    // A slow publication: it ends past the deadline.
+    checkpoint: () => {
+      time.advance(2000)
+
+      return published(true)()
+    },
+  }, { time })
+
+  const run = await worker.drain({ deadlineMs: 1000 })
+
+  assert.deepEqual(checkpoints(mock).map((call) => call.body.document), ['first'], 'nothing is published after the deadline')
+  assert.equal(run.drained, false)
+  assert.deepEqual(run.remaining.map(({ document, outcome }) => ({ document, outcome })), [{ document: 'second', outcome: OUTCOME.DEADLINE }])
+  assert.equal(run.unnamed, 0)
+})
+
 test('the compaction interval and batch come from the hub config, and the one-shot needs the webhook secret', () => {
   const defaults = buildConfig({ NODE_ENV: 'test' })
 

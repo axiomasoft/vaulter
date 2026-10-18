@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
+use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
+use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -12,7 +15,8 @@ use Vaulter\Drive\Models\Node;
 
 /*
  * Scenario 17: the append refuses what it cannot take before it allocates or writes — a body above
- * limits.request_bytes by its Content-Length (ahead of the signature check), a payload above limits.update_bytes by its
+ * limits.request_bytes by its Content-Length (ahead of the signature check; a declared seed carries a whole state, and a
+ * body that turns out no seed is held to request_bytes once read), a payload above limits.update_bytes by its
  * base64 length, a malformed envelope, another protocol version — and a subject who cannot see the document gets the
  * same 404 as a document that does not exist.
  */
@@ -22,6 +26,22 @@ function validRows(): int
     return DB::table(app(DatabaseConfig::class)->table('collaboration_updates'))->count()
         + DB::table(app(DatabaseConfig::class)->table('collaboration_receipts'))->count()
         + DB::table(app(DatabaseConfig::class)->table('collaboration_heads'))->count();
+}
+
+/**
+ * An append that declares the seed of an empty log (X-Vaulter-Collab-Seed: 1), signed like every hub call.
+ *
+ * @param array<string, mixed> $body
+ */
+function seedCall(array $body, string $token): TestResponse
+{
+    $body['nonce'] = bin2hex(random_bytes(8));
+
+    return test()->postJson(Docs::url('collaboration/hub/append'), $body, [
+        ...Hub::headers($body, $token),
+        HubProtocol::HEADER => '2',
+        LimitHubAppend::SEED_HEADER => '1',
+    ]);
 }
 
 /** @return array<string, mixed> a problem body without its per-request id */
@@ -78,6 +98,31 @@ it('bounds a seed by max_state_bytes, not limits.update_bytes: it carries the wh
     Hub::callV2('append', Hub::appendBody($this->node, str_repeat('a', 31)), Hub::token($this->node))
         ->assertStatus(413)
         ->assertJsonPath('code', 'collaboration_update_too_large');
+});
+
+it('lets a declared seed of a whole state through the request gate, and holds a body that is no seed to limits.request_bytes', function (): void {
+    config()->set('vaulter-collaboration.limits.request_bytes', 1024);
+    config()->set('vaulter-collaboration.max_state_bytes', 4096);
+    $token = Hub::token($this->node);
+    // 2048 bytes of state: its base64 alone is past request_bytes.
+    $seed = Hub::seedBody($this->node, str_repeat('s', 2048));
+
+    Hub::callV2('append', $seed, $token)
+        ->assertStatus(413)
+        ->assertJsonPath('code', 'collaboration_update_too_large')
+        ->assertJsonPath('meta.context.max_bytes', 1024);
+    expect(validRows())->toBe(0);
+
+    seedCall($seed, $token)
+        ->assertOk()
+        ->assertJsonPath('seq', 1);
+
+    // An update that declares a seed it is not passes the gate, and is refused once its body is read.
+    seedCall(Hub::appendBody($this->node, str_repeat('a', 2048)), $token)
+        ->assertStatus(413)
+        ->assertJsonPath('code', 'collaboration_update_too_large')
+        ->assertJsonPath('meta.context.max_bytes', 1024);
+    expect(Compaction::seqs($this->node))->toBe([1]);
 });
 
 it('refuses a malformed envelope with 422 and writes nothing', function (string $field, mixed $value): void {

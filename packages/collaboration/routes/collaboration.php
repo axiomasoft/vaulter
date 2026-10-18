@@ -50,10 +50,11 @@ Route::prefix($routes->versionedPrefix())
         Route::post('collaboration/hub/renew', HubRenewController::class)->name('collaboration.hub.renew');
     });
 
-// Protocol 2 append: the body size is checked by its Content-Length before the signature check reads the body.
+// Protocol 2 append: the body size is checked by its Content-Length before the signature check reads the body (a seed
+// may carry a whole state).
 Route::prefix($routes->versionedPrefix())
     ->name('vaulter.v1.')
-    ->middleware([...$routes->hubMiddleware(), 'throttle:vaulter-public', LimitHubAppend::class, ResolveCollaborationCall::class])
+    ->middleware([...$routes->hubMiddleware(), 'throttle:vaulter-public', LimitHubAppend::class.':'.LimitHubAppend::APPEND, ResolveCollaborationCall::class])
     ->group(static function (): void {
         Route::post('collaboration/hub/append', HubAppendController::class)->name('collaboration.hub.append');
     });

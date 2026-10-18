@@ -13,11 +13,12 @@ import { createWorker } from './worker.js'
 //                                       (src/worker.js) until a lease call hands out nothing, or the
 //                                       deadline (default 60 s) passes
 //
-// Exit codes of `compact --pending`: 0 — the backend has no generation left to lease (every
-// pending one this run saw was checkpointed); 1 — the deadline passed first: the documents still
-// pending are listed on stderr (document id, generation, last outcome) and the command can be
-// repeated; 2 — a usage or configuration error, nothing was asked of the backend. The backend
-// leases a pending generation once its log reached a compaction trigger or a drain was requested
+// Exit codes of `compact --pending`: 0 — the backend reports no generation left due for
+// compaction, whichever hub holds its lease (every pending one this run saw was checkpointed); 1 —
+// the deadline passed first: the documents still pending are listed on stderr (document id,
+// generation, last outcome; how many more the backend counted) and the command can be repeated;
+// 2 — a usage or configuration error, nothing was asked of the backend. The backend leases a
+// pending generation once its log reached a compaction trigger or a drain was requested
 // (vaulter:collaboration:drain asks for every pending one).
 
 export const DEFAULT_DEADLINE_SECONDS = 60
@@ -126,10 +127,13 @@ export async function compactPending({ deadlineSeconds, conf = config, out, err,
   for (const outcome of run.remaining) {
     err(`  pending: ${line(outcome)}`)
   }
+  if (run.unnamed > 0) {
+    err(`  … and ${run.unnamed} more generation(s) the backend still counts as due`)
+  }
   if (run.failure) {
     err(`  the last lease call failed: ${run.failure.error ? `no answer (${run.failure.error.message ?? run.failure.error})` : `${run.failure.status}${run.failure.code ? ` ${run.failure.code}` : ''}`}`)
   }
-  if (run.remaining.length === 0 && !run.failure) {
+  if (run.remaining.length === 0 && !(run.unnamed > 0) && !run.failure) {
     err('  (the backend kept handing out generations until the deadline)')
   }
 

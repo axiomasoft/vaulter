@@ -191,6 +191,35 @@ it('never reads the body to measure it', function (?string $length, bool $passes
     'within the limit' => ['1000', true],
 ]);
 
+it('sizes the append gate by the checkpoint limit for a declared seed, still without reading the body', function (?string $seed, ?string $parameter, bool $passes): void {
+    config()->set('vaulter-collaboration.limits.request_bytes', 1000);
+    // A base64 state of 3000 bytes and request_bytes on top: 5000.
+    config()->set('vaulter-collaboration.max_state_bytes', 3000);
+    $request = CountingBodyRequest::create('/append', 'POST', [], [], [], ['CONTENT_TYPE' => 'application/json'], str_repeat('x', 4000));
+    $request->headers->set('Content-Length', '4000');
+    if ($seed !== null) {
+        $request->headers->set(LimitHubAppend::SEED_HEADER, $seed);
+    }
+
+    $reached = false;
+    $gate = static function () use ($request, $parameter, &$reached): Response {
+        return app(LimitHubAppend::class)->handle($request, static function () use (&$reached): Response {
+            $reached = true;
+
+            return new Response;
+        }, $parameter);
+    };
+
+    $passes ? $gate() : expect($gate)->toThrow(CollaborationUpdateTooLargeException::class);
+    expect($reached)->toBe($passes)
+        ->and($request->reads)->toBe(0);
+})->with([
+    'a declared seed' => ['1', LimitHubAppend::APPEND, true],
+    'no seed header' => [null, LimitHubAppend::APPEND, false],
+    'another header value' => ['true', LimitHubAppend::APPEND, false],
+    'a route without seeds' => ['1', null, false],
+]);
+
 /** A request that counts the reads of its body. */
 final class CountingBodyRequest extends Request
 {

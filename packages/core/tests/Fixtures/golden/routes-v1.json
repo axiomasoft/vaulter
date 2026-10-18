@@ -101,7 +101,7 @@
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
             "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
             "throttle:vaulter-public",
-            "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend",
+            "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend:append",
             "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
         ]
     },

@@ -104,9 +104,10 @@ export function testConf(overrides = {}) {
 /**
  * A room loaded from a checkpoint ("checkpoint" in its text) behind a mock backend whose append
  * commits every update (seq after the checkpoint's) unless `handlers` say otherwise; the fake
- * Hocuspocus instance lists `connections` as the room's connections.
+ * Hocuspocus instance lists `connections` as the room's connections and, with `direct`, opens
+ * direct connections on the room (`directs`, each counting its `closes`).
  */
-export async function loadedRoom(t, { handlers = {}, conf = {}, time = virtualTime(), options = {} } = {}) {
+export async function loadedRoom(t, { handlers = {}, conf = {}, time = virtualTime(), options = {}, direct = false } = {}) {
   const base = new Y.Doc()
   base.getText('t').insert(0, 'checkpoint')
   const checkpoint = Buffer.from(Y.encodeStateAsUpdate(base)).toString('base64')
@@ -131,6 +132,16 @@ export async function loadedRoom(t, { handlers = {}, conf = {}, time = virtualTi
   })
   const document = new Y.Doc()
   t.after(() => document.destroy())
+  const directs = []
+
+  if (direct) {
+    instance.openDirectConnection = async () => {
+      const connection = { document, closes: 0, async disconnect() { this.closes++ } }
+      directs.push(connection)
+
+      return connection
+    }
+  }
 
   await persistence.onLoadDocument({ documentName: ROOM, document, context: writerContext(), instance })
 
@@ -148,5 +159,5 @@ export async function loadedRoom(t, { handlers = {}, conf = {}, time = virtualTi
     await persistence.onStateless({ connection, documentName: ROOM, document, payload: JSON.stringify(message), instance })
   }
 
-  return { mock, persistence, document, instance, connections, connect, sendEnvelope, time, checkpoint }
+  return { mock, persistence, document, instance, connections, directs, connect, sendEnvelope, time, checkpoint }
 }

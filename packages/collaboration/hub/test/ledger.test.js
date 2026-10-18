@@ -211,6 +211,50 @@ for (const [status, code, type, retry] of [
   })
 }
 
+test('a record refused for good takes the later records of its generation with it: they may build on it', async (t) => {
+  const refused = record()
+  const mock = await startMockBackend({ append: (call, n) => (call.body.update_id === refused.updateId ? problem(422, 'collaboration_update_mismatch') : receipt(call.body, n)) })
+  t.after(() => mock.close())
+  const { ledger, seen } = ledgerFor(mock)
+
+  // Queued while the refused one is in flight: the room already holds it.
+  const first = ledger.enqueue(refused)
+  const dependent = ledger.enqueue(record())
+  const server = ledger.enqueue(record({ origin: 'server' }))
+  const otherGeneration = ledger.enqueue(record({ generation: 1 }))
+  const otherDocument = ledger.enqueue(record({ documentName: 'vaulter.documents.1.43.0' }))
+  await ledger.flush()
+
+  assert.deepEqual(await first.settled, { status: 'dropped', code: 'collaboration_update_mismatch', retry: false, httpStatus: 422 })
+  for (const entry of [dependent, server]) {
+    assert.deepEqual(await entry.settled, { status: 'dropped', code: backend.EPOCH_MISMATCH, retry: false, httpStatus: null })
+  }
+  assert.deepEqual(seen.dropped.map(([entry, failure]) => [entry.updateId, failure.code, failure.retry]), [
+    [refused.updateId, 'collaboration_update_mismatch', false],
+    [dependent.updateId, backend.EPOCH_MISMATCH, false],
+    [server.updateId, backend.EPOCH_MISMATCH, false],
+  ], 'the refused one first: its handler closes the room before the others are nacked')
+  assert.deepEqual(new Set(mock.appends().map((call) => call.body.update_id)), new Set([refused.updateId, otherGeneration.updateId, otherDocument.updateId]), 'never sent without it')
+  assert.equal((await otherGeneration.settled).status, 'acked')
+  assert.equal((await otherDocument.settled).status, 'acked')
+  assert.equal(ledger.pendingCount(), 0)
+  assert.equal(ledger.stats().dropped, 3)
+})
+
+test('a refusal the client repeats (401, retry:true) keeps the later records: the update comes again', async (t) => {
+  const refused = record()
+  const mock = await startMockBackend({ append: (call, n) => (call.body.update_id === refused.updateId ? problem(401, 'unauthenticated') : receipt(call.body, n)) })
+  t.after(() => mock.close())
+  const { ledger, seen } = ledgerFor(mock)
+
+  ledger.enqueue(refused)
+  const later = ledger.enqueue(record())
+  await ledger.flush()
+
+  assert.equal((await later.settled).status, 'acked')
+  assert.deepEqual(seen.dropped.map(([entry]) => entry.updateId), [refused.updateId])
+})
+
 test('a server record refused for its credentials is kept: the next cycle tries a fresh token', async (t) => {
   const tokens = []
   const mock = await startMockBackend({ append: (call) => {

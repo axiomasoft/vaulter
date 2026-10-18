@@ -127,6 +127,55 @@ for (const [status, code] of [[422, 'collaboration_update_mismatch'], [413, 'col
   })
 }
 
+test('an update queued while the refused one was in flight goes with it: nacked, never appended without it', async (t) => {
+  let release
+  const gate = new Promise((resolve) => { release = resolve })
+  const room = await loadedRoom(t, { handlers: { append: async () => { await gate; return problem(422, 'collaboration_update_mismatch') } } })
+  const writer = await room.connect()
+  const refused = envelope(clientUpdate(room.document, 'refused '))
+
+  await room.sendEnvelope(writer, refused)
+  await eventually(() => room.mock.appends().length === 1, 'the refused append in flight')
+  // Built on it: the room holds the refused update already.
+  const dependent = envelope(clientUpdate(room.document, 'built on it '))
+  await room.sendEnvelope(writer, dependent)
+  release()
+  await room.persistence.ledger.flush()
+
+  assert.equal(room.mock.appends().length, 1, 'the later update is never appended without the refused one')
+  assert.deepEqual(writer.of('nack'), [
+    { t: 'nack', id: refused.id, code: 'collaboration_update_mismatch', retry: false },
+    { t: 'nack', id: dependent.id, code: EPOCH_MISMATCH, retry: false },
+  ])
+  assert.deepEqual(writer.closed, [EPOCH_CHANGED])
+  assert.equal(room.persistence.isFenced(ROOM), true)
+  assert.equal(room.persistence.ledger.pendingCount(ROOM), 0)
+})
+
+test('a diverged room closes its direct connections too, and refuses a new one until Hocuspocus unloaded it', async (t) => {
+  const room = await loadedRoom(t, { handlers: { append: () => problem(422, 'collaboration_update_mismatch') }, direct: true })
+  const writer = await room.connect()
+  // A direct connection held open would keep the room loaded, and fenced, for good.
+  const held = await room.instance.openDirectConnection(ROOM, {})
+
+  await room.sendEnvelope(writer, envelope(clientUpdate(room.document, 'refused')))
+  await room.persistence.ledger.flush()
+  await eventually(() => room.directs[0].closes === 1, 'the direct connection to close')
+
+  assert.deepEqual(writer.closed, [EPOCH_CHANGED])
+  await held.disconnect()
+  assert.equal(room.directs[0].closes, 1, 'closed once, whoever closes it again')
+
+  // One opened while the room is still loaded and fenced is closed at once and refused.
+  await assert.rejects(room.instance.openDirectConnection(ROOM, {}), (error) => error.code === EPOCH_MISMATCH)
+  assert.equal(room.directs[1].closes, 1)
+
+  // With nothing left to hold it, Hocuspocus unloads the room: the fence lifts.
+  await room.persistence.afterUnloadDocument({ documentName: ROOM })
+  assert.equal(room.persistence.isFenced(ROOM), false)
+  assert.equal((await room.instance.openDirectConnection(ROOM, {})).closes, 0)
+})
+
 test('a 403 nacks retry:false, closes the writer\'s connection with 4403 and the rest of the room with 4409', async (t) => {
   const room = await loadedRoom(t, { handlers: { append: () => problem(403, 'permission_denied') } })
   const writer = await room.connect()

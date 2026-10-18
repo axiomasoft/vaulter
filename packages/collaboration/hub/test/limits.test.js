@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 import { readFileSync } from 'node:fs'
-import { append, publishCheckpoint } from '../src/backend.js'
+import { append, publishCheckpoint, SEED_HEADER } from '../src/backend.js'
 import { buildConfig, validateConfig } from '../src/config.js'
 import {
   appendRequestBytes,
@@ -57,6 +57,10 @@ test('the size arithmetic works from lengths alone', () => {
   assert.equal(requestLimit('append', {}), LIMIT_DEFAULTS.maxRequestBytes)
   assert.equal(requestLimit('checkpoint', {}), base64Length(LIMIT_DEFAULTS.maxDocumentBytes) + LIMIT_DEFAULTS.maxRequestBytes)
   assert.equal(requestLimit('append', { maxRequestBytes: 10 }), 10)
+  // A seed carries the document's whole initial state, as a checkpoint does.
+  assert.equal(requestLimit('append', {}, { seed: true }), requestLimit('checkpoint', {}))
+  assert.equal(requestLimit('append', { maxRequestBytes: 10, maxDocumentBytes: 30 }, { seed: true }), 40 + 10)
+  assert.equal(requestLimit('compaction/lease', {}, { seed: true }), LIMIT_DEFAULTS.maxRequestBytes, 'only an append is a seed')
 })
 
 test('a message header is read without decoding the message', () => {
@@ -228,6 +232,32 @@ test('a backend request above MAX_REQUEST_BYTES is never sent; it is answered 41
   assert.equal(calls.length, 2)
 })
 
+test('the seed of an empty log may carry a whole state: it is sized as a checkpoint and says so to the backend\'s gate', async () => {
+  const calls = []
+  const fetchImpl = async (url, init) => {
+    calls.push(init)
+
+    return { ok: true, status: 200, headers: { get: () => null }, json: async () => ({ generation: 0, update_id: '6f9619ff-8b86-4011-b42d-00c04fc964ff', seq: 1, persisted: true }) }
+  }
+  const config = { webhookBase: 'http://laravel/api/vaulter/v1', webhookSecret: 's', webhookTimeoutMs: 0, maxRequestBytes: 2000, maxDocumentBytes: 3000 }
+  const update = { token: 't', room: ROOM, generation: 0, updateId: '6f9619ff-8b86-4011-b42d-00c04fc964ff', sha256: 'ab'.repeat(32) }
+  // Past MAX_REQUEST_BYTES, within a base64 state of MAX_DOCUMENT_BYTES on top of it.
+  const state = 'A'.repeat(base64Length(3000))
+
+  assert.equal((await append({ ...update, payload: state }, { config, fetchImpl })).status, 413, 'an update is not a seed')
+  assert.equal(calls.length, 0)
+
+  assert.equal((await append({ ...update, payload: state, seedStateVersion: 4 }, { config, fetchImpl })).ok, true)
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].headers[SEED_HEADER], '1')
+  assert.equal(JSON.parse(calls[0].body).seed_state_version, 4)
+  assert.equal((await append({ ...update, payload: `${state}${'A'.repeat(2000)}`, seedStateVersion: 4 }, { config, fetchImpl })).status, 413)
+  assert.equal(calls.length, 1)
+
+  await append({ ...update, payload: 'AAAA' }, { config, fetchImpl })
+  assert.equal(calls[1].headers[SEED_HEADER], undefined, 'only a seed says it is one')
+})
+
 // ── rooms and hooks (Yjs, Hocuspocus) ───────────────────────────────────────────────────────
 
 async function support() {
@@ -370,6 +400,66 @@ test('a repeated sync step 2 of what the room holds does not mark it full: only 
   other.getText('t').insert(0, 'y'.repeat(250))
   await room.persistence.beforeHandleMessage({ connection: writer, update: syncMessage(Y.encodeStateAsUpdate(other)), documentName: ROOM })
   other.destroy()
+
+  assert.equal(room.persistence.isFull(ROOM), true)
+  assert.equal(writer.readOnly, true)
+})
+
+test('a repeated sync step 2 counts none of the deletions the room applied already, and those it has not still count', async (t) => {
+  const { loadedRoom } = await support()
+  const Y = await import('yjs')
+
+  /** The state of a client of `base` that wrote 2000 characters and deleted every other one: a delete set of 1000 ranges. */
+  function fragmented(base) {
+    const client = new Y.Doc()
+    client.clientID = 7
+    Y.applyUpdate(client, Y.encodeStateAsUpdate(base))
+    client.transact(() => {
+      client.getText('t').insert(0, 'x'.repeat(2000))
+      for (let index = 0; index < 1000; index++) {
+        client.getText('t').delete(index, 1)
+      }
+    })
+    const state = Y.encodeStateAsUpdate(client)
+    client.destroy()
+
+    return state
+  }
+
+  // Measured on a twin of the room: the state, and the delete set a diff of it keeps whole.
+  const twin = new Y.Doc()
+  twin.getText('t').insert(0, 'checkpoint')
+  Y.applyUpdate(twin, fragmented(twin))
+  const held = Y.encodeStateAsUpdate(twin).length
+  const deletions = Y.diffUpdate(Y.encodeStateAsUpdate(twin), Y.encodeStateVector(twin)).length
+  twin.destroy()
+  assert.ok(deletions > 2000, `a delete set of ${deletions} bytes`)
+
+  // The limit leaves room for a quarter of that delete set again, not for all of it.
+  const room = await loadedRoom(t, { conf: { maxDocumentBytes: held + Math.floor(deletions / 4), maxUpdateBytes: held } })
+  const writer = await room.connect()
+  Y.applyUpdate(room.document, fragmented(room.document), { source: 'connection' })
+
+  await room.persistence.beforeHandleMessage({ connection: writer, update: syncMessage(Y.encodeStateAsUpdate(room.document)), documentName: ROOM })
+
+  assert.equal(room.persistence.isFull(ROOM), false, 'every deletion it carries is applied already')
+  assert.equal(writer.readOnly, false)
+  assert.equal(room.persistence.limits.rejections().document_bytes, 0)
+
+  // A client that deleted every other of the thousand characters left sends its state back: its delete set holds 500
+  // ranges of three characters, of which the room has applied two each — 500 single deletions it has not (about half of
+  // the first delete set, past the quarter the limit leaves).
+  const client = new Y.Doc()
+  Y.applyUpdate(client, Y.encodeStateAsUpdate(room.document))
+  client.transact(() => {
+    for (let index = 0; index < 500; index++) {
+      client.getText('t').delete(index, 1)
+    }
+  })
+  const deletedMore = Y.encodeStateAsUpdate(client)
+  client.destroy()
+
+  await room.persistence.beforeHandleMessage({ connection: writer, update: syncMessage(deletedMore), documentName: ROOM })
 
   assert.equal(room.persistence.isFull(ROOM), true)
   assert.equal(writer.readOnly, true)

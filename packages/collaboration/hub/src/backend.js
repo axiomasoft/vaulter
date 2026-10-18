@@ -28,12 +28,16 @@ import { parseRetryAfter } from './retry.js'
 // driven by the pending ledger. Tokens never appear in errors or logs. fetch and config are
 // injectable for tests.
 //
-// A body above MAX_REQUEST_BYTES (a checkpoint: the base64 state of MAX_DOCUMENT_BYTES on top) is
-// never sent: the call is answered here with the 413 collaboration_update_too_large the backend's
-// size gate would give.
+// A body above MAX_REQUEST_BYTES (a checkpoint, and the seed of an empty log: the base64 state of
+// MAX_DOCUMENT_BYTES on top) is never sent: the call is answered here with the 413
+// collaboration_update_too_large the backend's size gate would give. A seed says so in its
+// X-Vaulter-Collab-Seed header, which the gate sizes it by before the body is read.
 
 export const PROTOCOL_HEADER = 'X-Vaulter-Collab-Protocol'
 export const PROTOCOL_VERSION = '2'
+
+/** Marks the append of a seed: the backend's size gate takes a whole state for it. */
+export const SEED_HEADER = 'X-Vaulter-Collab-Seed'
 
 /** Problem codes the hub acts on. */
 export const EPOCH_MISMATCH = 'collaboration_epoch_mismatch'
@@ -66,7 +70,7 @@ function signRawBody(rawBody, secret) {
   return { timestamp, signature }
 }
 
-function headersFor({ token, signed }) {
+function headersFor({ token, signed, seed }) {
   const headers = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -75,6 +79,10 @@ function headersFor({ token, signed }) {
 
   if (typeof token === 'string' && token !== '') {
     headers.Authorization = `Bearer ${token}`
+  }
+
+  if (seed) {
+    headers[SEED_HEADER] = '1'
   }
 
   if (signed) {
@@ -119,11 +127,12 @@ async function bodyOf(response, signal) {
 
 /**
  * ONE call: `{ ok, status, headers, body }` once the whole answer arrived — the timeout covers the
- * body as well as the headers. Throws when there is no answer (network error, timeout).
+ * body as well as the headers. `seed` marks the append of a seed. Throws when there is no answer
+ * (network error, timeout).
  */
-async function post(endpoint, payload, token, { config = defaultConfig, fetchImpl = globalThis.fetch, timeoutMs } = {}) {
+async function post(endpoint, payload, token, { config = defaultConfig, fetchImpl = globalThis.fetch, timeoutMs } = {}, { seed = false } = {}) {
   const rawBody = JSON.stringify({ ...payload, nonce: crypto.randomUUID() })
-  const maxBytes = requestLimit(endpoint, config)
+  const maxBytes = requestLimit(endpoint, config, { seed })
 
   if (Buffer.byteLength(rawBody) > maxBytes) {
     return { ok: false, status: 413, headers: null, body: { code: UPDATE_TOO_LARGE, max_bytes: maxBytes } }
@@ -136,7 +145,7 @@ async function post(endpoint, payload, token, { config = defaultConfig, fetchImp
   try {
     const response = await fetchImpl(`${config.webhookBase}/collaboration/hub/${endpoint}`, {
       method: 'POST',
-      headers: headersFor({ token, signed: signRawBody(rawBody, config.webhookSecret) }),
+      headers: headersFor({ token, signed: signRawBody(rawBody, config.webhookSecret), seed }),
       body: rawBody,
       signal: controller.signal,
     })
@@ -215,7 +224,8 @@ export async function load({ token, room }, options = {}) {
 
 /**
  * ONE append attempt of an update: POST {room, generation, update_id, sha256, payload, origin}
- * (+ seed_state_version for the seed of an empty log). Resolves the answer:
+ * (+ seed_state_version and the seed header for the seed of an empty log, which may carry a whole
+ * state). Resolves the answer:
  *   - `{ ok: true, status, ack: {generation, update_id, seq, sha256, persisted} }` after the commit;
  *   - `{ ok: false, status, code, retryAfterMs }` for any other status.
  * Throws when there is no answer (network error, `timeoutMs` elapsed) — src/retry.js reads that
@@ -223,12 +233,13 @@ export async function load({ token, room }, options = {}) {
  */
 export async function append({ token, room, generation, updateId, sha256, payload, origin = 'client', seedStateVersion }, options = {}) {
   const body = { room, generation, update_id: updateId, sha256, payload, origin }
+  const seed = Number.isInteger(seedStateVersion)
 
-  if (Number.isInteger(seedStateVersion)) {
+  if (seed) {
     body.seed_state_version = seedStateVersion
   }
 
-  const response = await post('append', body, token, options)
+  const response = await post('append', body, token, options, { seed })
 
   if (response.ok) {
     const ack = response.body
@@ -255,17 +266,19 @@ function refusal(response) {
 }
 
 /**
- * ONE compaction lease call of the hub's worker: POST {hub_id, max}, signed, without a room
- * token. Resolves:
- *   - `{ ok: true, status, entries, serverTime }` — the generations leased to this hub, drain
- *     requests first, each `{document, generation, lease_token, lease_expires_at, checkpoint_seq,
- *     head_seq, checkpoint_version, type, schema_version, checkpoint, content, tail}`; `serverTime`
- *     is the answer's Date (ms, null without one), which the worker measures the leases against;
+ * ONE compaction lease call of the hub's worker: POST {hub_id, max} (+ report: true), signed,
+ * without a room token. Resolves:
+ *   - `{ ok: true, status, entries, serverTime, pending }` — the generations leased to this hub,
+ *     drain requests first, each `{document, generation, lease_token, lease_expires_at,
+ *     checkpoint_seq, head_seq, checkpoint_version, type, schema_version, checkpoint, content,
+ *     tail}`; `serverTime` is the answer's Date (ms, null without one), which the worker measures
+ *     the leases against; with `report`, `pending` is what the backend reports still due for
+ *     compaction (see pendingReport; null when the answer carries no report);
  *   - `{ ok: false, status, code, retryAfterMs }` for any other answer.
  * Throws when there is no answer (network error, timeout).
  */
-export async function leaseCompaction({ hubId, max }, options = {}) {
-  const response = await post('compaction/lease', { hub_id: hubId, max }, null, options)
+export async function leaseCompaction({ hubId, max, report = false }, options = {}) {
+  const response = await post('compaction/lease', { hub_id: hubId, max, ...(report ? { report: true } : {}) }, null, options)
 
   if (!response.ok) {
     return refusal(response)
@@ -279,7 +292,37 @@ export async function leaseCompaction({ hubId, max }, options = {}) {
 
   const date = Date.parse(header(response, 'Date') ?? '')
 
-  return { ok: true, status: response.status, entries, serverTime: Number.isNaN(date) ? null : date }
+  return { ok: true, status: response.status, entries, serverTime: Number.isNaN(date) ? null : date, ...(report ? { pending: pendingReport(response) } : {}) }
+}
+
+/** The headers of a lease answer that report what is still due for compaction. */
+export const PENDING_HEADER = 'X-Vaulter-Collab-Pending'
+export const PENDING_DOCUMENTS_HEADER = 'X-Vaulter-Collab-Pending-Documents'
+
+/**
+ * The backend's report in a lease answer, taken after its leases were granted: `{ total,
+ * generations: [{document, generation}] }` — how many generations are still due for compaction
+ * (their document carries the pending marker; asked to drain or past a trigger), whichever hub
+ * holds their lease, and the first of them by document. Null when the answer carries none.
+ */
+function pendingReport(response) {
+  const total = header(response, PENDING_HEADER)
+
+  if (typeof total !== 'string' || !/^\d+$/.test(total.trim())) {
+    return null
+  }
+
+  const generations = String(header(response, PENDING_DOCUMENTS_HEADER) ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => /^[^:]+:\d+$/.test(item))
+    .map((item) => {
+      const [document, generation] = item.split(':')
+
+      return { document, generation: Number.parseInt(generation, 10) }
+    })
+
+  return { total: Number.parseInt(total.trim(), 10), generations }
 }
 
 /**

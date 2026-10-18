@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Collaboration\Http\Controllers\Collaboration\HubCompactionLeaseController;
 use Vaulter\Collaboration\Persistence\CompactionLeases;
 use Vaulter\Collaboration\Persistence\LogTables;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
@@ -227,6 +228,38 @@ it('answers the worker over HTTP with the leases, signed but without a room toke
         ->and(Compaction::head($this->node)?->leaseOwner)->toBe('hub-http');
 });
 
+it('reports what is still due for compaction whichever hub holds its lease, until a checkpoint clears its marker', function (): void {
+    config()->set('vaulter-collaboration.compaction.trigger_updates', 2);
+    $id = (string) $this->node->getKey();
+    $quiet = Hub::document();
+    // Without report the answer is the list alone.
+    Hub::callV2('compaction/lease', ['hub_id' => 'hub-b', 'max' => 5], token: null)
+        ->assertOk()
+        ->assertHeaderMissing(HubCompactionLeaseController::PENDING_HEADER);
+
+    Compaction::append($this->node, 'u1');
+    Compaction::append($this->node, 'u2');
+    // Pending below every trigger: not due, not counted.
+    Compaction::append($quiet, 'q1');
+    $lease = Compaction::leaseOf($this->node, 'hub-a');
+
+    // Another hub's lease hides it from the lease answer, not from the report.
+    $response = Hub::callV2('compaction/lease', ['hub_id' => 'hub-b', 'max' => 5, 'report' => true], token: null)
+        ->assertOk()
+        ->assertHeader(HubCompactionLeaseController::PENDING_HEADER, '1')
+        ->assertHeader(HubCompactionLeaseController::PENDING_DOCUMENTS_HEADER, $id.':0');
+    expect($response->json())->toBe([]);
+
+    expect(requestDrain($quiet))->toBeTrue();
+    $both = app(CompactionLeases::class)->pending();
+    expect($both['total'])->toBe(2)
+        ->and(array_column($both['generations'], 'document'))->toEqualCanonicalizing([$id, (string) $quiet->getKey()])
+        ->and(app(CompactionLeases::class)->pending(limit: 1)['generations'])->toHaveCount(1);
+
+    expect(Compaction::publish($lease)->markerCleared)->toBeTrue()
+        ->and(app(CompactionLeases::class)->pending())->toBe(['total' => 1, 'generations' => [['document' => (string) $quiet->getKey(), 'generation' => 0]]]);
+});
+
 it('refuses a worker call without protocol 2, without a valid signature, or with a malformed body', function (): void {
     Hub::callV2('compaction/lease', ['hub_id' => 'hub'], token: null, protocol: null)
         ->assertStatus(409)
@@ -240,6 +273,7 @@ it('refuses a worker call without protocol 2, without a valid signature, or with
     Hub::callV2('compaction/lease', [], token: null)->assertStatus(422)->assertJsonPath('code', 'validation_failed');
     Hub::callV2('compaction/lease', ['hub_id' => 'hub', 'max' => 0], token: null)->assertStatus(422);
     Hub::callV2('compaction/lease', ['hub_id' => 'hub', 'max' => CompactionLeases::MAX + 1], token: null)->assertStatus(422);
+    Hub::callV2('compaction/lease', ['hub_id' => 'hub', 'max' => 1, 'report' => 'yes'], token: null)->assertStatus(422);
     Hub::callV2('checkpoint', ['document' => '1'], token: null)->assertStatus(422);
 });
 

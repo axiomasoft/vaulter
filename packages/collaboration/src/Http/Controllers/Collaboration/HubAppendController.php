@@ -12,6 +12,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationHub;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
+use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
@@ -24,7 +25,8 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
  * of its drive's rights (D46): the append was allowed by the rights now, and the hub renews the token. The base64 length is checked against `limits.update_bytes` before it is
  * decoded — against `max_state_bytes` for a seed, which carries the document's whole initial state. `seed_state_version`
  * marks the hub's seed (409 collaboration_seed_conflict unless the generation has no checkpoint and no record yet and the
- * document's state version still equals it).
+ * document's state version still equals it). The size gate ({@see LimitHubAppend}) takes a body of a whole state for a
+ * request that declares a seed; a body that is no seed is held to `limits.request_bytes` here.
  */
 #[Internal]
 final readonly class HubAppendController
@@ -64,6 +66,12 @@ final readonly class HubAppendController
         if ($errors !== [] || !is_int($generation) || !is_string($updateId) || !is_string($sha256) || !is_string($payload) || !is_string($origin)
             || ($seedStateVersion !== null && !is_int($seedStateVersion))) {
             throw ValidationException::withMessages(array_map(static fn (string $message): array => [$message], $errors));
+        }
+
+        // The gate let a body of a whole state through for a request that declared a seed: anything else is one update.
+        $body = strlen($request->getContent());
+        if ($seedStateVersion === null && $body > $this->config->requestBytes()) {
+            throw new CollaborationUpdateTooLargeException($body, $this->config->requestBytes());
         }
 
         // The size is known from the encoded length: refuse before decoding allocates the update. A seed is the whole

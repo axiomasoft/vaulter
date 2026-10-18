@@ -14199,7 +14199,7 @@
       ]
     },
     "collaboration": {
-      "count": 245,
+      "count": 251,
       "names": [
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_changes_the_pending_marker_of_a_document_only_through_the_documents_state_contract",
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_has_no_full_state_store__the_hub_store_route_and_its_action_are_gone",
@@ -14299,6 +14299,10 @@
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_refuses_an_append_without_a_usable_Content_Length_with_413_before_the_signature_check\"dataset \"not a number\"\"",
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_refuses_an_append_without_a_usable_Content_Length_with_413_before_the_signature_check\"dataset \"signed\"\"",
         "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_seeds_a_load_from_the_content_of_the_locked_row__together_with_its_state_version",
+        "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_sizes_the_append_gate_by_the_checkpoint_limit_for_a_declared_seed__still_without_reading_the_body\"dataset \"a declared seed\"\"",
+        "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_sizes_the_append_gate_by_the_checkpoint_limit_for_a_declared_seed__still_without_reading_the_body\"dataset \"a route without seeds\"\"",
+        "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_sizes_the_append_gate_by_the_checkpoint_limit_for_a_declared_seed__still_without_reading_the_body\"dataset \"another header value\"\"",
+        "P\\Tests\\Http\\HubAppendV2Test::__pest_evaluable_it_sizes_the_append_gate_by_the_checkpoint_limit_for_a_declared_seed__still_without_reading_the_body\"dataset \"no seed header\"\"",
         "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_names_the_protocol_in_the_mismatch_so_the_hub_can_tell_a_deployment_fault",
         "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('append') / dataset \"no header\"\"",
         "P\\Tests\\Http\\ProtocolVersionTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_on_every_hub_route__before_anything_is_read_or_written\"('append') / dataset \"protocol 1\"\"",
@@ -14331,6 +14335,7 @@
         "P\\Tests\\Persistence\\AppendIdempotencyTest::__pest_evaluable_it_refuses_the_same_update_id_with_another_payload_and_writes_nothing",
         "P\\Tests\\Persistence\\AppendValidationTest::__pest_evaluable_it_answers_a_hidden_document__another_tenant_and_a_missing_document_with_the_same_404",
         "P\\Tests\\Persistence\\AppendValidationTest::__pest_evaluable_it_bounds_a_seed_by_max__state__bytes__not_limits_update__bytes__it_carries_the_whole_initial_state",
+        "P\\Tests\\Persistence\\AppendValidationTest::__pest_evaluable_it_lets_a_declared_seed_of_a_whole_state_through_the_request_gate__and_holds_a_body_that_is_no_seed_to_limits_request__bytes",
         "P\\Tests\\Persistence\\AppendValidationTest::__pest_evaluable_it_refuses_a_body_above_limits_request__bytes_by_its_Content_Length_before_the_signature_is_checked",
         "P\\Tests\\Persistence\\AppendValidationTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_with_409_collaboration__protocol__mismatch\"dataset \"no header\"\"",
         "P\\Tests\\Persistence\\AppendValidationTest::__pest_evaluable_it_refuses_a_call_without_protocol_2_with_409_collaboration__protocol__mismatch\"dataset \"protocol 1\"\"",
@@ -14376,6 +14381,7 @@
         "P\\Tests\\Persistence\\CompactionLeaseTest::__pest_evaluable_it_reads_the_checkpoint__the_tail_and_the_checkpoint_version_with_the_lease",
         "P\\Tests\\Persistence\\CompactionLeaseTest::__pest_evaluable_it_refuses_a_checkpoint_body_above_the_checkpoint_limit_by_its_Content_Length",
         "P\\Tests\\Persistence\\CompactionLeaseTest::__pest_evaluable_it_refuses_a_worker_call_without_protocol_2__without_a_valid_signature__or_with_a_malformed_body",
+        "P\\Tests\\Persistence\\CompactionLeaseTest::__pest_evaluable_it_reports_what_is_still_due_for_compaction_whichever_hub_holds_its_lease__until_a_checkpoint_clears_its_marker",
         "P\\Tests\\Persistence\\GenerationFenceTest::__pest_evaluable_it_answers_the_hub_the_same_409_over_HTTP_for_a_room_of_the_closed_generation",
         "P\\Tests\\Persistence\\GenerationFenceTest::__pest_evaluable_it_refuses_an_append_of_a_generation_the_document_never_reached",
         "P\\Tests\\Persistence\\GenerationFenceTest::__pest_evaluable_it_refuses_an_append_of_the_generation_a_restore_closed_between_load_and_append",

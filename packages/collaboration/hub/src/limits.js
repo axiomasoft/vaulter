@@ -65,14 +65,15 @@ export function envelopeLength(maxUpdateBytes) {
 }
 
 /**
- * The body limit of a backend call, as the backend's size gate draws it: a checkpoint carries a
- * whole base64 state of MAX_DOCUMENT_BYTES on top of MAX_REQUEST_BYTES, every other call
- * MAX_REQUEST_BYTES.
+ * The body limit of a backend call, as the backend's size gate draws it: a checkpoint, and the
+ * `seed` of an empty log (an append of the document's whole initial state), carry a base64 state
+ * of MAX_DOCUMENT_BYTES on top of MAX_REQUEST_BYTES; every other call MAX_REQUEST_BYTES.
  */
-export function requestLimit(endpoint, conf = {}) {
+export function requestLimit(endpoint, conf = {}, { seed = false } = {}) {
   const request = conf.maxRequestBytes ?? LIMIT_DEFAULTS.maxRequestBytes
+  const state = endpoint === 'checkpoint' || (endpoint === 'append' && seed === true)
 
-  return endpoint === 'checkpoint' ? base64Length(conf.maxDocumentBytes ?? LIMIT_DEFAULTS.maxDocumentBytes) + request : request
+  return state ? base64Length(conf.maxDocumentBytes ?? LIMIT_DEFAULTS.maxDocumentBytes) + request : request
 }
 
 /** A varUint of lib0 at `cursor.position`; null when the bytes end first or it is too long. */
