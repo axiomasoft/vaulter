@@ -1,3 +1,0 @@
-### scripts/schema-snapshot.sh --driver=sqlite --all-presets --compare=packages/core/tests/Fixtures/Schema/expected
-schema-snapshot: driver=sqlite presets=48 failed=0
-EXIT=0

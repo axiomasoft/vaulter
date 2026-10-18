@@ -1,6 +1,0 @@
-cwd: .
-cmd: python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check && python3 /home/vostrikov/.claude/plugins/cache/swissknifeman/task/0.28.3/scripts/plan.py check 2026.09.29-№1-VAULTER-STABLE
-head: b68d2d63 + uncommitted (D57, ledger-P4 P4.14 rows, knowledge/artifacts-P4-design-P4.14-opus)
-opus-coverage OK: 1438 единиц, 254 секций, 0 нарушений
-0 error(s), 0 warning(s)
-exit: 0

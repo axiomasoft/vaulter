@@ -1,9 +1,0 @@
-{
-  "ok": true,
-  "cell_id": "download/500m",
-  "path_id": "download",
-  "http_status": 200,
-  "content_length_bytes": 524288000,
-  "client_bytes_received": 524288000,
-  "transfer_bytes": 524288000
-}

@@ -1,6 +1,0 @@
-{
-  "path": "plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P1/P1.5.md",
-  "old_sha256": "5f93b2c003e1186dfcfd36766a796b42f8938b9b616f2f14c46599d03bde50e2",
-  "new_sha256": "da6946ad8ad2fdb0cc1a101e9935e49f82eb370fdfaf7ae561cb263411db0968",
-  "change": "Qualify audit D20 as OPUS AD20 in Inputs to avoid collision with local plan D20; no requirement changed. Preexisting owner spec remains unstaged."
-}

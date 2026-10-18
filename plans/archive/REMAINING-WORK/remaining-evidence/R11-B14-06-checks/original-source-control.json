@@ -1,7 +1,0 @@
-{
-  "source": "cf967c7",
-  "publisher_exit": 0,
-  "historical_preserved": false,
-  "stdout": "p7-live verify: ok digest=1c6c2377815490f6026710b9a2f2106f2016eab4587b3627b5793c350eb91706\np7-live verify: ok digest=1c6c2377815490f6026710b9a2f2106f2016eab4587b3627b5793c350eb91706\np7-chaos run: published /tmp/p7-publication-test-fsym81l4/published run_id=offline-evidence\n",
-  "stderr": ""
-}

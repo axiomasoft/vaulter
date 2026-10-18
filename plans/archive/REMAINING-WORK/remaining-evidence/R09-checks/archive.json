@@ -1,9 +1,0 @@
-{
-  "archive": "plans/remaining-evidence/R09-P6-3df3b9e1-32b8-4e15-8b8f-c4efffe28f52.tar.gz",
-  "sha256": "fc689be535f63e7ef57ca65a01701639ecf84695baea0b7681fd52254fd93662",
-  "bytes": 15532594,
-  "raw_digest": "7bac6725d3af18ac57789e7f70f1fdc3d78b4f28fdc051ff7de2dda39124c270",
-  "extracted_verify_exit": 0,
-  "extracted_verify_stdout": "p6-matrix verify: ok digest=7bac6725d3af18ac57789e7f70f1fdc3d78b4f28fdc051ff7de2dda39124c270\n",
-  "extracted_verify_stderr": ""
-}

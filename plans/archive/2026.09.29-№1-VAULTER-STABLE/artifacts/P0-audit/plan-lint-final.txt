@@ -1,2 +1,0 @@
-ERROR: plans/2026.09.29-№1-VAULTER-STABLE/handoff.md:3: handoff.Next: Batch B0-A should address all remaining adjacent-suffix [], received ['P0.2']
-plan-lint: FAILURE (1 plan(ov), 1 errors, 0 warnings)

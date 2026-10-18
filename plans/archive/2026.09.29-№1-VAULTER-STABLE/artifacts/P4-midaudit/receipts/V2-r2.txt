@@ -1,6 +1,0 @@
-cwd: .
-cmd: env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch packages/core/tests/Configuration packages/core/tests/Profiles
-head: 29f5c5a1 + uncommitted P4.3 round 2 (Grok 4.7 fixes)
-
-{"tool":"pest","result":"passed","tests":440,"passed":440,"assertions":2425,"duration_ms":82772}
-exit: 0

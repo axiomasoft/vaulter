@@ -1,5 +1,0 @@
-{
-  "observation": "reconcile_terminal next_bundle is null because numeric materialize_next_ready scans only item IDs greater than P1.7",
-  "repair": "plan-views.py bundle --item P1.2",
-  "result": "ready successor bundle generated through owner; P1.2 not started"
-}

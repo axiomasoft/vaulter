@@ -1,3 +1,0 @@
-
-   INFO  Tombstoned 4000, swept 4000, skipped 0 (grace 24h).  
-

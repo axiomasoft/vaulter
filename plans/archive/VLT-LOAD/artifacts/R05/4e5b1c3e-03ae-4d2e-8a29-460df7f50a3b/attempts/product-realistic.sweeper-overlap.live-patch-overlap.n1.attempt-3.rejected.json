@@ -1,6 +1,0 @@
-{
-  "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n1",
-  "attempt": 3,
-  "status": "rejected",
-  "cause": "missing concurrent sweep/PATCH evidence"
-}

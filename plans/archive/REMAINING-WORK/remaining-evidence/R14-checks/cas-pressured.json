@@ -1,1 +1,0 @@
-{"process_kind":"php_cli","pid":12,"php_peak_bytes":35651584,"php_peak_delta_bytes":4194304,"ceiling_bytes":67108864,"within_ceiling":true,"stage_duration_seconds":16.351176479,"staged_sha256":"7f06c62352aebd8125b2a1841e2b9e1ffcbed602f381c3dcb3200200e383d1d5","probe_object_sha256":"7f06c62352aebd8125b2a1841e2b9e1ffcbed602f381c3dcb3200200e383d1d5","checksum_match":true}

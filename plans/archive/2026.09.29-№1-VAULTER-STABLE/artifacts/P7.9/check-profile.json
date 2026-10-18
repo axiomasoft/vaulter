@@ -1,9 +1,0 @@
-{
-  "item": "P7.9",
-  "note": "profile written after the first --write run (late vs rule: product edit preceded it)",
-  "changed_paths": ["scripts/strip-task-codes.php", "scripts/test-strip-task-codes.py", "scripts/fixtures-strip/**", "packages/*/src/**/*.php (comments only)"],
-  "callers": ["scripts/strip-task-codes.php --check in V711 and phase validation"],
-  "fixtures": "scripts/fixtures-strip/{in,expected}",
-  "acceptance": {"V1": "cwd=. PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-strip-task-codes.py && scripts/php84 scripts/strip-task-codes.php --check", "V2": "phase.validation V701-V713 (cwd per entry, SQLite env)"},
-  "impact_phase_run": ["PG/MySQL, full suites, consumer-smoke, docs:build, hosted CI (PR1-PR6)"]
-}

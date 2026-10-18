@@ -1,2 +1,0 @@
-  Tests:    2 risky, 2 skipped, 964 passed (4005 assertions)
-exit 0

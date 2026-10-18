@@ -1,9 +1,0 @@
-{
-  "action": "accept-candidate",
-  "detail": "ACP stopReason=end_turn; usage_complete=True",
-  "elapsed_seconds": 658.689,
-  "phase": "complete",
-  "process_alive": false,
-  "schema_version": "review-heartbeat/v1",
-  "session_id": "01a10b81-d061-7c20-b0e2-eb586bc16bca"
-}

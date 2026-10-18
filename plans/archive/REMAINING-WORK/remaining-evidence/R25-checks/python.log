@@ -1,6 +1,0 @@
-p6-queue-cases: integrity defects: extra_delivery_rows, missing_queue_jobs, sink_recorded_body
-...................................
-----------------------------------------------------------------------
-Ran 35 tests in 0.075s
-
-OK

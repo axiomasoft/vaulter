@@ -1,9 +1,0 @@
-{
-  "path": "packages/core/src/Observability/TracingSpanNames.php",
-  "baseline_sha256": "198eee6c7132eaedd81a4cc9bdb6a7b8c7f81bafac158612dd2cf1eed2655f07",
-  "current_sha256": "198eee6c7132eaedd81a4cc9bdb6a7b8c7f81bafac158612dd2cf1eed2655f07",
-  "unchanged": true,
-  "package_type_coverage": 99.8,
-  "required_min": 100,
-  "exit": 1
-}

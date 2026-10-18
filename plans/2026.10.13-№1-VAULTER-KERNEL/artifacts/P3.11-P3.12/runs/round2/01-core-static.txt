@@ -1,3 +1,0 @@
-### scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G
-{"tool":"pint","result":"passed"}{"tool":"phpstan","result":"passed","errors":0}
-EXIT=0

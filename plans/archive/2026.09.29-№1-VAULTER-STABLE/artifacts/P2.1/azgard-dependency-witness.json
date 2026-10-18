@@ -1,9 +1,0 @@
-{
-  "qualification_commit": "253cbf4cce0226545cd96ca8c6bcbefe329b1403",
-  "original_symlinks": {
-    "packages/azgard/vendor/axioma-studio/azguard-core": "../../../../../azguard/packages/core/",
-    "packages/azgard/vendor/axioma-studio/azguard-context": "../../../../../azguard/packages/context/"
-  },
-  "qualification_root": "build/azguard",
-  "reason": "Existing sibling checkout has a newer incompatible API; qualification uses the unchanged P0 baseline dependency without modifying the sibling repository."
-}

@@ -1,8 +1,0 @@
-## AD07
-— [9.967606419413135] AD07 Публичный API всегда авторизует; системный путь явный: каждая операция handle вызывает OperationGuard; actingAs() или asSystem($reason) (без ACL, но с tenancy и инвариантами); без actor — MissingActorException 401; ADR-0020; источник audits/2026-09-29-stable-audit/opus/02-decisions.md#d07  (project:vaulter)
-## AD01
-— [9.908999274298308] AD01 Одно окно канона: 0.3.0, затем стабилизация до 1.0: все переименования, изменения схемы и REST v1 выходят одним релизом 0.3.0 без алиасов в PHP; устаревшие ключи конфига читаются нормализатором с E_USER_DEPRECATED до 1.0; источник audits/2026-09-29-stable-audit/opus/02-decisions.md#d01  (project:vaulter)
-## AD20
-— [10.05083083786212] AD20 CAS: беспотерьная область дедупликации: BlobScope global|tenant|drive с scope_key, UNIQUE(scope_key, sha256), новый физический ключ объекта и команда vaulter:blobs:repair-scopes для старых snull/tnull; источник audits/2026-09-29-stable-audit/opus/02-decisions.md#d20  (project:vaulter)
-## AD40
-— [10.196781546917991] AD40 Зарезервированные поля узла: NodeKind::Shortcut зарезервирован и отклоняется в 1.0 (UnsupportedNodeKindException), is_pinned и position управляются через NodeOperations::update() и PATCH nodes/{node}; источник audits/2026-09-29-stable-audit/opus/02-decisions.md#d40  (project:vaulter)

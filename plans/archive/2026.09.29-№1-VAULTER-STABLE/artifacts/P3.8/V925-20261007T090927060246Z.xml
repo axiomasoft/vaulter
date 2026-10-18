@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites>
-  <testsuite name="Tests\Document\PurgeTrashCascadeTest" file="tests/Document/PurgeTrashCascadeTest.php" tests="1" assertions="4" errors="0" failures="0" skipped="0" time="1.566855">
-    <testcase name="it physically deletes a trashed document node's inline version content on purge, F-P1.12-02" file="tests/Document/PurgeTrashCascadeTest.php::it physically deletes a trashed document node's inline version content on purge, F-P1.12-02" class="Tests\Document\PurgeTrashCascadeTest" classname="Tests.Document.PurgeTrashCascadeTest" assertions="4" time="1.566855"/>
-  </testsuite>
-</testsuites>

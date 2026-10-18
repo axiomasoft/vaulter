@@ -1,7 +1,0 @@
-{
-  "kind": "pre-k6 preparation rejection",
-  "reason": "pg_stat_statements extension absent in new DB",
-  "snapshot_exit": 1,
-  "correction": "CREATE EXTENSION in isolated R03 DB",
-  "product_run_started": false
-}

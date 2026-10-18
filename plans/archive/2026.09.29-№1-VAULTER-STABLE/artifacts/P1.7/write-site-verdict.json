@@ -1,9 +1,0 @@
-{
-  "pre_mutation": "allow",
-  "pre_final": "allow",
-  "reason_codes": {
-    "pre_mutation": null,
-    "pre_final": null
-  },
-  "content_hash": "03494a092a3b15544e5a80d5c0503beca29eaa7536bb089d8be214b264be5820"
-}

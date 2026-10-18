@@ -1,4 +1,0 @@
-$ cd packages/azgard && ../../scripts/php84 vendor/bin/pint --test   env={}
-exit=0 duration_s=0.6
-
-{"tool":"pint","result":"passed"}
