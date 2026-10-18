@@ -5,7 +5,7 @@
 #             [-j N] [--engines=sqlite,pgsql,mysql] [--full] [--group=G] [--exclude-group=G]
 #             [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
 #   scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql|mysql] [--dry-run [--json]] [-j N] [--junit=DIR] [--no-skips] [-- pest flags]
-#   scripts/t stand [-p load,collab-e2e] [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
+#   scripts/t stand [-p load,collab-e2e,collab-stand] [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
 #   scripts/t baseline --write|--compare [-p ...]
 #   scripts/t --help
 #
@@ -30,7 +30,7 @@
 #     nofull = stand: the fast lane excludes nofast, --full excludes nofull (and runs serial once), nothing else is ever hidden.
 #     Selecting `--group=extended` or `--group=stand` drops the exclusion that group implies, so it never selects nothing.
 #   * stand: the stand-group tests (load/tests, SQLite, one process) plus the real-process scripts listed under "stand" in
-#     tests/suites.json (scripts/collab-e2e.sh). It is its own command, never part of fast/full/all; k6 and benchmarks are
+#     tests/suites.json (scripts/collab-e2e.sh, scripts/collab-stand.sh). It is its own command, never part of fast/full/all; k6 and benchmarks are
 #     not tests of this runner and no command here starts them.
 #
 # --changed: scripts/test-select.php turns `git diff <merge-base of --base (default main)>..HEAD` + staged/unstaged/untracked

@@ -1657,6 +1657,7 @@
           "files": [
             "packages/collaboration/tests/Arch/BoundaryTest.php",
             "packages/collaboration/tests/Arch/HttpV1ArchTest.php",
+            "packages/collaboration/tests/Arch/I17ScenarioMapTest.php",
             "packages/collaboration/tests/Arch/TestingBoundaryTest.php"
           ]
         },
@@ -2114,7 +2115,16 @@
         "bash",
         "scripts/collab-e2e.sh"
       ],
-      "note": "Collaboration protocol against real processes: testbench serve + the Hocuspocus hub; needs npm ci in packages/collaboration/hub"
+      "note": "Collaboration protocol 2 against real processes: testbench serve + the Hocuspocus hub; needs npm ci in packages/collaboration/hub"
+    },
+    {
+      "name": "collab-stand",
+      "cwd": ".",
+      "command": [
+        "bash",
+        "scripts/collab-stand.sh"
+      ],
+      "note": "I17 scenarios 2, 3, 10 in docker: PostgreSQL, Redis, testbench serve and two hubs (SIGKILL, two hubs, SIGTERM drain); needs docker compose and npm ci in packages/collaboration/hub"
     }
   ]
 }

@@ -14406,7 +14406,7 @@
       ]
     },
     "collaboration": {
-      "count": 251,
+      "count": 256,
       "names": [
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_changes_the_pending_marker_of_a_document_only_through_the_documents_state_contract",
         "P\\Tests\\Arch\\BoundaryTest::__pest_evaluable_it_has_no_full_state_store__the_hub_store_route_and_its_action_are_gone",
@@ -14417,6 +14417,11 @@
         "P\\Tests\\Arch\\HttpV1ArchTest::__pest_evaluable_collaboration_v1_controllers_are_final_single_action_classes",
         "P\\Tests\\Arch\\HttpV1ArchTest::__pest_evaluable_it_gives_collaboration_v1_controllers_no_public_method_besides_the_constructor_and_____invoke",
         "P\\Tests\\Arch\\HttpV1ArchTest::__pest_evaluable_it_names_every_collaboration_route_vaulter_v1___under_the_versioned_prefix",
+        "P\\Tests\\Arch\\I17ScenarioMapTest::__pest_evaluable_it_gives_every_scenario_known_lanes_and_files__each_file_existing",
+        "P\\Tests\\Arch\\I17ScenarioMapTest::__pest_evaluable_it_holds__for_every_lane_of_a_scenario__a_file_of_that_lane_s_kind",
+        "P\\Tests\\Arch\\I17ScenarioMapTest::__pest_evaluable_it_leaves_no_stand_file_outside_the_map",
+        "P\\Tests\\Arch\\I17ScenarioMapTest::__pest_evaluable_it_maps_exactly_the_scenarios_1_to_20",
+        "P\\Tests\\Arch\\I17ScenarioMapTest::__pest_evaluable_it_puts_the_stand_scenarios_2__3_and_10_in_hub_test_stand__and_no_other_scenario_on_the_stand_lane",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_CollaborationCallResolver_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_CollaborationCall_never_uses_the_Testing_namespaces",
         "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Collaboration_CollaborationDriverManager_never_uses_the_Testing_namespaces",

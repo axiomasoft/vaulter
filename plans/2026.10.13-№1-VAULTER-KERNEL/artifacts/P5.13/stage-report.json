@@ -1,0 +1,125 @@
+{
+  "changed_paths": [
+    "packages/collaboration/hub/stand/docker-compose.yml",
+    "packages/collaboration/hub/stand/testbench.yaml",
+    "packages/collaboration/hub/test/e2e/restore-epoch.e2e.js",
+    "packages/collaboration/hub/test/stand/kill-after-retry.stand.js",
+    "packages/collaboration/hub/test/stand/sigterm-drain.stand.js",
+    "packages/collaboration/hub/test/stand/two-hubs.stand.js",
+    "packages/collaboration/hub/test/support/live.js",
+    "packages/collaboration/hub/test/support/stand.js",
+    "packages/collaboration/tests/Arch/I17ScenarioMapTest.php",
+    "packages/collaboration/tests/i17-scenarios.json",
+    "scripts/collab-e2e.sh",
+    "scripts/collab-stand.sh",
+    "scripts/t",
+    "tests/README.md",
+    "tests/Repo/TestGroupsTest.php",
+    "tests/baseline/CHANGES.json",
+    "tests/baseline/CHANGES.md",
+    "tests/baseline/collaboration.count",
+    "tests/baseline/collaboration.list",
+    "tests/suites.json"
+  ],
+  "checks_run": [
+    {
+      "cmd": "scripts/t sqlite -p collaboration tests/Arch/I17ScenarioMapTest.php",
+      "exit": 0,
+      "id": "V1"
+    },
+    {
+      "cmd": "for f in packages/collaboration/hub/test/stand/*.stand.js packages/collaboration/hub/test/e2e/*.e2e.js; do node --check \"$f\" || exit 1; done && bash -n scripts/collab-stand.sh && bash -n scripts/collab-e2e.sh",
+      "exit": 0,
+      "id": "V2"
+    },
+    {
+      "cmd": "jq -e '[.stand[] | select(.name == \"collab-stand\")] | length == 1' tests/suites.json",
+      "exit": 0,
+      "id": "V3"
+    },
+    {
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ZonesMapTest.php tests/Repo/TestGroupsTest.php tests/Repo/TestRunnerTest.php",
+      "exit": 0,
+      "id": "V4"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/collaboration/hub/src/index.js:150",
+        "packages/vue-collaboration/src/transport.ts:128"
+      ],
+      "impact": "A real browser client of @vaulter/vue-collaboration would never save: the hub would drop its writes. Found by the protocol 2 e2e conversion; invisible to unit tests.",
+      "kind": "deviation",
+      "next": "Fix in vue-collaboration (pass parameters {protocol: 2} / append ?protocol=2) or in HocuspocusCollaborationDriver url, with a test, before the e2e is run in PLAN4.",
+      "outcome": "follow_up",
+      "severity": "high",
+      "text": "Clients end up read-only on the hub: nothing adds protocol=2 to the hub URL. hub/src/index.js readClientProtocol treats a connection without protocol=2 as protocol 1 (read-only). packages/vue-collaboration/src/transport.ts builds HocuspocusProvider without parameters, and neither the PHP driver nor the session url adds it. The stand/e2e clients add it themselves (test/support/live.js hubUrl)."
+    },
+    {
+      "class": "write_set",
+      "impact": "The commit takes these paths with the piece.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Changed outside scope.write_set, each needed by the piece: hub/test/support/live.js and hub/test/support/stand.js (helpers shared by e2e and the three stand files), hub/stand/testbench.yaml (host config bind-mounted by the compose backend), tests/Repo/TestGroupsTest.php (its 'scripts/t stand' plan test pinned suites ['load','collab-e2e'] and would be red with collab-stand), tests/README.md and a comment in scripts/t (stand list), tests/baseline/collaboration.{list,count} and CHANGES.{json,md} (refreshed with baseline --write -p collaboration)."
+    },
+    {
+      "class": "test_env",
+      "impact": "The vue/vue-collaboration baseline compare is unconfirmed by the executor.",
+      "kind": "deviation",
+      "next": "conductor: run V5 on the host.",
+      "outcome": "accepted",
+      "text": "V5 (scripts/t baseline --compare, all suites) was not confirmed: vue discovery (npx vitest list) needs registry.npmjs.org, refused by the sandbox (as in P5.4-P5.12). scripts/t baseline --compare -p core,media,drive,webhooks,documents,collaboration,azgard,filament,repo,hub,load exits 0 (collaboration current 380, missing 0)."
+    },
+    {
+      "impact": "Details may need adjusting at the first PLAN4 run of scripts/collab-stand.sh and collab-e2e.sh.",
+      "kind": "assumption",
+      "next": "PLAN4: run both scripts; look first at test/support/live.js (connect/edit) and stand.js (exitCode, sql).",
+      "text": "Stand and e2e files are syntax-checked only (node --check, bash -n, YAML parse); yjs, @hocuspocus/provider and docker are unavailable in the sandbox and D41 forbids running them. Unverified assumptions: Hocuspocus provider 4.3 keeps a query string given in url and delivers stateless messages as {payload}; 'docker compose ps -a --format json' rows carry Service/State/ExitCode; the hub drain leaves the management listener answering between the first 503 and process exit (shutdown.js closes it last); a hub killed with SIGTERM exits 0 when its ledger is empty."
+    },
+    {
+      "impact": "Detail choices at the D44 detail level.",
+      "kind": "note",
+      "next": "none",
+      "text": "scripts/collab-stand.sh runs node --test with --test-concurrency=1 (the guidance names plain node --test): the scenarios SIGKILL/SIGTERM the same containers and must not run in parallel. The stand backend uses 'testbench migrate' (not migrate:fresh) so the scenarios can restart it without losing data. Scenario 10's observable drain window is narrow when nothing is pending; readiness is polled every 25 ms and the test fails if no 503 is seen."
+    },
+    {
+      "impact": "Keeps the next pieces compatible.",
+      "kind": "note",
+      "next": "P5.14, P5.15",
+      "text": "For P5.14 (CI/release manifest): the hub suite's list_glob deliberately does not include test/stand (hub baseline unchanged), the stand lane must stay out of any PLAN3 job, and the compose builds the hub image from packages/collaboration/hub (context '..'). For P5.15 (docs): document scripts/collab-stand.sh, its env variables (VAULTER_E2E_PORT, VAULTER_E2E_HUB_PORT, VAULTER_E2E_HUB_B_PORT, VAULTER_STAND_MODE, VAULTER_STAND_LOG), and that scripts/t stand now plans load, collab-e2e, collab-stand."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/collaboration/hub/stand/testbench.yaml",
+        "packages/collaboration/hub/test/support/live.js",
+        "packages/collaboration/hub/test/support/stand.js",
+        "scripts/t",
+        "tests/README.md",
+        "tests/Repo/TestGroupsTest.php"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/collaboration/hub/stand/testbench.yaml, packages/collaboration/hub/test/support/live.js, packages/collaboration/hub/test/support/stand.js, scripts/t, tests/README.md, tests/Repo/TestGroupsTest.php"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "hub/test/support/live.js and stand.js: the real-process client and docker helpers could not be run",
+      "the protocol=2 URL gap (vue-collaboration transport / driver)",
+      "stand/docker-compose.yml: env of the hubs and the backend command"
+    ],
+    "reason_codes": [
+      "low_confidence"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Stand scenarios I17 2/3/10 written (kill-after-retry, two-hubs, sigterm-drain) against real processes only, with shared live/stand helpers, a docker-compose stand (PG, Redis, testbench serve, hub-a, hub-b) and scripts/collab-stand.sh. collab-e2e.sh and restore-epoch.e2e.js converted to protocol 2 (envelope ack as 'saved', session/restore routes of the documents/collaboration API, compaction/flush intervals). Machine map i17-scenarios.json (keys 1-20) and I17ScenarioMapTest (keys, files exist, lane/file kind, stand 2/3/10 in hub/test/stand, no unmapped stand file). tests/suites.json gets the collab-stand stand entry and the new Arch test in its partition; TestGroupsTest updated for the new stand suite; collaboration baseline refreshed. Nothing from the deferred list was run."
+}
