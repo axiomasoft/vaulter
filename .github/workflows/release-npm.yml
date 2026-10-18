@@ -1,6 +1,6 @@
 name: Release (npm)
 
-# Publishes the npm packages (@vaulter/vue, later @vaulter/client) via Changesets.
+# Publishes the npm packages (@vaulter/vue, @vaulter/vue-collaboration, later @vaulter/client) via Changesets.
 # On push to main this either opens/updates the "Version Packages" PR (when pending
 # changesets exist) or, once that PR is merged, publishes the bumped packages with
 # a registry token. The source repository is currently private, so npm provenance

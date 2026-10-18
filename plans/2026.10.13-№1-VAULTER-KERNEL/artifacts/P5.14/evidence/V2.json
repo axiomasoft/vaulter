@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261018T060613Z-37eb2a:P5.14:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN3.P5.14",
+  "candidate": {
+    "head": "938e1ee197a259df368f54e46e07e78f06a17c90",
+    "dirty_digest": "bd507dc93d5e8e72df73e62e6fa73aeaba3eb3e0639400c592be836cf44ddcd5"
+  },
+  "started_at": "2026-10-18T06:24:02Z",
+  "procedure": {
+    "cmd": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/Repo -p 'WorkflowPolicyTest.py'",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-18T06:24:03Z"
+}

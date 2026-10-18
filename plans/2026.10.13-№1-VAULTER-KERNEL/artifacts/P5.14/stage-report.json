@@ -1,0 +1,138 @@
+{
+  "changed_paths": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/collaboration-hub-image.yml",
+    ".github/workflows/hocuspocus-image.yml",
+    ".github/workflows/monorepo-split.yml",
+    ".github/workflows/release-npm.yml",
+    ".github/workflows/weekly-full.yml",
+    "package.json",
+    "packages/collaboration/hub/Dockerfile",
+    "packages/collaboration/hub/README.md",
+    "packages/collaboration/hub/docker-compose.yml",
+    "packages/collaboration/tests/Arch/I17ScenarioMapTest.php",
+    "packages/collaboration/tests/i17-scenarios.json",
+    "packages/vue-collaboration/package.json",
+    "release/packages.json",
+    "scripts/ci/workflow-policy.py",
+    "scripts/release/consumer-check.sh",
+    "scripts/test-release-tools.py",
+    "tests/Repo/ConsumerCheckTest.php",
+    "tests/Repo/WorkflowPolicyTest.py",
+    "tests/baseline/CHANGES.json",
+    "tests/baseline/CHANGES.md",
+    "tests/baseline/repo.count",
+    "tests/baseline/repo.list"
+  ],
+  "checks_run": [
+    {
+      "cmd": "scripts/release/consumer-check.sh collaboration --dry-run",
+      "exit": 0,
+      "id": "V1"
+    },
+    {
+      "cmd": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/Repo -p 'WorkflowPolicyTest.py'",
+      "exit": 0,
+      "id": "V2"
+    },
+    {
+      "cmd": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-tools.py",
+      "exit": 0,
+      "id": "V3"
+    },
+    {
+      "cmd": "jq -e '([.php[] | select(.path == \"packages/collaboration\")] | length == 1) and ([.npm[] | select(.name == \"@vaulter/vue-collaboration\")] | length == 1) and ([.images[] | select(.path == \"packages/collaboration/hub\")] | length == 1)' release/packages.json",
+      "exit": 0,
+      "id": "V4"
+    },
+    {
+      "cmd": "test ! -e .github/workflows/hocuspocus-image.yml && test -f .github/workflows/collaboration-hub-image.yml",
+      "exit": 0,
+      "id": "V5"
+    },
+    {
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ConsumerCheckTest.php",
+      "exit": 1,
+      "id": "V6"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "test_env",
+      "impact": "V6 needs a host re-run; I expect it to pass where lockfiles are readable",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "low",
+      "text": "V6 exits 1 in the executor sandbox: 18 of 19 ConsumerCheckTest tests pass (including the new collaboration cases); 'stages the root Pest harness next to core' fails because tar cannot copy the sandbox-masked packages/collaboration/hub/package-lock.json (Cannot mknod). core's consumer closure now includes collaboration, so its copy takes the hub dir."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/collaboration/tests/i17-scenarios.json:15",
+        "packages/collaboration/tests/Arch/I17ScenarioMapTest.php:49"
+      ],
+      "impact": "P5.13 map format changed for cross-package files; the collaboration consumer check is clean",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "I14 dry-run of collaboration failed on packages/collaboration/tests/i17-scenarios.json (P5.13) naming ../documents/tests/... and ../vue-collaboration/tests/...: a split archive has no sibling tests. Entries now use monorepo-root paths (packages/<name>/tests/...); I17ScenarioMapTest resolves them from the monorepo root and checks them only where release/packages.json exists."
+    },
+    {
+      "class": "write_set",
+      "impact": "the commit takes these paths with the piece",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Changed outside scope.write_set, each needed by the piece: package.json (root build/test now cover @vaulter/vue-collaboration, vue first, so release-npm builds a non-empty dist), packages/vue-collaboration/package.json (vaulter.api=1, required by check-versions.php for manifest npm entries), scripts/test-release-tools.py (built-zip list gains vaulter-collaboration), packages/collaboration/tests/{i17-scenarios.json,Arch/I17ScenarioMapTest.php}, packages/collaboration/hub/{Dockerfile,README.md,docker-compose.yml} (image/workflow name only; instance name default vaulter-hocuspocus kept), tests/baseline/{repo.list,repo.count,CHANGES.json,CHANGES.md} (baseline --write -p repo)."
+    },
+    {
+      "impact": "stale image name in docs until the docs pass",
+      "kind": "pending",
+      "next": "P5.15: update the image name, tag prefix and workflow file name; also document the npm package versioning decision for @vaulter/vue-collaboration (0.0.0, api 1, no changeset yet)",
+      "text": "Docs still name the old image/workflow: docs/guides/hub.md, docs/ru/guides/hub.md, .changeset/README.md (ghcr.io/axiomasoft/vaulter-hocuspocus). Not touched here."
+    },
+    {
+      "impact": "first real run of the workflows (PLAN4) may need small adjustments",
+      "kind": "assumption",
+      "next": "PLAN4: run ci.yml and weekly-full.yml and watch vue-collaboration, consumer-isolation/collaboration and the stand job",
+      "text": "The weekly-full stand job runs 'scripts/t stand --no-skips', which now includes the docker-based collab-stand (P5.13); the PR hub job runs only hub/test/*.test.js (stand files are not in list_glob). The new vue-collaboration CI job builds @vaulter/vue first (peer types) then typechecks and tests. None of this could run in PLAN3."
+    },
+    {
+      "class": "test_env",
+      "impact": "node-suite baseline compare unconfirmed by the executor",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "low",
+      "text": "Baseline compare over core..load and repo exits 0; the vue and vue-collaboration suites were not compared because vitest discovery needs the npm registry (sandbox blocks it), as in P5.4-P5.13."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "package.json",
+        "packages/collaboration/hub/Dockerfile",
+        "packages/collaboration/hub/README.md",
+        "packages/collaboration/hub/docker-compose.yml",
+        "packages/collaboration/tests/Arch/I17ScenarioMapTest.php",
+        "packages/collaboration/tests/i17-scenarios.json",
+        "packages/vue-collaboration/package.json",
+        "scripts/test-release-tools.py",
+        "tests/baseline/CHANGES.json",
+        "tests/baseline/CHANGES.md",
+        "tests/baseline/repo.count",
+        "tests/baseline/repo.list"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: package.json, packages/collaboration/hub/Dockerfile, packages/collaboration/hub/README.md, packages/collaboration/hub/docker-compose.yml, packages/collaboration/tests/Arch/I17ScenarioMapTest.php, packages/collaboration/tests/i17-scenarios.json, packages/vue-collaboration/package.json, scripts/test-release-tools.py, tests/baseline/CHANGES.json, tests/baseline/CHANGES.md, tests/baseline/repo.count, tests/baseline/repo.list"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [],
+    "reason_codes": [],
+    "recommended": false,
+    "suggested_model_class": "economy"
+  },
+  "status": "done_with_deviations",
+  "summary": "collaboration added to the CI/weekly-full PHP_SUPPORT matrices, a new vue-collaboration lane (ci.yml job + changes output + ci-gate need, weekly-full job + full-gate need, workflow-policy LANES/LANE_JOBS/plan_outputs), consumer-isolation and the split matrix; hocuspocus-image.yml git-mv'd to collaboration-hub-image.yml (image ghcr.io/axiomasoft/vaulter-collaboration-hub, tag vaulter-collaboration-hub-v*); release/packages.json gets the collaboration PHP package, @vaulter/vue-collaboration and the renamed image; consumer-check usage and ConsumerCheckTest (collaboration dataset entry + dev-sibling case); WorkflowPolicyTest and test-release-tools updated. Found by the dry run: tests/i17-scenarios.json reached ../documents/tests and ../vue-collaboration/tests, which the I14 check rightly rejects; those entries are now monorepo-root paths and I17ScenarioMapTest checks them only inside the monorepo."
+}

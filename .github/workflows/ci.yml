@@ -16,7 +16,7 @@ name: CI
 #   azgard.yml, filament.yml ............................... fast, quality (filament Rector stays advisory)
 #   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
 #   static-analysis.yml (Larastan) ......................... quality
-#   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub
+#   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub (+ vue-collaboration, P5.14)
 #   openapi.yml oasdiff breaking ........................... openapi.yml (unchanged, informative, D21)
 #   new: mysql 8.4 lane (db), repo harness + policy + actionlint (repo), spec validation (openapi),
 #        clean-consumer isolation of the split packages (consumer-isolation, I14)
@@ -37,7 +37,7 @@ permissions:
 env:
   # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
   # Laravel 12 pairs with Testbench ^10, Laravel 13 with ^11; filament is Laravel 13 only.
-  PHP_SUPPORT: '{"core":{"dir":".","lines":["12","13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["12","13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["12","13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"webhooks":{"dir":"packages/webhooks","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"collaboration":{"dir":"packages/collaboration","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["12","13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
 
 jobs:
   changes:
@@ -53,6 +53,7 @@ jobs:
       has_serial: ${{ steps.plan.outputs.has_serial }}
       has_consumer: ${{ steps.plan.outputs.has_consumer }}
       has_vue: ${{ steps.plan.outputs.has_vue }}
+      has_vue_collaboration: ${{ steps.plan.outputs.has_vue_collaboration }}
       has_hub: ${{ steps.plan.outputs.has_hub }}
       has_repo: ${{ steps.plan.outputs.has_repo }}
       has_openapi: ${{ steps.plan.outputs.has_openapi }}
@@ -534,6 +535,39 @@ jobs:
       - name: Build
         run: npm run build --workspace @vaulter/vue
 
+  vue-collaboration:
+    name: "@vaulter/vue-collaboration (Node ${{ matrix.node }})"
+    needs: changes
+    if: needs.changes.outputs.has_vue_collaboration == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # engines.node >=22 (@hocuspocus/provider@4).
+        node: ['22']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: npm install
+
+      # The package imports the built types of its peer @vaulter/vue (a workspace link to its dist/).
+      - name: Build @vaulter/vue (peer)
+        run: npm run build --workspace @vaulter/vue
+
+      - name: Type-check
+        run: npm run typecheck --workspace @vaulter/vue-collaboration
+
+      - name: Test
+        run: npm run test --workspace @vaulter/vue-collaboration
+
   hub:
     name: "@vaulter/collaboration-hub (Node ${{ matrix.node }})"
     needs: changes
@@ -695,7 +729,7 @@ jobs:
   ci-gate:
     name: CI gate
     if: always()
-    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, hub, repo, openapi]
+    needs: [changes, quality, fast, db, serial, consumer-isolation, vue, vue-collaboration, hub, repo, openapi]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Realtime collaboration (Yjs over Hocuspocus) for @vaulter/vue: update envelopes, a bounded queue with acks, and save statuses.",
   "license": "MIT",
+  "vaulter": {
+    "api": "1"
+  },
   "engines": {
     "node": ">=22"
   },

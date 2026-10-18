@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 /*
  * The machine map of the I17 scenarios (collaboration#tests 1-20): packages/collaboration/tests/i17-scenarios.json says,
- * for each scenario, which lanes carry it and which files hold it. Paths are relative to packages/collaboration. The
- * test reads that map and the file system only. It cannot run the scenarios; it keeps the map from drifting away from
- * the files: none may be missing, every lane must have a file of its kind, and the three scenarios that need real
- * processes (2, 3, 10; docker stand, PLAN4) have their file under hub/test/stand.
+ * for each scenario, which lanes carry it and which files hold it. Paths are relative to packages/collaboration; a file of
+ * another package is named from the monorepo root (packages/<name>/...) and is checked only where that root exists (not in
+ * the clean-consumer copy of this package, I14, which has no sibling tests). The test reads that map and the file system
+ * only. It cannot run the scenarios; it keeps the map from drifting away from the files: none may be missing, every lane
+ * must have a file of its kind, and the three scenarios that need real processes (2, 3, 10; docker stand, PLAN4) have their
+ * file under hub/test/stand.
  */
 
 const I17_STAND_SCENARIOS = [2, 3, 10];
 
 /** The lane => a file of the kind the lane runs, as a regular expression over the path relative to packages/collaboration. */
 const I17_LANE_FILES = [
-    'php' => '#^(tests|\.\./documents/tests)/.+Test\.php$#',
+    'php' => '#^(tests|packages/documents/tests)/.+Test\.php$#',
     'serial' => '#^tests/Concurrency/.+RaceTest\.php$#',
     'node' => '#^hub/test/[^/]+\.test\.js$#',
-    'vitest' => '#^\.\./vue-collaboration/tests/.+\.test\.ts$#',
+    'vitest' => '#^packages/vue-collaboration/tests/.+\.test\.ts$#',
     'stand' => '#^hub/test/stand/[^/]+\.stand\.js$#',
 ];
 
@@ -38,6 +40,8 @@ it('maps exactly the scenarios 1 to 20', function (): void {
 
 it('gives every scenario known lanes and files, each file existing', function (): void {
     $root = dirname(__DIR__, 2);
+    $monorepo = dirname($root, 2);
+    $inMonorepo = is_file($monorepo.'/release/packages.json');
 
     foreach (i17Map() as $number => $entry) {
         expect($entry['lanes'] ?? null)->toBeArray()->not->toBeEmpty("scenario $number has lanes")
@@ -47,7 +51,13 @@ it('gives every scenario known lanes and files, each file existing', function ()
         expect(array_unique($entry['files']))->toHaveCount(count($entry['files']), "scenario $number repeats a file");
 
         foreach ($entry['files'] as $file) {
-            expect(is_file($root.'/'.$file))->toBeTrue("scenario $number: $file does not exist");
+            $path = str_starts_with($file, 'packages/') ? $monorepo.'/'.$file : $root.'/'.$file;
+
+            if (str_starts_with($file, 'packages/') && ! $inMonorepo) {
+                continue;
+            }
+
+            expect(is_file($path))->toBeTrue("scenario $number: $file does not exist");
         }
     }
 });

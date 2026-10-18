@@ -13,8 +13,8 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "build": "npm run build --workspace @vaulter/vue",
-    "test": "npm run test --workspace @vaulter/vue",
+    "build": "npm run build --workspace @vaulter/vue && npm run build --workspace @vaulter/vue-collaboration",
+    "test": "npm run test --workspace @vaulter/vue && npm run test --workspace @vaulter/vue-collaboration",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"
