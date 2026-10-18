@@ -62,6 +62,21 @@ still in the outbox become pending again for that consumer (done and dead rows i
 and the gaps the range covers are acknowledged; it exits 1 when part of the range is no
 longer in the outbox. `--ack-only` acknowledges the loss without a replay.
 
+## Dead letters
+
+A row that used up `outbox.max_attempts` is `dead`; it stays for `outbox.dead_retention_seconds` and does not
+hold back other events or other consumers: each consumer has its own rows, so a dead row of one never delays
+another. Where to see it:
+
+- `vaulter:doctor` — `core.outbox.dead` warns with the number of dead rows per consumer within the dead retention;
+  read `last_error` of the rows to find the cause.
+- metrics — `vaulter_outbox_dead_total{consumer}` counts rows that died, `vaulter_outbox_dead_rows{consumer}` is the
+  current number of dead rows (a gauge that falls when they are replayed or pruned).
+
+To retry, fix the cause and run `vaulter:relay:replay --consumer= --from= --to=` for the seq range of the rows.
+The dead rows of that range become `pending` again with `attempts` reset to 0, and the command prints how many.
+Rows outside the range stay as they are.
+
 ## Retention
 
 `vaulter:outbox:prune` runs hourly (`vaulter.schedule.outbox_prune`). It deletes an event

@@ -84,3 +84,37 @@ sequence на заблокированной строке внутри свое�
 ожидания всё равно отклоняется с `409 document_content_degraded`, если между предпроверкой вызывающего
 и блокировкой закоммитилось восстановление ревизии более новой схемы или с деградацией. Отклонённая
 запись не меняет содержимое, Yjs-состояние, версию схемы и чекпоинты.
+
+## Версии агрегатов (реестр)
+
+У каждого агрегата, который меняет операция `if_match`, своя колонка версии, поэтому compare-and-set никогда не
+прячется за sequence чужой строки. Запись — `UPDATE … SET version = version + 1 WHERE id = ? AND version = ?`
+на агрегате, заблокированном в транзакции операции; ноль затронутых строк — отказ. Политика каждой операции —
+в [каталоге операций](/ru/reference/operations) ([ADR-0032](/adr/0032-operation-catalog-and-concurrency)).
+
+| Агрегат | Версия | Тег представления (`etag`) | Отказ | Операции |
+|---|---|---|---|---|
+| `drive.node` | `v_nodes.sequence` | ETag узла (выше) | `412 node_sequence_mismatch` | переименование, перенос, корзина, восстановление, purge, свойства, ревизии |
+| `drive.node_access` | `v_nodes.access_version` (гранты и наследование узла; `sequence` не меняется) | `GET nodes/{node}/grants`: id узла + `access_version` | `412 stale_write` | отзыв, ограничение и возврат наследования |
+| `drive.share` | `v_node_shares.version` | id шара + `version` | `412 stale_write` | обновление, ротация, отзыв |
+| `drive.drive` | `v_drives.version` | `GET drives/{drive}`: id + `version` | `412 stale_write` | архивирование, разархивирование, удаление |
+| `documents.document` | `v_documents.state_version` | `{documentId}.{epoch}.{stateVersion}` | `412 document_state_mismatch` | обновление содержимого, восстановление |
+| `documents.comment` | `v_node_comments.version` | id комментария + `version` | `412 stale_write` | resolve, удаление |
+| `webhooks.endpoint` | `v_webhook_endpoints.version` | id endpoint'а + `version` | `412 stale_write` | обновление, деактивация, ротация секрета, удаление |
+
+Тело ресурса несёт то же значение в `etag`, заголовок `ETag` его повторяет. Создание строки (грант, шар,
+комментарий, endpoint, папка, загрузка) — `append`: `If-Match` не принимает. У операций `natural`,
+`state_machine`, `generation` и `row_identity` `If-Match` тоже нет; их повтор безопасен по самому состоянию.
+
+## Коды
+
+| Ситуация | Ответ |
+|---|---|
+| `If-Match` отсутствует или `*` на маршруте `if_match` | `428 precondition_required` (для идемпотентности не сохраняется) |
+| тег устарел или чужой | `412` — `node_sequence_mismatch` и `document_state_mismatch` сохраняют свои коды; остальные агрегаты отвечают `stale_write` (retryable `after_refetch`, receipt `cacheable`) |
+| вызывающий не видит ресурс | `404` до чтения предусловия, поэтому тег не раскрывает скрытый ресурс |
+| fence поколения (коллаборация) | `409 collaboration_*` |
+
+`stale_write` называет в деталях `aggregate` и `id` ресурса и никогда не текущий тег; клиент перечитывает ресурс
+и решает заново. Так как отказ `cacheable`, повтор под тем же `Idempotency-Key` повторяет его, а не гонится с
+параллельным изменением. См. [коды ошибок](/ru/reference/errors).

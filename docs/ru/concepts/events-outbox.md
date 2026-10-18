@@ -59,6 +59,21 @@ drive), поэтому payload несёт seq журнала. В той же т�
 покрытые диапазоном разрывы подтверждаются; код выхода 1, если часть диапазона уже не в outbox.
 `--ack-only` подтверждает потерю без повтора.
 
+## Dead letters
+
+Строка, исчерпавшая `outbox.max_attempts`, становится `dead`; она хранится `outbox.dead_retention_seconds` и не
+задерживает ни другие события, ни других consumer'ов: у каждого consumer'а свои строки, поэтому dead-строка
+одного никогда не тормозит другого. Где её увидеть:
+
+- `vaulter:doctor` — `core.outbox.dead` предупреждает числом dead-строк по consumer'ам в пределах хранения;
+  причину ищите в `last_error` строк.
+- метрики — `vaulter_outbox_dead_total{consumer}` считает умершие строки, `vaulter_outbox_dead_rows{consumer}` —
+  текущее число dead-строк (gauge, падает после replay или чистки).
+
+Чтобы повторить, устраните причину и выполните `vaulter:relay:replay --consumer= --from= --to=` для диапазона seq
+этих строк. Dead-строки диапазона снова становятся `pending` с `attempts` = 0, команда печатает их число.
+Строки вне диапазона не меняются.
+
 ## Хранение
 
 `vaulter:outbox:prune` запускается ежечасно (`vaulter.schedule.outbox_prune`). Событие старше

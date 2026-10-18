@@ -24,6 +24,8 @@ outline: deep
 | `vaulter:make:profile` | Сгенерировать класс-провайдер Storage Panel |
 | `vaulter:blobs:gc` | Двухфазная, устойчивая к гонкам сборка мусора блобов |
 | `vaulter:blobs:reconcile` | Пересчитать `ref_count` блобов из пинов и сообщить о висячих строках |
+| `vaulter:blobs:scrub` | Сверить байты блобов с их sha256 в пределах выборки и бюджета ([руководство](/ru/guides/blob-integrity)) |
+| `vaulter:operations` | Напечатать каталог операций ([справочник](/ru/reference/operations)) |
 | `vaulter:trash:purge` | Окончательно удалить узлы из корзины по истечении срока хранения |
 | `vaulter:revisions:prune` | Удалить нетекущие ревизии файлов сверх политики ретеншна профиля |
 | `vaulter:uploads:sweep` | Прервать и подчистить протухшие сессии резюмируемой загрузки |

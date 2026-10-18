@@ -32,3 +32,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0029 — Idempotency](/adr/0029-idempotency) — _accepted; builds on ADR-0028_
 - [ADR-0030 — Package ownership of schema, models and configuration](/adr/0030-package-ownership-and-schema) — _accepted; builds on ADR-0027_
 - [ADR-0031 — The collaboration package and the durability model](/adr/0031-collaboration-package-and-durability) — _accepted; builds on ADR-0030; replaces ADR-0001 in part_
+- [ADR-0032 — The operation catalogue and aggregate concurrency](/adr/0032-operation-catalog-and-concurrency) — _accepted; builds on ADR-0028 and ADR-0029_

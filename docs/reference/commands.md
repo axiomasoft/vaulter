@@ -25,6 +25,8 @@ themselves — see [Scheduling](#scheduling).
 | `vaulter:make:profile` | Scaffold a storage-panel provider class |
 | `vaulter:blobs:gc` | Two-phase, race-safe blob garbage collection |
 | `vaulter:blobs:reconcile` | Rebuild blob `ref_count` from the pins and report dangling rows |
+| `vaulter:blobs:scrub` | Verify stored blob bytes against their sha256 within a sample and a budget ([guide](/guides/blob-integrity)) |
+| `vaulter:operations` | Print the operation catalogue ([reference](/reference/operations)) |
 | `vaulter:trash:purge` | Permanently delete trashed nodes past retention |
 | `vaulter:revisions:prune` | Delete non-current file revisions past the profile retention policy |
 | `vaulter:relay` | Relay the outbox to its consumers: register, reconcile, deliver, hold |

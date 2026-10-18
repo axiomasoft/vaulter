@@ -83,3 +83,39 @@ caller passed in. The same holds for "may this state be overwritten": a write th
 expectation is still refused with `409 document_content_degraded` when a restore of a newer-schema
 or degraded revision committed between the caller's pre-check and the lock. The refused write
 changes no content, Yjs state, schema version or checkpoint.
+
+## Aggregate versions (the registry)
+
+Every aggregate that an `if_match` operation changes has its own version column, so a compare-and-set
+never hides behind the sequence of another row. The write is
+`UPDATE … SET version = version + 1 WHERE id = ? AND version = ?` on the aggregate locked in the
+transaction of the operation; zero affected rows is the refusal. The policy of each operation is in the
+[operation catalogue](/reference/operations) ([ADR-0032](/adr/0032-operation-catalog-and-concurrency)).
+
+| Aggregate | Version | Representation tag (`etag`) | Refusal | Operations |
+|---|---|---|---|---|
+| `drive.node` | `v_nodes.sequence` | node ETag (above) | `412 node_sequence_mismatch` | rename, move, trash, restore, purge, properties, revisions |
+| `drive.node_access` | `v_nodes.access_version` (grants and inheritance of the node; `sequence` does not move) | `GET nodes/{node}/grants`: node id + `access_version` | `412 stale_write` | revoke, restrict and restore inheritance |
+| `drive.share` | `v_node_shares.version` | share id + `version` | `412 stale_write` | update, rotate, revoke |
+| `drive.drive` | `v_drives.version` | `GET drives/{drive}`: id + `version` | `412 stale_write` | archive, unarchive, delete |
+| `documents.document` | `v_documents.state_version` | `{documentId}.{epoch}.{stateVersion}` | `412 document_state_mismatch` | content update, restore |
+| `documents.comment` | `v_node_comments.version` | comment id + `version` | `412 stale_write` | resolve, delete |
+| `webhooks.endpoint` | `v_webhook_endpoints.version` | endpoint id + `version` | `412 stale_write` | update, deactivate, rotate secret, delete |
+
+A resource body carries the same value in `etag`, and the `ETag` header repeats it. Creating a row
+(grant, share, comment, endpoint, folder, upload) is `append`: it takes no `If-Match`.
+`natural`, `state_machine`, `generation` and `row_identity` operations have no `If-Match` either;
+their repeat is made safe by the state itself.
+
+## Codes
+
+| Situation | Answer |
+|---|---|
+| `If-Match` missing or `*` on an `if_match` route | `428 precondition_required` (not stored for idempotency) |
+| the tag is stale or foreign | `412` — `node_sequence_mismatch` and `document_state_mismatch` keep their codes; every other aggregate answers `stale_write` (retryable `after_refetch`, receipt `cacheable`) |
+| the caller cannot see the resource | `404` before the precondition is read, so a tag never discloses a hidden resource |
+| generation fence (collaboration) | `409 collaboration_*` |
+
+`stale_write` names the `aggregate` and the `id` of the resource in its details and never the current tag; the client reloads
+the resource and decides again. Because the refusal is `cacheable`, a retry under the same
+`Idempotency-Key` repeats it instead of racing a concurrent change. See the [error codes](/reference/errors).
