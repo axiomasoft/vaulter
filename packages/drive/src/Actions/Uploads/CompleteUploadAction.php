@@ -143,6 +143,11 @@ final readonly class CompleteUploadAction
         if (!$context->actor->isSystem()) {
             $type = ($session->metadata ?? [])['actor_type'] ?? null;
             if ($session->created_by === null || (string) $session->created_by !== (string) $context->actor->ref()->id || ($type !== null && $type !== $context->actor->ref()->type)) {
+                // Another caller's session is a 403 only for who may see where it uploads to; for anyone else it is as
+                // unknown as a missing one (R3), not a proof that the id exists.
+                $target = $this->locator->find(context: $context, key: $session->target_node_id ?? $session->target_parent_id ?? $drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
+                $this->guard->authorize(context: $context, ability: Ability::View, node: $target);
+
                 throw PermissionDeniedException::forAbility('upload-session-owner');
             }
         }

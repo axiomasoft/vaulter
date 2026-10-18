@@ -116,6 +116,31 @@ P\Tests\Http\IfMatchRequiredTest::__pest_evaluable_it_answers_an_unknown_endpoin
 P\Tests\Http\IfMatchRequiredTest::__pest_evaluable_it_answers_an_unknown_endpoint_404_once_the_caller_may_manage_endpoints"('webhook-endpoints.update')"
 P\Tests\Http\IfMatchRequiredTest::__pest_evaluable_it_raises_the_version_when_the_worker_switches_a_failing_endpoint_off__so_a_tag_read_while_it_was_active_cannot_switch_it_back_on
 P\Tests\Http\IfMatchRequiredTest::__pest_evaluable_it_tags_the_endpoint_with_its_id_and_version__and_each_change_raises_the_version_and_the_tag
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_covers_every_mutating_route_of_the_package__with_a_reason_for_each_row_that_does_not_apply
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-deliveries.redeliver R1""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-deliveries.redeliver R2""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-deliveries.redeliver R4""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-deliveries.redeliver R9""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.deactivate R1""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.deactivate R2""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.deactivate R4""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.deactivate R9""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.destroy R1""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.destroy R2""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.destroy R4""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.destroy R9""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.rotate-secret R1""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.rotate-secret R2""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.rotate-secret R4""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.rotate-secret R9""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.store R1""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.store R2""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.store R4""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.store R9""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.update R1""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.update R2""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.update R4""
+P\Tests\Http\SecurityMatrixTest::__pest_evaluable_it_holds_the_security_matrix"dataset "webhook-endpoints.update R9""
 P\Tests\Http\WebhookEndpointsV1Test::__pest_evaluable_it_gates_every_action__reads_included__behind_the_manage_ability
 P\Tests\Http\WebhookEndpointsV1Test::__pest_evaluable_it_pages_the_deliveries_of_one_endpoint_only
 P\Tests\Http\WebhookEndpointsV1Test::__pest_evaluable_it_redelivers_a_dead_delivery__202___refuses_a_pending_one__409__and_one_of_another_endpoint__404_

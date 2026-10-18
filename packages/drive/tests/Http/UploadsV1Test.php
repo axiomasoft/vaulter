@@ -6,6 +6,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Orchestra\Testbench\TestCase;
+use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\Http\V1;
 use Vaulter\Drive\Tests\Http\DriveV1;
@@ -114,9 +116,12 @@ it('requires If-Match for a session that targets an existing file and accepts th
 it('keeps a session to its owner and answers an unknown upload id as not found', function (): void {
     $uploadId = $this->postJson(V1::url('drives/'.$this->driveId.'/uploads'), ['name' => 'mine.bin', 'total_size_bytes' => 4])->json('data.upload_id');
 
+    // Who cannot see where it uploads to gets the answer for an id that does not exist (R3); who can see it is told the session is not theirs.
     $this->actingAs(V1::user(2));
-    $this->getJson(V1::url('uploads/'.$uploadId))->assertForbidden()->assertJsonPath('code', 'permission_denied');
+    $this->getJson(V1::url('uploads/'.$uploadId))->assertNotFound()->assertJsonPath('code', 'node_not_found');
     $this->getJson(V1::url('uploads/no-such-upload'))->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    AccessTestHelpers::grant(DriveTestHelpers::model($this->drive->root()), RoleRegistry::READER, subjectId: 2);
+    $this->getJson(V1::url('uploads/'.$uploadId))->assertForbidden()->assertJsonPath('code', 'permission_denied');
 });
 
 it('refuses resumable uploads with 403 profile_restriction when the feature is off, routes still registered', function (): void {
