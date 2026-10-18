@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Event;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
@@ -13,7 +15,9 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
+use Vaulter\Exceptions\Operations\UnknownOperationException;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
+use Vaulter\Idempotency\IdempotencyStore;
 use Vaulter\Kernel;
 use Vaulter\Modules\CompiledModules;
 use Vaulter\Modules\InvalidModuleGraph;
@@ -23,10 +27,13 @@ use Vaulter\Modules\SlotContribution;
 use Vaulter\Operations\ModuleReadiness;
 use Vaulter\Operations\NoOperationClaim;
 use Vaulter\Operations\Operation;
+use Vaulter\Operations\OperationCatalog;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSources;
 use Vaulter\Operations\OperationSpec;
 use Vaulter\Schema\ModuleSchemas;
+use Vaulter\Tests\Operations\Fixtures\ContractOperationPolicies;
 use Vaulter\Tests\Operations\Fixtures\OuterMiddleware;
 use Vaulter\Tests\Operations\Fixtures\ProbeMiddleware;
 use Vaulter\Tests\TestCase;
@@ -59,11 +66,12 @@ function runnerContractRunner(array $middleware, CompiledModules|InvalidModuleGr
             $middleware,
             array_keys($middleware),
         );
+        $arguments['operations']['drive'][] = ContractOperationPolicies::class;
         $state = new CompiledModules(...$arguments);
     }
     $kernel->seal($state);
 
-    return new OperationRunner($kernel, new ModuleReadiness($kernel, app(VaulterDatabase::class), app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), app(VaulterDatabase::class), new NoOperationClaim);
+    return new OperationRunner($kernel, new ModuleReadiness($kernel, app(VaulterDatabase::class), app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), app(VaulterDatabase::class), new NoOperationClaim, new OperationCatalog(static fn (): array => OperationSources::active($kernel)));
 }
 
 function runnerContractSpec(string $name = 'drive.folders.create', string $module = 'drive'): OperationSpec
@@ -318,4 +326,64 @@ it('contributes the telemetry middleware to the container runner', function (): 
 
     expect($ids)->toBe(['core.telemetry'])
         ->and(app(OperationRunner::class))->toBe(app(OperationRunner::class));
+});
+
+it('refuses a mutating operation outside the catalogue before the middleware, the claim and the transaction (D47)', function (): void {
+    $context = DriveContext::system(AccessTestHelpers::storage(), 'runner contract');
+    $keys = app(DatabaseConfig::class)->table(IdempotencyStore::ENTITY);
+    $before = app(VaulterDatabase::class)->connection()->table($keys)->count();
+    $transactions = 0;
+    Event::listen(TransactionBeginning::class, static function () use (&$transactions): void {
+        $transactions++;
+    });
+    $ran = false;
+    $attempt = function () use (&$ran): void {
+        $ran = true;
+    };
+
+    // The container runner, with the real idempotency claim: a keyed write of an undeclared operation claims nothing.
+    expect(fn () => app(OperationRunner::class)->write(runnerContractSpec('drive.undeclared.write'), $context->operation->withIdempotencyKey('key-1'), $attempt))
+        ->toThrow(UnknownOperationException::class, '"drive.undeclared.write" of the module "drive" has no policy')
+        ->and(fn () => runnerContractRunner([ProbeMiddleware::class])->write(runnerContractSpec('drive.undeclared.write'), $context->operation, $attempt))
+        ->toThrow(UnknownOperationException::class);
+
+    expect($ran)->toBeFalse()
+        ->and($transactions)->toBe(0)
+        ->and(ProbeMiddleware::$log)->toBe([])
+        ->and(app(VaulterDatabase::class)->connection()->table($keys)->count())->toBe($before);
+});
+
+it('refuses an operation that runs as another module than the one declaring its policy', function (): void {
+    $context = DriveContext::system(AccessTestHelpers::storage(), 'runner contract');
+    $ran = false;
+
+    expect(fn () => runnerContractRunner([])->write(runnerContractSpec('drive.folders.create', 'core'), $context->operation, function () use (&$ran): void {
+        $ran = true;
+    }))->toThrow(UnknownOperationException::class, 'runs as the module "core", but the module "drive" declares its policy')
+        ->and($ran)->toBeFalse();
+});
+
+it('lets a non-mutating operation run without a policy', function (): void {
+    $context = DriveContext::system(AccessTestHelpers::storage(), 'runner contract');
+    $spec = new OperationSpec(name: 'drive.undeclared.read', module: new ModuleId('drive'), mutating: false);
+
+    expect(runnerContractRunner([])->write($spec, $context->operation, static fn (): string => 'read'))->toBe('read');
+});
+
+it('refuses an undeclared composed write inside a declared one and rolls the outer one back', function (): void {
+    $context = DriveContext::system(AccessTestHelpers::storage(), 'runner contract');
+    $runner = runnerContractRunner([ProbeMiddleware::class]);
+    $inner = false;
+
+    expect(fn () => $runner->write(runnerContractSpec('drive.outer.write'), $context->operation, function () use ($runner, $context, &$inner): void {
+        runnerContractFolder($context, 'outer-of-undeclared');
+        $runner->write(runnerContractSpec('drive.undeclared.write'), $context->operation, function () use (&$inner): void {
+            $inner = true;
+        });
+    }))->toThrow(UnknownOperationException::class, '"drive.undeclared.write"');
+
+    expect($inner)->toBeFalse()
+        ->and(ProbeMiddleware::$log)->toBe(['probe:drive.outer.write'])
+        ->and(runnerContractCounts('outer-of-undeclared')['nodes'])->toBe(0)
+        ->and($runner->inOperation())->toBeFalse();
 });

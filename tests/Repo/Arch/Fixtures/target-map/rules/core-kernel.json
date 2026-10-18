@@ -1781,6 +1781,86 @@
             "action": "keep",
             "phase": "stay",
             "why": "architecture#kernel: HTTP-каркас — the kernel labels the metrics of every versioned route; modules contribute their route names (P4.16)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\OperationsReferenceCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface); vaulter:operations prints the operation catalogue (D47, P6.1)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Concurrency\\StaleWriteException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#errors: the core code stale_write (412) of a stale If-Match on an aggregate version (D47, P6.1)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Operations\\UnknownOperationException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#kernel: Ошибки — kernel exception (a mutating operation outside the operation catalogue, D47, P6.1)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\ConcurrencyPolicy",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D47 (P6.1): the operation catalogue of the kernel — the runner refuses a mutating operation without a policy; modules contribute OperationPolicySource"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\IdempotencyPolicy",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D47 (P6.1): the operation catalogue of the kernel — the runner refuses a mutating operation without a policy; modules contribute OperationPolicySource"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationCatalog",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D47 (P6.1): the operation catalogue of the kernel — the runner refuses a mutating operation without a policy; modules contribute OperationPolicySource"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationPolicy",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D47 (P6.1): the operation catalogue of the kernel — the runner refuses a mutating operation without a policy; modules contribute OperationPolicySource"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationPolicySource",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D47 (P6.1): the operation catalogue of the kernel — the runner refuses a mutating operation without a policy; modules contribute OperationPolicySource"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationSources",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D47 (P6.1): the operation catalogue of the kernel — the runner refuses a mutating operation without a policy; modules contribute OperationPolicySource"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationsReference",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "D47 (P6.1): the operation catalogue of the kernel — the runner refuses a mutating operation without a policy; modules contribute OperationPolicySource"
         }
     ]
 }

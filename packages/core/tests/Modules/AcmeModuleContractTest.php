@@ -30,6 +30,7 @@ use Vaulter\Events\EventSink;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Events\Outbox\OutboxRelay;
 use Vaulter\Events\Outbox\OutboxStore;
+use Vaulter\Exceptions\Operations\UnknownOperationException;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
 use Vaulter\Kernel;
 use Vaulter\Media\MediaModule;
@@ -45,11 +46,17 @@ use Vaulter\Modules\OffersModules;
 use Vaulter\Modules\SlotContribution;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
+use Vaulter\Operations\ConcurrencyPolicy;
+use Vaulter\Operations\IdempotencyPolicy;
 use Vaulter\Operations\ModuleReadiness;
 use Vaulter\Operations\NoOperationClaim;
 use Vaulter\Operations\Operation;
+use Vaulter\Operations\OperationCatalog;
 use Vaulter\Operations\OperationMiddleware;
+use Vaulter\Operations\OperationPolicy;
+use Vaulter\Operations\OperationPolicySource;
 use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSources;
 use Vaulter\Operations\OperationSpec;
 use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Testing\Contracts\ModuleContractTests;
@@ -58,6 +65,7 @@ use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeDownloadGuard;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeEventSink;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeMiddleware;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeModule;
+use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeOperationPolicies;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeOutboxConsumer;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeProbe;
 use Vaulter\Tests\Modules\Fixtures\AcmeModule\AcmeRestriction;
@@ -157,6 +165,8 @@ it('uses only the module surface, the slot contracts and what their signatures n
         Kernel::class, Activation::class, Cardinality::class, ModuleBindings::class,
         ModuleBuilder::class, ModuleId::class, OffersModules::class, SlotKind::class,
         VaulterModule::class,
+        // The operation catalogue a module declares its operations into (D47).
+        OperationPolicySource::class, OperationPolicy::class, ConcurrencyPolicy::class, IdempotencyPolicy::class,
         // Documented in the contract of the slot: the denial a DownloadGuard throws, the findings a DoctorCheck returns.
         ContentUnavailableException::class,
         DoctorFinding::class,
@@ -278,7 +288,7 @@ function acmeRunner(Kernel $kernel): OperationRunner
 {
     $database = app(VaulterDatabase::class);
 
-    return new OperationRunner($kernel, new ModuleReadiness($kernel, $database, app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), $database, new NoOperationClaim);
+    return new OperationRunner($kernel, new ModuleReadiness($kernel, $database, app(DatabaseConfig::class), new ModuleSchemas($kernel, app())), $database, new NoOperationClaim, new OperationCatalog(static fn (): array => OperationSources::active($kernel)));
 }
 
 function acmeWrite(OperationRunner $runner, Closure $attempt): mixed
@@ -287,6 +297,15 @@ function acmeWrite(OperationRunner $runner, Closure $attempt): mixed
 
     return $runner->write(new OperationSpec(name: 'drive.folders.create', module: new ModuleId('drive')), $context->operation, $attempt);
 }
+
+it('runs an operation it declares in the catalogue, like a built-in module (D47)', function (): void {
+    $context = DriveContext::system(AccessTestHelpers::storage(), 'acme contract');
+    $spec = new OperationSpec(name: AcmeOperationPolicies::RECORD, module: new ModuleId('acme'));
+
+    expect(acmeRunner(acmeKernel())->write($spec, $context->operation, static fn (): string => 'recorded'))->toBe('recorded')
+        ->and(fn () => acmeRunner(acmeKernel())->write(new OperationSpec(name: 'acme.pings.forget', module: new ModuleId('acme')), $context->operation, static fn (): string => 'forgotten'))
+        ->toThrow(UnknownOperationException::class, '"acme.pings.forget" of the module "acme" has no policy');
+});
 
 it('runs the operation once behind the module middleware, inside the root transaction, and returns its own result', function (): void {
     $result = new stdClass;

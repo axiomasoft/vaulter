@@ -37,7 +37,7 @@ it('caches a stale precondition and asks the client to refetch', function (strin
     expect($spec->status)->toBe(412)
         ->and($spec->retryable)->toBe(Retryable::AfterRefetch)
         ->and($spec->receipt)->toBe(ReceiptPolicy::Cacheable);
-})->with(['node_sequence_mismatch', 'document_state_mismatch']);
+})->with(['node_sequence_mismatch', 'document_state_mismatch', 'stale_write']);
 
 it('caches the deterministic domain refusals of the owners', function (string $code): void {
     expect(fullProblemCatalog()->spec($code)->receipt)->toBe(ReceiptPolicy::Cacheable, $code);

@@ -105,6 +105,12 @@
         },
         {
             "match": "exact",
+            "value": "command:vaulter:operations",
+            "owner": "core",
+            "why": "the kernel prints its operation catalogue (D47, like the reference commands)"
+        },
+        {
+            "match": "exact",
             "value": "command:vaulter:idempotency:prune",
             "owner": "core",
             "why": "D25: the idempotency receipts of the kernel (architecture#idempotency-concurrency, P3.12)"

@@ -1380,6 +1380,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/collaboration/src/Operations/CollaborationOperationPolicies.php",
+            "fqcn": "Vaulter\\Collaboration\\Operations\\CollaborationOperationPolicies",
+            "kind": "final-class",
+            "note": null,
+            "owner": "collaboration",
+            "package": "collaboration",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Collaboration\\Operations\\CollaborationOperationPolicies"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/collaboration/src/Operations/CollaborationOperations.php",
             "fqcn": "Vaulter\\Collaboration\\Operations\\CollaborationOperations",
             "kind": "final-class",
@@ -2062,6 +2076,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Console\\ModulesCommand",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Console\\ModulesCommand"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Console/OperationsReferenceCommand.php",
+            "fqcn": "Vaulter\\Console\\OperationsReferenceCommand",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Console\\OperationsReferenceCommand",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Console\\OperationsReferenceCommand"
         },
         {
             "action": "keep",
@@ -4162,6 +4190,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\Operations\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Documents\\Operations\\DocumentOperations"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Operations/DocumentsOperationPolicies.php",
+            "fqcn": "Vaulter\\Documents\\Operations\\DocumentsOperationPolicies",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Operations\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Operations\\DocumentsOperationPolicies"
         },
         {
             "action": "keep",
@@ -10690,6 +10732,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Operations/DriveOperationPolicies.php",
+            "fqcn": "Vaulter\\Drive\\Operations\\DriveOperationPolicies",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\Operations\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Operations\\DriveOperationPolicies"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/Operations/FileOperations.php",
             "fqcn": "Vaulter\\Drive\\Operations\\FileOperations",
             "kind": "final-class",
@@ -12762,6 +12818,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Exceptions/Concurrency/StaleWriteException.php",
+            "fqcn": "Vaulter\\Exceptions\\Concurrency\\StaleWriteException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Exceptions\\Concurrency\\StaleWriteException",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Exceptions\\Concurrency\\StaleWriteException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Exceptions/Configuration/InvalidConfigurationException.php",
             "fqcn": "Vaulter\\Exceptions\\Configuration\\InvalidConfigurationException",
             "kind": "final-class",
@@ -12884,6 +12954,20 @@
             "rule": "core-drive:fqcn:Vaulter\\Exceptions\\Nodes\\SequenceOverflowException",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Exceptions\\Nodes\\SequenceOverflowException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Exceptions/Operations/UnknownOperationException.php",
+            "fqcn": "Vaulter\\Exceptions\\Operations\\UnknownOperationException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Exceptions\\Operations\\UnknownOperationException",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Exceptions\\Operations\\UnknownOperationException"
         },
         {
             "action": "keep",
@@ -14946,6 +15030,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Operations/ConcurrencyPolicy.php",
+            "fqcn": "Vaulter\\Operations\\ConcurrencyPolicy",
+            "kind": "enum",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Operations\\ConcurrencyPolicy",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Operations\\ConcurrencyPolicy"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Operations/IdempotencyPolicy.php",
+            "fqcn": "Vaulter\\Operations\\IdempotencyPolicy",
+            "kind": "enum",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Operations\\IdempotencyPolicy",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Operations\\IdempotencyPolicy"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Operations/ModuleReadiness.php",
             "fqcn": "Vaulter\\Operations\\ModuleReadiness",
             "kind": "final-class",
@@ -14984,6 +15096,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Operations\\Operation",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Operations\\Operation"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Operations/OperationCatalog.php",
+            "fqcn": "Vaulter\\Operations\\OperationCatalog",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Operations\\OperationCatalog",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Operations\\OperationCatalog"
         },
         {
             "action": "keep",
@@ -15030,6 +15156,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Operations/OperationPolicy.php",
+            "fqcn": "Vaulter\\Operations\\OperationPolicy",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Operations\\OperationPolicy",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Operations\\OperationPolicy"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Operations/OperationPolicySource.php",
+            "fqcn": "Vaulter\\Operations\\OperationPolicySource",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Operations\\OperationPolicySource",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Operations\\OperationPolicySource"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Operations/OperationRunner.php",
             "fqcn": "Vaulter\\Operations\\OperationRunner",
             "kind": "final-class",
@@ -15044,6 +15198,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Operations/OperationSources.php",
+            "fqcn": "Vaulter\\Operations\\OperationSources",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Operations\\OperationSources",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Operations\\OperationSources"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Operations/OperationSpec.php",
             "fqcn": "Vaulter\\Operations\\OperationSpec",
             "kind": "final-class",
@@ -15054,6 +15222,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Operations\\OperationSpec",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Operations\\OperationSpec"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Operations/OperationsReference.php",
+            "fqcn": "Vaulter\\Operations\\OperationsReference",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Operations\\OperationsReference",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Operations\\OperationsReference"
         },
         {
             "action": "split",
@@ -16790,6 +16972,20 @@
             "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\WebhooksModule"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/webhooks/src/WebhooksOperationPolicies.php",
+            "fqcn": "Vaulter\\Webhooks\\WebhooksOperationPolicies",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "webhooks",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\WebhooksOperationPolicies"
         },
         {
             "action": "keep",

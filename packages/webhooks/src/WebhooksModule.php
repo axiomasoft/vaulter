@@ -59,6 +59,7 @@ final class WebhooksModule implements OwnsSchema, VaulterModule
             ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/webhooks.php')
             ->problems(WebhooksProblemCodes::class)
+            ->operations(WebhooksOperationPolicies::class)
             ->commands(
                 RetryWebhooksCommand::class,
                 PruneWebhooksCommand::class,

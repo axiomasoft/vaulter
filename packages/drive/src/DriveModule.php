@@ -61,6 +61,7 @@ use Vaulter\Drive\Handlers\NodePresenter as CoreNodePresenter;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Drive\Http\Support\DriveRouteLabels;
+use Vaulter\Drive\Operations\DriveOperationPolicies;
 use Vaulter\Drive\Providers\AccessRegistrar;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Providers\DriveSliceRegistrar;
@@ -143,6 +144,7 @@ final class DriveModule implements OwnsSchema, VaulterModule
             ->routes(dirname(__DIR__).'/routes/drive.php')
             ->problems(DriveProblemCodes::class)
             ->problems(DriveSliceProblemCodes::class)
+            ->operations(DriveOperationPolicies::class)
             // The drive's event types and its two event sinks.
             ->events(DriveEventType::class)
             ->slot(EventSink::class, ActivitySink::class, 'drive.activity')

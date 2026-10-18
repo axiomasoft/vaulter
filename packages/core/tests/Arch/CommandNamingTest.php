@@ -9,8 +9,9 @@ uses(TestCase::class);
 
 it('names every Vaulter command vaulter:<area>:<verb>', function (): void {
     // The top-level entry points are the install, doctor and modules commands (the module listing, D22) and the outbox
-    // relay with its replay (D29 names them vaulter:relay and vaulter:relay:replay).
-    $names = array_values(array_filter(array_keys(Artisan::all()), static fn (string $name): bool => str_starts_with($name, 'vaulter:') && !in_array($name, ['vaulter:install', 'vaulter:doctor', 'vaulter:modules', 'vaulter:relay'], true)));
+    // relay with its replay (D29 names them vaulter:relay and vaulter:relay:replay) and the operation catalogue (D47 names it
+    // vaulter:operations).
+    $names = array_values(array_filter(array_keys(Artisan::all()), static fn (string $name): bool => str_starts_with($name, 'vaulter:') && !in_array($name, ['vaulter:install', 'vaulter:doctor', 'vaulter:modules', 'vaulter:relay', 'vaulter:operations'], true)));
 
     expect($names)->not->toBeEmpty();
     foreach ($names as $name) {

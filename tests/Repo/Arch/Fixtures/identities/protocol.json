@@ -1302,6 +1302,13 @@
             "id": "format:operation-name",
             "kind": "protocol",
             "reason": "P5.10: + drive.access.invalidate, the operation of AccessInvalidation::changed() (a system actor whose reason is the host's)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "problem:stale_write",
+            "kind": "protocol",
+            "reason": "P6.1: 412, retryable after_refetch, receipt cacheable — the If-Match of a write names a version of an aggregate that is no longer current (Vaulter\\Exceptions\\Concurrency\\StaleWriteException, meta aggregate/id); nodes and documents keep their own codes"
         }
     ],
     "items": [
@@ -3196,6 +3203,18 @@
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
+        },
+        {
+            "exception": "Vaulter\\Exceptions\\Concurrency\\StaleWriteException",
+            "id": "problem:stale_write",
+            "owner": "core",
+            "receipt": "cacheable",
+            "retryable": "after_refetch",
+            "source": {
+                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+            },
+            "status": 412
         },
         {
             "exception": "Vaulter\\Drive\\Exceptions\\Policy\\TreeDepthLimitExceededException",

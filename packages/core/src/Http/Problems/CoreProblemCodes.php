@@ -12,6 +12,7 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Concurrency\StaleWriteException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
@@ -58,6 +59,8 @@ final class CoreProblemCodes implements ProblemCodeSource
             'rate_limited' => new ProblemSpec(429, ThrottleRequestsException::class, Retryable::WithBackoff),
             'registry_frozen' => new ProblemSpec(500, RegistryFrozenException::class),
             'route_not_found' => new ProblemSpec(404, NotFoundHttpException::class),
+            // The If-Match of a write names a version that is no longer current (D47): deterministic, so a receipt stores it.
+            'stale_write' => new ProblemSpec(412, StaleWriteException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
             'validation_failed' => new ProblemSpec(422, ValidationException::class),
             'write_outside_operation' => new ProblemSpec(500, WriteOutsideOperationException::class),
         ];

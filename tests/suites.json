@@ -482,6 +482,8 @@
             "packages/core/tests/Modules/RouteLabelSourceTest.php",
             "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
             "packages/core/tests/Observability/Tracing/TraceRecorderBindingTest.php",
+            "packages/core/tests/Operations/OperationCatalogTest.php",
+            "packages/core/tests/Operations/OperationsReferenceTest.php",
             "packages/core/tests/Unit/IdentityFitsKeyTest.php",
             "packages/core/tests/Unit/NodeNameTest.php"
           ]

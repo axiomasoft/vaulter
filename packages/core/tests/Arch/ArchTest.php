@@ -289,7 +289,7 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Repositories' => [],
         'Contracts' => ['IdStrategy'],
         // ADR-0017 amendment (ADR-0020): entry-point layers stay flat, so the allow-list is explicit.
-        'Operations' => ['AccessOperations', 'ActivityOperations', 'ChangeOperations', 'NodeLocator', 'NodeSequence', 'DriveContext', 'OperationContext', 'ShareOperations', 'Operation', 'OperationSpec', 'OperationRunner', 'OperationMiddleware', 'OperationClaim', 'NoOperationClaim', 'ModuleReadiness', 'AfterCommitFailure'],
+        'Operations' => ['AccessOperations', 'ActivityOperations', 'ChangeOperations', 'NodeLocator', 'NodeSequence', 'DriveContext', 'OperationContext', 'ShareOperations', 'Operation', 'OperationSpec', 'OperationRunner', 'OperationMiddleware', 'OperationClaim', 'NoOperationClaim', 'ModuleReadiness', 'AfterCommitFailure', 'ConcurrencyPolicy', 'IdempotencyPolicy', 'OperationPolicy', 'OperationPolicySource', 'OperationCatalog', 'OperationSources', 'OperationsReference'],
         // Revived in Phase D2 (P2 #5), kind-neutral naming in VLT-CANON P0.1: the
         // handler extensibility-seam VOs (FileDescriptor/ContentCapabilities/ViewerDescriptor/
         // NodePresentation) are kernel-shared — core's own Contracts\Handlers\*
@@ -698,6 +698,8 @@ arch('domain exceptions implement the HTTP problem contract')
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Support\MissingPackageException',
         'Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException',
+        // A mutating operation without a policy (D47) is a developer error: no problem code, a 500 internal_error.
+        'Vaulter\Exceptions\Operations\UnknownOperationException',
     ]);
 
 arch('production source never imports testing helpers (D35)')

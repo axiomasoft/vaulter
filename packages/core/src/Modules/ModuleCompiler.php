@@ -9,6 +9,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Events\EventTypeContract;
 use Vaulter\Http\Problems\ProblemCodeSource;
 use Vaulter\Http\Problems\ProblemSpec;
+use Vaulter\Operations\OperationPolicy;
+use Vaulter\Operations\OperationPolicySource;
+use Vaulter\Operations\OperationSpec;
 
 /**
  * Compiles the offered manifests into one sealed module graph (architecture#module-system, steps 1–5).
@@ -16,8 +19,8 @@ use Vaulter\Http\Problems\ProblemSpec;
  * `vaulter.modules` overrides come in as a value. Any defect yields {@see InvalidModuleGraph} with every
  * reason; nothing is activated partially.
  *
- * The only probes are `is_a()` checks of declared class-strings and the constant code tables of the declared
- * problem sources: config validation, never activation.
+ * The only probes are `is_a()` checks of declared class-strings and the constant tables of the declared
+ * problem and operation policy sources: config validation, never activation.
  */
 #[Internal]
 final class ModuleCompiler
@@ -156,6 +159,8 @@ final class ModuleCompiler
         $this->unique($builders, static fn (ModuleBuilder $b): array => $problemCodes[$b->module()->value] ?? [], 'problem code', $reasons);
         $eventTypes = $this->eventTypes($builders, $reasons);
         $this->unique($builders, static fn (ModuleBuilder $b): array => $eventTypes[$b->module()->value] ?? [], 'event type', $reasons);
+        $operations = $this->operationNames($builders, $reasons);
+        $this->unique($builders, static fn (ModuleBuilder $b): array => $operations[$b->module()->value] ?? [], 'operation', $reasons);
         foreach ($builders as $id => $builder) {
             foreach ($builder->bindingClasses() as $class) {
                 if (!is_a($class, ModuleBindings::class, true)) {
@@ -286,7 +291,7 @@ final class ModuleCompiler
         // 5. The sealed state: the declarations of the active modules, the schema of all of them.
         $states = [];
         $configs = $translations = $routeMiddleware = [];
-        $routes = $commands = $listeners = $schedules = $bindings = $events = $problems = $schemaPaths = [];
+        $routes = $commands = $listeners = $schedules = $bindings = $events = $problems = $operationSources = $schemaPaths = [];
         foreach ($known as $id => $module) {
             $builder = $builders[$id];
             $states[] = new ModuleState(
@@ -327,6 +332,9 @@ final class ModuleCompiler
             if ($builder->problemSources() !== []) {
                 $problems[$id] = $builder->problemSources();
             }
+            if ($builder->operationSources() !== []) {
+                $operationSources[$id] = array_values(array_unique($builder->operationSources()));
+            }
         }
 
         return new CompiledModules(
@@ -345,6 +353,7 @@ final class ModuleCompiler
             bindings: $bindings,
             events: $events,
             problems: $problems,
+            operations: $operationSources,
             schemaPaths: $schemaPaths,
             fingerprint: self::fingerprint($states, $override),
         );
@@ -578,6 +587,69 @@ final class ModuleCompiler
         }
 
         return $values;
+    }
+
+    /**
+     * The operation names each module declares a policy for (D47). A source is a value object without constructor
+     * arguments whose `policies()` is a constant table; the aggregate of a policy belongs to the declaring module.
+     *
+     * @param  array<string, ModuleBuilder> $builders
+     * @param  list<string>                 $reasons
+     * @return array<string, list<string>>  module id => operation names
+     */
+    private function operationNames(array $builders, array &$reasons): array
+    {
+        $names = [];
+        foreach ($builders as $id => $builder) {
+            foreach (array_unique($builder->operationSources()) as $class) {
+                if (!is_a($class, OperationPolicySource::class, true)) {
+                    $reasons[] = sprintf('module "%s" declares the operation source %s, which does not implement %s', $id, $class, OperationPolicySource::class);
+
+                    continue;
+                }
+                try {
+                    $table = self::declaredPolicies(new $class);
+                } catch (Throwable $e) {
+                    $reasons[] = sprintf('module "%s" declares the operation source %s, which cannot be read: %s', $id, $class, $e->getMessage());
+
+                    continue;
+                }
+                foreach ($table as $name => $policy) {
+                    if (!is_string($name) || strlen($name) > 64 || preg_match(OperationSpec::NAME_PATTERN, $name) !== 1) {
+                        $reasons[] = sprintf('operation source %s declares the malformed operation "%s"', $class, (string) $name);
+
+                        continue;
+                    }
+                    if (!$policy instanceof OperationPolicy) {
+                        $reasons[] = sprintf('operation source %s declares "%s" without an %s', $class, $name, OperationPolicy::class);
+
+                        continue;
+                    }
+                    // Still counted as declared: a name two modules declare is reported as such too.
+                    if ($policy->module() !== $id) {
+                        $reasons[] = sprintf('module "%s" declares the operation "%s" on the aggregate "%s" of another module', $id, $name, $policy->aggregate);
+                    }
+                    if (in_array($name, $names[$id] ?? [], true)) {
+                        $reasons[] = sprintf('module "%s" declares the operation "%s" twice (%s)', $id, $name, $class);
+
+                        continue;
+                    }
+                    $names[$id][] = $name;
+                }
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * What an operation source returns, read without trusting its declared shape.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function declaredPolicies(OperationPolicySource $source): array
+    {
+        return $source->policies();
     }
 
     /**

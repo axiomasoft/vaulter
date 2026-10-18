@@ -4516,6 +4516,7 @@ components:
           - share_not_found
           - share_password_required
           - share_role_not_allowed
+          - stale_write
           - tree_depth_limit_exceeded
           - tree_traversal_incomplete
           - unknown_document_type

@@ -1255,6 +1255,7 @@ export interface components {
              * @example share_not_found
              * @example share_password_required
              * @example share_role_not_allowed
+             * @example stale_write
              * @example tree_depth_limit_exceeded
              * @example tree_traversal_incomplete
              * @example unknown_document_type

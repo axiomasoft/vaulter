@@ -51,6 +51,7 @@ final class AcmeModule implements VaulterModule
             ->config('vaulter-acme', __DIR__.'/config.php')
             ->schema(__DIR__.'/migrations')
             ->routes(__DIR__.'/routes.php')
+            ->operations(AcmeOperationPolicies::class)
             ->commands(AcmeCommand::class)
             ->listen(AcmePinged::class, AcmeListener::class)
             ->bindings(AcmeBindings::class)

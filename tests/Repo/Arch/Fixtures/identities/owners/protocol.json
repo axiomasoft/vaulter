@@ -69,6 +69,12 @@
         },
         {
             "match": "exact",
+            "value": "problem:stale_write",
+            "owner": "core",
+            "why": "kernel concern: the stale If-Match of an aggregate version, shared by every module (D47, architecture#errors)"
+        },
+        {
+            "match": "exact",
             "value": "problem:rate_limited",
             "owner": "core",
             "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"

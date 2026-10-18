@@ -11,6 +11,7 @@ use Vaulter\Collaboration\Doctor\CollaborationCheck;
 use Vaulter\Collaboration\Drain\HubDrainer;
 use Vaulter\Collaboration\Drain\PendingRemovalGuard;
 use Vaulter\Collaboration\Http\Support\CollaborationRouteLabels;
+use Vaulter\Collaboration\Operations\CollaborationOperationPolicies;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Persistence\GenerationCloser;
 use Vaulter\Collaboration\Providers\CollaborationRegistrar;
@@ -82,6 +83,7 @@ final class CollaborationModule implements GuardsRemoval, OwnsSchema, VaulterMod
             ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/collaboration.php')
             ->problems(CollaborationProblemCodes::class)
+            ->operations(CollaborationOperationPolicies::class)
             ->bindings(CollaborationRegistrar::class)
             ->commands(PruneGenerationsCommand::class, DrainCommand::class)
             ->schedule(CollaborationSchedule::class)

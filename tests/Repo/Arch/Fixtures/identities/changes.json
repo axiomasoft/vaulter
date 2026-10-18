@@ -5439,6 +5439,20 @@
             "id": "index:v_collaboration_permission_versions.v_collaboration_permission_versions_pkey",
             "kind": "schema",
             "reason": "P5.10: index of the permission versions (D46)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "command:vaulter:operations",
+            "kind": "cli",
+            "reason": "P6.1: prints the operation catalogue of every offered module (operation, module, aggregate, concurrency, idempotency, routes) as Markdown, or one JSON document with --json; exit 0"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "problem:stale_write",
+            "kind": "protocol",
+            "reason": "P6.1: 412, retryable after_refetch, receipt cacheable — the If-Match of a write names a version of an aggregate that is no longer current (Vaulter\\Exceptions\\Concurrency\\StaleWriteException, meta aggregate/id); nodes and documents keep their own codes"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

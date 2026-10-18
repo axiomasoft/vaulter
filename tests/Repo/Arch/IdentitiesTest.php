@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D1', 'D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D26', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40', 'D46'];
+const ID_ACCEPTED_DECISIONS = ['D1', 'D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D26', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40', 'D46', 'D47'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -395,7 +395,8 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(33)
+        expect(count($items))->toBe(34)
+            ->and($items['command:vaulter:operations']['owner'])->toBe('core')
             ->and($items['command:vaulter:collaboration:prune']['owner'])->toBe('collaboration')
             ->and($items['command:vaulter:collaboration:drain']['owner'])->toBe('collaboration')
             ->and(array_column($items['command:vaulter:collaboration:drain']['options'], 'default', 'name'))->toBe(['deadline' => '30', 'release' => false])
@@ -433,7 +434,8 @@ describe('committed fixtures', function (): void {
 
         expect($count('event:'))->toBe(33)
             ->and($items['event:drive.access.effective_permissions_changed'])->toMatchArray(['owner' => 'drive', 'subject' => 'access', 'sinks' => ['activity' => false, 'external' => false, 'journal' => null]])
-            ->and($count('problem:'))->toBe(84)
+            ->and($count('problem:'))->toBe(85)
+            ->and($items['problem:stale_write'])->toMatchArray(['status' => 412, 'owner' => 'core', 'retryable' => 'after_refetch', 'receipt' => 'cacheable'])
             ->and($items['problem:collaboration_draining'])->toMatchArray(['status' => 503, 'owner' => 'collaboration', 'retryable' => 'with_backoff', 'receipt' => 'never'])
             ->and($items['problem:collaboration_checkpoint_conflict'])->toMatchArray(['status' => 409, 'owner' => 'collaboration', 'retryable' => 'after_refetch', 'receipt' => 'never'])
             ->and($items['problem:collaboration_update_too_large'])->toMatchArray(['status' => 413, 'owner' => 'collaboration', 'retryable' => 'never', 'receipt' => 'never'])

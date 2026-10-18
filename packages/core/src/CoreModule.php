@@ -13,6 +13,7 @@ use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\InstallCommand;
 use Vaulter\Console\ModulesCommand;
 use Vaulter\Console\ModuleUninstallCommand;
+use Vaulter\Console\OperationsReferenceCommand;
 use Vaulter\Console\PruneIdempotencyKeysCommand;
 use Vaulter\Console\PruneOutboxCommand;
 use Vaulter\Console\RelayCommand;
@@ -122,6 +123,7 @@ final class CoreModule implements OwnsSchema, VaulterModule
                 ModuleUninstallCommand::class,
                 EventsReferenceCommand::class,
                 ErrorsReferenceCommand::class,
+                OperationsReferenceCommand::class,
                 ConfigReferenceCommand::class,
                 CommandsReferenceCommand::class,
                 PruneIdempotencyKeysCommand::class,

@@ -126,6 +126,13 @@
             "id": "command:vaulter:collaboration:drain",
             "kind": "cli",
             "reason": "P5.6: managed disable (C10): {--deadline=30} {--release}; sets the draining flag, asks the hub to checkpoint every document with a pending marker and waits (not before drain.max_append_tx); exit 0 with no marker left, 1 listing the pending document_id, 2 a bad --deadline; --release removes the flag"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "command:vaulter:operations",
+            "kind": "cli",
+            "reason": "P6.1: prints the operation catalogue of every offered module (operation, module, aggregate, concurrency, idempotency, routes) as Markdown, or one JSON document with --json; exit 0"
         }
     ],
     "items": [
@@ -986,6 +993,33 @@
             "source": {
                 "file": "packages/core/src/Console/ModulesCommand.php",
                 "symbol": "Vaulter\\Console\\ModulesCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\OperationsReferenceCommand",
+            "description": "List the mutating operations with their concurrency and idempotency policies.",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:operations",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Print one JSON document",
+                    "name": "json",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/OperationsReferenceCommand.php",
+                "symbol": "Vaulter\\Console\\OperationsReferenceCommand"
             }
         },
         {

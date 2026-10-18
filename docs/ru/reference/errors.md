@@ -112,6 +112,7 @@ outline: deep
 | [`share_not_found`](#share_not_found) | 404 | drive | `never` | `never` | `Vaulter\Drive\Exceptions\Sharing\ShareNotFoundException` |
 | [`share_password_required`](#share_password_required) | 401 | drive | `never` | `never` | `Vaulter\Drive\Exceptions\Sharing\SharePasswordRequiredException` |
 | [`share_role_not_allowed`](#share_role_not_allowed) | 422 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Sharing\ShareRoleNotAllowedException` |
+| [`stale_write`](#stale_write) | 412 | core | `after_refetch` | `cacheable` | `Vaulter\Exceptions\Concurrency\StaleWriteException` |
 | [`tree_depth_limit_exceeded`](#tree_depth_limit_exceeded) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Policy\TreeDepthLimitExceededException` |
 | [`tree_traversal_incomplete`](#tree_traversal_incomplete) | 409 | drive | `never` | `cacheable` | `Vaulter\Drive\Exceptions\Nodes\TreeTraversalIncompleteException` |
 | [`unknown_document_type`](#unknown_document_type) | 422 | documents | `never` | `cacheable` | `Vaulter\Documents\Exceptions\UnknownDocumentTypeException` |
@@ -536,6 +537,12 @@ outline: deep
 **422** · drive · retryable `never` · receipt `cacheable`
 
 **Роль недопустима для ссылки** — Ссылка не может нести эту роль для этой аудитории.
+
+### `stale_write`
+
+**412** · core · retryable `after_refetch` · receipt `cacheable`
+
+**Устаревшая версия** — Ресурс изменился после того, как вы его прочитали; перечитайте его и повторите.
 
 ### `tree_depth_limit_exceeded`
 
