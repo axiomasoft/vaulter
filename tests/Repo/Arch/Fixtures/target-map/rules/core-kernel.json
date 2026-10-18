@@ -618,6 +618,14 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\OutboxDeadLettersCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#kernel + D29: the DLQ size is a property of the core-owned outbox and relay (P6.10)"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Doctor\\Checks\\OutboxLeasesCheck",
             "owner": "core",
             "action": "keep",

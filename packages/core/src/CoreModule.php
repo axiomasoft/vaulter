@@ -25,6 +25,7 @@ use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Doctor\Checks\DatabaseConnectionCheck;
 use Vaulter\Doctor\Checks\ModuleCacheFreshnessCheck;
 use Vaulter\Doctor\Checks\OutboxConsumerGapCheck;
+use Vaulter\Doctor\Checks\OutboxDeadLettersCheck;
 use Vaulter\Doctor\Checks\OutboxLagCheck;
 use Vaulter\Doctor\Checks\OutboxLeasesCheck;
 use Vaulter\Doctor\Checks\OutboxSettleWindowCheck;
@@ -75,6 +76,7 @@ final class CoreModule implements OwnsSchema, VaulterModule
         'core.cache' => CacheCheck::class,
         'core.modules.cache' => ModuleCacheFreshnessCheck::class,
         'core.outbox.lag' => OutboxLagCheck::class,
+        'core.outbox.dead' => OutboxDeadLettersCheck::class,
         'core.outbox.leases' => OutboxLeasesCheck::class,
         'core.outbox.consumer_gaps' => OutboxConsumerGapCheck::class,
         'core.outbox.settle_window' => OutboxSettleWindowCheck::class,

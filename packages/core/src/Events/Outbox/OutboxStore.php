@@ -385,8 +385,10 @@ final readonly class OutboxStore
      * (a done or dead row goes back to pending with a fresh budget) and acknowledges the gaps the range covers.
      * Returns the seqs the range actually covered (null when no event of it is alive) and the rows made pending.
      *
-     * @param  list<string>                                          $types
-     * @return array{covered: array{0: int, 1: int}|null, rows: int}
+     * `dead` counts the dead rows of the range that went back to pending (they are included in `rows`).
+     *
+     * @param  list<string>                                                     $types
+     * @return array{covered: array{0: int, 1: int}|null, rows: int, dead: int}
      */
     public function replay(string $id, array $types, int $from, int $to, CarbonImmutable $now): array
     {
@@ -400,14 +402,16 @@ final readonly class OutboxStore
                     $this->acknowledge($id, $from, $to, $now);
                 }
 
-                return ['covered' => $first === null || $last === null ? null : [self::int($first), self::int($last)], 'rows' => 0];
+                return ['covered' => $first === null || $last === null ? null : [self::int($first), self::int($last)], 'rows' => 0, 'dead' => 0];
             }
 
             $rows = $this->insertMissing($id, $types, $from - 1, $to, $now, onlyMissing: true);
-            $rows += $this->deliveries()
+            $inRange = fn (): Builder => $this->deliveries()
                 ->where('consumer_id', $id)
                 ->where('outbox_seq', '>=', $from)
-                ->where('outbox_seq', '<=', $to)
+                ->where('outbox_seq', '<=', $to);
+            $dead = $inRange()->where('state', DeliveryState::Dead->value)->count();
+            $rows += $inRange()
                 ->whereIn('state', [DeliveryState::Done->value, DeliveryState::Dead->value])
                 ->update(['state' => DeliveryState::Pending->value, 'attempts' => 0, 'next_attempt_at' => $now, 'continuation' => null, 'last_error' => null, 'done_at' => null, 'updated_at' => $now]);
             // A range whose head was already pruned is only partly replayed: its gaps stay open for --ack-only.
@@ -415,8 +419,29 @@ final readonly class OutboxStore
                 $this->acknowledge($id, $from, $to, $now);
             }
 
-            return ['covered' => [self::int($first), self::int($last)], 'rows' => $rows];
+            return ['covered' => [self::int($first), self::int($last)], 'rows' => $rows, 'dead' => $dead];
         });
+    }
+
+    /**
+     * The dead rows per consumer that retention still holds (done_at not before `$since`): the current DLQ size.
+     *
+     * @return array<string, int> consumer id => dead rows
+     */
+    public function deadRows(CarbonImmutable $since): array
+    {
+        $counts = [];
+        $rows = $this->deliveries()
+            ->where('state', DeliveryState::Dead->value)
+            ->where('done_at', '>=', $since)
+            ->selectRaw('consumer_id, count(*) as aggregate')
+            ->groupBy('consumer_id')
+            ->get();
+        foreach ($rows as $row) {
+            $counts[self::string($row->consumer_id)] = self::int($row->aggregate);
+        }
+
+        return $counts;
     }
 
     /** Marks the gaps of the consumer that `[$from, $to]` covers as acknowledged. */

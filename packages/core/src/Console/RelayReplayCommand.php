@@ -61,7 +61,7 @@ final class RelayReplayCommand extends Command
 
             return self::FAILURE;
         }
-        $this->components->info(sprintf('Replayed %d deliver%s of %s for seqs [%d, %d]; acknowledged %d gap(s).', $result['rows'], $result['rows'] === 1 ? 'y' : 'ies', $consumer, $covered[0], $covered[1], $result['acknowledged']));
+        $this->components->info(sprintf('Replayed %d deliver%s of %s for seqs [%d, %d] (%d dead returned to pending); acknowledged %d gap(s).', $result['rows'], $result['rows'] === 1 ? 'y' : 'ies', $consumer, $covered[0], $covered[1], $result['dead'], $result['acknowledged']));
         if ($covered[0] > (int) $from) {
             $this->components->error(sprintf('Seqs [%s, %d] are no longer in the outbox (retention): they cannot be replayed.', $from, $covered[0] - 1));
 

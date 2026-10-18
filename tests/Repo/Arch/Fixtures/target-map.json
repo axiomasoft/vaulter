@@ -2430,6 +2430,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Doctor/Checks/OutboxDeadLettersCheck.php",
+            "fqcn": "Vaulter\\Doctor\\Checks\\OutboxDeadLettersCheck",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Doctor\\Checks\\OutboxDeadLettersCheck",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Doctor\\Checks\\OutboxDeadLettersCheck"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Doctor/Checks/OutboxLagCheck.php",
             "fqcn": "Vaulter\\Doctor\\Checks\\OutboxLagCheck",
             "kind": "final-class",
