@@ -1573,8 +1573,8 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 ## Additions (current − original)
 
 - `repo`: 242 (introduced P1.3)
-- `core`: 559
-- `media`: 137
+- `core`: 563
+- `media`: 142
 - `drive`: 427
 - `documents`: 153
 - `azgard`: 9
