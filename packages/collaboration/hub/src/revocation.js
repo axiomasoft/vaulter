@@ -12,10 +12,10 @@ import { closeConnection, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, TOKEN_EXPIRED
 //     connection (4403; 4409 for a past generation, 4404 for a gone document, 4001 for a dead
 //     token), `read` makes it read-only (its writes are refused, the room's updates keep coming),
 //     `write` leaves it. The hub never works the rights out itself;
-//   - renewal: RENEW_BEFORE_MS before its token expires, the hub asks the backend for a new token of
-//     the connection. The backend checks the rights now; a writer who lost Edit is renewed
-//     read-only, any refusal closes the connection. A renewal never extends a token the backend did
-//     not issue again;
+//   - renewal: RENEW_BEFORE_MS before its token expires (halfway through a token that lives no
+//     longer than that), the hub asks the backend for a new token of the connection. The backend
+//     checks the rights now; a writer who lost Edit is renewed read-only, any refusal closes the
+//     connection. A renewal never extends a token the backend did not issue again;
 //   - expiry: the server's own timer closes a connection whose token expired (4001) — the bound of
 //     exposure when control messages are lost: token_ttl from the last token the backend issued.
 // A connection that is read-only or revoked is held there by beforeMessage(), ahead of every
@@ -25,7 +25,10 @@ import { closeConnection, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, TOKEN_EXPIRED
 // Time (clock, timers, sleep) is injectable, so tests move the clock to a token's expiry without
 // waiting.
 
-/** How long before a token's exp the hub renews it (default of VAULTER_COLLAB_RENEW_BEFORE_MS). */
+/**
+ * How long before a token's exp the hub renews it (default of VAULTER_COLLAB_RENEW_BEFORE_MS); at
+ * most half of what is left of the token when it is armed.
+ */
 export const RENEW_BEFORE_MS = 60_000
 
 /** The wait before a renewal that got no answer is tried again (bounded by the token's exp). */
@@ -199,8 +202,12 @@ export function createRevocation({
       return
     }
 
+    // A token that lives no longer than the lead is renewed halfway through what is left of it, so a
+    // short token_ttl never turns every renewal into the next one at once.
+    const leadMs = Math.min(renewBeforeMs, Math.floor(expiresInMs / 2))
+
     timersOf(entry).expiry = timers.set(() => expire(entry), expiresInMs)
-    scheduleRenewal(entry, Math.max(0, expiresInMs - renewBeforeMs))
+    scheduleRenewal(entry, expiresInMs - leadMs)
   }
 
   /** read: the connection keeps receiving the room's updates, and nothing it writes is taken. */
