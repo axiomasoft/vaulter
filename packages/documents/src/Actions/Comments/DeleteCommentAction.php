@@ -9,8 +9,10 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
+use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Support\DriveLifecycle;
 use Vaulter\Drive\Support\TreeGuard;
@@ -32,6 +34,7 @@ final readonly class DeleteCommentAction
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private AggregateVersion $versions,
     ) {}
 
     public function execute(DriveContext $context, DeleteCommentInput $data): void
@@ -47,6 +50,7 @@ final readonly class DeleteCommentAction
             }
             $this->tree->assertLive($current);
             $row = $this->comments->lock($data->comment) ?? throw CommentNotFoundException::forNode($nodeId, $data->comment->getKey());
+            $this->versions->assertExpected($row, 'version', $data->expectedVersion, NodeComment::AGGREGATE);
 
             $this->comments->delete($row);
             $row->setRelation('node', $current);

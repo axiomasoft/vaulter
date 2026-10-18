@@ -16,6 +16,9 @@ use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Data\Comments\ResolveCommentInput;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
+use Vaulter\Documents\Idempotency\CommentDeleteReceipt;
+use Vaulter\Documents\Idempotency\CommentReceiptCodec;
+use Vaulter\Documents\Idempotency\CommentReplayAuthorizer;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Drive\Access\OperationGuard;
@@ -28,6 +31,7 @@ use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
@@ -40,6 +44,11 @@ use Vaulter\Support\Identity;
  * Comment and either authorship or Edit; deleting a comment needs authorship or Manage.
  * A comment id is resolved only inside the addressed node, so another node's comment
  * is "not found" (comment_not_found). The drive profile must enable comments.
+ *
+ * Every write is idempotent by key (D25): the receipt is the comment, or for a deletion the ids and the basis the right
+ * was proven on, never the body. A comment has a version of its own (D47, CC2), which a resolution raises: pass
+ * CommentSnapshot::$version back as the expected version of resolve() and delete() to refuse a write on a comment that
+ * changed or went since it was read (412 stale_write).
  */
 #[Api]
 final readonly class CommentOperations implements DriveExtension
@@ -72,6 +81,13 @@ final readonly class CommentOperations implements DriveExtension
 
     public function add(NodeSnapshot|string|int $node, AddCommentInput $input): CommentSnapshot
     {
+        $nodeId = self::idOf($node);
+        $idempotency = new IdempotentWrite(
+            codec: new CommentReceiptCodec,
+            authorizer: CommentReplayAuthorizer::forAdd($this->context, $this->locator, $this->guard, $this->profiles, $nodeId),
+            fingerprint: ['node' => $nodeId, 'body' => $input->body, 'parent' => $input->parentId, 'anchor' => $input->anchor],
+        );
+
         return $this->write('add', function () use ($node, $input): CommentSnapshot {
             $node = $this->node($node, Ability::Comment, OperationKind::Mutation);
             if ($input->parentId !== null) {
@@ -80,34 +96,54 @@ final readonly class CommentOperations implements DriveExtension
             }
 
             return $this->mapper->comment($this->add->execute($this->context, $node, $input));
-        });
+        }, $idempotency);
     }
 
-    public function resolve(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment): CommentSnapshot
+    public function resolve(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment, ?int $expectedVersion = null): CommentSnapshot
     {
-        return $this->write('resolve', function () use ($node, $comment): CommentSnapshot {
-            $node = $this->node($node, Ability::Comment, OperationKind::Mutation);
-            $row = $this->query->comment($node, $comment);
-            if (!$this->isAuthor($row)) {
-                $this->guard->authorize($this->context, Ability::Edit, $node, OperationKind::Mutation);
-            }
+        $nodeId = self::idOf($node);
+        $idempotency = new IdempotentWrite(
+            codec: new CommentReceiptCodec,
+            authorizer: CommentReplayAuthorizer::forResolve($this->context, $this->locator, $this->guard, $this->profiles, $nodeId),
+            fingerprint: ['node' => $nodeId, 'comment' => self::commentId($comment), 'expected_version' => $expectedVersion],
+        );
 
-            return $this->mapper->comment($this->resolve->execute($this->context, new ResolveCommentInput($row)));
-        });
+        return $this->write('resolve', function () use ($node, $comment, $expectedVersion): CommentSnapshot {
+            [, $row] = $this->authorizedForResolve($node, $comment);
+
+            return $this->mapper->comment($this->resolve->execute($this->context, new ResolveCommentInput($row, $expectedVersion)));
+        }, $idempotency);
     }
 
-    public function delete(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment): void
+    public function delete(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment, ?int $expectedVersion = null): void
     {
-        $this->write('delete', function () use ($node, $comment): void {
-            // Deleting is a mutation even for the author, so an archived drive refuses it.
-            $node = $this->node($node, Ability::View, OperationKind::Mutation);
-            $row = $this->query->comment($node, $comment);
-            if (!$this->isAuthor($row)) {
-                $this->guard->authorize($this->context, Ability::Manage, $node, OperationKind::Mutation);
-            }
+        $nodeId = self::idOf($node);
+        // The receipt keeps the comment's id, its node and the basis of the right (ID2), never the comment.
+        $idempotency = new IdempotentWrite(
+            codec: new CommentReceiptCodec,
+            authorizer: CommentReplayAuthorizer::forDelete($this->context, $this->locator, $this->guard, $this->profiles, $nodeId),
+            fingerprint: ['node' => $nodeId, 'comment' => self::commentId($comment), 'expected_version' => $expectedVersion],
+        );
 
-            $this->delete->execute($this->context, new DeleteCommentInput($row));
-        });
+        $this->write('delete', function () use ($node, $comment, $expectedVersion): CommentDeleteReceipt {
+            [$node, $row, $byAuthor] = $this->authorizedForDelete($node, $comment);
+            $receipt = new CommentDeleteReceipt(id: Identity::stringify($row->getKey()), nodeId: Identity::stringify($node->getKey()), driveId: Identity::stringify($this->context->driveId()), byAuthor: $byAuthor);
+            $this->delete->execute($this->context, new DeleteCommentInput($row, $expectedVersion));
+
+            return $receipt;
+        }, $idempotency);
+    }
+
+    /**
+     * The comment a resolution or deletion would act on, authorized exactly as that write is, without writing: the
+     * HTTP If-Match is compared with it, so a caller who may not write learns nothing from a 428 or a 412.
+     */
+    #[Internal]
+    public function forWrite(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment, bool $delete): CommentSnapshot
+    {
+        [, $row] = $delete ? $this->authorizedForDelete($node, $comment) : $this->authorizedForResolve($node, $comment);
+
+        return $this->mapper->comment($row);
     }
 
     /**
@@ -116,9 +152,45 @@ final readonly class CommentOperations implements DriveExtension
      * @param  Closure(): T $attempt
      * @return T
      */
-    private function write(string $verb, Closure $attempt): mixed
+    private function write(string $verb, Closure $attempt, IdempotentWrite $idempotency): mixed
     {
-        return $this->runner->write(new OperationSpec('documents.comments.'.$verb, new ModuleId('documents')), $this->context->operation, $attempt);
+        return $this->runner->write(new OperationSpec('documents.comments.'.$verb, new ModuleId('documents')), $this->context->operation, $attempt, $idempotency);
+    }
+
+    /** @return array{0: Node, 1: NodeComment} */
+    private function authorizedForResolve(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment): array
+    {
+        $node = $this->node($node, Ability::Comment, OperationKind::Mutation);
+        $row = $this->query->comment($node, $comment);
+        if (!$this->isAuthor($row)) {
+            $this->guard->authorize($this->context, Ability::Edit, $node, OperationKind::Mutation);
+        }
+
+        return [$node, $row];
+    }
+
+    /** @return array{0: Node, 1: NodeComment, 2: bool} the basis of the right: authorship, else Manage */
+    private function authorizedForDelete(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment): array
+    {
+        // Deleting is a mutation even for the author, so an archived drive refuses it.
+        $node = $this->node($node, Ability::View, OperationKind::Mutation);
+        $row = $this->query->comment($node, $comment);
+        $byAuthor = $this->isAuthor($row);
+        if (!$byAuthor) {
+            $this->guard->authorize($this->context, Ability::Manage, $node, OperationKind::Mutation);
+        }
+
+        return [$node, $row, $byAuthor];
+    }
+
+    private static function idOf(NodeSnapshot|string|int $node): string
+    {
+        return $node instanceof NodeSnapshot ? $node->id : (string) $node;
+    }
+
+    private static function commentId(CommentSnapshot|string|int $comment): string
+    {
+        return $comment instanceof CommentSnapshot ? $comment->id : (string) $comment;
     }
 
     private function node(NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node
@@ -132,11 +204,6 @@ final readonly class CommentOperations implements DriveExtension
 
     private function isAuthor(NodeComment $comment): bool
     {
-        $actor = $this->context->actor->ref();
-
-        return !$this->context->actor->isSystem()
-            && $actor->id !== null
-            && $actor->type === $comment->author_type
-            && Identity::stringify($actor->id) === Identity::stringify($comment->author_id);
+        return CommentReplayAuthorizer::isAuthor($this->context, $comment->author_type, $comment->author_id);
     }
 }

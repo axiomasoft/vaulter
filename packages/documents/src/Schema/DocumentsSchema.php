@@ -109,6 +109,10 @@ final class DocumentsSchema implements ModuleSchema
         $table->timestamp('resolved_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'resolved_by', nullable: true, index: false);
 
+        // The comment's own version (D47, CC2): resolve and delete are conditional on it (If-Match); a resolution raises
+        // it with UPDATE … WHERE version = ?.
+        $this->helpers->counterColumn(table: $table, column: 'version');
+
         $table->timestamps();
 
         $name = $table->getTable();

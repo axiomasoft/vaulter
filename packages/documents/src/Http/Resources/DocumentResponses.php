@@ -16,6 +16,7 @@ use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\DriveArchivedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Http\Support\Preconditions;
 use Vaulter\Support\Identity;
 
@@ -45,28 +46,43 @@ final readonly class DocumentResponses
     /**
      * The state version a conditional content write expects.
      *
+     * On the route of a receipt operation (a restore) a retry under its Idempotency-Key repeats the If-Match of the
+     * first request, stale once that one committed (and the document may be out of the caller's view since): with a
+     * key the write gets a state version no document holds, and the operation answers from the receipt, or refuses —
+     * and stores — the stale write. Without a key the refusal stands (the content PUT is conditional, not keyed).
+     *
      * @throws StaleDocumentStateException when no listed tag is the current one (412)
      */
     public function expectedStateVersion(Request $request, DriveHandle $drive, string $nodeId): int
     {
-        // View and the document kind first: a caller who cannot see the node learns nothing.
-        $document = $this->documents->in($drive)->content($nodeId);
-        $node = $drive->nodes()->find($nodeId);
-        $abilities = $drive->nodes()->abilitiesMany([$node])[$node->id] ?? throw NodeNotFoundException::forId($nodeId);
-        if (!($abilities->flags[Ability::Edit->value] ?? false)) {
-            throw PermissionDeniedException::forAbility(Ability::Edit->value);
-        }
+        $held = null;
+        try {
+            // View and the document kind first: a caller who cannot see the node learns nothing.
+            $document = $this->documents->in($drive)->content($nodeId);
+            $held = $document->stateVersion;
+            $node = $drive->nodes()->find($nodeId);
+            $abilities = $drive->nodes()->abilitiesMany([$node])[$node->id] ?? throw NodeNotFoundException::forId($nodeId);
+            if (!($abilities->flags[Ability::Edit->value] ?? false)) {
+                throw PermissionDeniedException::forAbility(Ability::Edit->value);
+            }
 
-        // The ability flags do not know a drive is archived; refuse it before any precondition.
-        $model = $drive->model();
-        if ($model->status === DriveStatus::Archived) {
-            throw DriveArchivedException::forDrive(Identity::stringify($model->getKey()));
-        }
+            // The ability flags do not know a drive is archived; refuse it before any precondition.
+            $model = $drive->model();
+            if ($model->status === DriveStatus::Archived) {
+                throw DriveArchivedException::forDrive(Identity::stringify($model->getKey()));
+            }
 
-        if (!Preconditions::matches($request, (new DocumentContentResource($document))->etag())) {
-            throw new StaleDocumentStateException(expected: $document->stateVersion, actual: $document->stateVersion, nodeId: $nodeId);
-        }
+            if (!Preconditions::matches($request, (new DocumentContentResource($document))->etag())) {
+                throw new StaleDocumentStateException(expected: $document->stateVersion, actual: $document->stateVersion, nodeId: $nodeId);
+            }
 
-        return $document->stateVersion;
+            return $document->stateVersion;
+        } catch (StaleDocumentStateException|NodeNotFoundException $refusal) {
+            if (ReadIdempotencyKey::key($request) === null) {
+                throw $refusal;
+            }
+
+            return $held === PHP_INT_MAX ? PHP_INT_MAX - 1 : PHP_INT_MAX;
+        }
     }
 }

@@ -8,12 +8,13 @@ use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Models\Comments\NodeComment;
 
-/** Command for DeleteCommentAction: the comment, already resolved inside its node. */
+/** Command for DeleteCommentAction: the comment, already resolved inside its node, and the version the caller read (checked under the row lock, CC1). */
 #[Api]
 final readonly class DeleteCommentInput
 {
     #[Internal]
     public function __construct(
         public NodeComment $comment,
+        public ?int $expectedVersion = null,
     ) {}
 }

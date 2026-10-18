@@ -352,12 +352,12 @@
         {
             "id": "format:etag-versioned",
             "owner": "drive",
-            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
+            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version), comment (comment id, v_node_comments.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
             "source": {
                 "file": "packages/core/src/Http/Support/RepresentationTag.php",
                 "symbol": "Vaulter\\Http\\Support\\RepresentationTag::versioned"
             },
-            "why": "D47 (CC2): validator of the aggregates with a version of their own; If-Match of grants.destroy, access.inheritance.*, shares.update/rotate/destroy, drives.archive/unarchive/destroy (412 stale_write)"
+            "why": "D47 (CC2): validator of the aggregates with a version of their own; If-Match of grants.destroy, access.inheritance.*, shares.update/rotate/destroy, drives.archive/unarchive/destroy, and (kind comment, owner documents) comments.resolve/destroy (412 stale_write)"
         },
         {
             "id": "format:if-match",
@@ -568,6 +568,36 @@
             "format": "receipt kind vaulter.problem, version 1: JSON {code, status, details} of a refusal whose code is receipt: cacheable; headers in receipt_headers",
             "owner": "core",
             "why": "D25: the stored receipt of a deterministic refusal"
+        },
+        {
+            "id": "format:receipt-document-snapshot",
+            "source": {
+                "file": "packages/documents/src/Idempotency/DocumentSnapshotCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\DocumentSnapshotCodec::encode"
+            },
+            "format": "receipt kind documents.document-snapshot, version 1: JSON {node_id, document_id, type, schema_version, type_available, editable, epoch, state_version, dirty, head_revision_id, content: the JSON payload of the content (read back with ContentDecoder::read), revision: receipt-document-revision fields | null, content_hash, yjs_state_size, updated_at (Y-m-d\\TH:i:s.uP), updated_by}",
+            "owner": "documents",
+            "why": "D25, D47: the stored receipt of documents.documents.update and .restore"
+        },
+        {
+            "id": "format:receipt-document-revision",
+            "source": {
+                "file": "packages/documents/src/Idempotency/DocumentRevisionSnapshotCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\DocumentRevisionSnapshotCodec::encode"
+            },
+            "format": "receipt kind documents.revision-snapshot, version 1: JSON of every DocumentRevisionSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP); no content",
+            "owner": "documents",
+            "why": "D25, D47: the stored receipt of documents.documents.snapshot"
+        },
+        {
+            "id": "format:receipt-comment",
+            "source": {
+                "file": "packages/documents/src/Idempotency/CommentReceiptCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\CommentReceiptCodec::encode"
+            },
+            "format": "receipt kind documents.comment-receipt, version 1: JSON {type: comment, comment: every CommentSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version)} | {type: deleted, deleted: {id, node_id, drive_id, by_author}}; a deletion keeps the basis of the right (author or Manage), never the comment",
+            "owner": "documents",
+            "why": "D25, D47, ID2: the stored receipt of documents.comments.*; a delete replay is authorized by the recorded basis (scope kind node | node-author) now"
         }
     ]
 }

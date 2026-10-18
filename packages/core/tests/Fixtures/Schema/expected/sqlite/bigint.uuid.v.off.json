@@ -3134,6 +3134,14 @@
                     "hidden": 0
                 },
                 {
+                    "name": "version",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "created_at",
                     "type": "datetime",
                     "notnull": 0,
@@ -3253,7 +3261,7 @@
                     "match": "NONE"
                 }
             },
-            "create_sql": "CREATE TABLE \"v_node_comments\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"node_id\" integer not null, \"parent_id\" integer, \"author_id\" varchar not null, \"author_type\" varchar not null, \"body\" text not null, \"anchor\" text, \"resolved_at\" datetime, \"resolved_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"v_nodes\"(\"id\") on delete cascade, foreign key(\"parent_id\") references \"v_node_comments\"(\"id\") on delete cascade)"
+            "create_sql": "CREATE TABLE \"v_node_comments\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"node_id\" integer not null, \"parent_id\" integer, \"author_id\" varchar not null, \"author_type\" varchar not null, \"body\" text not null, \"anchor\" text, \"resolved_at\" datetime, \"resolved_by\" varchar, \"version\" BIGINT CHECK(typeof(version) = 'integer' AND version >= 0) not null default '0', \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"v_nodes\"(\"id\") on delete cascade, foreign key(\"parent_id\") references \"v_node_comments\"(\"id\") on delete cascade)"
         },
         "v_node_grants": {
             "columns": [

@@ -5530,6 +5530,34 @@
             "id": "format:receipt-share",
             "kind": "protocol",
             "reason": "P6.3: receipt of drive.shares.*; the token of create/rotate only as Crypt ciphertext (ID5)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "column:v_node_comments.version",
+            "kind": "schema",
+            "reason": "P6.5: the comment's own version (counterColumn); a resolution raises it with UPDATE … WHERE version = ?, resolve and delete are conditional on it (CC1)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-document-snapshot",
+            "kind": "protocol",
+            "reason": "P6.5: receipt of documents.documents.update and restore"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-document-revision",
+            "kind": "protocol",
+            "reason": "P6.5: receipt of documents.documents.snapshot"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-comment",
+            "kind": "protocol",
+            "reason": "P6.5: receipt of documents.comments.add, resolve and delete (a delete keeps ids and the basis of the right only)"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

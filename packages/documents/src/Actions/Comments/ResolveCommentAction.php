@@ -12,6 +12,7 @@ use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Support\DriveLifecycle;
 use Vaulter\Drive\Support\TreeGuard;
@@ -32,6 +33,7 @@ final readonly class ResolveCommentAction
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private AggregateVersion $versions,
     ) {}
 
     public function execute(DriveContext $context, ResolveCommentInput $data): NodeComment
@@ -49,8 +51,12 @@ final readonly class ResolveCommentAction
             }
             $this->tree->assertLive($current);
             $row = $this->comments->lock($data->comment) ?? throw CommentNotFoundException::forNode($nodeId, $data->comment->getKey());
+            // CC1: the version the caller read is compared on the locked row, so a delete or a resolution that landed
+            // in between is a 412, never a silent second write.
+            $this->versions->assertExpected($row, 'version', $data->expectedVersion, NodeComment::AGGREGATE);
 
             $resolved = $this->comments->resolve($row, $resolvedBy);
+            $this->versions->bump($resolved, 'version', NodeComment::AGGREGATE);
             $resolved->setRelation('node', $current);
             $this->recorder->record(new CommentResolved(comment: $resolved, actor: $context->actor->ref(), correlationId: $context->correlationId));
 

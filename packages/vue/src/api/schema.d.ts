@@ -895,7 +895,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create a document */
+        /**
+         * Create a document
+         * @description An append: no If-Match. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed.
+         */
         post: operations["documents.store"];
         delete?: never;
         options?: never;
@@ -917,7 +920,7 @@ export interface paths {
         get: operations["documents.content.show"];
         /**
          * Replace the content of a document
-         * @description Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after authorization: a caller without access gets 404/403, never a tag comparison.
+         * @description Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after authorization: a caller without access gets 404/403, never a tag comparison. A conditional write, not a keyed one: the If-Match is the guard, so a repeat of the same request after it committed carries the old tag and answers 412 document_state_mismatch, without a second revision or event.
          */
         put: operations["documents.content.update"];
         post?: never;
@@ -937,7 +940,10 @@ export interface paths {
         /** List the revisions of a document */
         get: operations["documents.revisions.index"];
         put?: never;
-        /** Snapshot the document as a revision */
+        /**
+         * Snapshot the document as a revision
+         * @description An append: no If-Match. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed.
+         */
         post: operations["documents.revisions.store"];
         delete?: never;
         options?: never;
@@ -974,7 +980,7 @@ export interface paths {
         put?: never;
         /**
          * Restore a revision as the current content
-         * @description Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after authorization: a caller without access gets 404/403, never a tag comparison.
+         * @description Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
          */
         post: operations["documents.revisions.restore"];
         delete?: never;
@@ -1027,7 +1033,10 @@ export interface paths {
         /** List comments of a node */
         get: operations["comments.index"];
         put?: never;
-        /** Add a comment */
+        /**
+         * Add a comment
+         * @description An append: no If-Match. The answer carries the comment tag as ETag. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed.
+         */
         post: operations["comments.store"];
         delete?: never;
         options?: never;
@@ -1044,7 +1053,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Resolve a comment */
+        /**
+         * Resolve a comment
+         * @description Requires If-Match with the ETag of the comment (428 precondition_required without it or with `*`, 412 stale_write when it was resolved or deleted since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. The resolution raises the comment version. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         post: operations["comments.resolve"];
         delete?: never;
         options?: never;
@@ -1062,7 +1074,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete a comment */
+        /**
+         * Delete a comment
+         * @description Requires If-Match with the ETag of the comment (428 precondition_required without it or with `*`, 412 stale_write when it was resolved or deleted since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed and the comment is gone.
+         */
         delete: operations["comments.destroy"];
         options?: never;
         head?: never;
@@ -1587,6 +1602,10 @@ export interface components {
             /** Format: date-time */
             resolved_at: string | null;
             resolved_by: string | null;
+            /** @description Raised by the resolution. */
+            version: number;
+            /** @description The comment's tag (the ETag of its responses); send it back verbatim as If-Match. */
+            etag: string;
             /** Format: date-time */
             created_at: string;
         };
@@ -4746,7 +4765,10 @@ export interface operations {
     "documents.store": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Drive id. */
                 drive: components["parameters"]["Drive"];
@@ -4771,6 +4793,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -4917,7 +4940,10 @@ export interface operations {
     "documents.revisions.store": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -4939,6 +4965,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -5030,6 +5057,8 @@ export interface operations {
             header: {
                 /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
                 "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
             };
             path: {
                 /** @description Node id. */
@@ -5048,6 +5077,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -5059,6 +5089,7 @@ export interface operations {
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
             412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
             428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
@@ -5184,7 +5215,10 @@ export interface operations {
     "comments.store": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -5207,6 +5241,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -5223,7 +5259,12 @@ export interface operations {
     "comments.resolve": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -5240,6 +5281,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -5249,13 +5292,21 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "comments.destroy": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -5272,6 +5323,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -5279,6 +5331,9 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };

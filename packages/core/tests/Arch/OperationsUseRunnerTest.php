@@ -36,7 +36,7 @@ const OPERATIONS_READS = [
     ChangeOperations::class => ['startCursor', 'list'],
     DocumentOperations::class => ['content', 'revisions', 'revisionPage', 'export'],
     CollaborationOperations::class => ['session'],
-    CommentOperations::class => ['list'],
+    CommentOperations::class => ['list', 'forWrite'],
 ];
 
 function operationsRunnerBody(ReflectionMethod $method): string

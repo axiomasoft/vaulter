@@ -3951,6 +3951,16 @@
                     "generation": ""
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
                     "name": "created_at",
                     "type": "timestamp",
                     "nullable": "YES",
@@ -4071,6 +4081,11 @@
                 }
             },
             "constraints": {
+                "v_node_comments_chk_1": {
+                    "type": "check",
+                    "clause": "(`version` >= 0)",
+                    "enforced": "YES"
+                },
                 "v_node_comments_node_id_foreign": {
                     "type": "foreign key",
                     "ref_table": "v_nodes",
@@ -4096,7 +4111,7 @@
                     ]
                 }
             },
-            "create_sql": "CREATE TABLE `v_node_comments` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` bigint unsigned NOT NULL,\n  `parent_id` bigint unsigned DEFAULT NULL,\n  `author_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `author_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `body` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `anchor` json DEFAULT NULL,\n  `resolved_at` timestamp NULL DEFAULT NULL,\n  `resolved_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `v_node_comments_node_created_idx` (`node_id`,`created_at`),\n  KEY `v_node_comments_parent_idx` (`parent_id`),\n  KEY `v_node_comments_tenant_id_index` (`tenant_id`),\n  KEY `v_node_comments_node_id_index` (`node_id`),\n  KEY `v_node_comments_parent_id_index` (`parent_id`),\n  KEY `v_node_comments_author_id_index` (`author_id`),\n  CONSTRAINT `v_node_comments_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_node_comments_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `v_node_comments` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `v_node_comments` (\n  `id` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `tenant_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` bigint unsigned NOT NULL,\n  `parent_id` bigint unsigned DEFAULT NULL,\n  `author_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `author_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `body` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `anchor` json DEFAULT NULL,\n  `resolved_at` timestamp NULL DEFAULT NULL,\n  `resolved_by` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `version` bigint NOT NULL DEFAULT '0',\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `v_node_comments_node_created_idx` (`node_id`,`created_at`),\n  KEY `v_node_comments_parent_idx` (`parent_id`),\n  KEY `v_node_comments_tenant_id_index` (`tenant_id`),\n  KEY `v_node_comments_node_id_index` (`node_id`),\n  KEY `v_node_comments_parent_id_index` (`parent_id`),\n  KEY `v_node_comments_author_id_index` (`author_id`),\n  CONSTRAINT `v_node_comments_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `v_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_node_comments_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `v_node_comments` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_node_comments_chk_1` CHECK ((`version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "v_node_grants": {
             "columns": [

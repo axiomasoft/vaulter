@@ -2600,6 +2600,15 @@
                     "collation": null
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "created_at",
                     "type": "timestamp(0) without time zone",
                     "not_null": false,
@@ -2645,6 +2654,13 @@
                 "v_node_comments_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_node_comments_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((version >= 0))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true

@@ -2958,8 +2958,10 @@ paths:
       tags:
       - documents
       summary: Create a document
+      description: 'An append: no If-Match. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed.'
       parameters:
       - $ref: '#/components/parameters/Drive'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -2991,6 +2993,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3064,7 +3068,9 @@ paths:
       - documents
       summary: Replace the content of a document
       description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
-        authorization: a caller without access gets 404/403, never a tag comparison.'
+        authorization: a caller without access gets 404/403, never a tag comparison. A conditional write, not a keyed one: the
+        If-Match is the guard, so a repeat of the same request after it committed carries the old tag and answers 412
+        document_state_mismatch, without a second revision or event.'
       parameters:
       - $ref: '#/components/parameters/Node'
       - $ref: '#/components/parameters/IfMatch'
@@ -3152,8 +3158,10 @@ paths:
       tags:
       - documents
       summary: Snapshot the document as a revision
+      description: 'An append: no If-Match. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed.'
       parameters:
       - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: false
         content:
@@ -3178,6 +3186,8 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3275,11 +3285,14 @@ paths:
       - documents
       summary: Restore a revision as the current content
       description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
-        authorization: a caller without access gets 404/403, never a tag comparison.'
+        authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry
+        with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale
+        because the first request committed.'
       parameters:
       - $ref: '#/components/parameters/Node'
       - $ref: '#/components/parameters/Revision'
       - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '200':
           description: OK
@@ -3292,6 +3305,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3306,6 +3321,8 @@ paths:
           $ref: '#/components/responses/Problem409'
         '412':
           $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
         '428':
           $ref: '#/components/responses/Problem428'
         '500':
@@ -3455,8 +3472,10 @@ paths:
       tags:
       - comments
       summary: Add a comment
+      description: 'An append: no If-Match. The answer carries the comment tag as ETag. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed.'
       parameters:
       - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -3487,6 +3506,10 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3507,9 +3530,12 @@ paths:
       tags:
       - comments
       summary: Resolve a comment
+      description: 'Requires If-Match with the ETag of the comment (428 precondition_required without it or with `*`, 412 stale_write when it was resolved or deleted since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. The resolution raises the comment version. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.'
       parameters:
       - $ref: '#/components/parameters/Node'
       - $ref: '#/components/parameters/Comment'
+      - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '200':
           description: OK
@@ -3520,6 +3546,10 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3530,6 +3560,12 @@ paths:
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
         '500':
           $ref: '#/components/responses/Problem500'
   /nodes/{node}/comments/{comment}:
@@ -3538,9 +3574,12 @@ paths:
       tags:
       - comments
       summary: Delete a comment
+      description: 'Requires If-Match with the ETag of the comment (428 precondition_required without it or with `*`, 412 stale_write when it was resolved or deleted since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed and the comment is gone.'
       parameters:
       - $ref: '#/components/parameters/Node'
       - $ref: '#/components/parameters/Comment'
+      - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '204':
           description: No content
@@ -3551,12 +3590,20 @@ paths:
               $ref: '#/components/headers/XRequestId'
             Cache-Control:
               $ref: '#/components/headers/CacheControlStore'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
           $ref: '#/components/responses/Problem403'
         '404':
           $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
         '500':
           $ref: '#/components/responses/Problem500'
   /collaboration/hub/authenticate:
@@ -5504,6 +5551,8 @@ components:
       - anchor
       - resolved_at
       - resolved_by
+      - version
+      - etag
       - created_at
       properties:
         id:
@@ -5544,6 +5593,13 @@ components:
           type:
           - string
           - 'null'
+        version:
+          type: integer
+          minimum: 0
+          description: Raised by the resolution.
+        etag:
+          type: string
+          description: The comment's tag (the ETag of its responses); send it back verbatim as If-Match.
         created_at:
           type: string
           format: date-time

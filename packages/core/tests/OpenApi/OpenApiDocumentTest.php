@@ -19,6 +19,8 @@ uses(EnablesWebhooksModule::class);
 const IF_MATCH_OPERATIONS = [
     'access.inheritance.restore',
     'access.inheritance.restrict',
+    'comments.destroy',
+    'comments.resolve',
     'documents.content.update',
     'documents.revisions.restore',
     'drives.archive',

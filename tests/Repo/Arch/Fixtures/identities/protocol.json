@@ -1365,6 +1365,27 @@
             "id": "format:receipt-share",
             "kind": "protocol",
             "reason": "P6.3: receipt of drive.shares.*; the token of create/rotate only as Crypt ciphertext (ID5)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-document-snapshot",
+            "kind": "protocol",
+            "reason": "P6.5: receipt of documents.documents.update and restore"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-document-revision",
+            "kind": "protocol",
+            "reason": "P6.5: receipt of documents.documents.snapshot"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-comment",
+            "kind": "protocol",
+            "reason": "P6.5: receipt of documents.comments.add, resolve and delete (a delete keeps ids and the basis of the right only)"
         }
     ],
     "items": [
@@ -2035,7 +2056,7 @@
             }
         },
         {
-            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
+            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version), comment (comment id, v_node_comments.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
             "id": "format:etag-versioned",
             "manual": true,
             "owner": "drive",
@@ -2162,6 +2183,36 @@
             "source": {
                 "file": "packages/drive/src/Idempotency/AccessReceiptCodec.php",
                 "symbol": "Vaulter\\Drive\\Idempotency\\AccessReceiptCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind documents.comment-receipt, version 1: JSON {type: comment, comment: every CommentSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version)} | {type: deleted, deleted: {id, node_id, drive_id, by_author}}; a deletion keeps the basis of the right (author or Manage), never the comment",
+            "id": "format:receipt-comment",
+            "manual": true,
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/src/Idempotency/CommentReceiptCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\CommentReceiptCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind documents.revision-snapshot, version 1: JSON of every DocumentRevisionSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP); no content",
+            "id": "format:receipt-document-revision",
+            "manual": true,
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/src/Idempotency/DocumentRevisionSnapshotCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\DocumentRevisionSnapshotCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind documents.document-snapshot, version 1: JSON {node_id, document_id, type, schema_version, type_available, editable, epoch, state_version, dirty, head_revision_id, content: the JSON payload of the content (read back with ContentDecoder::read), revision: receipt-document-revision fields | null, content_hash, yjs_state_size, updated_at (Y-m-d\\TH:i:s.uP), updated_by}",
+            "id": "format:receipt-document-snapshot",
+            "manual": true,
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/src/Idempotency/DocumentSnapshotCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\DocumentSnapshotCodec::encode"
             }
         },
         {

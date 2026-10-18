@@ -1255,6 +1255,7 @@
           ],
           "files": [
             "packages/documents/tests/Concurrency/CommentMutationRaceTest.php",
+            "packages/documents/tests/Concurrency/CommentVersionRaceTest.php",
             "packages/documents/tests/Concurrency/DegradedContentRaceTest.php",
             "packages/documents/tests/Concurrency/DocumentMutationLivenessRaceTest.php",
             "packages/documents/tests/Concurrency/DocumentRenameStaleTest.php",
@@ -1331,7 +1332,8 @@
             "packages/documents/tests/Http/DocumentContentV1Test.php",
             "packages/documents/tests/Http/DocumentRevisionsV1Test.php",
             "packages/documents/tests/Http/DocumentsRouteLabelsTest.php",
-            "packages/documents/tests/Http/ExportV1Test.php"
+            "packages/documents/tests/Http/ExportV1Test.php",
+            "packages/documents/tests/Http/IfMatchRequiredTest.php"
           ]
         },
         {
@@ -1467,6 +1469,7 @@
             "packages/documents/tests/Events/DocumentJournalTest.php",
             "packages/documents/tests/Operations/CommentOperationsTest.php",
             "packages/documents/tests/Operations/DocumentAbilityMatrixTest.php",
+            "packages/documents/tests/Operations/DocumentIdempotencyTest.php",
             "packages/documents/tests/Operations/DocumentOperationsTest.php",
             "packages/documents/tests/Operations/DocumentWriteGuardTest.php",
             "packages/documents/tests/Operations/MutationLivenessTest.php",
@@ -1556,6 +1559,7 @@
             "packages/documents/tests/Arch/DocumentStateWriterBoundaryTest.php",
             "packages/documents/tests/Arch/ExportBoundaryTest.php",
             "packages/documents/tests/Arch/HttpV1ArchTest.php",
+            "packages/documents/tests/Arch/OperationPolicyCoverageTest.php",
             "packages/documents/tests/Arch/OperationsBoundaryTest.php",
             "packages/documents/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/documents/tests/Arch/PublicApiSnapshotTest.php",

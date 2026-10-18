@@ -8,7 +8,10 @@ use DateTimeImmutable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 
-/** Read-only view of a comment on a node. The author is the host user's morph type and key. */
+/**
+ * Read-only view of a comment on a node. The author is the host user's morph type and key. `version` rises with the
+ * resolution: pass it back as the expected version of resolve() and delete().
+ */
 #[Api]
 final readonly class CommentSnapshot
 {
@@ -27,5 +30,6 @@ final readonly class CommentSnapshot
         public ?DateTimeImmutable $resolvedAt,
         public ?string $resolvedBy,
         public DateTimeImmutable $createdAt,
+        public int $version = 0,
     ) {}
 }
