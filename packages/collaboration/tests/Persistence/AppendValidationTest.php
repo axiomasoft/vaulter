@@ -62,6 +62,24 @@ it('refuses a payload above limits.update_bytes by its base64 length, and takes 
         ->assertJsonPath('seq', 1);
 });
 
+it('bounds a seed by max_state_bytes, not limits.update_bytes: it carries the whole initial state', function (): void {
+    config()->set('vaulter-collaboration.limits.update_bytes', 30);
+    config()->set('vaulter-collaboration.max_state_bytes', 60);
+
+    Hub::callV2('append', Hub::seedBody($this->node, str_repeat('s', 61)), Hub::token($this->node))
+        ->assertStatus(413)
+        ->assertJsonPath('code', 'collaboration_update_too_large');
+    expect(validRows())->toBe(0);
+
+    Hub::callV2('append', Hub::seedBody($this->node, str_repeat('s', 60)), Hub::token($this->node))
+        ->assertOk()
+        ->assertJsonPath('seq', 1);
+    // Every later record is one update again.
+    Hub::callV2('append', Hub::appendBody($this->node, str_repeat('a', 31)), Hub::token($this->node))
+        ->assertStatus(413)
+        ->assertJsonPath('code', 'collaboration_update_too_large');
+});
+
 it('refuses a malformed envelope with 422 and writes nothing', function (string $field, mixed $value): void {
     $body = Hub::appendBody($this->node, 'update');
     $body[$field] = $value;

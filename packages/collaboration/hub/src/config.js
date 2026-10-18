@@ -17,7 +17,10 @@
 //   VAULTER_COLLAB_ALLOWED_ORIGINS — csv of EXACT browser origins allowed to connect
 //                                    (CSWSH defence). REQUIRED in prod. "*" = allow any
 //                                    (dev only; logs a warning). Empty in prod ⇒ reject all.
-//   VAULTER_COLLAB_MAX_PAYLOAD_BYTES — max WS frame size (default 4 MiB; NOT the ws 100 MiB).
+//   VAULTER_COLLAB_MAX_PAYLOAD_BYTES — max WS frame size (NOT the ws 100 MiB). It must carry the
+//                                    largest message the limits permit — a sync step 2 of
+//                                    MAX_DOCUMENT_BYTES or the longest envelope — and defaults to
+//                                    exactly that (16 MiB + 1 KiB with the default limits).
 //   VAULTER_COLLAB_THROTTLE         — per-IP handshake attempts before ban (default 15).
 //   VAULTER_COLLAB_THROTTLE_SECONDS — window the attempts are counted over (default 60).
 //   VAULTER_COLLAB_BAN_TIME         — ban duration in minutes (default 5).
@@ -75,7 +78,7 @@
 // The room JWT is minted by Laravel and forwarded by the client; the hub does NOT need
 // the JWT signing secret — it only relays the token to the webhook (which verifies it).
 
-import { appendRequestBytes, envelopeLength } from './limits.js'
+import { appendRequestBytes, envelopeLength, LIMIT_DEFAULTS } from './limits.js'
 
 function str(name, fallback = undefined, env = process.env) {
   const value = env[name]
@@ -126,6 +129,17 @@ function isProductionEnv(env = process.env) {
   return !['development', 'dev', 'test', 'local'].includes(nodeEnv)
 }
 
+/** What a WebSocket frame carries besides a sync step 2's update or an envelope: the message header and the room name (generous). */
+const FRAME_OVERHEAD = 1024
+
+/**
+ * The smallest WebSocket frame the limits need: the larger of a sync step 2 of a whole document
+ * (src/limits.js permits one of MAX_DOCUMENT_BYTES) and the longest envelope, with the header on top.
+ */
+export function minPayloadBytes(maxUpdateBytes, maxDocumentBytes) {
+  return Math.max(maxDocumentBytes, envelopeLength(maxUpdateBytes)) + FRAME_OVERHEAD
+}
+
 /** buffered (default): sync before the append, bounded pending memory; durable: writes stop while appends fail. */
 export const PERSISTENCE_MODES = Object.freeze(['buffered', 'durable'])
 
@@ -165,6 +179,13 @@ export function resolveWebhookBase(env = process.env) {
 
 export function buildConfig(env = process.env) {
   const allowedOrigins = csv('VAULTER_COLLAB_ALLOWED_ORIGINS', env)
+  const maxUpdateBytes = int('VAULTER_COLLAB_MAX_UPDATE_BYTES', LIMIT_DEFAULTS.maxUpdateBytes, env)
+  const maxDocumentBytes = int('VAULTER_COLLAB_MAX_DOCUMENT_BYTES', LIMIT_DEFAULTS.maxDocumentBytes, env)
+  // The frame the limits need by default; a malformed limit is reported on its own variable.
+  const payloadDefault = minPayloadBytes(
+    Number.isInteger(maxUpdateBytes) && maxUpdateBytes > 0 ? maxUpdateBytes : LIMIT_DEFAULTS.maxUpdateBytes,
+    Number.isInteger(maxDocumentBytes) && maxDocumentBytes > 0 ? maxDocumentBytes : LIMIT_DEFAULTS.maxDocumentBytes,
+  )
 
   return {
     port: int('VAULTER_COLLAB_PORT', 1234, env),
@@ -177,7 +198,7 @@ export function buildConfig(env = process.env) {
     // Security
     allowedOrigins,
     allowAllOrigins: allowedOrigins.includes('*'),
-    maxPayloadBytes: int('VAULTER_COLLAB_MAX_PAYLOAD_BYTES', 4 * 1024 * 1024, env),
+    maxPayloadBytes: int('VAULTER_COLLAB_MAX_PAYLOAD_BYTES', payloadDefault, env),
     throttle: int('VAULTER_COLLAB_THROTTLE', 15, env),
     throttleSeconds: int('VAULTER_COLLAB_THROTTLE_SECONDS', 60, env),
     banTime: int('VAULTER_COLLAB_BAN_TIME', 5, env),
@@ -212,8 +233,8 @@ export function buildConfig(env = process.env) {
     shutdownDestroyMs: int('VAULTER_COLLAB_SHUTDOWN_DESTROY_MS', 5000, env),
 
     // Limits
-    maxUpdateBytes: int('VAULTER_COLLAB_MAX_UPDATE_BYTES', 1024 * 1024, env),
-    maxDocumentBytes: int('VAULTER_COLLAB_MAX_DOCUMENT_BYTES', 16 * 1024 * 1024, env),
+    maxUpdateBytes,
+    maxDocumentBytes,
     maxRequestBytes: int('VAULTER_COLLAB_MAX_REQUEST_BYTES', 2 * 1024 * 1024, env),
     maxRoomsPerTenant: int('VAULTER_COLLAB_MAX_ROOMS_PER_TENANT', 1000, env),
     maxConnectionsPerRoom: int('VAULTER_COLLAB_MAX_CONNECTIONS_PER_ROOM', 100, env),
@@ -352,9 +373,11 @@ export function validateConfig(conf = config) {
   if (Number.isInteger(conf.maxUpdateBytes) && Number.isInteger(conf.maxDocumentBytes) && conf.maxDocumentBytes < conf.maxUpdateBytes) {
     problems.push('VAULTER_COLLAB_MAX_DOCUMENT_BYTES must be >= VAULTER_COLLAB_MAX_UPDATE_BYTES.')
   }
-  // The frame must carry the largest envelope, or an update within its limit is cut by the transport.
-  if (Number.isInteger(conf.maxUpdateBytes) && Number.isInteger(conf.maxPayloadBytes) && conf.maxPayloadBytes < envelopeLength(conf.maxUpdateBytes) + 1024) {
-    problems.push(`VAULTER_COLLAB_MAX_PAYLOAD_BYTES must hold an envelope of VAULTER_COLLAB_MAX_UPDATE_BYTES (at least ${envelopeLength(conf.maxUpdateBytes) + 1024}).`)
+  // The frame must carry the largest message the limits permit — a sync step 2 of the whole
+  // document or the longest envelope — or one within its limit is cut by the transport.
+  if (Number.isInteger(conf.maxUpdateBytes) && Number.isInteger(conf.maxDocumentBytes) && Number.isInteger(conf.maxPayloadBytes)
+    && conf.maxPayloadBytes < minPayloadBytes(conf.maxUpdateBytes, conf.maxDocumentBytes)) {
+    problems.push(`VAULTER_COLLAB_MAX_PAYLOAD_BYTES must hold a sync step 2 of VAULTER_COLLAB_MAX_DOCUMENT_BYTES and an envelope of VAULTER_COLLAB_MAX_UPDATE_BYTES (at least ${minPayloadBytes(conf.maxUpdateBytes, conf.maxDocumentBytes)}).`)
   }
   if (!PERSISTENCE_MODES.includes(conf.mode)) {
     problems.push(`VAULTER_COLLAB_MODE must be one of ${PERSISTENCE_MODES.join(', ')}.`)

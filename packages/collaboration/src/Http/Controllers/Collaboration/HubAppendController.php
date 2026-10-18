@@ -21,8 +21,9 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
  * update_id (uuid), sha256 (hex of the payload), payload (base64), origin: client|server, seed_state_version?}`. The
  * answer `{generation, update_id, seq, sha256, persisted: true}` is built after the commit; a retry with the same
  * update_id and payload gets the same seq. The base64 length is checked against `limits.update_bytes` before it is
- * decoded. `seed_state_version` marks the hub's seed (409 collaboration_seed_conflict unless the generation has no
- * checkpoint and no record yet and the document's state version still equals it).
+ * decoded — against `max_state_bytes` for a seed, which carries the document's whole initial state. `seed_state_version`
+ * marks the hub's seed (409 collaboration_seed_conflict unless the generation has no checkpoint and no record yet and the
+ * document's state version still equals it).
  */
 #[Internal]
 final readonly class HubAppendController
@@ -63,8 +64,9 @@ final readonly class HubAppendController
             throw ValidationException::withMessages(array_map(static fn (string $message): array => [$message], $errors));
         }
 
-        // The size is known from the encoded length: refuse before decoding allocates the update.
-        $max = $this->config->updateBytes();
+        // The size is known from the encoded length: refuse before decoding allocates the update. A seed is the whole
+        // initial state of the document, bounded as a state is; every other record is one update.
+        $max = $seedStateVersion === null ? $this->config->updateBytes() : $this->config->maxStateBytes();
         $encodedMax = 4 * (int) ceil($max / 3);
         if (strlen($payload) > $encodedMax) {
             throw new CollaborationUpdateTooLargeException(intdiv(strlen($payload), 4) * 3, $max);

@@ -46,7 +46,8 @@ services:
       # — Security (CSWSH / DoS) — REQUIRED in production —
       # Comma-separated EXACT browser origins allowed to connect ("*" = any, dev only).
       VAULTER_COLLAB_ALLOWED_ORIGINS: ${VAULTER_COLLAB_ALLOWED_ORIGINS:-}
-      VAULTER_COLLAB_MAX_PAYLOAD_BYTES: ${VAULTER_COLLAB_MAX_PAYLOAD_BYTES:-4194304}
+      # Empty: the frame the limits need (a sync step 2 of MAX_DOCUMENT_BYTES); a smaller value stops the hub at start.
+      VAULTER_COLLAB_MAX_PAYLOAD_BYTES: ${VAULTER_COLLAB_MAX_PAYLOAD_BYTES:-}
       VAULTER_COLLAB_THROTTLE: ${VAULTER_COLLAB_THROTTLE:-15}
       VAULTER_COLLAB_THROTTLE_SECONDS: ${VAULTER_COLLAB_THROTTLE_SECONDS:-60}
       VAULTER_COLLAB_BAN_TIME: ${VAULTER_COLLAB_BAN_TIME:-5}

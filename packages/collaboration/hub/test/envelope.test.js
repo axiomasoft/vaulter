@@ -4,7 +4,7 @@ import crypto from 'node:crypto'
 import * as Y from 'yjs'
 import { EPOCH_MISMATCH, PROTOCOL_MISMATCH } from '../src/backend.js'
 import { isWriteMessage, NACK } from '../src/persistence.js'
-import { EPOCH_CHANGED } from '../src/rooms.js'
+import { EPOCH_CHANGED, TOKEN_EXPIRED } from '../src/rooms.js'
 import { problem, receipt } from './support/mock-backend.js'
 import { clientUpdate, envelope, eventually, loadedRoom, ROOM, sha256, writerContext } from './support/rooms.js'
 
@@ -96,9 +96,10 @@ test('a 409 epoch mismatch nacks retry:false, closes the room with 4409 and drop
 })
 
 for (const [status, code] of [[422, 'collaboration_update_mismatch'], [413, 'collaboration_update_too_large']]) {
-  test(`a ${status} ${code} is nacked retry:false and not repeated`, async (t) => {
+  test(`a ${status} ${code} is nacked retry:false, not repeated, and the room that took it is loaded again from its log`, async (t) => {
     const room = await loadedRoom(t, { handlers: { append: () => problem(status, code) } })
     const writer = await room.connect()
+    const viewer = await room.connect(writerContext({ mode: 'ro', readOnly: true }))
     const message = envelope(clientUpdate(room.document, 'refused'))
 
     await room.sendEnvelope(writer, message)
@@ -107,18 +108,51 @@ for (const [status, code] of [[422, 'collaboration_update_mismatch'], [413, 'col
     assert.equal(room.mock.appends().length, 1)
     assert.deepEqual(writer.of('nack'), [{ t: 'nack', id: message.id, code, retry: false }])
     assert.deepEqual(writer.of('ack'), [])
+
+    // The room and its clients hold an update the log never will: they reopen on a new Y.Doc.
+    assert.equal(room.persistence.isFenced(ROOM), true)
+    assert.deepEqual(writer.closed, [EPOCH_CHANGED])
+    assert.deepEqual(viewer.closed, [EPOCH_CHANGED])
+
+    // Nothing more of the room is appended, and a late joiner is closed before the room is loaded again.
+    const late = envelope(clientUpdate(room.document, 'built on the refused one'))
+    await room.sendEnvelope(writer, late)
+    assert.deepEqual(writer.of('nack').at(-1), { t: 'nack', id: late.id, code: EPOCH_MISMATCH, retry: false })
+    const joiner = await room.connect()
+    assert.deepEqual(joiner.closed, [EPOCH_CHANGED])
+    assert.equal(room.mock.appends().length, 1)
+
+    await room.persistence.afterUnloadDocument({ documentName: ROOM })
+    assert.equal(room.persistence.isFenced(ROOM), false)
   })
 }
 
-test('a 403 nacks retry:false and closes the writer\'s connection with 4403', async (t) => {
+test('a 403 nacks retry:false, closes the writer\'s connection with 4403 and the rest of the room with 4409', async (t) => {
   const room = await loadedRoom(t, { handlers: { append: () => problem(403, 'permission_denied') } })
   const writer = await room.connect()
+  const other = await room.connect()
 
   await room.sendEnvelope(writer, envelope(clientUpdate(room.document, 'revoked')))
   await room.persistence.ledger.flush()
 
   assert.equal(writer.of('nack')[0].retry, false)
   assert.deepEqual(writer.closed, [{ code: 4403, reason: 'forbidden' }])
+  assert.deepEqual(other.closed, [EPOCH_CHANGED], 'it holds the refused update too')
+  assert.equal(room.persistence.isFenced(ROOM), true)
+})
+
+test('a refusal the client repeats (401, retry:true) leaves the room open: the update is saved when it comes again', async (t) => {
+  const room = await loadedRoom(t, { handlers: { append: () => problem(401, 'unauthenticated') } })
+  const writer = await room.connect()
+  const other = await room.connect()
+
+  await room.sendEnvelope(writer, envelope(clientUpdate(room.document, 'token ran out')))
+  await room.persistence.ledger.flush()
+
+  assert.equal(writer.of('nack')[0].retry, true)
+  assert.deepEqual(writer.closed, [TOKEN_EXPIRED])
+  assert.deepEqual(other.closed, [])
+  assert.equal(room.persistence.isFenced(ROOM), false)
 })
 
 test('a malformed or foreign envelope is refused without an append', async (t) => {

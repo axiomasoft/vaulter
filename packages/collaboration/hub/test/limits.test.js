@@ -168,6 +168,7 @@ test('the limits come from the hub config with safe defaults', () => {
   )
   assert.deepEqual(createLimits(defaults).settings, LIMIT_DEFAULTS)
   assert.deepEqual(createLimits({ maxUpdateBytes: NaN, maxConnectionsPerRoom: 0 }).settings, LIMIT_DEFAULTS, 'an unusable value falls back')
+  assert.equal(defaults.maxPayloadBytes, 16 * 1024 * 1024 + 1024, 'the frame carries a sync step 2 of the whole document')
   assert.deepEqual(validateConfig(defaults), [])
 
   const custom = buildConfig({
@@ -180,6 +181,7 @@ test('the limits come from the hub config with safe defaults', () => {
     VAULTER_COLLAB_MAX_UPDATES_PER_SECOND_PER_ROOM: '7',
   })
   assert.deepEqual(createLimits(custom).settings, { maxUpdateBytes: 2048, maxDocumentBytes: 4096, maxRequestBytes: 8192, maxRoomsPerTenant: 5, maxConnectionsPerRoom: 6, maxUpdatesPerSecondPerRoom: 7 })
+  assert.equal(custom.maxPayloadBytes, 4096 + 1024, 'the default frame follows the limits')
   assert.deepEqual(validateConfig(custom), [])
 
   const problems = (env) => validateConfig(buildConfig({ NODE_ENV: 'test', ...env }))
@@ -187,6 +189,9 @@ test('the limits come from the hub config with safe defaults', () => {
   assert.ok(problems({ VAULTER_COLLAB_MAX_CONNECTIONS_PER_ROOM: 'many' }).some((problem) => problem.includes('VAULTER_COLLAB_MAX_CONNECTIONS_PER_ROOM')))
   assert.ok(problems({ VAULTER_COLLAB_MAX_DOCUMENT_BYTES: '100', VAULTER_COLLAB_MAX_UPDATE_BYTES: '200' }).some((problem) => problem.includes('VAULTER_COLLAB_MAX_DOCUMENT_BYTES must be >=')))
   assert.ok(problems({ VAULTER_COLLAB_MAX_REQUEST_BYTES: '1000' }).some((problem) => problem.includes('VAULTER_COLLAB_MAX_REQUEST_BYTES must hold')))
+  // A frame that holds every envelope but not a sync step 2 of the whole document would cut one the limits permit.
+  assert.ok(problems({ VAULTER_COLLAB_MAX_PAYLOAD_BYTES: String(4 * 1024 * 1024) }).some((problem) => problem.includes('VAULTER_COLLAB_MAX_PAYLOAD_BYTES must hold a sync step 2')))
+  assert.deepEqual(problems({ VAULTER_COLLAB_MAX_DOCUMENT_BYTES: String(2 * 1024 * 1024), VAULTER_COLLAB_MAX_PAYLOAD_BYTES: String(2 * 1024 * 1024 + 1024) }), [])
 })
 
 test('src/limits.js decodes nothing: it imports no Yjs, no y-protocols and no lib0 decoder', () => {
@@ -325,6 +330,83 @@ test('a writer\'s sync write that would take the room past MAX_DOCUMENT_BYTES is
   await room.persistence.beforeHandleMessage({ connection: writer, update: rawMessage(0, 2, 290), documentName: ROOM })
   assert.equal(writer.readOnly, true)
   assert.equal(room.persistence.isFull(ROOM), true)
+})
+
+/** A varUint of lib0. */
+function varUint(value) {
+  const bytes = []
+
+  while (value > 0x7f) {
+    bytes.push(0x80 | (value & 0x7f))
+    value = Math.floor(value / 0x80)
+  }
+
+  return [...bytes, value]
+}
+
+/** A raw Hocuspocus sync message carrying `update`: varString documentName · Sync · `step` · varUint8Array update. */
+function syncMessage(update, step = 1, name = ROOM) {
+  const nameBytes = Buffer.from(name)
+
+  return new Uint8Array([...varUint(nameBytes.length), ...nameBytes, 0, step, ...varUint(update.length), ...update])
+}
+
+test('a repeated sync step 2 of what the room holds does not mark it full: only what a sync write adds counts', async (t) => {
+  const { clientUpdate, loadedRoom } = await support()
+  const Y = await import('yjs')
+  const room = await loadedRoom(t, { conf: { maxDocumentBytes: 400, maxUpdateBytes: 400 } })
+  const writer = await room.connect()
+
+  // The room holds more than half its limit; a reconnecting client sends all of it back.
+  Y.applyUpdate(room.document, clientUpdate(room.document, 'x'.repeat(250)), { source: 'connection' })
+  await room.persistence.beforeHandleMessage({ connection: writer, update: syncMessage(Y.encodeStateAsUpdate(room.document)), documentName: ROOM })
+
+  assert.equal(room.persistence.isFull(ROOM), false, 'its length crosses the limit, its content is already there')
+  assert.equal(writer.readOnly, false)
+  assert.equal(room.persistence.limits.rejections().document_bytes, 0)
+
+  // A sync step 2 that brings that much new content still reaches the limit.
+  const other = new Y.Doc()
+  other.getText('t').insert(0, 'y'.repeat(250))
+  await room.persistence.beforeHandleMessage({ connection: writer, update: syncMessage(Y.encodeStateAsUpdate(other)), documentName: ROOM })
+  other.destroy()
+
+  assert.equal(room.persistence.isFull(ROOM), true)
+  assert.equal(writer.readOnly, true)
+})
+
+test('at MAX_DOCUMENT_BYTES an incremental update (its structs start above clock zero) is refused unless the room holds it', async (t) => {
+  const { envelope, loadedRoom, NACK } = await support()
+  const Y = await import('yjs')
+  const { holdsUpdate } = await import('../src/persistence.js')
+  const room = await loadedRoom(t, { conf: { maxDocumentBytes: 200, maxUpdateBytes: 200 } })
+  const writer = await room.connect()
+  // One client, two updates in a row: the second one continues the first one's clock.
+  const client = new Y.Doc()
+  Y.applyUpdate(client, Y.encodeStateAsUpdate(room.document))
+  const updates = []
+  client.on('update', (update) => updates.push(update))
+  client.getText('t').insert(0, 'y'.repeat(60))
+  client.getText('t').insert(0, 'z'.repeat(120))
+  client.getText('t').delete(0, 1)
+  client.destroy()
+
+  assert.equal(holdsUpdate(room.document, updates[1]), false, 'a struct the room never saw')
+  // The first came through a sync message; the second would take the room past its limit.
+  Y.applyUpdate(room.document, updates[0], { source: 'connection' })
+  assert.equal(holdsUpdate(room.document, updates[0]), true)
+  assert.equal(holdsUpdate(room.document, updates[1]), false, 'the room holds the clocks before it, not its own')
+
+  const second = envelope(updates[1])
+  await room.sendEnvelope(writer, second)
+
+  assert.deepEqual(writer.of('nack'), [{ t: 'nack', id: second.id, code: NACK.DOCUMENT_TOO_LARGE, retry: false }])
+  assert.doesNotMatch(room.document.getText('t').toString(), /z{10}/)
+
+  // Once a sync message brought it, it is held; an update that only deletes adds no content.
+  Y.applyUpdate(room.document, updates[1], { source: 'connection' })
+  assert.equal(holdsUpdate(room.document, updates[1]), true)
+  assert.equal(holdsUpdate(room.document, updates[2]), true)
 })
 
 async function hooksFor(t, conf = {}, answer = { allowed: true, mode: 'rw', userId: '1' }) {

@@ -35,6 +35,25 @@ test('a 409 epoch mismatch closes the room with 4409, drops its pending records 
   assert.equal(room.mock.appends().length, 1)
 })
 
+test('a server write to a fenced room is refused before anything is applied', async (t) => {
+  const room = await loadedRoom(t, { handlers: { append: () => problem(409, EPOCH_MISMATCH) } })
+  let opened = 0
+  room.instance.openDirectConnection = async () => { opened++; return { document: room.document, disconnect: async () => {} } }
+  await room.connect()
+
+  Y.applyUpdate(room.document, clientUpdate(room.document, 'server change'))
+  await room.persistence.ledger.flush()
+  assert.equal(room.persistence.isFenced(ROOM), true)
+
+  await assert.rejects(
+    room.persistence.serverWrite(ROOM, (document) => { document.getText('t').insert(0, 'too late ') }, { token: 'jwt-server' }),
+    (error) => error.code === EPOCH_MISMATCH,
+  )
+  assert.equal(opened, 0, 'no direct connection is opened')
+  assert.doesNotMatch(room.document.getText('t').toString(), /too late/)
+  assert.equal(room.mock.appends().length, 1)
+})
+
 test('the fence ends when Hocuspocus unloads the room', async (t) => {
   const room = await loadedRoom(t, { handlers: { append: () => problem(409, EPOCH_MISMATCH) } })
   await room.connect()

@@ -187,3 +187,10 @@ test('an append attempt is aborted after its timeout', async () => {
 
   await assert.rejects(append(UPDATE, { config: cfg, fetchImpl, timeoutMs: 20 }), /aborted/)
 })
+
+test('the attempt timeout covers the body: headers followed by a stalled body are no answer', async () => {
+  const fetchImpl = async () => ({ ok: true, status: 200, headers: { get: () => null }, json: () => new Promise(() => {}) })
+
+  await assert.rejects(append(UPDATE, { config: cfg, fetchImpl, timeoutMs: 20 }), /timed out after 20 ms/)
+  await assert.rejects(load({ token: 't', room: 'r' }, { config: cfg, fetchImpl, timeoutMs: 20 }), /timed out after 20 ms/)
+})

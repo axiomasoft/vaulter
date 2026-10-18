@@ -132,6 +132,24 @@ test('a server change made with serverWrite() is appended once with the token it
   assert.deepEqual(appends.map((call) => [call.body.update_id, call.body.origin, call.headers.authorization]), [[ids[0], 'server', 'Bearer jwt-transformer']])
 })
 
+test('a server change whose own token the backend refused is appended with a current token on the next cycle', async (t) => {
+  const room = await hub(t, {
+    handlers: { append: (call, n) => (call.headers.authorization === 'Bearer jwt-expired' ? { status: 401, body: { code: 'unauthenticated' } } : receipt(call.body, n + 2)) },
+  })
+
+  const ids = await room.persistence.serverWrite(ROOM, (document) => {
+    document.getText('t').insert(0, 'transformed ')
+  }, { token: 'jwt-expired' })
+  await room.persistence.ledger.flush()
+  assert.equal(room.persistence.ledger.pendingCount(ROOM), 1, 'kept: a server change is never lost to a credential answer')
+
+  // The next cycle does not try the refused token again.
+  await room.persistence.ledger.flush()
+
+  assert.deepEqual(room.mock.appends().map((call) => [call.body.update_id, call.headers.authorization]), [[ids[0], 'Bearer jwt-expired'], [ids[0], 'Bearer jwt-server']])
+  assert.equal(room.persistence.ledger.pendingCount(ROOM), 0)
+})
+
 test('the origin classification: own replays and envelopes, Redis, connections, and everything else is the server\'s', () => {
   const redisOrigins = [redisExtension]
 

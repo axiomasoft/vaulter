@@ -83,28 +83,63 @@ function headersFor({ token, signed }) {
   return headers
 }
 
+/**
+ * The JSON body of an answer (null when it is not JSON), read under the attempt's signal: a backend
+ * that sends its headers and then stalls has not answered, and the read throws once the timeout
+ * aborts it.
+ */
+async function bodyOf(response, signal) {
+  if (signal.aborted) {
+    throw signal.reason
+  }
+
+  let onAbort = null
+  const aborted = new Promise((resolve) => {
+    onAbort = resolve
+    signal.addEventListener('abort', onAbort, { once: true })
+  })
+
+  try {
+    const body = await Promise.race([
+      Promise.resolve().then(() => response.json()).catch(() => null),
+      aborted,
+    ])
+
+    if (signal.aborted) {
+      throw signal.reason
+    }
+
+    return body
+  } finally {
+    signal.removeEventListener('abort', onAbort)
+  }
+}
+
+/**
+ * ONE call: `{ ok, status, headers, body }` once the whole answer arrived — the timeout covers the
+ * body as well as the headers. Throws when there is no answer (network error, timeout).
+ */
 async function post(endpoint, payload, token, { config = defaultConfig, fetchImpl = globalThis.fetch, timeoutMs } = {}) {
   const rawBody = JSON.stringify({ ...payload, nonce: crypto.randomUUID() })
   const maxBytes = requestLimit(endpoint, config)
 
   if (Buffer.byteLength(rawBody) > maxBytes) {
-    return new Response(JSON.stringify({ code: UPDATE_TOO_LARGE, max_bytes: maxBytes }), {
-      status: 413,
-      headers: { 'Content-Type': 'application/problem+json' },
-    })
+    return { ok: false, status: 413, headers: null, body: { code: UPDATE_TOO_LARGE, max_bytes: maxBytes } }
   }
 
   const controller = new AbortController()
   const limit = timeoutMs ?? config.webhookTimeoutMs
-  const timer = limit ? setTimeout(() => controller.abort(), limit) : null
+  const timer = limit ? setTimeout(() => controller.abort(new Error(`collab/${endpoint} timed out after ${limit} ms`)), limit) : null
 
   try {
-    return await fetchImpl(`${config.webhookBase}/collaboration/hub/${endpoint}`, {
+    const response = await fetchImpl(`${config.webhookBase}/collaboration/hub/${endpoint}`, {
       method: 'POST',
       headers: headersFor({ token, signed: signRawBody(rawBody, config.webhookSecret) }),
       body: rawBody,
       signal: controller.signal,
     })
+
+    return { ok: response.ok, status: response.status, headers: response.headers, body: await bodyOf(response, controller.signal) }
   } finally {
     if (timer) {
       clearTimeout(timer)
@@ -112,10 +147,8 @@ async function post(endpoint, payload, token, { config = defaultConfig, fetchImp
   }
 }
 
-async function problemCode(response) {
-  const payload = await response.json().catch(() => null)
-
-  return typeof payload?.code === 'string' ? payload.code : null
+function problemCode(answer) {
+  return typeof answer.body?.code === 'string' ? answer.body.code : null
 }
 
 function header(response, name) {
@@ -138,12 +171,12 @@ export async function authenticate({ token, room }, options = {}) {
   const response = await post('authenticate', { room }, token, options)
 
   if (!response.ok) {
-    const code = response.status === 409 ? await problemCode(response) : null
+    const code = response.status === 409 ? problemCode(response) : null
 
     return { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: code, status: response.status }
   }
 
-  const payload = await response.json().catch(() => ({}))
+  const payload = response.body ?? {}
 
   return {
     allowed: payload?.allowed === true,
@@ -164,11 +197,15 @@ export async function load({ token, room }, options = {}) {
   const response = await post('load', { room }, token, options)
 
   if (response.ok) {
-    return response.json()
+    if (response.body === null || typeof response.body !== 'object') {
+      throw new Error(`collab/load answered ${response.status} without a log`)
+    }
+
+    return response.body
   }
 
   if (response.status >= 400 && response.status < 500) {
-    throw new BackendRejection('load', response.status, await problemCode(response))
+    throw new BackendRejection('load', response.status, problemCode(response))
   }
 
   throw new Error(`collab/load failed (${response.status})`)
@@ -192,7 +229,7 @@ export async function append({ token, room, generation, updateId, sha256, payloa
   const response = await post('append', body, token, options)
 
   if (response.ok) {
-    const ack = await response.json().catch(() => null)
+    const ack = response.body
 
     // A 2xx without a committed receipt is not an ack; the request is repeated as for a 5xx.
     if (ack?.persisted !== true || !Number.isInteger(ack?.seq) || String(ack?.update_id).toLowerCase() !== String(updateId).toLowerCase()) {
@@ -206,11 +243,11 @@ export async function append({ token, room, generation, updateId, sha256, payloa
 }
 
 /** A non-2xx answer: its status, problem code and, for a 429, the Retry-After wait. */
-async function refusal(response) {
+function refusal(response) {
   return {
     ok: false,
     status: response.status,
-    code: await problemCode(response),
+    code: problemCode(response),
     retryAfterMs: response.status === 429 ? parseRetryAfter(header(response, 'Retry-After')) : null,
   }
 }
@@ -232,7 +269,7 @@ export async function leaseCompaction({ hubId, max }, options = {}) {
     return refusal(response)
   }
 
-  const entries = await response.json().catch(() => null)
+  const entries = response.body
 
   if (!Array.isArray(entries)) {
     return { ok: false, status: 502, code: 'collaboration_invalid_lease', retryAfterMs: null }
@@ -267,7 +304,7 @@ export async function publishCheckpoint({ document, generation, leaseToken, cove
     return refusal(response)
   }
 
-  const result = await response.json().catch(() => null)
+  const result = response.body
 
   // A 2xx without the published version is not a publication; repeated as for a 5xx.
   if (!Number.isInteger(result?.checkpoint_version) || typeof result?.marker_cleared !== 'boolean') {

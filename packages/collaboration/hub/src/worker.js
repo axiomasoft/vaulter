@@ -25,8 +25,9 @@ import { retryPolicy, withRetry } from './retry.js'
 // The worker runs inside `serve` every VAULTER_COLLAB_COMPACTION_INTERVAL_MS (at once again when a
 // lease call came back full, so a backlog does not hold drain requests back), and alone in the
 // one-shot `compact --pending` (src/cli.js): drain() repeats passes until a lease call hands out
-// nothing — after every lease of its own that did not clear a marker has run out, so an empty
-// answer cannot hide one — or the deadline passes.
+// nothing while every generation the run was handed has been seen checkpointed with its marker
+// cleared (or closed) — an empty answer is no proof on its own: a generation still pending may be
+// leased elsewhere or not due — or the deadline passes.
 //
 // Time (clock, sleep, random), the backend client and the compaction are injectable for tests.
 
@@ -319,9 +320,11 @@ export function createWorker({
 
   /**
    * Run passes until a lease call hands out nothing (`drained: true`) or `deadlineMs` passed
-   * (`drained: false`). An empty answer settles the run only once every generation this run
-   * leased without clearing its marker has had its lease run out before that call — until then the
-   * backend would not hand it out again, however pending it is. `remaining` lists the generations
+   * (`drained: false`). An empty answer is no proof on its own that nothing is pending: a generation
+   * leased elsewhere, still under a lease of this run or not due is not handed out either. So it
+   * settles the run only once every generation this run was handed has been seen published with
+   * its marker cleared, or closed (a 409 epoch mismatch: a closed generation is never compacted);
+   * one that stays pending is asked for again until the deadline. `remaining` lists the generations
    * not shown to be clear: those whose last outcome left the marker, and those of the last lease
    * answer when it was not empty (the backend still had them pending); `failure` is the last failed
    * lease call.
@@ -335,9 +338,7 @@ export function createWorker({
     let published = 0
 
     for (;;) {
-      const askedAt = clock()
-
-      if (askedAt >= deadlineAt) {
+      if (clock() >= deadlineAt) {
         break
       }
 
@@ -350,7 +351,7 @@ export function createWorker({
           if (outcome.outcome === OUTCOME.PUBLISHED) {
             published++
           }
-          if (outcome.outcome === OUTCOME.PUBLISHED && outcome.markerCleared) {
+          if ((outcome.outcome === OUTCOME.PUBLISHED && outcome.markerCleared) || outcome.outcome === OUTCOME.EPOCH) {
             unresolved.delete(outcome.document)
           } else {
             unresolved.set(outcome.document, outcome)
@@ -358,13 +359,11 @@ export function createWorker({
         }
 
         if (pass.entries === 0) {
-          const waiting = [...unresolved.values()].filter((outcome) => outcome.retryAt > askedAt)
-
-          if (waiting.length === 0) {
+          if (unresolved.size === 0) {
             return { drained: true, published, remaining: [], failure: null }
           }
 
-          // Nothing else was leasable: only the generations still under a lease of this run count.
+          // Nothing was leasable now: the generations this run saw pending are asked for again.
           lastAnswer = []
         } else {
           lastAnswer = pass.results

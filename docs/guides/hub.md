@@ -113,7 +113,7 @@ missing.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `VAULTER_COLLAB_ALLOWED_ORIGINS` | *(empty)* | **CSWSH defence.** Comma-separated list of EXACT browser origins allowed to connect. **Required in production** (the hub refuses to boot without it). `*` allows any (dev only). A non-browser client (no `Origin`) is always allowed — it is not a CSWSH vector and is still gated by the auth webhook. |
-| `VAULTER_COLLAB_MAX_PAYLOAD_BYTES` | `4194304` (4 MiB) | Max WebSocket frame size (the `ws` default of 100 MiB is far too high for Yjs updates). |
+| `VAULTER_COLLAB_MAX_PAYLOAD_BYTES` | `16778240` (`MAX_DOCUMENT_BYTES` + 1 KiB) | Max WebSocket frame size (the `ws` default of 100 MiB is never used). It must hold the largest message the limits permit — a sync step 2 of a whole document (`VAULTER_COLLAB_MAX_DOCUMENT_BYTES`) or the longest envelope — so it defaults to exactly that, and a smaller value stops the hub at start. |
 | `VAULTER_COLLAB_THROTTLE` | `15` | Per-IP connection attempts allowed before a temporary ban. |
 | `VAULTER_COLLAB_THROTTLE_SECONDS` | `60` | Window (seconds) the attempts are counted over. |
 | `VAULTER_COLLAB_BAN_TIME` | `5` | Ban duration (minutes) after the throttle is exceeded. |
@@ -144,9 +144,10 @@ missing.
   sockets, but finite.
 - **Set `VAULTER_COLLAB_ALLOWED_ORIGINS`** to your exact app origins. Never use `*` in
   production. (The hub won't boot in `production` without it.)
-- **Keep `MAX_PAYLOAD` small** — Yjs updates are incremental and tiny; a low cap blunts
-  oversized-message DoS. (The hub now applies this cap to the underlying `ws` server; the
-  library default of ~100 MiB is never used.)
+- **Keep `MAX_PAYLOAD` at what the limits need** — the frame cap blunts oversized-message DoS,
+  but it must carry a sync step 2 of a whole document; to lower it, lower
+  `VAULTER_COLLAB_MAX_DOCUMENT_BYTES` with it. (The hub applies this cap to the underlying `ws`
+  server; the library default of ~100 MiB is never used.)
 - The **room JWT is short-lived** (`token_ttl` ≤ 3600) and bound to one generation of one
   document; every backend call re-checks access, so a viewer can never write (the hub drops
   their updates, the backend refuses a read-only store).
