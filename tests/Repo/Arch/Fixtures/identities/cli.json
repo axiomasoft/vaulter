@@ -133,6 +133,13 @@
             "id": "command:vaulter:operations",
             "kind": "cli",
             "reason": "P6.1: prints the operation catalogue of every offered module (operation, module, aggregate, concurrency, idempotency, routes) as Markdown, or one JSON document with --json; exit 0"
+        },
+        {
+            "change": "redefined",
+            "decision": "D47",
+            "id": "command:vaulter:errors:reference",
+            "kind": "cli",
+            "reason": "P6.7: --openapi prints the x-vaulter-problems table and the sorted code examples of the Problem schema of openapi/vaulter-v1.yaml, writing nothing; exit 0"
         }
     ],
     "items": [
@@ -586,6 +593,15 @@
             "hidden": false,
             "id": "command:vaulter:errors:reference",
             "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Print the x-vaulter-problems table and the code examples for openapi/vaulter-v1.yaml, writing nothing",
+                    "name": "openapi",
+                    "shortcut": null,
+                    "value_required": false
+                },
                 {
                     "accepts_value": false,
                     "array": false,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createVaulterClient } from '../../src/api/client'
-import { VaulterApiError } from '../../src/api/errors'
+import { VaulterApiError, parseRetryAfter } from '../../src/api/errors'
 import { fetchSequence, problemResponse } from '../support/http'
 
 describe('VaulterApiError.fromResponse', () => {
@@ -68,6 +68,48 @@ describe('VaulterApiError.fromResponse', () => {
     }, 412))
 
     expect(error.isConflict).toBe(true)
+  })
+})
+
+describe('Retry-After', () => {
+  const problem = (status: number, code: string, headers: Record<string, string> = {}) => new Response(
+    JSON.stringify({ type: 't', title: 'x', status, code, request_id: 'r', retryable: 'with_backoff' }),
+    { status, headers: { 'Content-Type': 'application/problem+json', ...headers } },
+  )
+
+  it('decodes delta-seconds into retryAfterSeconds', async () => {
+    const error = await VaulterApiError.fromResponse(problem(409, 'operation_in_progress', { 'Retry-After': '7' }))
+
+    expect(error.retryAfterSeconds).toBe(7)
+    expect(error.retryable).toBe('with_backoff')
+  })
+
+  it('is null without the header', async () => {
+    const error = await VaulterApiError.fromResponse(problem(412, 'stale_write'))
+
+    expect(error.retryAfterSeconds).toBeNull()
+    expect(error.code).toBe('stale_write')
+  })
+
+  it('reads the header of a non-problem response too', async () => {
+    const error = await VaulterApiError.fromResponse(new Response('<html>busy</html>', {
+      status: 503,
+      headers: { 'Content-Type': 'text/html', 'Retry-After': '30' },
+    }))
+
+    expect(error.code).toBe('http_503')
+    expect(error.retryAfterSeconds).toBe(30)
+  })
+
+  it('turns an HTTP-date into the seconds left, never negative, and ignores garbage', () => {
+    const now = Date.parse('2026-10-18T12:00:00Z')
+
+    expect(parseRetryAfter('Sun, 18 Oct 2026 12:00:45 GMT', now)).toBe(45)
+    expect(parseRetryAfter('Sun, 18 Oct 2026 11:59:00 GMT', now)).toBe(0)
+    expect(parseRetryAfter('0', now)).toBe(0)
+    expect(parseRetryAfter('soon', now)).toBeNull()
+    expect(parseRetryAfter('', now)).toBeNull()
+    expect(parseRetryAfter(null, now)).toBeNull()
   })
 })
 

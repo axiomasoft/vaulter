@@ -221,6 +221,8 @@
           "files": [
             "packages/core/tests/OpenApi/OpenApiDocumentTest.php",
             "packages/core/tests/OpenApi/OpenApiExamplesTest.php",
+            "packages/core/tests/OpenApi/OpenApiOperationPoliciesTest.php",
+            "packages/core/tests/OpenApi/OpenApiProblemsTableTest.php",
             "packages/core/tests/OpenApi/OpenApiRouteCoverageTest.php",
             "packages/core/tests/OpenApi/OpenApiValidationEnabledTest.php",
             "packages/core/tests/OpenApi/OpenApiValidatorSelfTest.php",

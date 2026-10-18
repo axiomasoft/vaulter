@@ -37,6 +37,10 @@ tests/api/client.test.ts > createVaulterClient — requests > reads the change c
 tests/api/client.test.ts > createVaulterClient — requests > resolves a 204 to undefined
 tests/api/client.test.ts > createVaulterClient — requests > returns no page/total fields: lists are cursor-only
 tests/api/client.test.ts > createVaulterClient — requests > sends share access headers for a public share
+tests/api/errors.test.ts > Retry-After > decodes delta-seconds into retryAfterSeconds
+tests/api/errors.test.ts > Retry-After > is null without the header
+tests/api/errors.test.ts > Retry-After > reads the header of a non-problem response too
+tests/api/errors.test.ts > Retry-After > turns an HTTP-date into the seconds left, never negative, and ignores garbage
 tests/api/errors.test.ts > VaulterApiError.fromResponse > flags a 412 as a conflict
 tests/api/errors.test.ts > VaulterApiError.fromResponse > maps a JSON content type with an unparsable or foreign body to http_<status>
 tests/api/errors.test.ts > VaulterApiError.fromResponse > maps an HTML proxy error to http_<status> without throwing a parse error

@@ -700,6 +700,8 @@ paths:
       - webhooks
       summary: Register a webhook endpoint (secret returned once)
       description: 'An append: no If-Match. The signing secret is returned once and kept in the receipt only as ciphertext. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response, secret included, with Idempotent-Replayed.'
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -4416,7 +4418,7 @@ components:
       schema:
         type: string
     RetryAfter:
-      description: Seconds until the rate limit window resets.
+      description: 'Seconds to wait before repeating the request: until the rate limit window resets, while an operation under the same Idempotency-Key still runs (operation_in_progress), or until a competing update settles (concurrent_update). Present only on the codes that name a delay.'
       schema:
         type: integer
     XRateLimitLimit:
@@ -4570,6 +4572,8 @@ components:
           $ref: '#/components/headers/XRequestId'
         Cache-Control:
           $ref: '#/components/headers/CacheControlError'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
       content:
         application/problem+json:
           schema:
@@ -4702,6 +4706,8 @@ components:
           $ref: '#/components/headers/XRequestId'
         Cache-Control:
           $ref: '#/components/headers/CacheControlError'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
       content:
         application/problem+json:
           schema:
@@ -4838,6 +4844,92 @@ components:
         meta:
           type: object
           description: Allow-listed machine readable extras (reason, header, node_id, ...).
+      x-vaulter-problems:
+        actor_required: {status: 401, retryable: never, receipt: never, module: core}
+        blob_unavailable: {status: 409, retryable: never, receipt: never, module: media}
+        cannot_delete_head_revision: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        collaboration_checkpoint_conflict: {status: 409, retryable: after_refetch, receipt: never, module: collaboration}
+        collaboration_draining: {status: 503, retryable: with_backoff, receipt: never, module: collaboration}
+        collaboration_epoch_mismatch: {status: 409, retryable: after_refetch, receipt: cacheable, module: collaboration}
+        collaboration_protocol_mismatch: {status: 409, retryable: never, receipt: never, module: collaboration}
+        collaboration_seed_conflict: {status: 409, retryable: after_refetch, receipt: cacheable, module: collaboration}
+        collaboration_unavailable: {status: 409, retryable: never, receipt: never, module: collaboration}
+        collaboration_update_mismatch: {status: 422, retryable: never, receipt: never, module: collaboration}
+        collaboration_update_too_large: {status: 413, retryable: never, receipt: never, module: collaboration}
+        comment_not_found: {status: 404, retryable: never, receipt: never, module: documents}
+        concurrent_update: {status: 409, retryable: with_backoff, receipt: never, module: core}
+        content_unavailable: {status: 423, retryable: with_backoff, receipt: never, module: drive}
+        cross_drive_operation: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        cursor_expired: {status: 410, retryable: after_refetch, receipt: never, module: drive}
+        dependency_unavailable: {status: 503, retryable: with_backoff, receipt: never, module: core}
+        document_content_degraded: {status: 409, retryable: never, receipt: cacheable, module: documents}
+        document_revision_not_found: {status: 404, retryable: never, receipt: never, module: documents}
+        document_state_mismatch: {status: 412, retryable: after_refetch, receipt: cacheable, module: documents}
+        document_state_pending: {status: 409, retryable: with_backoff, receipt: never, module: documents}
+        document_state_too_large: {status: 413, retryable: never, receipt: cacheable, module: documents}
+        document_type_unavailable: {status: 409, retryable: never, receipt: cacheable, module: documents}
+        drive_archived: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        drive_not_found: {status: 404, retryable: never, receipt: never, module: drive}
+        duplicate_registration: {status: 500, retryable: never, receipt: never, module: core}
+        extension_failed: {status: 500, retryable: never, receipt: never, module: core}
+        file_size_limit_exceeded: {status: 413, retryable: never, receipt: cacheable, module: drive}
+        folder_children_limit_exceeded: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        grant_not_found: {status: 404, retryable: never, receipt: never, module: drive}
+        idempotency_key_reused: {status: 422, retryable: never, receipt: never, module: core}
+        internal_error: {status: 500, retryable: never, receipt: never, module: core}
+        invalid_cursor: {status: 400, retryable: never, receipt: never, module: drive}
+        invalid_destination: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        invalid_document_content: {status: 422, retryable: never, receipt: cacheable, module: documents}
+        invalid_drive_state: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        invalid_node_name: {status: 422, retryable: never, receipt: cacheable, module: drive}
+        invalid_properties: {status: 422, retryable: never, receipt: cacheable, module: drive}
+        invalid_webhook_signature: {status: 400, retryable: never, receipt: never, module: webhooks}
+        method_not_allowed: {status: 405, retryable: never, receipt: never, module: core}
+        module_graph_invalid: {status: 503, retryable: never, receipt: never, module: core}
+        module_not_ready: {status: 503, retryable: never, receipt: never, module: core}
+        node_move_cycle: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        node_name_conflict: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        node_not_found: {status: 404, retryable: never, receipt: never, module: drive}
+        node_not_trashed: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        node_sequence_exhausted: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        node_sequence_mismatch: {status: 412, retryable: after_refetch, receipt: cacheable, module: drive}
+        node_trashed_by_ancestor: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        not_a_document: {status: 409, retryable: never, receipt: cacheable, module: documents}
+        not_a_file: {status: 422, retryable: never, receipt: cacheable, module: drive}
+        operation_in_progress: {status: 409, retryable: with_backoff, receipt: never, module: core}
+        payload_too_large: {status: 413, retryable: never, receipt: cacheable, module: core}
+        permission_denied: {status: 403, retryable: never, receipt: never, module: core}
+        precondition_required: {status: 428, retryable: after_refetch, receipt: never, module: core}
+        profile_restriction: {status: 403, retryable: never, receipt: never, module: drive}
+        quota_exceeded: {status: 413, retryable: never, receipt: cacheable, module: drive}
+        rate_limited: {status: 429, retryable: with_backoff, receipt: never, module: core}
+        registry_frozen: {status: 500, retryable: never, receipt: never, module: core}
+        restore_destination_changed: {status: 409, retryable: after_refetch, receipt: never, module: drive}
+        restore_destination_required: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        revision_not_found: {status: 404, retryable: never, receipt: never, module: drive}
+        revision_pinned: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        route_not_found: {status: 404, retryable: never, receipt: never, module: core}
+        share_link_ttl_exceeded: {status: 422, retryable: never, receipt: cacheable, module: drive}
+        share_not_found: {status: 404, retryable: never, receipt: never, module: drive}
+        share_password_required: {status: 401, retryable: never, receipt: never, module: drive}
+        share_role_not_allowed: {status: 422, retryable: never, receipt: cacheable, module: drive}
+        stale_write: {status: 412, retryable: after_refetch, receipt: cacheable, module: core}
+        tree_depth_limit_exceeded: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        tree_traversal_incomplete: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        unknown_document_type: {status: 422, retryable: never, receipt: cacheable, module: documents}
+        unknown_export_format: {status: 422, retryable: never, receipt: cacheable, module: documents}
+        unknown_profile: {status: 422, retryable: never, receipt: cacheable, module: drive}
+        unknown_role: {status: 422, retryable: never, receipt: cacheable, module: drive}
+        unsupported_node_kind: {status: 409, retryable: never, receipt: cacheable, module: drive}
+        upload_conflict: {status: 409, retryable: after_refetch, receipt: never, module: drive}
+        upload_not_found: {status: 404, retryable: never, receipt: never, module: drive}
+        upload_offset_mismatch: {status: 409, retryable: after_refetch, receipt: never, module: drive}
+        upload_rejected: {status: 422, retryable: never, receipt: cacheable, module: drive}
+        validation_failed: {status: 422, retryable: never, receipt: never, module: core}
+        webhook_delivery_not_found: {status: 404, retryable: never, receipt: never, module: webhooks}
+        webhook_delivery_not_redeliverable: {status: 409, retryable: never, receipt: cacheable, module: webhooks}
+        webhook_endpoint_not_found: {status: 404, retryable: never, receipt: never, module: webhooks}
+        write_outside_operation: {status: 500, retryable: never, receipt: never, module: core}
       additionalProperties: true
     PageMeta:
       type: object

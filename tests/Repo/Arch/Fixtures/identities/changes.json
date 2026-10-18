@@ -5572,6 +5572,13 @@
             "id": "format:receipt-webhook-endpoint",
             "kind": "protocol",
             "reason": "P6.6: receipt of webhooks.endpoints.register, update, deactivate, rotate_secret and delete; the signing secret of register and rotate_secret only as Crypt ciphertext (ID5), a delete keeps the id and the scope the right was proven in"
+        },
+        {
+            "change": "redefined",
+            "decision": "D47",
+            "id": "command:vaulter:errors:reference",
+            "kind": "cli",
+            "reason": "P6.7: --openapi prints the x-vaulter-problems table and the sorted code examples of the Problem schema of openapi/vaulter-v1.yaml, writing nothing; exit 0"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

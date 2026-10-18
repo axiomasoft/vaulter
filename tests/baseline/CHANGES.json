@@ -13434,7 +13434,7 @@
       ]
     },
     "core": {
-      "count": 551,
+      "count": 559,
       "names": [
         "P\\Packages\\core\\tests\\Arch\\ArchTest::__pest_evaluable_core_source_references_the_vaulter_drive_package_nowhere__P2__5___D1__I1_blocks_from_P4_16_",
         "P\\Packages\\core\\tests\\Arch\\OperationsBoundaryTest::__pest_evaluable_core_activity_Operations_depend_on_the_drive_package_only_through_the_moved_access_types",
@@ -13547,6 +13547,7 @@
         "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"blank\"\"",
         "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"missing\"\"",
         "P\\Packages\\core\\tests\\Http\\PreconditionsTest::__pest_evaluable_it_requires_the_header__missing_is_428__and_so_is_the_wildcard\"dataset \"wildcard\"\"",
+        "P\\Packages\\core\\tests\\Http\\Problems\\ErrorsReferenceTest::__pest_evaluable_it_prints_the_code_table_for_the_OpenAPI_document_with___openapi_and_writes_nothing",
         "P\\Packages\\core\\tests\\Http\\Problems\\ProblemCatalogLangTest::__pest_evaluable_it_keeps_the_lang_files_of_a_package_in_step_with_its_code_list\"dataset \"webhooks\"\"",
         "P\\Packages\\core\\tests\\Http\\Problems\\ProblemCatalogLangTest::__pest_evaluable_it_lists_the_codes_sorted__each_under_the_module_that_declares_it",
         "P\\Packages\\core\\tests\\Http\\Problems\\ProblemCatalogLangTest::__pest_evaluable_it_refuses_a_code_declared_by_two_modules_of_a_hand_built_catalogue",
@@ -13882,6 +13883,13 @@
         "P\\Packages\\core\\tests\\Observability\\TelemetryMiddlewareTest::__pest_evaluable_it_counts_and_times_each_operation_by_outcome\"dataset \"rejected\"\"",
         "P\\Packages\\core\\tests\\Observability\\TelemetryMiddlewareTest::__pest_evaluable_it_never_puts_the_idempotency_key_into_telemetry",
         "P\\Packages\\core\\tests\\Observability\\TelemetryMiddlewareTest::__pest_evaluable_it_wraps_each_operation_in_one_span_with_the_context_attributes_and_no_personal_data",
+        "P\\Packages\\core\\tests\\OpenApi\\OpenApiOperationPoliciesTest::__pest_evaluable_it_declares_Idempotency_Key_and_Idempotent_Replayed_on_every_receipt_route_and_nowhere_else",
+        "P\\Packages\\core\\tests\\OpenApi\\OpenApiOperationPoliciesTest::__pest_evaluable_it_declares_a_required_If_Match_with_412_and_428_on_every_if__match_route_and_nowhere_else",
+        "P\\Packages\\core\\tests\\OpenApi\\OpenApiOperationPoliciesTest::__pest_evaluable_it_describes_every_REST_route_of_the_catalogue_in_the_document",
+        "P\\Packages\\core\\tests\\OpenApi\\OpenApiProblemsTableTest::__pest_evaluable_it_declares_the_table_of_the_full_installation_in_x_vaulter_problems",
+        "P\\Packages\\core\\tests\\OpenApi\\OpenApiProblemsTableTest::__pest_evaluable_it_keeps_a_table_row_per_catalogue_code_with_the_fields_a_client_reads",
+        "P\\Packages\\core\\tests\\OpenApi\\OpenApiProblemsTableTest::__pest_evaluable_it_lists_the_sorted_codes_as_the_examples_of_the_code_property",
+        "P\\Packages\\core\\tests\\OpenApi\\OpenApiProblemsTableTest::__pest_evaluable_it_rewrites_only_the_two_blocks_of_the_Problem_schema",
         "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_lists_the_tables_by_the_module_that_owns_them__from_the_schema_class_of_each_manifest",
         "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_queries_nothing_until_the_first_write__once_for_it_and_never_again_for_a_ready_module",
         "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_refuses_a_module_that_is_not_active",
@@ -14599,8 +14607,12 @@
       ]
     },
     "vue": {
-      "count": 19,
+      "count": 23,
       "names": [
+        "tests/api/errors.test.ts > Retry-After > decodes delta-seconds into retryAfterSeconds",
+        "tests/api/errors.test.ts > Retry-After > is null without the header",
+        "tests/api/errors.test.ts > Retry-After > reads the header of a non-problem response too",
+        "tests/api/errors.test.ts > Retry-After > turns an HTTP-date into the seconds left, never negative, and ignores garbage",
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > detects the forbidden shapes",
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > finds every import shape in a source text",
         "tests/arch/api-no-vue.test.ts > src/api has no Vue imports (D15) > imports only itself and framework-neutral packages",

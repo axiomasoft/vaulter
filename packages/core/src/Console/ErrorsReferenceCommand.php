@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Output\OutputInterface;
 use Vaulter\Attributes\Internal;
 use Vaulter\Http\Problems\ErrorsReference;
 use Vaulter\Http\Problems\ProblemCatalog;
@@ -12,12 +13,13 @@ use Vaulter\Http\Problems\ProblemCatalog;
 /**
  * Regenerates the problem-code reference of the docs from the {@see ProblemCatalog}.
  * With --check nothing is written and the exit code says whether the docs are current
- * (for CI).
+ * (for CI). With --openapi it prints the code table for the OpenAPI document instead (P6.7).
  */
 #[Internal]
 final class ErrorsReferenceCommand extends Command
 {
     protected $signature = 'vaulter:errors:reference
+        {--openapi : Print the x-vaulter-problems table and the code examples for openapi/vaulter-v1.yaml, writing nothing}
         {--check : Exit 1 when a page differs from the generated reference, without writing}
         {--path=* : Pages to update (default: docs/reference/errors.md and docs/ru/reference/errors.md)}';
 
@@ -25,6 +27,12 @@ final class ErrorsReferenceCommand extends Command
 
     public function handle(ErrorsReference $reference): int
     {
+        if ($this->option('openapi') === true) {
+            $this->output->writeln($reference->openApi(), OutputInterface::OUTPUT_RAW);
+
+            return self::SUCCESS;
+        }
+
         $paths = array_values(array_filter((array) $this->option('path'), is_string(...)));
         if ($paths === []) {
             // The pages live in the monorepo, not in the host application.

@@ -1973,6 +1973,7 @@ export interface components {
                 "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                 "X-Request-Id": components["headers"]["XRequestId"];
                 "Cache-Control": components["headers"]["CacheControlError"];
+                "Retry-After": components["headers"]["RetryAfter"];
                 [name: string]: unknown;
             };
             content: {
@@ -2094,6 +2095,7 @@ export interface components {
                 "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                 "X-Request-Id": components["headers"]["XRequestId"];
                 "Cache-Control": components["headers"]["CacheControlError"];
+                "Retry-After": components["headers"]["RetryAfter"];
                 [name: string]: unknown;
             };
             content: {
@@ -2179,7 +2181,7 @@ export interface components {
         VaryOptional: "Authorization, Cookie";
         /** @description Share session token; send it back as X-Share-Session on follow-up requests. */
         XShareSession: string;
-        /** @description Seconds until the rate limit window resets. */
+        /** @description Seconds to wait before repeating the request: until the rate limit window resets, while an operation under the same Idempotency-Key still runs (operation_in_progress), or until a competing update settles (concurrent_update). Present only on the codes that name a delay. */
         RetryAfter: number;
         /** @description Requests allowed per window. */
         XRateLimitLimit: number;
@@ -2810,7 +2812,10 @@ export interface operations {
     "webhook-endpoints.store": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
