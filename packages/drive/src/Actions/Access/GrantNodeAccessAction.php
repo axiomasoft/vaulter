@@ -12,6 +12,8 @@ use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Configuration\AccessConfig;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Data\Access\GrantNodeAccessInput;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Drive\Models\Access\NodeGrant;
@@ -55,6 +57,7 @@ final readonly class GrantNodeAccessAction
             $grant = $this->grants->grant(node: $node, data: $data, grantedBy: $context->actor->ref()->id);
 
             $this->recorder->record(new NodeGrantCreated(grant: $grant, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::GrantCreated->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $grant;
         });

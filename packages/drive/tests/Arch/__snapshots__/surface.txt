@@ -1,6 +1,10 @@
 # Surface manifest of the package `drive` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
+Vaulter\Drive\Access\AccessInvalidation api since 1.0 final readonly class
+  public const string OPERATION = 'drive.access.invalidate'
+  public function changed(?Vaulter\Drive\Data\DriveRef $drive, string $reason): void
+
 Vaulter\Drive\Access\Roles\Role api since 1.0 final readonly class
   public array $abilities
   public int $bits
@@ -329,6 +333,10 @@ Vaulter\Drive\Data\CreateFolderOptions api since 1.0 final readonly class
   public function __construct(Vaulter\Drive\Enums\OnNameConflict $onConflict = \Vaulter\Drive\Enums\OnNameConflict::Fail)
   public static function make(): self
   public function onConflict(Vaulter\Drive\Enums\OnNameConflict $onConflict): self
+
+Vaulter\Drive\Data\DriveRef api since 1.0 final readonly class
+  public string $id
+  public static function of(Vaulter\Drive\Contracts\DriveHandle|Vaulter\Drive\Data\Snapshots\DriveSnapshot|int|string $drive): self
 
 Vaulter\Drive\Data\FileStream api since 1.0 final readonly class
   public string $filename
@@ -734,6 +742,12 @@ Vaulter\Drive\Enums\Access\InheritanceRestriction api since 1.0 enum: string
   case CopyCurrent = 'copy_current'
   case Empty = 'empty'
 
+Vaulter\Drive\Enums\Access\InvalidationScope api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
+  case Drive = 'drive'
+  case Global = 'global'
+  case Node = 'node'
+  case Subtree = 'subtree'
+
 Vaulter\Drive\Enums\Access\Permission api since 1.0 enum: int
   case Comment = 32
   case Copy = 256
@@ -760,6 +774,7 @@ Vaulter\Drive\Enums\Events\DriveEventType api since 1.0 enum: string implements 
   case DriveCreated = 'drive.created'
   case DriveDeleted = 'drive.deleted'
   case DriveUnarchived = 'drive.unarchived'
+  case EffectivePermissionsChanged = 'drive.access.effective_permissions_changed'
   case FileRevisionAdded = 'file.revision_added'
   case FileRevisionDeleted = 'file.revision_deleted'
   case FileUploaded = 'file.uploaded'
@@ -852,6 +867,19 @@ Vaulter\Drive\Enums\Uploads\UploadStatus api since 1.0 enum: string uses Vaulter
   public function canTransitionTo(self $target): bool
   public function isOpen(): bool
   public static function values(): array
+
+Vaulter\Drive\Events\Access\EffectivePermissionsChanged api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
+  public const string REASON_PATTERN = '/^[a-z][a-z0-9_.:-]{0,63}$/'
+  public ?string $driveId
+  public ?string $nodeId
+  public string $profile
+  public Vaulter\Drive\Enums\Access\InvalidationScope $reach
+  public string $reason
+  public ?string $tenantId
+  public function data(): array
+  public function scope(): Vaulter\ValueObjects\Events\EventScope
+  public function subject(): Vaulter\ValueObjects\Events\EventSubject
+  public function type(): Vaulter\Drive\Enums\Events\DriveEventType
 
 Vaulter\Drive\Events\Access\NodeGrantCreated api since 1.0 final readonly class extends Vaulter\Drive\Events\DriveEvent
   public Vaulter\Drive\Models\Access\NodeGrant $grant

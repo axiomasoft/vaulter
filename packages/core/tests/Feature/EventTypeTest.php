@@ -13,7 +13,7 @@ it('keeps the 0.2 stored vocabulary and appends the 1.0 lifecycle, document and 
         'node.moved', 'node.renamed', 'node.copied', 'node.updated', 'node.trashed', 'node.restored',
         'node.purged', 'grant.created', 'grant.revoked', 'access.inheritance_changed', 'share.created', 'share.updated',
         'share.rotated', 'share.revoked',
-        'drive.archived', 'drive.unarchived', 'drive.deleted', 'file.revision_deleted',
+        'drive.archived', 'drive.unarchived', 'drive.deleted', 'file.revision_deleted', 'drive.access.effective_permissions_changed',
         'document.created', 'document.updated', 'document.revision_created', 'document.restored',
         'comment.added', 'comment.resolved', 'comment.deleted',
     ]);

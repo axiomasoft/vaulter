@@ -786,6 +786,7 @@
             "packages/drive/tests/Access/AccessModelV1Test.php",
             "packages/drive/tests/Access/AccessResolverTest.php",
             "packages/drive/tests/Access/DatabaseDriverTest.php",
+            "packages/drive/tests/Access/EffectivePermissionsChangedTest.php",
             "packages/drive/tests/Access/EvaluateManyEquivalenceTest.php",
             "packages/drive/tests/Access/GateDriverTest.php",
             "packages/drive/tests/Access/GrantFailLoudTest.php",
@@ -1633,7 +1634,12 @@
             "packages/collaboration/tests/Persistence/CompactionLeaseTest.php",
             "packages/collaboration/tests/Persistence/GenerationFenceTest.php",
             "packages/collaboration/tests/Persistence/LockingReadsTest.php",
-            "packages/collaboration/tests/Persistence/ReceiptRetentionTest.php"
+            "packages/collaboration/tests/Persistence/ReceiptRetentionTest.php",
+            "packages/collaboration/tests/Revocation/AppendRevokedTest.php",
+            "packages/collaboration/tests/Revocation/ControlConsumerTest.php",
+            "packages/collaboration/tests/Revocation/EffectivePermissionsTest.php",
+            "packages/collaboration/tests/Revocation/PermissionVersionsTest.php",
+            "packages/collaboration/tests/Revocation/RenewTest.php"
           ]
         },
         {

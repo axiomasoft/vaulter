@@ -14,8 +14,10 @@ use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 
 /**
  * The side tables the collaboration module owns (D26): the update log of a document generation, its committed receipts
- * and its head. They reference the documents aggregate only; the working state, the generation (`collab_epoch`) and the
- * pending marker stay in v_documents and change through the documents state contract.
+ * and its head, and the permission versions of the drives (D46). The log tables reference the documents aggregate only;
+ * the working state, the generation (`collab_epoch`) and the pending marker stay in v_documents and change through the
+ * documents state contract. The permission versions reference nothing: a drive's key is a string, and the drive adds no
+ * column for collaboration.
  */
 #[Internal]
 final class CollaborationSchema implements ModuleSchema
@@ -29,6 +31,7 @@ final class CollaborationSchema implements ModuleSchema
             'collaboration_heads',
             'collaboration_updates',
             'collaboration_receipts',
+            'collaboration_permission_versions',
         ];
     }
 
@@ -51,6 +54,7 @@ final class CollaborationSchema implements ModuleSchema
                 'collaboration_heads' => $this->defineHeads(table: $table, ids: $ids),
                 'collaboration_updates' => $this->defineUpdates(table: $table, ids: $ids),
                 'collaboration_receipts' => $this->defineReceipts(table: $table, ids: $ids),
+                'collaboration_permission_versions' => $this->definePermissionVersions(table: $table),
                 default => throw new InvalidArgumentException(sprintf('Unknown collaboration entity [%s].', $entity)),
             };
         });
@@ -138,5 +142,20 @@ final class CollaborationSchema implements ModuleSchema
             ->references('id')
             ->on($this->helpers->table('documents'))
             ->cascadeOnDelete();
+    }
+
+    /**
+     * v_collaboration_permission_versions — one counter per scope of effective permissions (D46): `drive:<id>` for a
+     * drive, `global` for every drive. The `collaboration.permissions` event sink increments it in the transaction of
+     * drive.access.effective_permissions_changed; a session token carries the drive's and the global version it was
+     * issued under, so a token older than either is known to predate a change of rights.
+     */
+    private function definePermissionVersions(Blueprint $table): void
+    {
+        $table->string('scope_key', 191);
+        $this->helpers->counterColumn(table: $table, column: 'version');
+        $table->timestamp('updated_at')->nullable();
+
+        $table->primary(['scope_key'], $table->getTable().'_pkey');
     }
 }

@@ -9,6 +9,7 @@ use Laravel\Sanctum\SanctumServiceProvider;
 use Vaulter\Collaboration\CollaborationCallResolver;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
+use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Collaboration\Tests\Collaboration\CollaborationEnabledTestCase;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
@@ -42,6 +43,7 @@ function signedHubCall(array $body, string $jwt, int $timestamp): TestResponse
         'Authorization' => 'Bearer '.$jwt,
         CollaborationCallResolver::TIMESTAMP_HEADER => (string) $timestamp,
         CollaborationCallResolver::SIGNATURE_HEADER => CollaborationCallResolver::signature((string) json_encode($body), 'middleware-stack-webhook-secret', $timestamp),
+        HubProtocol::HEADER => (string) HubProtocol::VERSION,
     ]);
 }
 
@@ -61,9 +63,9 @@ it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $body = ['room' => $room];
     $timestamp = time();
     $jwt = JWT::encode([
-        'room' => $room, 'node' => (string) $node->getKey(), 'drive' => (string) $node->drive_id, 'tenant' => null,
-        'epoch' => 0, 'schema_version' => 1, 'mode' => 'rw',
-        'sub' => '17', 'iat' => $timestamp, 'exp' => $timestamp + 3600,
+        'room' => $room, 'document_id' => (string) $node->getKey(), 'drive_id' => (string) $node->drive_id, 'tenant' => null,
+        'generation' => 0, 'schema_version' => 1, 'scope' => 'write', 'permissions_version' => ['drive' => 0, 'global' => 0],
+        'sub' => '17', 'iat' => $timestamp, 'exp' => $timestamp + 300, 'jti' => 'middleware-stack',
     ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256');
 
     signedHubCall($body, $jwt, $timestamp)->assertOk()->assertJsonPath('allowed', true)->assertJsonPath('userId', '17');

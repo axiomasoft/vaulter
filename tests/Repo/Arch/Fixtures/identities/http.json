@@ -784,6 +784,27 @@
             "id": "route:vaulter.v1.collaboration.hub.append",
             "kind": "http",
             "reason": "P5.7: optional seed_state_version marks the hub's seed of an empty generation (409 collaboration_seed_conflict once the generation has a record or a checkpoint, or the state version moved); the drive's status is read again under the drive lock (403 archived, 404 deleting)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.renew",
+            "kind": "http",
+            "reason": "P5.10: protocol 2 renewal of a connection's room token by the rights now (room token + call signature); new exp = now + token_ttl, write -> read without Edit, 403 without View"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.recheck",
+            "kind": "http",
+            "reason": "P5.10: protocol 2 batch recheck after a control message (call signature only, every token verified): {connections: [{id, token}]} -> {results: [{id, access: none|read|write, reason, jti}]}"
+        },
+        {
+            "change": "redefined",
+            "decision": "D46",
+            "id": "route:vaulter.v1.collaboration.hub.append",
+            "kind": "http",
+            "reason": "P5.10: the ack carries permissions_stale: true when the token predates a change of its drive's or the global permission version; the rights are checked on every append regardless"
         }
     ],
     "flags": {
@@ -1143,6 +1164,73 @@
                 "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubLoadController"
             },
             "uri": "api/vaulter/v1/collaboration/hub/load"
+        },
+        {
+            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubRecheckController",
+            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubRecheckController",
+            "default_registered": false,
+            "id": "route:vaulter.v1.collaboration.hub.recheck",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "vaulter.module:collaboration",
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend",
+                "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
+            ],
+            "name": "vaulter.v1.collaboration.hub.recheck",
+            "openapi": {
+                "operation_id": "collaboration.hub.recheck",
+                "path": "/collaboration/hub/recheck"
+            },
+            "owner": "collaboration",
+            "requires": [
+                "vaulter.modules.collaboration"
+            ],
+            "source": {
+                "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubRecheckController.php",
+                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubRecheckController"
+            },
+            "uri": "api/vaulter/v1/collaboration/hub/recheck"
+        },
+        {
+            "action": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubRenewController",
+            "controller": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubRenewController",
+            "default_registered": false,
+            "id": "route:vaulter.v1.collaboration.hub.renew",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "vaulter.module:collaboration",
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
+            ],
+            "name": "vaulter.v1.collaboration.hub.renew",
+            "openapi": {
+                "operation_id": "collaboration.hub.renew",
+                "path": "/collaboration/hub/renew"
+            },
+            "owner": "collaboration",
+            "requires": [
+                "vaulter.modules.collaboration"
+            ],
+            "source": {
+                "file": "packages/collaboration/src/Http/Controllers/Collaboration/HubRenewController.php",
+                "symbol": "Vaulter\\Collaboration\\Http\\Controllers\\Collaboration\\HubRenewController"
+            },
+            "uri": "api/vaulter/v1/collaboration/hub/renew"
         },
         {
             "action": "Vaulter\\Documents\\Http\\Controllers\\Comments\\DeleteCommentController",

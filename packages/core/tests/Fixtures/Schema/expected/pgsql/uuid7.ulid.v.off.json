@@ -633,6 +633,56 @@
                 }
             }
         },
+        "v_collaboration_permission_versions": {
+            "columns": [
+                {
+                    "name": "scope_key",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_collaboration_permission_versions_pkey": "CREATE UNIQUE INDEX v_collaboration_permission_versions_pkey ON public.v_collaboration_permission_versions USING btree (scope_key)"
+            },
+            "constraints": {
+                "v_collaboration_permission_versions_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (scope_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_permission_versions_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
         "v_collaboration_receipts": {
             "columns": [
                 {

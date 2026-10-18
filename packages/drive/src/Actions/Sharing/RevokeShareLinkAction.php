@@ -8,6 +8,8 @@ use Illuminate\Support\Carbon;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Sharing\RevokeShareInput;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Sharing\NodeShareRevoked;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
@@ -32,6 +34,7 @@ final readonly class RevokeShareLinkAction
             $revoked = $this->shares->revoke(share: $share, now: Carbon::now());
             if ($revoked) {
                 $this->recorder->record(new NodeShareRevoked(share: $share, actor: $context->actor->ref(), correlationId: $context->correlationId));
+                $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::ShareRevoked->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
             }
 
             return $revoked;

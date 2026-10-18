@@ -13,7 +13,9 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\SharingConfig;
 use Vaulter\Drive\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Drive\Data\Sharing\MintedShareLink;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Sharing\NodeShareCreated;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
@@ -95,6 +97,7 @@ final readonly class CreateShareLinkAction
             $minted = new MintedShareLink(share: $share, token: $token);
 
             $this->recorder->record(new NodeShareCreated(share: $minted->share, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::ShareCreated->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $minted;
         });

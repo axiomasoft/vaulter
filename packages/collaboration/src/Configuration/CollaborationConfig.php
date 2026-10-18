@@ -16,7 +16,7 @@ use Vaulter\Support\Identity;
 
 /**
  * The typed reader of the `vaulter-collaboration` configuration root: the transport, the hub (URL, secrets,
- * token lifetime), the largest Yjs state a store may write, the protocol 2 limits, the compaction triggers and lease,
+ * token lifetime and clock skew), the control channel of revocations, the largest Yjs state a store may write, the protocol 2 limits, the compaction triggers and lease,
  * the drain deadline, flag store and append window, and the retention of closed generations. The room channel prefix
  * is the documents package's ({@see DocumentsConfig::channelPrefix()}): the comment events of a document broadcast on
  * the same channels.
@@ -221,22 +221,90 @@ final readonly class CollaborationConfig
         return max($seconds, 1);
     }
 
+    /** The longest a room token may live (seconds): D26 bounds the exposure of a lost control message by it. */
+    public const int MAX_TOKEN_TTL = 300;
+
+    /** The control transports: Redis pub/sub, HTTP to every hub's management port, or nothing. */
+    public const array CONTROL_TRANSPORTS = ['redis', 'http', 'none'];
+
     /**
-     * Rights are re-read only on the hub's next authenticate/load/store, so a token
-     * may not outlive an hour.
+     * The lifetime of a room token. A hub renews it before it expires, and a renewal checks the rights again, so a
+     * token that missed a revocation lives at most this long (D26).
      *
-     * @throws InvalidConfigurationException outside 1..3600 seconds
+     * @throws InvalidConfigurationException outside 1..300 seconds
      */
     public function hubTokenTtl(): int
     {
-        $value = $this->config->get(key: 'vaulter-collaboration.hub.token_ttl', default: 3600);
-        $seconds = is_numeric($value) ? (int) $value : 3600;
+        $value = $this->config->get(key: 'vaulter-collaboration.hub.token_ttl', default: self::MAX_TOKEN_TTL);
+        $seconds = is_numeric($value) ? (int) $value : self::MAX_TOKEN_TTL;
 
-        if ($seconds < 1 || $seconds > 3600) {
-            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.hub.token_ttl must be between 1 and 3600 seconds.');
+        if ($seconds < 1 || $seconds > self::MAX_TOKEN_TTL) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.hub.token_ttl must be between 1 and '.self::MAX_TOKEN_TTL.' seconds.');
         }
 
         return $seconds;
+    }
+
+    /**
+     * The clock difference tolerated on the exp of a room token (seconds), by the backend here and by the hub.
+     *
+     * @throws InvalidConfigurationException outside 0..60 seconds
+     */
+    public function hubClockSkew(): int
+    {
+        $value = $this->config->get(key: 'vaulter-collaboration.hub.clock_skew', default: 30);
+        $seconds = is_numeric($value) ? (int) $value : 30;
+
+        if ($seconds < 0 || $seconds > 60) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.hub.clock_skew must be between 0 and 60 seconds.');
+        }
+
+        return $seconds;
+    }
+
+    /**
+     * How a change of effective permissions reaches the hubs: `redis`, `http` or `none`.
+     *
+     * @throws InvalidConfigurationException for any other value
+     */
+    public function controlTransport(): string
+    {
+        $value = $this->config->get(key: 'vaulter-collaboration.control.transport', default: 'none');
+        if (!is_string($value) || !in_array($value, self::CONTROL_TRANSPORTS, true)) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-collaboration.control.transport must be "redis", "http" or "none".');
+        }
+
+        return $value;
+    }
+
+    /** The Redis connection the `redis` control transport publishes on. */
+    public function controlRedisConnection(): string
+    {
+        $value = $this->config->get('vaulter-collaboration.control.redis.connection');
+
+        return is_string($value) && $value !== '' ? $value : 'default';
+    }
+
+    /**
+     * The management base URLs of the hubs the `http` control transport posts to (a list, or one comma-separated string).
+     *
+     * @return list<string>
+     */
+    public function controlHttpUrls(): array
+    {
+        $value = $this->config->get('vaulter-collaboration.control.http.urls', []);
+        $urls = is_string($value) ? explode(',', $value) : (is_array($value) ? $value : []);
+
+        return array_values(array_filter(
+            array_map(static fn (mixed $url): string => is_string($url) ? rtrim(trim($url), '/') : '', $urls),
+            static fn (string $url): bool => $url !== '',
+        ));
+    }
+
+    /** How long one control POST may take (seconds). */
+    public function controlHttpTimeout(): int
+    {
+        return $this->positive('vaulter-collaboration.control.http.timeout', 2);
     }
 
     /**

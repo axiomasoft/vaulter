@@ -21,7 +21,12 @@ it('reads the shipped defaults of the vaulter-collaboration root', function (): 
 
     expect($config->driver())->toBe('hocuspocus')
         ->and($config->hubUrl())->toBe('ws://localhost:1234')
-        ->and($config->hubTokenTtl())->toBe(3600)
+        ->and($config->hubTokenTtl())->toBe(300)
+        ->and($config->hubClockSkew())->toBe(30)
+        ->and($config->controlTransport())->toBe('none')
+        ->and($config->controlRedisConnection())->toBe('default')
+        ->and($config->controlHttpUrls())->toBe([])
+        ->and($config->controlHttpTimeout())->toBe(2)
         ->and($config->hubTimestampTolerance())->toBe(300)
         ->and($config->maxStateBytes())->toBe(16777216)
         ->and($config->channelPrefix())->toBe('vaulter.documents');
@@ -59,13 +64,13 @@ it('parses only room names it issues', function (string $room): void {
     'non-numeric epoch' => ['host.docs.1.2.x'],
 ]);
 
-it('refuses the removed reverb driver and a token ttl above one hour', function (): void {
+it('refuses the removed reverb driver and a token ttl above five minutes', function (): void {
     $ttl = static fn (int $seconds): CollaborationConfig => config_of(['hub' => ['token_ttl' => $seconds]]);
 
     expect(fn () => config_of(['driver' => 'reverb'])->driver())->toThrow(InvalidConfigurationException::class, 'reverb collaboration driver was removed')
-        ->and(fn () => $ttl(3601)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
+        ->and(fn () => $ttl(301)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
         ->and(fn () => $ttl(0)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
-        ->and($ttl(3600)->hubTokenTtl())->toBe(3600)
+        ->and($ttl(300)->hubTokenTtl())->toBe(300)
         ->and(config_of()->maxStateBytes())->toBe(16777216)
         ->and(config_of(['max_state_bytes' => 0])->maxStateBytes())->toBe(16777216)
         ->and(config_of(['max_state_bytes' => 8])->maxStateBytes())->toBe(8);

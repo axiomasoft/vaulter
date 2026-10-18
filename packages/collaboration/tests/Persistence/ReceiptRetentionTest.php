@@ -97,10 +97,10 @@ it('closes the generation a restore leaves and refuses its late retry the same b
 });
 
 it('waits token_ttl, the retry horizon and the retention days before a closed generation may go', function (): void {
-    config()->set('vaulter-collaboration.hub.token_ttl', 600);
+    config()->set('vaulter-collaboration.hub.token_ttl', 240);
     config()->set('vaulter-collaboration.retention.retired_generation_days', 2);
 
-    expect(app(CollaborationConfig::class)->retiredGenerationGraceSeconds())->toBe(600 + 10 + 2 * 86400);
+    expect(app(CollaborationConfig::class)->retiredGenerationGraceSeconds())->toBe(240 + 10 + 2 * 86400);
 });
 
 it('keeps the receipts of the current generation however old they are', function (): void {

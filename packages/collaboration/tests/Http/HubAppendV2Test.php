@@ -13,6 +13,7 @@ use Vaulter\Collaboration\Data\RoomRef;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
 use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
+use Vaulter\Collaboration\Revocation\PermissionVersion;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
 use Vaulter\Configuration\DatabaseConfig;
@@ -35,7 +36,7 @@ it('appends an update and answers the committed receipt with the protocol header
     Hub::callV2('append', Hub::appendBody($this->node, "\x00\x01update", $id), $this->token)
         ->assertOk()
         ->assertHeader(HubProtocol::HEADER, '2')
-        ->assertExactJson(['generation' => 0, 'update_id' => $id, 'seq' => 1, 'sha256' => hash('sha256', "\x00\x01update"), 'persisted' => true]);
+        ->assertExactJson(['generation' => 0, 'update_id' => $id, 'seq' => 1, 'sha256' => hash('sha256', "\x00\x01update"), 'persisted' => true, 'permissions_stale' => false]);
 
     expect([Hub::aggregate($this->node)->pending_generation, Hub::aggregate($this->node)->pending_through_seq])->toBe([0, 1]);
 });
@@ -97,6 +98,7 @@ it('seeds a load from the content of the locked row, together with its state ver
         room: Hub::room($this->node),
         ref: new RoomRef(driveId: (string) $this->node->drive_id, nodeId: (string) $this->node->getKey(), epoch: 0),
         subject: '1', mode: 'rw', schemaVersion: 1, tenant: null,
+        permissionsVersion: new PermissionVersion(drive: 0, global: 0), jti: 'test-call', expiresAt: time() + 300,
     );
     $hub = app(CollaborationHub::class);
     $room = $hub->open($call, $call->room);

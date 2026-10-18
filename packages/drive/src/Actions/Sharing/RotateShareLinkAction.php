@@ -8,6 +8,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Sharing\MintedShareLink;
 use Vaulter\Drive\Data\Sharing\RotateShareLinkInput;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Sharing\NodeShareRotated;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Sharing\NodeShare;
@@ -46,6 +48,7 @@ final readonly class RotateShareLinkAction
 
             [$rotated, $token] = $this->minter->mint(fn (string $tokenHash, string $tokenPrefix): NodeShare => $this->shares->rotate($share, $tokenHash, $tokenPrefix));
             $this->recorder->record(new NodeShareRotated(share: $rotated, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::ShareRotated->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return new MintedShareLink(share: $rotated, token: $token);
         });

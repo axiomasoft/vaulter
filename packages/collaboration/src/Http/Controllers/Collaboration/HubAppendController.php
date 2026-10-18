@@ -19,8 +19,9 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 /**
  * Protocol 2 append: one Yjs update of the room's generation into the document's log. Body `{room, generation,
  * update_id (uuid), sha256 (hex of the payload), payload (base64), origin: client|server, seed_state_version?}`. The
- * answer `{generation, update_id, seq, sha256, persisted: true}` is built after the commit; a retry with the same
- * update_id and payload gets the same seq. The base64 length is checked against `limits.update_bytes` before it is
+ * answer `{generation, update_id, seq, sha256, persisted: true, permissions_stale}` is built after the commit; a retry
+ * with the same update_id and payload gets the same seq. `permissions_stale` is true when the token predates a change
+ * of its drive's rights (D46): the append was allowed by the rights now, and the hub renews the token. The base64 length is checked against `limits.update_bytes` before it is
  * decoded — against `max_state_bytes` for a seed, which carries the document's whole initial state. `seed_state_version`
  * marks the hub's seed (409 collaboration_seed_conflict unless the generation has no checkpoint and no record yet and the
  * document's state version still equals it).
@@ -37,7 +38,8 @@ final readonly class HubAppendController
         $update = $this->envelope($request);
         $room = $this->hub->open($call, $request->input('room'));
 
-        return HubProtocol::mark(new JsonResponse($this->hub->append($room, $call, $update)->ack()));
+        // The rights were checked above whatever the token's permission versions; a stale token tells the hub to renew.
+        return HubProtocol::mark(new JsonResponse([...$this->hub->append($room, $call, $update)->ack(), 'permissions_stale' => $room->permissionsStale]));
     }
 
     private function envelope(Request $request): UpdateEnvelope

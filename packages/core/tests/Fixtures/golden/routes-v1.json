@@ -176,6 +176,41 @@
         ]
     },
     {
+        "name": "vaulter.v1.collaboration.hub.recheck",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/collaboration/hub/recheck",
+        "middleware": [
+            "vaulter.module:collaboration",
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Collaboration\\Http\\Middleware\\LimitHubAppend",
+            "Vaulter\\Collaboration\\Http\\Middleware\\VerifyHubSignature"
+        ]
+    },
+    {
+        "name": "vaulter.v1.collaboration.hub.renew",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/collaboration/hub/renew",
+        "middleware": [
+            "vaulter.module:collaboration",
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Collaboration\\Http\\Middleware\\ResolveCollaborationCall"
+        ]
+    },
+    {
         "name": "vaulter.v1.comments.destroy",
         "methods": [
             "DELETE"

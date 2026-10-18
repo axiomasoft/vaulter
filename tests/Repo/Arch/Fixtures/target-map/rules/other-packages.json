@@ -593,6 +593,14 @@
         },
         {
             "match": "file",
+            "value": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+            "owner": "collaboration",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#persistence + D46 (P5.10): v_collaboration_permission_versions is created by the migration of collaboration"
+        },
+        {
+            "match": "file",
             "value": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
             "owner": "drive",
             "action": "keep",

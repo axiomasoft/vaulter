@@ -183,6 +183,12 @@
         },
         {
             "match": "exact",
+            "value": "table:v_collaboration_permission_versions",
+            "owner": "collaboration",
+            "why": "D46: collaboration owns the permission versions of the drives (drive:<id>|global), no FK and no drive column"
+        },
+        {
+            "match": "exact",
             "value": "table:v_drive_change_heads",
             "owner": "drive",
             "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"

@@ -7,10 +7,12 @@ namespace Vaulter\Collaboration\Tests\Collaboration;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Vaulter\Collaboration\CollaborationCall;
 use Vaulter\Collaboration\CollaborationCallResolver;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
+use Vaulter\Collaboration\Revocation\PermissionVersions;
 use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
@@ -77,7 +79,12 @@ final class HubTestHelpers
         return app(CollaborationConfig::class)->room($node->drive_id, $node->getKey(), $epoch ?? self::aggregate($node)->collab_epoch);
     }
 
-    /** @param array<string, mixed> $claims overrides of the minted claims */
+    /**
+     * A room token as RoomTokens mints it: `$mode` rw is the scope write, anything else read; the permission versions
+     * are the drive's current ones.
+     *
+     * @param array<string, mixed> $claims overrides of the minted claims
+     */
     public static function token(Node $node, string $mode = 'rw', int $actorId = 1, ?int $epoch = null, array $claims = []): string
     {
         $epoch ??= self::aggregate($node)->collab_epoch;
@@ -85,15 +92,17 @@ final class HubTestHelpers
         return JWT::encode(
             payload: [
                 'sub' => (string) $actorId,
-                'node' => (string) $node->getKey(),
-                'drive' => (string) $node->drive_id,
+                'document_id' => (string) $node->getKey(),
+                'drive_id' => (string) $node->drive_id,
                 'tenant' => null,
-                'epoch' => $epoch,
+                'generation' => $epoch,
                 'schema_version' => 1,
-                'mode' => $mode,
+                'scope' => $mode === 'rw' ? CollaborationCall::SCOPE_WRITE : CollaborationCall::SCOPE_READ,
+                'permissions_version' => app(PermissionVersions::class)->current((string) $node->drive_id)->toClaim(),
                 'room' => self::room($node, $epoch),
                 'iat' => time(),
-                'exp' => time() + 3600,
+                'exp' => time() + 300,
+                'jti' => (string) Str::uuid(),
                 ...$claims,
             ],
             key: self::JWT_SECRET,

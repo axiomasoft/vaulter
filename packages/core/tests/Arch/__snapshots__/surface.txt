@@ -722,7 +722,7 @@ Vaulter\ValueObjects\Events\EventScope api since 1.0 final readonly class
   public function __construct(mixed $tenantId, mixed $driveId, string $profile)
 
 Vaulter\ValueObjects\Events\EventSubject api since 1.0 final readonly class
-  public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload']
+  public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload', 'access']
   public string $id
   public string $type
   public function __construct(string $type, mixed $id)

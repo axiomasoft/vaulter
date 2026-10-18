@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Actions\Access;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Access\RevokeGrantInput;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Access\NodeGrantRevoked;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
@@ -30,6 +32,7 @@ final readonly class RevokeNodeAccessAction
             $subject = $grant->subject();
             $grant->delete();
             $this->recorder->record(new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::GrantRevoked->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return 1;
         });

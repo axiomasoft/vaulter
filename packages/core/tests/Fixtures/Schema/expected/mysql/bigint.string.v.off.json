@@ -1011,6 +1011,63 @@
             },
             "create_sql": "CREATE TABLE `v_collaboration_heads` (\n  `document_id` bigint unsigned NOT NULL,\n  `generation` bigint NOT NULL DEFAULT '0',\n  `head_seq` bigint NOT NULL DEFAULT '0',\n  `checkpoint_seq` bigint NOT NULL DEFAULT '0',\n  `checkpoint_version` bigint NOT NULL DEFAULT '0',\n  `lease_token` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `lease_owner` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `lease_expires_at` timestamp NULL DEFAULT NULL,\n  `drain_requested_at` timestamp NULL DEFAULT NULL,\n  `retired_at` timestamp NULL DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`document_id`,`generation`),\n  KEY `v_collaboration_heads_document_id_index` (`document_id`),\n  CONSTRAINT `v_collaboration_heads_document_fk` FOREIGN KEY (`document_id`) REFERENCES `v_documents` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `v_collaboration_heads_chk_1` CHECK ((`generation` >= 0)),\n  CONSTRAINT `v_collaboration_heads_chk_2` CHECK ((`head_seq` >= 0)),\n  CONSTRAINT `v_collaboration_heads_chk_3` CHECK ((`checkpoint_seq` >= 0)),\n  CONSTRAINT `v_collaboration_heads_chk_4` CHECK ((`checkpoint_version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
+        "v_collaboration_permission_versions": {
+            "columns": [
+                {
+                    "name": "scope_key",
+                    "type": "varchar(191)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "version",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                }
+            ],
+            "indexes": {
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "scope_key",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": {
+                "v_collaboration_permission_versions_chk_1": {
+                    "type": "check",
+                    "clause": "(`version` >= 0)",
+                    "enforced": "YES"
+                }
+            },
+            "create_sql": "CREATE TABLE `v_collaboration_permission_versions` (\n  `scope_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `version` bigint NOT NULL DEFAULT '0',\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`scope_key`),\n  CONSTRAINT `v_collaboration_permission_versions_chk_1` CHECK ((`version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
         "v_collaboration_receipts": {
             "columns": [
                 {

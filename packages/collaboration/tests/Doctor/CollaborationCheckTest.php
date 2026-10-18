@@ -21,7 +21,7 @@ function configureHub(array $hub = [], ?string $drainStore = 'file'): void
 {
     config([
         'vaulter-collaboration.hub' => [
-            'url' => 'wss://hub.example.test', 'jwt_secret' => 'jwt-secret-value', 'webhook_secret' => 'webhook-secret-value', 'token_ttl' => 3600,
+            'url' => 'wss://hub.example.test', 'jwt_secret' => 'jwt-secret-value', 'webhook_secret' => 'webhook-secret-value', 'token_ttl' => 300,
             ...$hub,
         ],
         'vaulter-collaboration.drain.cache_store' => $drainStore,
@@ -98,7 +98,7 @@ it('requires wss:// in production only', function (): void {
 });
 
 it('refuses a room token lifetime above an hour', function (): void {
-    configureHub(['token_ttl' => 7200]);
+    configureHub(['token_ttl' => 3600]);
 
     expect(collaborationFindings()[0]->code)->toBe('collaboration.hub_token_ttl');
 });

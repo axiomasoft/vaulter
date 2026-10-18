@@ -10,6 +10,8 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\Roles\Role;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Access\InheritanceRestriction;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Events\Access\NodeInheritanceChanged;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -66,6 +68,7 @@ final readonly class SetNodeInheritanceAction
             foreach ($copies as $copy) {
                 $this->recorder->record(new NodeGrantCreated(grant: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
             }
+            $this->recorder->record(EffectivePermissionsChanged::forNode(node: $updated, reason: DriveEventType::InheritanceChanged->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $updated;
         });

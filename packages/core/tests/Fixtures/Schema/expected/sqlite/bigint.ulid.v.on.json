@@ -825,6 +825,51 @@
             },
             "create_sql": "CREATE TABLE \"v_collaboration_heads\" (\"document_id\" integer not null, \"generation\" BIGINT CHECK(typeof(generation) = 'integer' AND generation >= 0) not null default '0', \"head_seq\" BIGINT CHECK(typeof(head_seq) = 'integer' AND head_seq >= 0) not null default '0', \"checkpoint_seq\" BIGINT CHECK(typeof(checkpoint_seq) = 'integer' AND checkpoint_seq >= 0) not null default '0', \"checkpoint_version\" BIGINT CHECK(typeof(checkpoint_version) = 'integer' AND checkpoint_version >= 0) not null default '0', \"lease_token\" varchar, \"lease_owner\" varchar, \"lease_expires_at\" datetime, \"drain_requested_at\" datetime, \"retired_at\" datetime, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"document_id\") references \"v_documents\"(\"id\") on delete cascade, primary key (\"document_id\", \"generation\"))"
         },
+        "v_collaboration_permission_versions": {
+            "columns": [
+                {
+                    "name": "scope_key",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 1,
+                    "hidden": 0
+                },
+                {
+                    "name": "version",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                }
+            ],
+            "indexes": {
+                "sqlite_autoindex_v_collaboration_permission_versions_1": {
+                    "unique": 1,
+                    "origin": "pk",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "scope_key",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": null
+                }
+            },
+            "foreign_keys": [],
+            "create_sql": "CREATE TABLE \"v_collaboration_permission_versions\" (\"scope_key\" varchar not null, \"version\" BIGINT CHECK(typeof(version) = 'integer' AND version >= 0) not null default '0', \"updated_at\" datetime, primary key (\"scope_key\"))"
+        },
         "v_collaboration_receipts": {
             "columns": [
                 {

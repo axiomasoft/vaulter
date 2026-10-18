@@ -116,11 +116,16 @@ it('rejects a tampered token and a token whose claims disagree with its room', f
         ->assertStatus(401);
 })->with([
     'tampered signature' => [[], 'x'],
-    'node claim of another node' => [['node' => '999999'], ''],
-    'epoch claim off the room' => [['epoch' => 7], ''],
-    'unknown mode' => [['mode' => 'admin'], ''],
+    'document claim of another node' => [['document_id' => '999999'], ''],
+    'drive claim of another drive' => [['drive_id' => '999999'], ''],
+    'generation claim off the room' => [['generation' => 7], ''],
+    'unknown scope' => [['scope' => 'admin'], ''],
+    'the 0.x mode claim instead of a scope' => [['scope' => null, 'mode' => 'rw'], ''],
+    'no permission versions' => [['permissions_version' => null], ''],
+    'a permission version that is not a pair of counters' => [['permissions_version' => ['drive' => -1, 'global' => 0]], ''],
+    'no token id' => [['jti' => ''], ''],
     'pre-0.3 room without epoch' => [['room' => 'vaulter.documents.1'], ''],
-    'expired' => [['exp' => time() - 60], ''],
+    'expired beyond the clock skew' => [['exp' => time() - 60], ''],
 ]);
 
 // ── HMAC body signature ─────────────────────────────────────────────────────────────

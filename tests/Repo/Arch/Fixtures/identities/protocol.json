@@ -1281,6 +1281,27 @@
             "id": "problem:collaboration_seed_conflict",
             "kind": "protocol",
             "reason": "P5.7: answered by collaboration.hub.append for a seed over a generation that already has a record or a checkpoint, or over JSON whose state version moved (the protocol 1 store that answered it is gone)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "event:drive.access.effective_permissions_changed",
+            "kind": "protocol",
+            "reason": "P5.10: durable drive event of a change of effective permissions {drive_id|null, scope: node|subtree|drive|global, node_id|null, reason}, recorded in the transaction of grant/inheritance/share/move/trash/restore/purge/archive/unarchive/delete and by AccessInvalidation::changed() for the host; subject access (drive:<id>|global), no activity, not external, no journal"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "format:jwt-claims-room",
+            "kind": "protocol",
+            "reason": "P5.10: claims sub, document_id, drive_id, tenant, generation, schema_version, scope (read|write), permissions_version {drive, global} (D46), room, iat, exp (iat + token_ttl, accepted up to clock_skew past it), jti; node/drive/epoch/mode are gone"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "format:operation-name",
+            "kind": "protocol",
+            "reason": "P5.10: + drive.access.invalidate, the operation of AccessInvalidation::changed() (a system actor whose reason is the host's)"
         }
     ],
     "items": [
@@ -1442,6 +1463,27 @@
                 "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentUpdated"
             },
             "subject": "node"
+        },
+        {
+            "case": "EffectivePermissionsChanged",
+            "data": {
+                "drive_id": "string|null",
+                "node_id": "string|null",
+                "reason": "string",
+                "scope": "string"
+            },
+            "id": "event:drive.access.effective_permissions_changed",
+            "owner": "drive",
+            "sinks": {
+                "activity": false,
+                "external": false,
+                "journal": null
+            },
+            "source": {
+                "file": "packages/drive/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Drive\\Enums\\Events\\DriveEventType::EffectivePermissionsChanged"
+            },
+            "subject": "access"
         },
         {
             "case": "DriveArchived",
@@ -2010,17 +2052,17 @@
             }
         },
         {
-            "format": "HS256 JWT: sub, node, drive, tenant, epoch, schema_version, mode (rw|ro), room (<channel prefix>.<drive>.<node>.<epoch>), iat, exp",
+            "format": "HS256 JWT: sub, document_id, drive_id, tenant, generation, schema_version, scope (read|write), permissions_version {drive, global}, room (<channel prefix>.<drive_id>.<document_id>.<generation>), iat, exp (iat + hub.token_ttl, accepted up to hub.clock_skew past it), jti",
             "id": "format:jwt-claims-room",
             "manual": true,
             "owner": "collaboration",
             "source": {
-                "file": "packages/collaboration/src/HocuspocusCollaborationDriver.php",
-                "symbol": "Vaulter\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
+                "file": "packages/collaboration/src/RoomTokens.php",
+                "symbol": "Vaulter\\Collaboration\\RoomTokens::mint"
             }
         },
         {
-            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
+            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.invalidate, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
             "id": "format:operation-name",
             "manual": true,
             "owner": "core",

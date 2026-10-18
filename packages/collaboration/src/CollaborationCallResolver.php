@@ -6,18 +6,20 @@ namespace Vaulter\Collaboration;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Revocation\PermissionVersion;
 
 /**
  * Authenticates a server-to-server call the Node Hocuspocus hub makes back into
- * Vaulter (collab/authenticate, collab/load, collab/store). Two independent barriers,
+ * Vaulter (authenticate, load, append, renew). Two independent barriers,
  * both required:
  *
  *   - the room JWT the client got from collaborationSession() and the hub relays
- *     (HS256, hub.jwt_secret): it names the user, the room and the mode, so the hub can
+ *     (HS256, hub.jwt_secret): it names the user, the room and the scope, so the hub can
  *     never act for anyone, anywhere or with more rights than the token carries;
  *   - an HMAC-SHA256 signature of "{timestamp}.{rawBody}" keyed by hub.webhook_secret,
  *     with a bounded timestamp and a replay cache in the application's Cache store
@@ -72,7 +74,7 @@ final readonly class CollaborationCallResolver
         ?string $presentedSignature,
         string $rawBody,
     ): ?CollaborationCall {
-        $call = $this->resolveJwt($bearerToken);
+        $call = $this->verifyToken($bearerToken);
 
         if (!$call instanceof CollaborationCall) {
             return null;
@@ -144,11 +146,12 @@ final readonly class CollaborationCallResolver
     }
 
     /**
-     * Verify the room JWT (signature and exp, by firebase/php-jwt) and lift its claims.
-     * The room must parse, and its drive/node/epoch must repeat the token's own claims,
-     * so no claim can be read two ways. Null on any failure.
+     * Verify a room JWT on its own (signature and exp, by firebase/php-jwt, with `hub.clock_skew` of leeway) and lift
+     * its claims: what a batch recheck does for each connection the signed body names. The room must parse, and its
+     * drive/document/generation must repeat the token's own claims, so no claim can be read two ways. Null on any
+     * failure.
      */
-    private function resolveJwt(?string $bearerToken): ?CollaborationCall
+    public function verifyToken(?string $bearerToken): ?CollaborationCall
     {
         if (!is_string($bearerToken) || $bearerToken === '') {
             return null;
@@ -160,28 +163,39 @@ final readonly class CollaborationCallResolver
             return null;
         }
 
+        // The application clock, as the tokens are minted by it, and the clock skew both sides tolerate.
+        [$leeway, $timestamp] = [JWT::$leeway, JWT::$timestamp];
         try {
+            JWT::$leeway = $this->config->hubClockSkew();
+            JWT::$timestamp = Carbon::now()->getTimestamp();
             $claims = (array) JWT::decode($bearerToken, new Key($secret, 'HS256'));
         } catch (Throwable) {
             return null;
+        } finally {
+            [JWT::$leeway, JWT::$timestamp] = [$leeway, $timestamp];
         }
 
         $room = $claims['room'] ?? null;
         $subject = $claims['sub'] ?? null;
-        $mode = $claims['mode'] ?? null;
-        $epoch = $claims['epoch'] ?? null;
+        $scope = $claims['scope'] ?? null;
+        $generation = $claims['generation'] ?? null;
         $schemaVersion = $claims['schema_version'] ?? null;
         $tenant = $claims['tenant'] ?? null;
+        $jti = $claims['jti'] ?? null;
+        $exp = $claims['exp'] ?? null;
+        $version = PermissionVersion::fromClaim($claims['permissions_version'] ?? null);
 
-        if (!is_string($room) || !is_string($subject) || $subject === '' || !in_array($mode, ['rw', 'ro'], true)
-            || !is_int($epoch) || !is_int($schemaVersion) || ($tenant !== null && !is_string($tenant))) {
+        if (!is_string($room) || !is_string($subject) || $subject === ''
+            || !in_array($scope, [CollaborationCall::SCOPE_READ, CollaborationCall::SCOPE_WRITE], true)
+            || !is_int($generation) || !is_int($schemaVersion) || ($tenant !== null && !is_string($tenant))
+            || !is_string($jti) || $jti === '' || !is_int($exp) || !$version instanceof PermissionVersion) {
             return null;
         }
 
         $ref = $this->config->parseRoom($room);
 
-        if ($ref === null || $ref->epoch !== $epoch
-            || ($claims['node'] ?? null) !== $ref->nodeId || ($claims['drive'] ?? null) !== $ref->driveId) {
+        if ($ref === null || $ref->epoch !== $generation
+            || ($claims['document_id'] ?? null) !== $ref->nodeId || ($claims['drive_id'] ?? null) !== $ref->driveId) {
             return null;
         }
 
@@ -189,9 +203,12 @@ final readonly class CollaborationCallResolver
             room: $room,
             ref: $ref,
             subject: $subject,
-            mode: $mode,
+            mode: $scope === CollaborationCall::SCOPE_WRITE ? 'rw' : 'ro',
             schemaVersion: $schemaVersion,
             tenant: $tenant,
+            permissionsVersion: $version,
+            jti: $jti,
+            expiresAt: $exp,
         );
     }
 }

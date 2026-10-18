@@ -8,6 +8,8 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Nodes\NodeMoved;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
@@ -110,6 +112,7 @@ final readonly class MoveNodeAction
                 toParentId: $toParentId,
                 actor: $context->actor->ref(), correlationId: $context->correlationId,
             ));
+            $this->recorder->record(EffectivePermissionsChanged::forNode(node: $moved, reason: DriveEventType::NodeMoved->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $moved;
         });

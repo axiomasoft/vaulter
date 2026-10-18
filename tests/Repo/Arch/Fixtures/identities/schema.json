@@ -1910,6 +1910,76 @@
             "id": "table:v_collaboration_updates",
             "kind": "schema",
             "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "table:v_collaboration_permission_versions",
+            "kind": "schema",
+            "reason": "P5.10: fourth collaboration table: one monotonic counter per scope key (drive:<id>|global), incremented by the collaboration.permissions event sink in the transaction of drive.access.effective_permissions_changed; no FK, no drive column"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "migration:0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+            "kind": "schema",
+            "reason": "P5.10: create migration of the permission versions (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "column:v_collaboration_permission_versions.scope_key",
+            "kind": "schema",
+            "reason": "P5.10: column of the permission versions (D46)"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "column:v_collaboration_permission_versions.version",
+            "kind": "schema",
+            "reason": "P5.10: column of the permission versions (D46)"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "column:v_collaboration_permission_versions.updated_at",
+            "kind": "schema",
+            "reason": "P5.10: column of the permission versions (D46)"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "constraint:v_collaboration_permission_versions.v_collaboration_permission_versions_pkey",
+            "kind": "schema",
+            "reason": "P5.10: key/CHECK constraint of the permission versions (D46; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "constraint:v_collaboration_permission_versions.v_collaboration_permission_versions_version_check",
+            "kind": "schema",
+            "reason": "P5.10: key/CHECK constraint of the permission versions (D46; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "constraint:v_collaboration_permission_versions.v_collaboration_permission_versions_chk_1",
+            "kind": "schema",
+            "reason": "P5.10: key/CHECK constraint of the permission versions (D46; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "index:v_collaboration_permission_versions.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.10: index of the permission versions (D46)"
+        },
+        {
+            "change": "added",
+            "decision": "D46",
+            "id": "index:v_collaboration_permission_versions.v_collaboration_permission_versions_pkey",
+            "kind": "schema",
+            "reason": "P5.10: index of the permission versions (D46)"
         }
     ],
     "engines": [
@@ -3948,6 +4018,88 @@
                 "symbol": "v_collaboration_heads"
             },
             "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(191)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(191)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "primary_key": 1,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_collaboration_permission_versions.scope_key",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
+            },
+            "table": "v_collaboration_permission_versions"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_collaboration_permission_versions.updated_at",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
+            },
+            "table": "v_collaboration_permission_versions"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_permission_versions.version",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
+            },
+            "table": "v_collaboration_permission_versions"
         },
         {
             "engines": {
@@ -20499,6 +20651,51 @@
         {
             "engines": {
                 "mysql": {
+                    "definition": "(`version` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_permission_versions.v_collaboration_permission_versions_chk_1",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
+            },
+            "table": "v_collaboration_permission_versions"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "PRIMARY KEY (scope_key)",
+                    "kind": "primary key"
+                }
+            },
+            "id": "constraint:v_collaboration_permission_versions.v_collaboration_permission_versions_pkey",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
+            },
+            "table": "v_collaboration_permission_versions"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((version >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_permission_versions.v_collaboration_permission_versions_version_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
+            },
+            "table": "v_collaboration_permission_versions"
+        },
+        {
+            "engines": {
+                "mysql": {
                     "definition": "(`generation` >= 0)",
                     "kind": "check"
                 }
@@ -24559,6 +24756,40 @@
                 "symbol": "v_collaboration_heads"
             },
             "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "scope_key"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_permission_versions.PRIMARY",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
+            },
+            "table": "v_collaboration_permission_versions"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "(scope_key)",
+                    "method": "btree",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_permission_versions.v_collaboration_permission_versions_pkey",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
+            },
+            "table": "v_collaboration_permission_versions"
         },
         {
             "engines": {
@@ -30370,6 +30601,17 @@
             ]
         },
         {
+            "id": "migration:0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_collaboration_permission_versions"
+            ]
+        },
+        {
             "columns": [
                 "id",
                 "tenant_id",
@@ -31950,6 +32192,179 @@
             "source": {
                 "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
                 "symbol": "v_collaboration_heads"
+            }
+        },
+        {
+            "columns": [
+                "scope_key",
+                "version",
+                "updated_at"
+            ],
+            "id": "table:v_collaboration_permission_versions",
+            "logical": "collaboration_permission_versions",
+            "migration": "0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+            "original_diff": {
+                "mysql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "pgsql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "sqlite": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                }
+            },
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000504_create_v_collaboration_permission_versions_table.php",
+                "symbol": "v_collaboration_permission_versions"
             }
         },
         {

@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Actions\Drives;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Drives\DriveArchived;
 use Vaulter\Drive\Exceptions\InvalidDriveStateException;
 use Vaulter\Drive\Models\Drive;
@@ -31,6 +33,7 @@ final readonly class ArchiveDriveAction
             }
             $drive = $this->drives->setStatus($drive, DriveStatus::Archived);
             $this->recorder->record(new DriveArchived(drive: $drive, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(EffectivePermissionsChanged::forDrive(drive: $drive, reason: DriveEventType::DriveArchived->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $drive;
         });

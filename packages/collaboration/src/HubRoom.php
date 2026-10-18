@@ -13,7 +13,9 @@ use Vaulter\Drive\Models\Node;
 /**
  * A hub call's room as it stands now: the live document behind the token, the
  * caller's current highest ability on it (null: not even View), whether its drive is
- * active (an archived drive is read-only) and whether the room may write at this moment.
+ * active (an archived drive is read-only), whether the room may write at this moment, and
+ * whether the token predates a change of rights of its drive (D46: the rights above were
+ * checked anyway; the hub renews such a session at once).
  */
 #[Internal]
 final readonly class HubRoom
@@ -26,6 +28,7 @@ final readonly class HubRoom
         public bool $writable,
         public bool $driveActive,
         public string $userId,
+        public bool $permissionsStale = false,
     ) {}
 
     public function mode(): string

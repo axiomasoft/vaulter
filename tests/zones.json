@@ -343,6 +343,7 @@
         "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
         "packages/collaboration/tests/Persistence",
         "packages/collaboration/tests/Restore",
+        "packages/collaboration/tests/Revocation",
         "packages/collaboration/tests/Console/PruneGenerationsTest.php",
         "packages/collaboration/tests/Disable",
         "packages/azgard/tests/RealAzgard",

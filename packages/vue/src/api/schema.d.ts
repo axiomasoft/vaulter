@@ -1133,6 +1133,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/collaboration/hub/renew": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hub: renew the room token of a connection by the rights now (protocol 2)
+         * @description Requires X-Vaulter-Collab-Protocol: 2. The bearer is the connection's current token (accepted up to hub.clock_skew past its exp). The rights are checked now, as on every hub call: the new token expires hub.token_ttl from now, carries the current permission versions and a scope no wider than the old token's or the subject's rights now (a writer who lost Edit is renewed read-only, an archived drive renews read-only). A subject without View gets 403 permission_denied, a gone or trashed document 404, a past generation 409 collaboration_epoch_mismatch. The old token is not extended.
+         */
+        post: operations["collaboration.hub.renew"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collaboration/hub/recheck": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hub: what each named connection may do now, after a control message (protocol 2)
+         * @description Requires X-Vaulter-Collab-Protocol: 2. The hub's own call: the body signature authenticates it, no room token; every token in the body is verified on its own. Up to 200 connections, answered in order: none (close the connection; reason token, gone, generation, unavailable or revoked), read (read-only) or write. The body is checked by its Content-Length (413 collaboration_update_too_large).
+         */
+        post: operations["collaboration.hub.recheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1581,6 +1621,38 @@ export interface components {
             seq: number;
             sha256: string;
             persisted: true;
+            /** @description True when the token predates a change of its drive's or of every drive's permissions (D46). The append was allowed by the rights now; the hub renews the token. */
+            permissions_stale: boolean;
+        };
+        /** @description The permission versions (D46) of the token's drive and of every drive. */
+        HubPermissionsVersion: {
+            drive: number;
+            global: number;
+        };
+        /** @description A renewed room token, scoped by the rights now. */
+        HubRenewed: {
+            token: string;
+            room: string;
+            generation: number;
+            /** @enum {string} */
+            scope: "read" | "write";
+            /** @enum {string} */
+            mode: "ro" | "rw";
+            /** @description Unix seconds, hub.token_ttl from the renewal. */
+            exp: number;
+            jti: string;
+            permissions_version: components["schemas"]["HubPermissionsVersion"];
+        };
+        /** @description What each connection of a recheck may do now, in the order of the request. */
+        HubRecheck: {
+            results: {
+                id: string;
+                /** @enum {string} */
+                access: "none" | "read" | "write";
+                /** @description Why access is none: token (invalid or expired), gone, generation, unavailable or revoked; null otherwise. */
+                reason: string | null;
+                jti: string | null;
+            }[];
         };
         /** @description A compaction lease on one document generation and what the hub merges under it, read with the lease under the document and head locks: the checkpoint (null before the first one, then content is the JSON to seed from) and the tail (checkpoint_seq, head_seq]. */
         HubCompactionLease: {
@@ -5254,6 +5326,94 @@ export interface operations {
             };
             401: components["responses"]["Problem401"];
             404: components["responses"]["Problem404"];
+            409: components["responses"]["Problem409"];
+            413: components["responses"]["Problem413"];
+            422: components["responses"]["Problem422"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+        };
+    };
+    "collaboration.hub.renew": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    room: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubRenewed"];
+                };
+            };
+            401: components["responses"]["Problem401"];
+            403: components["responses"]["Problem403"];
+            404: components["responses"]["Problem404"];
+            409: components["responses"]["Problem409"];
+            422: components["responses"]["Problem422"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+        };
+    };
+    "collaboration.hub.recheck": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    connections: {
+                        /** @description The hub's own key of the connection, 1 to 191 bytes. */
+                        id: string;
+                        /** @description The connection's current room token. */
+                        token: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubRecheck"];
+                };
+            };
+            401: components["responses"]["Problem401"];
             409: components["responses"]["Problem409"];
             413: components["responses"]["Problem413"];
             422: components["responses"]["Problem422"];
