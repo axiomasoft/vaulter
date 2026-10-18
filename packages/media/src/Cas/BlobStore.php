@@ -27,6 +27,8 @@ use Vaulter\Support\Identity;
 #[Api]
 final readonly class BlobStore implements BlobStoreContract
 {
+    private const int CHUNK_BYTES = 1_048_576;
+
     #[Internal]
     public function __construct(
         private ContentStore $content,
@@ -82,8 +84,10 @@ final readonly class BlobStore implements BlobStoreContract
 
             // The scrub marked this blob (D49): its object is missing or wrong. The staged bytes are hashed here and
             // match the row's digest and size, so the object is rewritten — removed first, as the conditional promote
-            // would keep the bad one — and the mark is lifted, all under the lock. A failure rolls the mark back.
-            $heal = !$result['created'] && $blob->integrity_failed_at !== null;
+            // would keep the bad one — and the mark is lifted, all under the lock. The heal is claimed with a write
+            // before the object is touched, so a commit that read the mark before another heal lifted it does not
+            // delete the restored object. A failure rolls the mark back.
+            $heal = !$result['created'] && $blob->integrity_failed_at !== null && $this->blobs->claimHeal($blob);
             if ($heal) {
                 $this->content->delete($blob->storage_key, $blob->disk);
             }
@@ -94,9 +98,10 @@ final readonly class BlobStore implements BlobStoreContract
             }
 
             if ($heal) {
-                // The mark is lifted only for an object that is there.
-                if (!$this->content->exists($blob->storage_key, $blob->disk)) {
-                    throw new RuntimeException('[Vaulter] Blob ['.Identity::stringify($blob->getKey()).'] was not healed: the object is still missing after the rewrite, the integrity mark stays.');
+                // The mark is lifted only for an object read back with the ingested size and digest: a delete the
+                // store did not carry out leaves the bad object, and the conditional promote keeps it.
+                if (!$this->holds($blob, $staged)) {
+                    throw new RuntimeException('[Vaulter] Blob ['.Identity::stringify($blob->getKey()).'] was not healed: the object read back after the rewrite is missing or does not match the ingested bytes (the bad object could not be removed or the write failed), the integrity mark stays.');
                 }
 
                 $this->blobs->clearIntegrity($blob);
@@ -112,5 +117,39 @@ final readonly class BlobStore implements BlobStoreContract
     public function read(Blob $blob): mixed
     {
         return $this->content->get($blob->storage_key, $blob->disk);
+    }
+
+    /** Whether the object of $blob, streamed back, has the size and sha256 of the staged bytes. */
+    private function holds(Blob $blob, StagedObject $staged): bool
+    {
+        $stream = $this->content->get($blob->storage_key, $blob->disk);
+
+        if ($stream === null) {
+            return false;
+        }
+
+        try {
+            $hash = hash_init('sha256');
+            $read = 0;
+
+            while (!feof($stream)) {
+                $chunk = fread($stream, self::CHUNK_BYTES);
+
+                if ($chunk === false) {
+                    return false;
+                }
+
+                hash_update($hash, $chunk);
+                $read += strlen($chunk);
+
+                if ($read > $staged->sizeBytes()) {
+                    return false;
+                }
+            }
+        } finally {
+            fclose($stream);
+        }
+
+        return $read === $staged->sizeBytes() && hash_equals(strtolower($staged->sha256()), hash_final($hash));
     }
 }

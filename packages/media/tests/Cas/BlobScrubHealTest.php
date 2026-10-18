@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobLock;
@@ -31,6 +32,62 @@ beforeEach(function (): void {
 function healCommit(string $bytes, string $tenant = '1'): Blob
 {
     return app(BlobStore::class)->commit(CasTestHelpers::streamFor($bytes), BlobScope::tenant($tenant));
+}
+
+/** A driver over the real one whose put() and delete() can be replaced. */
+function healDriver(?Closure $put = null, ?Closure $delete = null): StorageDriver
+{
+    return new class(app(StorageDriver::class), $put, $delete) implements StorageDriver
+    {
+        public function __construct(private readonly StorageDriver $inner, private readonly ?Closure $put, private readonly ?Closure $delete) {}
+
+        public function disk(?string $disk = null): Filesystem
+        {
+            return $this->inner->disk($disk);
+        }
+
+        public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
+        {
+            return $this->put !== null ? ($this->put)($key) : $this->inner->put($key, $stream, $disk, $ifNoneMatch, $options);
+        }
+
+        public function get(string $key, ?string $disk = null): mixed
+        {
+            return $this->inner->get($key, $disk);
+        }
+
+        public function exists(string $key, ?string $disk = null): bool
+        {
+            return $this->inner->exists($key, $disk);
+        }
+
+        public function delete(string $key, ?string $disk = null): void
+        {
+            if ($this->delete === null) {
+                $this->inner->delete($key, $disk);
+
+                return;
+            }
+
+            ($this->delete)($key);
+        }
+
+        public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string
+        {
+            return $this->inner->temporaryUrl($key, $expiresAt, $disk);
+        }
+    };
+}
+
+function healStore(StorageDriver $driver): Vaulter\Media\Cas\BlobStore
+{
+    return new Vaulter\Media\Cas\BlobStore(
+        new Sha256ContentStore($driver),
+        app(BlobLock::class),
+        app(BlobStoreRepository::class),
+        app(VaulterDatabase::class),
+        app(MediaConfig::class),
+    );
 }
 
 /** Damage the object, let the scrub mark the blob. */
@@ -179,4 +236,45 @@ it('keeps the mark when the driver reports a failed write and the object is not 
         ->and($blob->fresh()->integrity_failed_at)->not->toBeNull()
         ->and($blob->fresh()->isIntact())->toBeFalse()
         ->and(Storage::disk('local')->exists($blob->storage_key))->toBeFalse();
+});
+
+it('keeps the mark when the store does not remove the bad object', function (): void {
+    $blob = healDamage(healCommit('undeletable'), 'bad object!');
+    // A Flysystem disk that does not throw reports a failed delete as false, which the driver does not pass on: the
+    // bad object stays, and the conditional promote keeps it.
+    $store = healStore(healDriver(delete: static function (): void {}));
+
+    expect(fn () => $store->commit(CasTestHelpers::streamFor('undeletable'), BlobScope::tenant('1')))
+        ->toThrow(RuntimeException::class, 'was not healed')
+        ->and($blob->fresh()->isIntact())->toBeFalse()
+        ->and(Storage::disk('local')->get($blob->storage_key))->toBe('bad object!');
+});
+
+it('leaves the object alone when the mark was lifted after the commit read the row', function (): void {
+    $blob = healDamage(healCommit('healed by another'), 'bad');
+    $deletes = 0;
+    // The write of this commit would fail: a deleted object would be lost, not restored.
+    $store = healStore(healDriver(put: static fn (): bool => false, delete: static function () use (&$deletes): void {
+        $deletes++;
+    }));
+    $lifted = false;
+    // Another heal lands between the read of the row and the decision to rewrite the object (on SQLite: a commit whose
+    // snapshot is older than that heal's).
+    app(VaulterDatabase::class)->connection()->listen(static function (QueryExecuted $query) use (&$lifted, $blob): void {
+        if ($lifted || !str_starts_with($query->sql, 'select') || !str_contains($query->sql, $blob->getTable()) || !str_contains($query->sql, 'sha256')) {
+            return;
+        }
+
+        $lifted = true;
+        Storage::disk('local')->put($blob->storage_key, 'healed by another');
+        CasTestHelpers::write(static fn () => $blob->newQuery()->whereKey($blob->getKey())->update(['integrity_failed_at' => null, 'integrity_checked_at' => null]));
+    });
+
+    $committed = $store->commit(CasTestHelpers::streamFor('healed by another'), BlobScope::tenant('1'));
+
+    expect($lifted)->toBeTrue()
+        ->and($deletes)->toBe(0)
+        ->and($committed->isIntact())->toBeTrue()
+        ->and($blob->fresh()->isIntact())->toBeTrue()
+        ->and(Storage::disk('local')->get($blob->storage_key))->toBe('healed by another');
 });

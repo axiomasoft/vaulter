@@ -356,8 +356,9 @@ it('emits the checked, bytes and failed counters of a run', function (): void {
 
     app(BlobScrubber::class)->scrub();
 
+    // 12 bytes, then 1 byte of the bent object read twice: the failure is read again under the lock.
     expect(scrubCounters($this->metrics, 'vaulter_blobs_scrub_checked_total'))->toBe(['' => 2])
-        ->and(scrubCounters($this->metrics, 'vaulter_blobs_scrub_bytes_total'))->toBe(['' => 13])
+        ->and(scrubCounters($this->metrics, 'vaulter_blobs_scrub_bytes_total'))->toBe(['' => 14])
         ->and(scrubCounters($this->metrics, 'vaulter_blobs_scrub_failed_total'))->toBe(['missing' => 0, 'size' => 1, 'digest' => 0]);
 });
 
@@ -460,11 +461,12 @@ it('drops a failing verdict when an ingest restored the object after the read', 
     $blob = scrubCommit('restored meanwhile');
     Storage::disk('local')->delete($blob->storage_key);
     $inner = app(StorageDriver::class);
-    // The first read finds the object missing; the same bytes are ingested before the verdict is written. Neither
-    // integrity column changes (the row is committed, was never marked), so only a second read can tell.
+    // The first read finds the object missing (and the store confirms it is not there); the same bytes are ingested
+    // before the verdict is written. Neither integrity column changes (the row is committed, was never marked), so
+    // only a second read can tell.
     app()->instance(StorageDriver::class, new class($inner) implements StorageDriver
     {
-        private int $reads = 0;
+        private bool $restored = false;
 
         public function __construct(private readonly StorageDriver $inner) {}
 
@@ -480,18 +482,19 @@ it('drops a failing verdict when an ingest restored the object after the read', 
 
         public function get(string $key, ?string $disk = null): mixed
         {
-            $stream = $this->inner->get($key, $disk);
-
-            if ($this->reads++ === 0) {
-                scrubCommit('restored meanwhile');
-            }
-
-            return $stream;
+            return $this->inner->get($key, $disk);
         }
 
         public function exists(string $key, ?string $disk = null): bool
         {
-            return $this->inner->exists($key, $disk);
+            $exists = $this->inner->exists($key, $disk);
+
+            if (!$this->restored) {
+                $this->restored = true;
+                scrubCommit('restored meanwhile');
+            }
+
+            return $exists;
         }
 
         public function delete(string $key, ?string $disk = null): void
@@ -512,4 +515,130 @@ it('drops a failing verdict when an ingest restored the object after the read', 
         ->and($blob->fresh()->integrity_checked_at)->toBeNull()
         ->and(Storage::disk('local')->get($blob->storage_key))->toBe('restored meanwhile')
         ->and(scrubCounters($this->metrics, 'vaulter_blobs_scrub_failed_total'))->toBe(['missing' => 0, 'size' => 0, 'digest' => 0]);
+});
+
+/** A driver over the real one whose get() can be replaced. */
+function scrubDriver(Closure $get): StorageDriver
+{
+    return new class(app(StorageDriver::class), $get) implements StorageDriver
+    {
+        public function __construct(private readonly StorageDriver $inner, private readonly Closure $get) {}
+
+        public function disk(?string $disk = null): Filesystem
+        {
+            return $this->inner->disk($disk);
+        }
+
+        public function put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
+        {
+            return $this->inner->put($key, $stream, $disk, $ifNoneMatch, $options);
+        }
+
+        public function get(string $key, ?string $disk = null): mixed
+        {
+            return ($this->get)($key, fn (): mixed => $this->inner->get($key, $disk));
+        }
+
+        public function exists(string $key, ?string $disk = null): bool
+        {
+            return $this->inner->exists($key, $disk);
+        }
+
+        public function delete(string $key, ?string $disk = null): void
+        {
+            $this->inner->delete($key, $disk);
+        }
+
+        public function temporaryUrl(string $key, DateTimeInterface $expiresAt, ?string $disk = null): ?string
+        {
+            return $this->inner->temporaryUrl($key, $expiresAt, $disk);
+        }
+    };
+}
+
+/**
+ * A read stream that yields $head, then fails as a store that drops the connection would.
+ *
+ * @return resource
+ */
+function scrubFailingStream(string $head): mixed
+{
+    static $wrapper = null;
+
+    if ($wrapper === null) {
+        $wrapper = (new class
+        {
+            public static string $head = '';
+
+            /** @var resource|null */
+            public $context;
+
+            private bool $served = false;
+
+            public function stream_open(string $path, string $mode, int $options, ?string &$opened): bool
+            {
+                return true;
+            }
+
+            public function stream_read(int $count): string
+            {
+                if ($this->served) {
+                    throw new RuntimeException('connection reset');
+                }
+
+                $this->served = true;
+
+                return self::$head;
+            }
+
+            public function stream_eof(): bool
+            {
+                return false;
+            }
+        })::class;
+        stream_wrapper_register('vaulter-scrub-failing', $wrapper);
+    }
+
+    $wrapper::$head = $head;
+
+    return fopen('vaulter-scrub-failing://object', 'rb');
+}
+
+it('leaves a blob unmarked when the store answers the read with nothing but the object is there', function (): void {
+    $blob = scrubCommit('there but unreadable');
+    // A Flysystem disk that does not throw answers a failed readStream() with null, as for an absent object.
+    app()->instance(StorageDriver::class, scrubDriver(static fn (): mixed => null));
+    $before = scrubRows();
+
+    $result = app(BlobScrubber::class)->scrub();
+
+    expect($result)->toMatchArray(['visited' => 1, 'checked' => 0, 'failures' => [], 'unverified' => [(string) $blob->getKey()]])
+        ->and(scrubRows())->toBe($before)
+        ->and($blob->fresh()->isIntact())->toBeTrue();
+});
+
+it('counts the second read of a failure under the lock against the byte budget', function (): void {
+    $bent = scrubCommit('aaaaaaaaaa');
+    $next = scrubSet(scrubCommit('bbbbbbbbbb'), ['integrity_checked_at' => '2026-10-17 12:00:00']);
+    Storage::disk('local')->put($bent->storage_key, 'xxxxxxxxxx');
+
+    $result = app(BlobScrubber::class)->scrub(maxBytes: 15);
+
+    // 10 bytes read, 10 read again under the lock: the budget of 15 is used up before the next blob.
+    expect($result)->toMatchArray(['visited' => 1, 'checked' => 1, 'bytes' => 20, 'stopped_by' => 'max_bytes'])
+        ->and($next->fresh()->integrity_checked_at?->toDateTimeString())->toBe('2026-10-17 12:00:00');
+});
+
+it('counts the bytes of a read that fails against the byte budget', function (): void {
+    $failing = scrubCommit('fails half way');
+    $next = scrubSet(scrubCommit('never read'), ['integrity_checked_at' => '2026-10-17 12:00:00']);
+    app()->instance(StorageDriver::class, scrubDriver(static fn (string $key, Closure $read): mixed => $key === $failing->storage_key
+        ? scrubFailingStream('fails')
+        : $read()));
+
+    $result = app(BlobScrubber::class)->scrub(maxBytes: 5);
+
+    expect($result)->toMatchArray(['visited' => 1, 'checked' => 0, 'bytes' => 5, 'unverified' => [(string) $failing->getKey()], 'stopped_by' => 'max_bytes'])
+        ->and($failing->fresh()->isIntact())->toBeTrue()
+        ->and($next->fresh()->integrity_checked_at?->toDateTimeString())->toBe('2026-10-17 12:00:00');
 });

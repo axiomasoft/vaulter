@@ -59,7 +59,8 @@ final readonly class BlobScrubber
      *     failures: list<array{id: string, reason: string}>,
      *     unverified: list<string>,
      *     stopped_by: string,
-     * } stopped_by: limit, max_bytes, max_seconds or exhausted (nothing left to check in this run)
+     * } bytes: every byte read in the run (failed reads and second reads under the lock included), the measure of the
+     *   byte budget; stopped_by: limit, max_bytes, max_seconds or exhausted (nothing left to check in this run)
      */
     public function scrub(?int $limit = null, ?int $maxBytes = null, ?int $maxSeconds = null, ?string $scope = null, bool $dryRun = false): array
     {
@@ -101,8 +102,10 @@ final readonly class BlobScrubber
                 $cursor = [is_string($checkedAt) ? $checkedAt : null, $blob->getKey()];
                 $visited++;
 
+                // Every byte read counts against the budget: a read that fails half way and the second read of a
+                // failure under the lock included.
                 try {
-                    ['read' => $read, 'reason' => $reason] = $this->verify($blob);
+                    $reason = $this->verify($blob, $bytes);
                 } catch (Throwable) {
                     $unverified[] = Identity::stringify($blob->getKey());
 
@@ -110,7 +113,7 @@ final readonly class BlobScrubber
                 }
 
                 // A stale verdict (the row or the object changed after the bytes were read) is dropped, not reported.
-                $current = $dryRun ? true : $this->record($blob, $reason);
+                $current = $dryRun ? true : $this->record($blob, $reason, $bytes);
 
                 if ($current === null) {
                     $unverified[] = Identity::stringify($blob->getKey());
@@ -118,7 +121,6 @@ final readonly class BlobScrubber
                     continue;
                 }
 
-                $bytes += $read;
                 $checked++;
 
                 if ($current && $reason !== null) {
@@ -146,17 +148,23 @@ final readonly class BlobScrubber
     }
 
     /**
-     * Stream the object and compare it with the row. The read stops as soon as the object is longer than the row says.
-     * An error while reading throws: that is unverified, not a verdict.
+     * Stream the object and compare it with the row; every byte read is added to $bytes as it is read. The read stops
+     * as soon as the object is longer than the row says. An error while reading throws: that is unverified, not a
+     * verdict. A driver answers get() with null both for an absent object and, on a disk that does not throw, for one
+     * it failed to read: the object is missing only when the store also says it is not there.
      *
-     * @return array{read: int, reason: string|null} reason: missing, size, digest or null (intact)
+     * @return string|null missing, size, digest or null (intact)
      */
-    private function verify(Blob $blob): array
+    private function verify(Blob $blob, int &$bytes): ?string
     {
         $stream = $this->driver->get($blob->storage_key, $blob->disk);
 
         if ($stream === null) {
-            return ['read' => 0, 'reason' => 'missing'];
+            if ($this->driver->exists($blob->storage_key, $blob->disk)) {
+                throw new RuntimeException('The object of blob '.Identity::stringify($blob->getKey()).' is there but could not be read.');
+            }
+
+            return 'missing';
         }
 
         try {
@@ -172,6 +180,7 @@ final readonly class BlobScrubber
 
                 hash_update($hash, $chunk);
                 $read += strlen($chunk);
+                $bytes += strlen($chunk);
 
                 if ($read > $blob->size_bytes) {
                     break;
@@ -182,22 +191,23 @@ final readonly class BlobScrubber
         }
 
         if ($read !== $blob->size_bytes) {
-            return ['read' => $read, 'reason' => 'size'];
+            return 'size';
         }
 
-        return ['read' => $read, 'reason' => hash_equals(strtolower($blob->sha256), hash_final($hash)) ? null : 'digest'];
+        return hash_equals(strtolower($blob->sha256), hash_final($hash)) ? null : 'digest';
     }
 
     /**
      * Write the verdict under the lock of the blob. The row is read again: if the ingest healed it, GC took it or
      * another scrub recorded it while the bytes were read, the verdict is stale and nothing is written. An ingest or a
      * resurrection can also restore the object without touching a column, so a failing verdict is checked once more
-     * under the lock (the object is read again; only failures pay for it) and stands only if it is the same. Returns
-     * false for a stale verdict and null when the object cannot be read for the check (unverified, nothing written).
+     * under the lock (the object is read again; only failures pay for it, and the bytes go to $bytes) and stands only
+     * if it is the same. Returns false for a stale verdict and null when the object cannot be read for the check
+     * (unverified, nothing written).
      */
-    private function record(Blob $seen, ?string $reason): ?bool
+    private function record(Blob $seen, ?string $reason, int &$bytes): ?bool
     {
-        return $this->database->transaction(function () use ($seen, $reason): ?bool {
+        return $this->database->transaction(function () use ($seen, $reason, &$bytes): ?bool {
             $this->lock->acquire(scope: $seen->scope_key, sha256: $seen->sha256);
 
             $fresh = $this->blobs->lockRow($seen);
@@ -210,7 +220,7 @@ final readonly class BlobScrubber
 
             if ($reason !== null) {
                 try {
-                    $again = $this->verify($fresh)['reason'];
+                    $again = $this->verify($fresh, $bytes);
                 } catch (Throwable) {
                     return null;
                 }
