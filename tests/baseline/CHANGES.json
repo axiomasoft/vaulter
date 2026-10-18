@@ -14084,7 +14084,7 @@
       ]
     },
     "drive": {
-      "count": 221,
+      "count": 225,
       "names": [
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_keeps_the_event_out_of_the_activity_feed_and_away_from_webhooks__with_the_access_policy_as_its_subject",
         "P\\Tests\\Access\\EffectivePermissionsChangedTest::__pest_evaluable_it_records_a_drive_wide_change_when_the_drive_is_archived__unarchived_and_deleted",
@@ -14157,6 +14157,8 @@
         "P\\Tests\\Drive\\DriveLifecycleOperationTest::__pest_evaluable_it_raises_the_version_with_each_change_and_refuses_a_stale_expected_version",
         "P\\Tests\\Drive\\DriveLifecycleOperationTest::__pest_evaluable_it_replays_an_archive_under_its_key_once_and_refuses_another_request_under_it",
         "P\\Tests\\Drive\\DriveLifecycleOperationTest::__pest_evaluable_it_starts_the_delete_once_and_leaves_the_drive_absent_to_a_retry",
+        "P\\Tests\\Drive\\DrivePurgeTest::__pest_evaluable_it_purges_each_child_of_the_root_as_a_root_operation_of_the_system_actor__drive_purge___D48___one_purge_event_per_child",
+        "P\\Tests\\Drive\\DrivePurgeTest::__pest_evaluable_it_purges_the_other_children_and_raises_the_first_refusal_when_one_child_fails__then_converges_on_the_repeat",
         "P\\Tests\\Drive\\HasDrivesTest::__pest_evaluable_it_deletes_the_drives_of_a_deleted_owner_with_vaulter_drive_drives_delete__with__owner",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_detaches_one_edge_with_its_pin__and_all_edges_of_the_given_revisions_only",
         "P\\Tests\\Drive\\RevisionBlobLinksTest::__pest_evaluable_it_gives_a_new_revision__a_restored_revision_and_a_copy_each_a_pin_of_its_own",
@@ -14176,6 +14178,8 @@
         "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_refuses_a_malformed_cursor_and_options_a_drive_list_does_not_support",
         "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_reports_no_next_page_when_the_last_visible_drive_fills_the_page_exactly",
         "P\\Tests\\Drive\\VisibleDrivesTest::__pest_evaluable_it_walks_past_a_full_chunk_of_hidden_candidates_to_a_visible_drive",
+        "P\\Tests\\Feature\\PurgeTrashTest::__pest_evaluable_it_prints_and_counts_the_skipped_roots_when_one_root_fails_and_still_purges_the_others",
+        "P\\Tests\\Feature\\PurgeTrashTest::__pest_evaluable_it_purges_each_root_as_its_own_root_operation_of_the_system_actor__retention___D48___recording_one_purge_event_per_root",
         "P\\Tests\\Http\\AccessConcurrencyTest::__pest_evaluable_it_keeps_the_node_sequence_through_grants__inheritance_and_share_links__CC2_",
         "P\\Tests\\Http\\AccessConcurrencyTest::__pest_evaluable_it_lets_a_restriction_win_over_a_revoke_read_under_the_same_tag",
         "P\\Tests\\Http\\AccessConcurrencyTest::__pest_evaluable_it_lets_a_revoke_win_over_a_restriction_read_under_the_same_tag",
@@ -14310,7 +14314,7 @@
       ]
     },
     "documents": {
-      "count": 61,
+      "count": 63,
       "names": [
         "P\\Tests\\Arch\\ArchTest::__pest_evaluable_documents_depends_on_drive_but_never_directly_on_media__D6_",
         "P\\Tests\\Arch\\DocumentStateWriterBoundaryTest::__pest_evaluable_it_writes_the_pending_state_marker_only_in_DocumentStateWriter__D26_",
@@ -14359,16 +14363,18 @@
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_answers_409_without_resolving_a_drainer_when_none_is_active",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_answers_the_REST_content__export__replace_and_restore_with_the_problem_document__state__pending",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_does_not_drain_before_a_purge_that_runs_inside_a_transaction",
+        "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_drains_a_pending_document_before_a_retention_purge__then_purges_it",
+        "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_drains_a_pending_document_of_a_drive_being_deleted_before_the_drive_purge_step__then_finishes_the_drive",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_drains_a_trashed_pending_document_before_the_purge_transaction__then_purges_it",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_drains_before_a_replace_and_writes_on_top_of_the_drained_edits",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_drains_before_a_restore__then_closes_the_generation",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_drains_before_an_export_of_the_working_state",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_drains_outside_any_transaction_and_serves_the_drained_state",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_drains_the_purge_target_even_behind_more_trashed_pending_documents_than_one_page_that_do_not_settle",
-        "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_keeps_a_drive_being_deleted_while_one_of_its_documents_is_pending_and_finishes_once_the_marker_is_cleared",
+        "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_keeps_a_drive_being_deleted_while_the_drain_does_not_settle_one_of_its_documents_and_finishes_once_the_marker_is_cleared",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_never_waits_on_the_drainer_inside_a_transaction",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_refuses_a_replace_whose_tag_predates_the_drained_edits_instead_of_overwriting_them",
-        "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_refuses_a_retention_purge_of_a_pending_document_untouched_and_purges_it_once_the_marker_is_cleared",
+        "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_refuses_a_retention_purge_of_a_pending_document_the_drain_did_not_settle__keeps_it__and_purges_the_other_roots",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_refuses_to_purge_a_pending_document_the_drain_did_not_settle__or_without_a_drainer__and_keeps_it\"dataset \"drain misses its deadline\"\"",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_refuses_to_purge_a_pending_document_the_drain_did_not_settle__or_without_a_drainer__and_keeps_it\"dataset \"no drainer\"\"",
         "P\\Tests\\State\\PendingStateGuardTest::__pest_evaluable_it_refuses_with_409_and_keeps_the_generation_when_the_drain_misses_its_deadline",

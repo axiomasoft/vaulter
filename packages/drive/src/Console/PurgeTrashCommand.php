@@ -20,6 +20,9 @@ use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\Tenancy;
 
@@ -40,18 +43,19 @@ final class PurgeTrashCommand extends Command
         parent::__construct();
     }
 
-    public function handle(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics): int
+    public function handle(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics, OperationRunner $runner): int
     {
-        return Tenancy::without(fn (): int => $this->runMaintenance($nodes, $store, $purge, $metrics));
+        return Tenancy::without(fn (): int => $this->runMaintenance($nodes, $store, $purge, $metrics, $runner));
     }
 
-    private function runMaintenance(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics): int
+    private function runMaintenance(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $purge, MetricsRecorder $metrics, OperationRunner $runner): int
     {
         $purgedRoots = 0;
         $purgedNodeCount = 0;
+        $skipped = 0;
         $failed = false;
         $metrics->timing(name: 'vaulter_purge_duration_seconds', operation: function () use (
-            $nodes, $store, $purge, $metrics, &$purgedRoots, &$purgedNodeCount, &$failed,
+            $nodes, $store, $purge, $metrics, $runner, &$purgedRoots, &$purgedNodeCount, &$skipped, &$failed,
         ): void {
             $candidates = $nodes->trashedBefore(Carbon::now())->get();
             foreach ($candidates as $node) {
@@ -61,13 +65,15 @@ final class PurgeTrashCommand extends Command
                     if ($drive === null) {
                         continue;
                     }
-                    $context = DriveContext::system(drive: $drive, reason: 'purge-trash');
+                    $context = DriveContext::system(drive: $drive, reason: 'retention');
                     $override = $this->option('days');
                     $days = (is_string($override) || is_int($override)) && is_numeric($override)
                         ? max((int) $override, 0)
                         : ($this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $this->driveConfig->trashRetentionDays());
                     $threshold = Carbon::now()->subDays($days);
-                    $purged = $this->database->transaction(function () use ($node, $context, $threshold, $nodes, $store, $purge): int {
+                    // Each root is one root operation `drive.trash.purge` (D48, I9): the documents drain runs before its
+                    // transaction, and a root that stays refused (document_state_pending) rolls back only itself.
+                    $purged = $runner->write(new OperationSpec('drive.trash.purge', new ModuleId('drive')), $context->operation, function () use ($node, $context, $threshold, $nodes, $store, $purge): int {
                         $this->database->lockAggregate('drives', $context->driveId());
                         $locked = $store->lockTrashedRoot(Identity::key($node->getKey()), $threshold);
                         if ($locked === null) {
@@ -85,6 +91,7 @@ final class PurgeTrashCommand extends Command
                     }
                 } catch (Throwable $exception) {
                     $failed = true;
+                    $skipped++;
                     Log::error('Vaulter retention purge root failed.', [
                         'root_id' => $node->id,
                         'correlation_id' => $context?->correlationId,
@@ -97,7 +104,13 @@ final class PurgeTrashCommand extends Command
         if ($purgedNodeCount > 0) {
             $metrics->counter(name: 'vaulter_purge_nodes_total', amount: $purgedNodeCount);
         }
-        $this->info(sprintf('Purged %d trashed subtree%s.', $purgedRoots, $purgedRoots === 1 ? '' : 's'));
+        if ($purgedRoots > 0) {
+            $metrics->counter(name: 'vaulter_purge_roots_total', amount: $purgedRoots, labels: ['outcome' => 'purged']);
+        }
+        if ($skipped > 0) {
+            $metrics->counter(name: 'vaulter_purge_roots_total', amount: $skipped, labels: ['outcome' => 'skipped']);
+        }
+        $this->info(sprintf('Purged %d trashed subtree%s.', $purgedRoots, $purgedRoots === 1 ? '' : 's').($skipped > 0 ? sprintf(' Skipped %d.', $skipped) : ''));
 
         return $failed ? self::FAILURE : self::SUCCESS;
     }

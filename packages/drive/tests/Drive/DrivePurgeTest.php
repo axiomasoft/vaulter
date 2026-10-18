@@ -14,6 +14,7 @@ use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\DriveStatus;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Events\Drives\DriveDeleted;
@@ -28,7 +29,9 @@ use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Operations\OperationRunner;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
@@ -173,4 +176,49 @@ it('purges a quarantined revision through the same path: edges, rows and quota, 
     if (DB::connection()->getDriverName() === 'pgsql') {
         expect(FileRevision::query()->whereKey($revision->getKey())->exists())->toBeFalse();
     }
+});
+
+it('purges each child of the root as a root operation of the system actor "drive-purge" (D48), one purge event per child', function (): void {
+    Queue::fake();
+    $drive = DriveTestHelpers::drive();
+    $id = $drive->model()->getKey();
+    $children = [(string) $drive->folders()->create('one')->id, (string) $drive->folders()->create('two')->id];
+    $drive->delete();
+    $inside = [];
+    Node::retrieved(function (Node $model) use (&$inside, $children): void {
+        if (in_array((string) $model->getKey(), $children, true)) {
+            $inside[] = app(OperationRunner::class)->inOperation();
+        }
+    });
+
+    expect(app(PurgeDriveStepAction::class)->execute($id))->toBeTrue();
+
+    $events = OutboxEvent::query()->where('type', DriveEventType::NodePurged->value)->get();
+    expect($events)->toHaveCount(count($children))
+        ->and(Activity::query()->where('verb', DriveEventType::NodePurged->value)->get()->every(fn (Activity $row): bool => ($row->context['system_reason'] ?? null) === 'drive-purge'))->toBeTrue()
+        ->and($inside)->toContain(true);
+});
+
+it('purges the other children and raises the first refusal when one child fails, then converges on the repeat', function (): void {
+    Queue::fake();
+    $drive = DriveTestHelpers::drive();
+    $id = $drive->model()->getKey();
+    $bad = $drive->folders()->create('bad');
+    $ok = $drive->folders()->create('ok');
+    $drive->delete();
+    $fail = true;
+    Node::retrieved(static function (Node $model) use (&$fail, $bad): void {
+        if ($fail && (string) $model->getKey() === (string) $bad->id && app(OperationRunner::class)->inOperation()) {
+            throw new RuntimeException('boom');
+        }
+    });
+
+    expect(fn () => app(PurgeDriveStepAction::class)->execute($id))->toThrow(RuntimeException::class)
+        ->and(Node::query()->whereKey($ok->id)->exists())->toBeFalse()
+        ->and(Node::query()->whereKey($bad->id)->exists())->toBeTrue()
+        ->and(Drive::query()->whereKey($id)->exists())->toBeTrue();
+
+    $fail = false;
+    expect(app(PurgeDriveStepAction::class)->execute($id))->toBeTrue()
+        ->and(Drive::query()->whereKey($id)->exists())->toBeFalse();
 });

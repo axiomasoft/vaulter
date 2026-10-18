@@ -6,12 +6,16 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Drive\Data\UploadSource;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Facades\Vaulter;
+use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Tests\Fixtures\RevisionBlobPins;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Media\Models\Cas\Blob;
+use Vaulter\Operations\OperationRunner;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -134,4 +138,49 @@ it('honours the --days override', function (): void {
     $this->artisan('vaulter:trash:purge', ['--days' => '7'])->assertSuccessful();
 
     expect(Node::query()->whereKey($node->getKey())->exists())->toBeFalse();
+});
+
+it('purges each root as its own root operation of the system actor "retention" (D48), recording one purge event per root', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $nodes = [];
+    foreach (['a', 'b'] as $name) {
+        $nodes[$name] = AccessTestHelpers::folder($storage, null, $name);
+        $nodes[$name]->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $nodes[$name]->getKey()])->save();
+    }
+    $seen = [];
+    $candidates = array_map(static fn (Node $node): string => (string) $node->getKey(), $nodes);
+    Node::retrieved(function (Node $model) use (&$seen, $candidates): void {
+        if (in_array((string) $model->getKey(), $candidates, true)) {
+            $seen[] = app(OperationRunner::class)->inOperation();
+        }
+    });
+
+    $this->artisan('vaulter:trash:purge')->assertSuccessful();
+
+    $events = OutboxEvent::query()->where('type', DriveEventType::NodePurged->value)->get();
+    expect($events)->toHaveCount(2)
+        ->and(Activity::query()->where('verb', DriveEventType::NodePurged->value)->get()->every(fn (Activity $row): bool => ($row->context['system_reason'] ?? null) === 'retention'))->toBeTrue()
+        // Candidates are read outside the runner; each root is then located and purged inside its own operation.
+        ->and($seen)->toContain(false)->toContain(true);
+});
+
+it('prints and counts the skipped roots when one root fails and still purges the others', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $ok = AccessTestHelpers::folder($storage, null, 'ok');
+    $bad = AccessTestHelpers::folder($storage, null, 'bad');
+    foreach ([$ok, $bad] as $node) {
+        $node->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->getKey()])->save();
+    }
+    // The failing root: an exception raised while its purge locates it.
+    Node::retrieved(static function (Node $model) use ($bad): void {
+        if ((string) $model->getKey() === (string) $bad->getKey() && app(OperationRunner::class)->inOperation()) {
+            throw new RuntimeException('boom');
+        }
+    });
+
+    $this->artisan('vaulter:trash:purge')->expectsOutputToContain('Purged 1 trashed subtree. Skipped 1.')->assertExitCode(1);
+
+    expect(Node::query()->whereKey($ok->getKey())->exists())->toBeFalse()
+        ->and(Node::query()->whereKey($bad->getKey())->exists())->toBeTrue()
+        ->and(OutboxEvent::query()->where('type', DriveEventType::NodePurged->value)->count())->toBe(1);
 });

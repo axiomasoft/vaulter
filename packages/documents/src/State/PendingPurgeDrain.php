@@ -6,6 +6,7 @@ namespace Vaulter\Documents\State;
 
 use Closure;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Operations\Operation;
 use Vaulter\Operations\OperationMiddleware;
 use Vaulter\ValueObjects\Operations\ScopeRef;
@@ -17,8 +18,11 @@ use Vaulter\ValueObjects\Operations\ScopeRef;
  * DocumentContentLifecycle::purge() checks the marker again under the purge's locks — still set, the purge answers
  * 409 document_state_pending and removes nothing.
  *
- * Purges that do not run as a trash operation (the retention command, a drive purge) are not drained here and stay
- * 409 while the marker is set.
+ * The system purges run as this same root operation (D48): the retention command (actor reason `retention`) and
+ * the drive purge step (reason `drive-purge`) purge each root as one `drive.trash.purge`, so they are drained here
+ * too; the drive purge step removes a drive being deleted, so it drains every marked document of the drive, not only
+ * the trashed ones. A purge composed into another operation, or inside a transaction, is not drained and stays 409
+ * while the marker is set.
  */
 #[Internal]
 final readonly class PendingPurgeDrain implements OperationMiddleware
@@ -32,7 +36,8 @@ final readonly class PendingPurgeDrain implements OperationMiddleware
     {
         $scope = $operation->context->scope;
         if ($operation->spec->name === self::PURGE && !$operation->isNested() && $scope->kind === ScopeRef::DRIVE) {
-            $this->pending->drainTrashed($scope->id);
+            $actor = $operation->context->actor;
+            $this->pending->drainTrashed($scope->id, wholeDrive: $actor->isSystem() && $actor->ref()->reason === OperationGuard::PURGE_REASON);
         }
 
         return $next($operation);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Drives;
 
+use Throwable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
@@ -22,13 +23,16 @@ use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\Tenancy;
 
 /**
  * One resumable step of purging a drive that is being deleted: open uploads
- * are aborted, up to BATCH children of the root go one by one — each in its own
- * transaction through PurgeNodeAction as the system actor 'drive-purge', the same
+ * are aborted, up to BATCH children of the root go one by one — each as its own
+ * root operation `drive.trash.purge` (D48) through PurgeNodeAction as the system actor 'drive-purge', the same
  * lifecycle, CAS and quota path as an ordinary purge — and when the root has no
  * children left one last transaction removes the root, the drive's change journal and
  * the drive row. Activity and outbox rows stay as history. Safe to repeat after any crash.
@@ -49,6 +53,7 @@ final readonly class PurgeDriveStepAction
         private ChangeEntryRepository $changes,
         private ChangeHeadRepository $heads,
         private RevisionBlobLinks $links,
+        private OperationRunner $runner,
     ) {}
 
     /** @return bool true when the drive is gone (or was never being deleted), false while children remain */
@@ -68,12 +73,22 @@ final readonly class PurgeDriveStepAction
                 return $this->finish($context, null);
             }
             $children = $nodeClass::query()->where('drive_id', $drive->getKey())->where('parent_id', $root->getKey())->orderBy('id')->limit(self::BATCH)->get();
+            // One root operation per child (D48): the documents drain runs before its transaction. A child that stays
+            // refused (document_state_pending after the drain) rolls back only itself; the others still go, and the
+            // first refusal is raised once the batch is done, so the step is repeated.
+            $refusal = null;
             foreach ($children as $child) {
                 try {
-                    $this->purge->execute($context, new PurgeNodeInput(node: $child, bypassTrashRequirement: true));
+                    $this->runner->write(new OperationSpec('drive.trash.purge', new ModuleId('drive')), $context->operation,
+                        fn () => $this->purge->execute($context, new PurgeNodeInput(node: $child, bypassTrashRequirement: true)));
                 } catch (NodeNotFoundException) {
                     // Gone since the read: the purge converges.
+                } catch (Throwable $exception) {
+                    $refusal ??= $exception;
                 }
+            }
+            if ($refusal !== null) {
+                throw $refusal;
             }
             if ($children->count() === self::BATCH) {
                 return false;
