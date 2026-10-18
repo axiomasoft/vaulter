@@ -10,7 +10,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -24,7 +25,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -422,7 +424,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -436,7 +439,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -465,7 +469,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -611,7 +616,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -640,7 +646,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -931,7 +938,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -960,7 +968,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -974,7 +983,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {
@@ -988,7 +998,8 @@
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "vaulter.idempotency"
         ]
     },
     {

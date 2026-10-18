@@ -33,9 +33,13 @@ final class DriveOperationPolicies implements OperationPolicySource
             'drive.trash.purge' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['nodes.purge']),
             // Emptying the trash is one keyed operation holding every root purge; it is absolute (what is in the trash goes), so it has no version.
             'drive.trash.empty' => new OperationPolicy('drive.node', ConcurrencyPolicy::Natural, IdempotencyPolicy::Receipt, ['trash.empty']),
-            // A direct upload and a direct new revision of a file run in one operation of their own (FileOperations).
-            'drive.files.upload' => new OperationPolicy('drive.node', ConcurrencyPolicy::Append, IdempotencyPolicy::Receipt, ['files.store']),
-            'drive.files.add_revision' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['files.revisions.store']),
+            // A direct upload and a direct new revision of a file run in one operation of their own (FileOperations). Their
+            // body is the bytes, staged before the write, so they keep no receipt: a repeat answers by its precondition
+            // instead — files.store always refuses a taken name (409 node_name_conflict: the route offers no other
+            // conflict policy) and files.revisions.store requires If-Match (412 node_sequence_mismatch) — and never adds a
+            // second file or revision. A retry-safe upload of content is the resumable one (uploads.store, a receipt).
+            'drive.files.upload' => new OperationPolicy('drive.node', ConcurrencyPolicy::Append, IdempotencyPolicy::Conditional, ['files.store']),
+            'drive.files.add_revision' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Conditional, ['files.revisions.store']),
             'drive.files.restore_revision' => new OperationPolicy('drive.node', ConcurrencyPolicy::IfMatch, IdempotencyPolicy::Receipt, ['files.revisions.restore']),
             'drive.files.delete_revision' => new OperationPolicy('drive.revision', ConcurrencyPolicy::RowIdentity, IdempotencyPolicy::Receipt, ['files.revisions.destroy']),
             'drive.files.set_revision_retention' => new OperationPolicy('drive.revision', ConcurrencyPolicy::Natural, IdempotencyPolicy::Natural, ['files.revisions.update']),

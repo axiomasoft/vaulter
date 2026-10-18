@@ -16,17 +16,22 @@ use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Access\NodeGrantCreated;
 use Vaulter\Drive\Exceptions\Access\UnenumerableGrantSubjectException;
+use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Access\GrantStoreRepository;
+use Vaulter\Drive\Repositories\NodeStoreRepository;
 use Vaulter\Events\EventRecorder;
 
 /**
  * Give a subject a role on a node. Idempotent on the grant-unique key:
  * re-granting the same subject the same scope replaces the role and expiry. The
- * write runs in a transaction and emits NodeGrantCreated.
+ * write runs in a transaction under the node's row lock, raises the node's
+ * access_version (never its sequence: CC2) and emits NodeGrantCreated. A grant is
+ * an append (D47(4)): it expects no version.
  *
  * Authorization (the actor may Manage the node) is enforced by the caller
  * (controller/policy) before reaching the Action — the Action persists, it does
@@ -42,6 +47,8 @@ final readonly class GrantNodeAccessAction
         private VaulterDatabase $database,
         private NodeLocator $locator,
         private EventRecorder $recorder,
+        private NodeStoreRepository $nodes,
+        private AggregateVersion $versions,
     ) {}
 
     public function execute(DriveContext $context, GrantNodeAccessInput $input): NodeGrant
@@ -54,7 +61,9 @@ final readonly class GrantNodeAccessAction
 
         // The activity and outbox rows commit with the grant; a failed write rolls it back.
         return $this->database->transaction(function () use ($context, $node, $data): NodeGrant {
-            $grant = $this->grants->grant(node: $node, data: $data, grantedBy: $context->actor->ref()->id);
+            $locked = $this->nodes->lockForUpdate([$node->id])->first() ?? throw NodeNotFoundException::forId($node->id);
+            $grant = $this->grants->grant(node: $locked, data: $data, grantedBy: $context->actor->ref()->id);
+            $this->versions->bump($locked, 'access_version', AggregateVersion::NODE_ACCESS);
 
             $this->recorder->record(new NodeGrantCreated(grant: $grant, actor: $context->actor->ref(), correlationId: $context->correlationId));
             $this->recorder->record(EffectivePermissionsChanged::forNode(node: $node, reason: DriveEventType::GrantCreated->value, actor: $context->actor->ref(), correlationId: $context->correlationId));

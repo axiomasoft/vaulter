@@ -173,9 +173,9 @@ Vaulter\Drive\Contracts\Access\AccessOperations api since 1.0 interface
   public function explain(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Enums\Access\Ability $ability, ?Illuminate\Contracts\Auth\Access\Authorizable $subject = null): Vaulter\Drive\Access\ValueObjects\AccessExplanation
   public function grant(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Access\GrantInput $grant): Vaulter\Drive\Data\Snapshots\GrantSnapshot
   public function grants(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
-  public function restoreInheritance(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Drive\Data\Snapshots\NodeSnapshot
-  public function restrictInheritance(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Enums\Access\InheritanceRestriction $mode = \Vaulter\Drive\Enums\Access\InheritanceRestriction::Empty): Vaulter\Drive\Data\Snapshots\NodeSnapshot
-  public function revoke(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\GrantSnapshot|int|string $grant): void
+  public function restoreInheritance(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedAccessVersion = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  public function restrictInheritance(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Enums\Access\InheritanceRestriction $mode = \Vaulter\Drive\Enums\Access\InheritanceRestriction::Empty, ?int $expectedAccessVersion = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  public function revoke(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\GrantSnapshot|int|string $grant, ?int $expectedAccessVersion = null): void
 
 Vaulter\Drive\Contracts\Access\EnumeratesRoleSubjects spi:implement since 1.0 interface
 
@@ -202,10 +202,10 @@ Vaulter\Drive\Contracts\DriveHandle api since 1.0 interface
   public function actingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): static
   public function activity(): Vaulter\Drive\Contracts\Activity\ActivityOperations
   public function actor(): Vaulter\ValueObjects\Access\Actor
-  public function archive(): Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  public function archive(?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\DriveSnapshot
   public function asSystem(string $reason): static
   public function changes(): Vaulter\Drive\Operations\ChangeOperations
-  public function delete(): Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  public function delete(?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\DriveSnapshot
   public function extension(string $operations): object
   public function files(): Vaulter\Drive\Contracts\FileOperations
   public function folders(): Vaulter\Drive\Contracts\FolderOperations
@@ -216,7 +216,7 @@ Vaulter\Drive\Contracts\DriveHandle api since 1.0 interface
   public function shares(): Vaulter\Drive\Contracts\Sharing\ShareOperations
   public function snapshot(): Vaulter\Drive\Data\Snapshots\DriveSnapshot
   public function trash(): Vaulter\Drive\Contracts\TrashOperations
-  public function unarchive(): Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  public function unarchive(?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\DriveSnapshot
   public function withCorrelationId(string $correlationId): static
   public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
 
@@ -285,9 +285,9 @@ Vaulter\Drive\Contracts\Profiles\ProfileOption spi:implement since 1.0 interface
 Vaulter\Drive\Contracts\Sharing\ShareOperations api since 1.0 interface
   public function create(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Sharing\ShareLinkInput $input): Vaulter\Drive\Data\Snapshots\MintedShareLink
   public function list(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
-  public function revoke(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
-  public function rotate(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share): Vaulter\Drive\Data\Snapshots\MintedShareLink
-  public function update(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, Vaulter\Drive\Data\Sharing\ShareLinkUpdate $changes): Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot
+  public function revoke(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, ?int $expectedVersion = null): void
+  public function rotate(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, ?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\MintedShareLink
+  public function update(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, Vaulter\Drive\Data\Sharing\ShareLinkUpdate $changes, ?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot
 
 Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator spi:implement since 1.0 interface
   public function generate(): string
@@ -506,6 +506,7 @@ Vaulter\Drive\Data\Snapshots\DriveSnapshot api since 1.0 final readonly class
   public string $profile
   public Vaulter\Drive\Enums\DriveStatus $status
   public ?string $tenantId
+  public int $version
 
 Vaulter\Drive\Data\Snapshots\FileHeadSnapshot api since 1.0 final readonly class
   public string $fileId
@@ -548,6 +549,7 @@ Vaulter\Drive\Data\Snapshots\MintedShareLink api since 1.0 final readonly class
   public string $token
 
 Vaulter\Drive\Data\Snapshots\NodeSnapshot api since 1.0 final readonly class
+  public int $accessVersion
   public ?DateTimeImmutable $contentModifiedAt
   public ?string $contentModifiedBy
   public DateTimeImmutable $createdAt
@@ -595,6 +597,7 @@ Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot api since 1.0 final readonly clas
   public int $tokenGeneration
   public string $tokenPrefix
   public int $useCount
+  public int $version
 
 Vaulter\Drive\Data\Snapshots\ViewerStateSnapshot api since 1.0 final readonly class
   public bool $starred
@@ -694,10 +697,10 @@ Vaulter\Drive\DriveHandle api since 1.0 final readonly class implements Vaulter\
   public function actingAs(Illuminate\Contracts\Auth\Access\Authorizable $user): static
   public function activity(): Vaulter\Drive\Contracts\Activity\ActivityOperations
   public function actor(): Vaulter\ValueObjects\Access\Actor
-  public function archive(): Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  public function archive(?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\DriveSnapshot
   public function asSystem(string $reason): static
   public function changes(): Vaulter\Drive\Operations\ChangeOperations
-  public function delete(): Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  public function delete(?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\DriveSnapshot
   public function extension(string $operations): object
   public function files(): Vaulter\Drive\Contracts\FileOperations
   public function folders(): Vaulter\Drive\Contracts\FolderOperations
@@ -708,7 +711,7 @@ Vaulter\Drive\DriveHandle api since 1.0 final readonly class implements Vaulter\
   public function shares(): Vaulter\Drive\Contracts\Sharing\ShareOperations
   public function snapshot(): Vaulter\Drive\Data\Snapshots\DriveSnapshot
   public function trash(): Vaulter\Drive\Contracts\TrashOperations
-  public function unarchive(): Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  public function unarchive(?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\DriveSnapshot
   public function uploads(): Vaulter\Drive\Operations\UploadOperations
   public function withCorrelationId(string $correlationId): static
   public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
@@ -1464,9 +1467,9 @@ Vaulter\Drive\Operations\AccessOperations api since 1.0 final readonly class imp
   public function explain(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Enums\Access\Ability $ability, ?Illuminate\Contracts\Auth\Access\Authorizable $subject = null): Vaulter\Drive\Access\ValueObjects\AccessExplanation
   public function grant(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Access\GrantInput $grant): Vaulter\Drive\Data\Snapshots\GrantSnapshot
   public function grants(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
-  public function restoreInheritance(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): Vaulter\Drive\Data\Snapshots\NodeSnapshot
-  public function restrictInheritance(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Enums\Access\InheritanceRestriction $mode = \Vaulter\Drive\Enums\Access\InheritanceRestriction::Empty): Vaulter\Drive\Data\Snapshots\NodeSnapshot
-  public function revoke(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\GrantSnapshot|int|string $grant): void
+  public function restoreInheritance(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedAccessVersion = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  public function restrictInheritance(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Enums\Access\InheritanceRestriction $mode = \Vaulter\Drive\Enums\Access\InheritanceRestriction::Empty, ?int $expectedAccessVersion = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  public function revoke(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\GrantSnapshot|int|string $grant, ?int $expectedAccessVersion = null): void
 
 Vaulter\Drive\Operations\ActivityOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Activity\ActivityOperations
   public function forDrive(?Vaulter\Drive\Data\ListOptions $options = null): Vaulter\Data\Page
@@ -1515,9 +1518,9 @@ Vaulter\Drive\Operations\NodeOperations api since 1.0 final readonly class imple
 Vaulter\Drive\Operations\ShareOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Sharing\ShareOperations
   public function create(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Sharing\ShareLinkInput $input): Vaulter\Drive\Data\Snapshots\MintedShareLink
   public function list(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
-  public function revoke(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
-  public function rotate(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share): Vaulter\Drive\Data\Snapshots\MintedShareLink
-  public function update(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, Vaulter\Drive\Data\Sharing\ShareLinkUpdate $changes): Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot
+  public function revoke(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, ?int $expectedVersion = null): void
+  public function rotate(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, ?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\MintedShareLink
+  public function update(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, Vaulter\Drive\Data\Sharing\ShareLinkUpdate $changes, ?int $expectedVersion = null): Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot
 
 Vaulter\Drive\Operations\TrashOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\TrashOperations
   public function empty(): int

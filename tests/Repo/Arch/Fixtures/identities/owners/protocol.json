@@ -350,6 +350,16 @@
             "why": "validator of a node representation; If-Match on writes"
         },
         {
+            "id": "format:etag-versioned",
+            "owner": "drive",
+            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
+            "source": {
+                "file": "packages/core/src/Http/Support/RepresentationTag.php",
+                "symbol": "Vaulter\\Http\\Support\\RepresentationTag::versioned"
+            },
+            "why": "D47 (CC2): validator of the aggregates with a version of their own; If-Match of grants.destroy, access.inheritance.*, shares.update/rotate/destroy, drives.archive/unarchive/destroy (412 stale_write)"
+        },
+        {
             "id": "format:if-match",
             "owner": "core",
             "format": "If-Match header: one or more strong entity tags; weak tags never match; absent -> 428 precondition_required, no match -> 412",
@@ -518,6 +528,36 @@
             "format": "receipt kind drive.upload-session, version 1: JSON {id, upload_id, drive_id, protocol, status, received_bytes, total_size_bytes, chunk_size, mime_type, target_node_id, target_parent_id, target_name, expires_at}; no staged bytes, storage key or blob",
             "owner": "drive",
             "why": "D25: the stored receipt of uploads.initiate, decoded on a replay"
+        },
+        {
+            "id": "format:receipt-access",
+            "source": {
+                "file": "packages/drive/src/Idempotency/AccessReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\AccessReceiptCodec::encode"
+            },
+            "format": "receipt kind drive.access-receipt, version 1: JSON {type: grant, grant: every GrantSnapshot field (snake_case, subject_type/subject_id; times Y-m-d\\TH:i:s.uP)} or {type: revoke, revoke: {kind: grant, id, drive_id, node_id, ability}}",
+            "owner": "drive",
+            "why": "D25 (ID2): the stored receipt of drive.access.grant and drive.access.revoke; a revoke replay checks Manage on the recorded node"
+        },
+        {
+            "id": "format:receipt-share",
+            "source": {
+                "file": "packages/drive/src/Idempotency/ShareReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\ShareReceiptCodec::encode"
+            },
+            "format": "receipt kind drive.share-receipt, version 1: JSON {type: link, link} | {type: minted, link, token: Crypt::encryptString(raw token)} | {type: revoke, revoke: {kind: share, id, drive_id, node_id, ability}}; link = every ShareLinkSnapshot field (snake_case), never the token; the raw token is stored only as ciphertext (APP_KEY)",
+            "owner": "drive",
+            "why": "D25, D47(5), ID5: the stored receipt of drive.shares.*; a create/rotate replay returns the same token only to the same scope digest after the current authorization"
+        },
+        {
+            "id": "format:receipt-drive-snapshot",
+            "source": {
+                "file": "packages/drive/src/Idempotency/DriveSnapshotCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\DriveSnapshotCodec::encode"
+            },
+            "format": "receipt kind drive.drive-snapshot, version 1: JSON {id, owner_type, owner_id, profile, name, status, tenant_id, created_at, version}",
+            "owner": "drive",
+            "why": "D25, D47(6): the stored receipt of drive.drives.archive, drive.drives.unarchive and drive.drives.delete"
         },
         {
             "id": "format:receipt-problem",

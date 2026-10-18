@@ -12,5 +12,6 @@ use Vaulter\Drive\Models\Sharing\NodeShare;
 #[Internal]
 final readonly class RevokeShareInput
 {
-    public function __construct(public Node $node, public NodeShare $share) {}
+    /** @param int|null $expectedVersion the link's version the caller read (If-Match); null skips the check */
+    public function __construct(public Node $node, public NodeShare $share, public ?int $expectedVersion = null) {}
 }

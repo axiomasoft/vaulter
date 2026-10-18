@@ -17,6 +17,7 @@ use Vaulter\Drive\Events\Access\NodeInheritanceChanged;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Access\GrantReadRepository;
@@ -35,6 +36,10 @@ use Vaulter\Support\Identity;
  * subject and scope cannot hold two lifetimes, so where a direct subtree grant
  * already exists the conflict resolves towards less access (see keepsDirect()).
  *
+ * The node row is locked, the expected access_version compared under the lock and a
+ * change raises it (CC1); the node sequence does not move (CC2). Restoring or
+ * restricting what already is changes nothing and keeps the version.
+ *
  * Authorization (Manage on the node) belongs to AccessOperations.
  */
 #[Internal]
@@ -48,14 +53,17 @@ final readonly class SetNodeInheritanceAction
         private GrantReadRepository $grants,
         private GrantStoreRepository $writer,
         private EventRecorder $recorder,
+        private AggregateVersion $versions,
     ) {}
 
-    public function execute(DriveContext $context, Node $node, bool $inherit, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node
+    /** @param int|null $expectedAccessVersion the node's access_version the caller read (If-Match); null skips the check */
+    public function execute(DriveContext $context, Node $node, bool $inherit, InheritanceRestriction $mode = InheritanceRestriction::Empty, ?int $expectedAccessVersion = null): Node
     {
         $node = $this->locator->find(context: $context, key: $node);
 
-        return $this->database->transaction(function () use ($context, $node, $inherit, $mode): Node {
+        return $this->database->transaction(function () use ($context, $node, $inherit, $mode, $expectedAccessVersion): Node {
             $locked = $this->store->lockForUpdate([$node->id])->first() ?? throw NodeNotFoundException::forId($node->id);
+            $this->versions->assertExpected($locked, 'access_version', $expectedAccessVersion, AggregateVersion::NODE_ACCESS);
             if ((bool) $locked->inherit_grants === $inherit) {
                 return $locked;
             }
@@ -63,6 +71,7 @@ final readonly class SetNodeInheritanceAction
                 ? $this->copyInherited(context: $context, node: $locked)
                 : [];
             $updated = $this->store->update($locked, ['inherit_grants' => $inherit]);
+            $this->versions->bump($updated, 'access_version', AggregateVersion::NODE_ACCESS);
             $this->recorder->record(new NodeInheritanceChanged(node: $updated, inherits: $inherit, actor: $context->actor->ref(), correlationId: $context->correlationId));
             // Recorded after every row of the change is written and locked.
             foreach ($copies as $copy) {

@@ -1980,6 +1980,27 @@
             "id": "index:v_collaboration_permission_versions.v_collaboration_permission_versions_pkey",
             "kind": "schema",
             "reason": "P5.10: index of the permission versions (D46)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "column:v_drives.version",
+            "kind": "schema",
+            "reason": "P6.3: the drive's own version (counterColumn); archive, unarchive and delete raise it with UPDATE … WHERE version = ? (CC1)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "column:v_node_shares.version",
+            "kind": "schema",
+            "reason": "P6.3: the share link's own version (counterColumn); update, rotate and revoke raise it with UPDATE … WHERE version = ? (CC1)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "column:v_nodes.access_version",
+            "kind": "schema",
+            "reason": "P6.3: the version of a node's access (counterColumn); grant create/revoke and restrict/restore inheritance raise it, the node sequence does not move (CC2)"
         }
     ],
     "engines": [
@@ -7503,6 +7524,32 @@
         {
             "engines": {
                 "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_drives.version",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
+                "symbol": "v_drives"
+            },
+            "table": "v_drives"
+        },
+        {
+            "engines": {
+                "mysql": {
                     "default": null,
                     "nullable": false,
                     "type": "bigint unsigned"
@@ -11792,6 +11839,32 @@
         {
             "engines": {
                 "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_node_shares.version",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
+                "symbol": "v_node_shares"
+            },
+            "table": "v_node_shares"
+        },
+        {
+            "engines": {
+                "mysql": {
                     "charset": "utf8mb4",
                     "collation": "utf8mb4_unicode_ci",
                     "default": null,
@@ -12199,6 +12272,32 @@
                 "symbol": "v_node_user_states"
             },
             "table": "v_node_user_states"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_nodes.access_version",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",
+                "symbol": "v_nodes"
+            },
+            "table": "v_nodes"
         },
         {
             "engines": {
@@ -21205,6 +21304,21 @@
         },
         {
             "engines": {
+                "mysql": {
+                    "definition": "(`version` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_drives.v_drives_chk_2",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
+                "symbol": "v_drives"
+            },
+            "table": "v_drives"
+        },
+        {
+            "engines": {
                 "pgsql": {
                     "definition": "UNIQUE (owner_type, owner_id, profile)",
                     "kind": "unique"
@@ -21241,6 +21355,21 @@
                 }
             },
             "id": "constraint:v_drives.v_drives_scan_admission_sequence_check",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
+                "symbol": "v_drives"
+            },
+            "table": "v_drives"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((version >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_drives.v_drives_version_check",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
@@ -21445,6 +21574,21 @@
         },
         {
             "engines": {
+                "mysql": {
+                    "definition": "(`version` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_node_shares.v_node_shares_chk_1",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
+                "symbol": "v_node_shares"
+            },
+            "table": "v_node_shares"
+        },
+        {
+            "engines": {
                 "pgsql": {
                     "definition": "PRIMARY KEY (id)",
                     "kind": "primary key"
@@ -21466,6 +21610,21 @@
                 }
             },
             "id": "constraint:v_node_shares.v_node_shares_token_hash_uniq",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
+                "symbol": "v_node_shares"
+            },
+            "table": "v_node_shares"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((version >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_node_shares.v_node_shares_version_check",
             "owner": "drive",
             "source": {
                 "file": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
@@ -21502,6 +21661,36 @@
                 "symbol": "v_node_user_states"
             },
             "table": "v_node_user_states"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((access_version >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_nodes.v_nodes_access_version_check",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",
+                "symbol": "v_nodes"
+            },
+            "table": "v_nodes"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`access_version` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_nodes.v_nodes_chk_1",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",
+                "symbol": "v_nodes"
+            },
+            "table": "v_nodes"
         },
         {
             "engines": {
@@ -33878,6 +34067,7 @@
                 "used_bytes",
                 "scan_admission_sequence",
                 "status",
+                "version",
                 "created_by",
                 "created_at",
                 "updated_at"
@@ -33885,6 +34075,884 @@
             "id": "table:v_drives",
             "logical": "drives",
             "migration": "0001_01_01_000201_create_v_drives_table.php",
+            "original_diff": {
+                "mysql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "pgsql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "sqlite": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                }
+            },
             "owner": "drive",
             "source": {
                 "file": "packages/drive/database/migrations/0001_01_01_000201_create_v_drives_table.php",
@@ -34235,6 +35303,7 @@
                 "role_version",
                 "audience",
                 "token_generation",
+                "version",
                 "scope",
                 "password_hash",
                 "expires_at",
@@ -34248,6 +35317,884 @@
             "id": "table:v_node_shares",
             "logical": "node_shares",
             "migration": "0001_01_01_000212_create_v_node_shares_table.php",
+            "original_diff": {
+                "mysql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "pgsql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "sqlite": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                }
+            },
             "owner": "drive",
             "source": {
                 "file": "packages/drive/database/migrations/0001_01_01_000212_create_v_node_shares_table.php",
@@ -34288,6 +36235,7 @@
                 "extension",
                 "size_bytes",
                 "inherit_grants",
+                "access_version",
                 "shortcut_target_id",
                 "properties",
                 "content_modified_at",
@@ -34305,6 +36253,884 @@
             "id": "table:v_nodes",
             "logical": "nodes",
             "migration": "0001_01_01_000202_create_v_nodes_table.php",
+            "original_diff": {
+                "mysql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "pgsql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "sqlite": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "access_version"
+                            ],
+                            "removed": []
+                        }
+                    }
+                }
+            },
             "owner": "drive",
             "source": {
                 "file": "packages/drive/database/migrations/0001_01_01_000202_create_v_nodes_table.php",

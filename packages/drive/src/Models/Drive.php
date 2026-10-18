@@ -38,6 +38,7 @@ use Vaulter\Support\Concerns\HasStableMorphAlias;
  * @property int|null        $quota_bytes
  * @property int             $used_bytes
  * @property DriveStatus     $status
+ * @property int             $version
  * @property int|string|null $created_by
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
@@ -119,6 +120,7 @@ class Drive extends Model
             'quota_bytes' => 'integer',
             'used_bytes' => 'integer',
             'status' => DriveStatus::class,
+            'version' => 'integer',
         ];
     }
 }

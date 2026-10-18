@@ -832,7 +832,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.access.inheritance.restore",
             "openapi": {
@@ -862,7 +863,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.access.inheritance.restrict",
             "openapi": {
@@ -1669,7 +1671,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.drives.archive",
             "openapi": {
@@ -1699,7 +1702,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.drives.destroy",
             "openapi": {
@@ -1759,7 +1763,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.drives.unarchive",
             "openapi": {
@@ -2062,7 +2067,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.grants.destroy",
             "openapi": {
@@ -2122,7 +2128,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.grants.store",
             "openapi": {
@@ -2702,7 +2709,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.shares.destroy",
             "openapi": {
@@ -2762,7 +2770,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.shares.rotate",
             "openapi": {
@@ -2792,7 +2801,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.shares.store",
             "openapi": {
@@ -2822,7 +2832,8 @@
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
                 "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
-                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "vaulter.idempotency"
             ],
             "name": "vaulter.v1.shares.update",
             "openapi": {

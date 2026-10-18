@@ -114,7 +114,7 @@ it('lists shares WITHOUT ever exposing the raw token or hash', function (): void
     $response = $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares')->assertOk();
 
     $first = $response->json('data.0');
-    expect(array_keys($first))->toBe(['id', 'node_id', 'role', 'role_version', 'audience', 'scope', 'expires_at', 'max_uses', 'use_count', 'has_password', 'token_generation', 'created_by', 'created_at'])
+    expect(array_keys($first))->toBe(['id', 'node_id', 'role', 'role_version', 'audience', 'scope', 'expires_at', 'max_uses', 'use_count', 'has_password', 'token_generation', 'version', 'etag', 'created_by', 'created_at'])
         ->and($first)->not->toHaveKey('token')
         ->and($first)->not->toHaveKey('token_hash')
         ->and($first)->not->toHaveKey('password_hash');
@@ -126,7 +126,7 @@ it('revokes a share that belongs to the node', function (): void {
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
     $share = ShareTestHelpers::share($node, token: 'kill-me');
 
-    $this->deleteJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares/'.$share->getKey())
+    $this->deleteJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares/'.$share->getKey(), [], ['If-Match' => '"share.'.$share->getKey().'.0"'])
         ->assertNoContent();
 
     expect($share->refresh()->revoked_at)->not->toBeNull();

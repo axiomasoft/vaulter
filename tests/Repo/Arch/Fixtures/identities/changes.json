@@ -5481,6 +5481,55 @@
             "id": "format:receipt-upload-session",
             "kind": "protocol",
             "reason": "P6.2: receipt of uploads.initiate"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "column:v_drives.version",
+            "kind": "schema",
+            "reason": "P6.3: the drive's own version (counterColumn); archive, unarchive and delete raise it with UPDATE … WHERE version = ? (CC1)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "column:v_node_shares.version",
+            "kind": "schema",
+            "reason": "P6.3: the share link's own version (counterColumn); update, rotate and revoke raise it with UPDATE … WHERE version = ? (CC1)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "column:v_nodes.access_version",
+            "kind": "schema",
+            "reason": "P6.3: the version of a node's access (counterColumn); grant create/revoke and restrict/restore inheritance raise it, the node sequence does not move (CC2)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:etag-versioned",
+            "kind": "protocol",
+            "reason": "P6.3: ETag \"<kind>.<id>.<version>\" of the node's access (grants.index), a share link and a drive; If-Match of their conditional writes (412 stale_write)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-access",
+            "kind": "protocol",
+            "reason": "P6.3: receipt of drive.access.grant and drive.access.revoke"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-drive-snapshot",
+            "kind": "protocol",
+            "reason": "P6.3: receipt of drive.drives.archive, unarchive and delete"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-share",
+            "kind": "protocol",
+            "reason": "P6.3: receipt of drive.shares.*; the token of create/rotate only as Crypt ciphertext (ID5)"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

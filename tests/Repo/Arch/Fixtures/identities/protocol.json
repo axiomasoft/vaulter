@@ -1337,6 +1337,34 @@
             "id": "format:receipt-upload-session",
             "kind": "protocol",
             "reason": "P6.2: receipt of uploads.initiate"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:etag-versioned",
+            "kind": "protocol",
+            "reason": "P6.3: ETag \"<kind>.<id>.<version>\" of the node's access (grants.index), a share link and a drive; If-Match of their conditional writes (412 stale_write)"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-access",
+            "kind": "protocol",
+            "reason": "P6.3: receipt of drive.access.grant and drive.access.revoke"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-drive-snapshot",
+            "kind": "protocol",
+            "reason": "P6.3: receipt of drive.drives.archive, unarchive and delete"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "format:receipt-share",
+            "kind": "protocol",
+            "reason": "P6.3: receipt of drive.shares.*; the token of create/rotate only as Crypt ciphertext (ID5)"
         }
     ],
     "items": [
@@ -2007,6 +2035,16 @@
             }
         },
         {
+            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
+            "id": "format:etag-versioned",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/src/Http/Support/RepresentationTag.php",
+                "symbol": "Vaulter\\Http\\Support\\RepresentationTag::versioned"
+            }
+        },
+        {
             "format": "ULID string (Str::ulid()) assigned when the DomainEvent is built; one value per occurrence (UNIQUE in activity and outbox, with endpoint in deliveries)",
             "id": "format:event-id",
             "manual": true,
@@ -2117,6 +2155,26 @@
             }
         },
         {
+            "format": "receipt kind drive.access-receipt, version 1: JSON {type: grant, grant: every GrantSnapshot field (snake_case, subject_type/subject_id; times Y-m-d\\TH:i:s.uP)} or {type: revoke, revoke: {kind: grant, id, drive_id, node_id, ability}}",
+            "id": "format:receipt-access",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Idempotency/AccessReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\AccessReceiptCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind drive.drive-snapshot, version 1: JSON {id, owner_type, owner_id, profile, name, status, tenant_id, created_at, version}",
+            "id": "format:receipt-drive-snapshot",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Idempotency/DriveSnapshotCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\DriveSnapshotCodec::encode"
+            }
+        },
+        {
             "format": "receipt kind drive.node-snapshot, version 1: JSON of every NodeSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; file/document/viewer heads or null)",
             "id": "format:receipt-node-snapshot",
             "manual": true,
@@ -2154,6 +2212,16 @@
             "source": {
                 "file": "packages/drive/src/Idempotency/RevisionReceiptCodec.php",
                 "symbol": "Vaulter\\Drive\\Idempotency\\RevisionReceiptCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind drive.share-receipt, version 1: JSON {type: link, link} | {type: minted, link, token: Crypt::encryptString(raw token)} | {type: revoke, revoke: {kind: share, id, drive_id, node_id, ability}}; link = every ShareLinkSnapshot field (snake_case), never the token; the raw token is stored only as ciphertext (APP_KEY)",
+            "id": "format:receipt-share",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Idempotency/ShareReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\ShareReceiptCodec::encode"
             }
         },
         {

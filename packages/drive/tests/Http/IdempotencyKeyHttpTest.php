@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Models\Node;
@@ -225,4 +226,28 @@ it('replays a rename of a node that is in the trash by now instead of answering 
         ->assertOk()
         ->assertHeader('Idempotent-Replayed', 'true')
         ->assertJsonPath('data.id', $first->json('data.id'));
+});
+
+it('answers a repeated direct upload by its precondition: one file, 409 node_name_conflict, the key ignored', function (): void {
+    $folder = V1::folder($this->drive, 'direct');
+    $request = fn (): array => ['parent_id' => $folder->id, 'file' => UploadedFile::fake()->createWithContent('once.txt', 'same bytes')];
+
+    $this->post(V1::url('drives/'.$this->driveId.'/files'), $request(), ['Accept' => 'application/json', 'Idempotency-Key' => 'direct-1'])->assertCreated();
+    $this->post(V1::url('drives/'.$this->driveId.'/files'), $request(), ['Accept' => 'application/json', 'Idempotency-Key' => 'direct-1'])
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'node_name_conflict')
+        ->assertHeaderMissing('Idempotent-Replayed');
+
+    expect(Node::query()->where('name', 'once.txt')->count())->toBe(1);
+});
+
+it('answers a repeated direct revision by its If-Match: one new revision, then 412', function (): void {
+    $file = V1::file($this->drive, 'rev.txt', 'one');
+    $headers = ['Accept' => 'application/json', 'If-Match' => V1::tagFor($this->drive, $file->id)];
+    $request = fn (): array => ['file' => UploadedFile::fake()->createWithContent('rev.txt', 'two')];
+
+    $this->post(V1::url('files/'.$file->id.'/revisions'), $request(), $headers)->assertCreated()->assertJsonPath('data.number', 2);
+    $this->post(V1::url('files/'.$file->id.'/revisions'), $request(), $headers)->assertStatus(412)->assertJsonPath('code', 'node_sequence_mismatch');
+
+    expect(DriveTestHelpers::model($file)->file()->firstOrFail()->versions()->count())->toBe(2);
 });

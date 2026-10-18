@@ -110,7 +110,8 @@ it('grants then revokes access through the grant API', function (): void {
         ->assertJsonCount(2, 'data');
 
     // Revoke subject 2's grant by its id.
-    $this->deleteJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants/'.$created->json('data.id'))->assertNoContent();
+    $etag = $this->getJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants')->json('etag');
+    $this->deleteJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants/'.$created->json('data.id'), [], ['If-Match' => $etag])->assertNoContent();
 
     expect(NodeGrant::query()->where('node_id', $folder->id)->where('subject_id', 2)->exists())->toBeFalse();
 });

@@ -2,9 +2,9 @@ Vaulter\Drive\Contracts\Access\AccessOperations
   explain(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Drive\Access\ValueObjects\AccessExplanation
   grant(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Access\GrantInput $grant): \Vaulter\Drive\Data\Snapshots\GrantSnapshot
   grants(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
-  restoreInheritance(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
-  restrictInheritance(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Enums\Access\InheritanceRestriction $mode = Vaulter\Drive\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
-  revoke(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\GrantSnapshot|int|string $grant): void
+  restoreInheritance(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedAccessVersion = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  restrictInheritance(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Enums\Access\InheritanceRestriction $mode = Vaulter\Drive\Enums\Access\InheritanceRestriction::Empty, ?int $expectedAccessVersion = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
+  revoke(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\GrantSnapshot|int|string $grant, ?int $expectedAccessVersion = null): void
 
 Vaulter\Drive\Contracts\Access\EnumeratesRoleSubjects
 
@@ -33,10 +33,10 @@ Vaulter\Drive\Contracts\DriveHandle
   actingAs(\Illuminate\Contracts\Auth\Access\Authorizable $user): \static
   activity(): \Vaulter\Drive\Contracts\Activity\ActivityOperations
   actor(): \Vaulter\ValueObjects\Access\Actor
-  archive(): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  archive(?int $expectedVersion = null): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
   asSystem(string $reason): \static
   changes(): \Vaulter\Drive\Operations\ChangeOperations
-  delete(): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  delete(?int $expectedVersion = null): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
   extension(string $operations): object
   files(): \Vaulter\Drive\Contracts\FileOperations
   folders(): \Vaulter\Drive\Contracts\FolderOperations
@@ -47,7 +47,7 @@ Vaulter\Drive\Contracts\DriveHandle
   shares(): \Vaulter\Drive\Contracts\Sharing\ShareOperations
   snapshot(): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
   trash(): \Vaulter\Drive\Contracts\TrashOperations
-  unarchive(): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
+  unarchive(?int $expectedVersion = null): \Vaulter\Drive\Data\Snapshots\DriveSnapshot
   withCorrelationId(string $correlationId): \static
   withIdempotencyKey(string $key, ?string $requestFingerprint = null): \static
 
@@ -116,9 +116,9 @@ Vaulter\Drive\Contracts\Profiles\ProfileOption
 Vaulter\Drive\Contracts\Sharing\ShareOperations
   create(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Sharing\ShareLinkInput $input): \Vaulter\Drive\Data\Snapshots\MintedShareLink
   list(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node): array
-  revoke(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
-  rotate(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share): \Vaulter\Drive\Data\Snapshots\MintedShareLink
-  update(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, \Vaulter\Drive\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot
+  revoke(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, ?int $expectedVersion = null): void
+  rotate(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, ?int $expectedVersion = null): \Vaulter\Drive\Data\Snapshots\MintedShareLink
+  update(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot|int|string $share, \Vaulter\Drive\Data\Sharing\ShareLinkUpdate $changes, ?int $expectedVersion = null): \Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot
 
 Vaulter\Drive\Contracts\Sharing\ShareTokenGenerator
   generate(): string

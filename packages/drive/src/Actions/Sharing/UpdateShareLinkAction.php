@@ -19,6 +19,7 @@ use Vaulter\Drive\Events\Sharing\NodeShareUpdated;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Drive\Models\Sharing\NodeShare;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Repositories\Sharing\NodeShareStoreRepository;
@@ -28,8 +29,10 @@ use Vaulter\Events\EventRecorder;
 /**
  * Change a live share link without touching its token: expiry, use
  * budget, password and audience. The link row is locked after the node, so a
- * concurrent revoke or rotate and this update serialize. The new expiry obeys the
- * same bounds as at creation.
+ * concurrent revoke or rotate and this update serialize; the expected version is
+ * compared under that lock and a change raises it (CC1), so of two writers that
+ * read the same version one gets stale_write. The new expiry obeys the same bounds
+ * as at creation.
  */
 #[Internal]
 final readonly class UpdateShareLinkAction
@@ -42,6 +45,7 @@ final readonly class UpdateShareLinkAction
         private ShareLinkRules $rules,
         private TenancyConfig $tenancy,
         private EventRecorder $recorder,
+        private AggregateVersion $versions,
     ) {}
 
     public function execute(DriveContext $context, UpdateShareLinkInput $input): NodeShare
@@ -71,6 +75,7 @@ final readonly class UpdateShareLinkAction
             if (!$share instanceof NodeShare) {
                 throw NodeNotFoundException::forId($node->id);
             }
+            $this->versions->assertExpected($share, 'version', $input->expectedVersion, AggregateVersion::SHARE);
 
             $attributes = [];
             if ($changes->audience !== null && $changes->audience !== $share->audience) {
@@ -99,6 +104,7 @@ final readonly class UpdateShareLinkAction
 
             $updated = $this->shares->update($share, $attributes);
             if ($attributes !== []) {
+                $this->versions->bump($updated, 'version', AggregateVersion::SHARE);
                 // Field names only: the new password must never leave the row.
                 $changed = array_map(static fn (string $column): string => $column === 'password_hash' ? 'password' : $column, array_keys($attributes));
                 $this->recorder->record(new NodeShareUpdated(share: $updated, changed: $changed, actor: $context->actor->ref(), correlationId: $context->correlationId));

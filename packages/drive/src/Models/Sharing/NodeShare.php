@@ -46,6 +46,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property int             $role_version
  * @property ShareAudience   $audience
  * @property int             $token_generation
+ * @property int             $version
  * @property GrantScope      $scope
  * @property string|null     $password_hash
  * @property Carbon|null     $expires_at
@@ -175,6 +176,7 @@ class NodeShare extends Model
             'audience' => ShareAudience::class,
             'role_version' => 'integer',
             'token_generation' => 'integer',
+            'version' => 'integer',
             'expires_at' => 'datetime',
             'max_uses' => 'integer',
             'use_count' => 'integer',

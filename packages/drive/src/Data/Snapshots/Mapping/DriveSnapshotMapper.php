@@ -29,6 +29,7 @@ final readonly class DriveSnapshotMapper
             status: $drive->status,
             tenantId: SnapshotValue::nullableId($drive->tenant_id),
             createdAt: SnapshotValue::requiredTime($drive->created_at),
+            version: is_numeric($version = $drive->getAttribute('version')) ? (int) $version : 0,
         );
     }
 

@@ -81,10 +81,12 @@ Route::prefix($routes->versionedPrefix())
     ->middleware($routes->authenticatedMiddleware())
     ->where(['drive' => $id, 'node' => $id, 'revision' => $id, 'upload' => $id])
     ->group(static function (): void {
+        // The drive's lifecycle, its access and its share links are receipt operations too (D25, D47): keyed, and — except a
+        // grant or a share link created — conditional on the aggregate's own version (If-Match, 428/412 stale_write).
         Route::get('drives/{drive}', ShowDriveController::class)->name('drives.show');
-        Route::post('drives/{drive}/archive', ArchiveDriveController::class)->name('drives.archive');
-        Route::post('drives/{drive}/unarchive', UnarchiveDriveController::class)->name('drives.unarchive');
-        Route::delete('drives/{drive}', DeleteDriveController::class)->name('drives.destroy');
+        Route::post('drives/{drive}/archive', ArchiveDriveController::class)->name('drives.archive')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('drives/{drive}/unarchive', UnarchiveDriveController::class)->name('drives.unarchive')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::delete('drives/{drive}', DeleteDriveController::class)->name('drives.destroy')->middleware(ReadIdempotencyKey::ALIAS);
 
         Route::get('drives/{drive}/nodes', ListChildrenController::class)->name('nodes.index');
         Route::get('drives/{drive}/search', SearchNodesController::class)->name('nodes.search');
@@ -149,16 +151,16 @@ Route::prefix($routes->versionedPrefix())
     ->where(['node' => $id, 'drive' => $id, 'grant' => $id, 'share' => $id])
     ->group(static function (): void {
         Route::get('nodes/{node}/grants', ListGrantsController::class)->name('grants.index');
-        Route::post('nodes/{node}/grants', CreateGrantController::class)->name('grants.store');
-        Route::delete('nodes/{node}/grants/{grant}', RevokeGrantController::class)->name('grants.destroy');
-        Route::post('nodes/{node}/inheritance/restrict', RestrictInheritanceController::class)->name('access.inheritance.restrict');
-        Route::post('nodes/{node}/inheritance/restore', RestoreInheritanceController::class)->name('access.inheritance.restore');
+        Route::post('nodes/{node}/grants', CreateGrantController::class)->name('grants.store')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::delete('nodes/{node}/grants/{grant}', RevokeGrantController::class)->name('grants.destroy')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/inheritance/restrict', RestrictInheritanceController::class)->name('access.inheritance.restrict')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/inheritance/restore', RestoreInheritanceController::class)->name('access.inheritance.restore')->middleware(ReadIdempotencyKey::ALIAS);
 
         Route::get('nodes/{node}/shares', ListSharesController::class)->name('shares.index');
-        Route::post('nodes/{node}/shares', CreateShareController::class)->name('shares.store');
-        Route::patch('nodes/{node}/shares/{share}', UpdateShareController::class)->name('shares.update');
-        Route::post('nodes/{node}/shares/{share}/rotate', RotateShareController::class)->name('shares.rotate');
-        Route::delete('nodes/{node}/shares/{share}', RevokeShareController::class)->name('shares.destroy');
+        Route::post('nodes/{node}/shares', CreateShareController::class)->name('shares.store')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::patch('nodes/{node}/shares/{share}', UpdateShareController::class)->name('shares.update')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/shares/{share}/rotate', RotateShareController::class)->name('shares.rotate')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::delete('nodes/{node}/shares/{share}', RevokeShareController::class)->name('shares.destroy')->middleware(ReadIdempotencyKey::ALIAS);
 
         Route::get('drives/{drive}/activity', ListDriveActivityController::class)->name('activity.drive');
         Route::get('nodes/{node}/activity', ListNodeActivityController::class)->name('activity.node');

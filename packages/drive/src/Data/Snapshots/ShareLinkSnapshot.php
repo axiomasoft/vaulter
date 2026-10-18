@@ -10,7 +10,10 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Enums\Sharing\ShareAudience;
 
-/** Read-only view of a share link. The token is never part of it. */
+/**
+ * Read-only view of a share link. The token is never part of it. `version` rises
+ * with each update, rotation and revocation: pass it back as the expected version.
+ */
 #[Api]
 final readonly class ShareLinkSnapshot
 {
@@ -31,5 +34,6 @@ final readonly class ShareLinkSnapshot
         public ?DateTimeImmutable $revokedAt,
         public DateTimeImmutable $createdAt,
         public ?string $createdBy,
+        public int $version = 0,
     ) {}
 }

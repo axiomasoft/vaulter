@@ -90,8 +90,8 @@ describe('VaulterSharePanel', () => {
   function share(partial: Partial<Share> & Pick<Share, 'id'>): Share {
     return {
       node_id: '9', role: 'reader', role_version: 1, audience: 'anyone', scope: 'item', expires_at: null,
-      max_uses: null, use_count: 0, has_password: false, token_generation: 1, created_by: null,
-      created_at: '2026-01-01T00:00:00Z', ...partial,
+      max_uses: null, use_count: 0, has_password: false, token_generation: 1, version: 0, etag: `"share.${partial.id}.0"`,
+      created_by: null, created_at: '2026-01-01T00:00:00Z', ...partial,
     }
   }
 

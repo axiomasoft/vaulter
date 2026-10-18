@@ -11,10 +11,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List grants of a node */
+        /**
+         * List grants of a node
+         * @description The grants set directly on the node. `etag` is the access tag of the node (in the body only: a list is never stored): its id and access version, which every grant, revoke and inheritance change raises (the node sequence and the node ETag do not move). Send it as If-Match of a revoke or an inheritance change.
+         */
         get: operations["grants.index"];
         put?: never;
-        /** Grant a role on a node */
+        /**
+         * Grant a role on a node
+         * @description An append: no If-Match. Raises the access version of the node. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed.
+         */
         post: operations["grants.store"];
         delete?: never;
         options?: never;
@@ -32,7 +38,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Revoke a grant */
+        /**
+         * Revoke a grant
+         * @description Requires If-Match with the access tag of the node (the ETag of grants.index) (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         delete: operations["grants.destroy"];
         options?: never;
         head?: never;
@@ -48,7 +57,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Stop inheriting access from the parent */
+        /**
+         * Stop inheriting access from the parent
+         * @description Requires If-Match with the access tag of the node (the ETag of grants.index) (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed. The answer is the node with its own ETag.
+         */
         post: operations["access.inheritance.restrict"];
         delete?: never;
         options?: never;
@@ -65,7 +77,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Inherit access from the parent again */
+        /**
+         * Inherit access from the parent again
+         * @description Requires If-Match with the access tag of the node (the ETag of grants.index) (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed. The answer is the node with its own ETag.
+         */
         post: operations["access.inheritance.restore"];
         delete?: never;
         options?: never;
@@ -83,7 +98,10 @@ export interface paths {
         /** List share links of a node */
         get: operations["shares.index"];
         put?: never;
-        /** Create a share link (token returned once) */
+        /**
+         * Create a share link (token returned once)
+         * @description An append: no If-Match. The token is shown once; a retry with the same Idempotency-Key and request returns the stored response — the same token, to the same caller only — with Idempotent-Replayed.
+         */
         post: operations["shares.store"];
         delete?: never;
         options?: never;
@@ -101,11 +119,17 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Revoke a share link */
+        /**
+         * Revoke a share link
+         * @description Requires If-Match with the ETag of the share link (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         delete: operations["shares.destroy"];
         options?: never;
         head?: never;
-        /** Update a share link */
+        /**
+         * Update a share link
+         * @description Requires If-Match with the ETag of the share link (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         patch: operations["shares.update"];
         trace?: never;
     };
@@ -118,7 +142,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rotate the token of a share link (new token returned once) */
+        /**
+         * Rotate the token of a share link (new token returned once)
+         * @description Requires If-Match with the ETag of the share link (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed. A replay returns the same new token, to the same caller only.
+         */
         post: operations["shares.rotate"];
         delete?: never;
         options?: never;
@@ -361,7 +388,10 @@ export interface paths {
         get: operations["drives.show"];
         put?: never;
         post?: never;
-        /** Start deleting a drive (status deleting) */
+        /**
+         * Start deleting a drive (status deleting)
+         * @description Requires If-Match with the ETag of the drive (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed. Once the drive is deleting it is gone for everyone: a retry answers 404 drive_not_found.
+         */
         delete: operations["drives.destroy"];
         options?: never;
         head?: never;
@@ -377,7 +407,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Archive a drive (read only) */
+        /**
+         * Archive a drive (read only)
+         * @description Requires If-Match with the ETag of the drive (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         post: operations["drives.archive"];
         delete?: never;
         options?: never;
@@ -394,7 +427,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Return an archived drive to service */
+        /**
+         * Return an archived drive to service
+         * @description Requires If-Match with the ETag of the drive (428 precondition_required without it or with `*`, 412 stale_write when it changed since). Checked after authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry with the same key and request returns the stored response with Idempotent-Replayed, even once its If-Match went stale because the first request committed.
+         */
         post: operations["drives.unarchive"];
         delete?: never;
         options?: never;
@@ -1422,6 +1458,10 @@ export interface components {
             root_node_id: string;
             /** @enum {string} */
             status: "active" | "archived" | "deleting";
+            /** @description Raised by every archive, unarchive and delete. */
+            version: number;
+            /** @description The drive's tag (the ETag of its responses); send it back verbatim as If-Match. */
+            etag: string;
             quota_bytes: number | null;
             used_bytes: number;
             /** Format: date-time */
@@ -1500,6 +1540,10 @@ export interface components {
             use_count: number;
             has_password: boolean;
             token_generation: number;
+            /** @description Raised by every update, rotation and revocation. */
+            version: number;
+            /** @description The link's tag (the ETag of its responses); send it back verbatim as If-Match. */
+            etag: string;
             created_by: string | null;
             /** Format: date-time */
             created_at: string;
@@ -1755,6 +1799,8 @@ export interface components {
             data: components["schemas"]["Grant"];
         };
         GrantList: {
+            /** @description The access tag of the node, the If-Match of a revoke or an inheritance change. */
+            etag: string;
             data: components["schemas"]["Grant"][];
         };
         ShareEnvelope: {
@@ -2164,7 +2210,10 @@ export interface operations {
     "grants.store": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -2193,6 +2242,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2209,7 +2259,12 @@ export interface operations {
     "grants.destroy": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -2226,6 +2281,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -2233,13 +2289,21 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "access.inheritance.restrict": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -2262,6 +2326,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2271,14 +2336,21 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "access.inheritance.restore": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -2294,6 +2366,7 @@ export interface operations {
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2303,6 +2376,9 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
@@ -2339,7 +2415,10 @@ export interface operations {
     "shares.store": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -2368,6 +2447,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2384,7 +2464,12 @@ export interface operations {
     "shares.destroy": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -2401,6 +2486,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -2408,13 +2494,21 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "shares.update": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -2442,6 +2536,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2451,14 +2547,21 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
             422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "shares.rotate": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Node id. */
                 node: components["parameters"]["Node"];
@@ -2475,6 +2578,7 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2484,6 +2588,9 @@ export interface operations {
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
@@ -3099,7 +3206,12 @@ export interface operations {
     "drives.destroy": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Drive id. */
                 drive: components["parameters"]["Drive"];
@@ -3114,6 +3226,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -3124,13 +3238,21 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "drives.archive": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Drive id. */
                 drive: components["parameters"]["Drive"];
@@ -3145,6 +3267,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -3155,13 +3279,21 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };
     "drives.unarchive": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
+                "If-Match": components["parameters"]["IfMatch"];
+                /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 /** @description Drive id. */
                 drive: components["parameters"]["Drive"];
@@ -3176,6 +3308,8 @@ export interface operations {
                     "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
                     "X-Request-Id": components["headers"]["XRequestId"];
                     "Cache-Control": components["headers"]["CacheControlStore"];
+                    ETag: components["headers"]["ETagRequired"];
+                    "Idempotent-Replayed": components["headers"]["IdempotentReplayed"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -3186,6 +3320,9 @@ export interface operations {
             403: components["responses"]["Problem403"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
+            412: components["responses"]["Problem412"];
+            422: components["responses"]["Problem422"];
+            428: components["responses"]["Problem428"];
             500: components["responses"]["Problem500"];
         };
     };

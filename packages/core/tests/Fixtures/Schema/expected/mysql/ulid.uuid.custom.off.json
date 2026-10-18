@@ -2574,6 +2574,16 @@
                     "generation": ""
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
                     "name": "created_by",
                     "type": "char(36)",
                     "nullable": "YES",
@@ -2752,9 +2762,14 @@
                     "type": "check",
                     "clause": "((`scan_admission_sequence` is null) or (`scan_admission_sequence` >= 0))",
                     "enforced": "YES"
+                },
+                "custom_drives_chk_2": {
+                    "type": "check",
+                    "clause": "(`version` >= 0)",
+                    "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `custom_drives` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `owner_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `owner_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `root_node_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `disk` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `quota_bytes` bigint DEFAULT NULL,\n  `used_bytes` bigint NOT NULL DEFAULT '0',\n  `scan_admission_sequence` bigint NOT NULL DEFAULT '0',\n  `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',\n  `created_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_drives_owner_profile_uniq` (`owner_type`,`owner_id`,`profile`),\n  KEY `custom_drives_owner_type_owner_id_index` (`owner_type`,`owner_id`),\n  KEY `custom_drives_profile_status_index` (`profile`,`status`),\n  KEY `custom_drives_profile_index` (`profile`),\n  KEY `custom_drives_tenant_id_index` (`tenant_id`),\n  KEY `custom_drives_owner_id_index` (`owner_id`),\n  KEY `custom_drives_root_node_id_index` (`root_node_id`),\n  KEY `custom_drives_status_index` (`status`),\n  CONSTRAINT `custom_drives_chk_1` CHECK (((`scan_admission_sequence` is null) or (`scan_admission_sequence` >= 0)))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `custom_drives` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `owner_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `owner_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `root_node_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `disk` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `quota_bytes` bigint DEFAULT NULL,\n  `used_bytes` bigint NOT NULL DEFAULT '0',\n  `scan_admission_sequence` bigint NOT NULL DEFAULT '0',\n  `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',\n  `version` bigint NOT NULL DEFAULT '0',\n  `created_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_drives_owner_profile_uniq` (`owner_type`,`owner_id`,`profile`),\n  KEY `custom_drives_owner_type_owner_id_index` (`owner_type`,`owner_id`),\n  KEY `custom_drives_profile_status_index` (`profile`,`status`),\n  KEY `custom_drives_profile_index` (`profile`),\n  KEY `custom_drives_tenant_id_index` (`tenant_id`),\n  KEY `custom_drives_owner_id_index` (`owner_id`),\n  KEY `custom_drives_root_node_id_index` (`root_node_id`),\n  KEY `custom_drives_status_index` (`status`),\n  CONSTRAINT `custom_drives_chk_1` CHECK (((`scan_admission_sequence` is null) or (`scan_admission_sequence` >= 0))),\n  CONSTRAINT `custom_drives_chk_2` CHECK ((`version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "custom_file_revision_blobs": {
             "columns": [
@@ -4432,6 +4447,16 @@
                     "generation": ""
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
                     "name": "scope",
                     "type": "varchar(8)",
                     "nullable": "NO",
@@ -4646,9 +4671,14 @@
                             "id"
                         ]
                     ]
+                },
+                "custom_node_shares_chk_1": {
+                    "type": "check",
+                    "clause": "(`version` >= 0)",
+                    "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `custom_node_shares` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `token_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `token_prefix` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `role_key` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `role_version` smallint NOT NULL DEFAULT '1',\n  `audience` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'anyone',\n  `token_generation` int unsigned NOT NULL DEFAULT '1',\n  `scope` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'item',\n  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `expires_at` timestamp NULL DEFAULT NULL,\n  `max_uses` int unsigned DEFAULT NULL,\n  `use_count` int unsigned NOT NULL DEFAULT '0',\n  `revoked_at` timestamp NULL DEFAULT NULL,\n  `granted_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_node_shares_token_hash_uniq` (`token_hash`),\n  KEY `custom_node_shares_node_revoked_idx` (`node_id`,`revoked_at`),\n  KEY `custom_node_shares_tenant_id_index` (`tenant_id`),\n  KEY `custom_node_shares_node_id_index` (`node_id`),\n  KEY `custom_node_shares_token_prefix_index` (`token_prefix`),\n  KEY `custom_node_shares_revoked_at_index` (`revoked_at`),\n  KEY `custom_node_shares_expiry_live_idx` (`expires_at`),\n  CONSTRAINT `custom_node_shares_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `custom_node_shares` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `token_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `token_prefix` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `role_key` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `role_version` smallint NOT NULL DEFAULT '1',\n  `audience` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'anyone',\n  `token_generation` int unsigned NOT NULL DEFAULT '1',\n  `version` bigint NOT NULL DEFAULT '0',\n  `scope` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'item',\n  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `expires_at` timestamp NULL DEFAULT NULL,\n  `max_uses` int unsigned DEFAULT NULL,\n  `use_count` int unsigned NOT NULL DEFAULT '0',\n  `revoked_at` timestamp NULL DEFAULT NULL,\n  `granted_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_node_shares_token_hash_uniq` (`token_hash`),\n  KEY `custom_node_shares_node_revoked_idx` (`node_id`,`revoked_at`),\n  KEY `custom_node_shares_tenant_id_index` (`tenant_id`),\n  KEY `custom_node_shares_node_id_index` (`node_id`),\n  KEY `custom_node_shares_token_prefix_index` (`token_prefix`),\n  KEY `custom_node_shares_revoked_at_index` (`revoked_at`),\n  KEY `custom_node_shares_expiry_live_idx` (`expires_at`),\n  CONSTRAINT `custom_node_shares_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_node_shares_chk_1` CHECK ((`version` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "custom_node_user_states": {
             "columns": [
@@ -4957,6 +4987,16 @@
                     "type": "tinyint(1)",
                     "nullable": "NO",
                     "default": "1",
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "access_version",
+                    "type": "bigint",
+                    "nullable": "NO",
+                    "default": "0",
                     "charset": null,
                     "collation": null,
                     "extra": "",
@@ -5374,13 +5414,18 @@
                         ]
                     ]
                 },
+                "custom_nodes_chk_1": {
+                    "type": "check",
+                    "clause": "(`access_version` >= 0)",
+                    "enforced": "YES"
+                },
                 "custom_nodes_sequence_nonnegative": {
                     "type": "check",
                     "clause": "(`sequence` >= 0)",
                     "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `custom_nodes` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `drive_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `parent_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name_key` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `extension` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `inherit_grants` tinyint(1) NOT NULL DEFAULT '1',\n  `shortcut_target_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `properties` json DEFAULT NULL,\n  `content_modified_at` timestamp NULL DEFAULT NULL,\n  `content_modified_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_at` timestamp NULL DEFAULT NULL,\n  `trashed_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_from_parent_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trash_root_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `sequence` bigint NOT NULL DEFAULT '0',\n  `name_key_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin GENERATED ALWAYS AS ((case when (`trashed_at` is null) then sha2(`name_key`,256) else NULL end)) STORED,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_nodes_sibling_uniq` (`parent_id`,`name_key_hash`),\n  UNIQUE KEY `custom_nodes_root_uniq` (`drive_id`,((case when (`parent_id` is null) then 1 else NULL end))),\n  KEY `custom_nodes_drive_id_parent_id_index` (`drive_id`,`parent_id`),\n  KEY `custom_nodes_drive_id_kind_trashed_at_index` (`drive_id`,`kind`,`trashed_at`),\n  KEY `custom_nodes_drive_id_trash_root_id_index` (`drive_id`,`trash_root_id`),\n  KEY `custom_nodes_profile_index` (`profile`),\n  KEY `custom_nodes_tenant_id_index` (`tenant_id`),\n  KEY `custom_nodes_drive_id_index` (`drive_id`),\n  KEY `custom_nodes_parent_id_index` (`parent_id`),\n  KEY `custom_nodes_kind_index` (`kind`),\n  KEY `custom_nodes_mime_type_index` (`mime_type`),\n  KEY `custom_nodes_shortcut_target_id_index` (`shortcut_target_id`),\n  KEY `custom_nodes_trashed_from_parent_id_index` (`trashed_from_parent_id`),\n  KEY `custom_nodes_trash_root_id_index` (`trash_root_id`),\n  KEY `custom_nodes_trashed_idx` (`trashed_at`),\n  CONSTRAINT `custom_nodes_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `custom_drives` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_nodes_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_nodes_sequence_nonnegative` CHECK ((`sequence` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `custom_nodes` (\n  `id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `drive_id` char(26) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `parent_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name_key` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `extension` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `inherit_grants` tinyint(1) NOT NULL DEFAULT '1',\n  `access_version` bigint NOT NULL DEFAULT '0',\n  `shortcut_target_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `properties` json DEFAULT NULL,\n  `content_modified_at` timestamp NULL DEFAULT NULL,\n  `content_modified_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_at` timestamp NULL DEFAULT NULL,\n  `trashed_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_from_parent_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trash_root_id` char(26) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `sequence` bigint NOT NULL DEFAULT '0',\n  `name_key_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin GENERATED ALWAYS AS ((case when (`trashed_at` is null) then sha2(`name_key`,256) else NULL end)) STORED,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_nodes_sibling_uniq` (`parent_id`,`name_key_hash`),\n  UNIQUE KEY `custom_nodes_root_uniq` (`drive_id`,((case when (`parent_id` is null) then 1 else NULL end))),\n  KEY `custom_nodes_drive_id_parent_id_index` (`drive_id`,`parent_id`),\n  KEY `custom_nodes_drive_id_kind_trashed_at_index` (`drive_id`,`kind`,`trashed_at`),\n  KEY `custom_nodes_drive_id_trash_root_id_index` (`drive_id`,`trash_root_id`),\n  KEY `custom_nodes_profile_index` (`profile`),\n  KEY `custom_nodes_tenant_id_index` (`tenant_id`),\n  KEY `custom_nodes_drive_id_index` (`drive_id`),\n  KEY `custom_nodes_parent_id_index` (`parent_id`),\n  KEY `custom_nodes_kind_index` (`kind`),\n  KEY `custom_nodes_mime_type_index` (`mime_type`),\n  KEY `custom_nodes_shortcut_target_id_index` (`shortcut_target_id`),\n  KEY `custom_nodes_trashed_from_parent_id_index` (`trashed_from_parent_id`),\n  KEY `custom_nodes_trash_root_id_index` (`trash_root_id`),\n  KEY `custom_nodes_trashed_idx` (`trashed_at`),\n  CONSTRAINT `custom_nodes_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `custom_drives` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_nodes_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_nodes_chk_1` CHECK ((`access_version` >= 0)),\n  CONSTRAINT `custom_nodes_sequence_nonnegative` CHECK ((`sequence` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "custom_outbox": {
             "columns": [
