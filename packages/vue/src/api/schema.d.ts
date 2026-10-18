@@ -1042,7 +1042,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hub: authenticate a room connection */
+        /**
+         * Hub: authenticate a room connection
+         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise).
+         */
         post: operations["collaboration.hub.authenticate"];
         delete?: never;
         options?: never;
@@ -1059,7 +1062,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hub: load the state of a room */
+        /**
+         * Hub: load the state of a room
+         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The checkpoint and the committed tail to replay on it; before the generation has any record, the JSON the hub builds its seed from.
+         */
         post: operations["collaboration.hub.load"];
         delete?: never;
         options?: never;
@@ -1067,7 +1073,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/collaboration/hub/store": {
+    "/collaboration/hub/append": {
         parameters: {
             query?: never;
             header?: never;
@@ -1076,8 +1082,51 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hub: store the state of a room */
-        post: operations["collaboration.hub.store"];
+        /**
+         * Hub: append one update to the log of a room (protocol 2)
+         * @description Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large). The answer is the committed receipt: a retry with the same update_id and payload gets the same seq. The hub's seed of an empty generation carries seed_state_version: it is appended only while the generation has no checkpoint and no record and the document's state version still equals it (409 collaboration_seed_conflict otherwise). While vaulter:collaboration:drain drains the log before the module is switched off, every append answers 503 collaboration_draining and nothing is written; the hub keeps the update and retries it with backoff.
+         */
+        post: operations["collaboration.hub.append"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collaboration/hub/compaction/lease": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hub: lease document generations due for compaction (protocol 2)
+         * @description The hub's compaction worker, not a room connection: the body signature authenticates the call, no room token. Requires X-Vaulter-Collab-Protocol: 2. Up to max generations with uncheckpointed edits or a drain request, drain requests first; each entry carries what the hub merges (the checkpoint and the tail (checkpoint_seq, head_seq]) and the values its checkpoint publication repeats. A lease gives no right to append.
+         */
+        post: operations["collaboration.hub.compaction.lease"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collaboration/hub/checkpoint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hub: publish a checkpoint merged under a compaction lease (protocol 2)
+         * @description The hub's compaction worker: the body signature authenticates the call, no room token. Requires X-Vaulter-Collab-Protocol: 2. One compare-and-set: the lease holds the generation, covered_from is the last checkpoint's sequence, expected_checkpoint_version its version and the document's state version, covered_through is in the log. Otherwise 409 collaboration_checkpoint_conflict (a closed generation: 409 collaboration_epoch_mismatch), and nothing changes. On success the updates through covered_through are deleted (their receipts stay) and the pending marker is cleared when the checkpoint covers it. The body is checked by its Content-Length and the state by its base64 length before decoding (413 collaboration_update_too_large).
+         */
+        post: operations["collaboration.hub.checkpoint"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1101,9 +1150,14 @@ export interface components {
              * @example actor_required
              * @example blob_unavailable
              * @example cannot_delete_head_revision
+             * @example collaboration_checkpoint_conflict
+             * @example collaboration_draining
              * @example collaboration_epoch_mismatch
+             * @example collaboration_protocol_mismatch
              * @example collaboration_seed_conflict
              * @example collaboration_unavailable
+             * @example collaboration_update_mismatch
+             * @example collaboration_update_too_large
              * @example comment_not_found
              * @example concurrent_update
              * @example content_unavailable
@@ -1113,6 +1167,7 @@ export interface components {
              * @example document_content_degraded
              * @example document_revision_not_found
              * @example document_state_mismatch
+             * @example document_state_pending
              * @example document_state_too_large
              * @example document_type_unavailable
              * @example drive_archived
@@ -1519,20 +1574,60 @@ export interface components {
             userId: string | null;
             epoch?: number;
         };
-        HubLoaded: {
-            /** @description Base64 Yjs state, null before the first store. */
-            state: string | null;
-            content: Record<string, never> | null;
-            epoch: number;
-            schemaVersion: number;
-            stateVersion: number;
-            type: string;
+        /** @description The committed receipt of an appended update (protocol 2), sent only after the commit. */
+        HubAppended: {
+            generation: number;
+            update_id: string;
+            seq: number;
+            sha256: string;
+            persisted: true;
         };
-        HubStored: {
-            changed: boolean;
-            epoch: number;
+        /** @description A compaction lease on one document generation and what the hub merges under it, read with the lease under the document and head locks: the checkpoint (null before the first one, then content is the JSON to seed from) and the tail (checkpoint_seq, head_seq]. */
+        HubCompactionLease: {
+            /** @description The node id of the document. */
+            document: string;
+            generation: number;
+            lease_token: string;
+            /** Format: date-time */
+            lease_expires_at: string;
+            checkpoint_seq: number;
+            head_seq: number;
+            /** @description The state version the publication must expect (expected_checkpoint_version). */
+            checkpoint_version: number;
+            type: string;
+            schema_version: number;
+            /** @description Base64 Yjs checkpoint, null before the first one. */
+            checkpoint: string | null;
+            content: Record<string, never> | null;
+            tail: {
+                seq: number;
+                update_id: string;
+                /** @description Base64 Yjs update. */
+                payload: string;
+            }[];
+        };
+        /** @description A published checkpoint. marker_cleared is false when edits committed after the lease read the log keep the document pending; their updates stay in the log. */
+        HubCheckpointPublished: {
+            checkpoint_version: number;
+            marker_cleared: boolean;
+        };
+        /** @description Protocol 2 load: the checkpoint and the committed tail (checkpoint_seq, head_seq] to replay on it. Before the first checkpoint, content is the JSON projection to seed the room from. */
+        HubLoadedV2: {
+            generation: number;
+            schema_version: number;
+            type: string;
             state_version: number;
-            yjs_state_size: number;
+            /** @description Base64 Yjs checkpoint, null before the first one. */
+            checkpoint: string | null;
+            checkpoint_seq: number;
+            head_seq: number;
+            content: Record<string, never> | null;
+            tail: {
+                seq: number;
+                update_id: string;
+                /** @description Base64 Yjs update. */
+                payload: string;
+            }[];
         };
         AbilitiesExplained: {
             abilities: components["schemas"]["Abilities"];
@@ -1626,9 +1721,6 @@ export interface components {
         };
         CollaborationSessionEnvelope: {
             data: components["schemas"]["CollaborationSession"];
-        };
-        HubStoredEnvelope: {
-            data: components["schemas"]["HubStored"];
         };
         AbilitiesExplainedEnvelope: {
             data: components["schemas"]["AbilitiesExplained"];
@@ -1835,10 +1927,24 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
+        /** @description Temporarily unavailable; retry with backoff (collaboration_draining). */
+        Problem503: {
+            headers: {
+                "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                "X-Request-Id": components["headers"]["XRequestId"];
+                "Cache-Control": components["headers"]["CacheControlError"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
     };
     parameters: {
         /** @description The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag: 412. Checked after authorization. */
         IfMatch: string;
+        /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+        XVaulterCollabProtocol: string;
         /** @description One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true) after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed. */
         IdempotencyKey: string;
         /** @description Required when the request replaces an existing node (node_id given): 428 without it, 412 on a stale tag. */
@@ -1916,6 +2022,8 @@ export interface components {
         XRateLimitLimit: number;
         /** @description Requests left in the window. */
         XRateLimitRemaining: number;
+        /** @description The hub ↔ backend protocol version of the answer (protocol 2 calls). */
+        XVaulterCollabProtocol: "2";
         /** @description attachment or inline, with a filename. */
         ContentDisposition: string;
         /** @description Sandboxes every served byte. */
@@ -4921,7 +5029,10 @@ export interface operations {
     "collaboration.hub.authenticate": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -4941,6 +5052,7 @@ export interface operations {
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
                     "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -4958,7 +5070,10 @@ export interface operations {
     "collaboration.hub.load": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -4978,10 +5093,11 @@ export interface operations {
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
                     "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HubLoaded"];
+                    "application/json": components["schemas"]["HubLoadedV2"];
                 };
             };
             401: components["responses"]["Problem401"];
@@ -4992,10 +5108,13 @@ export interface operations {
             500: components["responses"]["Problem500"];
         };
     };
-    "collaboration.hub.store": {
+    "collaboration.hub.append": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -5003,11 +5122,17 @@ export interface operations {
             content: {
                 "application/json": {
                     room: string;
-                    /** @description Base64 Yjs state. */
-                    state: string;
-                    content?: Record<string, never> | null;
-                    seed?: boolean;
-                    state_version?: number | null;
+                    generation: number;
+                    /** @description UUID of the update, unchanged on every retry. */
+                    update_id: string;
+                    /** @description Hex sha256 of the decoded payload; checked by the backend, never trusted. */
+                    sha256: string;
+                    /** @description Base64 Yjs update. */
+                    payload: string;
+                    /** @enum {string} */
+                    origin?: "client" | "server";
+                    /** @description Only on the hub's seed (the first record of a generation, built from the JSON load returned) — the state_version load returned. */
+                    seed_state_version?: number;
                 };
             };
         };
@@ -5020,14 +5145,114 @@ export interface operations {
                     "Cache-Control": components["headers"]["CacheControlStore"];
                     "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
                     "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HubStoredEnvelope"];
+                    "application/json": components["schemas"]["HubAppended"];
                 };
             };
             401: components["responses"]["Problem401"];
             403: components["responses"]["Problem403"];
+            404: components["responses"]["Problem404"];
+            409: components["responses"]["Problem409"];
+            413: components["responses"]["Problem413"];
+            422: components["responses"]["Problem422"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+            503: components["responses"]["Problem503"];
+        };
+    };
+    "collaboration.hub.compaction.lease": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The id of the hub instance; the lease owner. */
+                    hub_id: string;
+                    /** @description The most leases to hand out, 1..100; 1 when absent. */
+                    max?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubCompactionLease"][];
+                };
+            };
+            401: components["responses"]["Problem401"];
+            409: components["responses"]["Problem409"];
+            413: components["responses"]["Problem413"];
+            422: components["responses"]["Problem422"];
+            429: components["responses"]["Problem429"];
+            500: components["responses"]["Problem500"];
+        };
+    };
+    "collaboration.hub.checkpoint": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value, answers 409 collaboration_protocol_mismatch before anything is read. */
+                "X-Vaulter-Collab-Protocol": components["parameters"]["XVaulterCollabProtocol"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The node id of the document, as the lease named it. */
+                    document: string;
+                    generation: number;
+                    lease_token: string;
+                    /** @description The checkpoint_seq the lease reported (C). */
+                    covered_from: number;
+                    /** @description The last log sequence the checkpoint holds (H), at most the head_seq the lease reported. */
+                    covered_through: number;
+                    expected_checkpoint_version: number;
+                    /** @description Base64 Yjs state of the merged checkpoint. */
+                    state: string;
+                    /** @description The JSON projection of the state. */
+                    content: Record<string, never>;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    "X-Vaulter-Api-Version": components["headers"]["XVaulterApiVersion"];
+                    "X-Request-Id": components["headers"]["XRequestId"];
+                    "Cache-Control": components["headers"]["CacheControlStore"];
+                    "X-RateLimit-Limit": components["headers"]["XRateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["XRateLimitRemaining"];
+                    "X-Vaulter-Collab-Protocol": components["headers"]["XVaulterCollabProtocol"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubCheckpointPublished"];
+                };
+            };
+            401: components["responses"]["Problem401"];
             404: components["responses"]["Problem404"];
             409: components["responses"]["Problem409"];
             413: components["responses"]["Problem413"];

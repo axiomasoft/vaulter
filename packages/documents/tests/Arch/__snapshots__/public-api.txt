@@ -1,6 +1,6 @@
 Vaulter\Documents\Contracts\CollaborationDriver
   issueSession(\Vaulter\Drive\Models\Node $node, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): \Vaulter\Documents\Data\Collaboration\CollaborationSession
-  type(): \Vaulter\Documents\Enums\Collaboration\CollaborationDriverType
+  type(): string
 
 Vaulter\Documents\Contracts\DocumentCodec
   decode(array $raw, int $schemaVersion): \Vaulter\Documents\Contracts\DocumentContent
@@ -31,9 +31,6 @@ Vaulter\Documents\Contracts\DocumentType
 Vaulter\Documents\Contracts\ExportFilenameResolver
   resolve(\Vaulter\Drive\Models\Node $node, string $extension): string
 
-Vaulter\Documents\Contracts\HostUserResolver
-  find(int|string $id): ?\Illuminate\Contracts\Auth\Access\Authorizable
-
 Vaulter\Documents\Contracts\SupportsCollaboration
   collaborationProtocol(): string
   projectFromState(string $state): ?\Vaulter\Documents\Contracts\DocumentContent
@@ -42,24 +39,13 @@ Vaulter\Documents\Contracts\UpgradesSchema
   upgrade(array $content, int $fromVersion): array
 
 Vaulter\Documents\Configuration\DocumentsConfig
-  assertDistinctHubSecrets(): void
   channelPrefix(): string
   checkpointIntervalSeconds(): int
-  collaborationDriver(): string
-  collaborationEnabled(): bool
-  collaborationMaxStateBytes(): int
-  collaborationRoom(mixed $driveId, mixed $nodeId, int $epoch): string
   commentsEnabled(): bool
   defaultType(): string
   exporters(): array
-  hubJwtSecret(): ?string
-  hubTimestampTolerance(): int
-  hubTokenTtl(): int
-  hubUrl(): ?string
-  hubWebhookSecret(): ?string
   maxContentSizeKb(): int
   model(string $key): string
-  parseRoom(string $room): ?\Vaulter\Documents\Data\Collaboration\RoomRef
   revisionLimit(): int
   tiptapExtraAttributes(): array
   tiptapExtraMarks(): array
@@ -217,7 +203,6 @@ Vaulter\Documents\DocumentsManager
   types(): \Vaulter\Documents\Types\DocumentTypeRegistry
 
 Vaulter\Documents\Operations\DocumentOperations
-  collaborationSession(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   content(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   create(string $name, ?string $type = null, ?array $content = null, \Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Drive\Data\CreateFolderOptions $options = null): \Vaulter\Drive\Data\Snapshots\NodeSnapshot
   export(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\ValueObjects\DocumentExport
@@ -292,15 +277,15 @@ Vaulter\Documents\Data\Comments\AddCommentInput
   readonly string $body
 
 Vaulter\Documents\Data\Collaboration\CollaborationSession
-  __construct(\Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver, string $room, string $nodeId, string $driveId, int $epoch, int $schemaVersion, bool $readOnly, string $token, ?string $url = null)
+  __construct(string $driver, string $room, string $nodeId, string $driveId, int $epoch, int $schemaVersion, bool $readOnly, string $token, ?string $url = null)
   mode(): string
   toArray(): array
   readonly ?string $url
-  readonly \Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver
   readonly bool $readOnly
   readonly int $epoch
   readonly int $schemaVersion
   readonly string $driveId
+  readonly string $driver
   readonly string $nodeId
   readonly string $room
   readonly string $token

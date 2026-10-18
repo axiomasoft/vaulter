@@ -15,7 +15,7 @@ Pest on Orchestra Testbench (PHP), `node --test` (hub) and Vitest (vue). Every s
 | `core` | repo root | `core-kernel`, `core-access`, `core-sharing`, `core-events`, `core-http`, `core-schema`, `core-observability` (aggregator `core`) |
 | `media`, `drive`, `webhooks`, `documents`, `azgard`, `filament` | `packages/<name>` | one zone each; `uses` follows the Composer graph (drive uses core+media, webhooks and documents use core+media+drive, …) |
 | `repo` | repo root | `tests/Repo`: the harness itself (runner, selector, zone map, groups) |
-| `hub` | `hocuspocus-server` | Node tests of the collaboration hub (not Pest) |
+| `hub` | `packages/collaboration/hub` | Node tests of the collaboration hub (not Pest) |
 | `vue` | `packages/vue` | the TypeScript client (not Pest) |
 | `load` | repo root | `load/tests`; **explicit only** (`-p load` or `stand`), never in `all` |
 

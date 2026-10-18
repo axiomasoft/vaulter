@@ -21,8 +21,8 @@ use Illuminate\Support\ServiceProvider;
 use OpenTelemetry\SDK\Trace\TracerProvider;
 use PDO;
 use Throwable;
-use Vaulter\Documents\Contracts\HostUserResolver;
-use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
+use Vaulter\Collaboration\Contracts\HostUserResolver;
+use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
@@ -88,7 +88,7 @@ final class LoadServiceProvider extends ServiceProvider
             'vaulter-drive.features.share_links' => true,
             'vaulter-drive.uploads.resumable.enabled' => true,
             'vaulter-documents.comments.enabled' => true,
-            'vaulter-documents.collaboration.enabled' => true,
+            'vaulter.modules.collaboration' => true,
 
             'vaulter-drive.access.permission_driver' => 'database',
             'vaulter.ids.strategy' => env('VAULTER_LOAD_ID_STRATEGY', 'bigint'),

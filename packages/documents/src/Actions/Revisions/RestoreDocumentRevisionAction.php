@@ -19,6 +19,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
+use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Support\DriveLifecycle;
@@ -34,7 +35,8 @@ use Vaulter\Events\EventRecorder;
  * The source is resolved within the node's own aggregate, so a revision id of
  * another document (or a file revision with the same id) never restores here. One
  * outer transaction under T → N → D locks; after commit DocumentRevisionCreated fires
- * with restored=true, then DocumentRestored with the new epoch.
+ * with restored=true, then DocumentRestored with the new epoch. A document with a
+ * pending-state marker is refused (409 document_state_pending) and keeps its epoch.
  */
 #[Internal]
 final readonly class RestoreDocumentRevisionAction
@@ -47,6 +49,7 @@ final readonly class RestoreDocumentRevisionAction
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
         private EventRecorder $recorder,
+        private PendingStateGuard $pending,
     ) {}
 
     public function execute(DriveContext $context, RestoreDocumentRevisionInput $data): DocumentRevision
@@ -76,6 +79,8 @@ final readonly class RestoreDocumentRevisionAction
             $node = $this->tree->sync($node, $current);
             $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
             $document->setRelation('node', $node);
+            // Closing the generation over saved edits not in the working state would lose them (C8): G stays.
+            $this->pending->assertSettled($document);
             $source = is_int($versionId) || (is_string($versionId) && $versionId !== '') ? $this->revisions->forNode($node, $versionId) : null;
             if (!$source instanceof DocumentRevision) {
                 throw DocumentRevisionNotFoundException::forNode($nodeId, $versionId);

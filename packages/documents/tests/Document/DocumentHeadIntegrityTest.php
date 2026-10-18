@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
-use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
@@ -17,6 +15,7 @@ use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Fixtures\StateWrites;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 
@@ -56,7 +55,7 @@ it('keeps the head inside its own document through every writer', function (): v
 
     app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('update')));
     assertOwnHead($node);
-    app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(node: $node, yjsState: "yjs\0state"));
+    StateWrites::yjs($node, "yjs\0state");
     assertOwnHead($node);
     $named = app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node), new CreateNamedRevisionInput(node: $node, label: 'named', keepForever: true));
     assertOwnHead($node);

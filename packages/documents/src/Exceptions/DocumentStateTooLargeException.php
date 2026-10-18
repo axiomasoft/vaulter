@@ -11,7 +11,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * A collaboration store carried a binary Yjs state above
- * vaulter-documents.collaboration.max_state_bytes. Nothing is written.
+ * vaulter-collaboration.max_state_bytes. Nothing is written.
  */
 #[Api]
 final class DocumentStateTooLargeException extends VaulterException implements ProblemException
@@ -23,7 +23,7 @@ final class DocumentStateTooLargeException extends VaulterException implements P
         public readonly int $maxBytes,
     ) {
         parent::__construct(sprintf(
-            '[Vaulter] The collaboration state is %d bytes, above the %d-byte limit. Fix: raise vaulter-documents.collaboration.max_state_bytes or split the document. Docs: %s',
+            '[Vaulter] The collaboration state is %d bytes, above the %d-byte limit. Fix: raise vaulter-collaboration.max_state_bytes or split the document. Docs: %s',
             $sizeBytes,
             $maxBytes,
             self::docs('document-state-too-large'),

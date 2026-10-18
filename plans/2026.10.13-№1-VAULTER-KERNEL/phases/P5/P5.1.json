@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.1",
   "title": "Пакет vaulter-collaboration: скелет, перенос PHP-кода, конфига, маршрутов и тестов из documents; остаток D32 опустошён",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Создаётся `packages/collaboration` (`axioma-studio/vaulter-collaboration`, `Vaulter\\Collaboration\\`, require core+drive+documents+`firebase/php-jwt` ^7) с манифестом `CollaborationModule` (OptIn, requires documents, обязательные секреты hub.*); `move-types --owner=collaboration` переносит collaboration-типы documents (20 из target-map + дополнения p5-design#package); hub- и session-маршруты → `packages/collaboration/routes/collaboration.php` под `vaulter.module:collaboration` (пути и имена неизменны); `vaulter-documents.collaboration.*` → `vaulter-collaboration.*`, ключ `enabled` удалён в пользу `vaulter.modules.collaboration`; `DocumentOperations::collaborationSession` → `Vaulter\\Collaboration\\Operations\\CollaborationOperations::session()`; documents сохраняет SPI (`CollaborationDriver::type(): string`, `SupportsCollaboration`, `CollaborationSession`), без firebase/php-jwt и трёх JWT-проб; allowlists i2/i4 без записей `removed_in: P5`; suite/zone `collaboration`, baseline, I6-фикстура `+collaboration`. Протокол хаба v1 и поведение не меняются.",
   "why": "D1, D32, D22: коллаборация — отдельный OptIn-пакет; блокирующие I2 (с P4) и I4 (с P3) допускают остаток documents→collaboration только до P5. Hard risks: после переноса documents ссылается на `Vaulter\\Collaboration\\*` (запрещённое обратное ребро I2, красный inventory --check); пустые каталоги под PSR-4 `Vaulter\\Documents\\`; documents-тесты, включавшие `vaulter-documents.collaboration.enabled`, без пакета получают InvalidModuleGraph или 404; выбор драйвера по class_exists вместо sealed capability (I4).",
   "scope": {
@@ -299,6 +299,68 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T09:07:47Z"
+  "result": {
+    "started_at": "2026-10-17T09:09:24Z",
+    "finished_at": "2026-10-17T10:11:05Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e86b4fe-5c27-4b7b-ba07-2eed9c9b835c"
+    },
+    "deviations": [
+      "DocumentStateChange::$expectedEpoch удалён: проверка эпохи только в PersistCollaborationStateAction под тем же lock.",
+      "Префикс канала остаётся vaulter-documents.broadcast.channel_prefix (comment events того же канала); CollaborationConfig делегирует; ledger D1.",
+      "Нет InvalidModuleGraph при пустых секретах: манифест не умеет required config; throw только в production. tiptap-schema.json перенесён в packages/collaboration/tests/Fixtures (пути хаба обновлены, P5.2 переносит дальше).",
+      "move-types расширен на owner collaboration/phase P5 + тест MoveTypesTest; пакетные pgsql-прогоны collaboration (database, fence/liveness races) отложены в PLAN4."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T10:11:05Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-17T10:11:05Z"
 }

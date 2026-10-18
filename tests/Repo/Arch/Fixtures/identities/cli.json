@@ -112,6 +112,20 @@
             "id": "command:vaulter:blobs:reconcile",
             "kind": "cli",
             "reason": "P4.20: the description says the ref_count is rebuilt from the pins (v_blob_references), not from edge counts; name, signature and behaviour are unchanged"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "command:vaulter:collaboration:prune",
+            "kind": "cli",
+            "reason": "P5.5: prune of retired generations (C11) after hub.token_ttl + retry horizon + retention.retired_generation_days; retires generations a document left while the module was off; never the current one"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "command:vaulter:collaboration:drain",
+            "kind": "cli",
+            "reason": "P5.6: managed disable (C10): {--deadline=30} {--release}; sets the draining flag, asks the hub to checkpoint every document with a pending marker and waits (not before drain.max_append_tx); exit 0 with no marker left, 1 listing the pending document_id, 2 a bad --deadline; --release removes the flag"
         }
     ],
     "items": [
@@ -267,6 +281,71 @@
             "source": {
                 "file": "packages/drive/src/Console/ResetChangesCommand.php",
                 "symbol": "Vaulter\\Drive\\Console\\ResetChangesCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Collaboration\\Console\\DrainCommand",
+            "description": "Refuse new collaboration updates and checkpoint every pending document through the hub before the module is switched off.",
+            "exit_codes": [
+                "FAILURE",
+                "INVALID",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:collaboration:drain",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "30",
+                    "description": "Seconds to wait for the hub to checkpoint every pending document",
+                    "name": "deadline",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Remove the draining flag: appends are accepted again",
+                    "name": "release",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "collaboration",
+            "parse": "signature",
+            "source": {
+                "file": "packages/collaboration/src/Console/DrainCommand.php",
+                "symbol": "Vaulter\\Collaboration\\Console\\DrainCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Collaboration\\Console\\PruneGenerationsCommand",
+            "description": "Delete the log and receipts of closed collaboration generations past their grace.",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:collaboration:prune",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Report what would be pruned without deleting",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "collaboration",
+            "parse": "signature",
+            "source": {
+                "file": "packages/collaboration/src/Console/PruneGenerationsCommand.php",
+                "symbol": "Vaulter\\Collaboration\\Console\\PruneGenerationsCommand"
             }
         },
         {

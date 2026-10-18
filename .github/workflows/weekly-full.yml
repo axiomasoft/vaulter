@@ -242,7 +242,7 @@ jobs:
       - name: Install dependencies
         run: |
           composer install --prefer-dist --no-interaction --no-progress
-          npm ci --prefix hocuspocus-server
+          npm ci --prefix packages/collaboration/hub
 
       # An absent or skipped stand is a failure, not a green run: --no-skips and the job has no continue-on-error.
       - name: Stand
@@ -284,7 +284,7 @@ jobs:
         run: npm run build --workspace @vaulter/vue
 
   hub:
-    name: "@vaulter/hocuspocus-server (Node 22)"
+    name: "@vaulter/collaboration-hub (Node 22)"
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -297,15 +297,15 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        working-directory: ./hocuspocus-server
+        working-directory: ./packages/collaboration/hub
         run: npm ci
 
       - name: Syntax check
-        working-directory: ./hocuspocus-server
+        working-directory: ./packages/collaboration/hub
         run: npm run check
 
       - name: Test
-        working-directory: ./hocuspocus-server
+        working-directory: ./packages/collaboration/hub
         run: npm test
 
   repo:

@@ -9,7 +9,6 @@ use Illuminate\Foundation\Application;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\CoreModule;
-use Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Documents\Content\DocumentContentLifecycle;
 use Vaulter\Documents\Contracts\CollaborationDriver;
 use Vaulter\Documents\Contracts\DocumentExporter;
@@ -116,11 +115,11 @@ it('shares the sanitizer with the existing scheme allow-list', function (): void
         ->and($decoded)->toContain('https://example.com', 'mailto:hi@example.com');
 });
 
-it('provides the filename seam and the collaboration transport as the capabilities of the module', function (): void {
+it('provides the filename seam and leaves the optional collaboration transport unselected without its package', function (): void {
     $capabilities = app(Kernel::class)->capabilities();
 
     expect($capabilities->require(ExportFilenameResolver::class))->toBeInstanceOf(DefaultExportFilenameResolver::class)
-        ->and($capabilities->require(CollaborationDriver::class))->toBeInstanceOf(HocuspocusCollaborationDriver::class);
+        ->and($capabilities->has(CollaborationDriver::class))->toBeFalse();
 });
 
 it('fills the type and exporter registries from the module contributions, once', function (): void {

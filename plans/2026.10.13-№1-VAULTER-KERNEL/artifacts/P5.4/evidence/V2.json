@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T111305Z-7e7bab:P5.4:checks.2:V2",
+  "check_id": "V2",
+  "subject": "PLAN3.P5.4",
+  "candidate": {
+    "head": "4dee19502b5323151586bed4d95bbee3ee5725ea",
+    "dirty_digest": "848d0577d7abc0466ba2ef4a5f08c14b5eecef9abbcef294af0de4a656914021"
+  },
+  "started_at": "2026-10-17T15:15:15Z",
+  "procedure": {
+    "cmd": "scripts/t sqlite -p core packages/core/tests/Modules/CleanInstallMatrixTest.php",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T15:15:24Z"
+}

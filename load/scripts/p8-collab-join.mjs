@@ -28,7 +28,7 @@ if (sessions.length === 0) {
   throw new Error('p8-collab-join: no seeded document collaboration sessions discovered')
 }
 
-const requireFromHub = createRequire(new URL('../../hocuspocus-server/package.json', import.meta.url))
+const requireFromHub = createRequire(new URL('../../packages/collaboration/hub/package.json', import.meta.url))
 const providerModule = await import(pathToFileURL(requireFromHub.resolve('@hocuspocus/provider')).href)
 const yjsModule = await import(pathToFileURL(requireFromHub.resolve('yjs')).href)
 const providers = sessions.map((session) => {

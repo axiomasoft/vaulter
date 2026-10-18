@@ -13,7 +13,6 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
-use Vaulter\Documents\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -52,10 +51,6 @@ final readonly class DocumentStateWriter
         $this->assertTransaction();
 
         // Preconditions are checked before anything is written.
-        if ($change->expectedEpoch !== null && $change->expectedEpoch !== $locked->collab_epoch) {
-            throw new CollaborationEpochMismatchException(expected: $change->expectedEpoch, actual: $locked->collab_epoch);
-        }
-
         if ($change->expectedStateVersion !== null) {
             if ($change->expectedStateVersion < 0) {
                 throw new InvalidArgumentException('[Vaulter] An expected state version must be nonnegative.');
@@ -75,6 +70,19 @@ final readonly class DocumentStateWriter
         // open room's history stale: the next epoch fences their stores off.
         $epochChanged = $change->cause === StateWriteCause::Restore
             || ($change->cause === StateWriteCause::Update && $locked->yjs_state !== null);
+
+        // Closing a generation over collaborative state no checkpoint holds yet would leave its saved edits in no
+        // revision (C8): the state is captured first, then replaced.
+        if ($epochChanged && $locked->yjs_state !== null && $locked->hasUncheckpointedChanges()) {
+            $this->capture(
+                document: $locked,
+                label: null,
+                keepForever: false,
+                autosave: true,
+                restoredFrom: null,
+                actorId: $change->actorId,
+            );
+        }
 
         $attributes = [
             'state_version' => Int64Counter::increment($locked->state_version),
@@ -127,6 +135,21 @@ final readonly class DocumentStateWriter
             restoredFrom: null,
             actorId: $actorId,
         );
+    }
+
+    /**
+     * Set the pending-state marker (D26) — the generation and the last committed collaboration sequence the working
+     * state does not cover yet — or clear it with two nulls. The validators and the working state stay as they are.
+     */
+    public function mark(Document $locked, ?int $generation, ?int $throughSeq): void
+    {
+        $this->assertTransaction();
+
+        if (($generation === null) !== ($throughSeq === null) || ($generation ?? 0) < 0 || ($throughSeq ?? 1) < 1) {
+            throw new InvalidArgumentException('[Vaulter] A pending marker is a generation of at least 0 with a sequence of at least 1, or none at all.');
+        }
+
+        $this->documents->update($locked, ['pending_generation' => $generation, 'pending_through_seq' => $throughSeq]);
     }
 
     private function capture(

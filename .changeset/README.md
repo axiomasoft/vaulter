@@ -31,7 +31,7 @@ write a one-line summary. This creates a markdown file under `.changeset/` —
   share a version **ceiling**: bumping one to `X.Y.Z` aligns the other's number,
   but they are **not** forced to publish in lockstep (that would be `fixed`).
 - `baseBranch: main` — the comparison branch for detecting changed packages.
-- `@vaulter/hocuspocus-server` is `private` and `ignore`d — it ships as a Docker
+- `@vaulter/collaboration-hub` is `private` and `ignore`d — it ships as a Docker
   image (`ghcr.io/axiomasoft/vaulter-hocuspocus`), never to npm.
 - No changeset = no release. The publish step is gated on pending changesets.
 

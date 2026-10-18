@@ -259,7 +259,7 @@ it('keeps fk-map.json equal to the foreign keys of the schema identities', funct
         ->and(array_column(array_filter($map['fks'], static fn (array $fk): bool => $fk['head']), 'name'))->toBe(['v_documents_head_fk', 'v_files_head_fk']);
 });
 
-it('keeps every committed allowlist entry reasoned, categorised and no later than the invariant blocks (all four block: I1 and I2 since P4.16, with the named collaboration residual of D32)', function (): void {
+it('keeps every committed allowlist entry reasoned, categorised and no later than the invariant blocks (all four block: I1 and I2 since P4.16, the collaboration residual of D32 emptied in P5.1)', function (): void {
     $repo = Repo::discover();
     $count = 0;
     foreach (['I1', 'I2', 'I3', 'I4'] as $invariant) {
@@ -275,8 +275,9 @@ it('keeps every committed allowlist entry reasoned, categorised and no later tha
         }
     }
 
-    // I1 is empty; what stays is the I2 residual of D32 (documents -> collaboration, removed in P5) and the I4 ones.
+    // I1 and I2 are empty (the D32 residual documents -> collaboration went with the extraction of the package in P5.1); what stays is the I4 and I13 ones.
     expect($count)->toBeGreaterThan(0)
         ->and(Allowlist::load($repo, ScanGenerator::allowlistPath('I1'))->entries())->toBe([])
-        ->and(array_unique(array_column(Allowlist::load($repo, ScanGenerator::allowlistPath('I2'))->entries(), 'removed_in')))->toBe(['P5']);
+        ->and(Allowlist::load($repo, ScanGenerator::allowlistPath('I2'))->entries())->toBe([])
+        ->and(array_filter(Allowlist::load($repo, ScanGenerator::allowlistPath('I4'))->entries(), static fn (array $entry): bool => ($entry['removed_in'] ?? null) === 'P5'))->toBe([]);
 });

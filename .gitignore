@@ -14,7 +14,7 @@ package-lock.json
 !/package-lock.json
 pnpm-lock.yaml
 # …but the hub image needs its lockfile committed for a reproducible `npm ci` build.
-!hocuspocus-server/package-lock.json
+!packages/collaboration/hub/package-lock.json
 *.log
 
 # VitePress

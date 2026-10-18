@@ -42,6 +42,8 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property int                       $collab_epoch
  * @property int                       $state_version
  * @property int                       $checkpoint_state_version
+ * @property int|null                  $pending_generation
+ * @property int|null                  $pending_through_seq
  * @property array<string, mixed>|null $content
  * @property string|null               $content_hash
  * @property int|null                  $content_size
@@ -130,6 +132,12 @@ class Document extends Model
         return $this->state_version > $this->checkpoint_state_version;
     }
 
+    /** Whether committed collaboration edits are not in the working state yet (the pending-state marker is set). */
+    public function hasPendingState(): bool
+    {
+        return $this->pending_generation !== null;
+    }
+
     /** The 0.2 `format` label of this document's type, kept for the current JSON keys. */
     public function legacyFormat(): string
     {
@@ -178,6 +186,8 @@ class Document extends Model
             'collab_epoch' => 'integer',
             'state_version' => 'integer',
             'checkpoint_state_version' => 'integer',
+            'pending_generation' => 'integer',
+            'pending_through_seq' => 'integer',
             'content_size' => 'integer',
             'yjs_state_size' => 'integer',
             'last_checkpoint_at' => 'datetime',

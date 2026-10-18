@@ -1,0 +1,70 @@
+<?php
+
+declare(strict_types=1);
+
+use Firebase\JWT\JWT;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
+use Laravel\Sanctum\SanctumServiceProvider;
+use Vaulter\Collaboration\CollaborationCallResolver;
+use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Contracts\HostUserResolver;
+use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
+use Vaulter\Collaboration\Tests\Collaboration\CollaborationEnabledTestCase;
+use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+
+class HubMiddlewareStackTestCase extends CollaborationEnabledTestCase
+{
+    protected function getPackageProviders($app): array
+    {
+        return [...parent::getPackageProviders($app), SanctumServiceProvider::class];
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+        $app['config']->set('vaulter.routes.middleware.authenticated', ['api', 'auth:sanctum']);
+        $app['config']->set('vaulter-collaboration.driver', 'hocuspocus');
+        $app['config']->set('vaulter-collaboration.hub.webhook_secret', 'middleware-stack-webhook-secret');
+        $app['config']->set('vaulter-collaboration.hub.jwt_secret', 'middleware-stack-jwt-secret-at-least-32-bytes');
+    }
+}
+
+uses(HubMiddlewareStackTestCase::class, RefreshDatabase::class);
+
+/** @param array<string, mixed> $body */
+function signedHubCall(array $body, string $jwt, int $timestamp): TestResponse
+{
+    return test()->postJson('api/vaulter/v1/collaboration/hub/authenticate', $body, [
+        'Authorization' => 'Bearer '.$jwt,
+        CollaborationCallResolver::TIMESTAMP_HEADER => (string) $timestamp,
+        CollaborationCallResolver::SIGNATURE_HEADER => CollaborationCallResolver::signature((string) json_encode($body), 'middleware-stack-webhook-secret', $timestamp),
+    ]);
+}
+
+it('requires Sanctum on the session route and the hub credentials, not Sanctum, on the hub calls', function (): void {
+    $this->postJson('api/vaulter/v1/documents/1/collaboration/session')->assertUnauthorized();
+    // The hub stack is not the Sanctum one: a call without the room token and the body signature is refused by the hub resolver itself.
+    $this->postJson('api/vaulter/v1/collaboration/hub/authenticate', ['room' => 'x'])->assertUnauthorized()->assertJsonPath('code', 'actor_required');
+});
+
+it('accepts a signed hub JWT without a Sanctum token', function (): void {
+    $drive = DocumentTestHelpers::drive();
+    app()->bind(HostUserResolver::class, fn () => new FakeHostUserResolver);
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
+        storage: $drive->model(), name: 'Hub', content: DocumentTestHelpers::content(), parent: DriveTestHelpers::model($drive->root()),
+    ));
+    $room = app(CollaborationConfig::class)->room($node->drive_id, $node->getKey(), 0);
+    $body = ['room' => $room];
+    $timestamp = time();
+    $jwt = JWT::encode([
+        'room' => $room, 'node' => (string) $node->getKey(), 'drive' => (string) $node->drive_id, 'tenant' => null,
+        'epoch' => 0, 'schema_version' => 1, 'mode' => 'rw',
+        'sub' => '17', 'iat' => $timestamp, 'exp' => $timestamp + 3600,
+    ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256');
+
+    signedHubCall($body, $jwt, $timestamp)->assertOk()->assertJsonPath('allowed', true)->assertJsonPath('userId', '17');
+});

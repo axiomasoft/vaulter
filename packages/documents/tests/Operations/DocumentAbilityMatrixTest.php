@@ -54,24 +54,22 @@ function matrixMethods(): array
         'restore' => static fn (DocumentOperations $ops, CommentOperations $comments, NodeSnapshot $doc, DocumentRevisionSnapshot $first): mixed => $ops->restore($doc->id, $first),
         'setRetention' => static fn (DocumentOperations $ops, CommentOperations $comments, NodeSnapshot $doc, DocumentRevisionSnapshot $first): mixed => $ops->setRetention($doc->id, $first, true),
         'export' => static fn (DocumentOperations $ops, CommentOperations $comments, NodeSnapshot $doc, DocumentRevisionSnapshot $first): mixed => $ops->export($doc->id, 'html'),
-        'collaborationSession' => static fn (DocumentOperations $ops, CommentOperations $comments, NodeSnapshot $doc, DocumentRevisionSnapshot $first): mixed => $ops->collaborationSession($doc->id),
         'comments.list' => static fn (DocumentOperations $ops, CommentOperations $comments, NodeSnapshot $doc, DocumentRevisionSnapshot $first): mixed => $comments->list($doc->id),
         'comments.add' => static fn (DocumentOperations $ops, CommentOperations $comments, NodeSnapshot $doc, DocumentRevisionSnapshot $first): mixed => $comments->add($doc->id, new AddCommentInput('matrix comment')),
     ];
 }
 
 /**
- * ok = returns a result; ro/rw = collaboration session mode; denied =
- * permission_denied; hidden = node_not_found.
+ * ok = returns a result; denied = permission_denied; hidden = node_not_found.
  *
  * @return array<string, array{?string, string, string}>
  */
 function matrixCases(): array
 {
-    $viewer = ['content' => 'ok', 'revisions' => 'ok', 'update' => 'denied', 'snapshot' => 'denied', 'restore' => 'denied', 'setRetention' => 'denied', 'export' => 'denied', 'collaborationSession' => 'ro', 'comments.list' => 'ok', 'comments.add' => 'denied'];
+    $viewer = ['content' => 'ok', 'revisions' => 'ok', 'update' => 'denied', 'snapshot' => 'denied', 'restore' => 'denied', 'setRetention' => 'denied', 'export' => 'denied', 'comments.list' => 'ok', 'comments.add' => 'denied'];
     $reader = ['export' => 'ok'] + $viewer;
     $commenter = ['comments.add' => 'ok'] + $reader;
-    $editor = ['update' => 'ok', 'snapshot' => 'ok', 'restore' => 'ok', 'setRetention' => 'ok', 'collaborationSession' => 'rw'] + $commenter;
+    $editor = ['update' => 'ok', 'snapshot' => 'ok', 'restore' => 'ok', 'setRetention' => 'ok'] + $commenter;
     $table = [
         'none' => array_fill_keys(array_keys($viewer), 'hidden'),
         RoleRegistry::PREVIEWER => $viewer,
@@ -105,7 +103,6 @@ it('authorizes every documents method by role', function (?string $role, string 
     match ($expected) {
         'hidden' => expect($call)->toThrow(NodeNotFoundException::class),
         'denied' => expect($call)->toThrow(PermissionDeniedException::class),
-        'ro', 'rw' => expect($call()->readOnly)->toBe($expected === 'ro'),
         default => expect($call())->not->toBeNull(),
     };
 })->with(matrixCases());
@@ -166,13 +163,11 @@ it('returns the same codes through the HTTP routes', function (?string $role, st
     'reader exports' => [RoleRegistry::READER, 'GET', 'documents/{id}/export/html', 200, null],
     'reader cannot comment' => [RoleRegistry::READER, 'POST', 'nodes/{id}/comments', 403, 'permission_denied'],
     'commenter comments' => [RoleRegistry::COMMENTER, 'POST', 'nodes/{id}/comments', 201, null],
-    'commenter gets a session' => [RoleRegistry::COMMENTER, 'POST', 'documents/{id}/collaboration/session', 201, null],
     'writer autosaves' => [RoleRegistry::WRITER, 'PUT', 'documents/{id}/content', 200, null],
     'no grant hides content' => [null, 'GET', 'documents/{id}/content', 404, 'node_not_found'],
     'no grant hides the write' => [null, 'PUT', 'documents/{id}/content', 404, 'node_not_found'],
     'no grant hides history' => [null, 'GET', 'documents/{id}/revisions', 404, 'node_not_found'],
     'no grant hides comments' => [null, 'POST', 'nodes/{id}/comments', 404, 'node_not_found'],
-    'no grant hides the session' => [null, 'POST', 'documents/{id}/collaboration/session', 404, 'node_not_found'],
 ]);
 
 it('hides a trashed document from the HTTP routes with node_not_found', function (): void {

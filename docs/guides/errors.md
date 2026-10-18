@@ -52,6 +52,7 @@ Codes are a stable public contract (AD29).
 | `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
 | `comment_not_found` | 404 | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
 | `document_state_mismatch` | 412 | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
+| `document_state_pending` | 409 | `Vaulter\Documents\Exceptions\DocumentStatePendingException` |
 | `collaboration_epoch_mismatch` | 409 | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
 | `collaboration_seed_conflict` | 409 | `Vaulter\Documents\Exceptions\CollaborationSeedConflictException` |
 | `collaboration_unavailable` | 409 | `Vaulter\Documents\Exceptions\CollaborationUnavailableException` |
@@ -165,6 +166,13 @@ checkpointing, restoring, exporting and collaborating need the type registered a
 any more (the nodes of an editor extension that was switched off), or it was written in a newer
 schema version than the installed type. It was read with those parts left out, so saving over it
 would delete them; the document is read-only until the extension is enabled again.
+
+## document-state-pending
+
+`document_state_pending` (409, retryable `with_backoff`) — the document has collaboration edits that are
+saved but not in its content yet. Reading, exporting, replacing, restoring or purging the content first asks
+the realtime transport to bring them in; when it is not active or misses its deadline, the request is
+refused untouched. Retry later; make sure the collaboration module and its hub run.
 
 ## registry-frozen
 

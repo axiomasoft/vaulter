@@ -45,13 +45,13 @@ services:
 
   hub:
     build:
-      context: ../hocuspocus-server
+      context: ../packages/collaboration/hub
     environment:
       # Dev stand: NODE_ENV=development opens the Origin allowlist (a published/prod image
       # defaults to production and REQUIRES VAULTER_COLLAB_ALLOWED_ORIGINS — see config.js).
       NODE_ENV: "development"
       VAULTER_COLLAB_PORT: "1234"
-      VAULTER_COLLAB_HEALTH_PORT: "1235"
+      VAULTER_COLLAB_MANAGEMENT_PORT: "1235"
       VAULTER_BACKEND_URL: "http://laravel:8000"
       VAULTER_API_PREFIX: "api/vaulter"
     ports:
@@ -60,10 +60,10 @@ services:
       laravel:
         condition: service_healthy
     # F-P4.5-03: symmetric with the reference deployment's own healthcheck
-    # (hocuspocus-server/docker-compose.yml) — the hub exposes the same /health
-    # endpoint on VAULTER_COLLAB_HEALTH_PORT.
+    # (packages/collaboration/hub/docker-compose.yml) — /livez of the management listener on
+    # VAULTER_COLLAB_MANAGEMENT_PORT (loopback inside the container).
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:1235/livez').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 3s
       timeout: 3s
       retries: 20

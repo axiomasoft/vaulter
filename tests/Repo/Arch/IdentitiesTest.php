@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
+const ID_ACCEPTED_DECISIONS = ['D1', 'D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D26', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -352,7 +352,8 @@ describe('committed fixtures', function (): void {
 
         expect($schema['presets'])->toBe(48)
             ->and($schema['engines'])->toBe(['pgsql', 'mysql', 'sqlite'])
-            ->and(count($tables))->toBe(29)
+            ->and(count($tables))->toBe(32)
+            ->and($tables['v_collaboration_heads'] ?? null)->toBe('collaboration')
             ->and(array_column(array_filter($schema['items'], static fn (array $i): bool => str_starts_with($i['id'], 'migration:')), 'id'))->toBe(array_map(static fn (string $b): string => 'migration:'.$b, $migrations));
         foreach ($schema['items'] as $item) {
             if (isset($item['table'])) {
@@ -393,7 +394,10 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(31)
+        expect(count($items))->toBe(33)
+            ->and($items['command:vaulter:collaboration:prune']['owner'])->toBe('collaboration')
+            ->and($items['command:vaulter:collaboration:drain']['owner'])->toBe('collaboration')
+            ->and(array_column($items['command:vaulter:collaboration:drain']['options'], 'default', 'name'))->toBe(['deadline' => '30', 'release' => false])
             ->and($doctor['parse'])->toBe('signature')
             ->and(array_column($doctor['options'], 'name'))->toBe(['production', 'json', 'check', 'sample', 'probe-storage'])
             ->and(array_column($doctor['options'], 'accepts_value', 'name')['sample'])->toBeTrue()
@@ -407,12 +411,12 @@ describe('committed fixtures', function (): void {
         $http = id_fixture('http');
         $items = array_column($http['items'], null, 'id');
 
-        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter-drive.features.share_links', 'vaulter-documents.collaboration.enabled'])
+        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter-drive.features.share_links', 'vaulter.modules.collaboration'])
             ->and($http['flags'])->not->toHaveKey('vaulter.features.webhooks')
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['requires'])->toBe(['vaulter.modules.webhooks'])
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['default_registered'] ?? false)->toBeFalse()
             ->and($items['route:vaulter.v1.webhook-endpoints.index']['middleware'])->toContain('vaulter.module:webhooks')
-            ->and($items['route:vaulter.v1.collaboration.hub.load']['requires'])->toBe(['vaulter-documents.collaboration.enabled'])
+            ->and($items['route:vaulter.v1.collaboration.hub.load']['requires'])->toBe(['vaulter.modules.collaboration'])
             ->and($items['route:vaulter.v1.collaboration.hub.load']['default_registered'] ?? false)->toBeFalse()
             ->and($items['route:vaulter.v1.grants.index'])->toMatchArray(['methods' => ['GET'], 'owner' => 'drive', 'openapi' => ['path' => '/nodes/{node}/grants', 'operation_id' => 'grants.index']])
             ->and($items['route:vaulter.v1.grants.index']['requires'] ?? [])->toBe([])
@@ -427,7 +431,11 @@ describe('committed fixtures', function (): void {
         $count = static fn (string $prefix): int => count(array_filter(array_keys($items), static fn (string $id): bool => str_starts_with($id, $prefix)));
 
         expect($count('event:'))->toBe(32)
-            ->and($count('problem:'))->toBe(78)
+            ->and($count('problem:'))->toBe(84)
+            ->and($items['problem:collaboration_draining'])->toMatchArray(['status' => 503, 'owner' => 'collaboration', 'retryable' => 'with_backoff', 'receipt' => 'never'])
+            ->and($items['problem:collaboration_checkpoint_conflict'])->toMatchArray(['status' => 409, 'owner' => 'collaboration', 'retryable' => 'after_refetch', 'receipt' => 'never'])
+            ->and($items['problem:collaboration_update_too_large'])->toMatchArray(['status' => 413, 'owner' => 'collaboration', 'retryable' => 'never', 'receipt' => 'never'])
+            ->and($items['problem:document_state_pending'])->toMatchArray(['status' => 409, 'owner' => 'documents', 'retryable' => 'with_backoff', 'receipt' => 'never'])
             ->and($items['problem:blob_unavailable'])->toMatchArray(['status' => 409, 'owner' => 'media', 'retryable' => 'never', 'receipt' => 'never'])
             ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'external' => true, 'journal' => 'upsert'])
             ->and($items['event:file.uploaded']['data'])->toHaveKey('revision_id')

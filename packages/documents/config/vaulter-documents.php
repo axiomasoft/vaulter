@@ -24,20 +24,9 @@ return [
         'extra_attributes' => [],
         'url_attributes' => [],
     ],
-    'collaboration' => [
-        'enabled' => false,
-        'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),
-        'hub' => [
-            'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-            'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
-            'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-            'token_ttl' => 3600,
-            'timestamp_tolerance' => 300,
-        ],
-        // The largest binary Yjs state one hub store may write (413 above it).
-        'max_state_bytes' => 16777216,
-        'broadcast' => ['channel_prefix' => 'vaulter.documents'],
-    ],
+    // The private broadcast channels of a document ("<prefix>.<nodeId>"): the comment events use them, and the
+    // collaboration package authorizes them and names its rooms with the same prefix.
+    'broadcast' => ['channel_prefix' => 'vaulter.documents'],
     'models' => [
         'document_revision' => DocumentRevision::class,
         'node_comment' => NodeComment::class,

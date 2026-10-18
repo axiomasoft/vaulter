@@ -456,6 +456,32 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter-azgard.permissions.manage` | — | `'documents.manage'` | — |
 | `vaulter-azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `'documents.create'` | — |
 
+### `vaulter-collaboration`
+
+| Key | Env | Default | Description |
+|---|---|---|---|
+| `vaulter-collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `'hocuspocus'` | — |
+| `vaulter-collaboration.hub.url` | `VAULTER_COLLAB_URL` | `'ws://localhost:1234'` | — |
+| `vaulter-collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | Signs the room tokens (Laravel only); must differ from the webhook secret the hub holds. |
+| `vaulter-collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | — |
+| `vaulter-collaboration.hub.token_ttl` | — | `3600` | — |
+| `vaulter-collaboration.hub.timestamp_tolerance` | — | `300` | — |
+| `vaulter-collaboration.max_state_bytes` | — | `16777216` | The largest binary Yjs state one hub store may write (413 above it). |
+| `vaulter-collaboration.mode` | `VAULTER_COLLAB_MODE` | `'buffered'` | When an edit counts as saved (protocol 2): `buffered` — the hub may sync it before the backend committed it; `durable` — the hub acknowledges an edit only with the backend receipt. |
+| `vaulter-collaboration.limits.update_bytes` | — | `1048576` | The largest decoded Yjs update one append carries, and the largest append request body (413 above either, checked before the body is decoded). |
+| `vaulter-collaboration.limits.request_bytes` | — | `2097152` | — |
+| `vaulter-collaboration.compaction` | — | — | The hub's compaction worker leases a document with uncheckpointed edits once its log holds this many updates, this many bytes of them, or its oldest one is this many seconds old; a drain request always qualifies. A lease lasts lease_ttl seconds. |
+| `vaulter-collaboration.compaction.trigger_updates` | — | `500` | — |
+| `vaulter-collaboration.compaction.trigger_bytes` | — | `1048576` | — |
+| `vaulter-collaboration.compaction.trigger_age` | — | `600` | — |
+| `vaulter-collaboration.compaction.lease_ttl` | — | `60` | — |
+| `vaulter-collaboration.drain.restore_deadline` | — | `10` | How long a restore, REST replace, content read or export of a document with uncheckpointed edits waits for the hub to compact them (seconds); after it the request answers 409 document_state_pending. |
+| `vaulter-collaboration.drain.cache_store` | — | `null` | The cache store of the draining flag vaulter:collaboration:drain sets (null: the default store). Every PHP process must see it, so not an `array` or `null` store (the doctor reports one as an error). |
+| `vaulter-collaboration.drain.max_append_tx` | — | `5` | The longest an append transaction lasts, lock waits included (seconds): a drain reports its outcome no earlier than this after it set the flag, so an append that read the flag before it was set has committed by then. |
+| `vaulter-collaboration.retention.retired_generation_days` | — | `7` | Days the log and receipts of a closed generation stay after its last token and retry could still arrive. |
+| `vaulter-collaboration.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
+| `vaulter-collaboration.schedule.collaboration_prune` | — | `'dailyAt:03:40'` | — |
+
 ### `vaulter`
 
 | Key | Env | Default | Description |
@@ -515,15 +541,8 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter-documents.tiptap.extra_marks` | — | `[]` | — |
 | `vaulter-documents.tiptap.extra_attributes` | — | `[]` | — |
 | `vaulter-documents.tiptap.url_attributes` | — | `[]` | — |
-| `vaulter-documents.collaboration.enabled` | — | `false` | — |
-| `vaulter-documents.collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `'hocuspocus'` | — |
-| `vaulter-documents.collaboration.hub.url` | `VAULTER_COLLAB_URL` | `'ws://localhost:1234'` | — |
-| `vaulter-documents.collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | — |
-| `vaulter-documents.collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | — |
-| `vaulter-documents.collaboration.hub.token_ttl` | — | `3600` | — |
-| `vaulter-documents.collaboration.hub.timestamp_tolerance` | — | `300` | — |
-| `vaulter-documents.collaboration.max_state_bytes` | — | `16777216` | The largest binary Yjs state one hub store may write (413 above it). |
-| `vaulter-documents.collaboration.broadcast.channel_prefix` | — | `'vaulter.documents'` | — |
+| `vaulter-documents.broadcast` | — | — | The private broadcast channels of a document ("<prefix>.<nodeId>"): the comment events use them, and the collaboration package authorizes them and names its rooms with the same prefix. |
+| `vaulter-documents.broadcast.channel_prefix` | — | `'vaulter.documents'` | — |
 | `vaulter-documents.models.document_revision` | — | `DocumentRevision::class` | — |
 | `vaulter-documents.models.node_comment` | — | `NodeComment::class` | — |
 

@@ -1232,6 +1232,55 @@
             "id": "morph:Vaulter\\Drive\\Providers\\BindingsRegistrar::boot#morphMap",
             "kind": "protocol",
             "reason": "P4.16: the drive registers the stable morph aliases of its drive and node models (vaulter.drive, vaulter.node) when it boots; the kernel no longer knows them"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:document_state_pending",
+            "kind": "protocol",
+            "reason": "P5.3: 409, retryable with_backoff, receipt never — content read, export, REST replace, restore and purge of a document whose pending marker could not be drained (C8, C9); thrown by the documents guards, drained through the PendingStateDrainer SPI (D27)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_protocol_mismatch",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_update_mismatch",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_update_too_large",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_checkpoint_conflict",
+            "kind": "protocol",
+            "reason": "P5.5: 409, retryable after_refetch, receipt never — a checkpoint publication that lost its CAS (lease, coverage or checkpoint version); nothing changes, the hub takes a new lease"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_draining",
+            "kind": "protocol",
+            "reason": "P5.6: 503, retryable with_backoff, receipt never — an append while vaulter:collaboration:drain drains the log before the module is switched off; nothing is written, the hub keeps the update"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "problem:collaboration_seed_conflict",
+            "kind": "protocol",
+            "reason": "P5.7: answered by collaboration.hub.append for a seed over a generation that already has a record or a checkpoint, or over JSON whose state version moved (the protocol 1 store that answered it is gone)"
         }
     ],
     "items": [
@@ -1906,8 +1955,8 @@
             "manual": true,
             "owner": "collaboration",
             "source": {
-                "file": "packages/documents/src/Collaboration/CollaborationCallResolver.php",
-                "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
+                "file": "packages/collaboration/src/CollaborationCallResolver.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
             }
         },
         {
@@ -1966,8 +2015,8 @@
             "manual": true,
             "owner": "collaboration",
             "source": {
-                "file": "packages/documents/src/Collaboration/HocuspocusCollaborationDriver.php",
-                "symbol": "Vaulter\\Documents\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
+                "file": "packages/collaboration/src/HocuspocusCollaborationDriver.php",
+                "symbol": "Vaulter\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
             }
         },
         {
@@ -2327,40 +2376,100 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Documents\\Exceptions\\CollaborationEpochMismatchException",
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationCheckpointConflictException",
+            "id": "problem:collaboration_checkpoint_conflict",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "after_refetch",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 409
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationDrainingException",
+            "id": "problem:collaboration_draining",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "with_backoff",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 503
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationEpochMismatchException",
             "id": "problem:collaboration_epoch_mismatch",
             "owner": "collaboration",
             "receipt": "cacheable",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
-                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Documents\\Exceptions\\CollaborationSeedConflictException",
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationProtocolMismatchException",
+            "id": "problem:collaboration_protocol_mismatch",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 409
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationSeedConflictException",
             "id": "problem:collaboration_seed_conflict",
             "owner": "collaboration",
             "receipt": "cacheable",
             "retryable": "after_refetch",
             "source": {
-                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
-                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
         },
         {
-            "exception": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException",
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUnavailableException",
             "id": "problem:collaboration_unavailable",
             "owner": "collaboration",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
-                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
             },
             "status": 409
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUpdateMismatchException",
+            "id": "problem:collaboration_update_mismatch",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 422
+        },
+        {
+            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUpdateTooLargeException",
+            "id": "problem:collaboration_update_too_large",
+            "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+            },
+            "status": 413
         },
         {
             "exception": "Vaulter\\Documents\\Exceptions\\CommentNotFoundException",
@@ -2469,6 +2578,18 @@
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
             },
             "status": 412
+        },
+        {
+            "exception": "Vaulter\\Documents\\Exceptions\\DocumentStatePendingException",
+            "id": "problem:document_state_pending",
+            "owner": "documents",
+            "receipt": "never",
+            "retryable": "with_backoff",
+            "source": {
+                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
+                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
+            },
+            "status": 409
         },
         {
             "exception": "Vaulter\\Documents\\Exceptions\\DocumentStateTooLargeException",

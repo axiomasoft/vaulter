@@ -3393,8 +3393,11 @@ paths:
       tags:
       - hub
       summary: 'Hub: authenticate a room connection'
+      description: 'Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise).'
       security:
       - hubSecret: []
+      parameters:
+      - $ref: '#/components/parameters/XVaulterCollabProtocol'
       requestBody:
         required: true
         content:
@@ -3420,6 +3423,8 @@ paths:
               $ref: '#/components/headers/XRateLimitLimit'
             X-RateLimit-Remaining:
               $ref: '#/components/headers/XRateLimitRemaining'
+            X-Vaulter-Collab-Protocol:
+              $ref: '#/components/headers/XVaulterCollabProtocol'
           content:
             application/json:
               schema:
@@ -3442,8 +3447,12 @@ paths:
       tags:
       - hub
       summary: 'Hub: load the state of a room'
+      description: 'Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The checkpoint and
+        the committed tail to replay on it; before the generation has any record, the JSON the hub builds its seed from.'
       security:
       - hubSecret: []
+      parameters:
+      - $ref: '#/components/parameters/XVaulterCollabProtocol'
       requestBody:
         required: true
         content:
@@ -3469,10 +3478,12 @@ paths:
               $ref: '#/components/headers/XRateLimitLimit'
             X-RateLimit-Remaining:
               $ref: '#/components/headers/XRateLimitRemaining'
+            X-Vaulter-Collab-Protocol:
+              $ref: '#/components/headers/XVaulterCollabProtocol'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HubLoaded'
+                $ref: '#/components/schemas/HubLoadedV2'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
@@ -3485,14 +3496,23 @@ paths:
           $ref: '#/components/responses/Problem429'
         '500':
           $ref: '#/components/responses/Problem500'
-  /collaboration/hub/store:
+  /collaboration/hub/append:
     post:
-      operationId: collaboration.hub.store
+      operationId: collaboration.hub.append
       tags:
       - hub
-      summary: 'Hub: store the state of a room'
+      summary: 'Hub: append one update to the log of a room (protocol 2)'
+      description: 'Requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise). The body size is
+        checked by its Content-Length and the payload by its base64 length before decoding (413 collaboration_update_too_large).
+        The answer is the committed receipt: a retry with the same update_id and payload gets the same seq. The hub''s seed
+        of an empty generation carries seed_state_version: it is appended only while the generation has no checkpoint and
+        no record and the document''s state version still equals it (409 collaboration_seed_conflict otherwise). While
+        vaulter:collaboration:drain drains the log before the module is switched off, every append answers 503
+        collaboration_draining and nothing is written; the hub keeps the update and retries it with backoff.'
       security:
       - hubSecret: []
+      parameters:
+      - $ref: '#/components/parameters/XVaulterCollabProtocol'
       requestBody:
         required: true
         content:
@@ -3501,24 +3521,34 @@ paths:
               type: object
               required:
               - room
-              - state
+              - generation
+              - update_id
+              - sha256
+              - payload
               properties:
                 room:
                   type: string
-                state:
+                generation:
+                  type: integer
+                update_id:
                   type: string
-                  description: Base64 Yjs state.
-                content:
-                  type:
-                  - object
-                  - 'null'
-                seed:
-                  type: boolean
-                state_version:
-                  type:
-                  - integer
-                  - 'null'
+                  description: UUID of the update, unchanged on every retry.
+                sha256:
+                  type: string
+                  description: Hex sha256 of the decoded payload; checked by the backend, never trusted.
+                payload:
+                  type: string
+                  description: Base64 Yjs update.
+                origin:
+                  type: string
+                  enum:
+                  - client
+                  - server
+                seed_state_version:
+                  type: integer
                   minimum: 0
+                  description: Only on the hub's seed (the first record of a generation, built from the JSON load returned)
+                    — the state_version load returned.
       responses:
         '200':
           description: OK
@@ -3533,14 +3563,176 @@ paths:
               $ref: '#/components/headers/XRateLimitLimit'
             X-RateLimit-Remaining:
               $ref: '#/components/headers/XRateLimitRemaining'
+            X-Vaulter-Collab-Protocol:
+              $ref: '#/components/headers/XVaulterCollabProtocol'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HubStoredEnvelope'
+                $ref: '#/components/schemas/HubAppended'
         '401':
           $ref: '#/components/responses/Problem401'
         '403':
           $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+        '503':
+          $ref: '#/components/responses/Problem503'
+  /collaboration/hub/compaction/lease:
+    post:
+      operationId: collaboration.hub.compaction.lease
+      tags:
+      - hub
+      summary: 'Hub: lease document generations due for compaction (protocol 2)'
+      description: 'The hub''s compaction worker, not a room connection: the body signature authenticates the call, no room
+        token. Requires X-Vaulter-Collab-Protocol: 2. Up to max generations with uncheckpointed edits or a drain request, drain
+        requests first; each entry carries what the hub merges (the checkpoint and the tail (checkpoint_seq, head_seq]) and
+        the values its checkpoint publication repeats. A lease gives no right to append.'
+      security:
+      - hubSecret: []
+      parameters:
+      - $ref: '#/components/parameters/XVaulterCollabProtocol'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - hub_id
+              properties:
+                hub_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 191
+                  description: The id of the hub instance; the lease owner.
+                max:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  description: The most leases to hand out, 1..100; 1 when absent.
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-Vaulter-Collab-Protocol:
+              $ref: '#/components/headers/XVaulterCollabProtocol'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HubCompactionLease'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /collaboration/hub/checkpoint:
+    post:
+      operationId: collaboration.hub.checkpoint
+      tags:
+      - hub
+      summary: 'Hub: publish a checkpoint merged under a compaction lease (protocol 2)'
+      description: 'The hub''s compaction worker: the body signature authenticates the call, no room token. Requires X-Vaulter-Collab-Protocol:
+        2. One compare-and-set: the lease holds the generation, covered_from is the last checkpoint''s sequence, expected_checkpoint_version
+        its version and the document''s state version, covered_through is in the log. Otherwise 409 collaboration_checkpoint_conflict
+        (a closed generation: 409 collaboration_epoch_mismatch), and nothing changes. On success the updates through covered_through
+        are deleted (their receipts stay) and the pending marker is cleared when the checkpoint covers it. The body is checked
+        by its Content-Length and the state by its base64 length before decoding (413 collaboration_update_too_large).'
+      security:
+      - hubSecret: []
+      parameters:
+      - $ref: '#/components/parameters/XVaulterCollabProtocol'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - document
+              - generation
+              - lease_token
+              - covered_from
+              - covered_through
+              - expected_checkpoint_version
+              - state
+              - content
+              properties:
+                document:
+                  type: string
+                  description: The node id of the document, as the lease named it.
+                generation:
+                  type: integer
+                  minimum: 0
+                lease_token:
+                  type: string
+                covered_from:
+                  type: integer
+                  minimum: 0
+                  description: The checkpoint_seq the lease reported (C).
+                covered_through:
+                  type: integer
+                  minimum: 0
+                  description: The last log sequence the checkpoint holds (H), at most the head_seq the lease reported.
+                expected_checkpoint_version:
+                  type: integer
+                  minimum: 0
+                state:
+                  type: string
+                  description: Base64 Yjs state of the merged checkpoint.
+                content:
+                  type: object
+                  description: The JSON projection of the state.
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-Vaulter-Collab-Protocol:
+              $ref: '#/components/headers/XVaulterCollabProtocol'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubCheckpointPublished'
+        '401':
+          $ref: '#/components/responses/Problem401'
         '404':
           $ref: '#/components/responses/Problem404'
         '409':
@@ -3572,6 +3764,14 @@ components:
       required: true
       description: 'The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag:
         412. Checked after authorization.'
+      schema:
+        type: string
+    XVaulterCollabProtocol:
+      name: X-Vaulter-Collab-Protocol
+      in: header
+      required: true
+      description: 'The hub ↔ backend protocol version the call speaks: `2`. A call without it, or with any other value,
+        answers 409 collaboration_protocol_mismatch before anything is read.'
       schema:
         type: string
     IdempotencyKey:
@@ -3814,6 +4014,11 @@ components:
       description: Requests left in the window.
       schema:
         type: integer
+    XVaulterCollabProtocol:
+      description: The hub ↔ backend protocol version of the answer (protocol 2 calls).
+      schema:
+        type: string
+        const: '2'
     ContentDisposition:
       description: attachment or inline, with a filename.
       required: true
@@ -4075,6 +4280,19 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    Problem503:
+      description: Temporarily unavailable; retry with backoff (collaboration_draining).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
   schemas:
     Problem:
       type: object
@@ -4102,9 +4320,14 @@ components:
           - actor_required
           - blob_unavailable
           - cannot_delete_head_revision
+          - collaboration_checkpoint_conflict
+          - collaboration_draining
           - collaboration_epoch_mismatch
+          - collaboration_protocol_mismatch
           - collaboration_seed_conflict
           - collaboration_unavailable
+          - collaboration_update_mismatch
+          - collaboration_update_too_large
           - comment_not_found
           - concurrent_update
           - content_unavailable
@@ -4114,6 +4337,7 @@ components:
           - document_content_degraded
           - document_revision_not_found
           - document_state_mismatch
+          - document_state_pending
           - document_state_too_large
           - document_type_unavailable
           - drive_archived
@@ -5206,49 +5430,156 @@ components:
           - 'null'
         epoch:
           type: integer
-    HubLoaded:
+    HubAppended:
       type: object
+      description: The committed receipt of an appended update (protocol 2), sent only after the commit.
       required:
-      - state
-      - content
-      - epoch
-      - schemaVersion
-      - stateVersion
-      - type
+      - generation
+      - update_id
+      - seq
+      - sha256
+      - persisted
       properties:
-        state:
+        generation:
+          type: integer
+        update_id:
+          type: string
+        seq:
+          type: integer
+        sha256:
+          type: string
+        persisted:
+          type: boolean
+          const: true
+    HubCompactionLease:
+      type: object
+      description: 'A compaction lease on one document generation and what the hub merges under it, read with the lease under
+        the document and head locks: the checkpoint (null before the first one, then content is the JSON to seed from) and
+        the tail (checkpoint_seq, head_seq].'
+      required:
+      - document
+      - generation
+      - lease_token
+      - lease_expires_at
+      - checkpoint_seq
+      - head_seq
+      - checkpoint_version
+      - type
+      - schema_version
+      - checkpoint
+      - content
+      - tail
+      properties:
+        document:
+          type: string
+          description: The node id of the document.
+        generation:
+          type: integer
+        lease_token:
+          type: string
+        lease_expires_at:
+          type: string
+          format: date-time
+        checkpoint_seq:
+          type: integer
+        head_seq:
+          type: integer
+        checkpoint_version:
+          type: integer
+          description: The state version the publication must expect (expected_checkpoint_version).
+        type:
+          type: string
+        schema_version:
+          type: integer
+        checkpoint:
           type:
           - string
           - 'null'
-          description: Base64 Yjs state, null before the first store.
+          description: Base64 Yjs checkpoint, null before the first one.
         content:
           type:
           - object
           - 'null'
-        epoch:
+        tail:
+          type: array
+          items:
+            type: object
+            required:
+            - seq
+            - update_id
+            - payload
+            properties:
+              seq:
+                type: integer
+              update_id:
+                type: string
+              payload:
+                type: string
+                description: Base64 Yjs update.
+    HubCheckpointPublished:
+      type: object
+      description: A published checkpoint. marker_cleared is false when edits committed after the lease read the log keep
+        the document pending; their updates stay in the log.
+      required:
+      - checkpoint_version
+      - marker_cleared
+      properties:
+        checkpoint_version:
           type: integer
-        schemaVersion:
+        marker_cleared:
+          type: boolean
+    HubLoadedV2:
+      type: object
+      description: 'Protocol 2 load: the checkpoint and the committed tail (checkpoint_seq, head_seq] to replay on it. Before
+        the first checkpoint, content is the JSON projection to seed the room from.'
+      required:
+      - generation
+      - schema_version
+      - type
+      - state_version
+      - checkpoint
+      - checkpoint_seq
+      - head_seq
+      - content
+      - tail
+      properties:
+        generation:
           type: integer
-        stateVersion:
+        schema_version:
           type: integer
         type:
           type: string
-    HubStored:
-      type: object
-      required:
-      - changed
-      - epoch
-      - state_version
-      - yjs_state_size
-      properties:
-        changed:
-          type: boolean
-        epoch:
-          type: integer
         state_version:
           type: integer
-        yjs_state_size:
+        checkpoint:
+          type:
+          - string
+          - 'null'
+          description: Base64 Yjs checkpoint, null before the first one.
+        checkpoint_seq:
           type: integer
+        head_seq:
+          type: integer
+        content:
+          type:
+          - object
+          - 'null'
+        tail:
+          type: array
+          items:
+            type: object
+            required:
+            - seq
+            - update_id
+            - payload
+            properties:
+              seq:
+                type: integer
+              update_id:
+                type: string
+              payload:
+                type: string
+                description: Base64 Yjs update.
     AbilitiesExplained:
       type: object
       required:
@@ -5495,13 +5826,6 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/CollaborationSession'
-    HubStoredEnvelope:
-      type: object
-      required:
-      - data
-      properties:
-        data:
-          $ref: '#/components/schemas/HubStored'
     AbilitiesExplainedEnvelope:
       type: object
       required:

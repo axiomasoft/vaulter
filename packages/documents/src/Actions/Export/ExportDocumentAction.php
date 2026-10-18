@@ -11,6 +11,7 @@ use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Queries\DocumentQuery;
+use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Support\Identity;
@@ -23,7 +24,8 @@ use Vaulter\Support\LoadTier;
  * The caller has already located the node and passed the Download / ContentEgress
  * gate. The exporter receives decoded content only; a degraded read is exported as
  * the type reads it (never as a blank document), and a type nothing registers is
- * refused rather than exported as opaque JSON.
+ * refused rather than exported as opaque JSON. The working state of a document with a
+ * pending-state marker is refused (409 document_state_pending); a checkpoint is not.
  */
 #[Internal]
 final readonly class ExportDocumentAction
@@ -34,6 +36,7 @@ final readonly class ExportDocumentAction
         private ContentDecoder $decoder,
         private ExportFilenameResolver $filenames,
         private MetricsRecorder $metrics,
+        private PendingStateGuard $pending,
     ) {}
 
     /**
@@ -58,6 +61,10 @@ final readonly class ExportDocumentAction
             name: 'vaulter_export_duration_seconds',
             operation: function () use ($data): DocumentExport {
                 $document = $this->query->document($data->node);
+                // The working state lags behind saved collaboration edits; a checkpoint is what it was.
+                if ($data->revision === null) {
+                    $this->pending->assertSettled($document);
+                }
                 $type = $this->decoder->writable($document->type);
                 $exporter = $this->exporters->for($type->key(), $data->format);
 

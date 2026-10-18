@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Tests\Collaboration\HubTestHelpers as Hub;
+use Vaulter\Documents\Tests\Fixtures\GrantedDocuments as Granted;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Facades\Vaulter;
@@ -15,17 +15,16 @@ use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 /**
  * The content of a document is its own resource: GET carries a tag made of the
  * generation (`"{nodeId}.{epoch}.{stateVersion}"`), PUT is refused without it or with a
- * stale one, and a store from the collaboration hub moves the generation under a
- * reader's feet exactly like another writer would.
+ * stale one, and a write by another editor moves the generation under a reader's feet.
  */
 beforeEach(function (): void {
-    Hub::configure();
+    Granted::configure();
 });
 
 /** @return array{0: Node, 1: string} a document under a writer (user 1) and a reader (user 2), and its id */
 function sharedDocument(): array
 {
-    $node = Hub::document(level: RoleRegistry::WRITER, actorId: 1);
+    $node = Granted::document(level: RoleRegistry::WRITER, actorId: 1);
     AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 2);
 
     return [$node, (string) $node->getKey()];
@@ -39,8 +38,8 @@ it('answers a reader and a writer with the same body and the same tag', function
     $this->actingAs(AccessTestHelpers::user(2));
     $reader = $this->getJson(Docs::url('documents/'.$id.'/content'))->assertOk();
 
-    $epoch = Hub::aggregate($node)->collab_epoch;
-    $version = Hub::aggregate($node)->state_version;
+    $epoch = Granted::aggregate($node)->collab_epoch;
+    $version = Granted::aggregate($node)->state_version;
     expect($reader->json())->toBe($writer->json())
         ->and($reader->headers->get('ETag'))->toBe($writer->headers->get('ETag'))
         ->and($writer->headers->get('ETag'))->toBe('"'.$id.'.'.$epoch.'.'.$version.'"')
@@ -89,7 +88,7 @@ it('requires If-Match to write: 428 without it or with *, 412 for a weak or stal
 it('saves with the current tag, moves the state version by one and answers the new tag', function (): void {
     [$node, $id] = sharedDocument();
     $this->actingAs(AccessTestHelpers::user(1));
-    $before = Hub::aggregate($node)->state_version;
+    $before = Granted::aggregate($node)->state_version;
     $tag = Docs::etag($id);
 
     $saved = Docs::put($id, Docs::doc('Saved'), $tag)
@@ -101,21 +100,21 @@ it('saves with the current tag, moves the state version by one and answers the n
         ->and($saved->headers->get('ETag'))->toBe(Docs::etag($id));
 });
 
-it('refuses a PUT after a hub store landed between the read and the write', function (): void {
+it('refuses a PUT after another writer landed between the read and the write', function (): void {
     [$node, $id] = sharedDocument();
     $this->actingAs(AccessTestHelpers::user(1));
     $tag = Docs::etag($id);
 
-    Hub::call('store', Hub::storeBody($node, 'hub-state', Hub::tiptap('From the hub')), Hub::token($node))->assertOk();
+    Docs::put($id, Docs::doc('From another writer'), $tag)->assertOk();
 
     Docs::put($id, Docs::doc('Late editor'), $tag)
         ->assertStatus(412)
         ->assertJsonPath('code', 'document_state_mismatch');
-    expect(Hub::aggregate($node)->content['content'][0]['content'][0]['text'])->toBe('From the hub');
+    expect(Granted::aggregate($node)->content['content'][0]['content'][0]['text'])->toBe('From another writer');
 });
 
 it('lets a previewer read the content and refuses its write before any tag is compared', function (): void {
-    $node = Hub::document(level: RoleRegistry::PREVIEWER, actorId: 3);
+    $node = Granted::document(level: RoleRegistry::PREVIEWER, actorId: 3);
     $id = (string) $node->getKey();
     $this->actingAs(AccessTestHelpers::user(3));
 

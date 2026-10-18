@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Support\OpenApi;
 
 use Illuminate\Foundation\Application;
+use Vaulter\Collaboration\VaulterCollaborationServiceProvider;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Tests\TestCase;
 
@@ -21,7 +22,7 @@ abstract class OpenApiTestCase extends TestCase
     #[\Override]
     protected function getPackageProviders($app): array
     {
-        return [...parent::getPackageProviders($app), VaulterDocumentsServiceProvider::class];
+        return [...parent::getPackageProviders($app), VaulterDocumentsServiceProvider::class, VaulterCollaborationServiceProvider::class];
     }
 
     /**
@@ -32,6 +33,6 @@ abstract class OpenApiTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter-documents.collaboration.enabled', true);
+        $app['config']->set('vaulter.modules.collaboration', true);
     }
 }

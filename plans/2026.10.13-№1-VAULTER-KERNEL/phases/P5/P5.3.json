@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.3",
   "title": "Documents: публичный state-контракт CollaborativeState (D27), pending marker и document_state_pending",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`Vaulter\\Documents\\State\\CollaborativeState` (#[Api], реализация Internal) с DTO `LockedDocumentState`, `PendingMarker`, `CheckpointPublication`, `CheckpointOutcome`: `lock()` (T→N→D), `markPending()`, `publishCheckpoint()` (CAS generation/state_version, снятие marker только при PT ≤ H), `pendingDocuments()`; вне транзакции — LogicException. SPI `Vaulter\\Documents\\State\\PendingStateDrainer` (#[Spi(Implement)], capability OptionalSingle в DocumentsModule). Колонки `v_documents.pending_generation`, `pending_through_seq` + CHECK (create-DDL DocumentsSchema, D21). Guards drain-or-409 `document_state_pending` (409, retryable with_backoff, receipt never) в REST PUT content, restore, export, GET content, purge документа (C8, C9). DocumentStateWriter остаётся Internal.",
   "why": "D26, D27, p5-design#invariants C5, C8, C9: documents владеет generation и marker; collaboration пишет только через публичный контракт; без marker REST тихо читает или перезаписывает устаревшую проекцию. Hard risks: снятие marker без покрытия (потеря saved-правок при restore/replace), deadlock при нарушении порядка T→N→D, ожидание drain внутри транзакции (locks на время хаба), stale JSON как актуальный.",
   "scope": {
@@ -166,6 +166,24 @@
       "note": "CHANGES.json/CHANGES.md и текущие *.list/*.count; original/* неизменны"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/eb0a31ec8c9b8e9df704075f9735ffeeb37710eefe4ccb10edf57d1f20ee96e7",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/62074f5eb069105fea28c268deb4d2bba23f33280012a57593bb512169ababe7",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/127023ffb8de469db075d7f9d0f823ae83b13a5e724bec9567d947b5d6986891",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/5c4b0dfe839f6f0200e97023df67d0760718007013580e6acdb4824b1ee9d860",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Все методы CollaborativeState требуют открытой транзакции VaulterDatabase (иначе LogicException); lock() — единственная точка взятия T→N→D для collaboration.",
     "Marker: оба поля NULL или оба NOT NULL (CHECK); markPending ставит max(PT, seq) только при generation == collab_epoch; publishCheckpoint снимает marker только при той же generation и coveredThrough ≥ PT.",
@@ -244,6 +262,87 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T09:07:47Z"
+  "result": {
+    "started_at": "2026-10-17T11:13:06Z",
+    "finished_at": "2026-10-17T12:34:28Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "opus",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-d5e0d57192b01ac045d1c0a2-P5.3",
+    "notes": "Correction round 3 of the P5.3 review fixes. F2 fixed: PendingStateGuard::drainTrashed() no longer drains a fixed batch (orderBy id, limit 100). It reads every marked trashed document of the drive in keyset pages of 100 (id > last) and drains each one once per call, so documents whose drain never settles cannot starve the purge target; the constant is renamed PURGE_DRAIN_PAGE. F1 (retention purge and drive purge step) cannot be fixed inside documents and is reported as a deviation owned by drive. PurgeTrashCommand::runMaintenance and PurgeDriveStepAction call PurgeNodeAction in transactions of their own, outside OperationRunner, so the OperationMiddleware seam (PendingPurgeDrain) never runs. A drain before those transactions needs a drive-side pre-transaction purge hook, i.e. a new or changed drive SPI and slot, an architecture change that needs a D#. PendingStateGuardTest: the test helper guardSettle() now publishes a covering checkpoint (the fake drainer reuses it). New cases: (1) F2 regression: 101 stuck marked trashed documents with lower ids plus a publishing drainer for the target; the purge drains all 102 once each and removes the target. (2) Retention purge (artisan vaulter:trash:purge --days=0) of a pending trashed document exits 1, keeps the document and never calls the drainer; after guardSettle() the next run exits 0 and removes it. (3) Drive purge step (PurgeDriveStepAction, drive status Deleting) throws DocumentStatePendingException, keeps the document and never calls the drainer; after guardSettle() it returns true and the document is gone. Runs, all exit 0 on sqlite: scripts/t sqlite -p documents tests/State/PendingStateGuardTest.php; scripts/t sqlite -p documents tests/State tests/Arch (35 State tests); scripts/t baseline --write -p documents then --compare -p documents (current 718, added 57).\nChanged: docs/guides/errors.md, docs/reference/errors.md, docs/ru/reference/errors.md, openapi/vaulter-v1.yaml, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/bigint.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/ulid.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/mysql/uuid7.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/bigint.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/ulid.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/pgsql/uuid7.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/bigint.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/ulid.uuid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.bigint.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.bigint.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.bigint.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.bigint.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.string.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.string.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.string.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.string.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.ulid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.ulid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.ulid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.ulid.v.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.uuid.custom.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.uuid.custom.on.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.uuid.v.off.json, packages/core/tests/Fixtures/Schema/expected/sqlite/uuid7.uuid.v.on.json, packages/documents/resources/lang/en/problems.php, packages/documents/resources/lang/ru/problems.php, packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php, packages/documents/src/Actions/Export/ExportDocumentAction.php, packages/documents/src/Actions/Revisions/RestoreDocumentRevisionAction.php, packages/documents/src/Content/DocumentContentLifecycle.php, packages/documents/src/Content/DocumentStateWriter.php, packages/documents/src/DocumentsModule.php, packages/documents/src/Exceptions/DocumentStatePendingException.php, packages/documents/src/Http/Problems/DocumentsProblemCodes.php, packages/documents/src/Models/Documents/Document.php, packages/documents/src/Operations/DocumentOperations.php, packages/documents/src/Providers/BindingsRegistrar.php, packages/documents/src/Schema/DocumentsSchema.php, packages/documents/src/State/CheckpointOutcome.php, packages/documents/src/State/CheckpointPublication.php, packages/documents/src/State/CollaborativeState.php, packages/documents/src/State/DatabaseCollaborativeState.php, packages/documents/src/State/LockedDocumentState.php, packages/documents/src/State/PendingMarker.php, packages/documents/src/State/PendingPurgeDrain.php, packages/documents/src/State/PendingStateDrainer.php, packages/documents/src/State/PendingStateGuard.php, packages/documents/tests/Arch/DocumentStateWriterBoundaryTest.php, packages/documents/tests/Arch/__snapshots__/surface.txt, packages/documents/tests/Concurrency/PendingMarkerRaceTest.php, packages/documents/tests/Fixtures/State/FakePendingStateDrainer.php, packages/documents/tests/Fixtures/State/PendingDrainerModule.php, packages/documents/tests/Fixtures/State/PendingDrainerProvider.php, packages/documents/tests/Pest.php, packages/documents/tests/State/CollaborativeStateTest.php, packages/documents/tests/State/PendingStateGuardTest.php, packages/documents/tests/State/StateTestCase.php, packages/documents/tests/groups.php, packages/vue/src/api/schema.d.ts, tests/Repo/Arch/Fixtures/identities/changes.json, tests/Repo/Arch/Fixtures/identities/protocol.json, tests/Repo/Arch/Fixtures/identities/schema.json, tests/Repo/Arch/Fixtures/target-map.json, tests/Repo/Arch/IdentitiesTest.php, tests/baseline/CHANGES.json, tests/baseline/CHANGES.md, tests/baseline/documents.count, tests/baseline/documents.list, tests/suites.json, tests/zones.json",
+    "deviations": [
+      "F1 not fixed in documents: retention (PurgeTrashCommand::runMaintenance, its own transaction around PurgeNodeAction) and the drive purge step (PurgeDriveStepAction → PurgeNodeAction's own transaction) bypass OperationRunner, so no documents-side hook can drain before their transaction. While a marker is set, both refuse with document_state_pending (rolled back, nothing removed) and never call the drainer. They converge once the marker is cleared: the next retention run or drive-purge step succeeds (pinned by two PendingStateGuardTest cases). A real drain-or-409 there needs a drive-owned pre-transaction purge hook, a new drive SPI and slot (D8, needs a D#), or running those purges through OperationRunner as 'drive.trash.purge'. That is outside the documents write set and changes drive's architecture.",
+      "changed outside the write set: docs/guides/errors.md, docs/reference/errors.md, docs/ru/reference/errors.md, packages/documents/resources/lang/en/problems.php, packages/documents/resources/lang/ru/problems.php"
+    ],
+    "pending": [
+      "owner_decision(spec_mismatch): F1 not fixed in documents: retention (PurgeTrashCommand::runMaintenance, its own transaction around PurgeNodeAction) and the drive purge step (PurgeDriveStepAction → PurgeNodeAction's own transaction) bypass OperationRunner, so no documents-side hook can drain before their transaction. While a marker is set, both refuse with document_state_pending (rolled back, nothing removed) and never call the drainer. They converge once the marker is cleared: the next retention run or drive-purge step succeeds (pinned by two PendingStateGuardTest cases). A real drain-or-409 there needs a drive-owned pre-transaction purge hook, a new drive SPI and slot (D8, needs a D#), or running those purges through OperationRunner as 'drive.trash.purge'. That is outside the documents write set and changes drive's architecture."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T12:34:28Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T12:34:28Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T12:34:28Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T12:34:28Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T12:34:28Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T12:34:28Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V6.json"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-17T12:34:28Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V7.json"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-17T12:34:28Z",
+        "evidence": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V8.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V1.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V2.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V3.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V4.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V5.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V6.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V7.json",
+      "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P5.3/evidence/V8.json"
+    ]
+  },
+  "updated_at": "2026-10-17T12:34:28Z"
 }

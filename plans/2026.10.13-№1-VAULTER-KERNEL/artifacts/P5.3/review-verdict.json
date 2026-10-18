@@ -1,0 +1,131 @@
+{
+  "item": "P5.3",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "A document has pending marker (generation 0, through seq 3) and an active PendingStateDrainer that would publish a covering checkpoint. Trash the document and purge it. PurgeNodeAction already holds the purge transaction, so purge() only calls assertSettled() and throws DocumentStatePendingException. The drainer is never called (PendingStateGuardTest.php:188-195 expects zero calls even when the fake drainer would publish). Retrying purge repeats the 409. The document cannot be purged while the marker remains, and collab_epoch stays put. C9 requires purge to drain outside the transaction, lock again, and return 409 only if the marker is still set.",
+          "id": "F1",
+          "location": "packages/documents/src/Content/DocumentContentLifecycle.php:91",
+          "reproduction": "PendingStateGuardTest 'refuses to purge a pending document and keeps it' with guardDrainer(publish: true); FakePendingStateDrainer::$calls stays [].",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "scripts/t sqlite -p documents tests/State/PendingStateGuardTest.php (test 'refuses to purge a pending document and keeps it'; code: packages/documents/src/Content/DocumentContentLifecycle.php:83-91, caller packages/drive/src/Actions/Trash/PurgeNodeAction.php:75)",
+            "exit": 0,
+            "observed": "Purge of a pending document throws DocumentStatePendingException and FakePendingStateDrainer::$calls stays [] although the fake drainer would publish. purge() only calls assertSettled() inside the purge transaction and never drains, so a retry gives the same 409 until something else clears the marker."
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "A Russian client displays the problem title 'Содержимое документа ещё не сохранено'. The marker means the collaboration edits are already saved and are absent only from the working projection. The title tells the user the content was not saved. The same title is repeated in docs/ru/reference/errors.md. The English title and both detail strings describe the pending projection.",
+          "id": "F2",
+          "location": "packages/documents/resources/lang/ru/problems.php:23",
+          "severity": "Nit",
+          "triage_reproduction": {
+            "cmd": "grep -n 'ещё не сохранено' packages/documents/resources/lang/ru/problems.php docs/ru/reference/errors.md",
+            "exit": 0,
+            "observed": "The title 'Содержимое документа ещё не сохранено' is at problems.php:23 and repeated in docs/ru/reference/errors.md. It says the content is unsaved, while the marker means saved collaboration edits are not yet in the working projection."
+          }
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a149b2-3b9a-7162-87b9-cbc13e4d01af",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261017T111305Z-7e7bab/P5.3/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2"
+        ],
+        "rejected": [],
+        "session": "21461d6e-460b-4462-8dcc-55b41af1464d"
+      },
+      "verdict": "ATTENTION"
+    },
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "A document has pending marker (generation 0, through seq 3) and an active PendingStateDrainer that would publish a covering checkpoint. Retention (`vaulter:trash:purge`, PurgeTrashCommand.php:70) opens a transaction and calls PurgeNodeAction directly; drive deletion (PurgeDriveStepAction.php:73, bypassTrashRequirement) does the same for a live document. PendingPurgeDrain never runs, drainTrashed() is not called, and DocumentContentLifecycle::purge() at line 91 only assertSettled() inside that transaction. The purge throws DocumentStatePendingException, rolls back, and leaves the marker. Retention fails that root on every run. The drive purge job retries the same 409 and the drive stays Deleting. The drainer is never invoked, so a healthy hub cannot clear the marker.",
+          "id": "F1",
+          "location": "packages/documents/src/State/PendingPurgeDrain.php:34",
+          "reproduction": "Static trace of PurgeTrashCommand::runMaintenance and PurgeDriveStepAction::execute into PurgeNodeAction::execute; no drain call exists on those paths. Not executed.",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "grep -n 'drain\\|transaction\\|PurgeNodeAction' packages/drive/src/Console/PurgeTrashCommand.php packages/drive/src/Actions/Drives/PurgeDriveStepAction.php; grep -n 'drainTrashed\\|PURGE =' packages/documents/src/State/PendingPurgeDrain.php",
+            "exit": 0,
+            "observed": "PurgeTrashCommand:70 and PurgeDriveStepAction open a transaction and call PurgeNodeAction with no drain call. PendingPurgeDrain drains only for a root 'drive.trash.purge' operation with a DRIVE scope. Its own docblock says retention and drive purges are not drained and stay 409. With a marker set and a healthy drainer, those paths can never clear it, so the purge is refused on every run."
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "A drive has 100 trashed documents with pending markers and lower ids whose drain() returns without clearing them (deadline or hub cannot compact those rooms). Document D has a higher id, marker (generation 0, through seq 3), and a drainer that would publish a covering checkpoint. Trash D and call trash()->purge(D). drainTrashed() loads orderBy id limit 100, so it drains the stuck rows and never D. purge() then assertSettled() throws document_state_pending and deletes nothing. Every retry selects the same 100 stuck rows. D stays pending and cannot be purged.",
+          "id": "F2",
+          "location": "packages/documents/src/State/PendingStateGuard.php:73",
+          "reproduction": "Static trace of PendingStateGuard::drainTrashed (lines 69-84) and PendingPurgeDrain::handle. Not executed.",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "grep -n 'whereHas\\|orderBy\\|limit' packages/documents/src/State/PendingStateGuard.php",
+            "exit": 0,
+            "observed": "Lines 71-73: drainTrashed selects marked, trashed documents of the drive with orderBy('id') and limit(100). It does not target the document being purged. With 100 or more lower-id rows that stay stuck, the document with the higher id is never drained. DocumentContentLifecycle::purge then throws 409 on every retry."
+          }
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 2,
+      "session": "01a149c7-02a2-7871-9871-79f3349dcd28",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261017T111305Z-7e7bab/P5.3/streams/review.2.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2"
+        ],
+        "rejected": [],
+        "session": "6649b06d-da14-42bf-8eef-22fae3fb8fef"
+      },
+      "verdict": "ATTENTION"
+    },
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "A document carries pending marker (generation 0, through seq 3) and an active PendingStateDrainer whose drain() would publish a covering checkpoint. vaulter:trash:purge opens a transaction at PurgeTrashCommand.php:70 and calls PurgeNodeAction inside it. PendingPurgeDrain.php:34 runs only for a root drive.trash.purge operation, so drainTrashed() is never called. DocumentContentLifecycle::purge() then assertSettled() under that transaction and throws document_state_pending. The command catches it, leaves the row and the marker in place, and exits 1. The same document on a drive in status Deleting is removed by PurgeDriveStepAction.php:73 with bypassTrashRequirement and no prior drain, so the step throws DocumentStatePendingException and the drive stays Deleting. PendingStateGuardTest.php lines 272–299 lock this in: guardDrainer(publish: true) and FakePendingStateDrainer::$calls stays empty. C9 requires drain outside the transaction, then a fresh lock, and 409 only when the marker is still set.",
+          "id": "F1",
+          "location": "packages/drive/src/Console/PurgeTrashCommand.php:70",
+          "reproduction": "Read packages/documents/tests/State/PendingStateGuardTest.php lines 268–299. Static only; the conductor already recorded V1 exit 0, which includes this test.",
+          "severity": "Major"
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 3,
+      "session": "01a149d5-4d14-7f82-8a12-5107e91e2dfb",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261017T111305Z-7e7bab/P5.3/streams/review.3.jsonl",
+      "triage": {
+        "confirmed": [],
+        "rejected": [
+          {
+            "finding": "F1",
+            "reason": "Reproduces as described, but the defect lives in packages/drive (PurgeTrashCommand.php:70 and PurgeDriveStepAction.php:73), which runs PurgeNodeAction in its own transaction without calling documents' PendingPurgeDrain first. That is outside this item's write set. The behaviour inside the documents contract is fail-closed: DocumentContentLifecycle::purge refuses with 409 document_state_pending, no row is deleted, and the purge converges once the marker clears. No silent loss occurs. The documents test pins this on purpose and names drive as the owner of the boundary. Owner: the drive module, in a later drive/P5 item. The fix there is to drain pending documents (PendingPurgeDrain::drainTrashed) outside the transaction before opening it in the retention command and the drive purge step. Recorded as a rejected Major plan note."
+          }
+        ],
+        "session": "a0b75c81-e3f8-42b9-81c8-b895cf4e6e90"
+      },
+      "verdict": "ATTENTION"
+    }
+  ],
+  "run": "cnd-20261017T111305Z-7e7bab",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

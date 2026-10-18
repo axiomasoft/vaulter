@@ -292,23 +292,26 @@ services:
   hocuspocus:
     logging: *bounded-logs
     build:
-      context: ../hocuspocus-server
+      context: ../packages/collaboration/hub
       dockerfile: Dockerfile
     environment:
       NODE_ENV: production
       VAULTER_COLLAB_PORT: '1234'
-      VAULTER_COLLAB_HEALTH_PORT: '1235'
+      # The app container reads /stats of the management listener (CollaborationRoomMetrics), so it
+      # binds every interface of this stand's private network.
+      VAULTER_COLLAB_MANAGEMENT_HOST: 0.0.0.0
+      VAULTER_COLLAB_MANAGEMENT_PORT: '1235'
       VAULTER_BACKEND_URL: http://app:8080
       VAULTER_API_PREFIX: api/vaulter
       VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_SECRET:-vlt-load-dev-collab-secret-not-for-production}
       VAULTER_COLLAB_ALLOWED_ORIGINS: '*'
     ports:
-      - '1235:1235'
+      - '127.0.0.1:1235:1235'
     depends_on:
       app:
         condition: service_healthy
     healthcheck:
-      test: ['CMD', 'node', '-e', "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:1235/livez').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 5s
       timeout: 3s
       retries: 20

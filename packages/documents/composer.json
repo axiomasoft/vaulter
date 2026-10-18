@@ -1,9 +1,9 @@
 {
     "name": "axioma-studio/vaulter-documents",
-    "description": "Documents behaviour for Vaulter — TipTap document editing, version history and real-time collaboration over the vaulter-core kernel.",
+    "description": "Documents behaviour for Vaulter — TipTap document editing, version history, comments and export over the vaulter-core kernel (real-time collaboration is the vaulter-collaboration package).",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "documents", "tiptap", "collaboration", "yjs", "versioning", "editor", "vaulter"],
+    "keywords": ["laravel", "documents", "tiptap", "versioning", "editor", "vaulter"],
     "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
@@ -22,14 +22,10 @@
         "spatie/laravel-package-tools": "^1.92",
         "symfony/html-sanitizer": "^6.4 || ^7.0 || ^8.0"
     },
-    "suggest": {
-        "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^7.0)."
-    },
     "require-dev": {
         "opis/json-schema": "^2.4",
         "symfony/yaml": "^8.0",
         "axioma-studio/vaulter-media": "self.version",
-        "firebase/php-jwt": "^7.0",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.13",
         "laravel/sanctum": "^4.0",

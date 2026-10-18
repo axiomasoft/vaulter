@@ -6,14 +6,14 @@ namespace Vaulter\Tests\E2E;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Vaulter\Collaboration\Configuration\CollaborationConfig;
+use Vaulter\Collaboration\Contracts\HostUserResolver;
+use Vaulter\Collaboration\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
-use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
-use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Testing\Fixtures\FakeHostUserResolver;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Operations\DriveContext;
@@ -40,10 +40,9 @@ final class E2eServiceProvider extends ServiceProvider
     {
         // Должно встать ДО boot VaulterServiceProvider, где маршруты гейтятся по фиче.
         config([
-            // P3.1 (F-P1.6-01, D20): the realtime surface now needs its OWN opt-in
-            // ON TOP of document_versions — the e2e stand exercises the collaboration session +
-            // the hub endpoints, so it must flip this too (default false).
-            'vaulter-documents.collaboration.enabled' => true,
+            // The collaboration module is opt-in (D22) — the e2e stand exercises the collaboration session +
+            // the hub endpoints, so it must switch it on (default off).
+            'vaulter.modules.collaboration' => true,
             'vaulter-drive.access.permission_driver' => 'database',
             'vaulter.ids.strategy' => 'bigint',
             'vaulter.routes.middleware.authenticated' => ['api', E2eActingAs::class],
@@ -148,7 +147,7 @@ final class E2eServiceProvider extends ServiceProvider
                 'first_revision_id' => $document->current_revision_id,
                 'writer_user' => 1,
                 'viewer_user' => 2,
-                'room' => app(DocumentsConfig::class)->collaborationRoom($node->drive_id, $node->getKey(), $document->collab_epoch),
+                'room' => app(CollaborationConfig::class)->room($node->drive_id, $node->getKey(), $document->collab_epoch),
             ]);
         });
 

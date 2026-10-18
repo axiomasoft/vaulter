@@ -3,14 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
-use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Export\ExportDocumentInput;
@@ -22,8 +20,9 @@ use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Models\Documents\Document;
-use Vaulter\Documents\Tests\Collaboration\HubTestHelpers;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Fixtures\GrantedDocuments;
+use Vaulter\Documents\Tests\Fixtures\StateWrites;
 use Vaulter\Drive\Contracts\DriveHandle;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Models\Node;
@@ -65,12 +64,7 @@ function matrixValidators(Node $node): array
 
 function matrixYjs(Node $node, string $state = 'yjs-state', bool $seed = false): void
 {
-    app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
-        node: $node,
-        yjsState: $state,
-        content: HubTestHelpers::tiptap($state),
-        seed: $seed,
-    ));
+    StateWrites::yjs($node, $state, GrantedDocuments::tiptap($state), $seed);
 }
 
 /**
@@ -257,8 +251,8 @@ it('carries the content validators the writer produced in every document event',
     app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('edited')));
     Event::assertDispatched(DocumentContentUpdated::class, static fn (DocumentContentUpdated $e): bool => [$e->stateVersion, $e->epoch] === [2, 0]);
 
+    // A binary state written by the collaboration store moves the validator like any content write (the event is the store's: see the collaboration suite).
     matrixYjs($node, 'room edit');
-    Event::assertDispatched(DocumentContentUpdated::class, static fn (DocumentContentUpdated $e): bool => [$e->stateVersion, $e->epoch] === [3, 0]);
 
     app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node), new CreateNamedRevisionInput(node: $node, label: 'named', keepForever: false));
     Event::assertDispatched(DocumentRevisionCreated::class, static fn (DocumentRevisionCreated $e): bool => !$e->restored && [$e->stateVersion, $e->epoch] === [3, 0]);

@@ -1,0 +1,168 @@
+{
+  "changed_paths": [
+    "e2e/docker-compose.yml",
+    "load/docker-compose.load.yml",
+    "packages/collaboration/hub/Dockerfile",
+    "packages/collaboration/hub/docker-compose.yml",
+    "packages/collaboration/hub/package.json",
+    "packages/collaboration/hub/src/backend.js",
+    "packages/collaboration/hub/src/cli.js",
+    "packages/collaboration/hub/src/config.js",
+    "packages/collaboration/hub/src/index.js",
+    "packages/collaboration/hub/src/limits.js",
+    "packages/collaboration/hub/src/management.js",
+    "packages/collaboration/hub/src/metrics.js",
+    "packages/collaboration/hub/src/persistence.js",
+    "packages/collaboration/hub/src/rooms.js",
+    "packages/collaboration/hub/src/shutdown.js",
+    "packages/collaboration/hub/test/limits.test.js",
+    "packages/collaboration/hub/test/management.test.js",
+    "packages/collaboration/hub/test/metrics.test.js",
+    "packages/collaboration/hub/test/security.test.js",
+    "packages/collaboration/hub/test/shutdown.test.js",
+    "packages/collaboration/hub/test/webhook.test.js",
+    "packages/collaboration/hub/test/websocket-hardening.test.js",
+    "scripts/collab-e2e.sh",
+    "tests/baseline/CHANGES.json",
+    "tests/baseline/CHANGES.md",
+    "tests/baseline/hub.count",
+    "tests/baseline/hub.list"
+  ],
+  "checks_run": [
+    {
+      "cmd": "(cd packages/collaboration/hub && npm run check && node --test test/management.test.js test/shutdown.test.js test/limits.test.js test/metrics.test.js)",
+      "exit": 1,
+      "id": "V1"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "test_env",
+      "evidence": [
+        "V1",
+        "V2"
+      ],
+      "impact": "V1 node part and V2 are unconfirmed by the executor; Yjs-dependent behaviour of the limits and drain paths is verified for control flow only",
+      "kind": "deviation",
+      "next": "conductor: run V1/V2. A red here most likely comes from a real-Yjs size in limits.test.js 'a room at MAX_DOCUMENT_BYTES…', or from where Hocuspocus 4.3 keeps onConnect/stopOnSignals (server.configuration vs hocuspocus.configuration) in the new websocket-hardening case",
+      "outcome": "accepted",
+      "severity": "medium",
+      "text": "V1's node --test part exits 1 in this sandbox only because yjs/@hocuspocus/* cannot be resolved (root node_modules masked, registry.npmjs.org refused, no yjs tarball in the npm cache), as in P5.7/P5.8. 40 of 50 tests pass; all 10 failures are 'Cannot find package yjs'. They are the 9 Yjs-backed cases of limits.test.js and the hooks/persistence drain scenario of shutdown.test.js. Under throwaway stubs in $TMPDIR (append-only fake CRDT, stub Server/Throttle/transformer/tiptap/ws, loaded with --import) they all pass, but stub byte sizes differ from real Yjs. The document-size test is sized with margin for real Yjs encodings (room ~110 bytes measured plus a 140-byte update against a 200-byte limit). V2 and the new websocket-hardening case were not run against real Hocuspocus."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/collaboration/hub/package.json",
+        "e2e/docker-compose.yml",
+        "load/docker-compose.load.yml",
+        "scripts/collab-e2e.sh"
+      ],
+      "impact": "the commit takes these 4 paths with the piece",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Changed outside scope.write_set: packages/collaboration/hub/package.json (the check script names the four new src files); e2e/docker-compose.yml, load/docker-compose.load.yml and scripts/collab-e2e.sh (they used VAULTER_COLLAB_HEALTH_PORT and /health, both removed; now management port and /livez). The load stand sets VAULTER_COLLAB_MANAGEMENT_HOST=0.0.0.0 because CollaborationRoomMetrics reads http://hocuspocus:1235/stats from another container, and its published port is narrowed to 127.0.0.1:1235."
+    },
+    {
+      "class": "other",
+      "evidence": [
+        "packages/collaboration/hub/src/persistence.js",
+        "packages/collaboration/hub/src/management.js"
+      ],
+      "impact": "durable writes and /readyz recover once the backend speaks protocol 2 again",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Bug fixed on the spot (D43): persistence's protocolMismatch flag was sticky. One 409 collaboration_protocol_mismatch (for example from an old backend pod during a rollout) stopped durable writes until restart, and reportProtocolMismatch did not re-evaluate writes. Now a committed append (ledger acked) or any 2xx seen by the instrumented backend clears it (protocolCompatible), and reportProtocolMismatch re-evaluates writes at once."
+    },
+    {
+      "impact": "the P5.12 client and docs",
+      "kind": "note",
+      "next": "P5.12: implement the reactions; docs pass: document the codes",
+      "text": "Client-protocol additions P5.12 (vue-collaboration) must handle: (1) status {t:'status', mode, writes:'stopped', reason} with reason draining | pending_budget | backend_unavailable | protocol_mismatch | document_too_large; the open status is unchanged. (2) New nack codes: collaboration_update_too_large (retry:false), document_too_large (retry:false), rate_limited (retry:true). (3) Close codes: 4503 draining (reconnect, ideally to another hub, keep the queue, resend unacked envelopes); 4413 update_too_large or document_too_large (do not resend that update); 4429 rate_limited, too_many_connections or too_many_rooms (back off). onConnect/onAuthenticate refusals carry reason 'draining', 'too_many_connections' or 'too_many_rooms'."
+    },
+    {
+      "impact": "configuration surface of the hub image",
+      "kind": "note",
+      "next": "registrar: record as a note",
+      "text": "Detail choices (D44, detail level). (a) Env names follow the VAULTER_COLLAB_ prefix: VAULTER_COLLAB_MANAGEMENT_HOST/PORT, _READY_BACKEND_TTL_MS (default 30000; must exceed the compaction interval), _SHUTDOWN_FLUSH_MS, _SHUTDOWN_DESTROY_MS, _MAX_UPDATE_BYTES, _MAX_DOCUMENT_BYTES, _MAX_REQUEST_BYTES, _MAX_ROOMS_PER_TENANT, _MAX_CONNECTIONS_PER_ROOM, _MAX_UPDATES_PER_SECOND_PER_ROOM. (b) The readiness heartbeat is any 2xx of the hub's own backend calls (no new backend ping route); without a webhook secret the lease call is refused and /readyz stays false. (c) collab_append_latency_seconds is the round trip of each append attempt. (d) collab_epoch_mismatch_total has label source=append|compaction. (e) The tenant for MAX_ROOMS_PER_TENANT is the JWT tenant claim, read unverified after the backend accepted the token; null tenant is one bucket. (f) The per-room rate is a token bucket per room for sync writes and another for envelopes; only writable connections are counted. Because the bucket is per room as specified, a flooding writer can push an innocent writer of the same room into 4429. (g) /stats is kept on the management listener for the load harness. (h) New config validations: the frame (VAULTER_COLLAB_MAX_PAYLOAD_BYTES) must hold the largest envelope, MAX_REQUEST_BYTES must hold the largest append, and MAX_DOCUMENT_BYTES must be >= MAX_UPDATE_BYTES."
+    },
+    {
+      "impact": "operator docs lag the image",
+      "kind": "pending",
+      "next": "docs pass: rewrite the hub env table and add a probes/drain section",
+      "text": "Docs not updated (D43 docs pass): packages/collaboration/hub/README.md, docs/guides/hub.md and docs/ru/guides/hub.md still list VAULTER_COLLAB_HEALTH_PORT and GET /health. They do not yet describe /livez, /readyz, /metrics, the management host, the shutdown deadlines, the limits or the new client codes. No docs guard test covers them. Also docs/plan/00-master-plan.md mentions the health port (historical)."
+    },
+    {
+      "impact": "a pod killed early loses what the drain would have flushed (it then counts as RPO loss in buffered mode)",
+      "kind": "note",
+      "next": "docs pass and the P5.13 stand (sigterm-drain.stand.js): use a grace period of at least 40 s",
+      "text": "Grace period: flush 30 s plus destroy 5 s is 35 s, which is above Kubernetes' default terminationGracePeriodSeconds of 30 s and docker stop's default of 10 s. The hub compose file sets stop_grace_period: 40s and the Dockerfile comment says so; manifests elsewhere are not in the repo."
+    },
+    {
+      "impact": "if one is wrong, V1/V2 go red in websocket-hardening/limits/shutdown, or a write could slip through while draining via a writer Hocuspocus does not treat as read-only",
+      "kind": "assumption",
+      "next": "reviewer (RC-P5-2): confirm against node_modules/@hocuspocus/server/dist",
+      "text": "Assumptions about Hocuspocus 4.3 I could not check against its dist here: server.configuration holds stopOnSignals and the hooks; server.httpServer.listening tells whether the WS listens; beforeHandleMessage receives the raw message (varString name, type, sync step…) as `update` for every message type, stateless included; setting connection.readOnly makes Hocuspocus drop a writer's sync step 2/update (relied on for draining and full rooms, as P5.7 did for stopped writes); Document.getConnections() lists a room's connections; a thrown error in onConnect/onAuthenticate refuses the connection. Also assumed: ioredis client.status === 'ready' when connected, and Y.encodeStateVectorFromUpdate/decodeStateVector exist in yjs 13.6."
+    },
+    {
+      "impact": "P5.10/P5.11 integration points",
+      "kind": "note",
+      "next": "P5.11 executor",
+      "text": "For P5.10/P5.11: POST /control (HMAC) belongs on the same listener; add it to createManagement's handle (src/management.js), which answers 405 for non-GET today. collab_revoked_still_connected currently counts open connections whose token exp has passed (persistence.revokedStillConnected); P5.11 should add connections revoked by the control channel. instrumentBackend (src/management.js) wraps authenticate/load/append/leaseCompaction/publishCheckpoint; a new backend call must be added there to feed the readiness."
+    },
+    {
+      "class": "test_env",
+      "evidence": [
+        "V4"
+      ],
+      "impact": "the vue baseline compare is unconfirmed by the executor",
+      "kind": "deviation",
+      "next": "conductor: run V4",
+      "outcome": "accepted",
+      "text": "V4 (scripts/t baseline --compare, all suites) was not run as written: vue discovery (npx vitest list) needs the npm registry, which this sandbox refuses (as in P5.4–P5.8). `scripts/t baseline --compare -p core,media,drive,webhooks,documents,collaboration,azgard,filament,repo,hub` exits 0 after `scripts/t baseline --write -p hub` (hub: current 26)."
+    },
+    {
+      "impact": "none for this piece",
+      "kind": "note",
+      "text": "Lockfiles untouched: packages/collaboration/hub/package-lock.json and the root package-lock.json show as modified only because the sandbox masks them (as noted in P5.8). This piece adds no dependency."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "e2e/docker-compose.yml",
+        "load/docker-compose.load.yml",
+        "packages/collaboration/hub/package.json",
+        "scripts/collab-e2e.sh"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: e2e/docker-compose.yml, load/docker-compose.load.yml, packages/collaboration/hub/package.json, scripts/collab-e2e.sh"
+    },
+    {
+      "impact": "the run of this piece went its own way here",
+      "kind": "note",
+      "next": "a reviewer of the phase may look at it",
+      "text": "run active 2h00m; 2 piece(s) closed, 1 left; now P5.9 executor.1"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "src/persistence.js: exceeds/markFull/holdsUpdate and the envelope order (size, rate, then document-full with the held-update check), and stopWrites/gate/statusMessage per room",
+      "src/shutdown.js: flush loop, races and exit code, unflushed counted after destroy",
+      "src/index.js boot() wiring and hooks (onConnect/onAuthenticate/connected/beforeHandleMessage) against the real Hocuspocus 4.3 payloads, untested for real here",
+      "src/management.js: readiness semantics (2xx heartbeat, protocol mismatch cleared by 2xx) and instrumentBackend classification",
+      "client-visible codes: status reason, nack codes, 4413/4429/4503"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "shared_module_changed",
+      "low_confidence"
+    ],
+    "recommended": true,
+    "suggested_model_class": "frontier"
+  },
+  "status": "done_with_deviations",
+  "summary": "P5.9 hub operations. New src/management.js: loopback-by-default listener (VAULTER_COLLAB_MANAGEMENT_HOST 127.0.0.1 : VAULTER_COLLAB_MANAGEMENT_PORT 1235). /livez answers from the event loop only; /readyz is 503 unless the WS server listens, the backend gave a 2xx within VAULTER_COLLAB_READY_BACKEND_TTL_MS (cached status from instrumentBackend over every hub call; the worker's lease call every interval is the heartbeat, the probe calls nothing), the protocol is compatible (409 collaboration_protocol_mismatch makes it false, any later 2xx clears it), Redis clients are ready when Redis is configured, and the hub is not draining. /metrics serves Prometheus text (src/metrics.js registry, no new deps, every collab_* metric of p5-design plus pending_bytes, appended/dropped, limit_rejections{limit}, writes_stopped, draining, ready; no room/document labels). /stats kept for the load harness. startHealthEndpoint, /health on 0.0.0.0 and healthPort/VAULTER_COLLAB_HEALTH_PORT removed. New src/shutdown.js: the one SIGTERM/SIGINT handler (Server stopOnSignals: false; no other module installs signal handlers). draining=true synchronously (readyz 503, onConnect/onAuthenticate refuse, a connection that lands meanwhile closes 4503) -> persistence.stopWrites('draining') (writers read-only, so Hocuspocus drops sync step 2/updates; envelopes nacked writes_stopped retry:true; serverWrite refused) -> ledger flush loop until empty or VAULTER_COLLAB_SHUTDOWN_FLUSH_MS 30000 (blocked records retried every 200 ms), worker.stop alongside -> closeEveryRoom 4503 draining -> destroy() raced with VAULTER_COLLAB_SHUTDOWN_DESTROY_MS 5000 -> unflushed counted after destroy -> log.error(message, {unflushed, documents, rooms}) and exit 1, else exit 0; cancellable timers; a repeated signal is ignored; a failing step is logged and does not stop the drain. New src/limits.js (imports nothing): MAX_UPDATE_BYTES 1 MiB, MAX_DOCUMENT_BYTES 16 MiB, MAX_REQUEST_BYTES 2 MiB, MAX_ROOMS_PER_TENANT 1000, MAX_CONNECTIONS_PER_ROOM 100, MAX_UPDATES_PER_SECOND_PER_ROOM 200 (VAULTER_COLLAB_* env, validated). Sizes come from lengths or headers before decoding. A raw message over its size closes 4413 in beforeHandleMessage; an oversized stateless payload is nacked before JSON.parse; an envelope is nacked collaboration_update_too_large from its base64 length before decoding. A per-room token bucket per channel: sync writes close 4429, envelopes nack rate_limited retry:true. Connections per room are checked at onConnect and registered at connected (a concurrent overshoot closes 4429); rooms per tenant use the token's tenant claim after the backend accepted it. A backend body over the limit is never sent and answers a local 413 collaboration_update_too_large (checkpoint gets base64 of MAX_DOCUMENT_BYTES on top). Document size: estimate plus Y.encodeStateAsUpdate measure at most once per 64 KiB of growth; a full room mutes its writers (status writes:stopped reason document_too_large) and nacks document_too_large unless the room already holds the update (state-vector check), so a sync-first update is still appended. persistence.js: stopWrites, per-room stop reasons in status, protocolCompatible (fix: protocolMismatch was sticky), revokedStillConnected, isWriteMessage moved to limits.js and re-exported. backend.js: authenticate returns status; request-size gate. index.js: hooks onConnect/onAuthenticate/connected/beforeHandleMessage/onDisconnect wire draining and limits; boot() builds the instrumented backend, readiness, metrics, management and coordinator (installed before listen). Dockerfile: HEALTHCHECK -> /livez on the management port, MANAGEMENT_HOST=127.0.0.1, EXPOSE 1234 only, STOPSIGNAL SIGTERM. Hub docker-compose: management env, management port not published (commented loopback option), stop_grace_period 40s, healthcheck /livez. Tests: new test/{management,shutdown,limits,metrics}.test.js; security/webhook/websocket-hardening adjusted; tests/baseline rewritten with `scripts/t baseline --write -p hub` (hub 22 -> 26). Other commands run: npm run check (exit 0); node --test retry/ledger/webhook/v1-paths/config/security/management/metrics (100 pass, exit 0); `scripts/t baseline --compare -p core,media,drive,webhooks,documents,collaboration,azgard,filament,repo,hub` (exit 0); under throwaway yjs/hocuspocus/tiptap/ws stubs loaded with `node --import $TMPDIR/p59-stubs/register.mjs` (not committed): limits+shutdown 31/31 pass, modes/envelope/readonly/collab-expiry/epoch-fence/on-connect 50/50 pass, the new websocket-hardening P5.9 case passes."
+}

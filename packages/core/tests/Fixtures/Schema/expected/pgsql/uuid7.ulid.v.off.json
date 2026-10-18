@@ -473,6 +473,367 @@
                 }
             }
         },
+        "v_collaboration_heads": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "head_seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "checkpoint_seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "checkpoint_version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "lease_token",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "lease_owner",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drain_requested_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "retired_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_collaboration_heads_document_id_index": "CREATE INDEX v_collaboration_heads_document_id_index ON public.v_collaboration_heads USING btree (document_id)",
+                "v_collaboration_heads_pkey": "CREATE UNIQUE INDEX v_collaboration_heads_pkey ON public.v_collaboration_heads USING btree (document_id, generation)"
+            },
+            "constraints": {
+                "v_collaboration_heads_checkpoint_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK ((checkpoint_seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_heads_checkpoint_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((checkpoint_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_heads_document_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES v_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_heads_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK ((generation >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_heads_head_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK ((head_seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_heads_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (document_id, generation)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "v_collaboration_receipts": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "update_id",
+                    "type": "character(36)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "sha256",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "committed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_collaboration_receipts_document_id_index": "CREATE INDEX v_collaboration_receipts_document_id_index ON public.v_collaboration_receipts USING btree (document_id)",
+                "v_collaboration_receipts_pkey": "CREATE UNIQUE INDEX v_collaboration_receipts_pkey ON public.v_collaboration_receipts USING btree (document_id, generation, update_id)"
+            },
+            "constraints": {
+                "v_collaboration_receipts_document_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES v_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_receipts_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK ((generation >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_receipts_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (document_id, generation, update_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_receipts_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK ((seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "v_collaboration_updates": {
+            "columns": [
+                {
+                    "name": "document_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "update_id",
+                    "type": "character(36)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "payload",
+                    "type": "bytea",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "sha256",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "v_collaboration_updates_document_id_index": "CREATE INDEX v_collaboration_updates_document_id_index ON public.v_collaboration_updates USING btree (document_id)",
+                "v_collaboration_updates_pkey": "CREATE UNIQUE INDEX v_collaboration_updates_pkey ON public.v_collaboration_updates USING btree (document_id, generation, seq)",
+                "v_collaboration_updates_update_uniq": "CREATE UNIQUE INDEX v_collaboration_updates_update_uniq ON public.v_collaboration_updates USING btree (document_id, generation, update_id)"
+            },
+            "constraints": {
+                "v_collaboration_updates_document_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES v_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_updates_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK ((generation >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_updates_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (document_id, generation, seq)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_updates_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK ((seq >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_collaboration_updates_update_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (document_id, generation, update_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
         "v_document_revisions": {
             "columns": [
                 {
@@ -786,6 +1147,24 @@
                     "collation": null
                 },
                 {
+                    "name": "pending_generation",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "pending_through_seq",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "content",
                     "type": "jsonb",
                     "not_null": false,
@@ -880,11 +1259,19 @@
                 "v_documents_current_revision_id_index": "CREATE INDEX v_documents_current_revision_id_index ON public.v_documents USING btree (current_revision_id)",
                 "v_documents_node_id_index": "CREATE INDEX v_documents_node_id_index ON public.v_documents USING btree (node_id)",
                 "v_documents_node_uniq": "CREATE UNIQUE INDEX v_documents_node_uniq ON public.v_documents USING btree (node_id)",
+                "v_documents_pending_idx": "CREATE INDEX v_documents_pending_idx ON public.v_documents USING btree (pending_generation)",
                 "v_documents_pkey": "CREATE UNIQUE INDEX v_documents_pkey ON public.v_documents USING btree (id)",
                 "v_documents_tenant_id_index": "CREATE INDEX v_documents_tenant_id_index ON public.v_documents USING btree (tenant_id)",
                 "v_documents_type_idx": "CREATE INDEX v_documents_type_idx ON public.v_documents USING btree (type)"
             },
             "constraints": {
+                "v_documents_check": {
+                    "type": "c",
+                    "definition": "CHECK ((((pending_generation IS NULL) AND (pending_through_seq IS NULL)) OR ((pending_generation IS NOT NULL) AND (pending_through_seq IS NOT NULL))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "v_documents_checkpoint_state_version_check": {
                     "type": "c",
                     "definition": "CHECK ((checkpoint_state_version >= 0))",
@@ -916,6 +1303,20 @@
                 "v_documents_node_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (node_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_documents_pending_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK (((pending_generation IS NULL) OR (pending_generation >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "v_documents_pending_through_seq_check": {
+                    "type": "c",
+                    "definition": "CHECK (((pending_through_seq IS NULL) OR (pending_through_seq >= 1)))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true

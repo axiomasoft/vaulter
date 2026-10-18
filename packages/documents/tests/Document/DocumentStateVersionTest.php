@@ -4,25 +4,20 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
-use Vaulter\Documents\Content\DocumentStateWriter;
-use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
-use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
-use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
-use Vaulter\Documents\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Fixtures\StateWrites;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Nodes\SequenceOverflowException;
@@ -128,33 +123,24 @@ it('takes named checkpoints without moving the state; restore moves state and ep
 
 it('counts Yjs and projection changes while an identical Yjs state is a no-op', function (): void {
     $node = stateVersionDocument();
-    $action = app(PersistCollaborationStateAction::class);
-
-    $action->execute(new PersistCollaborationStateInput(node: $node, yjsState: "first\0state"));
-    $action->execute(new PersistCollaborationStateInput(node: $node, yjsState: "second\0state"));
+    StateWrites::yjs($node, "first\0state");
+    StateWrites::yjs($node, "second\0state");
     expect(DocumentTestHelpers::document($node)->state_version)->toBe(3);
 
-    Event::fake([DocumentContentUpdated::class]);
-    $same = $action->execute(new PersistCollaborationStateInput(node: $node, yjsState: "second\0state"));
+    $same = StateWrites::yjs($node, "second\0state");
     expect($same->changed)->toBeFalse()
         ->and(DocumentTestHelpers::document($node)->state_version)->toBe(3);
-    Event::assertNotDispatched(DocumentContentUpdated::class);
 
-    $action->execute(new PersistCollaborationStateInput(
-        node: $node,
-        yjsState: "second\0state",
-        content: DocumentTestHelpers::content('projection changed')->toArray(),
-    ));
+    StateWrites::yjs($node, "second\0state", DocumentTestHelpers::content('projection changed')->toArray());
     $document = DocumentTestHelpers::document($node);
     expect($document->state_version)->toBe(4)
         ->and($document->yjs_state)->toBe("second\0state")
         ->and($document->collab_epoch)->toBe(0);
-    Event::assertDispatchedTimes(DocumentContentUpdated::class, 1);
 });
 
 it('replacing the JSON of a document with Yjs state drops that state and moves the epoch', function (): void {
     $node = stateVersionDocument();
-    app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(node: $node, yjsState: "room\0state"));
+    StateWrites::yjs($node, "room\0state");
 
     $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
         node: $node,
@@ -165,24 +151,6 @@ it('replacing the JSON of a document with Yjs state drops that state and moves t
         ->and($result->document->collab_epoch)->toBe(1)
         ->and($result->document->yjs_state)->toBeNull()
         ->and($result->document->yjs_state_size)->toBeNull();
-});
-
-it('fences a write from an old collaboration epoch before anything is written', function (): void {
-    $node = stateVersionDocument();
-    $database = app(VaulterDatabase::class);
-
-    expect(fn () => $database->transaction(function () use ($node): void {
-        $document = Document::query()->where('node_id', $node->id)->lockForUpdate()->firstOrFail();
-        app(DocumentStateWriter::class)->write($document, new DocumentStateChange(
-            cause: StateWriteCause::Collaboration,
-            schemaVersion: 1,
-            content: null,
-            yjsState: "stale\0room",
-            expectedEpoch: 5,
-        ));
-    }))->toThrow(CollaborationEpochMismatchException::class);
-
-    expect(DocumentTestHelpers::document($node)->state_version)->toBe(1);
 });
 
 it('refuses a negative expectation', function (): void {

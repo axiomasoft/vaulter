@@ -1399,6 +1399,517 @@
             "id": "table:v_webhook_endpoints",
             "kind": "schema",
             "reason": "P4.13: the create-migration of the table ships in the webhooks package (packages/webhooks/database/migrations); the table, its columns and keys are unchanged"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_documents.pending_generation",
+            "kind": "schema",
+            "reason": "P5.3: the pending-state marker of the working state (generation, pending_through_seq), written only through the documents state contract CollaborativeState (D27); both NULL = the checkpoint covers every committed collaboration edit"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_documents.pending_through_seq",
+            "kind": "schema",
+            "reason": "P5.3: the pending-state marker of the working state (generation, pending_through_seq), written only through the documents state contract CollaborativeState (D27); both NULL = the checkpoint covers every committed collaboration edit"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the marker pair CHECK (both NULL or both NOT NULL) on pending_through_seq"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_chk_4",
+            "kind": "schema",
+            "reason": "P5.3: mysql name of the CHECK pending_generation IS NULL OR pending_generation >= 0"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_chk_5",
+            "kind": "schema",
+            "reason": "P5.3: mysql name of the CHECK pending_through_seq IS NULL OR pending_through_seq >= 1"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_generation_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the CHECK pending_generation IS NULL OR pending_generation >= 0"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_marker_check",
+            "kind": "schema",
+            "reason": "P5.3: mysql named marker pair CHECK (both NULL or both NOT NULL), added after create because MySQL refuses a column CHECK naming another column"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_through_seq_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the CHECK pending_through_seq IS NULL OR pending_through_seq >= 1"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_documents.v_documents_pending_idx",
+            "kind": "schema",
+            "reason": "P5.3: the documents carrying a pending marker (CollaborativeState::pendingDocuments(), drain and compaction lease)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.checkpoint_seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.checkpoint_version",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.created_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.drain_requested_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.head_seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_expires_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_owner",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_token",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.retired_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.updated_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.committed_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.sha256",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.update_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.created_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.payload",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.sha256",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.update_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_checkpoint_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_checkpoint_version_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_3",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_4",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_head_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_update_uniq",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_heads.v_collaboration_heads_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_receipts.v_collaboration_receipts_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_updates.v_collaboration_updates_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.v_collaboration_heads_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.v_collaboration_heads_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.v_collaboration_receipts_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.v_collaboration_receipts_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_update_uniq",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000501_create_v_collaboration_heads_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000502_create_v_collaboration_updates_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000503_create_v_collaboration_receipts_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_heads",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_receipts",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_updates",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
         }
     ],
     "engines": [
@@ -3075,6 +3586,820 @@
         {
             "engines": {
                 "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_heads.checkpoint_seq",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_heads.checkpoint_version",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_collaboration_heads.created_at",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "bigint unsigned"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "primary_key": 1,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_collaboration_heads.document_id",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads",
+            "variants": {
+                "mysql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(26)"
+                        },
+                        "ids=uuid7": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(36)"
+                        }
+                    }
+                },
+                "pgsql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "collation": "default",
+                            "type": "character(26)"
+                        },
+                        "ids=uuid7": {
+                            "type": "uuid"
+                        }
+                    }
+                },
+                "sqlite": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "type": "varchar"
+                        },
+                        "ids=uuid7": {
+                            "type": "varchar"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_collaboration_heads.drain_requested_at",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "primary_key": 2,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_heads.generation",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_heads.head_seq",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_collaboration_heads.lease_expires_at",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(191)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(191)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_collaboration_heads.lease_owner",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(64)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(64)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_collaboration_heads.lease_token",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_collaboration_heads.retired_at",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_collaboration_heads.updated_at",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_collaboration_receipts.committed_at",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "bigint unsigned"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "primary_key": 1,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_collaboration_receipts.document_id",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts",
+            "variants": {
+                "mysql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(26)"
+                        },
+                        "ids=uuid7": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(36)"
+                        }
+                    }
+                },
+                "pgsql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "collation": "default",
+                            "type": "character(26)"
+                        },
+                        "ids=uuid7": {
+                            "type": "uuid"
+                        }
+                    }
+                },
+                "sqlite": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "type": "varchar"
+                        },
+                        "ids=uuid7": {
+                            "type": "varchar"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "primary_key": 2,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_receipts.generation",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_receipts.seq",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "char(64)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character(64)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_collaboration_receipts.sha256",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "char(36)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character(36)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "primary_key": 3,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_collaboration_receipts.update_id",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_collaboration_updates.created_at",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "bigint unsigned"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "primary_key": 1,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_collaboration_updates.document_id",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates",
+            "variants": {
+                "mysql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(26)"
+                        },
+                        "ids=uuid7": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "type": "char(36)"
+                        }
+                    }
+                },
+                "pgsql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "collation": "default",
+                            "type": "character(26)"
+                        },
+                        "ids=uuid7": {
+                            "type": "uuid"
+                        }
+                    }
+                },
+                "sqlite": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "type": "varchar"
+                        },
+                        "ids=uuid7": {
+                            "type": "varchar"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "primary_key": 2,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_updates.generation",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "longblob"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bytea"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "BLOB"
+                }
+            },
+            "id": "column:v_collaboration_updates.payload",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": "0",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": "'0'::bigint",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "primary_key": 3,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_collaboration_updates.seq",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "char(64)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character(64)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_collaboration_updates.sha256",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "char(36)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character(36)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_collaboration_updates.update_id",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
                     "default": null,
                     "nullable": true,
                     "type": "json"
@@ -4278,6 +5603,58 @@
                     }
                 }
             }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_documents.pending_generation",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_documents.pending_through_seq",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
         },
         {
             "engines": {
@@ -18986,6 +20363,306 @@
         },
         {
             "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((checkpoint_seq >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_checkpoint_seq_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((checkpoint_version >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_checkpoint_version_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`generation` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_1",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`head_seq` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_2",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`checkpoint_seq` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_3",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`checkpoint_version` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_4",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((generation >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_generation_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((head_seq >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_head_seq_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "PRIMARY KEY (document_id, generation)",
+                    "kind": "primary key"
+                }
+            },
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_pkey",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`generation` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_chk_1",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`seq` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_chk_2",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((generation >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_generation_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "PRIMARY KEY (document_id, generation, update_id)",
+                    "kind": "primary key"
+                }
+            },
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_pkey",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((seq >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_seq_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`generation` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_chk_1",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(`seq` >= 0)",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_chk_2",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((generation >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_generation_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "PRIMARY KEY (document_id, generation, seq)",
+                    "kind": "primary key"
+                }
+            },
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_pkey",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK ((seq >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_seq_check",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "UNIQUE (document_id, generation, update_id)",
+                    "kind": "unique"
+                }
+            },
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_update_uniq",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
                 "mysql": {
                     "definition": "(`state_version` >= 0)",
                     "kind": "check"
@@ -19062,6 +20739,21 @@
         {
             "engines": {
                 "pgsql": {
+                    "definition": "CHECK ((((pending_generation IS NULL) AND (pending_through_seq IS NULL)) OR ((pending_generation IS NOT NULL) AND (pending_through_seq IS NOT NULL))))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_check",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "pgsql": {
                     "definition": "CHECK ((checkpoint_state_version >= 0))",
                     "kind": "check"
                 }
@@ -19121,6 +20813,36 @@
         },
         {
             "engines": {
+                "mysql": {
+                    "definition": "((`pending_generation` is null) or (`pending_generation` >= 0))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_chk_4",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "((`pending_through_seq` is null) or (`pending_through_seq` >= 1))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_chk_5",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
                 "pgsql": {
                     "definition": "CHECK ((collab_epoch >= 0))",
                     "kind": "check"
@@ -19142,6 +20864,51 @@
                 }
             },
             "id": "constraint:v_documents.v_documents_node_uniq",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK (((pending_generation IS NULL) OR (pending_generation >= 0)))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_pending_generation_check",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "definition": "(((`pending_generation` is null) and (`pending_through_seq` is null)) or ((`pending_generation` is not null) and (`pending_through_seq` is not null)))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_pending_marker_check",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "CHECK (((pending_through_seq IS NULL) OR (pending_through_seq >= 1)))",
+                    "kind": "check"
+                }
+            },
+            "id": "constraint:v_documents.v_documents_pending_through_seq_check",
             "owner": "documents",
             "source": {
                 "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
@@ -20612,6 +22379,111 @@
                 "symbol": "v_blob_references"
             },
             "table": "v_blob_references"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "kind": "foreign key",
+                    "on_delete": "CASCADE",
+                    "on_update": "NO ACTION",
+                    "ref_columns": [
+                        "id"
+                    ],
+                    "ref_table": "v_documents"
+                },
+                "pgsql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "kind": "foreign key",
+                    "on_delete": "CASCADE",
+                    "on_update": "NO ACTION",
+                    "ref_columns": [
+                        "id"
+                    ],
+                    "ref_table": "v_documents"
+                }
+            },
+            "id": "fk:v_collaboration_heads.v_collaboration_heads_document_fk",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "kind": "foreign key",
+                    "on_delete": "CASCADE",
+                    "on_update": "NO ACTION",
+                    "ref_columns": [
+                        "id"
+                    ],
+                    "ref_table": "v_documents"
+                },
+                "pgsql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "kind": "foreign key",
+                    "on_delete": "CASCADE",
+                    "on_update": "NO ACTION",
+                    "ref_columns": [
+                        "id"
+                    ],
+                    "ref_table": "v_documents"
+                }
+            },
+            "id": "fk:v_collaboration_receipts.v_collaboration_receipts_document_fk",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "kind": "foreign key",
+                    "on_delete": "CASCADE",
+                    "on_update": "NO ACTION",
+                    "ref_columns": [
+                        "id"
+                    ],
+                    "ref_table": "v_documents"
+                },
+                "pgsql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "kind": "foreign key",
+                    "on_delete": "CASCADE",
+                    "on_update": "NO ACTION",
+                    "ref_columns": [
+                        "id"
+                    ],
+                    "ref_table": "v_documents"
+                }
+            },
+            "id": "fk:v_collaboration_updates.v_collaboration_updates_document_fk",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
         },
         {
             "engines": {
@@ -22627,6 +24499,237 @@
             "engines": {
                 "mysql": {
                     "columns": [
+                        "document_id",
+                        "generation"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_heads.PRIMARY",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(document_id)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_collaboration_heads.v_collaboration_heads_document_id_index",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "(document_id, generation)",
+                    "method": "btree",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_heads.v_collaboration_heads_pkey",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            },
+            "table": "v_collaboration_heads"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id",
+                        "generation",
+                        "update_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_receipts.PRIMARY",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(document_id)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_collaboration_receipts.v_collaboration_receipts_document_id_index",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "(document_id, generation, update_id)",
+                    "method": "btree",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_receipts.v_collaboration_receipts_pkey",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            },
+            "table": "v_collaboration_receipts"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id",
+                        "generation",
+                        "seq"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_updates.PRIMARY",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(document_id)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "document_id"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_collaboration_updates.v_collaboration_updates_document_id_index",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "(document_id, generation, seq)",
+                    "method": "btree",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_updates.v_collaboration_updates_pkey",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "document_id",
+                        "generation",
+                        "update_id"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                },
+                "pgsql": {
+                    "definition": "(document_id, generation, update_id)",
+                    "method": "btree",
+                    "unique": true
+                },
+                "sqlite": {
+                    "columns": [
+                        "document_id",
+                        "generation",
+                        "update_id"
+                    ],
+                    "origin": "c",
+                    "unique": true
+                }
+            },
+            "id": "index:v_collaboration_updates.v_collaboration_updates_update_uniq",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            },
+            "table": "v_collaboration_updates"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
                         "id"
                     ],
                     "method": "BTREE",
@@ -22981,6 +25084,36 @@
                 }
             },
             "id": "index:v_documents.v_documents_node_uniq",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "pending_generation"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(pending_generation)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "pending_generation"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_documents.v_documents_pending_idx",
             "owner": "documents",
             "source": {
                 "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
@@ -28204,6 +30337,39 @@
             ]
         },
         {
+            "id": "migration:0001_01_01_000501_create_v_collaboration_heads_table.php",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_collaboration_heads"
+            ]
+        },
+        {
+            "id": "migration:0001_01_01_000502_create_v_collaboration_updates_table.php",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_collaboration_updates"
+            ]
+        },
+        {
+            "id": "migration:0001_01_01_000503_create_v_collaboration_receipts_table.php",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_collaboration_receipts"
+            ]
+        },
+        {
             "columns": [
                 "id",
                 "tenant_id",
@@ -29606,6 +31772,541 @@
         },
         {
             "columns": [
+                "document_id",
+                "generation",
+                "head_seq",
+                "checkpoint_seq",
+                "checkpoint_version",
+                "lease_token",
+                "lease_owner",
+                "lease_expires_at",
+                "drain_requested_at",
+                "retired_at",
+                "created_at",
+                "updated_at"
+            ],
+            "id": "table:v_collaboration_heads",
+            "logical": "collaboration_heads",
+            "migration": "0001_01_01_000501_create_v_collaboration_heads_table.php",
+            "original_diff": {
+                "mysql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "pgsql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "sqlite": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                }
+            },
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000501_create_v_collaboration_heads_table.php",
+                "symbol": "v_collaboration_heads"
+            }
+        },
+        {
+            "columns": [
+                "document_id",
+                "generation",
+                "update_id",
+                "seq",
+                "sha256",
+                "committed_at"
+            ],
+            "id": "table:v_collaboration_receipts",
+            "logical": "collaboration_receipts",
+            "migration": "0001_01_01_000503_create_v_collaboration_receipts_table.php",
+            "original_diff": {
+                "mysql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "pgsql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "sqlite": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                }
+            },
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000503_create_v_collaboration_receipts_table.php",
+                "symbol": "v_collaboration_receipts"
+            }
+        },
+        {
+            "columns": [
+                "document_id",
+                "generation",
+                "seq",
+                "update_id",
+                "payload",
+                "sha256",
+                "created_at"
+            ],
+            "id": "table:v_collaboration_updates",
+            "logical": "collaboration_updates",
+            "migration": "0001_01_01_000502_create_v_collaboration_updates_table.php",
+            "original_diff": {
+                "mysql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "pgsql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "sqlite": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                }
+            },
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/database/migrations/0001_01_01_000502_create_v_collaboration_updates_table.php",
+                "symbol": "v_collaboration_updates"
+            }
+        },
+        {
+            "columns": [
                 "id",
                 "tenant_id",
                 "document_id",
@@ -29646,6 +32347,8 @@
                 "collab_epoch",
                 "state_version",
                 "checkpoint_state_version",
+                "pending_generation",
+                "pending_through_seq",
                 "content",
                 "content_hash",
                 "content_size",
@@ -29660,6 +32363,1028 @@
             "id": "table:v_documents",
             "logical": "documents",
             "migration": "0001_01_01_000302_create_v_documents_table.php",
+            "original_diff": {
+                "mysql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "pgsql": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        }
+                    }
+                },
+                "sqlite": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "pending_generation",
+                                "pending_through_seq"
+                            ],
+                            "removed": []
+                        }
+                    }
+                }
+            },
             "owner": "documents",
             "source": {
                 "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",

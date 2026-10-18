@@ -110,7 +110,7 @@ final class Mover
             $suites = TestMover::suites($this->repo, $testMoves);
             $zones = TestMover::zones($this->repo, $testMoves);
             array_push($warnings, ...$suites['warnings'], ...$zones['warnings']);
-            $ledger = $this->newEntries(TestMover::ledger($this->repo, $suites['suites'], $suites['files'], $decision));
+            $ledger = $this->newEntries(TestMover::ledger($this->repo, $suites['suites'], $suites['files'], $decision, Plan::phaseOf($options['owner'])));
             foreach ($testMoves as $testMove) {
                 $testReport[] = [
                     'from' => $testMove['from'],

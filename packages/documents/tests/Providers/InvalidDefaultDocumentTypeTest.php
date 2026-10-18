@@ -109,11 +109,3 @@ it('refuses to boot when the vaulter.document_types tag resolves to something th
     expect(fn () => bootFreshDocumentsApplication([], before: [NotADocumentTypeTagProvider::class]))
         ->toThrow(InvalidConfigurationException::class, 'Document type "stdClass" did not resolve to a');
 });
-
-it('refuses to boot collaboration with one value as both the JWT and the webhook secret (R9)', function (): void {
-    expect(fn () => bootFreshDocumentsApplication([
-        'vaulter-documents.collaboration.enabled' => true,
-        'vaulter-documents.collaboration.hub.jwt_secret' => 'same-secret-for-both-roles-0123456789',
-        'vaulter-documents.collaboration.hub.webhook_secret' => 'same-secret-for-both-roles-0123456789',
-    ]))->toThrow(InvalidConfigurationException::class, 'must differ');
-});

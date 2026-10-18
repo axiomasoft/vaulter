@@ -1,0 +1,5 @@
+{
+  "suite": "collaboration",
+  "introduced": "P5",
+  "note": "The collaboration suite does not exist at the base commit c64bba25 (the collaboration code and tests lived in the documents suite until P5.1); its immutable original is empty by construction. The moved cases are recorded in CHANGES.json as documents -> collaboration, every other case counts as an addition."
+}

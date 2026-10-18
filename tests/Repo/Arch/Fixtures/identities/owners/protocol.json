@@ -388,10 +388,10 @@
             "owner": "collaboration",
             "format": "X-Vaulter-Collab-Timestamp (unix seconds) and X-Vaulter-Collab-Signature (lowercase hex HMAC-SHA256 of \"<timestamp>.<raw body>\" with the hub webhook secret); a replayed signature is refused",
             "source": {
-                "file": "packages/documents/src/Collaboration/CollaborationCallResolver.php",
-                "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
+                "file": "packages/collaboration/src/CollaborationCallResolver.php",
+                "symbol": "Vaulter\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
             },
-            "why": "the hub's call authentication (the collaboration package after P5)"
+            "why": "the hub's call authentication (the collaboration package, D1)"
         },
         {
             "id": "format:header-tus",
@@ -408,8 +408,8 @@
             "owner": "collaboration",
             "format": "HS256 JWT: sub, node, drive, tenant, epoch, schema_version, mode (rw|ro), room (<channel prefix>.<drive>.<node>.<epoch>), iat, exp",
             "source": {
-                "file": "packages/documents/src/Collaboration/HocuspocusCollaborationDriver.php",
-                "symbol": "Vaulter\\Documents\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
+                "file": "packages/collaboration/src/HocuspocusCollaborationDriver.php",
+                "symbol": "Vaulter\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
             },
             "why": "the room token the hub verifies"
         },

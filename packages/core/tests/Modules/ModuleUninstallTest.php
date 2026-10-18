@@ -22,6 +22,8 @@ use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\FreshApplication;
+use Vaulter\Tests\Modules\Fixtures\GuardedModule\GuardedProvider;
+use Vaulter\Tests\Modules\Fixtures\GuardedModule\GuardedRemovalGuard;
 use Vaulter\Tests\TestCase;
 use Vaulter\VaulterServiceProvider;
 
@@ -33,8 +35,10 @@ uses(TestCase::class, DatabaseMigrations::class);
 // pins of another owner on its data (the media), references it cannot read, and — without --purge — rows or pins of
 // its own. What the dry run read is read again inside the purge transaction and before each rollback (rows or pins that
 // appeared stop it, exit 1); on a transactional-DDL driver the purge and the rollbacks are one transaction (a failure
-// changes nothing, exit 1), elsewhere a failure after the purge is exit 3 (applied partially). The suite application is core+media+drive+webhooks; the sets without webhooks or with documents are fresh
-// applications on their own database.
+// changes nothing, exit 1), elsewhere a failure after the purge is exit 3 (applied partially). A module's removal guard
+// (GuardsRemoval, D26 — the collaboration edits not in a checkpoint) refuses it while it names a blocker: in the dry run,
+// in the purge transaction and before each rollback (the fixture GuardedModule). The suite application is
+// core+media+drive+webhooks; the sets without webhooks or with documents are fresh applications on their own database.
 
 /** @return list<string> the tables of the connection, sorted */
 function uninstallTables(): array
@@ -144,6 +148,8 @@ function uninstallRun(Application $app, array $arguments): array
 const UNINSTALL_DRIVE_SET = [VaulterServiceProvider::class, VaulterMediaServiceProvider::class, VaulterDriveServiceProvider::class];
 
 const UNINSTALL_DOCUMENTS_SET = [...UNINSTALL_DRIVE_SET, VaulterDocumentsServiceProvider::class];
+
+const UNINSTALL_GUARDED_SET = [VaulterServiceProvider::class, GuardedProvider::class];
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -425,4 +431,68 @@ it('stops half-way when a row appears after the first rollback of a DDL that com
         ->and(Schema::hasTable('v_webhook_endpoints'))->toBeTrue()
         ->and(DB::table('v_webhook_endpoints')->count())->toBe(1)
         ->and(uninstallRan())->toContain('0001_01_01_000401_create_v_webhook_endpoints_table');
+});
+
+it('refuses a module while its removal guard names a blocker, in the dry run and on --force --purge, and changes nothing', function (): void {
+    $app = uninstallApp(UNINSTALL_GUARDED_SET);
+    GuardedRemovalGuard::reset([['open note(s)' => 2]]);
+
+    $plan = uninstallRun($app, ['module' => 'guarded']);
+    $run = uninstallRun($app, ['module' => 'guarded', '--force' => true, '--purge' => true]);
+
+    expect($plan['exit'])->toBe(1)
+        ->and($plan['output'])->toContain('Removal guards')->toContain('module "guarded" refuses it: 2 open note(s)')->toContain('Dry run: nothing was changed.')
+        ->and($run['exit'])->toBe(1)
+        ->and($run['output'])->toContain('module "guarded" refuses it: 2 open note(s)')->toContain('nothing was changed');
+    uninstallIn($app, static fn () => expect(Schema::hasTable('v_guarded_notes'))->toBeTrue()
+        ->and(uninstallRan())->toContain('2026_10_17_000001_create_v_guarded_notes_table'));
+});
+
+it('removes a guarded module as before while its guard names none, reading it in the plan, the purge transaction and before the rollback', function (): void {
+    $app = uninstallApp(UNINSTALL_GUARDED_SET);
+    GuardedRemovalGuard::reset();
+    uninstallIn($app, static fn () => DB::table('v_guarded_notes')->insert(['body' => 'kept until the purge']));
+
+    $run = uninstallRun($app, ['module' => 'guarded', '--force' => true, '--purge' => true]);
+
+    expect($run['exit'])->toBe(0, $run['output'])
+        ->and($run['output'])->toContain('1 row(s), 0 reference(s)')->toContain('The schema of "guarded" is removed.')
+        ->and(GuardedRemovalGuard::$reads)->each->toMatchArray(['module' => 'guarded'])
+        // The plan outside any transaction, then inside the one transaction: before the purge and before the rollback.
+        ->and(array_column(GuardedRemovalGuard::$reads, 'transactionLevel'))->toBe([0, 1, 1]);
+    uninstallIn($app, static fn () => expect(Schema::hasTable('v_guarded_notes'))->toBeFalse()
+        ->and(uninstallRan())->not->toContain('2026_10_17_000001_create_v_guarded_notes_table'));
+});
+
+it('stops in the purge transaction when the guard names a blocker the plan did not see, and changes nothing', function (): void {
+    $app = uninstallApp(UNINSTALL_GUARDED_SET);
+    GuardedRemovalGuard::reset([[], ['note(s) written meanwhile' => 1]]);
+    uninstallIn($app, static fn () => DB::table('v_guarded_notes')->insert(['body' => 'stays']));
+
+    $run = uninstallRun($app, ['module' => 'guarded', '--force' => true, '--purge' => true]);
+
+    expect($run['exit'])->toBe(1)
+        ->and($run['output'])->toContain('module "guarded" refuses it: 1 note(s) written meanwhile')->toContain('nothing was changed')
+        ->and(array_column(GuardedRemovalGuard::$reads, 'transactionLevel'))->toBe([0, 1]);
+    uninstallIn($app, static fn () => expect(DB::table('v_guarded_notes')->count())->toBe(1)
+        ->and(uninstallRan())->toContain('2026_10_17_000001_create_v_guarded_notes_table'));
+});
+
+it('refuses to execute when the removal guard cannot be built, and shows it in the plan', function (): void {
+    $app = uninstallApp(UNINSTALL_GUARDED_SET);
+    GuardedRemovalGuard::reset();
+    GuardedRemovalGuard::$broken = true;
+
+    try {
+        $plan = uninstallRun($app, ['module' => 'guarded']);
+        $run = uninstallRun($app, ['module' => 'guarded', '--force' => true]);
+    } finally {
+        GuardedRemovalGuard::reset();
+    }
+
+    expect($plan['exit'])->toBe(0)
+        ->and($plan['output'])->toContain('Removal guard of guarded')->toContain('the guard store is offline')
+        ->and($run['exit'])->toBe(1)
+        ->and($run['output'])->toContain('the removal guard of module "guarded" cannot be read (the guard store is offline)');
+    uninstallIn($app, static fn () => expect(Schema::hasTable('v_guarded_notes'))->toBeTrue());
 });

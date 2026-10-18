@@ -11,6 +11,7 @@ use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
+use Vaulter\Documents\State\PendingStateGuard;
 use Vaulter\Drive\Contracts\NodeContentLifecycle;
 use Vaulter\Drive\Data\CopyResult;
 use Vaulter\Drive\Enums\NodeKind;
@@ -34,6 +35,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         private DocumentStoreRepository $documents,
         private DocumentStateWriter $writer,
         private DocumentsConfig $documentsConfig,
+        private PendingStateGuard $pending,
     ) {}
 
     public function kind(): NodeKind
@@ -84,6 +86,9 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         if (!$document instanceof Document) {
             return;
         }
+        // Saved collaboration edits not in the working state yet go only through a drain, never with the purge (C9).
+        // PendingPurgeDrain drained before this transaction; nothing waits here, a marker still set refuses the purge.
+        $this->pending->assertSettled($document);
 
         // MySQL checks the RESTRICT head foreign key while the history goes away, so the
         // head pointer is cleared first.

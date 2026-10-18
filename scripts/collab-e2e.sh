@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 # Collaboration protocol e2e against REAL processes: `vendor/bin/testbench serve` (the
 # Laravel host of testbench.yaml on a throwaway SQLite file) and the Hocuspocus hub
-# (`node hocuspocus-server/src/index.js`), then hocuspocus-server/test/e2e/restore-epoch.e2e.js:
+# (`node packages/collaboration/hub/src/index.js`), then packages/collaboration/hub/test/e2e/restore-epoch.e2e.js:
 # restore while a client is editing → the hub closes the room with 4409 → the reopened
 # room shows the restored content and the old edit never comes back; a read-only client
 # changes nothing; a client with an older schema version is read-only.
 #
 # Usage: bash scripts/collab-e2e.sh   (env: VAULTER_E2E_PORT=8787, VAULTER_E2E_HUB_PORT=18234)
-# Needs: composer install at the root, npm ci in hocuspocus-server, PHP 8.4 (scripts/php84).
+# Needs: composer install at the root, npm ci in packages/collaboration/hub, PHP 8.4 (scripts/php84).
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 port="${VAULTER_E2E_PORT:-8787}"
 hub_port="${VAULTER_E2E_HUB_PORT:-18234}"
-health_port="$((hub_port + 1))"
+management_port="$((hub_port + 1))"
 log_dir="$root/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.5"
 log="${VAULTER_E2E_LOG:-$log_dir/collab-e2e.log}"
 work="$(mktemp -d "${TMPDIR:-/tmp}/vaulter-collab-e2e.XXXXXX")"
@@ -44,6 +44,7 @@ providers:
   - Vaulter\\Media\\VaulterMediaServiceProvider
   - Vaulter\\Drive\\VaulterDriveServiceProvider
   - Vaulter\\Documents\\VaulterDocumentsServiceProvider
+  - Vaulter\\Collaboration\\VaulterCollaborationServiceProvider
   - Vaulter\\Tests\\E2E\\E2eServiceProvider
 env:
   - APP_KEY="base64:lRknxO3IznrZODHVPvLNKylvYP19ch+EXZ8dM+i3OlY="
@@ -84,24 +85,24 @@ wait_for "http://127.0.0.1:${port}/e2e/health" "testbench serve"
 
 echo "== hub :$hub_port" | tee -a "$log"
 (
-    cd "$root/hocuspocus-server"
+    cd "$root/packages/collaboration/hub"
     NODE_ENV=test \
     VAULTER_LARAVEL_WEBHOOK_URL="http://127.0.0.1:${port}/api/vaulter/v1" \
     VAULTER_COLLAB_WEBHOOK_SECRET="$webhook_secret" \
     VAULTER_COLLAB_PORT="$hub_port" \
-    VAULTER_COLLAB_HEALTH_PORT="$health_port" \
+    VAULTER_COLLAB_MANAGEMENT_PORT="$management_port" \
     VAULTER_COLLAB_DEBOUNCE_MS=200 \
     VAULTER_COLLAB_MAX_DEBOUNCE_MS=1000 \
     VAULTER_COLLAB_THROTTLE=1000 \
     exec node src/index.js
 ) >>"$log" 2>&1 &
 pids+=("$!")
-wait_for "http://127.0.0.1:${health_port}/health" "hub"
+wait_for "http://127.0.0.1:${management_port}/livez" "hub"
 
 echo "== restore-epoch e2e" | tee -a "$log"
 status=0
 (
-    cd "$root/hocuspocus-server"
+    cd "$root/packages/collaboration/hub"
     VAULTER_E2E_BACKEND="http://127.0.0.1:${port}" \
     VAULTER_E2E_HUB="ws://127.0.0.1:${hub_port}" \
     node --test test/e2e/restore-epoch.e2e.js

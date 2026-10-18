@@ -104,6 +104,7 @@ it('finds the provider of every package', function (): void {
 
     expect($names)->toBe([
         'VaulterAzgardServiceProvider.php',
+        'VaulterCollaborationServiceProvider.php',
         'VaulterDocumentsServiceProvider.php',
         'VaulterDriveServiceProvider.php',
         'VaulterFilamentServiceProvider.php',

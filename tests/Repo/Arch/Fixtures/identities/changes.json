@@ -535,13 +535,6 @@
         {
             "change": "redefined",
             "decision": "D22",
-            "id": "route:vaulter.v1.collaboration.hub.store",
-            "kind": "http",
-            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
-        },
-        {
-            "change": "redefined",
-            "decision": "D22",
             "id": "route:vaulter.v1.comments.destroy",
             "kind": "http",
             "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
@@ -4451,6 +4444,826 @@
             "id": "command:vaulter:blobs:reconcile",
             "kind": "cli",
             "reason": "P4.20: the description says the ref_count is rebuilt from the pins (v_blob_references), not from edge counts; name, signature and behaviour are unchanged"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.driver",
+            "id": "config:vaulter-collaboration.driver",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.jwt_secret",
+            "id": "config:vaulter-collaboration.hub.jwt_secret",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.timestamp_tolerance",
+            "id": "config:vaulter-collaboration.hub.timestamp_tolerance",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.token_ttl",
+            "id": "config:vaulter-collaboration.hub.token_ttl",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.url",
+            "id": "config:vaulter-collaboration.hub.url",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.hub.webhook_secret",
+            "id": "config:vaulter-collaboration.hub.webhook_secret",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.max_state_bytes",
+            "id": "config:vaulter-collaboration.max_state_bytes",
+            "kind": "config",
+            "reason": "P5.1: the key moved from the root of the documents package vaulter-documents.collaboration.* to the root of the collaboration package vaulter-collaboration.*; same tail, same default, same env name"
+        },
+        {
+            "change": "renamed",
+            "decision": "D1",
+            "from": "config:vaulter-documents.collaboration.broadcast.channel_prefix",
+            "id": "config:vaulter-documents.broadcast.channel_prefix",
+            "kind": "config",
+            "reason": "P5.1: the channel prefix is read by the comment events of the documents and by the collaboration package (rooms, channel authorization): it stays with the documents, outside the collaboration section"
+        },
+        {
+            "change": "removed",
+            "decision": "D22",
+            "id": "config:vaulter-documents.collaboration.enabled",
+            "kind": "config",
+            "reason": "P5.1: collaboration is an opt-in module, switched by vaulter.modules.collaboration (default false); the documents package has no collaboration switch"
+        },
+        {
+            "change": "added",
+            "decision": "D1",
+            "id": "publish:vaulter-collaboration-config",
+            "kind": "config",
+            "reason": "P5.1: publish tag of the collaboration package provider"
+        },
+        {
+            "change": "added",
+            "decision": "D1",
+            "id": "publish:vaulter-collaboration-translations",
+            "kind": "config",
+            "reason": "P5.1: publish tag of the collaboration package provider"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.collaboration.session",
+            "kind": "http",
+            "reason": "P5.1: mounted by CollaborationModule (routes/collaboration.php of the collaboration package) behind vaulter.module:collaboration; the opt-in vaulter.modules.collaboration replaces vaulter-documents.collaboration.enabled (D32 residual emptied)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_documents.pending_generation",
+            "kind": "schema",
+            "reason": "P5.3: the pending-state marker of the working state (generation, pending_through_seq), written only through the documents state contract CollaborativeState (D27); both NULL = the checkpoint covers every committed collaboration edit"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_documents.pending_through_seq",
+            "kind": "schema",
+            "reason": "P5.3: the pending-state marker of the working state (generation, pending_through_seq), written only through the documents state contract CollaborativeState (D27); both NULL = the checkpoint covers every committed collaboration edit"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the marker pair CHECK (both NULL or both NOT NULL) on pending_through_seq"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_chk_4",
+            "kind": "schema",
+            "reason": "P5.3: mysql name of the CHECK pending_generation IS NULL OR pending_generation >= 0"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_chk_5",
+            "kind": "schema",
+            "reason": "P5.3: mysql name of the CHECK pending_through_seq IS NULL OR pending_through_seq >= 1"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_generation_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the CHECK pending_generation IS NULL OR pending_generation >= 0"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_marker_check",
+            "kind": "schema",
+            "reason": "P5.3: mysql named marker pair CHECK (both NULL or both NOT NULL), added after create because MySQL refuses a column CHECK naming another column"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_documents.v_documents_pending_through_seq_check",
+            "kind": "schema",
+            "reason": "P5.3: pgsql name of the CHECK pending_through_seq IS NULL OR pending_through_seq >= 1"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_documents.v_documents_pending_idx",
+            "kind": "schema",
+            "reason": "P5.3: the documents carrying a pending marker (CollaborativeState::pendingDocuments(), drain and compaction lease)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:document_state_pending",
+            "kind": "protocol",
+            "reason": "P5.3: 409, retryable with_backoff, receipt never — content read, export, REST replace, restore and purge of a document whose pending marker could not be drained (C8, C9); thrown by the documents guards, drained through the PendingStateDrainer SPI (D27)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.checkpoint_seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.checkpoint_version",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.created_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.drain_requested_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.head_seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_expires_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_owner",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.lease_token",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.retired_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_heads.updated_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.committed_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.sha256",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_receipts.update_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.created_at",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.document_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.generation",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.payload",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.seq",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.sha256",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "column:v_collaboration_updates.update_id",
+            "kind": "schema",
+            "reason": "P5.4: column of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_checkpoint_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_checkpoint_version_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_3",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_chk_4",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_head_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_heads.v_collaboration_heads_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_receipts.v_collaboration_receipts_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_chk_1",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_chk_2",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_generation_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_pkey",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_seq_check",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "constraint:v_collaboration_updates.v_collaboration_updates_update_uniq",
+            "kind": "schema",
+            "reason": "P5.4: key/CHECK constraint of the collaboration update log side tables (D26; pgsql/mysql names predicted without engines, compared in PLAN4)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_heads.v_collaboration_heads_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_receipts.v_collaboration_receipts_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "fk:v_collaboration_updates.v_collaboration_updates_document_fk",
+            "kind": "schema",
+            "reason": "P5.4: collaboration → documents foreign key of an update log side table (D26, I3 direction)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.v_collaboration_heads_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_heads.v_collaboration_heads_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.v_collaboration_receipts_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_receipts.v_collaboration_receipts_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.PRIMARY",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_document_id_index",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_pkey",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "index:v_collaboration_updates.v_collaboration_updates_update_uniq",
+            "kind": "schema",
+            "reason": "P5.4: index of the collaboration update log side tables (D26)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000501_create_v_collaboration_heads_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000502_create_v_collaboration_updates_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "migration:0001_01_01_000503_create_v_collaboration_receipts_table.php",
+            "kind": "schema",
+            "reason": "P5.4: create migration of a collaboration side table (block 0005NN, CollaborationSchema)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_heads",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_receipts",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "table:v_collaboration_updates",
+            "kind": "schema",
+            "reason": "P5.4: the update log side tables of collaboration (D26): heads (head_seq, checkpoint_seq, checkpoint_version, lease, drain request, retired_at), updates (PK document/generation/seq, UNIQUE update_id) and receipts (PK document/generation/update_id); FK to v_documents only"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_protocol_mismatch",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_update_mismatch",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_update_too_large",
+            "kind": "protocol",
+            "reason": "P5.4: protocol 2 append/load problem (D26): collaboration_update_mismatch 422 (hash or receipt of another payload), collaboration_update_too_large 413 (Content-Length/base64 length before decoding), collaboration_protocol_mismatch 409 (X-Vaulter-Collab-Protocol); never retried, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.append",
+            "kind": "http",
+            "reason": "P5.4: protocol 2 append (X-Vaulter-Collab-Protocol: 2, committed receipt ack) on the hub stack behind the size gate and the call signature"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.limits.request_bytes",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.limits.update_bytes",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.mode",
+            "kind": "config",
+            "reason": "P5.4: protocol 2 settings of collaboration (D26): mode buffered|durable, limits.update_bytes, limits.request_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "env:VAULTER_COLLAB_MODE",
+            "kind": "config",
+            "reason": "P5.4: VAULTER_COLLAB_MODE feeds vaulter-collaboration.mode"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.compaction.lease",
+            "kind": "http",
+            "reason": "P5.5: protocol 2 compaction lease (C12) for the hub's worker: body signature, no room token; leases generations with a pending marker that reached a trigger or a drain request, with their checkpoint and tail"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.checkpoint",
+            "kind": "http",
+            "reason": "P5.5: protocol 2 checkpoint publication (C6, C7): CAS on the lease token, CS/CV and H <= HS under the document and head locks; deletes the covered updates of the generation"
+        },
+        {
+            "change": "removed",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.store",
+            "kind": "http",
+            "reason": "P5.7: the protocol 1 full-state store is gone with HubStoreController and PersistCollaborationStateAction; the hub appends every update through collaboration.hub.append (the seed too, with seed_state_version) and the compaction worker publishes the checkpoints"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "kind": "http",
+            "reason": "P5.7: protocol 2 only: requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise) and repeats it in the answer"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "kind": "http",
+            "reason": "P5.7: protocol 2 only: requires X-Vaulter-Collab-Protocol: 2 (409 collaboration_protocol_mismatch otherwise); the protocol 1 answer (state, content, epoch) is gone, the answer is the checkpoint and the committed tail"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "route:vaulter.v1.collaboration.hub.append",
+            "kind": "http",
+            "reason": "P5.7: optional seed_state_version marks the hub's seed of an empty generation (409 collaboration_seed_conflict once the generation has a record or a checkpoint, or the state version moved); the drive's status is read again under the drive lock (403 archived, 404 deleting)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_checkpoint_conflict",
+            "kind": "protocol",
+            "reason": "P5.5: 409, retryable after_refetch, receipt never — a checkpoint publication that lost its CAS (lease, coverage or checkpoint version); nothing changes, the hub takes a new lease"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "command:vaulter:collaboration:prune",
+            "kind": "cli",
+            "reason": "P5.5: prune of retired generations (C11) after hub.token_ttl + retry horizon + retention.retired_generation_days; retires generations a document left while the module was off; never the current one"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.lease_ttl",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_age",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_bytes",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.compaction.trigger_updates",
+            "kind": "config",
+            "reason": "P5.5: compaction settings of collaboration (D26): triggers 500 updates / 1 MiB / 600 s and the lease lifetime"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.drain.restore_deadline",
+            "kind": "config",
+            "reason": "P5.5: how long a restore, REST replace, content read or export waits for the hub to drain a pending document (C8, 10 s)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.retention.retired_generation_days",
+            "kind": "config",
+            "reason": "P5.5: retention window of a retired generation's log and receipts after token_ttl + retry horizon (C11)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.schedule.collaboration_prune",
+            "kind": "config",
+            "reason": "P5.5: the schedule of vaulter:collaboration:prune (ModuleSchedule of the collaboration module)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "command:vaulter:collaboration:drain",
+            "kind": "cli",
+            "reason": "P5.6: managed disable (C10): {--deadline=30} {--release}; sets the draining flag, asks the hub to checkpoint every document with a pending marker and waits (not before drain.max_append_tx); exit 0 with no marker left, 1 listing the pending document_id, 2 a bad --deadline; --release removes the flag"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.drain.cache_store",
+            "kind": "config",
+            "reason": "P5.6: the cache store of the draining flag vaulter:collaboration:drain sets (key vaulter:collaboration:draining; null: the default store); doctor collaboration.hub refuses an array or null driver"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.drain.max_append_tx",
+            "kind": "config",
+            "reason": "P5.6: the longest append transaction (5 s): a drain decides no earlier than this after it set the flag, so an append that read the flag before it was set has committed"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "problem:collaboration_draining",
+            "kind": "protocol",
+            "reason": "P5.6: 503, retryable with_backoff, receipt never — an append while vaulter:collaboration:drain drains the log before the module is switched off; nothing is written, the hub keeps the update"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "problem:collaboration_seed_conflict",
+            "kind": "protocol",
+            "reason": "P5.7: answered by collaboration.hub.append for a seed over a generation that already has a record or a checkpoint, or over JSON whose state version moved (the protocol 1 store that answered it is gone)"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

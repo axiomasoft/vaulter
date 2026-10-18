@@ -535,7 +535,7 @@ jobs:
         run: npm run build --workspace @vaulter/vue
 
   hub:
-    name: "@vaulter/hocuspocus-server (Node ${{ matrix.node }})"
+    name: "@vaulter/collaboration-hub (Node ${{ matrix.node }})"
     needs: changes
     if: needs.changes.outputs.has_hub == 'true'
     runs-on: ubuntu-latest
@@ -555,18 +555,18 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Install dependencies
-        working-directory: ./hocuspocus-server
+        working-directory: ./packages/collaboration/hub
         run: npm ci
 
       # Syntax gate: every source module parses (mirrors the `check` script).
       - name: Syntax check
-        working-directory: ./hocuspocus-server
+        working-directory: ./packages/collaboration/hub
         run: npm run check
 
       # Behaviour gate: the node:test suite, incl. websocket-hardening.test.js, so the collab-hub security
       # invariants (frame cap, Throttle armed, JWT/webhook/Origin/expiry seams) cannot silently regress.
       - name: Test
-        working-directory: ./hocuspocus-server
+        working-directory: ./packages/collaboration/hub
         run: npm test
 
   repo:

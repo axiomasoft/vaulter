@@ -23,6 +23,8 @@ use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Documents\State\CollaborativeState;
+use Vaulter\Documents\State\DatabaseCollaborativeState;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Node;
@@ -45,8 +47,6 @@ final class BindingsRegistrar implements ModuleBindings
             $config = $app->make(DocumentsConfig::class);
             $config->model('document_revision');
             $config->model('node_comment');
-            $config->assertDistinctHubSecrets();
-            $config->hubTokenTtl();
         });
         $app->tag('vaulter.config_validator.documents', ConfigValidCheck::TAG);
 
@@ -57,6 +57,8 @@ final class BindingsRegistrar implements ModuleBindings
         $app->bind(DocumentOperations::class);
         $app->bind(CommentOperations::class);
         $app->alias(DocumentsManager::class, 'vaulter.documents');
+        // The state contract of the realtime transport (D27): stateless, every call works in the caller's transaction.
+        $app->singleton(CollaborativeState::class, DatabaseCollaborativeState::class);
 
         // The export filename seam is a capability of DocumentsModule (the node's basename plus the exporter's
         // extension): ExportDocumentAction is final, so a host wanting a different scheme rebinds the contract
@@ -86,8 +88,6 @@ final class BindingsRegistrar implements ModuleBindings
         // Core reads a document head through this relation without depending on
         // the documents package; subclasses of the configured node model inherit it.
         Node::resolveRelationUsing('document', static fn (Node $node): HasOne => $node->hasOne(Document::class, 'node_id'));
-        $config->assertDistinctHubSecrets();
-        $config->assertCollaborationSecrets($app);
 
         self::bootDocumentTypes($app, $config);
         self::bootDocumentExporters($app, $config);

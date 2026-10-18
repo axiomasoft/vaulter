@@ -81,3 +81,12 @@ P4.20 | docs/ (concepts, guides, extending) | "storage"/"panel" vocabulary (Stor
 P4.20 | docs/guides/errors.md:47-75 | the exception table has several `validation_failed` rows with different classes and no RU counterpart of the table
 P4.20 | docs/reference/php-api.md (Contracts) | per-contract prose still says "core" for drive-owned contracts in places (e.g. "Implement when …"); re-read after the P4.16 core clean-up
 P4.20 | docs/reference/config.md:5-25 (+ru) | the guidance grep `vaulter\.(access|sharing|webhooks)\.` still matches the Gate ability string `vaulter.webhooks.manage` (a value, not a config key)
+P5.1 | docs/guides/errors.md, READMEs | старые FQCN collaboration — P5.15
+P5.1 | CollaborationLivenessRaceTest | pgsql serial, не запускался (PLAN4)
+P5.1 | CollaborationModule | отсутствие секретов не превращается в InvalidModuleGraph (у манифеста нет required config) — только production throw
+P5.1 | broadcast.channel_prefix | остаётся в vaulter-documents.*; CollaborationConfig::channelPrefix() делегирует
+P5.2 | package-lock.json (корень, hub) | дрейф tiptap 3.31.4→3.32.0/prosemirror из-за смены пути; lock хаба +608 строк — проверить сборкой образа/npm ci в PLAN4
+P5.2 | ci.yml | джобы переименованы в "@vaulter/collaboration-hub (Node …)": обновить required checks в настройках репозитория (владельцу)
+P5.2 | hub/README.md, docs/**, CONTRIBUTING.md, vaulter-spec.md, .claude/workflows/*.js | остался hocuspocus-server — P5.15
+P5.2 | hocuspocus-image.yml, имя образа vaulter-hocuspocus | не переименованы — P5.14
+P5.2 | hocuspocus-v4.test.js | stderr-лог библиотеки «Caught error during storeDocumentHooks» (штатный)

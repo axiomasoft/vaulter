@@ -17,7 +17,6 @@ it('declares the existing route file during package configuration and mounts ins
 
     config()->set('vaulter.routes.prefix', 'host/documents');
     config()->set('vaulter.routes.middleware.authenticated', ['host.auth']);
-    config()->set('vaulter-documents.collaboration.enabled', false);
     config()->set('vaulter-documents.comments.enabled', false);
     $original = Route::getFacadeRoot();
     $router = new Router(new Dispatcher($this->app), $this->app);
@@ -34,9 +33,8 @@ it('declares the existing route file during package configuration and mounts ins
             ->and($route->middleware())->toContain('host.auth')
             // A disabled feature never unregisters a route: the operations refuse it.
             ->and($routes->contains(fn ($route): bool => $route->getName() === 'vaulter.v1.comments.index'))->toBeTrue()
-            ->and($routes->contains(fn ($route): bool => $route->getName() === 'vaulter.v1.documents.collaboration.session'))->toBeTrue()
-            // The hub stack exists only while collaboration is on.
-            ->and($routes->contains(fn ($route): bool => str_starts_with((string) $route->getName(), 'vaulter.v1.collaboration.hub.')))->toBeFalse();
+            // The realtime session and the hub stack are the routes of the collaboration package, not of this one.
+            ->and($routes->contains(fn ($route): bool => str_contains((string) $route->getName(), 'collaboration')))->toBeFalse();
     } finally {
         Route::swap($original);
     }

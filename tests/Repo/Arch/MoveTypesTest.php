@@ -353,3 +353,46 @@ it('moves files with git mv when the root is a repository', function (): void {
     expect(proc_close($process))->toBe(0, $err)
         ->and($git('status', '--porcelain'))->toMatch('#^R. packages/core/src/Roles/Role\.php -> packages/drive/src/Roles/Role\.php$#m');
 });
+
+it('selects the phase P5 moves of the owner collaboration and renames the namespace of tests that leave a package other than core', function (): void {
+    $root = mt_root();
+
+    $packages = json_decode(mt_read($root, 'tests/Repo/Arch/Fixtures/packages.json'), true);
+    $packages['packages']['collaboration'] = ['dir' => 'packages/collaboration', 'exists' => true, 'psr4' => ['Acme\\Collaboration\\' => 'src/']];
+    file_put_contents($root.'/tests/Repo/Arch/Fixtures/packages.json', json_encode($packages));
+
+    $map = json_decode(mt_read($root, 'tests/Repo/Arch/Fixtures/target-map.json'), true);
+    $map['types'][] = ['action' => 'move', 'file' => 'packages/drive/src/Rooms/Room.php', 'fqcn' => 'Acme\\Drive\\Rooms\\Room', 'owner' => 'collaboration', 'phase' => 'P5', 'rule' => 'other:fqcn:Acme\\Drive\\Rooms\\Room', 'target_fqcn' => 'Acme\\Collaboration\\Rooms\\Room'];
+    $map['types'][] = ['action' => 'move', 'file' => 'packages/drive/src/Rooms/Door.php', 'fqcn' => 'Acme\\Drive\\Rooms\\Door', 'owner' => 'collaboration', 'phase' => 'P4', 'rule' => 'other:fqcn:Acme\\Drive\\Rooms\\Door', 'target_fqcn' => 'Acme\\Collaboration\\Rooms\\Door'];
+    file_put_contents($root.'/tests/Repo/Arch/Fixtures/target-map.json', json_encode($map));
+
+    $zones = json_decode(mt_read($root, 'tests/zones.json'), true);
+    $zones['zones']['collaboration'] = ['suite' => 'collaboration', 'src' => ['packages/collaboration/src'], 'tests' => ['packages/collaboration/tests/Other']];
+    file_put_contents($root.'/tests/zones.json', json_encode($zones, JSON_PRETTY_PRINT));
+
+    mkdir($root.'/packages/drive/src/Rooms', 0775, true);
+    mkdir($root.'/packages/drive/tests/Rooms', 0775, true);
+    file_put_contents($root.'/packages/drive/src/Rooms/Room.php', "<?php\n\nnamespace Acme\\Drive\\Rooms;\n\nfinal class Room {}\n");
+    file_put_contents($root.'/packages/drive/src/Rooms/Door.php', "<?php\n\nnamespace Acme\\Drive\\Rooms;\n\nfinal class Door {}\n");
+    file_put_contents($root.'/packages/drive/tests/Rooms/RoomCheck.php', "<?php\n\nnamespace Vaulter\\Drive\\Tests\\Rooms;\n\nuse Acme\\Drive\\Rooms\\Room;\n\nfinal class RoomCheck\n{\n    public function room(): Room\n    {\n        return new Room;\n    }\n}\n");
+
+    $suites = json_decode(mt_read($root, 'tests/suites.json'), true);
+    $suites['suites']['drive']['partitions'][0]['files'] = ['packages/drive/tests/Rooms/RoomCheck.php'];
+    $suites['suites']['collaboration'] = [...$suites['suites']['drive'], 'cwd' => 'packages/collaboration', 'tests_dir' => 'packages/collaboration/tests'];
+    $suites['suites']['collaboration']['partitions'][0]['files'] = [];
+    file_put_contents($root.'/tests/suites.json', json_encode($suites));
+
+    [$code, $report, , $err] = mt_run($root, ['--owner=collaboration', '--apply', '--tests=packages/drive/tests/Rooms:packages/collaboration/tests/Rooms']);
+
+    // Only the phase P5 type is selected: the P4 one is not a move of this owner.
+    expect($code)->toBe(0, $err)
+        ->and(array_column($report['moved'], 'old'))->toBe(['Acme\\Drive\\Rooms\\Room'])
+        ->and(file_exists($root.'/packages/collaboration/src/Rooms/Room.php'))->toBeTrue()
+        ->and(file_exists($root.'/packages/drive/src/Rooms/Door.php'))->toBeTrue()
+        ->and(mt_read($root, 'packages/collaboration/src/Rooms/Room.php'))->toContain("namespace Acme\\Collaboration\\Rooms;\n");
+
+    $moved = mt_read($root, 'packages/collaboration/tests/Rooms/RoomCheck.php');
+    expect($moved)->toContain("namespace Vaulter\\Collaboration\\Tests\\Rooms;\n")
+        ->and($moved)->toContain('use Acme\\Collaboration\\Rooms\\Room;')
+        ->and(json_decode(mt_read($root, 'tests/suites.json'), true)['suites']['collaboration']['partitions'][0]['files'])->toBe(['packages/collaboration/tests/Rooms/RoomCheck.php']);
+});

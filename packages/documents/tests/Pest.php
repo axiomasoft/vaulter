@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Documents\Tests\Collaboration\CollaborationEnabledTestCase;
 use Vaulter\Documents\Tests\Comment\CommentsTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
 use Vaulter\Documents\Tests\Export\ExportTestCase;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
+use Vaulter\Documents\Tests\State\StateTestCase;
 use Vaulter\Documents\Tests\TestCase;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
@@ -23,20 +23,11 @@ uses(TestCase::class, RefreshDatabase::class)->in('Schema', 'Unit');
 uses(DocumentTestCase::class, RefreshDatabase::class)->in('Doctor');
 
 // The document-node suite boots with 'document_versions' ON so the routes register.
-// 'collaboration' stays OFF (the true default) — CollaborationFeatureGateTest (VLT-
-// REMED P3.1 / F-P1.6-01) lives here and asserts exactly that combination.
 uses(DocumentTestCase::class, RefreshDatabase::class)->in('Document');
-
-// These exercise the realtime-collab routes themselves (collab/token,
-// collab/authenticate, collab/store) — VLT-REMED P3.1 (F-P1.6-01, D13/D20) gates
-// them on 'collaboration' TOO (on top of 'document_versions'), so this suite needs
-// it ON. Kept in its own top-level folder (Pest forbids two test cases for one
-// path) so the DocumentTestCase binding above never also claims these files.
-uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Collaboration');
 
 // PostgreSQL ForkRace scenarios: forked backends must see committed fixtures, so these
 // migrate per test instead of wrapping it in a transaction.
-uses(CollaborationEnabledTestCase::class, DatabaseMigrations::class)->in('Concurrency');
+uses(DocumentTestCase::class, DatabaseMigrations::class)->in('Concurrency');
 
 // Events that must wait for the OUTERMOST commit are proved without the fixture's wrapping
 // transaction, which would stand in for the commit: this suite migrates per test.
@@ -48,7 +39,7 @@ uses(OperationsTestCase::class, DatabaseMigrations::class)->in('AfterCommit');
 uses(CommentsTestCase::class, RefreshDatabase::class)->in('Comment');
 
 // The Documents API (DocumentOperations/CommentOperations) with every guard live:
-// database grants, comments and collaboration ON.
+// database grants and comments ON.
 uses(OperationsTestCase::class, RefreshDatabase::class)->in('Operations', 'Recipes');
 
 // Document export: registry, authorization, source selection and the file response;
@@ -62,9 +53,11 @@ uses(TypesTestCase::class, RefreshDatabase::class)->in('Types');
 // Generated scaffolds run their contract suites on the same booted types and exporters.
 uses(ExportTestCase::class, RefreshDatabase::class)->in('Console');
 
-// The v1 HTTP surface: documents, revisions, comments, export, the session and the hub
-// (collaboration ON so the hub stack is registered).
-uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Http');
+// The collaborative-state contract and the drain-or-409 guards (D26, D27) check "inside a transaction" themselves:
+// these files migrate per test instead of wrapping each in a transaction.
+uses(StateTestCase::class, DatabaseMigrations::class)->in('State');
+// The v1 HTTP surface: documents, revisions, comments and export.
+uses(DocumentTestCase::class, RefreshDatabase::class)->in('Http');
 
 // Registrar checks use a booted application without mutating the database.
 uses(TestCase::class)->in('Providers');

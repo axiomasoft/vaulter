@@ -10,6 +10,7 @@ providers:
   - Vaulter\Media\VaulterMediaServiceProvider
   - Vaulter\Drive\VaulterDriveServiceProvider
   - Vaulter\Documents\VaulterDocumentsServiceProvider
+  - Vaulter\Collaboration\VaulterCollaborationServiceProvider
   - Vaulter\Webhooks\VaulterWebhooksServiceProvider
   - Vaulter\Load\LoadServiceProvider
 

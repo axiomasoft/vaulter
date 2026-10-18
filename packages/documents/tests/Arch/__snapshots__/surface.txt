@@ -2,25 +2,13 @@
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
 Vaulter\Documents\Configuration\DocumentsConfig api since 1.0 final readonly class
-  public function assertCollaborationSecrets(Illuminate\Contracts\Foundation\Application $app): void
-  public function assertDistinctHubSecrets(): void
   public function channelPrefix(): string
   public function checkpointIntervalSeconds(): int
-  public function collaborationDriver(): string
-  public function collaborationEnabled(): bool
-  public function collaborationMaxStateBytes(): int
-  public function collaborationRoom(mixed $driveId, mixed $nodeId, int $epoch): string
   public function commentsEnabled(): bool
   public function defaultType(): string
   public function exporters(): array
-  public function hubJwtSecret(): ?string
-  public function hubTimestampTolerance(): int
-  public function hubTokenTtl(): int
-  public function hubUrl(): ?string
-  public function hubWebhookSecret(): ?string
   public function maxContentSizeKb(): int
   public function model(string $key): string
-  public function parseRoom(string $room): ?Vaulter\Documents\Data\Collaboration\RoomRef
   public function revisionLimit(): int
   public function tiptapExtraAttributes(): array
   public function tiptapExtraMarks(): array
@@ -91,7 +79,7 @@ Vaulter\Documents\Content\TipTap\TipTapSchema api since 1.0 final readonly class
 
 Vaulter\Documents\Contracts\CollaborationDriver spi:implement since 1.0 interface
   public function issueSession(Vaulter\Drive\Models\Node $node, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): Vaulter\Documents\Data\Collaboration\CollaborationSession
-  public function type(): Vaulter\Documents\Enums\Collaboration\CollaborationDriverType
+  public function type(): string
 
 Vaulter\Documents\Contracts\DocumentCodec spi:implement since 1.0 interface
   public function decode(array $raw, int $schemaVersion): Vaulter\Documents\Contracts\DocumentContent
@@ -122,9 +110,6 @@ Vaulter\Documents\Contracts\DocumentType spi:implement since 1.0 interface
 Vaulter\Documents\Contracts\ExportFilenameResolver spi:implement since 1.0 interface
   public function resolve(Vaulter\Drive\Models\Node $node, string $extension): string
 
-Vaulter\Documents\Contracts\HostUserResolver spi:implement since 1.0 interface
-  public function find(int|string $id): ?Illuminate\Contracts\Auth\Access\Authorizable
-
 Vaulter\Documents\Contracts\SupportsCollaboration spi:implement since 1.0 interface
   public function collaborationProtocol(): string
   public function projectFromState(string $state): ?Vaulter\Documents\Contracts\DocumentContent
@@ -134,7 +119,7 @@ Vaulter\Documents\Contracts\UpgradesSchema spi:implement since 1.0 interface
 
 Vaulter\Documents\Data\Collaboration\CollaborationSession api since 1.0 final readonly class
   public string $driveId
-  public Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver
+  public string $driver
   public int $epoch
   public string $nodeId
   public bool $readOnly
@@ -142,24 +127,9 @@ Vaulter\Documents\Data\Collaboration\CollaborationSession api since 1.0 final re
   public int $schemaVersion
   public string $token
   public ?string $url
-  public function __construct(Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver, string $room, string $nodeId, string $driveId, int $epoch, int $schemaVersion, bool $readOnly, string $token, ?string $url = null)
+  public function __construct(string $driver, string $room, string $nodeId, string $driveId, int $epoch, int $schemaVersion, bool $readOnly, string $token, ?string $url = null)
   public function mode(): string
   public function toArray(): array
-
-Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput api since 1.0 final readonly class
-  public int|null|string $actorId
-  public ?array $content
-  public ?int $expectedEpoch
-  public ?int $expectedStateVersion
-  public Vaulter\Drive\Models\Node $node
-  public bool $seed
-  public string $yjsState
-
-Vaulter\Documents\Data\Collaboration\RoomRef api since 1.0 final readonly class
-  public string $driveId
-  public int $epoch
-  public string $nodeId
-  public function __construct(string $driveId, string $nodeId, int $epoch)
 
 Vaulter\Documents\Data\Comments\AddCommentInput api since 1.0 final readonly class
   public ?array $anchor
@@ -274,9 +244,6 @@ Vaulter\Documents\DocumentsManager api since 1.0 final readonly class
   public function in(Vaulter\Drive\Contracts\DriveHandle $drive): Vaulter\Documents\Operations\DocumentOperations
   public function types(): Vaulter\Documents\Types\DocumentTypeRegistry
 
-Vaulter\Documents\Enums\Collaboration\CollaborationDriverType api since 1.0 enum: string uses Vaulter\Support\Concerns\HasLabel
-  case Hocuspocus = 'hocuspocus'
-
 Vaulter\Documents\Enums\DocumentEventType api since 1.0 enum: string implements Vaulter\Events\EventTypeContract uses Vaulter\Events\Concerns\DescribesEvent
   case CommentAdded = 'comment.added'
   case CommentDeleted = 'comment.deleted'
@@ -374,37 +341,6 @@ Vaulter\Documents\Events\Revisions\DocumentRevisionCreated api since 1.0 final r
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Documents\Enums\DocumentEventType
 
-Vaulter\Documents\Exceptions\CollaborationConfigException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
-  public static function missingJwt(): self
-  public static function missingSecret(): self
-
-Vaulter\Documents\Exceptions\CollaborationEpochMismatchException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public readonly int $actual
-  public readonly int $expected
-  public function __construct(int $expected, int $actual)
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-
-Vaulter\Documents\Exceptions\CollaborationSeedConflictException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public readonly ?int $actualStateVersion
-  public readonly ?int $expectedStateVersion
-  public readonly string $nodeId
-  public function __construct(string $nodeId, ?int $expectedStateVersion = null, ?int $actualStateVersion = null)
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-
-Vaulter\Documents\Exceptions\CollaborationUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public readonly string $reason
-  public readonly ?string $type
-  public function __construct(string $reason, ?string $type = null)
-  public static function disabled(): self
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-  public static function unsupportedType(string $type): self
-
 Vaulter\Documents\Exceptions\CommentNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function forNode(mixed $nodeId, mixed $commentId): self
   public function httpStatus(): int
@@ -421,6 +357,12 @@ Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException api since 1.0 fin
   public static function forNode(mixed $nodeId, mixed $versionId): self
   public function httpStatus(): int
   public function problemCode(): string
+
+Vaulter\Documents\Exceptions\DocumentStatePendingException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly Vaulter\Documents\State\PendingMarker $marker
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
 
 Vaulter\Documents\Exceptions\DocumentStateTooLargeException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly int $maxBytes
@@ -535,7 +477,6 @@ Vaulter\Documents\Operations\CommentOperations api since 1.0 final readonly clas
   public function resolve(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment): Vaulter\Documents\Data\Snapshots\CommentSnapshot
 
 Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly class implements Vaulter\Drive\Contracts\DriveExtension
-  public function collaborationSession(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationSession
   public function content(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   public function create(string $name, ?string $type = null, ?array $content = null, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?Vaulter\Drive\Data\CreateFolderOptions $options = null): Vaulter\Drive\Data\Snapshots\NodeSnapshot
   public function export(Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, string $format, Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): Vaulter\Documents\ValueObjects\DocumentExport
@@ -548,6 +489,49 @@ Vaulter\Documents\Operations\DocumentOperations api since 1.0 final readonly cla
 Vaulter\Documents\Presentation\DocumentPresenter api since 1.0 final readonly class implements Vaulter\Drive\Contracts\Presentation\KindPresenter
   public function kind(): Vaulter\Drive\Enums\NodeKind
   public function present(Vaulter\Drive\Data\Snapshots\NodeSnapshot|Vaulter\Drive\Models\Node $node): Vaulter\Drive\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Documents\State\CheckpointOutcome api since 1.0 final readonly class
+  public bool $changed
+  public int $generation
+  public ?Vaulter\Documents\State\PendingMarker $pending
+  public bool $published
+  public int $stateVersion
+
+Vaulter\Documents\State\CheckpointPublication api since 1.0 final readonly class
+  public ?Vaulter\ValueObjects\Access\ActorRef $actor
+  public array $content
+  public int $coveredThrough
+  public int $expectedStateVersion
+  public int $generation
+  public string $yjsState
+  public function __construct(int $generation, int $expectedStateVersion, int $coveredThrough, string $yjsState, array $content, ?Vaulter\ValueObjects\Access\ActorRef $actor = null)
+
+Vaulter\Documents\State\CollaborativeState api since 1.0 interface
+  public function lock(int|string $nodeId): Vaulter\Documents\State\LockedDocumentState
+  public function markPending(Vaulter\Documents\State\LockedDocumentState $state, int $generation, int $throughSeq): Vaulter\Documents\State\PendingMarker
+  public function pendingDocuments(int $limit = 100, int|null|string $after = null): array
+  public function publishCheckpoint(Vaulter\Documents\State\LockedDocumentState $state, Vaulter\Documents\State\CheckpointPublication $publication): Vaulter\Documents\State\CheckpointOutcome
+
+Vaulter\Documents\State\LockedDocumentState api since 1.0 final readonly class
+  public string $documentId
+  public string $driveId
+  public int $generation
+  public string $nodeId
+  public ?Vaulter\Documents\State\PendingMarker $pending
+  public int $schemaVersion
+  public int $stateVersion
+  public bool $trashed
+  public string $type
+
+Vaulter\Documents\State\PendingMarker api since 1.0 final readonly class
+  public string $documentId
+  public int $generation
+  public string $nodeId
+  public int $throughSeq
+  public function coveredBy(int $generation, int $coveredThrough): bool
+
+Vaulter\Documents\State\PendingStateDrainer spi:implement since 1.0 interface
+  public function drain(Vaulter\Documents\State\PendingMarker $marker): void
 
 Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests api since 1.0 trait
   public function assertDocumentTypeContract(Vaulter\Documents\Contracts\DocumentType $type): void

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 
 /*
@@ -11,16 +12,16 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
  * code).
  */
 
-it('the documents configuration accessor falls back to hocuspocus when the config key is entirely absent, F-P3.6-01', function (): void {
-    config()->offsetUnset('vaulter-documents.collaboration.driver');
+it('the collaboration configuration accessor falls back to hocuspocus when the config key is entirely absent, F-P3.6-01', function (): void {
+    config()->offsetUnset('vaulter-collaboration.driver');
 
-    expect(app(DocumentsConfig::class)->collaborationDriver())->toBe('hocuspocus');
+    expect((new CollaborationConfig(app('config'), app(DocumentsConfig::class)))->driver())->toBe('hocuspocus');
 });
 
-it('the vaulter-documents config default transport is hocuspocus (unchanged by P3.1 — the ADR/docs were the drift), F-P3.6-01', function (): void {
-    $defaults = require dirname(__DIR__, 3).'/documents/config/vaulter-documents.php';
+it('the vaulter-collaboration config default transport is hocuspocus (unchanged by P3.1 — the ADR/docs were the drift), F-P3.6-01', function (): void {
+    $defaults = require dirname(__DIR__, 3).'/collaboration/config/vaulter-collaboration.php';
 
-    expect($defaults['collaboration']['driver'])->toBe('hocuspocus');
+    expect($defaults['driver'])->toBe('hocuspocus');
 });
 
 it('README describes canonical feature ownership (P2.5)', function (): void {
