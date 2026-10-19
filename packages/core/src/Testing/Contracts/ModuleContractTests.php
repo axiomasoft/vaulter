@@ -20,6 +20,7 @@ use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleSchedule;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
+use Vaulter\Operations\OperationPolicySource;
 
 /**
  * Reusable assertions for the manifest of a third-party module, to run from a test of the Laravel application
@@ -166,6 +167,7 @@ final class ModuleContractTests
             'slot' => static fn (ModuleBuilder $b): ModuleBuilder => $b->slot(self::class, self::class, 'late'),
             'events' => static fn (ModuleBuilder $b): ModuleBuilder => $b->events(self::class),
             'problems' => static fn (ModuleBuilder $b): ModuleBuilder => $b->problems(ProblemCodeSource::class),
+            'operations' => static fn (ModuleBuilder $b): ModuleBuilder => $b->operations(OperationPolicySource::class),
         ];
         foreach ($late as $declaration => $declare) {
             try {
@@ -196,6 +198,7 @@ final class ModuleContractTests
             'contributions' => $builder->contributions(),
             'events' => $builder->eventSources(),
             'problems' => $builder->problemSources(),
+            'operations' => $builder->operationSources(),
         ];
     }
 }

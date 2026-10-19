@@ -21,7 +21,7 @@ final readonly class RestoreFileRevisionController
     public function __invoke(Request $request, string $node, string $revision): FileRevisionResource
     {
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
-        $expected = $this->nodes->expectedSequence($request, $drive, $node, Ability::Edit);
+        $expected = $this->nodes->expectedSequenceForReplay($request, $drive, $node, Ability::Edit);
 
         return new FileRevisionResource($drive->files()->restoreRevision($node, $revision, $expected));
     }

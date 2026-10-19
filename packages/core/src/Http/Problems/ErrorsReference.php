@@ -55,6 +55,32 @@ final readonly class ErrorsReference
         return implode("\n", $summary)."\n\n".implode("\n\n", $sections);
     }
 
+    /**
+     * The machine table of the codes for `openapi/vaulter-v1.yaml` (P6.7), as the YAML the Problem schema carries: the
+     * `x-vaulter-problems` member (code to status, retryable, receipt and declaring module) and the sorted `examples` of
+     * the `code` property. Printed by `vaulter:errors:reference --openapi`; the contract test compares the document to it.
+     */
+    public function openApi(): string
+    {
+        $lines = ['x-vaulter-problems:'];
+        foreach ($this->catalog->all() as $code => $entry) {
+            $lines[] = sprintf(
+                '  %s: {status: %d, retryable: %s, receipt: %s, module: %s}',
+                $code,
+                $entry['status'],
+                $entry['retryable']->value,
+                $entry['receipt']->value,
+                $entry['module'],
+            );
+        }
+        $lines[] = 'examples:';
+        foreach (array_keys($this->catalog->all()) as $code) {
+            $lines[] = '- '.$code;
+        }
+
+        return implode("\n", $lines);
+    }
+
     /** The block between the markers, markers included. */
     public function block(string $locale): string
     {

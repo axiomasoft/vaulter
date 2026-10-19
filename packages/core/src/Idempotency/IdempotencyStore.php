@@ -17,6 +17,8 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Idempotency\OperationInProgressException;
 use Vaulter\Schema\IdStrategyResolver;
+use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Operations\ScopeRef;
 
 /**
  * The rows of `v_idempotency_keys` (D25, ADR-0029). Every write runs inside the operation's root transaction:
@@ -126,6 +128,34 @@ final class IdempotencyStore
         if ($updated !== 1) {
             throw new LogicException('[Vaulter] The idempotency claim of this attempt is gone; the receipt was not written.');
         }
+    }
+
+    /**
+     * The scope of the one live receipt of `$operation` that `$actor` committed under `$key` for exactly this request
+     * (`$requestHash`), or null. For a transport whose retry addresses a resource that is gone by now (a purged node
+     * no longer names its drive): the scope says where to run the retry, so the runner answers it from that receipt.
+     * Nothing is trusted from the row — the claim compares the whole tuple again and the owner authorizes the replay.
+     * Not indexed by these columns: called only for a keyed request whose resource is not found.
+     */
+    public function scopeOf(string $operation, string $key, ActorRef $actor, string $requestHash): ?ScopeRef
+    {
+        $fields = IdempotencyDigest::actor($actor);
+        $rows = $this->query()
+            ->where('operation', $operation)
+            ->where('idempotency_key', base64_encode($key))
+            ->where('actor_kind', $fields['actor_kind'])
+            ->when($fields['actor_id'] === null, static fn (Builder $query): Builder => $query->whereNull('actor_id'), static fn (Builder $query): Builder => $query->where('actor_id', $fields['actor_id']))
+            ->where('request_hash', $requestHash)
+            ->where('status', self::COMPLETED)
+            ->where('expires_at', '>', Carbon::now())
+            ->limit(2)
+            ->get(['scope_kind', 'scope_id']);
+        if ($rows->count() !== 1) {
+            return null;
+        }
+        $row = $rows->first();
+
+        return $row instanceof stdClass && is_string($row->scope_kind) && is_scalar($row->scope_id) ? new ScopeRef((string) $row->scope_kind, (string) $row->scope_id) : null;
     }
 
     /**

@@ -47,7 +47,7 @@ it('registers an endpoint and returns the secret exactly once', function (): voi
     $list = $this->getJson('api/vaulter/v1/webhook-endpoints')->assertOk();
 
     expect($list->json('data.0'))->not->toHaveKey('secret')
-        ->and(array_keys($list->json('data.0')))->toBe(['id', 'url', 'drive_id', 'events', 'status', 'disabled_at', 'created_at'])
+        ->and(array_keys($list->json('data.0')))->toBe(['id', 'url', 'drive_id', 'events', 'status', 'disabled_at', 'version', 'etag', 'created_at'])
         ->and($list->json('meta'))->toBe(['next_cursor' => null, 'per_page' => 50]);
 });
 
@@ -83,7 +83,7 @@ it('updates an endpoint url, events and active flag (partial)', function (): voi
     $this->patchJson('api/vaulter/v1/webhook-endpoints/'.$endpoint->getKey(), [
         'events' => ['node.moved', 'node.trashed'],
         'is_active' => false,
-    ])->assertOk();
+    ], ['If-Match' => webhookTag($endpoint->getKey())])->assertOk()->assertHeader('ETag', webhookTag($endpoint->getKey(), 1));
 
     $endpoint->refresh();
 
@@ -96,7 +96,7 @@ it('updates an endpoint url, events and active flag (partial)', function (): voi
 it('deactivates an endpoint and resets its failure_count', function (): void {
     $endpoint = WebhookTestHelpers::endpoint(['is_active' => true, 'failure_count' => 4]);
 
-    $this->postJson('api/vaulter/v1/webhook-endpoints/'.$endpoint->getKey().'/deactivate')->assertOk();
+    $this->postJson('api/vaulter/v1/webhook-endpoints/'.$endpoint->getKey().'/deactivate', [], ['If-Match' => webhookTag($endpoint->getKey())])->assertOk();
 
     $endpoint->refresh();
 
@@ -107,7 +107,7 @@ it('deactivates an endpoint and resets its failure_count', function (): void {
 it('deletes an endpoint', function (): void {
     $endpoint = WebhookTestHelpers::endpoint();
 
-    $this->deleteJson('api/vaulter/v1/webhook-endpoints/'.$endpoint->getKey())->assertNoContent();
+    $this->deleteJson('api/vaulter/v1/webhook-endpoints/'.$endpoint->getKey(), [], ['If-Match' => webhookTag($endpoint->getKey())])->assertNoContent();
 
     expect(WebhookEndpoint::query()->whereKey($endpoint->getKey())->exists())->toBeFalse();
 });

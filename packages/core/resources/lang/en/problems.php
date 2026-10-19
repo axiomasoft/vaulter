@@ -190,6 +190,10 @@ return [
         'title' => 'Share role not allowed',
         'detail' => 'A share link cannot carry this role for this audience.',
     ],
+    'stale_write' => [
+        'title' => 'Stale write',
+        'detail' => 'The resource changed since you read it; refetch it and retry.',
+    ],
     'tree_depth_limit_exceeded' => [
         'title' => 'Tree depth limit exceeded',
         'detail' => 'The folder tree may not be deeper than :limit levels.',

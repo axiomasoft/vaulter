@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks\Actions;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Data\RotatedWebhookSecret;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
@@ -29,17 +30,21 @@ final readonly class RotateWebhookSecretAction
         private WebhookEndpointStoreRepository $endpoints,
         private VaulterDatabase $database,
         private WebhooksConfig $config,
+        private AggregateVersion $versions,
     ) {}
 
-    public function execute(WebhookEndpoint $endpoint, ?int $overlapSeconds = null): RotatedWebhookSecret
+    public function execute(WebhookEndpoint $endpoint, ?int $overlapSeconds = null, ?int $expectedVersion = null): RotatedWebhookSecret
     {
         $overlap = min(max($overlapSeconds ?? $this->config->secretRotationOverlap(), 0), self::MAX_OVERLAP_SECONDS);
         $secret = WebhookSecret::generate();
 
-        return $this->database->transaction(function () use ($endpoint, $overlap, $secret): RotatedWebhookSecret {
+        return $this->database->transaction(function () use ($endpoint, $overlap, $secret, $expectedVersion): RotatedWebhookSecret {
             // Rotate from the stored row: two rotations racing must not both keep the same "previous".
             $current = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail();
+            // CC1: the version the caller read is compared on the locked row.
+            $this->versions->assertExpected($current, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
             $this->endpoints->rotateSecret($current, $secret, $overlap === 0 ? null : now()->addSeconds($overlap));
+            $this->versions->bump($current, 'version', WebhookEndpoint::AGGREGATE);
             $endpoint->setRawAttributes($current->getAttributes(), sync: true);
 
             return new RotatedWebhookSecret(endpointId: $endpoint->id, secret: $secret);

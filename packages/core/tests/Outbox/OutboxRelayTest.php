@@ -331,6 +331,60 @@ it('replays a range to a consumer, acknowledges the gaps it covers and reports w
         ->assertExitCode(1);
 });
 
+it('publishes the dead rows of each consumer as a gauge and reads zero once they are replayed', function (): void {
+    relayConsumers([ScriptedConsumer::ID => ScriptedConsumer::class, EphemeralConsumer::ID => EphemeralConsumer::class]);
+    $event = eventFor(ScriptedConsumer::ID);
+    ScriptedConsumer::$answers = [ConsumeResult::dead('poison')];
+    relayPass();
+
+    $metrics = $this->metrics;
+    $gauge = static fn (string $consumer): array => array_values(array_map(
+        static fn (array $e): int|float => $e['value'],
+        array_filter($metrics->emissions(), static fn (array $e): bool => $e['type'] === 'gauge' && $e['name'] === 'vaulter_outbox_dead_rows' && $e['labels'] === ['consumer' => $consumer]),
+    ));
+    expect($gauge(ScriptedConsumer::ID))->toBe([1])
+        ->and($gauge(EphemeralConsumer::ID))->toBe([0]);
+
+    $this->artisan('vaulter:relay:replay', ['--consumer' => ScriptedConsumer::ID, '--from' => $event->outbox_seq, '--to' => $event->outbox_seq])
+        ->expectsOutputToContain('(1 dead returned to pending)')
+        ->assertSuccessful();
+    relayPass();
+
+    expect($gauge(ScriptedConsumer::ID))->toBe([1, 0]);
+});
+
+it('returns only the dead rows of the range, with a fresh budget, and counts them', function (): void {
+    relayConsumers([ScriptedConsumer::ID => ScriptedConsumer::class]);
+    $dead = eventFor(ScriptedConsumer::ID);
+    $done = eventFor(ScriptedConsumer::ID);
+    $outside = eventFor(ScriptedConsumer::ID);
+    ScriptedConsumer::$answers = [ConsumeResult::dead('poison'), ConsumeResult::done(), ConsumeResult::dead('other')];
+    relayPass();
+
+    $result = app(OutboxRelay::class)->replay(ScriptedConsumer::ID, $dead->outbox_seq, $done->outbox_seq, ackOnly: false);
+
+    expect($result['dead'])->toBe(1)
+        ->and($result['rows'])->toBe(2)
+        ->and(rowOf($dead))->toMatchArray(['state' => 'pending', 'attempts' => 0, 'last_error' => null])
+        ->and(rowOf($done)['state'])->toBe('pending')
+        ->and(rowOf($outside)['state'])->toBe('dead');
+});
+
+it('does not let a dead delivery of one consumer delay another consumer', function (): void {
+    relayConsumers([ScriptedConsumer::ID => ScriptedConsumer::class, EphemeralConsumer::ID => EphemeralConsumer::class]);
+    $poison = eventFor(ScriptedConsumer::ID, age: 950);
+    $next = eventFor(ScriptedConsumer::ID, age: 940);
+    $other = eventFor(EphemeralConsumer::ID, age: 930);
+    ScriptedConsumer::$answers = [ConsumeResult::dead('poison')];
+
+    $finished = relayPass();
+
+    expect(rowOf($poison)['state'])->toBe('dead')
+        ->and(rowOf($next)['state'])->toBe('done')
+        ->and(rowOf($other, EphemeralConsumer::ID)['state'])->toBe('done')
+        ->and($finished[EphemeralConsumer::ID])->toBe(1);
+});
+
 it('acknowledges a gap without replay with --ack-only', function (): void {
     relayConsumers([ScriptedConsumer::ID => ScriptedConsumer::class]);
     relayPass();

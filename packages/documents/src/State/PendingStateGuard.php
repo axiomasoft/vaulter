@@ -54,9 +54,10 @@ final readonly class PendingStateGuard
     /**
      * Drain the trashed documents of drive `$driveId` that carry a marker — the documents a purge in that drive may
      * remove — outside any transaction; the purge checks each marker again under its own locks. Does nothing inside a
-     * transaction or without an active drainer.
+     * transaction or without an active drainer. With `$wholeDrive` every marked document of the drive is drained, live
+     * ones too: the drive purge step removes a drive being deleted, whose nodes are not in the trash.
      */
-    public function drainTrashed(int|string $driveId): void
+    public function drainTrashed(int|string $driveId, bool $wholeDrive = false): void
     {
         if ($this->database->connection()->transactionLevel() > 0) {
             return;
@@ -73,7 +74,9 @@ final readonly class PendingStateGuard
         do {
             $query = Document::query()
                 ->whereNotNull('pending_generation')
-                ->whereHas('node', static fn ($node) => $node->where('drive_id', $driveId)->whereNotNull('trashed_at'))
+                ->whereHas('node', static fn ($node) => $wholeDrive
+                    ? $node->where('drive_id', $driveId)
+                    : $node->where('drive_id', $driveId)->whereNotNull('trashed_at'))
                 ->orderBy('id')
                 ->limit(self::PURGE_DRAIN_PAGE);
             if ($after !== null) {

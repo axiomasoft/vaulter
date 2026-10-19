@@ -67,7 +67,7 @@ final readonly class CollaborationCheck implements DoctorCheck
         try {
             $this->config->hubTokenTtl();
         } catch (Throwable) {
-            $problems[] = ['collaboration.hub_token_ttl', 'The room token lifetime must be between 1 and 3600 seconds.', 'set vaulter-collaboration.hub.token_ttl to at most 3600'];
+            $problems[] = ['collaboration.hub_token_ttl', 'The room token lifetime must be between 1 and 300 seconds: it bounds how long a revoked writer keeps a session the hub was not told about.', 'set vaulter-collaboration.hub.token_ttl to at most 300'];
         }
         $shared = false;
         if ($driver === null) {

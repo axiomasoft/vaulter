@@ -4,7 +4,7 @@ import { TiptapTransformer } from '@hocuspocus/transformer'
 import * as backendModule from './backend.js'
 import { config as defaultConfig } from './config.js'
 import { createLedger } from './ledger.js'
-import { createLimits, envelopeIdOf, isWriteMessage, LIMIT } from './limits.js'
+import { createLimits, envelopeIdOf, isWriteMessage, LIMIT, readMessageHeader, readVarUint } from './limits.js'
 import { retryPolicy } from './retry.js'
 import { closeConnection, closeRoom, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, TOKEN_EXPIRED } from './rooms.js'
 import { extensionsFor, FIELD, lostAttributes } from './schema.js'
@@ -48,6 +48,12 @@ export { isWriteMessage }
 // estimated from the updates it took and measured (Y.encodeStateAsUpdate) only when the estimate
 // says a write would cross the limit; past it, its writers are read-only and an envelope is nacked
 // `document_too_large` unless the room already holds its update (a sync message brought it first).
+//
+// An update the room took before its commit and the backend then refused for good (dropped with
+// retry:false — too large, invalid, the writer may no longer write) is in the room and in every
+// client, but never in the log: the ledger drops the later records of its generation with it, and
+// the room is fenced and closed — 4409 for its clients, which reopen on a new Y.Doc, and its direct
+// connections as well — so Hocuspocus unloads it and the next connection loads it from its log.
 //
 // The hub tells each connection {"t":"status","mode","writes":"open"} — or {…,"writes":"stopped",
 // "reason"} with reason draining | pending_budget | backend_unavailable | protocol_mismatch |
@@ -201,13 +207,15 @@ export function buildSeed(loaded) {
 }
 
 /**
- * Whether a document already holds every struct an update inserts (its state vector covers the
- * update's): applying it then only repeats it or deletes, and adds no content. False for an update
- * Yjs cannot read.
+ * Whether a document already holds every struct an update inserts (its state reaches the end clock
+ * of every client the update inserts for): applying it then only repeats it or deletes, and adds
+ * no content. The end clocks come from the update's structs, not from its state vector, which
+ * leaves out a client whose structs start above clock zero — as those of every incremental update
+ * do. False for an update Yjs cannot read.
  */
 export function holdsUpdate(document, update) {
   try {
-    const incoming = Y.decodeStateVector(Y.encodeStateVectorFromUpdate(update))
+    const { to: incoming } = Y.parseUpdateMeta(update)
     const current = Y.decodeStateVector(Y.encodeStateVector(document))
 
     for (const [client, clock] of incoming) {
@@ -219,6 +227,152 @@ export function holdsUpdate(document, update) {
     return true
   } catch {
     return false
+  }
+}
+
+/**
+ * The Yjs update a raw sync step 2 / update message carries (`varString documentName · varUint
+ * type · varUint syncType · varUint8Array update`), without a copy; null when it cannot be read.
+ */
+function syncUpdateOf(message) {
+  const header = readMessageHeader(message)
+
+  if (header === null) {
+    return null
+  }
+
+  const cursor = { position: header.nameBytes }
+
+  if (readVarUint(message, cursor) === null || readVarUint(message, cursor) === null) {
+    return null
+  }
+
+  const length = readVarUint(message, cursor)
+
+  if (length === null || cursor.position + length > message.length) {
+    return null
+  }
+
+  return message.subarray(cursor.position, cursor.position + length)
+}
+
+/** The bytes of a lib0 varUint. */
+function varUintBytes(value) {
+  let bytes = 1
+
+  for (let rest = value; rest >= 0x80; rest = Math.floor(rest / 0x80)) {
+    bytes++
+  }
+
+  return bytes
+}
+
+/** The bytes a delete set (client → [{clock, len}]) takes in an update (v1). */
+function deleteSetBytes(clients) {
+  let bytes = varUintBytes(clients.size)
+
+  for (const [client, ranges] of clients) {
+    bytes += varUintBytes(client) + varUintBytes(ranges.length)
+
+    for (const { clock, len } of ranges) {
+      bytes += varUintBytes(clock) + varUintBytes(len)
+    }
+  }
+
+  return bytes
+}
+
+/** The index of the struct of one client's structs (in clock order, without gaps) that holds `clock`; their length when none does. */
+function structAt(structs, clock) {
+  let low = 0
+  let high = structs.length - 1
+
+  while (low <= high) {
+    const middle = (low + high) >> 1
+    const struct = structs[middle]
+
+    if (clock < struct.id.clock) {
+      high = middle - 1
+    } else if (clock >= struct.id.clock + struct.length) {
+      low = middle + 1
+    } else {
+      return middle
+    }
+  }
+
+  return structs.length
+}
+
+/**
+ * The part of a delete set (client → [{clock, len}]) a document has not applied yet: the ranges of
+ * its structs that are not deleted, and those past what it holds of the client (deleted once their
+ * structs arrive).
+ */
+function unappliedDeletions(document, clients) {
+  const unapplied = new Map()
+
+  for (const [client, ranges] of clients) {
+    const structs = document.store.clients.get(client) ?? []
+    const kept = []
+    const keep = (clock, len) => {
+      const last = kept.at(-1)
+
+      if (last && last.clock + last.len === clock) {
+        last.len += len
+      } else {
+        kept.push({ clock, len })
+      }
+    }
+
+    for (const { clock, len } of ranges) {
+      const end = clock + len
+      let at = clock
+
+      for (let index = structAt(structs, clock); index < structs.length && at < end; index++) {
+        const struct = structs[index]
+        const until = Math.min(end, struct.id.clock + struct.length)
+
+        if (!struct.deleted) {
+          keep(at, until - at)
+        }
+
+        at = until
+      }
+
+      if (at < end) {
+        keep(at, end - at)
+      }
+    }
+
+    if (kept.length > 0) {
+      unapplied.set(client, kept)
+    }
+  }
+
+  return unapplied
+}
+
+/**
+ * The bytes of a sync write a document does not hold yet: the structs its update adds (the diff
+ * against the document's state vector) and the deletions the document has not applied — a diff
+ * keeps the update's whole delete set, and a repeated sync step 2 carries the whole state, every
+ * deletion the document applied long ago included, and adds next to nothing. The message's length
+ * when its update cannot be read.
+ */
+function missingBytes(document, message) {
+  const update = syncUpdateOf(message)
+
+  if (update === null) {
+    return message.length
+  }
+
+  try {
+    const diff = Y.diffUpdate(update, Y.encodeStateVector(document))
+    const { clients } = Y.decodeUpdate(diff).ds
+
+    return diff.length - deleteSetBytes(clients) + deleteSetBytes(unappliedDeletions(document, clients))
+  } catch {
+    return message.length
   }
 }
 
@@ -262,8 +416,14 @@ export function createPersistence({
    * before the first measure), growth (bytes of the updates since), full (at MAX_DOCUMENT_BYTES) }.
    */
   const rooms = new Map()
-  /** Rooms whose generation ended or whose document is gone: nothing of theirs is appended any more. */
-  const fenced = new Set()
+  /**
+   * documentName → the close of a room whose generation ended, whose document is gone or whose state
+   * holds an update its log never will: nothing of theirs is appended any more, and a connection
+   * that joins one before Hocuspocus unloads it is closed the same way.
+   */
+  const fenced = new Map()
+  /** Server records whose own token the backend refused (401/403): a current writer's is used instead. */
+  const refusedTokens = new WeakSet()
   /**
    * documentName → Map<socketId (or the connection), { connection, context }> of the writers
    * connected to this hub; onDisconnect names the socket, not always the connection.
@@ -272,6 +432,8 @@ export function createPersistence({
   const contexts = new WeakMap()
   /** connection → the room it joined. */
   const roomOf = new WeakMap()
+  /** documentName → the direct connections open on it (Hocuspocus names them to no hook). */
+  const directConnections = new Map()
   /** Writers set read-only while writes are stopped; given back their writes when they reopen. */
   const muted = new Set()
   let instance = null
@@ -295,7 +457,7 @@ export function createPersistence({
       origin: entry.origin,
       seedStateVersion: entry.seedStateVersion,
     }, { ...backendOptions, timeoutMs }),
-    credentials: (entry) => entry.token ?? writerToken(entry.documentName),
+    credentials: (entry) => credentialsOf(entry),
     policy,
     clock,
     sleep,
@@ -311,8 +473,18 @@ export function createPersistence({
           send(connection, { t: 'ack', id: entry.clientId, seq: ack.seq, g: ack.generation ?? entry.generation })
         }
       },
-      failed: (entry, failure) => nack(entry, failure.code, true),
-      dropped: (entry, failure) => nack(entry, failure.code, failure.retry === true),
+      failed: (entry, failure) => {
+        // A server record kept after a credential refusal: its own token is not tried again.
+        if (entry.origin === 'server' && (failure.status === 401 || failure.status === 403)) {
+          refusedTokens.add(entry)
+        }
+
+        nack(entry, failure.code, true)
+      },
+      dropped: (entry, failure) => {
+        nack(entry, failure.code, failure.retry === true)
+        diverged(entry, failure)
+      },
       epochMismatch: (documentName) => fence(documentName, EPOCH_CHANGED),
       documentGone: (documentName) => fence(documentName, DOCUMENT_GONE),
       forbidden: (entry) => entry.connections.forEach((connection) => closeConnection(connection, FORBIDDEN)),
@@ -325,6 +497,50 @@ export function createPersistence({
   function bind(hocuspocus) {
     if (hocuspocus && instance === null) {
       instance = hocuspocus
+      followDirectConnections(hocuspocus)
+    }
+  }
+
+  /**
+   * Keep the direct connections of the instance (openDirectConnection): a room that diverged closes
+   * them with its WebSockets, or one held open would keep the room loaded — and fenced — for good.
+   * One opened on a fenced room is closed again at once and refused (code
+   * collaboration_epoch_mismatch). Closing one twice closes it once.
+   */
+  function followDirectConnections(hocuspocus) {
+    const open = hocuspocus.openDirectConnection
+
+    if (typeof open !== 'function') {
+      return
+    }
+
+    hocuspocus.openDirectConnection = async function openDirectConnection(documentName, ...rest) {
+      const connection = await open.call(hocuspocus, documentName, ...rest)
+      const disconnect = connection.disconnect
+      let closing = null
+
+      connection.disconnect = function closeDirectConnection() {
+        if (closing === null) {
+          directConnections.get(documentName)?.delete(connection)
+          closing = Promise.resolve().then(() => disconnect.call(connection))
+        }
+
+        return closing
+      }
+
+      if (fenced.has(documentName)) {
+        await connection.disconnect().catch(() => {})
+
+        throw fencedWrite(documentName)
+      }
+
+      if (!directConnections.has(documentName)) {
+        directConnections.set(documentName, new Set())
+      }
+
+      directConnections.get(documentName).add(connection)
+
+      return connection
     }
   }
 
@@ -367,9 +583,59 @@ export function createPersistence({
     return null
   }
 
+  /**
+   * The token of an append attempt: a client record's is its connection's; a server record's is the
+   * one it was made with until the backend refused it (expired, or its user may no longer write),
+   * then a connected writer's current one — so a refused token never blocks the room's records.
+   */
+  function credentialsOf(entry) {
+    if (entry.token && !refusedTokens.has(entry)) {
+      return entry.token
+    }
+
+    return writerToken(entry.documentName)
+  }
+
   function fence(documentName, close) {
-    fenced.add(documentName)
+    fenced.set(documentName, close)
     closeRoom(instance, documentName, close)
+  }
+
+  /**
+   * A record the room took (an envelope applied before its commit, a server change) was refused for
+   * good: the room and every client now hold an update its log never will, and later updates may
+   * build on it (the ledger dropped the later records of its generation with it). The room is
+   * fenced — nothing more of it is appended — and every connection is closed: its WebSockets with
+   * the code a client reopens on a new Y.Doc at, its direct connections as well. With none left,
+   * Hocuspocus unloads the room, which lifts the fence, and the next connection loads it again from
+   * its log. A generation that ended and a document that is gone fence the room themselves; a
+   * refusal the client may repeat (retry:true) is sent again and saved then.
+   */
+  function diverged(entry, failure) {
+    const ended = (failure.status === 409 && failure.code === backendModule.EPOCH_MISMATCH) || failure.status === 404
+    const room = rooms.get(entry.documentName)
+
+    if (failure.retry === true || ended || !room || room.generation !== entry.generation || fenced.has(entry.documentName)) {
+      return
+    }
+
+    log.warn?.(`Vaulter collab hub: an update of ${entry.documentName} the room already holds was refused (${failure.status ?? 'no answer'} ${failure.code}); the room is closed and loaded again from its log`)
+    fenced.set(entry.documentName, EPOCH_CHANGED)
+
+    // The connections a 403 closed already keep the close that tells their client why.
+    const closedForbidden = failure.status === 403 ? entry.connections : new Set()
+
+    for (const connection of allConnections(entry.documentName)) {
+      if (!closedForbidden.has(connection)) {
+        closeConnection(connection, EPOCH_CHANGED)
+      }
+    }
+
+    for (const connection of [...(directConnections.get(entry.documentName) ?? [])]) {
+      connection.disconnect().catch((error) => {
+        log.warn?.(`Vaulter collab hub: a direct connection of ${entry.documentName} did not close: ${error?.message ?? error}`)
+      })
+    }
   }
 
   function reportProtocolMismatch() {
@@ -848,6 +1114,13 @@ export function createPersistence({
       roomOf.set(connection, room)
     }
 
+    // The fenced room is not loaded again until Hocuspocus unloads it: a late joiner gets its close.
+    if (fenced.has(room)) {
+      closeConnection(connection, fenced.get(room))
+
+      return
+    }
+
     if (isWriter(context)) {
       if (!writers.has(room)) {
         writers.set(room, new Map())
@@ -862,8 +1135,10 @@ export function createPersistence({
 
   /**
    * A writer's sync step 2 / update is not applied (it is dropped as read-only) while its room takes
-   * no writes — writes stopped, or the room at its size limit, which a message larger than what is
-   * left reaches (its length is the measure: nothing is decoded).
+   * no writes — writes stopped, or the room at its size limit, which a message adding more than what
+   * is left reaches. Its length is the first measure; only a message that length says would cross
+   * is decoded, and then only what the room does not hold yet counts (a repeated sync step 2 carries
+   * the whole state and adds no content).
    */
   async function beforeHandleMessage({ connection, update, documentName }) {
     if (!connection || !isWriteMessage(update)) {
@@ -873,7 +1148,8 @@ export function createPersistence({
     const name = documentName ?? nameOf(connection)
     const room = rooms.get(name)
 
-    if (room && !room.full && !writesStopped && connection.readOnly !== true && isWriter(contextOf(connection)) && exceeds(room, update.length)) {
+    if (room && !room.full && !writesStopped && connection.readOnly !== true && isWriter(contextOf(connection))
+      && exceeds(room, update.length) && exceeds(room, missingBytes(room.document, update))) {
       limit.count(LIMIT.DOCUMENT_BYTES)
       markFull(name, room)
     }
@@ -895,10 +1171,32 @@ export function createPersistence({
     }
   }
 
+  /**
+   * A writer the backend no longer lets write (src/revocation.js made it read-only or closed it): it
+   * is no writer of its room any more — its token is not used for server changes — and stopped
+   * writes never give it its writes back.
+   */
+  function demote(connection) {
+    if (!connection) {
+      return
+    }
+
+    muted.delete(connection)
+
+    for (const room of writers.values()) {
+      for (const [key, writer] of room) {
+        if (writer.connection === connection) {
+          room.delete(key)
+        }
+      }
+    }
+  }
+
   async function afterUnloadDocument({ documentName }) {
     rooms.delete(documentName)
     fenced.delete(documentName)
     writers.delete(documentName)
+    directConnections.delete(documentName)
     limit.forgetRoom(documentName)
   }
 
@@ -911,15 +1209,24 @@ export function createPersistence({
     }).length
   }
 
+  /** The refusal of a server write to a fenced room: its change would never be appended. */
+  function fencedWrite(documentName) {
+    return Object.assign(new Error(`The room ${documentName} is fenced (its generation ended, or its state is no longer its log's); the server change was not applied`), { code: backendModule.EPOCH_MISMATCH })
+  }
+
   /**
    * Apply a server change to a room and append it: `change(document)` runs in one transaction of a
-   * direct connection. In durable mode this resolves only after the backend committed every update
+   * direct connection. A fenced room refuses it (code collaboration_epoch_mismatch) before anything
+   * is applied. In durable mode this resolves only after the backend committed every update
    * of the change (and rejects when it refused one, or after `timeoutMs`); in buffered mode right
    * after the update was put into the ledger. Resolves the update_ids the change was appended with.
    */
   async function serverWrite(documentName, change, { context = {}, token = null, timeoutMs = policy.deadlineMs } = {}) {
     if (!instance) {
       throw new Error('The collaboration persistence is not attached to a Hocuspocus instance')
+    }
+    if (fenced.has(documentName)) {
+      throw fencedWrite(documentName)
     }
     if (stopReasonFor(documentName) !== null) {
       const code = writesStopped ? NACK.WRITES_STOPPED : NACK.DOCUMENT_TOO_LARGE
@@ -932,6 +1239,11 @@ export function createPersistence({
     const origin = { source: 'vaulter-server', token: token ?? context?.token ?? null }
 
     try {
+      // Fenced while the room was opened (its load found the generation over): nothing is applied.
+      if (fenced.has(documentName)) {
+        throw fencedWrite(documentName)
+      }
+
       capturing = captured
       // The loaded room itself, so the transaction carries this origin (and its token).
       const document = connection.document ?? instance.documents?.get?.(documentName) ?? null
@@ -975,6 +1287,7 @@ export function createPersistence({
     reportProtocolMismatch,
     protocolCompatible,
     stopWrites,
+    demote,
     revokedStillConnected,
     attach: bind,
     start: () => ledger.start(),

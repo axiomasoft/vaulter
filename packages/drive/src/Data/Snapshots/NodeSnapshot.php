@@ -13,6 +13,10 @@ use Vaulter\Drive\Enums\NodeKind;
  * Read-only view of a node. Identifiers are strings; pass `$node->id` (or the
  * snapshot itself) back to any operation. Actor fields hold the host key of the
  * user, or null for the system.
+ *
+ * `sequence` versions the node itself; `accessVersion` versions its access (its
+ * grants and inheritance, CC2) — pass it back as the expected access version of
+ * a revoke or an inheritance change.
  */
 #[Api]
 final readonly class NodeSnapshot
@@ -45,5 +49,6 @@ final readonly class NodeSnapshot
         public ?FileHeadSnapshot $file,
         public ?DocumentHeadSnapshot $document,
         public ?ViewerStateSnapshot $viewer,
+        public int $accessVersion = 0,
     ) {}
 }

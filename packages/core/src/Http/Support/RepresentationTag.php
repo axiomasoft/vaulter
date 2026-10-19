@@ -17,7 +17,7 @@ use Vaulter\Attributes\Internal;
  * The id and sequence stay readable for support, but clients treat the tag as opaque.
  *
  * Document content carries nothing caller-specific, so its tag is the content
- * generation itself.
+ * generation itself; so are the tags of the aggregates with a version of their own.
  */
 #[Internal]
 final class RepresentationTag
@@ -35,6 +35,16 @@ final class RepresentationTag
     public static function document(string $nodeId, int $epoch, int $stateVersion): string
     {
         return '"'.$nodeId.'.'.$epoch.'.'.$stateVersion.'"';
+    }
+
+    /**
+     * The tag of an aggregate that carries its own version (D47, CC2): a share link, the access of a node (its
+     * grants and inheritance), a drive. Nothing caller-specific changes what a write of it may assume, so the tag is
+     * the kind, the id and the version; the kind keeps the tags of different aggregates with one id apart.
+     */
+    public static function versioned(string $kind, string $id, int $version): string
+    {
+        return '"'.$kind.'.'.$id.'.'.$version.'"';
     }
 
     /**

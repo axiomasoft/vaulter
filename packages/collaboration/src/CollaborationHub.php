@@ -12,6 +12,7 @@ use Vaulter\Collaboration\Exceptions\CollaborationUnavailableException;
 use Vaulter\Collaboration\Persistence\AppendResult;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
+use Vaulter\Collaboration\Revocation\PermissionVersions;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Exceptions\NotADocumentException;
@@ -32,7 +33,8 @@ use Vaulter\Support\Identity;
  * DocumentOperations; instead every call re-reads what the token was issued for: the node still exists, is not in the
  * trash, belongs to the token's drive and tenant, the drive is active (archived: read-only), the room's epoch is the
  * document's current one, and the token subject's rights now. A revoked Edit therefore takes effect on the hub's next
- * call.
+ * call, whatever the permission versions say (D26); a token older than its drive's or the global permission version
+ * (D46) is marked stale, so the hub renews it at once.
  */
 #[Internal]
 final readonly class CollaborationHub
@@ -45,6 +47,7 @@ final readonly class CollaborationHub
         private AccessResolver $access,
         private HostUserResolver $users,
         private UpdateLog $log,
+        private PermissionVersions $versions,
     ) {}
 
     /**
@@ -55,6 +58,7 @@ final readonly class CollaborationHub
      *                                             or the subject cannot see a document whose generation moved
      * @throws CollaborationEpochMismatchException the document moved to another generation (a subject with View)
      * @throws CollaborationUnavailableException   the type cannot collaborate
+     * @throws NotADocumentException               the node is not a document
      */
     public function open(CollaborationCall $call, mixed $room): HubRoom
     {
@@ -114,6 +118,7 @@ final readonly class CollaborationHub
             writable: $writable,
             driveActive: $driveStatus === DriveStatus::Active,
             userId: $call->subject,
+            permissionsStale: $call->permissionsVersion->olderThan($this->versions->current($ref->driveId)),
         );
     }
 

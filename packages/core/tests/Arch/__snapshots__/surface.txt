@@ -301,6 +301,12 @@ Vaulter\Exceptions\Concerns\ProvidesProblemDetails api since 1.0 trait
   public function problemDetails(): array
   public function problemHeaders(): array
 
+Vaulter\Exceptions\Concurrency\StaleWriteException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public function httpStatus(): int
+  public static function of(string $aggregate, int|string $id): self
+  public function problemCode(): string
+  public function problemDetails(): array
+
 Vaulter\Exceptions\Configuration\InvalidConfigurationException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
   public function problemCode(): string
 
@@ -348,6 +354,10 @@ Vaulter\Exceptions\Nodes\SequenceOverflowException api since 1.0 final class ext
   public function __construct()
   public function httpStatus(): int
   public function problemCode(): string
+
+Vaulter\Exceptions\Operations\UnknownOperationException api since 1.0 final class extends LogicException
+  public static function foreign(string $operation, string $module, string $owner): self
+  public static function undeclared(string $operation, string $module): self
 
 Vaulter\Exceptions\Registry\RegistryFrozenException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function forRegistry(string $registry): self
@@ -517,6 +527,8 @@ Vaulter\Modules\ModuleBuilder api since 1.0 final class
   public function listen(string $event, string $listener): self
   public function listeners(): array
   public function module(): Vaulter\Modules\ModuleId
+  public function operationSources(): array
+  public function operations(string $source): self
   public function problemSources(): array
   public function problems(string $source): self
   public function provides(string $contract, string $implementation): self
@@ -591,6 +603,20 @@ Vaulter\Modules\VaulterModule spi:implement since 1.0 interface
   public function requires(): array
   public function version(): string
 
+Vaulter\Operations\ConcurrencyPolicy api since 1.0 enum: string
+  case Append = 'append'
+  case Generation = 'generation'
+  case IfMatch = 'if_match'
+  case Natural = 'natural'
+  case RowIdentity = 'row_identity'
+  case StateMachine = 'state_machine'
+
+Vaulter\Operations\IdempotencyPolicy api since 1.0 enum: string
+  case Conditional = 'conditional'
+  case Natural = 'natural'
+  case Protocol = 'protocol'
+  case Receipt = 'receipt'
+
 Vaulter\Operations\Operation api since 1.0 final readonly class
   public int $attemptNo
   public Vaulter\Operations\OperationContext $context
@@ -616,6 +642,20 @@ Vaulter\Operations\OperationContext api since 1.0 final readonly class
 
 Vaulter\Operations\OperationMiddleware spi:implement since 1.0 interface
   public function handle(Vaulter\Operations\Operation $operation, Closure $next): mixed
+
+Vaulter\Operations\OperationPolicy api since 1.0 final readonly class
+  public const string AGGREGATE_PATTERN = '/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/'
+  public const string ROUTE_PATTERN = '/^[a-z][a-z0-9_-]*(\.[a-z][a-z0-9_-]*)*$/'
+  public string $aggregate
+  public Vaulter\Operations\ConcurrencyPolicy $concurrency
+  public Vaulter\Operations\IdempotencyPolicy $idempotency
+  public array $routes
+  public function __construct(string $aggregate, Vaulter\Operations\ConcurrencyPolicy $concurrency, Vaulter\Operations\IdempotencyPolicy $idempotency, array $routes = [])
+  public function module(): string
+  public function toArray(): array
+
+Vaulter\Operations\OperationPolicySource spi:implement since 1.0 interface
+  public function policies(): array
 
 Vaulter\Operations\OperationRunner api since 1.0 final class
   public function inOperation(): bool
@@ -722,7 +762,7 @@ Vaulter\ValueObjects\Events\EventScope api since 1.0 final readonly class
   public function __construct(mixed $tenantId, mixed $driveId, string $profile)
 
 Vaulter\ValueObjects\Events\EventSubject api since 1.0 final readonly class
-  public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload']
+  public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload', 'access']
   public string $id
   public string $type
   public function __construct(string $type, mixed $id)

@@ -9,6 +9,7 @@ use Vaulter\Collaboration\CollaborationCall;
 use Vaulter\Collaboration\CollaborationHub;
 use Vaulter\Collaboration\Data\RoomRef;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
+use Vaulter\Collaboration\Revocation\PermissionVersion;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Compaction;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
@@ -31,6 +32,7 @@ it('refuses an append when the drive changes after the room was opened', functio
         room: Hub::room($node),
         ref: new RoomRef(driveId: (string) $node->drive_id, nodeId: (string) $node->id, epoch: 0),
         subject: '1', mode: 'rw', schemaVersion: 1, tenant: null,
+        permissionsVersion: new PermissionVersion(drive: 0, global: 0), jti: 'test-call', expiresAt: time() + 300,
     );
     $hub = app(CollaborationHub::class);
     $room = $hub->open($call, $call->room);

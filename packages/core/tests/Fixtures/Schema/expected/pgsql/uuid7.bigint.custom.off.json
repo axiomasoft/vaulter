@@ -349,6 +349,24 @@
                     "collation": null
                 },
                 {
+                    "name": "integrity_checked_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "integrity_failed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "storage_version",
                     "type": "character varying(255)",
                     "not_null": false,
@@ -442,6 +460,7 @@
             "indexes": {
                 "custom_blobs_encryption_key_id_index": "CREATE INDEX custom_blobs_encryption_key_id_index ON public.custom_blobs USING btree (encryption_key_id)",
                 "custom_blobs_gc_idx": "CREATE INDEX custom_blobs_gc_idx ON public.custom_blobs USING btree (status, ref_count, delete_after_at)",
+                "custom_blobs_integrity_idx": "CREATE INDEX custom_blobs_integrity_idx ON public.custom_blobs USING btree (integrity_checked_at)",
                 "custom_blobs_pkey": "CREATE UNIQUE INDEX custom_blobs_pkey ON public.custom_blobs USING btree (id)",
                 "custom_blobs_scope_sha_uniq": "CREATE UNIQUE INDEX custom_blobs_scope_sha_uniq ON public.custom_blobs USING btree (scope_key, sha256)",
                 "custom_blobs_size_bytes_index": "CREATE INDEX custom_blobs_size_bytes_index ON public.custom_blobs USING btree (size_bytes)",
@@ -627,6 +646,56 @@
                 "custom_collaboration_heads_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (document_id, generation)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_collaboration_permission_versions": {
+            "columns": [
+                {
+                    "name": "scope_key",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_collaboration_permission_versions_pkey": "CREATE UNIQUE INDEX custom_collaboration_permission_versions_pkey ON public.custom_collaboration_permission_versions USING btree (scope_key)"
+            },
+            "constraints": {
+                "custom_collaboration_permission_versions_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (scope_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_collaboration_permission_versions_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((version >= 0))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -1662,6 +1731,15 @@
                     "collation": "default"
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "created_by",
                     "type": "bigint",
                     "not_null": false,
@@ -1718,6 +1796,13 @@
                 "custom_drives_scan_admission_sequence_check": {
                     "type": "c",
                     "definition": "CHECK (((scan_admission_sequence IS NULL) OR (scan_admission_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((version >= 0))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2534,6 +2619,15 @@
                     "collation": null
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "created_at",
                     "type": "timestamp(0) without time zone",
                     "not_null": false,
@@ -2579,6 +2673,13 @@
                 "custom_node_comments_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_comments_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((version >= 0))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -2813,6 +2914,15 @@
                     "collation": null
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "scope",
                     "type": "character varying(8)",
                     "not_null": true,
@@ -2922,6 +3032,13 @@
                 "custom_node_shares_token_hash_uniq": {
                     "type": "u",
                     "definition": "UNIQUE (token_hash)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((version >= 0))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true
@@ -3145,6 +3262,15 @@
                     "collation": null
                 },
                 {
+                    "name": "access_version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "shortcut_target_id",
                     "type": "uuid",
                     "not_null": false,
@@ -3281,6 +3407,13 @@
                 "custom_nodes_trashed_idx": "CREATE INDEX custom_nodes_trashed_idx ON public.custom_nodes USING btree (trashed_at) WHERE (trashed_at IS NOT NULL)"
             },
             "constraints": {
+                "custom_nodes_access_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((access_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
                 "custom_nodes_drive_id_foreign": {
                     "type": "f",
                     "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
@@ -5517,6 +5650,15 @@
                     "collation": "default"
                 },
                 {
+                    "name": "version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
                     "name": "created_at",
                     "type": "timestamp(0) without time zone",
                     "not_null": false,
@@ -5571,6 +5713,13 @@
                 "custom_webhook_endpoints_pkey": {
                     "type": "p",
                     "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_endpoints_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((version >= 0))",
                     "deferrable": false,
                     "deferred": false,
                     "validated": true

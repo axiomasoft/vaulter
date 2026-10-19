@@ -221,6 +221,8 @@
           "files": [
             "packages/core/tests/OpenApi/OpenApiDocumentTest.php",
             "packages/core/tests/OpenApi/OpenApiExamplesTest.php",
+            "packages/core/tests/OpenApi/OpenApiOperationPoliciesTest.php",
+            "packages/core/tests/OpenApi/OpenApiProblemsTableTest.php",
             "packages/core/tests/OpenApi/OpenApiRouteCoverageTest.php",
             "packages/core/tests/OpenApi/OpenApiValidationEnabledTest.php",
             "packages/core/tests/OpenApi/OpenApiValidatorSelfTest.php",
@@ -482,6 +484,8 @@
             "packages/core/tests/Modules/RouteLabelSourceTest.php",
             "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
             "packages/core/tests/Observability/Tracing/TraceRecorderBindingTest.php",
+            "packages/core/tests/Operations/OperationCatalogTest.php",
+            "packages/core/tests/Operations/OperationsReferenceTest.php",
             "packages/core/tests/Unit/IdentityFitsKeyTest.php",
             "packages/core/tests/Unit/NodeNameTest.php"
           ]
@@ -584,12 +588,15 @@
             "packages/media/tests/Cas/BlobFindOrCreateTest.php",
             "packages/media/tests/Cas/BlobGarbageCollectorTest.php",
             "packages/media/tests/Cas/BlobGcBatchTest.php",
+            "packages/media/tests/Cas/BlobGcCriteriaTest.php",
             "packages/media/tests/Cas/BlobGcPipelineTest.php",
             "packages/media/tests/Cas/BlobOrphanPruneTest.php",
             "packages/media/tests/Cas/BlobOrphanSweepTest.php",
             "packages/media/tests/Cas/BlobPinGcTest.php",
             "packages/media/tests/Cas/BlobPinStatusTest.php",
             "packages/media/tests/Cas/BlobReconcilerTest.php",
+            "packages/media/tests/Cas/BlobScrubHealTest.php",
+            "packages/media/tests/Cas/BlobScrubTest.php",
             "packages/media/tests/Cas/CasPromoteAtomicTest.php",
             "packages/media/tests/Cas/ColdMutationSurvivorTest.php",
             "packages/media/tests/Cas/CommandOutputContractTest.php",
@@ -597,6 +604,7 @@
             "packages/media/tests/Cas/OrphanGraceConfigTest.php",
             "packages/media/tests/Cas/ReconcileBlobsOrphanCommandTest.php",
             "packages/media/tests/Cas/SweepPendingSerializableTest.php",
+            "packages/media/tests/Doctor/BlobIntegrityCheckTest.php",
             "packages/media/tests/Doctor/BlobPinsCheckTest.php",
             "packages/media/tests/Feature/BootTest.php",
             "packages/media/tests/Observability/P85Section53MediaMetricsTest.php",
@@ -694,6 +702,7 @@
             "packages/drive/tests/Concurrency/CompleteUploadRetryTest.php",
             "packages/drive/tests/Concurrency/DedicatedConnectionTest.php",
             "packages/drive/tests/Concurrency/DriveArchiveRaceTest.php",
+            "packages/drive/tests/Concurrency/GcNewRevisionRaceTest.php",
             "packages/drive/tests/Concurrency/LockOrderRaceTest.php",
             "packages/drive/tests/Concurrency/MoveCycleRaceTest.php",
             "packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php",
@@ -707,6 +716,7 @@
             "packages/drive/tests/Concurrency/RootTransactionSnapshotTest.php",
             "packages/drive/tests/Concurrency/SameNameUploadRaceTest.php",
             "packages/drive/tests/Concurrency/ScanWorkRecoveryRaceTest.php",
+            "packages/drive/tests/Concurrency/ShareVersionRaceTest.php",
             "packages/drive/tests/Concurrency/TreeLockRaceTest.php",
             "packages/drive/tests/Concurrency/TusConcurrentPatchTest.php",
             "packages/drive/tests/Concurrency/TusPatchVsSweepRaceTest.php",
@@ -786,6 +796,7 @@
             "packages/drive/tests/Access/AccessModelV1Test.php",
             "packages/drive/tests/Access/AccessResolverTest.php",
             "packages/drive/tests/Access/DatabaseDriverTest.php",
+            "packages/drive/tests/Access/EffectivePermissionsChangedTest.php",
             "packages/drive/tests/Access/EvaluateManyEquivalenceTest.php",
             "packages/drive/tests/Access/GateDriverTest.php",
             "packages/drive/tests/Access/GrantFailLoudTest.php",
@@ -812,6 +823,7 @@
             "packages/drive/tests/Drive/CreateFolderTest.php",
             "packages/drive/tests/Drive/DeepSubtreeLifecycleTest.php",
             "packages/drive/tests/Drive/DriveArchiveTest.php",
+            "packages/drive/tests/Drive/DriveLifecycleOperationTest.php",
             "packages/drive/tests/Drive/DrivePolicyEnforcementTest.php",
             "packages/drive/tests/Drive/DrivePurgeTest.php",
             "packages/drive/tests/Drive/ForceDeleteTest.php",
@@ -867,6 +879,7 @@
             "packages/drive/tests/Feature/UploadChunkLimitTest.php",
             "packages/drive/tests/Feature/UploadSessionOwnershipTest.php",
             "packages/drive/tests/Http/AbilitiesManyTest.php",
+            "packages/drive/tests/Http/AccessConcurrencyTest.php",
             "packages/drive/tests/Http/ActivityV1Test.php",
             "packages/drive/tests/Http/CacheHeadersDriveV1Test.php",
             "packages/drive/tests/Http/CacheHeadersV1Test.php",
@@ -891,6 +904,7 @@
             "packages/drive/tests/Http/PublicSharesV1Test.php",
             "packages/drive/tests/Http/QuarantinedDownloadTest.php",
             "packages/drive/tests/Http/RepresentationTagTest.php",
+            "packages/drive/tests/Http/SecurityMatrixTest.php",
             "packages/drive/tests/Http/SharesV1Test.php",
             "packages/drive/tests/Http/StaleIfMatchTest.php",
             "packages/drive/tests/Http/StarPropertiesV1Test.php",
@@ -912,6 +926,7 @@
             "packages/drive/tests/PublicApi/AuthorizationInsideOperationTest.php",
             "packages/drive/tests/PublicApi/CopySubtreeAuthorizationTest.php",
             "packages/drive/tests/PublicApi/LifecycleBoundaryTest.php",
+            "packages/drive/tests/PublicApi/NodeIdempotencyTest.php",
             "packages/drive/tests/PublicApi/NodeSequenceContractTest.php",
             "packages/drive/tests/PublicApi/OperationMatrixTest.php",
             "packages/drive/tests/Recipes/DriveRecipeTest.php",
@@ -933,6 +948,7 @@
             "packages/drive/tests/Schema/SiblingUniqueTest.php",
             "packages/drive/tests/Sharing/CreateShareLinkTest.php",
             "packages/drive/tests/Sharing/PublicShareDownloadHeadersTest.php",
+            "packages/drive/tests/Sharing/ShareIdempotencyTest.php",
             "packages/drive/tests/Sharing/ShareLinkLifecycleEventsTest.php",
             "packages/drive/tests/Sharing/ShareLinkLifecycleTest.php",
             "packages/drive/tests/Sharing/ShareResolverTest.php",
@@ -1028,6 +1044,7 @@
             "packages/drive/tests/Arch/ArchTest.php",
             "packages/drive/tests/Arch/ConfigurationBoundaryTest.php",
             "packages/drive/tests/Arch/HttpV1ArchTest.php",
+            "packages/drive/tests/Arch/OperationPolicyCoverageTest.php",
             "packages/drive/tests/Arch/OperationsBoundaryTest.php",
             "packages/drive/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/drive/tests/Arch/PublicApiSnapshotTest.php",
@@ -1111,6 +1128,7 @@
             "serial"
           ],
           "files": [
+            "packages/webhooks/tests/Concurrency/EndpointVersionRaceTest.php",
             "packages/webhooks/tests/Concurrency/WebhookAutoDisableRaceTest.php",
             "packages/webhooks/tests/Events/WebhookAutoDisableCommitTest.php"
           ]
@@ -1133,6 +1151,8 @@
             "packages/webhooks/tests/Configuration/WebhooksConfigTest.php",
             "packages/webhooks/tests/Console/SchedulingRegistrarTest.php",
             "packages/webhooks/tests/Feature/PruneWebhooksTest.php",
+            "packages/webhooks/tests/Http/IfMatchRequiredTest.php",
+            "packages/webhooks/tests/Http/SecurityMatrixTest.php",
             "packages/webhooks/tests/Http/WebhookEndpointsV1Test.php",
             "packages/webhooks/tests/Http/WebhookExceptionStatusTest.php",
             "packages/webhooks/tests/Http/WebhooksProblemCodesTest.php",
@@ -1142,6 +1162,7 @@
             "packages/webhooks/tests/Schema/WebhooksKeyColumnsTest.php",
             "packages/webhooks/tests/Webhooks/ConcurrentDeliveryTest.php",
             "packages/webhooks/tests/Webhooks/DeliverWebhookTest.php",
+            "packages/webhooks/tests/Webhooks/EndpointIdempotencyTest.php",
             "packages/webhooks/tests/Webhooks/OutboundUrlGuardTest.php",
             "packages/webhooks/tests/Webhooks/OutboxStagingTest.php",
             "packages/webhooks/tests/Webhooks/OutboxTransactionTest.php",
@@ -1175,6 +1196,7 @@
             "serial"
           ],
           "files": [
+            "packages/webhooks/tests/Arch/OperationPolicyCoverageTest.php",
             "packages/webhooks/tests/Observability/Tracing/WebhookPipelineTracingTest.php"
           ]
         }
@@ -1246,6 +1268,7 @@
           ],
           "files": [
             "packages/documents/tests/Concurrency/CommentMutationRaceTest.php",
+            "packages/documents/tests/Concurrency/CommentVersionRaceTest.php",
             "packages/documents/tests/Concurrency/DegradedContentRaceTest.php",
             "packages/documents/tests/Concurrency/DocumentMutationLivenessRaceTest.php",
             "packages/documents/tests/Concurrency/DocumentRenameStaleTest.php",
@@ -1322,7 +1345,9 @@
             "packages/documents/tests/Http/DocumentContentV1Test.php",
             "packages/documents/tests/Http/DocumentRevisionsV1Test.php",
             "packages/documents/tests/Http/DocumentsRouteLabelsTest.php",
-            "packages/documents/tests/Http/ExportV1Test.php"
+            "packages/documents/tests/Http/ExportV1Test.php",
+            "packages/documents/tests/Http/IfMatchRequiredTest.php",
+            "packages/documents/tests/Http/SecurityMatrixTest.php"
           ]
         },
         {
@@ -1458,6 +1483,7 @@
             "packages/documents/tests/Events/DocumentJournalTest.php",
             "packages/documents/tests/Operations/CommentOperationsTest.php",
             "packages/documents/tests/Operations/DocumentAbilityMatrixTest.php",
+            "packages/documents/tests/Operations/DocumentIdempotencyTest.php",
             "packages/documents/tests/Operations/DocumentOperationsTest.php",
             "packages/documents/tests/Operations/DocumentWriteGuardTest.php",
             "packages/documents/tests/Operations/MutationLivenessTest.php",
@@ -1547,6 +1573,7 @@
             "packages/documents/tests/Arch/DocumentStateWriterBoundaryTest.php",
             "packages/documents/tests/Arch/ExportBoundaryTest.php",
             "packages/documents/tests/Arch/HttpV1ArchTest.php",
+            "packages/documents/tests/Arch/OperationPolicyCoverageTest.php",
             "packages/documents/tests/Arch/OperationsBoundaryTest.php",
             "packages/documents/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/documents/tests/Arch/PublicApiSnapshotTest.php",
@@ -1633,7 +1660,12 @@
             "packages/collaboration/tests/Persistence/CompactionLeaseTest.php",
             "packages/collaboration/tests/Persistence/GenerationFenceTest.php",
             "packages/collaboration/tests/Persistence/LockingReadsTest.php",
-            "packages/collaboration/tests/Persistence/ReceiptRetentionTest.php"
+            "packages/collaboration/tests/Persistence/ReceiptRetentionTest.php",
+            "packages/collaboration/tests/Revocation/AppendRevokedTest.php",
+            "packages/collaboration/tests/Revocation/ControlConsumerTest.php",
+            "packages/collaboration/tests/Revocation/EffectivePermissionsTest.php",
+            "packages/collaboration/tests/Revocation/PermissionVersionsTest.php",
+            "packages/collaboration/tests/Revocation/RenewTest.php"
           ]
         },
         {
@@ -1651,6 +1683,8 @@
           "files": [
             "packages/collaboration/tests/Arch/BoundaryTest.php",
             "packages/collaboration/tests/Arch/HttpV1ArchTest.php",
+            "packages/collaboration/tests/Arch/I17ScenarioMapTest.php",
+            "packages/collaboration/tests/Arch/OperationPolicyCoverageTest.php",
             "packages/collaboration/tests/Arch/TestingBoundaryTest.php"
           ]
         },
@@ -2082,6 +2116,22 @@
         "list"
       ],
       "partitions": []
+    },
+    "vue-collaboration": {
+      "kind": "node",
+      "cwd": "packages/vue-collaboration",
+      "command": [
+        "npm",
+        "test",
+        "--"
+      ],
+      "default": true,
+      "discovery": [
+        "npx",
+        "vitest",
+        "list"
+      ],
+      "partitions": []
     }
   },
   "stand": [
@@ -2092,7 +2142,16 @@
         "bash",
         "scripts/collab-e2e.sh"
       ],
-      "note": "Collaboration protocol against real processes: testbench serve + the Hocuspocus hub; needs npm ci in packages/collaboration/hub"
+      "note": "Collaboration protocol 2 against real processes: testbench serve + the Hocuspocus hub; needs npm ci in packages/collaboration/hub"
+    },
+    {
+      "name": "collab-stand",
+      "cwd": ".",
+      "command": [
+        "bash",
+        "scripts/collab-stand.sh"
+      ],
+      "note": "I17 scenarios 2, 3, 10 in docker: PostgreSQL, Redis, testbench serve and two hubs (SIGKILL, two hubs, SIGTERM drain); needs docker compose and npm ci in packages/collaboration/hub"
     }
   ]
 }

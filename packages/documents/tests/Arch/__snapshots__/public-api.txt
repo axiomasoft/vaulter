@@ -214,9 +214,9 @@ Vaulter\Documents\Operations\DocumentOperations
 
 Vaulter\Documents\Operations\CommentOperations
   add(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Comments\AddCommentInput $input): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
-  delete(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment): void
+  delete(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment, ?int $expectedVersion = null): void
   list(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Drive\Data\ListOptions $options = null): \Vaulter\Data\Page
-  resolve(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
+  resolve(\Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment, ?int $expectedVersion = null): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
 
 Vaulter\Documents\Data\Snapshots\DocumentSnapshot
 
@@ -264,6 +264,7 @@ Vaulter\Documents\Data\Snapshots\CommentSnapshot
   readonly ?string $parentId
   readonly ?string $resolvedBy
   readonly \DateTimeImmutable $createdAt
+  readonly int $version
   readonly string $authorId
   readonly string $authorType
   readonly string $body

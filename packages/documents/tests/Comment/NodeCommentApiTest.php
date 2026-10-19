@@ -123,13 +123,14 @@ it('lets the AUTHOR resolve and delete their own comment', function () use ($use
 
     $id = $this->postJson($url($node), ['body' => 'mine'])->assertCreated()->json('data.id');
 
-    $this->postJson($url($node).'/'.$id.'/resolve')
+    // A write on a comment names the version it read (its tag): the resolution raises it.
+    $this->postJson($url($node).'/'.$id.'/resolve', [], ['If-Match' => '"comment.'.$id.'.0"'])
         ->assertOk()
         ->assertJsonPath('data.resolved_by', '1');
 
     expect(NodeComment::query()->findOrFail($id)->isResolved())->toBeTrue();
 
-    $this->deleteJson($url($node).'/'.$id)->assertNoContent();
+    $this->deleteJson($url($node).'/'.$id, [], ['If-Match' => '"comment.'.$id.'.1"'])->assertNoContent();
     expect(NodeComment::query()->whereKey($id)->exists())->toBeFalse();
 });
 
@@ -157,8 +158,8 @@ it('lets a MANAGER who is not the author resolve and delete', function () use ($
     $id = $this->postJson($url($node), ['body' => 'authored by 1'])->assertCreated()->json('data.id');
 
     $this->actingAs($user(3));
-    $this->postJson($url($node).'/'.$id.'/resolve')->assertOk();
-    $this->deleteJson($url($node).'/'.$id)->assertNoContent();
+    $this->postJson($url($node).'/'.$id.'/resolve', [], ['If-Match' => '"comment.'.$id.'.0"'])->assertOk();
+    $this->deleteJson($url($node).'/'.$id, [], ['If-Match' => '"comment.'.$id.'.1"'])->assertNoContent();
 
     expect(NodeComment::query()->whereKey($id)->exists())->toBeFalse();
 });

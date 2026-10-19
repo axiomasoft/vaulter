@@ -33,6 +33,12 @@ final readonly class CompactionLeases
     /** The most generations one lease call hands out. */
     public const int MAX = 100;
 
+    /** The most generations a report of what is still due names; it counts them all. */
+    public const int REPORTED = 20;
+
+    /** The pending markers read per transaction while a report counts. */
+    private const int PAGE = 100;
+
     public function __construct(
         private VaulterDatabase $database,
         private LogTables $log,
@@ -71,6 +77,40 @@ final readonly class CompactionLeases
         }
 
         return $leases;
+    }
+
+    /**
+     * What is still due for compaction, whichever hub holds its lease: the generations whose document carries their
+     * pending marker, open, with a drain request or past a trigger — what a lease call hands out now, or once a lease
+     * that holds one is spent or ran out. Only an empty report shows the hub's `compact --pending` that nothing is left:
+     * an empty lease answer does not, another hub's lease hides a generation from it. The markers are read through the
+     * documents state contract page by page, each page in a short transaction of its own, the heads without locks.
+     * `generations` names the first `$limit` in document id order; `total` counts them all.
+     *
+     * @return array{total: int, generations: list<array{document: string, generation: int}>}
+     */
+    public function pending(int $limit = self::REPORTED): array
+    {
+        $now = Carbon::now();
+        $total = 0;
+        $generations = [];
+        $after = null;
+        do {
+            $page = $this->database->transaction(fn (): array => $this->state->pendingDocuments(self::PAGE, $after));
+            foreach ($page as $marker) {
+                $after = Identity::key($marker->documentId);
+                $head = $this->log->heads($this->log->rows('collaboration_heads', $marker->documentId, $marker->generation))[0] ?? null;
+                if ($head === null || $head->retiredAt !== null || ($head->drainRequestedAt === null && !$this->due($head, $now))) {
+                    continue;
+                }
+                $total++;
+                if (count($generations) < $limit) {
+                    $generations[] = ['document' => $marker->nodeId, 'generation' => $marker->generation];
+                }
+            }
+        } while (count($page) === self::PAGE);
+
+        return ['total' => $total, 'generations' => $generations];
     }
 
     /**

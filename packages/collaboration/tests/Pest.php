@@ -11,7 +11,7 @@ use Vaulter\Testing\Support\TestGroups;
 
 // The hub protocol, the session and the room tokens run with the opt-in collaboration module ACTIVE: its routes are
 // mounted and its driver is provided.
-uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Collaboration', 'Http', 'Operations', 'Doctor', 'Persistence', 'Console', 'Document/CollaborationSessionTest.php');
+uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Collaboration', 'Http', 'Operations', 'Doctor', 'Persistence', 'Console', 'Revocation', 'Document/CollaborationSessionTest.php');
 
 // A restore drains a pending document only outside any transaction (PendingStateGuard): these migrate per test instead
 // of wrapping it in one, which would hide the difference.

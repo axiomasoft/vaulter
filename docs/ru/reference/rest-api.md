@@ -885,14 +885,18 @@ Bearer-ссылки на узел (`vaulter-drive.features.share_links`). Ссы
   или `null`), `created_at`.
 - **Повторная доставка** — для `delivered` или `dead` при активном эндпоинте; иначе
   `409 webhook_delivery_not_redeliverable`. Неизвестные id дают
-  `404 webhook_endpoint_not_found` / `404 webhook_delivery_not_found`.
+  `404 webhook_endpoint_not_found` / `404 webhook_delivery_not_found`. Передавайте
+  `Idempotency-Key`: повтор с тем же ключом отвечает из квитанции (`Idempotent-Replayed`,
+  доставка в текущем состоянии) и ничего не отправляет повторно; без ключа повтор после
+  завершения доставки — это новая переотправка.
 
 ---
 
 ## Совместное редактирование в реальном времени
 
-Совместное редактирование TipTap/Yjs над документами (`vaulter-documents.collaboration.enabled`).
-См. [Совместное редактирование](/ru/guides/collaboration).
+Совместное редактирование TipTap/Yjs над документами обслуживает opt-in модуль `vaulter-collaboration`
+(`vaulter.modules.collaboration`; маршруты существуют, только пока он активен). См.
+[Совместное редактирование](/ru/guides/collaboration).
 
 #### `POST v1/documents/{node}/collaboration/session` — `documents.collaboration.session`
 
@@ -905,22 +909,30 @@ read-only для остальных, кто может его видеть.
 
 **Гейт:** `view`. **Ответ:** `201 { "data": { "driver", "room", "node_id", "drive_id", "epoch",
 "schema_version", "mode", "token", "url" } }`, не кэшируется. Выключенная коллаборация или тип,
-который не умеет совместную работу, — `409 collaboration_unavailable`.
+который не умеет совместную работу, — `409 collaboration_unavailable`; маршрут неактивного модуля отвечает `404`.
 
 ### Эндпоинты хаба (сервер-к-серверу)
 
-Вызовы хаба идут через стек `hub`: `throttle:vaulter-public` и `ResolveCollaborationCall`,
-который требует room-JWT **и** HMAC-подпись тела. Они регистрируются, только пока включена
-коллаборация, не принимают пользовательскую сессию и отвечают отказами как problem+json
-(`401 actor_required` на неподписанный вызов). Протокол — комната, барьер эпохи, seed,
-`409 collaboration_epoch_mismatch` как терминальный ответ — не изменился; см.
-[Совместное редактирование](/ru/guides/collaboration#протокол-хаба-сервер-к-серверу).
+Вызовы хаба идут через стек `hub`: `throttle:vaulter-public`, заголовок протокола и проверки подписи ниже. Они
+регистрируются, только пока активен модуль коллаборации, не принимают пользовательскую сессию и отвечают отказами как
+problem+json (`401 actor_required` на неподписанный вызов). Каждый вызов обязан нести `X-Vaulter-Collab-Protocol: 2`
+(иначе `409 collaboration_protocol_mismatch`), и каждый ответ его повторяет. Вызовы комнаты требуют room-JWT **и**
+HMAC-подпись тела (`ResolveCollaborationCall`); собственные вызовы хаба (`compaction/lease`, `checkpoint`, `recheck`)
+аутентифицирует одна подпись тела. Протокол — комната, ограждение по поколению, квитанция, seed,
+`409 collaboration_epoch_mismatch` как терминальный ответ — описан в
+[Совместном редактировании](/ru/guides/collaboration#протокол-хаба-сервер-сервер).
 
 | Маршрут | Имя | Ответ |
 |---|---|---|
 | `POST v1/collaboration/hub/authenticate` | `collaboration.hub.authenticate` | `{ allowed, mode, userId, epoch }` |
-| `POST v1/collaboration/hub/load` | `collaboration.hub.load` | `{ state, content, epoch, schemaVersion, stateVersion, type }` |
-| `POST v1/collaboration/hub/store` | `collaboration.hub.store` | `{ data: { changed, epoch, state_version, yjs_state_size } }` |
+| `POST v1/collaboration/hub/load` | `collaboration.hub.load` | `{ generation, schema_version, type, state_version, checkpoint, checkpoint_seq, head_seq, content, tail[] }` |
+| `POST v1/collaboration/hub/append` | `collaboration.hub.append` | зафиксированная квитанция `{ generation, update_id, seq, sha256, persisted, permissions_stale }`; `503 collaboration_draining`, пока идёт drain |
+| `POST v1/collaboration/hub/renew` | `collaboration.hub.renew` | `{ token, room, generation, scope, mode, exp, jti, permissions_version }` |
+| `POST v1/collaboration/hub/recheck` | `collaboration.hub.recheck` | `{ results: [{ id, access, reason, jti }] }` — `none`, `read` или `write` по каждому соединению |
+| `POST v1/collaboration/hub/compaction/lease` | `collaboration.hub.compaction.lease` | массив lease: чекпоинт, версия, хвост и токен lease |
+| `POST v1/collaboration/hub/checkpoint` | `collaboration.hub.checkpoint` | `{ checkpoint_version, marker_cleared }`; `409 collaboration_checkpoint_conflict` |
+
+Маршрута сохранения всего состояния нет: сохранение — это `append` с квитанцией.
 
 ---
 

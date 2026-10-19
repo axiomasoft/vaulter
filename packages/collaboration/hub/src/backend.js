@@ -9,11 +9,13 @@ import { parseRetryAfter } from './retry.js'
 //   - append       → POST {base}/collaboration/hub/append        (one update; the ledger repeats it)
 //   - leaseCompaction   → POST {base}/collaboration/hub/compaction/lease (the compaction worker)
 //   - publishCheckpoint → POST {base}/collaboration/hub/checkpoint       (a merged checkpoint, CAS)
+//   - renew        → POST {base}/collaboration/hub/renew         (a connection's token, by the rights now)
+//   - recheck      → POST {base}/collaboration/hub/recheck       (what connections may do now, after control)
 //
 // Every call names the protocol (X-Vaulter-Collab-Protocol: 2; the backend answers anything else
 // with 409 collaboration_protocol_mismatch). The calls made for a room connection carry two
-// independent proofs, both required by the backend; the compaction calls are the hub's own and
-// carry the signature alone:
+// independent proofs, both required by the backend; the compaction and recheck calls are the hub's
+// own and carry the signature alone:
 //   - the room JWT of the connection the call is made for (Authorization: Bearer) — it names the
 //     user, the room (drive, node, epoch) and the mode; the hub never holds its signing secret;
 //   - an HMAC-SHA256 signature of "{timestamp}.{rawBody}" keyed by the webhook secret
@@ -26,12 +28,16 @@ import { parseRetryAfter } from './retry.js'
 // driven by the pending ledger. Tokens never appear in errors or logs. fetch and config are
 // injectable for tests.
 //
-// A body above MAX_REQUEST_BYTES (a checkpoint: the base64 state of MAX_DOCUMENT_BYTES on top) is
-// never sent: the call is answered here with the 413 collaboration_update_too_large the backend's
-// size gate would give.
+// A body above MAX_REQUEST_BYTES (a checkpoint, and the seed of an empty log: the base64 state of
+// MAX_DOCUMENT_BYTES on top) is never sent: the call is answered here with the 413
+// collaboration_update_too_large the backend's size gate would give. A seed says so in its
+// X-Vaulter-Collab-Seed header, which the gate sizes it by before the body is read.
 
 export const PROTOCOL_HEADER = 'X-Vaulter-Collab-Protocol'
 export const PROTOCOL_VERSION = '2'
+
+/** Marks the append of a seed: the backend's size gate takes a whole state for it. */
+export const SEED_HEADER = 'X-Vaulter-Collab-Seed'
 
 /** Problem codes the hub acts on. */
 export const EPOCH_MISMATCH = 'collaboration_epoch_mismatch'
@@ -64,7 +70,7 @@ function signRawBody(rawBody, secret) {
   return { timestamp, signature }
 }
 
-function headersFor({ token, signed }) {
+function headersFor({ token, signed, seed }) {
   const headers = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -75,6 +81,10 @@ function headersFor({ token, signed }) {
     headers.Authorization = `Bearer ${token}`
   }
 
+  if (seed) {
+    headers[SEED_HEADER] = '1'
+  }
+
   if (signed) {
     headers['X-Vaulter-Collab-Timestamp'] = String(signed.timestamp)
     headers['X-Vaulter-Collab-Signature'] = signed.signature
@@ -83,28 +93,64 @@ function headersFor({ token, signed }) {
   return headers
 }
 
-async function post(endpoint, payload, token, { config = defaultConfig, fetchImpl = globalThis.fetch, timeoutMs } = {}) {
+/**
+ * The JSON body of an answer (null when it is not JSON), read under the attempt's signal: a backend
+ * that sends its headers and then stalls has not answered, and the read throws once the timeout
+ * aborts it.
+ */
+async function bodyOf(response, signal) {
+  if (signal.aborted) {
+    throw signal.reason
+  }
+
+  let onAbort = null
+  const aborted = new Promise((resolve) => {
+    onAbort = resolve
+    signal.addEventListener('abort', onAbort, { once: true })
+  })
+
+  try {
+    const body = await Promise.race([
+      Promise.resolve().then(() => response.json()).catch(() => null),
+      aborted,
+    ])
+
+    if (signal.aborted) {
+      throw signal.reason
+    }
+
+    return body
+  } finally {
+    signal.removeEventListener('abort', onAbort)
+  }
+}
+
+/**
+ * ONE call: `{ ok, status, headers, body }` once the whole answer arrived — the timeout covers the
+ * body as well as the headers. `seed` marks the append of a seed. Throws when there is no answer
+ * (network error, timeout).
+ */
+async function post(endpoint, payload, token, { config = defaultConfig, fetchImpl = globalThis.fetch, timeoutMs } = {}, { seed = false } = {}) {
   const rawBody = JSON.stringify({ ...payload, nonce: crypto.randomUUID() })
-  const maxBytes = requestLimit(endpoint, config)
+  const maxBytes = requestLimit(endpoint, config, { seed })
 
   if (Buffer.byteLength(rawBody) > maxBytes) {
-    return new Response(JSON.stringify({ code: UPDATE_TOO_LARGE, max_bytes: maxBytes }), {
-      status: 413,
-      headers: { 'Content-Type': 'application/problem+json' },
-    })
+    return { ok: false, status: 413, headers: null, body: { code: UPDATE_TOO_LARGE, max_bytes: maxBytes } }
   }
 
   const controller = new AbortController()
   const limit = timeoutMs ?? config.webhookTimeoutMs
-  const timer = limit ? setTimeout(() => controller.abort(), limit) : null
+  const timer = limit ? setTimeout(() => controller.abort(new Error(`collab/${endpoint} timed out after ${limit} ms`)), limit) : null
 
   try {
-    return await fetchImpl(`${config.webhookBase}/collaboration/hub/${endpoint}`, {
+    const response = await fetchImpl(`${config.webhookBase}/collaboration/hub/${endpoint}`, {
       method: 'POST',
-      headers: headersFor({ token, signed: signRawBody(rawBody, config.webhookSecret) }),
+      headers: headersFor({ token, signed: signRawBody(rawBody, config.webhookSecret), seed }),
       body: rawBody,
       signal: controller.signal,
     })
+
+    return { ok: response.ok, status: response.status, headers: response.headers, body: await bodyOf(response, controller.signal) }
   } finally {
     if (timer) {
       clearTimeout(timer)
@@ -112,10 +158,8 @@ async function post(endpoint, payload, token, { config = defaultConfig, fetchImp
   }
 }
 
-async function problemCode(response) {
-  const payload = await response.json().catch(() => null)
-
-  return typeof payload?.code === 'string' ? payload.code : null
+function problemCode(answer) {
+  return typeof answer.body?.code === 'string' ? answer.body.code : null
 }
 
 function header(response, name) {
@@ -138,12 +182,12 @@ export async function authenticate({ token, room }, options = {}) {
   const response = await post('authenticate', { room }, token, options)
 
   if (!response.ok) {
-    const code = response.status === 409 ? await problemCode(response) : null
+    const code = response.status === 409 ? problemCode(response) : null
 
     return { allowed: false, mode: 'ro', userId: null, epoch: null, conflict: code, status: response.status }
   }
 
-  const payload = await response.json().catch(() => ({}))
+  const payload = response.body ?? {}
 
   return {
     allowed: payload?.allowed === true,
@@ -164,11 +208,15 @@ export async function load({ token, room }, options = {}) {
   const response = await post('load', { room }, token, options)
 
   if (response.ok) {
-    return response.json()
+    if (response.body === null || typeof response.body !== 'object') {
+      throw new Error(`collab/load answered ${response.status} without a log`)
+    }
+
+    return response.body
   }
 
   if (response.status >= 400 && response.status < 500) {
-    throw new BackendRejection('load', response.status, await problemCode(response))
+    throw new BackendRejection('load', response.status, problemCode(response))
   }
 
   throw new Error(`collab/load failed (${response.status})`)
@@ -176,7 +224,8 @@ export async function load({ token, room }, options = {}) {
 
 /**
  * ONE append attempt of an update: POST {room, generation, update_id, sha256, payload, origin}
- * (+ seed_state_version for the seed of an empty log). Resolves the answer:
+ * (+ seed_state_version and the seed header for the seed of an empty log, which may carry a whole
+ * state). Resolves the answer:
  *   - `{ ok: true, status, ack: {generation, update_id, seq, sha256, persisted} }` after the commit;
  *   - `{ ok: false, status, code, retryAfterMs }` for any other status.
  * Throws when there is no answer (network error, `timeoutMs` elapsed) — src/retry.js reads that
@@ -184,15 +233,16 @@ export async function load({ token, room }, options = {}) {
  */
 export async function append({ token, room, generation, updateId, sha256, payload, origin = 'client', seedStateVersion }, options = {}) {
   const body = { room, generation, update_id: updateId, sha256, payload, origin }
+  const seed = Number.isInteger(seedStateVersion)
 
-  if (Number.isInteger(seedStateVersion)) {
+  if (seed) {
     body.seed_state_version = seedStateVersion
   }
 
-  const response = await post('append', body, token, options)
+  const response = await post('append', body, token, options, { seed })
 
   if (response.ok) {
-    const ack = await response.json().catch(() => null)
+    const ack = response.body
 
     // A 2xx without a committed receipt is not an ack; the request is repeated as for a 5xx.
     if (ack?.persisted !== true || !Number.isInteger(ack?.seq) || String(ack?.update_id).toLowerCase() !== String(updateId).toLowerCase()) {
@@ -206,33 +256,35 @@ export async function append({ token, room, generation, updateId, sha256, payloa
 }
 
 /** A non-2xx answer: its status, problem code and, for a 429, the Retry-After wait. */
-async function refusal(response) {
+function refusal(response) {
   return {
     ok: false,
     status: response.status,
-    code: await problemCode(response),
+    code: problemCode(response),
     retryAfterMs: response.status === 429 ? parseRetryAfter(header(response, 'Retry-After')) : null,
   }
 }
 
 /**
- * ONE compaction lease call of the hub's worker: POST {hub_id, max}, signed, without a room
- * token. Resolves:
- *   - `{ ok: true, status, entries, serverTime }` — the generations leased to this hub, drain
- *     requests first, each `{document, generation, lease_token, lease_expires_at, checkpoint_seq,
- *     head_seq, checkpoint_version, type, schema_version, checkpoint, content, tail}`; `serverTime`
- *     is the answer's Date (ms, null without one), which the worker measures the leases against;
+ * ONE compaction lease call of the hub's worker: POST {hub_id, max} (+ report: true), signed,
+ * without a room token. Resolves:
+ *   - `{ ok: true, status, entries, serverTime, pending }` — the generations leased to this hub,
+ *     drain requests first, each `{document, generation, lease_token, lease_expires_at,
+ *     checkpoint_seq, head_seq, checkpoint_version, type, schema_version, checkpoint, content,
+ *     tail}`; `serverTime` is the answer's Date (ms, null without one), which the worker measures
+ *     the leases against; with `report`, `pending` is what the backend reports still due for
+ *     compaction (see pendingReport; null when the answer carries no report);
  *   - `{ ok: false, status, code, retryAfterMs }` for any other answer.
  * Throws when there is no answer (network error, timeout).
  */
-export async function leaseCompaction({ hubId, max }, options = {}) {
-  const response = await post('compaction/lease', { hub_id: hubId, max }, null, options)
+export async function leaseCompaction({ hubId, max, report = false }, options = {}) {
+  const response = await post('compaction/lease', { hub_id: hubId, max, ...(report ? { report: true } : {}) }, null, options)
 
   if (!response.ok) {
     return refusal(response)
   }
 
-  const entries = await response.json().catch(() => null)
+  const entries = response.body
 
   if (!Array.isArray(entries)) {
     return { ok: false, status: 502, code: 'collaboration_invalid_lease', retryAfterMs: null }
@@ -240,7 +292,37 @@ export async function leaseCompaction({ hubId, max }, options = {}) {
 
   const date = Date.parse(header(response, 'Date') ?? '')
 
-  return { ok: true, status: response.status, entries, serverTime: Number.isNaN(date) ? null : date }
+  return { ok: true, status: response.status, entries, serverTime: Number.isNaN(date) ? null : date, ...(report ? { pending: pendingReport(response) } : {}) }
+}
+
+/** The headers of a lease answer that report what is still due for compaction. */
+export const PENDING_HEADER = 'X-Vaulter-Collab-Pending'
+export const PENDING_DOCUMENTS_HEADER = 'X-Vaulter-Collab-Pending-Documents'
+
+/**
+ * The backend's report in a lease answer, taken after its leases were granted: `{ total,
+ * generations: [{document, generation}] }` — how many generations are still due for compaction
+ * (their document carries the pending marker; asked to drain or past a trigger), whichever hub
+ * holds their lease, and the first of them by document. Null when the answer carries none.
+ */
+function pendingReport(response) {
+  const total = header(response, PENDING_HEADER)
+
+  if (typeof total !== 'string' || !/^\d+$/.test(total.trim())) {
+    return null
+  }
+
+  const generations = String(header(response, PENDING_DOCUMENTS_HEADER) ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => /^[^:]+:\d+$/.test(item))
+    .map((item) => {
+      const [document, generation] = item.split(':')
+
+      return { document, generation: Number.parseInt(generation, 10) }
+    })
+
+  return { total: Number.parseInt(total.trim(), 10), generations }
 }
 
 /**
@@ -267,7 +349,7 @@ export async function publishCheckpoint({ document, generation, leaseToken, cove
     return refusal(response)
   }
 
-  const result = await response.json().catch(() => null)
+  const result = response.body
 
   // A 2xx without the published version is not a publication; repeated as for a 5xx.
   if (!Number.isInteger(result?.checkpoint_version) || typeof result?.marker_cleared !== 'boolean') {
@@ -275,4 +357,50 @@ export async function publishCheckpoint({ document, generation, leaseToken, cove
   }
 
   return { ok: true, status: response.status, checkpointVersion: result.checkpoint_version, markerCleared: result.marker_cleared }
+}
+
+/**
+ * ONE renewal of a connection's token: POST {room} with the current token as the bearer. Resolves
+ * `{ ok: true, status, renewed: {token, room, generation, scope, mode, exp, jti, permissions_version} }`
+ * — the new token, scoped by the rights now — or `{ ok: false, status, code, retryAfterMs }` (403: the
+ * subject may no longer view the document, 404: it is gone, 409 collaboration_epoch_mismatch: its
+ * generation is over, 401: the token is not accepted). Throws when there is no answer.
+ */
+export async function renew({ token, room }, options = {}) {
+  const response = await post('renew', { room }, token, options)
+
+  if (!response.ok) {
+    return refusal(response)
+  }
+
+  const renewed = response.body
+
+  // A 2xx without a usable token is not a renewal; it is tried again as for a 5xx.
+  if (typeof renewed?.token !== 'string' || renewed.token === '' || !Number.isInteger(renewed?.exp)) {
+    return { ok: false, status: 502, code: 'collaboration_invalid_renewal', retryAfterMs: null }
+  }
+
+  return { ok: true, status: response.status, renewed }
+}
+
+/**
+ * ONE recheck of connections after a control message: POST {connections: [{id, token}]} (at most
+ * 200), signed, without a room token. Resolves `{ ok: true, status, results: [{id, access:
+ * none|read|write, reason, jti}] }` in the order asked, or `{ ok: false, status, code, retryAfterMs }`.
+ * Throws when there is no answer.
+ */
+export async function recheck({ connections }, options = {}) {
+  const response = await post('recheck', { connections }, null, options)
+
+  if (!response.ok) {
+    return refusal(response)
+  }
+
+  const results = response.body?.results
+
+  if (!Array.isArray(results)) {
+    return { ok: false, status: 502, code: 'collaboration_invalid_recheck', retryAfterMs: null }
+  }
+
+  return { ok: true, status: response.status, results }
 }

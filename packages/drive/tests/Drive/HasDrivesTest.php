@@ -77,6 +77,19 @@ it('deletes the drives of a deleted owner with vaulter-drive.drives.delete_with_
     Queue::assertPushed(PurgeDriveJob::class);
 });
 
+it('deletes the drives of a deleted owner when grants are switched off', function (): void {
+    // The grants feature gates grant management, not the system lifecycle of a drive.
+    config()->set('vaulter-drive.drives.delete_with_owner', true);
+    config()->set('vaulter-drive.features.grants', false);
+    $host = HasDrivesHost::query()->create();
+    $host->drive();
+
+    $host->delete();
+
+    expect(Drive::query()->where('owner_type', $host->getMorphClass())->where('owner_id', $host->getKey())->value('status'))->toBe(DriveStatus::Deleting);
+    Queue::assertPushed(PurgeDriveJob::class);
+});
+
 it('a host with SoftDeletes reacts to forceDeleted and not to deleted', function (): void {
     config()->set('vaulter-drive.drives.delete_with_owner', true);
     $host = HasDrivesSoftHost::query()->create();

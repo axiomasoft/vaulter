@@ -9,6 +9,7 @@ use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Http\Problems\ProblemCodeSource;
+use Vaulter\Operations\OperationPolicySource;
 
 /**
  * What a module declares from {@see VaulterModule::register()}. Declarations only: values are
@@ -67,6 +68,9 @@ final class ModuleBuilder
 
     /** @var list<class-string<ProblemCodeSource>> */
     private array $problems = [];
+
+    /** @var list<class-string<OperationPolicySource>> */
+    private array $operations = [];
 
     public function __construct(private readonly ModuleId $module) {}
 
@@ -262,6 +266,21 @@ final class ModuleBuilder
         return $this;
     }
 
+    /**
+     * The policies of the module's mutating operations (D47): the catalogue lists them while the module is active,
+     * the operation runner refuses a mutating operation it does not list, and an operation name declared by two
+     * installed modules makes the graph invalid.
+     *
+     * @param class-string<OperationPolicySource> $source
+     */
+    public function operations(string $source): self
+    {
+        $this->guard();
+        $this->operations[] = $source;
+
+        return $this;
+    }
+
     /** Called by the compiler once every manifest registered. */
     #[Internal]
     public function seal(): void
@@ -357,6 +376,12 @@ final class ModuleBuilder
     public function problemSources(): array
     {
         return $this->problems;
+    }
+
+    /** @return list<string> the declared classes; the compiler checks that each one is an {@see OperationPolicySource} */
+    public function operationSources(): array
+    {
+        return $this->operations;
     }
 
     private function guard(): void

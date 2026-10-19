@@ -32,7 +32,7 @@ write a one-line summary. This creates a markdown file under `.changeset/` —
   but they are **not** forced to publish in lockstep (that would be `fixed`).
 - `baseBranch: main` — the comparison branch for detecting changed packages.
 - `@vaulter/collaboration-hub` is `private` and `ignore`d — it ships as a Docker
-  image (`ghcr.io/axiomasoft/vaulter-hocuspocus`), never to npm.
+  image (`ghcr.io/axiomasoft/vaulter-collaboration-hub`), never to npm.
 - No changeset = no release. The publish step is gated on pending changesets.
 
 See <https://github.com/changesets/changesets> for the full docs.

@@ -97,7 +97,7 @@ it('returns the complete v1 drive shape with string ids and nothing internal', f
     sort($keys);
 
     expect($keys)->toBe([
-        'created_at', 'id', 'name', 'owner', 'profile', 'quota_bytes', 'root_node_id', 'status', 'used_bytes',
+        'created_at', 'etag', 'id', 'name', 'owner', 'profile', 'quota_bytes', 'root_node_id', 'status', 'used_bytes', 'version',
     ])
         ->and($data['id'])->toBe((string) $storage->getKey())
         ->and($data['owner'])->toBe([

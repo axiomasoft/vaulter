@@ -219,7 +219,7 @@ CAS-бакет должен быть без версионирования: уд
 диска профиля (см. [Drive → Имена, лимиты, избранное и свойства](/ru/concepts/nodes-and-revisions));
 См. [Загрузки](/ru/guides/uploads) и [Корзина](/ru/guides/trash).
 
-## Documents: содержимое, ревизии, комментарии и коллаборация
+## Documents: содержимое, ревизии и комментарии
 
 <!-- snippet: config -->
 
@@ -229,18 +229,7 @@ CAS-бакет должен быть без версионирования: уд
 'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
 'comments' => ['enabled' => true],
 'exporters' => [\Vaulter\Documents\Export\HtmlExporter::class, \Vaulter\Documents\Export\MarkdownExporter::class],
-'collaboration' => [
-    'enabled' => false,
-    'driver' => 'hocuspocus',
-    'hub' => [
-        'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
-        'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-        'token_ttl' => 3600,
-        'timestamp_tolerance' => 300,
-    ],
-    'broadcast' => ['channel_prefix' => 'vaulter.documents'],
-],
+'broadcast' => ['channel_prefix' => 'vaulter.documents'],
 'models' => [
     'document_revision' => \Vaulter\Documents\Models\Revisions\DocumentRevision::class,
     'node_comment' => \Vaulter\Documents\Models\Comments\NodeComment::class,
@@ -251,15 +240,23 @@ CAS-бакет должен быть без версионирования: уд
 Блобы и ревизии файлов включены всегда.
 Комментарии теперь по умолчанию **включены**. Для отключения задайте
 `vaulter-documents.comments.enabled = false`.
-Коллаборация остаётся опциональной. При её включении оба секрета хаба должны быть заданы
-и различаться: иначе production boot завершается исключением, а другие окружения пишут warning.
+`broadcast.channel_prefix` — пространство имён каналов комментариев и комнат коллаборации.
 
 `exporters` — список имён классов экспортёров. Расширения allow-list TipTap живут в
 `vaulter-documents.tiptap.*`. `vaulter-documents.types` — список классов
 [типов документов](/ru/extending/document-types). Если в списке нет типа rich text (`['markdown']`),
 значение по умолчанию `vaulter-documents.default_type` (`vaulter/rich-text`) не зарегистрировано, и загрузка падает, пока
 не задан зарегистрированный ключ, например `vaulter/markdown`.
-См. [Совместное редактирование](/ru/guides/collaboration) и [Экспорт](/ru/guides/export).
+См. [Экспорт](/ru/guides/export).
+
+## Коллаборация {#collaboration}
+
+Редактирование в реальном времени — отдельный opt-in пакет `axioma-studio/vaulter-collaboration` с файлом конфигурации
+`config/vaulter-collaboration.php` (тег публикации `vaulter-collaboration-config`). Он активен, только когда
+`vaulter.modules.collaboration` равен `true`; тогда обязательны URL хаба (`hub.url`) и оба секрета (`hub.jwt_secret`,
+`hub.webhook_secret`, заданные и разные) — без них приложение не загружается. Ключи (`hub.*`, `control.*`, `mode`,
+`limits.*`, `compaction.*`, `drain.*`, `retention.*`, `schedule.*`) перечислены в
+[Совместном редактировании → Конфигурация](/ru/guides/collaboration#конфигурация).
 
 ## Типизированный доступ
 

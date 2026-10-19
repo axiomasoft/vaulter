@@ -10,6 +10,7 @@ use Throwable;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Operations\UnknownOperationException;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
 use Vaulter\Idempotency\CachedRefusal;
 use Vaulter\Idempotency\IdempotentWrite;
@@ -19,7 +20,8 @@ use Vaulter\Kernel;
  * The one way a write operation runs (ADR-0028, architecture#operation-chains). The stages are a
  * contract and no contribution removes one:
  *
- * 1. admission — a valid module graph, a ready module, a system actor with a reason;
+ * 1. admission — a valid module graph, a ready module, a mutating operation the catalogue declares for that
+ *    module (D47), a system actor with a reason;
  * 2. the OperationMiddleware chain, each calling `$next` exactly once and returning its result;
  * 3. the root transaction, repeated as a whole attempt after a serialization failure or a deadlock
  *    (never a nested one: a write inside a write runs in the same transaction, with no claim, no
@@ -47,6 +49,7 @@ final class OperationRunner
         private readonly ModuleReadiness $readiness,
         private readonly VaulterDatabase $database,
         private readonly OperationClaim $claim,
+        private readonly OperationCatalog $catalog,
     ) {}
 
     /**
@@ -60,6 +63,7 @@ final class OperationRunner
     {
         $this->kernel->assertValid();
         $this->readiness->assertReady($spec->module);
+        $this->assertDeclared($spec);
         $operation = new Operation(spec: $spec, context: $context, nested: $this->depth > 0);
 
         /** @var list<OperationMiddleware> $middleware */
@@ -72,6 +76,26 @@ final class OperationRunner
     public function inOperation(): bool
     {
         return $this->depth > 0;
+    }
+
+    /**
+     * A mutating operation runs only with a policy its own module declares (D47): checked for a composed write too,
+     * before any middleware, claim or transaction.
+     *
+     * @throws UnknownOperationException
+     */
+    private function assertDeclared(OperationSpec $spec): void
+    {
+        if (!$spec->mutating) {
+            return;
+        }
+        $owner = $this->catalog->module($spec->name);
+        if ($owner === null) {
+            throw UnknownOperationException::undeclared($spec->name, $spec->module->value);
+        }
+        if ($owner !== $spec->module->value) {
+            throw UnknownOperationException::foreign($spec->name, $spec->module->value, $owner);
+        }
     }
 
     /**

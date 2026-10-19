@@ -66,6 +66,42 @@ final readonly class MediaConfig
         return max($hours, 1);
     }
 
+    /** The most blobs one scrub run visits: vaulter-media.scrub.limit (D49), a positive integer; an override wins. */
+    #[Internal]
+    public function scrubLimit(?int $override = null): int
+    {
+        return $override ?? $this->scrubSetting('limit') ?? 100;
+    }
+
+    /** The bytes after which a scrub run stops (vaulter-media.scrub.max_bytes); null: no byte budget. */
+    #[Internal]
+    public function scrubMaxBytes(?int $override = null): ?int
+    {
+        return $override ?? $this->scrubSetting('max_bytes');
+    }
+
+    /** The seconds after which a scrub run stops (vaulter-media.scrub.max_seconds); null: no time budget. */
+    #[Internal]
+    public function scrubMaxSeconds(?int $override = null): ?int
+    {
+        return $override ?? $this->scrubSetting('max_seconds');
+    }
+
+    private function scrubSetting(string $name): ?int
+    {
+        $value = $this->config->get(key: 'vaulter-media.scrub.'.$name);
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_int($value) ? $value > 0 : (is_string($value) && preg_match('/^[1-9][0-9]{0,17}$/D', $value) === 1)) {
+            return (int) $value;
+        }
+
+        throw new InvalidConfigurationException('[Vaulter] vaulter-media.scrub.'.$name.' must be a positive integer (or null for no budget, except limit).');
+    }
+
     /** @return class-string<ContentStore> */
     public function contentStore(): string
     {

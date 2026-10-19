@@ -23,12 +23,14 @@ describe('VaulterGrantsPanel', () => {
 
   it('lists grants, adds one with a subject object and revokes one by its id', async () => {
     const created = grant({ id: 'g2', subject: { type: 'App\\User', id: '42' }, role: 'writer' })
-    const list = vi.fn().mockResolvedValue([grant({ id: 'g1' })])
+    const list = vi.fn()
+      .mockResolvedValueOnce({ etag: '"node-access.9.0"', data: [grant({ id: 'g1' })] })
+      .mockResolvedValueOnce({ etag: '"node-access.9.1"', data: [created, grant({ id: 'g1' })] })
     const create = vi.fn().mockResolvedValue(created)
     const revoke = vi.fn().mockResolvedValue(undefined)
     const wrapper = mount(VaulterGrantsPanel, {
       props: { nodeId: '9' },
-      ...withClient({ grants: { list, create, revoke } }),
+      ...withClient({ grants: { listTagged: list, create, revoke } }),
     })
 
     await flushAll()
@@ -53,7 +55,8 @@ describe('VaulterGrantsPanel', () => {
     await rows[1].get('.vaulter-grants-panel__revoke').trigger('click')
     await flushAll()
 
-    expect(revoke).toHaveBeenCalledWith('9', 'g1')
+    // The grant made the access tag stale: the panel reloads and revokes with the fresh one.
+    expect(revoke).toHaveBeenCalledWith('9', 'g1', { etag: '"node-access.9.1"' })
     expect(wrapper.emitted('revoked')?.[0]?.[0]).toMatchObject({ id: 'g1' })
     expect(wrapper.findAll('.vaulter-grants-panel__item')).toHaveLength(1)
   })
@@ -78,7 +81,7 @@ describe('VaulterGrantsPanel', () => {
   it('shows a load failure without an unhandled rejection', async () => {
     const wrapper = mount(VaulterGrantsPanel, {
       props: { nodeId: '9' },
-      ...withClient({ grants: { list: vi.fn().mockRejectedValue(new Error('boom')) } }),
+      ...withClient({ grants: { listTagged: vi.fn().mockRejectedValue(new Error('boom')) } }),
     })
     await flushAll()
 
@@ -90,8 +93,8 @@ describe('VaulterSharePanel', () => {
   function share(partial: Partial<Share> & Pick<Share, 'id'>): Share {
     return {
       node_id: '9', role: 'reader', role_version: 1, audience: 'anyone', scope: 'item', expires_at: null,
-      max_uses: null, use_count: 0, has_password: false, token_generation: 1, created_by: null,
-      created_at: '2026-01-01T00:00:00Z', ...partial,
+      max_uses: null, use_count: 0, has_password: false, token_generation: 1, version: 0, etag: `"share.${partial.id}.0"`,
+      created_by: null, created_at: '2026-01-01T00:00:00Z', ...partial,
     }
   }
 
@@ -122,7 +125,7 @@ describe('VaulterSharePanel', () => {
     await wrapper.get('.vaulter-share-panel__rotate').trigger('click')
     await flushAll()
 
-    expect(rotate).toHaveBeenCalledWith('9', '1')
+    expect(rotate).toHaveBeenCalledWith('9', '1', { etag: '"share.1.0"' })
     expect((wrapper.get('.vaulter-share-panel__token').element as HTMLInputElement).value).toBe('https://x/share/new.SECRET')
     expect(wrapper.emitted('rotated')?.[0]?.[0]).toMatchObject({ token: 'new.SECRET' })
     expect(wrapper.get('.vaulter-share-panel__list').html()).not.toContain('SECRET')
@@ -170,7 +173,7 @@ describe('VaulterSharePanel', () => {
     await wrapper.get('.vaulter-share-panel__revoke').trigger('click')
     await flushAll()
 
-    expect(revoke).toHaveBeenCalledWith('9', '1')
+    expect(revoke).toHaveBeenCalledWith('9', '1', { etag: '"share.1.0"' })
     expect(wrapper.emitted('revoked')?.[0]).toEqual(['1'])
     expect(wrapper.findAll('.vaulter-share-panel__item')).toHaveLength(0)
   })

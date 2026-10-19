@@ -19,13 +19,23 @@ import { EPOCH_MISMATCH, PROTOCOL_MISMATCH } from './backend.js'
 //   - 404                       → the document's records are dropped, `documentGone`;
 //   - 409 protocol mismatch     → kept, `protocolMismatch` (a deployment fault, not the data's);
 //   - 401/403 of a server record → kept: its credentials are resolved again on the next cycle;
-//   - any other 4xx             → removed, `dropped` (nack with the answer's retry flag).
+//   - any other 4xx             → removed, `dropped` (nack with the answer's retry flag); one the
+//                                 client may not repeat (retry:false) takes every later record of
+//                                 its generation with it, each `dropped` too: the room took it, so
+//                                 they may build on it, and a log holding them without it could
+//                                 never be loaded or checkpointed whole.
 //
 // Time is injected (clock, sleep, random) and so is the append call, so tests drive the ledger
 // against a mock backend without real waits.
 
 /** The nack `retry` flag of a refusal: may the client send the same update again later. */
 const RETRY_AFTER_REFUSAL = Object.freeze({ 401: true })
+
+/**
+ * Why a record is dropped with an earlier one of its generation that was refused for good: none of
+ * it may be appended any more, as after the end of the generation (the room is loaded again).
+ */
+const DEPENDENT_DROPPED = Object.freeze({ status: null, code: EPOCH_MISMATCH, retry: false })
 
 function key(documentName, updateId) {
   return `${documentName}\u0000${updateId}`
@@ -353,6 +363,17 @@ export function createLedger({
       settle(entry, droppedResult(failure))
       log.error?.(`Vaulter collab hub: the append of ${entry.updateId} in ${documentName} was refused (${failure.status} ${failure.code}); dropped`)
 
+      // Refused for good, it is in the room but never in the log: the records after it in its
+      // generation may build on it, so they go with it (an update the client repeats keeps them).
+      const dependents = failure.retry === true
+        ? []
+        : dropWhere(documentName, (candidate) => candidate.generation === entry.generation, DEPENDENT_DROPPED)
+
+      if (dependents.length > 0) {
+        stats.dropped += dependents.length
+        log.warn?.(`Vaulter collab hub: ${dependents.length} later pending update(s) of ${documentName} generation ${entry.generation} dropped with it`)
+      }
+
       if (verdict.type === 'forbidden') {
         emit('forbidden', entry)
       } else if (verdict.type === 'unauthorized') {
@@ -360,6 +381,9 @@ export function createLedger({
       }
 
       emit('dropped', entry, failure)
+      for (const candidate of dependents) {
+        emit('dropped', candidate, DEPENDENT_DROPPED)
+      }
       emit('changed')
     }
   }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Testing\Support\TestGroups;
+use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class)->in('Webhooks', 'Http', 'Feature', 'Outbox', 'Console', 'Configuration', 'Modules', 'Schema');
@@ -17,3 +18,11 @@ uses(TestCase::class)->in('Observability');
 
 // Test groups: database, serial, extended, stand and the engine-only engine:* — see groups.php.
 TestGroups::bind(__DIR__, 'webhooks');
+
+/** The ETag of an endpoint as the API shows it: kind, id and the stored version (D47, CC2). */
+function webhookTag(int|string $id, ?int $version = null): string
+{
+    $version ??= (int) WebhookEndpoint::query()->whereKey($id)->value('version');
+
+    return '"webhook-endpoint.'.$id.'.'.$version.'"';
+}

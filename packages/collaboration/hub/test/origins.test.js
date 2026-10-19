@@ -3,8 +3,8 @@ import assert from 'node:assert/strict'
 import * as Y from 'yjs'
 import { Hocuspocus } from '@hocuspocus/server'
 import { createPersistence, originKind } from '../src/persistence.js'
-import { receipt, startMockBackend, virtualTime } from './support/mock-backend.js'
-import { clientUpdate, envelope, fakeConnection, quietLog, ROOM, testConf, textAfter, writerContext } from './support/rooms.js'
+import { problem, receipt, startMockBackend, virtualTime } from './support/mock-backend.js'
+import { clientUpdate, envelope, eventually, fakeConnection, quietLog, ROOM, testConf, textAfter, writerContext } from './support/rooms.js'
 
 // Where an update comes from decides who appends it (I17 scenario 11): a server/direct change is
 // appended exactly once, under an update_id of the hub; a change that arrived through the Redis
@@ -130,6 +130,47 @@ test('a server change made with serverWrite() is appended once with the token it
   const appends = room.mock.appends()
   assert.equal(ids.length, 1)
   assert.deepEqual(appends.map((call) => [call.body.update_id, call.body.origin, call.headers.authorization]), [[ids[0], 'server', 'Bearer jwt-transformer']])
+})
+
+test('a server change whose own token the backend refused is appended with a current token on the next cycle', async (t) => {
+  const room = await hub(t, {
+    handlers: { append: (call, n) => (call.headers.authorization === 'Bearer jwt-expired' ? { status: 401, body: { code: 'unauthenticated' } } : receipt(call.body, n + 2)) },
+  })
+
+  const ids = await room.persistence.serverWrite(ROOM, (document) => {
+    document.getText('t').insert(0, 'transformed ')
+  }, { token: 'jwt-expired' })
+  await room.persistence.ledger.flush()
+  assert.equal(room.persistence.ledger.pendingCount(ROOM), 1, 'kept: a server change is never lost to a credential answer')
+
+  // The next cycle does not try the refused token again.
+  await room.persistence.ledger.flush()
+
+  assert.deepEqual(room.mock.appends().map((call) => [call.body.update_id, call.headers.authorization]), [[ids[0], 'Bearer jwt-expired'], [ids[0], 'Bearer jwt-server']])
+  assert.equal(room.persistence.ledger.pendingCount(ROOM), 0)
+})
+
+test('a refused server change closes the room\'s direct connection too: Hocuspocus unloads it, the fence lifts, the next write loads it from its log', async (t) => {
+  const room = await hub(t, { handlers: { append: (call, n) => (n === 1 ? problem(422, 'collaboration_update_mismatch') : receipt(call.body, n + 2)) } })
+
+  // The direct connection the room was opened with stays open: only the divergence closes it.
+  await room.direct.transact((document) => {
+    document.getText('t').insert(0, 'refused ')
+  })
+  await room.persistence.ledger.flush()
+
+  await eventually(() => !room.hocuspocus.documents.has(ROOM), 'Hocuspocus to unload the diverged room')
+  assert.equal(room.persistence.isFenced(ROOM), false)
+
+  let loaded = null
+  const ids = await room.persistence.serverWrite(ROOM, (document) => {
+    loaded = document.getText('t').toString()
+    document.getText('t').insert(0, 'after ')
+  })
+  await room.persistence.ledger.flush()
+
+  assert.equal(loaded, 'checkpoint', 'loaded again from its log, without the refused change')
+  assert.deepEqual(room.mock.appends().slice(1).map((call) => call.body.update_id), ids)
 })
 
 test('the origin classification: own replays and envelopes, Redis, connections, and everything else is the server\'s', () => {

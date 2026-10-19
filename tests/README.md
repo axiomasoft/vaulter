@@ -17,6 +17,7 @@ Pest on Orchestra Testbench (PHP), `node --test` (hub) and Vitest (vue). Every s
 | `repo` | repo root | `tests/Repo`: the harness itself (runner, selector, zone map, groups) |
 | `hub` | `packages/collaboration/hub` | Node tests of the collaboration hub (not Pest) |
 | `vue` | `packages/vue` | the TypeScript client (not Pest) |
+| `vue-collaboration` | `packages/vue-collaboration` | the Yjs/Hocuspocus adapter of the client: envelopes, queue, save status (Vitest, not Pest); uses `vue` |
 | `load` | repo root | `load/tests`; **explicit only** (`-p load` or `stand`), never in `all` |
 
 Paths are repo-relative for `core`, `load` and `repo`, package-relative for the others. Zones of the core suite and
@@ -51,7 +52,7 @@ All commands accept `--dry-run [--json]`: it prints the plan (suites, partitions
 | `scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql\|mysql]` | The zones touched by `base...HEAD` plus staged, unstaged and untracked files, and their consumers; `--quick` keeps only the touched zones. An unknown path or a harness change is refused with exit 2 and the full affected plan is printed; prose-only (`README.md`, `CONTRIBUTING.md`, `docs/`, `plans/`) is a plan of zero runs and is not a pass; `AGENTS.md` and `CLAUDE.md` are not prose, so editing them is refused the same way. |
 | `scripts/t <engine> -p <pkg> --full` | Parallel pass without `nofull,serial`, then one `serial` pass. |
 | `scripts/t <engine> -p <pkg> --group=serial -j1 --no-skips` | The serial pass only. |
-| `scripts/t stand` | Stand-group tests plus the real-process scripts (`scripts/collab-e2e.sh`). Never part of fast/full/all; k6 and benchmarks are not started by any command here. |
+| `scripts/t stand` | Stand-group tests plus the real-process scripts (`scripts/collab-e2e.sh`, `scripts/collab-stand.sh`). Never part of fast/full/all; k6 and benchmarks are not started by any command here. |
 | `scripts/t baseline --write\|--compare [-p …]` | Discovery of test names against `tests/baseline/` (nothing is executed). |
 
 Other flags: `-j N` workers inside a partition (default half the CPUs, at most 8), `--junit=DIR`, `--no-skips`,

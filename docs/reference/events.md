@@ -103,6 +103,7 @@ same after-commit dispatch.
 | `drive.unarchived` | drive | drive | — | ✓ | ✓ | — | An archived drive became writable again. |
 | `drive.deleted` | drive | drive | — | ✓ | ✓ | — | A drive was deleted. |
 | `file.revision_deleted` | drive | node | `revision_id`: `string`, `number`: `int` | ✓ | ✓ | — | A non-current revision was deleted. |
+| `drive.access.effective_permissions_changed` | drive | access | `drive_id`: `string\|null`, `scope`: `string`, `node_id`: `string\|null`, `reason`: `string` | — | — | — | Who may do what changed for a node, a subtree, a drive or every drive (scope); recorded in the transaction of the change, so the sessions issued before it can be checked again. |
 <!-- events:end -->
 
 Every content save of a document would flood the feed, so `document.updated` is not
@@ -149,7 +150,7 @@ Every constructor ends with `ActorRef $actor, string $correlationId, ?string $ev
 ## Comment broadcasts
 
 The three comment events publish to a `PrivateChannel` named
-`{collaboration.channel_prefix}.{nodeId}` (default prefix `vaulter.documents`) — the
+`{broadcast.channel_prefix}.{nodeId}` (`vaulter-documents.broadcast.channel_prefix`, default `vaulter.documents`) — the
 same room open editors join for collaboration.
 
 | Event | `broadcastAs()` | `broadcastWith()` keys |

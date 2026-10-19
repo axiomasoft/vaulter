@@ -9,6 +9,8 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Nodes\NodeRestored;
 use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
@@ -137,6 +139,7 @@ final readonly class RestoreNodeAction
             }
             $fresh = $current->refresh();
             $this->recorder->record(new NodeRestored(node: $fresh, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(EffectivePermissionsChanged::forNode(node: $fresh, reason: DriveEventType::NodeRestored->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $fresh;
         });

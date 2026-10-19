@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive;
 
+use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,8 @@ use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Drive\Idempotency\DriveReplayAuthorizer;
+use Vaulter\Drive\Idempotency\DriveSnapshotCodec;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Operations\ChangeOperations;
 use Vaulter\Drive\Operations\DriveContext;
@@ -41,8 +44,12 @@ use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Kernel;
 use Vaulter\Modules\MissingExtensionException;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 use Vaulter\ValueObjects\Access\Actor;
 
 #[Api]
@@ -75,36 +82,47 @@ final readonly class DriveHandle implements Contract
         return $this->container->make(DriveSnapshotMapper::class)->quota($this->model());
     }
 
-    public function archive(): DriveSnapshot
+    public function archive(?int $expectedVersion = null): DriveSnapshot
     {
-        $context = $this->authorizedLifecycle();
-
-        return $this->container->make(DriveSnapshotMapper::class)->map($this->container->make(ArchiveDriveAction::class)->execute($context));
+        return $this->write('archive', $expectedVersion, fn (DriveContext $context): Drive => $this->container->make(ArchiveDriveAction::class)->execute($context, $expectedVersion));
     }
 
-    public function unarchive(): DriveSnapshot
+    public function unarchive(?int $expectedVersion = null): DriveSnapshot
     {
-        $context = $this->authorizedLifecycle();
-
-        return $this->container->make(DriveSnapshotMapper::class)->map($this->container->make(UnarchiveDriveAction::class)->execute($context));
+        return $this->write('unarchive', $expectedVersion, fn (DriveContext $context): Drive => $this->container->make(UnarchiveDriveAction::class)->execute($context, $expectedVersion));
     }
 
-    public function delete(): DriveSnapshot
+    public function delete(?int $expectedVersion = null): DriveSnapshot
     {
-        $context = $this->authorizedLifecycle();
-
-        return $this->container->make(DriveSnapshotMapper::class)->map($this->container->make(DeleteDriveAction::class)->execute($context));
+        return $this->write('delete', $expectedVersion, fn (DriveContext $context): Drive => $this->container->make(DeleteDriveAction::class)->execute($context, $expectedVersion));
     }
 
-    /** Manage on the root, or the system actor; an archived drive still allows its own lifecycle. */
-    private function authorizedLifecycle(): DriveContext
+    /**
+     * A lifecycle change runs as the operation `drive.drives.<verb>` (D47(6)): admitted by the runner, keyed by an
+     * idempotency key when the handle carries one (the receipt is the drive snapshot at commit), authorized inside the
+     * attempt — Manage on the root, or the system actor; an archived drive still allows its own lifecycle — and
+     * compared with the expected version under the drive's row lock by the Action.
+     *
+     * @param Closure(DriveContext): Drive $change
+     */
+    private function write(string $verb, ?int $expectedVersion, Closure $change): DriveSnapshot
     {
         $context = $this->context();
-        $rootId = $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root');
-        $root = $this->container->make(NodeLocator::class)->find($context, $rootId);
-        $this->container->make(OperationGuard::class)->authorize($context, Ability::Manage, $root);
+        $locator = $this->container->make(NodeLocator::class);
+        $guard = $this->container->make(OperationGuard::class);
+        $mapper = $this->container->make(DriveSnapshotMapper::class);
+        $idempotency = new IdempotentWrite(
+            codec: new DriveSnapshotCodec,
+            authorizer: new DriveReplayAuthorizer($context, $locator, $guard),
+            fingerprint: ['drive' => (string) $context->driveId(), 'expected_version' => $expectedVersion],
+        );
 
-        return $context;
+        return $this->container->make(OperationRunner::class)->write(new OperationSpec('drive.drives.'.$verb, new ModuleId('drive')), $context->operation, static function () use ($context, $locator, $guard, $mapper, $change): DriveSnapshot {
+            $root = $locator->find($context, $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
+            $guard->authorizeLifecycle($context, $root);
+
+            return $mapper->map($change($context));
+        }, $idempotency);
     }
 
     public function profile(): Profile

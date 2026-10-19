@@ -95,6 +95,7 @@ final readonly class DocumentSnapshotMapper
             resolvedAt: SnapshotValue::time($comment->resolved_at),
             resolvedBy: SnapshotValue::nullableId($comment->resolved_by),
             createdAt: SnapshotValue::requiredTime($comment->created_at),
+            version: $comment->version,
         );
     }
 }

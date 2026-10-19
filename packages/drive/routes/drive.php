@@ -81,17 +81,20 @@ Route::prefix($routes->versionedPrefix())
     ->middleware($routes->authenticatedMiddleware())
     ->where(['drive' => $id, 'node' => $id, 'revision' => $id, 'upload' => $id])
     ->group(static function (): void {
+        // The drive's lifecycle, its access and its share links are receipt operations too (D25, D47): keyed, and — except a
+        // grant or a share link created — conditional on the aggregate's own version (If-Match, 428/412 stale_write).
         Route::get('drives/{drive}', ShowDriveController::class)->name('drives.show');
-        Route::post('drives/{drive}/archive', ArchiveDriveController::class)->name('drives.archive');
-        Route::post('drives/{drive}/unarchive', UnarchiveDriveController::class)->name('drives.unarchive');
-        Route::delete('drives/{drive}', DeleteDriveController::class)->name('drives.destroy');
+        Route::post('drives/{drive}/archive', ArchiveDriveController::class)->name('drives.archive')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('drives/{drive}/unarchive', UnarchiveDriveController::class)->name('drives.unarchive')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::delete('drives/{drive}', DeleteDriveController::class)->name('drives.destroy')->middleware(ReadIdempotencyKey::ALIAS);
 
         Route::get('drives/{drive}/nodes', ListChildrenController::class)->name('nodes.index');
         Route::get('drives/{drive}/search', SearchNodesController::class)->name('nodes.search');
         Route::get('drives/{drive}/starred', ListStarredController::class)->name('nodes.starred');
         Route::get('drives/{drive}/trash', ListTrashController::class)->name('trash.index');
-        Route::delete('drives/{drive}/trash', EmptyTrashController::class)->name('trash.empty');
-        // Idempotent by Idempotency-Key (D25): the operations declare a receipt codec and a replay authorizer.
+        Route::delete('drives/{drive}/trash', EmptyTrashController::class)->name('trash.empty')->middleware(ReadIdempotencyKey::ALIAS);
+        // Idempotent by Idempotency-Key (D25): the operations declare a receipt codec and a replay authorizer. The routes of
+        // operations whose repeat is naturally harmless (star, unstar, revision retention, upload complete and abort) read no key.
         Route::post('drives/{drive}/folders', CreateFolderController::class)->name('folders.store')->middleware(ReadIdempotencyKey::ALIAS);
         Route::post('drives/{drive}/files', UploadFileController::class)->name('files.store');
 
@@ -99,23 +102,23 @@ Route::prefix($routes->versionedPrefix())
 
         Route::get('nodes/{node}', ShowNodeController::class)->name('nodes.show');
         Route::patch('nodes/{node}', UpdateNodeController::class)->name('nodes.update')->middleware(ReadIdempotencyKey::ALIAS);
-        Route::patch('nodes/{node}/properties', UpdateNodePropertiesController::class)->name('nodes.properties.update');
+        Route::patch('nodes/{node}/properties', UpdateNodePropertiesController::class)->name('nodes.properties.update')->middleware(ReadIdempotencyKey::ALIAS);
         Route::put('nodes/{node}/star', StarNodeController::class)->name('nodes.star');
         Route::delete('nodes/{node}/star', UnstarNodeController::class)->name('nodes.unstar');
-        Route::post('nodes/{node}/move', MoveNodeController::class)->name('nodes.move');
-        Route::post('nodes/{node}/copy', CopyNodeController::class)->name('nodes.copy');
-        Route::post('nodes/{node}/trash', TrashNodeController::class)->name('nodes.trash');
-        Route::post('nodes/{node}/restore', RestoreNodeController::class)->name('nodes.restore');
-        Route::delete('nodes/{node}', PurgeNodeController::class)->name('nodes.purge');
+        Route::post('nodes/{node}/move', MoveNodeController::class)->name('nodes.move')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/copy', CopyNodeController::class)->name('nodes.copy')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/trash', TrashNodeController::class)->name('nodes.trash')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/restore', RestoreNodeController::class)->name('nodes.restore')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::delete('nodes/{node}', PurgeNodeController::class)->name('nodes.purge')->middleware(ReadIdempotencyKey::ALIAS);
         Route::get('nodes/{node}/abilities', ShowAbilitiesController::class)->name('nodes.abilities');
 
         Route::get('files/{node}/download', DownloadFileController::class)->name('files.download');
         Route::get('files/{node}/revisions', ListFileRevisionsController::class)->name('files.revisions.index');
         Route::post('files/{node}/revisions', AddFileRevisionController::class)->name('files.revisions.store');
         Route::get('files/{node}/revisions/{revision}/download', DownloadFileRevisionController::class)->name('files.revisions.download');
-        Route::post('files/{node}/revisions/{revision}/restore', RestoreFileRevisionController::class)->name('files.revisions.restore');
+        Route::post('files/{node}/revisions/{revision}/restore', RestoreFileRevisionController::class)->name('files.revisions.restore')->middleware(ReadIdempotencyKey::ALIAS);
         Route::patch('files/{node}/revisions/{revision}', UpdateFileRevisionController::class)->name('files.revisions.update');
-        Route::delete('files/{node}/revisions/{revision}', DeleteFileRevisionController::class)->name('files.revisions.destroy');
+        Route::delete('files/{node}/revisions/{revision}', DeleteFileRevisionController::class)->name('files.revisions.destroy')->middleware(ReadIdempotencyKey::ALIAS);
 
         /*
         | Resumable uploads. The tus and S3-multipart protocols keep their own acts and
@@ -123,7 +126,7 @@ Route::prefix($routes->versionedPrefix())
         | problem+json. Throttled by the package's vaulter-uploads limiter, keyed by actor.
         */
         Route::middleware('throttle:vaulter-uploads')->group(static function (): void {
-            Route::post('drives/{drive}/uploads', CreateUploadController::class)->name('uploads.store');
+            Route::post('drives/{drive}/uploads', CreateUploadController::class)->name('uploads.store')->middleware(ReadIdempotencyKey::ALIAS);
             Route::get('uploads/{upload}', [TusProtocolController::class, 'status'])->name('uploads.show');
             Route::match(['HEAD'], 'uploads/{upload}', [TusProtocolController::class, 'head'])->name('uploads.tus.head');
             Route::patch('uploads/{upload}', [TusProtocolController::class, 'patch'])->name('uploads.tus.patch');
@@ -148,16 +151,16 @@ Route::prefix($routes->versionedPrefix())
     ->where(['node' => $id, 'drive' => $id, 'grant' => $id, 'share' => $id])
     ->group(static function (): void {
         Route::get('nodes/{node}/grants', ListGrantsController::class)->name('grants.index');
-        Route::post('nodes/{node}/grants', CreateGrantController::class)->name('grants.store');
-        Route::delete('nodes/{node}/grants/{grant}', RevokeGrantController::class)->name('grants.destroy');
-        Route::post('nodes/{node}/inheritance/restrict', RestrictInheritanceController::class)->name('access.inheritance.restrict');
-        Route::post('nodes/{node}/inheritance/restore', RestoreInheritanceController::class)->name('access.inheritance.restore');
+        Route::post('nodes/{node}/grants', CreateGrantController::class)->name('grants.store')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::delete('nodes/{node}/grants/{grant}', RevokeGrantController::class)->name('grants.destroy')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/inheritance/restrict', RestrictInheritanceController::class)->name('access.inheritance.restrict')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/inheritance/restore', RestoreInheritanceController::class)->name('access.inheritance.restore')->middleware(ReadIdempotencyKey::ALIAS);
 
         Route::get('nodes/{node}/shares', ListSharesController::class)->name('shares.index');
-        Route::post('nodes/{node}/shares', CreateShareController::class)->name('shares.store');
-        Route::patch('nodes/{node}/shares/{share}', UpdateShareController::class)->name('shares.update');
-        Route::post('nodes/{node}/shares/{share}/rotate', RotateShareController::class)->name('shares.rotate');
-        Route::delete('nodes/{node}/shares/{share}', RevokeShareController::class)->name('shares.destroy');
+        Route::post('nodes/{node}/shares', CreateShareController::class)->name('shares.store')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::patch('nodes/{node}/shares/{share}', UpdateShareController::class)->name('shares.update')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/shares/{share}/rotate', RotateShareController::class)->name('shares.rotate')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::delete('nodes/{node}/shares/{share}', RevokeShareController::class)->name('shares.destroy')->middleware(ReadIdempotencyKey::ALIAS);
 
         Route::get('drives/{drive}/activity', ListDriveActivityController::class)->name('activity.drive');
         Route::get('nodes/{node}/activity', ListNodeActivityController::class)->name('activity.node');

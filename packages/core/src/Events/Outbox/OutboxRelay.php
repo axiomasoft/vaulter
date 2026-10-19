@@ -105,13 +105,13 @@ final readonly class OutboxRelay
      * `vaulter:relay:replay`: re-delivers `[$from, $to]` to an active consumer of the registry, or with `$ackOnly`
      * only acknowledges the gaps the range covers.
      *
-     * @return array{covered: array{0: int, 1: int}|null, rows: int, acknowledged: int}
+     * @return array{covered: array{0: int, 1: int}|null, rows: int, dead: int, acknowledged: int}
      */
     public function replay(string $id, int $from, int $to, bool $ackOnly): array
     {
         $now = CarbonImmutable::now();
         if ($ackOnly) {
-            return ['covered' => null, 'rows' => 0, 'acknowledged' => $this->store->acknowledge($id, $from, $to, $now)];
+            return ['covered' => null, 'rows' => 0, 'dead' => 0, 'acknowledged' => $this->store->acknowledge($id, $from, $to, $now)];
         }
         $consumer = $this->consumers()[$id] ?? throw new LogicException(sprintf('[Vaulter] The outbox consumer "%s" is not in the active module graph.', $id));
         $this->store->register(array_map(static fn (OutboxConsumer $c): DeliveryClass => $c->deliveryClass(), $this->consumers()), $now);
@@ -262,6 +262,11 @@ final readonly class OutboxRelay
     {
         foreach ($this->store->oldestOpen($now) as $id => $createdAt) {
             $this->metrics->gauge(name: 'vaulter_outbox_lag_seconds', value: max(0, $now->getTimestamp() - $createdAt->getTimestamp()), labels: ['consumer' => $id]);
+        }
+        // The current DLQ size inside dead retention (a gauge, not an event counter); a drained consumer reads 0.
+        $dead = $this->store->deadRows($now->subSeconds($this->config->deadRetentionSeconds()));
+        foreach (array_unique([...array_keys($dead), ...array_keys($this->consumers())]) as $id) {
+            $this->metrics->gauge(name: 'vaulter_outbox_dead_rows', value: $dead[$id] ?? 0, labels: ['consumer' => $id]);
         }
     }
 

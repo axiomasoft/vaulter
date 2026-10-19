@@ -17,6 +17,7 @@ use Vaulter\Documents\Http\Controllers\Revisions\ListDocumentRevisionsController
 use Vaulter\Documents\Http\Controllers\Revisions\RestoreDocumentRevisionController;
 use Vaulter\Documents\Http\Controllers\Revisions\ShowDocumentRevisionController;
 use Vaulter\Documents\Http\Controllers\Revisions\UpdateDocumentRevisionController;
+use Vaulter\Http\Middleware\ReadIdempotencyKey;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,19 +43,19 @@ Route::prefix($routes->versionedPrefix())
     ->middleware($routes->authenticatedMiddleware())
     ->where(['drive' => $id, 'node' => $id, 'revision' => $id, 'comment' => $id, 'format' => '[A-Za-z0-9._-]+'])
     ->group(static function (): void {
-        Route::post('drives/{drive}/documents', CreateDocumentController::class)->name('documents.store');
+        Route::post('drives/{drive}/documents', CreateDocumentController::class)->name('documents.store')->middleware(ReadIdempotencyKey::ALIAS);
 
         Route::get('documents/{node}/content', ShowDocumentContentController::class)->name('documents.content.show');
         Route::put('documents/{node}/content', UpdateDocumentContentController::class)->name('documents.content.update');
         Route::get('documents/{node}/revisions', ListDocumentRevisionsController::class)->name('documents.revisions.index');
-        Route::post('documents/{node}/revisions', CreateDocumentRevisionController::class)->name('documents.revisions.store');
+        Route::post('documents/{node}/revisions', CreateDocumentRevisionController::class)->name('documents.revisions.store')->middleware(ReadIdempotencyKey::ALIAS);
         Route::get('documents/{node}/revisions/{revision}', ShowDocumentRevisionController::class)->name('documents.revisions.show');
-        Route::post('documents/{node}/revisions/{revision}/restore', RestoreDocumentRevisionController::class)->name('documents.revisions.restore');
+        Route::post('documents/{node}/revisions/{revision}/restore', RestoreDocumentRevisionController::class)->name('documents.revisions.restore')->middleware(ReadIdempotencyKey::ALIAS);
         Route::patch('documents/{node}/revisions/{revision}', UpdateDocumentRevisionController::class)->name('documents.revisions.update');
         Route::get('documents/{node}/export/{format}', ExportDocumentController::class)->name('documents.export');
 
         Route::get('nodes/{node}/comments', ListCommentsController::class)->name('comments.index');
-        Route::post('nodes/{node}/comments', AddCommentController::class)->name('comments.store');
-        Route::post('nodes/{node}/comments/{comment}/resolve', ResolveCommentController::class)->name('comments.resolve');
-        Route::delete('nodes/{node}/comments/{comment}', DeleteCommentController::class)->name('comments.destroy');
+        Route::post('nodes/{node}/comments', AddCommentController::class)->name('comments.store')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::post('nodes/{node}/comments/{comment}/resolve', ResolveCommentController::class)->name('comments.resolve')->middleware(ReadIdempotencyKey::ALIAS);
+        Route::delete('nodes/{node}/comments/{comment}', DeleteCommentController::class)->name('comments.destroy')->middleware(ReadIdempotencyKey::ALIAS);
     });

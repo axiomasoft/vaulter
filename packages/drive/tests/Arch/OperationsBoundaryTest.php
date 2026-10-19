@@ -110,6 +110,8 @@ it('keeps every HTTP and Filament boundary on Operations except the shrinking ex
     ]);
     $exempt = [
         ...$webhookAdmin,
+        // Resolves the endpoint a If-Match precondition is checked against (P6.6).
+        'webhooks/src/Http/Resources/Webhooks/EndpointPreconditions.php',
         'drive/src/Http/Support/ContentResponder.php',
         'drive/src/Http/Support/HttpResourceResolver.php',
         'drive/src/Http/Support/SharedNodeResolver.php',
@@ -154,12 +156,10 @@ it('keeps the controllers off the domain models except the shrinking exemption l
         'drive/src/Http/Controllers/Sharing/ListPublicShareNodesController.php',
         'drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php',
         'drive/src/Http/Controllers/Uploads/TusProtocolController.php',
-        'webhooks/src/Http/Controllers/Webhooks/DeactivateWebhookEndpointController.php',
         'webhooks/src/Http/Controllers/Webhooks/ListWebhookDeliveriesController.php',
         'webhooks/src/Http/Controllers/Webhooks/ListWebhookEndpointsController.php',
         'webhooks/src/Http/Controllers/Webhooks/RedeliverWebhookController.php',
         'webhooks/src/Http/Controllers/Webhooks/ShowWebhookEndpointController.php',
-        'webhooks/src/Http/Controllers/Webhooks/UpdateWebhookEndpointController.php',
     ];
     $offenders = [];
     foreach ((new Finder)->files()->in(array_filter([

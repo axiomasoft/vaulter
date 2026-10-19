@@ -21,8 +21,8 @@ PLAN3 P1.6 adds the single-CI contract:
 * weekly-full.yml runs on schedule `0 4 * * 1`, by hand and as a reusable workflow; monorepo-split.yml qualifies the
   exact tagged SHA through it and through `CI gate` before anything is published, and never polls for a green run.
 
-PLAN3 P4.19 adds the I14 lane: `consumer-isolation` (a matrix of core, media, drive, documents, webhooks from the planned
-`consumer_matrix`) runs scripts/release/consumer-check.sh for real and blocks - `ci-gate` needs it like every other job.
+PLAN3 P4.19 adds the I14 lane: `consumer-isolation` (a matrix of core, media, drive, documents, webhooks, collaboration from the
+planned `consumer_matrix`) runs scripts/release/consumer-check.sh for real and blocks - `ci-gate` needs it like every other job.
 
 Two more subcommands run inside ci.yml (they are the logic the workflow would otherwise inline as shell):
 
@@ -53,7 +53,7 @@ MUTATION_FLOORS = {
 COVERAGE_MARKERS = ('--coverage', 'codecov', '--coverage-clover')
 
 # PLAN3 P1.6: the single CI.
-PHP_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'azgard', 'filament']
+PHP_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament']
 TESTBENCH_TO_LARAVEL = {'10': '12', '11': '13'}  # the Testbench major that supports each Laravel major
 LARAVEL_TO_TESTBENCH = {'12': '^10.0', '13': '^11.0'}
 REMOVED_WORKFLOWS = [
@@ -62,11 +62,11 @@ REMOVED_WORKFLOWS = [
 ]
 GATE_JOB = 'ci-gate'
 GATE_CHECK_NAME = 'CI gate'
-LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'hub', 'repo', 'openapi']
+LANES = ['quality', 'fast', 'db', 'serial', 'consumer', 'vue', 'vue_collaboration', 'hub', 'repo', 'openapi']
 # PLAN3 P4.19 (I14): packages whose split archive must stand alone. azgard is the external gate (D20), filament has its
 # own composer check. A lane that is not named like its job maps here (job id -> `has_<lane>` / `<lane>_matrix` outputs).
-CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks']
-LANE_JOBS = {'consumer': 'consumer-isolation'}
+CONSUMER_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration']
+LANE_JOBS = {'consumer': 'consumer-isolation', 'vue_collaboration': 'vue-collaboration'}
 
 
 def lane_job(lane: str) -> str:
@@ -426,7 +426,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
     php = [pkg for pkg in PHP_PACKAGES if pkg in support]
     skip_reason = ''
     if mode == 'all':
-        suites = set(php) | {'repo', 'vue', 'hub'}
+        suites = set(php) | {'repo', 'vue', 'vue-collaboration', 'hub'}
         db_suites = {'pgsql': set(php), 'mysql': set(php)}
     elif mode == 'changed':
         if changes is None or db is None:
@@ -465,7 +465,7 @@ def plan_outputs(support: dict, mode: str, changes: dict | None = None, db: dict
     flags = {
         'quality': bool(quality_matrix), 'fast': bool(fast), 'db': bool(db_matrix), 'serial': bool(serial),
         'consumer': bool(consumer),
-        'vue': 'vue' in suites, 'hub': 'hub' in suites, 'repo': 'repo' in suites,
+        'vue': 'vue' in suites, 'vue_collaboration': 'vue-collaboration' in suites, 'hub': 'hub' in suites, 'repo': 'repo' in suites,
         'openapi': skip_reason == '',
     }
     out = {'skip_reason': skip_reason, 'mode': mode}

@@ -7,4 +7,7 @@ Vaulter\Media\Configuration\MediaConfig
   disk(): string
   gcGraceHours(int $override = 0): int
   orphanGraceHours(int $override = 0): int
+  scrubLimit(?int $override = NULL): int
+  scrubMaxBytes(?int $override = NULL): ?int
+  scrubMaxSeconds(?int $override = NULL): ?int
   storageDriver(): string

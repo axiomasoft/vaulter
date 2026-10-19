@@ -63,7 +63,7 @@ final readonly class IdempotencyClaim implements OperationClaim
         $digest = IdempotencyDigest::scope($tuple);
         // A transport that fingerprints its own request (HTTP) replaces the operation's fingerprint.
         $fingerprint = $operation->context->requestFingerprint;
-        $requestHash = IdempotencyDigest::request($fingerprint === null ? $idempotency->fingerprint : ['transport' => $fingerprint]);
+        $requestHash = $fingerprint === null ? IdempotencyDigest::request($idempotency->fingerprint) : IdempotencyDigest::transport($fingerprint);
 
         $receipt = $this->store->claim($tuple, $digest, $requestHash, $this->ttl());
         if ($receipt !== null) {

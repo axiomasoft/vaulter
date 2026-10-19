@@ -23,6 +23,7 @@ use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Documents\Http\Support\DocumentsRouteLabels;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Documents\Operations\DocumentsOperationPolicies;
 use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Documents\Profiles\AllowedDocumentTypesProfileOption;
 use Vaulter\Documents\Profiles\CommentsProfileOption;
@@ -87,6 +88,7 @@ final class DocumentsModule implements OwnsSchema, VaulterModule
             ->schema(dirname(__DIR__).'/database/migrations')
             ->routes(dirname(__DIR__).'/routes/documents.php')
             ->problems(DocumentsProblemCodes::class)
+            ->operations(DocumentsOperationPolicies::class)
             ->events(DocumentEventType::class)
             ->bindings(BindingsRegistrar::class)
             ->commands(MakeDocumentTypeCommand::class, MakeExporterCommand::class)

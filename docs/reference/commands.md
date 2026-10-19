@@ -25,6 +25,8 @@ themselves — see [Scheduling](#scheduling).
 | `vaulter:make:profile` | Scaffold a storage-panel provider class |
 | `vaulter:blobs:gc` | Two-phase, race-safe blob garbage collection |
 | `vaulter:blobs:reconcile` | Rebuild blob `ref_count` from the pins and report dangling rows |
+| `vaulter:blobs:scrub` | Verify stored blob bytes against their sha256 within a sample and a budget ([guide](/guides/blob-integrity)) |
+| `vaulter:operations` | Print the operation catalogue ([reference](/reference/operations)) |
 | `vaulter:trash:purge` | Permanently delete trashed nodes past retention |
 | `vaulter:revisions:prune` | Delete non-current file revisions past the profile retention policy |
 | `vaulter:relay` | Relay the outbox to its consumers: register, reconcile, deliver, hold |
@@ -175,7 +177,7 @@ The JSON document is described by `packages/core/resources/schemas/doctor-v1.sch
 | `drive.drives.deleting` | Drives in `deleting` for more than 24 h (`vaulter:drives:purge`) | warning → warning |
 | `drive.drives.usage` | Stored `used_bytes` against the quota formula, same calculator as `vaulter:drives:recount`, without a lock | warning → warning |
 | `documents.types` | The default type is registered; documents of unregistered types, counted | warning → warning |
-| `documents.collaboration` | With collaboration on: both secrets set and different, hub URL (`wss://` in production), token lifetime ≤ 3600 s, `firebase/php-jwt` installed | error → error |
+| `collaboration.hub` | With the collaboration module on: both secrets set and different, hub URL (`wss://` in production), token lifetime ≤ 300 s, a drain cache store every process shares; a standing `vaulter:collaboration:drain` flag (`collaboration.draining`) is a warning | error → error |
 | `azgard.dependency` | AzGuard is installed and the bridge guard resolves | error → error |
 
 The `drive.scan.*` checks run whether or not `vaulter.modules.webhooks` is on: scan work is mandatory
@@ -196,6 +198,7 @@ existing ones to avoid double runs). A host still has to run `schedule:run` ever
 | `vaulter.schedule.outbox_prune` | `vaulter:outbox:prune` | `hourly` |
 | `vaulter-webhooks.schedule.webhooks_retry` | `vaulter:webhooks:retry` (needs `vaulter.modules.webhooks`) | `everyMinute` |
 | `vaulter-webhooks.schedule.webhooks_prune` | `vaulter:webhooks:prune` (needs `vaulter.modules.webhooks`) | `dailyAt:03:10` |
+| `vaulter-collaboration.schedule.collaboration_prune` | `vaulter:collaboration:prune` (needs `vaulter.modules.collaboration`) | `dailyAt:03:40` |
 | `vaulter-drive.schedule.changes_prune` | `vaulter:changes:prune` (needs `vaulter-drive.features.changes`) | `dailyAt:03:20` |
 | `vaulter-drive.schedule.uploads_sweep` | `vaulter:uploads:sweep` | `hourlyAt:15` |
 | `vaulter-drive.schedule.trash_purge` | `vaulter:trash:purge` | `dailyAt:03:30` |
@@ -544,6 +547,50 @@ php artisan vaulter:changes:reset 42
 
 ---
 
+## `vaulter:collaboration:drain`
+
+Make the [collaboration](/guides/collaboration) module safe to switch off (opt-in module `vaulter.modules.collaboration`).
+It sets the draining flag — from then on every append answers `503 collaboration_draining` — asks the hub's compaction
+worker to checkpoint every document that carries a pending marker, and waits, outside any transaction, until none is left
+or `--deadline` seconds passed. The outcome is what the documents report afterwards, not what the hub answered, and it is
+read no earlier than `drain.max_append_tx` after the flag was set. A marker that appears meanwhile is drained too.
+
+```
+vaulter:collaboration:drain
+    {--deadline=30}   Seconds to wait for the hub to checkpoint every pending document
+    {--release}       Remove the draining flag: appends are accepted again
+```
+
+Exit `0`: no document is pending — switch the module off or run `vaulter:module:uninstall collaboration`. Exit `1`:
+documents are still pending (the hub is down, the deadline passed) and are listed, or the cache store did not keep the flag
+(`vaulter-collaboration.drain.cache_store`), so nothing was asked of the hub; repeat once the hub runs. Exit `2`: a bad
+option. The flag stays after both outcomes until `--release`, **including after the module is switched on again**.
+
+```bash
+php artisan vaulter:collaboration:drain --deadline=60
+php artisan vaulter:collaboration:drain --release
+```
+
+---
+
+## `vaulter:collaboration:prune`
+
+Delete the update log, receipts and head of closed collaboration generations past their grace: retired longer ago than
+`hub.token_ttl` + the hub's retry horizon (10 s) + `retention.retired_generation_days`. A document's current generation is
+never touched. First it retires the heads of generations a document left while the module was off. Scheduled daily
+(`vaulter-collaboration.schedule.collaboration_prune`).
+
+```
+vaulter:collaboration:prune
+    {--dry-run}   Report what would be pruned without deleting
+```
+
+```bash
+php artisan vaulter:collaboration:prune --dry-run
+```
+
+---
+
 ## Scheduling
 
 The maintenance commands are schedule-friendly. A representative schedule:
@@ -579,6 +626,8 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:blobs:reconcile` | Rebuild blob ref_count from the pins and report dangling rows; optionally disk-walk for orphan objects (H.3) | `[--orphans] [--disk [DISK]] [--orphan-grace [ORPHAN-GRACE]] [--prune]` |
 | `vaulter:changes:prune` | Delete drive change-journal entries past the retention window. | `[--days [DAYS]] [--drive [DRIVE]]` |
 | `vaulter:changes:reset` | Expire every change-journal cursor of a drive, forcing its clients to resynchronize. | `<drive>` |
+| `vaulter:collaboration:drain` | Refuse new collaboration updates and checkpoint every pending document through the hub before the module is switched off. | `[--deadline [DEADLINE]] [--release]` |
+| `vaulter:collaboration:prune` | Delete the log and receipts of closed collaboration generations past their grace. | `[--dry-run]` |
 | `vaulter:commands:reference` | Generate the command table in the reference docs. | `[--check] [--path [PATH]]` |
 | `vaulter:config:reference` | Generate the config key table in the reference docs. | `[--check] [--path [PATH]]` |
 | `vaulter:doctor` | Diagnose the Vaulter setup of this host (read-only) | `[--production] [--json] [--check [CHECK]] [--sample [SAMPLE]] [--probe-storage]` |

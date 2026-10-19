@@ -96,14 +96,16 @@ it('issues a writable session for a writer (edit)', function (): void {
     $claims = (array) JWT::decode($response->json('data.token'), new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
     expect($claims)->toMatchArray([
         'sub' => '1',
-        'node' => (string) $node->getKey(),
-        'drive' => (string) $node->drive_id,
+        'document_id' => (string) $node->getKey(),
+        'drive_id' => (string) $node->drive_id,
         'tenant' => null,
-        'epoch' => 0,
+        'generation' => 0,
         'schema_version' => 1,
-        'mode' => 'rw',
+        'scope' => 'write',
         'room' => 'vaulter.documents.'.$node->drive_id.'.'.$node->getKey().'.0',
-    ])->and($claims['exp'] - $claims['iat'])->toBe(3600);
+    ])->and((array) $claims['permissions_version'])->toBe(['drive' => 0, 'global' => 0])
+        ->and($claims['jti'])->toBeString()->not->toBe('')
+        ->and($claims['exp'] - $claims['iat'])->toBe(300);
 });
 
 it('issues a read-only session to an editor whose client speaks another schema version', function (): void {

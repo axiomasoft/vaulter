@@ -24,9 +24,11 @@ import { retryPolicy, withRetry } from './retry.js'
 //
 // The worker runs inside `serve` every VAULTER_COLLAB_COMPACTION_INTERVAL_MS (at once again when a
 // lease call came back full, so a backlog does not hold drain requests back), and alone in the
-// one-shot `compact --pending` (src/cli.js): drain() repeats passes until a lease call hands out
-// nothing — after every lease of its own that did not clear a marker has run out, so an empty
-// answer cannot hide one — or the deadline passes.
+// one-shot `compact --pending` (src/cli.js): drain() repeats passes until the backend reports no
+// generation left due for compaction — an empty lease answer is no proof on its own: a generation
+// still pending may be leased elsewhere — or the deadline passes. Its lease calls ask for that
+// report, and the deadline bounds each lease call, merge and publication: what it cuts short is not
+// published, and its lease runs out.
 //
 // Time (clock, sleep, random), the backend client and the compaction are injectable for tests.
 
@@ -42,6 +44,10 @@ export const OUTCOME = Object.freeze({
   FAILED: 'compaction_failed',
   REJECTED: 'rejected',
   UNAVAILABLE: 'backend_unavailable',
+  /** The drain's deadline passed before its checkpoint was published. */
+  DEADLINE: 'deadline_passed',
+  /** drain() only: a generation still due that this run was not handed (another hub holds it, or it waits). */
+  NOT_LEASED: 'not_leased',
 })
 
 /** The lease owner this process names (the backend keeps it for diagnostics; the token is what counts). */
@@ -143,10 +149,34 @@ export function createWorker({
     })
   }
 
-  /** Merge and publish one leased generation; resolves its result, never throws. */
-  async function compactEntry(entry, receivedAt, serverTime) {
+  /** The backend options of a lease call: its timeout ends at `deadlineAt` (the clock's time) at the latest. */
+  function leaseOptions(deadlineAt) {
+    const remaining = deadlineAt - clock()
+
+    if (!Number.isFinite(remaining)) {
+      return backendOptions
+    }
+
+    const configured = backendOptions.timeoutMs ?? backendOptions.config?.webhookTimeoutMs ?? conf.webhookTimeoutMs
+
+    return { ...backendOptions, timeoutMs: Math.max(1, Math.ceil(configured > 0 ? Math.min(configured, remaining) : remaining)) }
+  }
+
+  /** A leased generation the deadline cut short: nothing is published, its lease runs out. */
+  function cutShort(entry, label, lapsesAt) {
+    log.warn?.(`Vaulter collab compaction: the deadline passed before the checkpoint of ${label}; nothing is published`)
+
+    return result(entry, OUTCOME.DEADLINE, { retryAt: lapsesAt })
+  }
+
+  /** Merge and publish one leased generation, not past `deadlineAt`; resolves its result, never throws. */
+  async function compactEntry(entry, receivedAt, serverTime, deadlineAt = Infinity) {
     const { publishBy, lapsesAt } = leaseWindow(entry, receivedAt, serverTime)
     const label = `document ${String(entry?.document ?? '?')} generation ${entry?.generation ?? '?'}`
+
+    if (clock() >= deadlineAt) {
+      return cutShort(entry, label, lapsesAt)
+    }
 
     if (clock() >= publishBy) {
       counters.expired++
@@ -177,7 +207,15 @@ export function createWorker({
     compaction.seconds += seconds
     emit('compacted', { document: String(entry.document), generation: entry.generation, seconds, bytes: compacted.bytes })
 
-    const series = await publish(compacted, publishBy)
+    if (clock() >= deadlineAt) {
+      return cutShort(entry, label, lapsesAt)
+    }
+
+    const series = await publish(compacted, Math.min(publishBy, deadlineAt))
+
+    if (series.expired && deadlineAt < publishBy) {
+      return cutShort(entry, label, lapsesAt)
+    }
 
     if (series.expired) {
       counters.expired++
@@ -231,15 +269,18 @@ export function createWorker({
 
   /**
    * One pass: one lease call, then every leased generation in the backend's order. Resolves
-   * `{ ok: true, entries, results }` or, when the lease call failed, `{ ok: false, status, code,
-   * error }`. Never throws.
+   * `{ ok: true, entries, results, pending }` or, when the lease call failed, `{ ok: false, status,
+   * code, error }`. `report` asks the backend what is still due for compaction (`pending`, null when
+   * it reported nothing; src/backend.js leaseCompaction). `deadlineAt` (the clock's time) bounds the
+   * lease call, and every merge and publication: what it cuts short is not published (outcome
+   * deadline_passed). Never throws.
    */
-  async function runOnce() {
+  async function runOnce({ report = false, deadlineAt = Infinity } = {}) {
     counters.passes++
     let answer
 
     try {
-      answer = await backend.leaseCompaction({ hubId, max: batch }, backendOptions)
+      answer = await backend.leaseCompaction({ hubId, max: batch, ...(report ? { report: true } : {}) }, leaseOptions(deadlineAt))
     } catch (error) {
       answer = { ok: false, status: null, code: null, error }
     }
@@ -267,12 +308,12 @@ export function createWorker({
     counters.leased += answer.entries.length
 
     for (const entry of answer.entries) {
-      const outcome = await compactEntry(entry, receivedAt, answer.serverTime ?? null)
+      const outcome = await compactEntry(entry, receivedAt, answer.serverTime ?? null, deadlineAt)
       results.push(outcome)
       emit('outcome', outcome)
     }
 
-    return { ok: true, entries: answer.entries.length, results }
+    return { ok: true, entries: answer.entries.length, results, pending: answer.pending ?? null }
   }
 
   function schedule(delayMs) {
@@ -318,62 +359,72 @@ export function createWorker({
   }
 
   /**
-   * Run passes until a lease call hands out nothing (`drained: true`) or `deadlineMs` passed
-   * (`drained: false`). An empty answer settles the run only once every generation this run
-   * leased without clearing its marker has had its lease run out before that call — until then the
-   * backend would not hand it out again, however pending it is. `remaining` lists the generations
-   * not shown to be clear: those whose last outcome left the marker, and those of the last lease
-   * answer when it was not empty (the backend still had them pending); `failure` is the last failed
-   * lease call.
+   * Run passes until the backend reports no generation left due for compaction (`drained: true`)
+   * or `deadlineMs` passed (`drained: false`); the deadline bounds every lease call, merge and
+   * publication. Every lease call asks for the report (src/backend.js leaseCompaction), which counts
+   * the generations still due whichever hub holds their lease — an empty lease answer is no proof:
+   * another hub's lease hides one. The report is taken with the leases, so what this pass then
+   * cleared (published with the marker cleared, or closed: a 409 epoch mismatch) is taken off it;
+   * a publication whose answer was lost and whose retry found the lease spent (409) is settled by
+   * the next report. `remaining` names what the last report still counted — with this run's last
+   * outcome of each, or not_leased — and `unnamed` how many more it counted; `failure` is the last
+   * failed lease call.
+   *
+   * A backend that sends no report settles the run on an empty lease answer once every generation
+   * this run was handed was seen cleared or closed; `remaining` then lists those not shown clear.
    */
   async function drain({ deadlineMs }) {
     const deadlineAt = clock() + deadlineMs
     /** document → the last result of a generation whose marker this run did not see cleared. */
     const unresolved = new Map()
+    /** The backend's last report, less what this run cleared since. */
+    let pending = null
     let lastAnswer = []
     let failure = null
     let published = 0
 
     for (;;) {
-      const askedAt = clock()
-
-      if (askedAt >= deadlineAt) {
+      if (clock() >= deadlineAt) {
         break
       }
 
-      const pass = await runOnce()
+      const pass = await runOnce({ report: true, deadlineAt })
 
       if (pass.ok) {
         failure = null
+        const cleared = new Set()
 
         for (const outcome of pass.results) {
           if (outcome.outcome === OUTCOME.PUBLISHED) {
             published++
           }
-          if (outcome.outcome === OUTCOME.PUBLISHED && outcome.markerCleared) {
+          if ((outcome.outcome === OUTCOME.PUBLISHED && outcome.markerCleared) || outcome.outcome === OUTCOME.EPOCH) {
             unresolved.delete(outcome.document)
+            cleared.add(outcome.document)
           } else {
             unresolved.set(outcome.document, outcome)
           }
         }
 
-        if (pass.entries === 0) {
-          const waiting = [...unresolved.values()].filter((outcome) => outcome.retryAt > askedAt)
+        if (pass.pending !== null) {
+          const generations = pass.pending.generations.filter((generation) => !cleared.has(generation.document))
+          pending = { total: pass.pending.total - (pass.pending.generations.length - generations.length), generations }
 
-          if (waiting.length === 0) {
-            return { drained: true, published, remaining: [], failure: null }
+          if (pending.total <= 0) {
+            return { drained: true, published, remaining: [], unnamed: 0, failure: null }
           }
-
-          // Nothing else was leasable: only the generations still under a lease of this run count.
-          lastAnswer = []
-        } else {
-          lastAnswer = pass.results
-
-          if (pass.entries >= batch) {
-            continue
-          }
+        } else if (pass.entries === 0 && unresolved.size === 0) {
+          return { drained: true, published, remaining: [], unnamed: 0, failure: null }
         }
-      } else {
+
+        // Without a report, the generations of a lease answer were still pending when it was given.
+        lastAnswer = pass.entries === 0 ? [] : pass.results
+
+        if (pass.entries >= batch) {
+          continue
+        }
+      } else if (failure === null || clock() < deadlineAt) {
+        // A pass the deadline cut short says nothing new: keep the failure the backend really gave.
         failure = pass
       }
 
@@ -384,13 +435,19 @@ export function createWorker({
       }
     }
 
+    if (pending !== null) {
+      const remaining = pending.generations.map(({ document, generation }) => unresolved.get(document) ?? { document, generation, outcome: OUTCOME.NOT_LEASED })
+
+      return { drained: false, published, remaining, unnamed: Math.max(0, pending.total - remaining.length), failure }
+    }
+
     const remaining = new Map(lastAnswer.map((outcome) => [outcome.document, outcome]))
 
     for (const [document, outcome] of unresolved) {
       remaining.set(document, outcome)
     }
 
-    return { drained: false, published, remaining: [...remaining.values()], failure }
+    return { drained: false, published, remaining: [...remaining.values()], unnamed: 0, failure }
   }
 
   return {

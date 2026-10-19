@@ -15,7 +15,7 @@ use Vaulter\Drive\Http\Support\HttpResourceResolver;
 /**
  * Copy a checkpoint forward as the new working state (Edit). The checkpoint itself is
  * never changed and open collaboration rooms move to a new epoch, so If-Match is required
- * and is compared with the content's current tag.
+ * and is compared with the content's current tag; idempotent by Idempotency-Key.
  */
 #[Internal]
 final readonly class RestoreDocumentRevisionController

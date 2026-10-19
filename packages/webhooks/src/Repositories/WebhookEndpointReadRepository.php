@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Attributes\Internal;
+use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Webhooks\Configuration\WebhooksConfig;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 
@@ -13,12 +14,16 @@ use Vaulter\Webhooks\Models\WebhookEndpoint;
  * The read side of webhook-endpoint queries — the
  * admin listing + single lookup for the management surface. Authorization is the
  * controller's job (a global manage ability); this repository only shapes queries.
+ *
+ * Under strict tenancy a caller sees the endpoints of the current tenant and those registered before tenancy (no
+ * tenant); an endpoint of another tenant is as unknown as a missing one (R2, P6.11).
  */
 #[Internal]
 final readonly class WebhookEndpointReadRepository
 {
     public function __construct(
         private readonly WebhooksConfig $webhooksConfig,
+        private readonly TenancyBoundary $tenancy,
     ) {}
 
     /**
@@ -49,7 +54,12 @@ final readonly class WebhookEndpointReadRepository
     {
         /** @var class-string<WebhookEndpoint> $model */
         $model = $this->webhooksConfig->model('webhook_endpoint');
+        $query = $model::query();
+        if (!$this->tenancy->enforced()) {
+            return $query;
+        }
+        $tenant = $this->tenancy->current();
 
-        return $model::query();
+        return $query->where(static fn (Builder $visible): Builder => $visible->where('tenant_id', $tenant)->orWhereNull('tenant_id'));
     }
 }

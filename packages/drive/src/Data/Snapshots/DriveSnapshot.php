@@ -11,7 +11,8 @@ use Vaulter\Drive\Enums\DriveStatus;
 
 /**
  * Read-only view of a drive. Built by Vaulter; the constructor is not part of the
- * public contract.
+ * public contract. `version` rises with each archive, unarchive and delete: pass it
+ * back as the expected version of the next one.
  */
 #[Api]
 final readonly class DriveSnapshot
@@ -26,5 +27,6 @@ final readonly class DriveSnapshot
         public DriveStatus $status,
         public ?string $tenantId,
         public DateTimeImmutable $createdAt,
+        public int $version = 0,
     ) {}
 }

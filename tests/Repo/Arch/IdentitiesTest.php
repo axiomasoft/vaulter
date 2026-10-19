@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D1', 'D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D26', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40'];
+const ID_ACCEPTED_DECISIONS = ['D1', 'D6', 'D8', 'D10', 'D14', 'D21', 'D22', 'D23', 'D25', 'D26', 'D28', 'D29', 'D33', 'D34', 'D36', 'D38', 'D39', 'D40', 'D46', 'D47', 'D49'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -352,8 +352,9 @@ describe('committed fixtures', function (): void {
 
         expect($schema['presets'])->toBe(48)
             ->and($schema['engines'])->toBe(['pgsql', 'mysql', 'sqlite'])
-            ->and(count($tables))->toBe(32)
+            ->and(count($tables))->toBe(33)
             ->and($tables['v_collaboration_heads'] ?? null)->toBe('collaboration')
+            ->and($tables['v_collaboration_permission_versions'] ?? null)->toBe('collaboration')
             ->and(array_column(array_filter($schema['items'], static fn (array $i): bool => str_starts_with($i['id'], 'migration:')), 'id'))->toBe(array_map(static fn (string $b): string => 'migration:'.$b, $migrations));
         foreach ($schema['items'] as $item) {
             if (isset($item['table'])) {
@@ -394,7 +395,8 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(33)
+        expect(count($items))->toBe(35)
+            ->and($items['command:vaulter:operations']['owner'])->toBe('core')
             ->and($items['command:vaulter:collaboration:prune']['owner'])->toBe('collaboration')
             ->and($items['command:vaulter:collaboration:drain']['owner'])->toBe('collaboration')
             ->and(array_column($items['command:vaulter:collaboration:drain']['options'], 'default', 'name'))->toBe(['deadline' => '30', 'release' => false])
@@ -430,8 +432,10 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('protocol')['items'], null, 'id');
         $count = static fn (string $prefix): int => count(array_filter(array_keys($items), static fn (string $id): bool => str_starts_with($id, $prefix)));
 
-        expect($count('event:'))->toBe(32)
-            ->and($count('problem:'))->toBe(84)
+        expect($count('event:'))->toBe(33)
+            ->and($items['event:drive.access.effective_permissions_changed'])->toMatchArray(['owner' => 'drive', 'subject' => 'access', 'sinks' => ['activity' => false, 'external' => false, 'journal' => null]])
+            ->and($count('problem:'))->toBe(85)
+            ->and($items['problem:stale_write'])->toMatchArray(['status' => 412, 'owner' => 'core', 'retryable' => 'after_refetch', 'receipt' => 'cacheable'])
             ->and($items['problem:collaboration_draining'])->toMatchArray(['status' => 503, 'owner' => 'collaboration', 'retryable' => 'with_backoff', 'receipt' => 'never'])
             ->and($items['problem:collaboration_checkpoint_conflict'])->toMatchArray(['status' => 409, 'owner' => 'collaboration', 'retryable' => 'after_refetch', 'receipt' => 'never'])
             ->and($items['problem:collaboration_update_too_large'])->toMatchArray(['status' => 413, 'owner' => 'collaboration', 'retryable' => 'never', 'receipt' => 'never'])

@@ -115,6 +115,8 @@ it('mounts the session and the hub routes behind the module middleware once it i
             'vaulter.v1.collaboration.hub.append',
             'vaulter.v1.collaboration.hub.compaction.lease',
             'vaulter.v1.collaboration.hub.checkpoint',
+            'vaulter.v1.collaboration.hub.renew',
+            'vaulter.v1.collaboration.hub.recheck',
         ])
         ->and($kernel->capabilities()->require(CollaborationDriver::class))->toBeInstanceOf(HocuspocusCollaborationDriver::class)
         ->and($app['config']->get('vaulter-collaboration.driver'))->toBe('hocuspocus')

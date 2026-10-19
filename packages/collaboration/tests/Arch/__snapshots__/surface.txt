@@ -2,6 +2,8 @@
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
 Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final readonly class
+  public const array CONTROL_TRANSPORTS = ['redis', 'http', 'none']
+  public const int MAX_TOKEN_TTL = 300
   public const int RETRY_HORIZON_SECONDS = 10
   public function assertDistinctHubSecrets(): void
   public function assertSecrets(Illuminate\Contracts\Foundation\Application $app): void
@@ -11,9 +13,14 @@ Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final read
   public function compactionTriggerAge(): int
   public function compactionTriggerBytes(): int
   public function compactionTriggerUpdates(): int
+  public function controlHttpTimeout(): int
+  public function controlHttpUrls(): array
+  public function controlRedisConnection(): string
+  public function controlTransport(): string
   public function drainCacheStore(): ?string
   public function drainMaxAppendTx(): int
   public function driver(): string
+  public function hubClockSkew(): int
   public function hubJwtSecret(): ?string
   public function hubTimestampTolerance(): int
   public function hubTokenTtl(): int

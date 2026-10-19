@@ -14,8 +14,28 @@ return [
         // Signs the room tokens (Laravel only); must differ from the webhook secret the hub holds.
         'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
         'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-        'token_ttl' => 3600,
+        // The lifetime of a room token (seconds, at most 300): the longest a revoked writer keeps a session when no
+        // control message reaches the hub, because a renewal checks the rights again (D26).
+        'token_ttl' => 300,
+        // The clock difference tolerated on a room token's exp, by the hub and the backend alike (seconds); part of the
+        // exposure bound token_ttl + clock_skew. Not the tolerance of a request signature (timestamp_tolerance).
+        'clock_skew' => 30,
         'timestamp_tolerance' => 300,
+    ],
+    // How a change of effective permissions (drive.access.effective_permissions_changed) reaches the hubs at once:
+    // `redis` publishes on the channel vaulter:collab:control of the connection below, `http` POSTs to the management
+    // /control endpoint of every hub listed (signed with hub.webhook_secret), `none` sends nothing — the hubs then learn
+    // of it on the next append or renewal. A lost message is never replayed: the token lifetime bounds the exposure.
+    'control' => [
+        'transport' => env('VAULTER_COLLAB_CONTROL_TRANSPORT', 'none'),
+        'redis' => [
+            'connection' => env('VAULTER_COLLAB_CONTROL_REDIS', 'default'),
+        ],
+        'http' => [
+            // The management base URLs of the hubs (comma-separated in the environment), e.g. http://hub-1:1235.
+            'urls' => env('VAULTER_COLLAB_CONTROL_URLS', ''),
+            'timeout' => 2,
+        ],
     ],
     // The largest binary Yjs state one hub store may write (413 above it).
     'max_state_bytes' => 16777216,

@@ -54,6 +54,22 @@ final readonly class OperationGuard
         }
     }
 
+    /**
+     * A drive lifecycle change (archive, unarchive, delete): Manage on the drive's root for a user. The system actor
+     * (the owner-deleted cascade, host maintenance) is not held to the profile's feature gates: the grants feature
+     * governs grant management, and a drive must still be deletable with its owner in a profile that switches grants
+     * off. Tenancy and the deleting state still apply to it.
+     */
+    public function authorizeLifecycle(DriveContext $context, Node $root): void
+    {
+        if (!$context->actor->isSystem()) {
+            $this->authorize(context: $context, ability: Ability::Manage, node: $root);
+
+            return;
+        }
+        $this->assertDriveLifecycle(context: $context, node: $this->scoped(context: $context, node: $root), operation: OperationKind::Metadata);
+    }
+
     /** Grant management uses the grants feature, independently of bearer links. */
     public function authorizeGrants(DriveContext $context, Node $node): void
     {

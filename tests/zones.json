@@ -171,6 +171,12 @@
             "src": ["packages/vue"],
             "tests": ["packages/vue/tests"],
             "uses": []
+        },
+        "vue-collaboration": {
+            "suite": "vue-collaboration",
+            "src": ["packages/vue-collaboration"],
+            "tests": ["packages/vue-collaboration/tests"],
+            "uses": ["vue"]
         }
     },
     "harness": [
@@ -239,7 +245,11 @@
         {"path": "packages/vue/package.json", "zones": ["vue"]},
         {"path": "packages/vue/vite.config.ts", "zones": ["vue"]},
         {"path": "packages/vue/tsconfig.json", "zones": ["vue"]},
-        {"path": "packages/vue/tests/support", "zones": ["vue"]}
+        {"path": "packages/vue/tests/support", "zones": ["vue"]},
+        {"path": "packages/vue-collaboration/package.json", "zones": ["vue-collaboration"]},
+        {"path": "packages/vue-collaboration/vite.config.ts", "zones": ["vue-collaboration"]},
+        {"path": "packages/vue-collaboration/tsconfig.json", "zones": ["vue-collaboration"]},
+        {"path": "packages/vue-collaboration/tests/support", "zones": ["vue-collaboration"]}
     ],
     "database": [
         "packages/core/tests/Schema",
@@ -270,6 +280,7 @@
         "packages/media/tests/Cas/BlobFindOrCreateTest.php",
         "packages/media/tests/Cas/BlobGarbageCollectorTest.php",
         "packages/media/tests/Cas/BlobGcBatchTest.php",
+        "packages/media/tests/Cas/BlobGcCriteriaTest.php",
         "packages/media/tests/Cas/BlobGcPipelineTest.php",
         "packages/media/tests/Cas/BlobOrphanPruneTest.php",
         "packages/media/tests/Cas/BlobOrphanSweepTest.php",
@@ -277,6 +288,8 @@
         "packages/media/tests/Cas/BlobPinStatusTest.php",
         "packages/media/tests/Cas/BlobPinTransactionTest.php",
         "packages/media/tests/Cas/BlobReconcilerTest.php",
+        "packages/media/tests/Cas/BlobScrubHealTest.php",
+        "packages/media/tests/Cas/BlobScrubTest.php",
         "packages/media/tests/Cas/BlobScopeKeyTest.php",
         "packages/media/tests/Cas/CasPromoteAtomicTest.php",
         "packages/media/tests/Cas/ColdMutationSurvivorTest.php",
@@ -343,6 +356,7 @@
         "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
         "packages/collaboration/tests/Persistence",
         "packages/collaboration/tests/Restore",
+        "packages/collaboration/tests/Revocation",
         "packages/collaboration/tests/Console/PruneGenerationsTest.php",
         "packages/collaboration/tests/Disable",
         "packages/azgard/tests/RealAzgard",

@@ -13,6 +13,7 @@ use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Actions\Uploads\InitiateUploadAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\DriveHandle;
+use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -20,15 +21,19 @@ use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;
+use Vaulter\Drive\Idempotency\UploadSessionCodec;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
+use Vaulter\Support\Identity;
 
 #[Api]
 final readonly class UploadOperations
@@ -58,6 +63,22 @@ final readonly class UploadOperations
 
     public function initiate(InitiateUploadInput $input): UploadSession
     {
+        $node = $input->targetNode === null ? null : self::idOf($input->targetNode);
+        $parent = $input->targetParent === null ? null : self::idOf($input->targetParent);
+        // Idempotent by key (D25): the receipt is the opened session. A replay needs Edit on the target file (a new
+        // revision) or Create in the parent folder (a new file) where they are now.
+        $idempotency = new IdempotentWrite(
+            codec: new UploadSessionCodec($this->config),
+            authorizer: $node === null
+                ? NodeReplayAuthorizer::forCreate($this->context, $this->locator, $this->guard, $parent)
+                : NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $node),
+            fingerprint: [
+                'protocol' => $input->protocol->value, 'target_node' => $node, 'target_parent' => $parent, 'target_name' => $input->targetName,
+                'expected_sha256' => $input->expectedSha256, 'total_size_bytes' => $input->totalSizeBytes, 'mime_type' => $input->mimeType,
+                'metadata' => $input->metadata, 'expected_sequence' => $input->expectedSequence,
+            ],
+        );
+
         return $this->write('initiate', function () use ($input): UploadSession {
             if (!$this->config->resumableEnabled()) {
                 // The target is looked up first, so a disabled feature does not tell a
@@ -69,7 +90,7 @@ final readonly class UploadOperations
             }
 
             return $this->initiation->execute(context: $this->context, input: $input);
-        });
+        }, $idempotency);
     }
 
     public function complete(UploadSession|int|string $session): Node
@@ -160,9 +181,18 @@ final readonly class UploadOperations
      * @param  Closure(): T $attempt
      * @return T
      */
-    private function write(string $verb, Closure $attempt): mixed
+    private function write(string $verb, Closure $attempt, ?IdempotentWrite $idempotency = null): mixed
     {
-        return $this->runner->write(new OperationSpec('drive.uploads.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
+        return $this->runner->write(new OperationSpec('drive.uploads.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt, $idempotency);
+    }
+
+    private static function idOf(Node|NodeSnapshot|int|string $key): string
+    {
+        return match (true) {
+            $key instanceof NodeSnapshot => $key->id,
+            $key instanceof Node => Identity::stringify($key->getKey()),
+            default => (string) $key,
+        };
     }
 
     /**

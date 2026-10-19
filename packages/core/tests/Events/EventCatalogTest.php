@@ -15,15 +15,16 @@ use Vaulter\Events\EventTypeContract;
  */
 it('gives every catalogued type a complete EventSpec', function (): void {
     $types = [...DriveEventType::cases(), ...DocumentEventType::cases()];
-    expect($types)->toHaveCount(32);
+    expect($types)->toHaveCount(33);
     foreach ($types as $type) {
         $attributes = (new ReflectionEnumUnitCase($type::class, $type->name))->getAttributes(EventSpec::class);
         expect($attributes)->toHaveCount(1, (string) $type->value);
         $spec = $type->spec();
-        expect($spec->subject)->toBeIn(['drive', 'node', 'comment', 'share', 'upload'])
+        expect($spec->subject)->toBeIn(['drive', 'node', 'comment', 'share', 'upload', 'access'])
             ->and($spec->description)->not->toBe('')
             ->and($spec->journal)->toBeIn([null, 'upsert', 'remove'])
-            ->and($spec->activity || $spec->external)->toBeTrue();
+            // The effective-permissions change is control traffic: only outbox consumers that subscribe to it read it.
+            ->and($spec->activity || $spec->external || $type === DriveEventType::EffectivePermissionsChanged)->toBeTrue();
         foreach ($spec->data as $key => $kind) {
             expect($kind)->toBeIn(['string', 'string|null', 'int', 'bool', 'list<string>', 'object']);
             expect(rtrim($key, '?'))->toMatch('/^[a-z][a-z0-9_]*$/');

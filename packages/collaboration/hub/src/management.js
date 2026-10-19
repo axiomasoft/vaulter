@@ -16,7 +16,10 @@ import { CONTENT_TYPE } from './metrics.js'
 //                  A 503 does not close established WebSockets: draining does that (src/shutdown.js).
 //   GET /metrics — the Prometheus text of src/metrics.js.
 //   GET /stats   — {rooms, connections} as JSON (the load harness reads the room count).
-// Nothing here is authenticated: keep the listener off public networks.
+//   POST /control — a control message of the backend (src/control.js), HMAC-signed with the webhook
+//                  secret; without a valid signature 401 and nothing changes. The body is read only
+//                  up to the channel's limit (MAX_CONTROL_BYTES; 413 above).
+// Nothing else here is authenticated: keep the listener off public networks.
 
 /**
  * What the hub knows about the backend from the answers of its own calls: when it last answered 2xx
@@ -124,6 +127,8 @@ export function instrumentBackend(backend, { status, onAppend = () => {}, now = 
     },
     leaseCompaction: (args, options) => observed(() => backend.leaseCompaction(args, options)),
     publishCheckpoint: (args, options) => observed(() => backend.publishCheckpoint(args, options)),
+    renew: (args, options) => observed(() => backend.renew(args, options)),
+    recheck: (args, options) => observed(() => backend.recheck(args, options)),
   }
 }
 
@@ -163,13 +168,106 @@ function json(response, status, payload, head) {
 }
 
 /**
- * The management listener. `readiness()` → {ready, checks}; `metrics()` → the exposition text;
- * `stats()` → {rooms, connections}. `start()` resolves the bound address; `close()` stops it.
+ * The body of a request, at most `maxBytes` (null when it is longer: the rest is not read).
  */
-export function createManagement({ host = '127.0.0.1', port = 0, readiness, metrics, stats = () => ({ rooms: 0, connections: 0 }), log = console } = {}) {
+function readBody(request, maxBytes) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    let length = 0
+    let done = false
+
+    request.on('data', (chunk) => {
+      if (done) {
+        return
+      }
+
+      length += chunk.length
+
+      if (length > maxBytes) {
+        done = true
+        resolve(null)
+        request.pause()
+
+        return
+      }
+
+      chunks.push(chunk)
+    })
+    request.on('end', () => {
+      if (!done) {
+        done = true
+        resolve(Buffer.concat(chunks).toString('utf8'))
+      }
+    })
+    request.on('error', (error) => {
+      if (!done) {
+        done = true
+        reject(error)
+      }
+    })
+  })
+}
+
+/** The longest control body read when the channel names no limit of its own. */
+const CONTROL_BODY_BYTES = 16 * 1024
+
+/**
+ * POST /control: the declared length first, then the body up to the channel's `maxBytes`, then
+ * the channel's verdict (`control.receiveHttp({headers, rawBody})` → {status, body}).
+ */
+async function handleControl(request, response, control, log) {
+  if (request.method !== 'POST') {
+    response.setHeader('Allow', 'POST')
+    json(response, 405, { status: 'method_not_allowed' }, false)
+
+    return
+  }
+
+  if (control === null) {
+    json(response, 404, { status: 'not_found' }, false)
+
+    return
+  }
+
+  const maxBytes = Number.isInteger(control.maxBytes) && control.maxBytes > 0 ? control.maxBytes : CONTROL_BODY_BYTES
+  const declared = Number.parseInt(request.headers['content-length'] ?? '', 10)
+
+  if (Number.isInteger(declared) && declared > maxBytes) {
+    json(response, 413, { status: 'too_large' }, false)
+
+    return
+  }
+
+  try {
+    const rawBody = await readBody(request, maxBytes)
+
+    if (rawBody === null) {
+      json(response, 413, { status: 'too_large' }, false)
+
+      return
+    }
+
+    const verdict = control.receiveHttp({ headers: request.headers, rawBody })
+    json(response, verdict.status, verdict.body, false)
+  } catch (error) {
+    log.error?.(`Vaulter collab hub: the control request failed: ${error?.message ?? error}`)
+    json(response, 500, { status: 'error' }, false)
+  }
+}
+
+/**
+ * The management listener. `readiness()` → {ready, checks}; `metrics()` → the exposition text;
+ * `stats()` → {rooms, connections}; `control` — the control channel (src/control.js) behind
+ * POST /control, null without one. `start()` resolves the bound address; `close()` stops it.
+ */
+export function createManagement({ host = '127.0.0.1', port = 0, readiness, metrics, stats = () => ({ rooms: 0, connections: 0 }), control = null, log = console } = {}) {
   function handle(request, response) {
     const head = request.method === 'HEAD'
     const path = (request.url ?? '/').split('?')[0]
+
+    if (path === '/control') {
+      return handleControl(request, response, control, log)
+    }
 
     if (request.method !== 'GET' && !head) {
       response.setHeader('Allow', 'GET, HEAD')

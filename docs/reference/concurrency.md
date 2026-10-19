@@ -30,8 +30,9 @@ fail a save, and saving does not fail a rename.
 | copy a document | source 0; copy 0 | source 0; copy 1 | source 0; copy 0 | — |
 | update the content (JSON) | 0 | +1 | +1 if the document has Yjs state | `expectedStateVersion` |
 | update with identical content | 0 | 0 | 0 | checked first, so a stale expectation is still refused |
-| collaboration seed | 0 | +1 | 0 | `expectedEpoch`, `yjs_state IS NULL` and the `state_version` the hub read in `collaboration/hub/load` (`409 collaboration_seed_conflict`) |
-| collaboration store | 0 | +1 when the state changed | 0 | `expectedEpoch` (`409`) |
+| collaboration seed (the first log record) | 0 | 0 | 0 | the generation has no record and no checkpoint, and the `state_version` the hub read in `collaboration/hub/load` is still current (`409 collaboration_seed_conflict`) |
+| collaboration append | 0 | 0 | 0 | the generation is current (`409 collaboration_epoch_mismatch`); sets the pending marker, no state version moves |
+| collaboration checkpoint | 0 | +1 when the state changed | 0 | the generation, `expected_checkpoint_version` (the state version) and the covered range (`409 collaboration_checkpoint_conflict`) |
 | restore a document revision | 0 | +1 | +1 | `expectedStateVersion` |
 | snapshot (named checkpoint) | 0 | 0 | 0 | — |
 | pin a document revision, export | 0 | 0 | 0 | — |
@@ -43,8 +44,8 @@ consumer can order content events without reading the row again.
 A JSON update of a document **without** Yjs state moves `state_version` but not the epoch (there
 is no room to make stale). That is why a seed cannot rely on the epoch alone: the hub reads the
 JSON in `collaboration/hub/load` and seeds it later, and an update in between would be overwritten by a
-seed built from the old text. The seed therefore carries the loaded `state_version` and the
-write compares it under the document lock; a moved version is `409 collaboration_seed_conflict`
+seed built from the old text. The seed (appended as the first record of the log) therefore carries the loaded
+`state_version` as `seed_state_version` and the write compares it under the document lock; a moved version is `409 collaboration_seed_conflict`
 (`context.expected_state_version`, `actual_state_version`), after which the hub loads again and
 seeds from the current JSON.
 
@@ -61,7 +62,7 @@ REST v1 exposes these as strong ETags (see the [REST reference](/reference/rest-
 - Document content: `"{documentId}.{epoch}.{stateVersion}"`; its body depends on no caller,
   so the generation is enough. A mismatch is `412 document_state_mismatch`.
 - A CRDT room has no `If-Match`. Merging concurrent edits is the room's job; the hub is fenced by
-  the epoch alone, and a store of a past generation is answered with `409`.
+  the epoch alone, and an append of a past generation is answered with `409`.
 
 A conditional route runs in this order: authenticate → resolve the drive/node (tenant-scoped)
 → find the node as the caller (no `view` → `404`; no ability for the mutation → `403`) → build
@@ -82,3 +83,39 @@ caller passed in. The same holds for "may this state be overwritten": a write th
 expectation is still refused with `409 document_content_degraded` when a restore of a newer-schema
 or degraded revision committed between the caller's pre-check and the lock. The refused write
 changes no content, Yjs state, schema version or checkpoint.
+
+## Aggregate versions (the registry)
+
+Every aggregate that an `if_match` operation changes has its own version column, so a compare-and-set
+never hides behind the sequence of another row. The write is
+`UPDATE … SET version = version + 1 WHERE id = ? AND version = ?` on the aggregate locked in the
+transaction of the operation; zero affected rows is the refusal. The policy of each operation is in the
+[operation catalogue](/reference/operations) ([ADR-0032](/adr/0032-operation-catalog-and-concurrency)).
+
+| Aggregate | Version | Representation tag (`etag`) | Refusal | Operations |
+|---|---|---|---|---|
+| `drive.node` | `v_nodes.sequence` | node ETag (above) | `412 node_sequence_mismatch` | rename, move, trash, restore, purge, properties, revisions |
+| `drive.node_access` | `v_nodes.access_version` (grants and inheritance of the node; `sequence` does not move) | `GET nodes/{node}/grants`: node id + `access_version` | `412 stale_write` | revoke, restrict and restore inheritance |
+| `drive.share` | `v_node_shares.version` | share id + `version` | `412 stale_write` | update, rotate, revoke |
+| `drive.drive` | `v_drives.version` | `GET drives/{drive}`: id + `version` | `412 stale_write` | archive, unarchive, delete |
+| `documents.document` | `v_documents.state_version` | `{documentId}.{epoch}.{stateVersion}` | `412 document_state_mismatch` | content update, restore |
+| `documents.comment` | `v_node_comments.version` | comment id + `version` | `412 stale_write` | resolve, delete |
+| `webhooks.endpoint` | `v_webhook_endpoints.version` | endpoint id + `version` | `412 stale_write` | update, deactivate, rotate secret, delete |
+
+A resource body carries the same value in `etag`, and the `ETag` header repeats it. Creating a row
+(grant, share, comment, endpoint, folder, upload) is `append`: it takes no `If-Match`.
+`natural`, `state_machine`, `generation` and `row_identity` operations have no `If-Match` either;
+their repeat is made safe by the state itself.
+
+## Codes
+
+| Situation | Answer |
+|---|---|
+| `If-Match` missing or `*` on an `if_match` route | `428 precondition_required` (not stored for idempotency) |
+| the tag is stale or foreign | `412` — `node_sequence_mismatch` and `document_state_mismatch` keep their codes; every other aggregate answers `stale_write` (retryable `after_refetch`, receipt `cacheable`) |
+| the caller cannot see the resource | `404` before the precondition is read, so a tag never discloses a hidden resource |
+| generation fence (collaboration) | `409 collaboration_*` |
+
+`stale_write` names the `aggregate` and the `id` of the resource in its details and never the current tag; the client reloads
+the resource and decides again. Because the refusal is `cacheable`, a retry under the same
+`Idempotency-Key` repeats it instead of racing a concurrent change. See the [error codes](/reference/errors).

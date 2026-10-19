@@ -294,4 +294,15 @@ enum DriveEventType: string implements EventTypeContract
         description: 'A non-current revision was deleted.',
     )]
     case FileRevisionDeleted = 'file.revision_deleted';
+
+    #[Label('Effective permissions changed')]
+    #[EventSpec(
+        subject: 'access',
+        data: ['drive_id' => 'string|null', 'scope' => 'string', 'node_id' => 'string|null', 'reason' => 'string'],
+        activity: false,
+        external: false,
+        journal: null,
+        description: 'Who may do what changed for a node, a subtree, a drive or every drive (scope); recorded in the transaction of the change, so the sessions issued before it can be checked again.',
+    )]
+    case EffectivePermissionsChanged = 'drive.access.effective_permissions_changed';
 }

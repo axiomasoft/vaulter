@@ -123,6 +123,48 @@ final readonly class BlobStoreRepository
     }
 
     /**
+     * Record one integrity check of the bytes (the scrub, D49). The check time always moves, so the blob goes to the
+     * back of the scrub queue; a failure also sets integrity_failed_at, keeping the first one of a blob that stays bad.
+     * Only the ingest heals (clearIntegrity()): a later clean check never clears the mark. Caller holds the lock.
+     */
+    public function recordIntegrity(Blob $blob, bool $intact): void
+    {
+        $now = now();
+        $attributes = ['integrity_checked_at' => $now];
+
+        if (!$intact && $blob->integrity_failed_at === null) {
+            $attributes['integrity_failed_at'] = $now;
+        }
+
+        $blob->forceFill($attributes)->save();
+    }
+
+    /**
+     * Claim the heal of a marked blob (D49) before its object is touched: a write that lands only while the mark is
+     * still set, then the row is read again and decides. On SQLite the write takes the single-writer lock, and a
+     * transaction whose snapshot predates another heal's commit fails here (and is retried) instead of deleting the
+     * object that heal restored. The affected-row count is not trusted (MySQL counts changed rows, not matched ones).
+     * False: the mark is gone. Caller holds the lock.
+     */
+    public function claimHeal(Blob $blob): bool
+    {
+        $this->query()->whereKey($blob->getKey())->whereNotNull('integrity_failed_at')->update(['integrity_checked_at' => null]);
+
+        $blob->refresh();
+
+        return $blob->integrity_failed_at !== null;
+    }
+
+    /**
+     * Lift the integrity mark after the ingest rewrote the object (D49). The check time is cleared too, so the next
+     * scrub verifies the rewritten bytes first. Caller holds the lock.
+     */
+    public function clearIntegrity(Blob $blob): void
+    {
+        $blob->forceFill(['integrity_failed_at' => null, 'integrity_checked_at' => null])->save();
+    }
+
+    /**
      * Overwrite the ref_count CACHE from a freshly counted pin total
      * (reconciliation). This is the only writer of ref_count — commit never
      * touches it (no hot-row).

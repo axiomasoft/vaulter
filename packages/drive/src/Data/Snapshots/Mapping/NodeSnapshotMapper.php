@@ -89,6 +89,7 @@ final readonly class NodeSnapshotMapper
                 file: $node->kind === NodeKind::File ? $this->fileHead($node) : null,
                 document: $fragments[self::DOCUMENT][$id] ?? null,
                 viewer: $stars === null ? null : new ViewerStateSnapshot(starred: isset($stars[$id])),
+                accessVersion: self::version($node->getAttribute('access_version')),
             );
         }
 
@@ -202,5 +203,11 @@ final readonly class NodeSnapshotMapper
     private static function properties(?array $properties): array
     {
         return $properties ?? [];
+    }
+
+    /** A version column, 0 for a row read without it. */
+    private static function version(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
     }
 }

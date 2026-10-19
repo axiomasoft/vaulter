@@ -119,14 +119,32 @@ test('compact --pending exits 1 at the deadline with the pending document ids on
   assert.match(run.stderr, /pending: document 77 \(generation 2\)/)
   assert.ok(run.ms >= 1900, `exited after ${run.ms} ms`)
   assert.ok(endpoint(mock, 'compaction/lease').length >= 2)
-  // A 409 is never repeated within one lease: one publication per lease answer.
-  assert.equal(endpoint(mock, 'checkpoint').length, endpoint(mock, 'compaction/lease').length)
+  // A 409 is never repeated within one lease: one publication per lease answer at most — the
+  // deadline may cut the last one short.
+  const [leases, checkpoints] = [endpoint(mock, 'compaction/lease').length, endpoint(mock, 'checkpoint').length]
+  assert.ok(checkpoints <= leases && checkpoints >= leases - 1, `${checkpoints} publications for ${leases} lease answers`)
+})
+
+test('compact --pending does not settle on an empty lease answer while the backend reports a generation due: another hub holds its lease', async (t) => {
+  const { mock, env } = await backend(t, {
+    'compaction/lease': () => ({ status: 200, body: [], headers: { 'X-Vaulter-Collab-Pending': '3', 'X-Vaulter-Collab-Pending-Documents': '42:2' } }),
+  })
+
+  const run = await runCli(['compact', '--pending', '--deadline=1'], env)
+
+  assert.equal(run.code, 1, run.stderr)
+  assert.match(run.stderr, /pending: document 42 \(generation 2\): not_leased/)
+  assert.match(run.stderr, /and 2 more generation\(s\)/)
+  assert.ok(endpoint(mock, 'compaction/lease').length >= 2)
+  assert.equal(endpoint(mock, 'compaction/lease')[0].body.report, true)
 })
 
 test('compact --pending exits 1 at the deadline when the backend refuses every lease call', async (t) => {
   const { env } = await backend(t, { 'compaction/lease': () => ({ status: 401, body: { code: 'unauthenticated' } }) })
 
-  const run = await runCli(['compact', '--pending', '--deadline=1'], env)
+  // 3 s, not 1: on a loaded machine the process may spend the whole first second starting, and the lease call is then
+  // bounded by the few milliseconds left ("no answer") instead of reaching the backend.
+  const run = await runCli(['compact', '--pending', '--deadline=3'], env)
 
   assert.equal(run.code, 1)
   assert.match(run.stderr, /the last lease call failed: 401 unauthenticated/)

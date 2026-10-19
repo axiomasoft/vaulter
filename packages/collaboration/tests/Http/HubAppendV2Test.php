@@ -13,6 +13,7 @@ use Vaulter\Collaboration\Data\RoomRef;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
 use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
+use Vaulter\Collaboration\Revocation\PermissionVersion;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
 use Vaulter\Configuration\DatabaseConfig;
@@ -35,7 +36,7 @@ it('appends an update and answers the committed receipt with the protocol header
     Hub::callV2('append', Hub::appendBody($this->node, "\x00\x01update", $id), $this->token)
         ->assertOk()
         ->assertHeader(HubProtocol::HEADER, '2')
-        ->assertExactJson(['generation' => 0, 'update_id' => $id, 'seq' => 1, 'sha256' => hash('sha256', "\x00\x01update"), 'persisted' => true]);
+        ->assertExactJson(['generation' => 0, 'update_id' => $id, 'seq' => 1, 'sha256' => hash('sha256', "\x00\x01update"), 'persisted' => true, 'permissions_stale' => false]);
 
     expect([Hub::aggregate($this->node)->pending_generation, Hub::aggregate($this->node)->pending_through_seq])->toBe([0, 1]);
 });
@@ -97,6 +98,7 @@ it('seeds a load from the content of the locked row, together with its state ver
         room: Hub::room($this->node),
         ref: new RoomRef(driveId: (string) $this->node->drive_id, nodeId: (string) $this->node->getKey(), epoch: 0),
         subject: '1', mode: 'rw', schemaVersion: 1, tenant: null,
+        permissionsVersion: new PermissionVersion(drive: 0, global: 0), jti: 'test-call', expiresAt: time() + 300,
     );
     $hub = app(CollaborationHub::class);
     $room = $hub->open($call, $call->room);
@@ -187,6 +189,35 @@ it('never reads the body to measure it', function (?string $length, bool $passes
     'not a number' => ['abc', false],
     'above the limit' => ['5000', false],
     'within the limit' => ['1000', true],
+]);
+
+it('sizes the append gate by the checkpoint limit for a declared seed, still without reading the body', function (?string $seed, ?string $parameter, bool $passes): void {
+    config()->set('vaulter-collaboration.limits.request_bytes', 1000);
+    // A base64 state of 3000 bytes and request_bytes on top: 5000.
+    config()->set('vaulter-collaboration.max_state_bytes', 3000);
+    $request = CountingBodyRequest::create('/append', 'POST', [], [], [], ['CONTENT_TYPE' => 'application/json'], str_repeat('x', 4000));
+    $request->headers->set('Content-Length', '4000');
+    if ($seed !== null) {
+        $request->headers->set(LimitHubAppend::SEED_HEADER, $seed);
+    }
+
+    $reached = false;
+    $gate = static function () use ($request, $parameter, &$reached): Response {
+        return app(LimitHubAppend::class)->handle($request, static function () use (&$reached): Response {
+            $reached = true;
+
+            return new Response;
+        }, $parameter);
+    };
+
+    $passes ? $gate() : expect($gate)->toThrow(CollaborationUpdateTooLargeException::class);
+    expect($reached)->toBe($passes)
+        ->and($request->reads)->toBe(0);
+})->with([
+    'a declared seed' => ['1', LimitHubAppend::APPEND, true],
+    'no seed header' => [null, LimitHubAppend::APPEND, false],
+    'another header value' => ['true', LimitHubAppend::APPEND, false],
+    'a route without seeds' => ['1', null, false],
 ]);
 
 /** A request that counts the reads of its body. */

@@ -10,6 +10,7 @@ use Vaulter\Drive\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Drive\Data\Snapshots\MintedShareLink;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Data\Snapshots\ShareLinkSnapshot;
+use Vaulter\Exceptions\Concurrency\StaleWriteException;
 
 #[Api]
 interface ShareOperations
@@ -21,15 +22,19 @@ interface ShareOperations
 
     /**
      * Change expiry, use budget, password or audience of a live link. The token and
-     * the role stay; use rotate() for a new token.
+     * the role stay; use rotate() for a new token. `$expectedVersion` — the link's
+     * version the caller read ({@see ShareLinkSnapshot::$version}) — is compared
+     * atomically with the write; a mismatch throws {@see StaleWriteException}. Null
+     * skips the check.
      */
-    public function update(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share, ShareLinkUpdate $changes): ShareLinkSnapshot;
+    public function update(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share, ShareLinkUpdate $changes, ?int $expectedVersion = null): ShareLinkSnapshot;
 
     /**
      * Replace the link's token. The old token stops working immediately; the new one
-     * is in the result and nowhere else.
+     * is in the result and nowhere else. `$expectedVersion` as for {@see update()}.
      */
-    public function rotate(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share): MintedShareLink;
+    public function rotate(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share, ?int $expectedVersion = null): MintedShareLink;
 
-    public function revoke(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share): void;
+    /** Revoke the link. `$expectedVersion` as for {@see update()}. */
+    public function revoke(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share, ?int $expectedVersion = null): void;
 }

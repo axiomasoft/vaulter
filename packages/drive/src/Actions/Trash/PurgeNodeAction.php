@@ -11,7 +11,9 @@ use Vaulter\Drive\Access\OperationGuard;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\NodeContentLifecycleRegistry;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
+use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Enums\NodeKind;
+use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Events\Nodes\NodePurged;
 use Vaulter\Drive\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotTrashedException;
@@ -79,6 +81,7 @@ final readonly class PurgeNodeAction
             $this->store->purgeSubtree(collect($ids));
             $this->recorder->record(new NodePurged(storageId: $context->driveId(), nodeIds: $ids, freedBytes: $freedBytes,
                 tenantId: $context->drive->tenant_id, profile: $context->drive->profile, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(EffectivePermissionsChanged::forPurgedSubtree(drive: $context->drive, nodeId: $current->getKey(), reason: DriveEventType::NodePurged->value, actor: $context->actor->ref(), correlationId: $context->correlationId));
         });
     }
 }

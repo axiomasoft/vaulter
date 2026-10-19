@@ -15,18 +15,33 @@ uses(EnablesWebhooksModule::class);
  * they apply to — a new operation cannot forget them.
  */
 
-/** The operations that change a node or a document and so require If-Match. */
+/** The operations that change a node, a document or an aggregate with a version of its own (D47) and so require If-Match. */
 const IF_MATCH_OPERATIONS = [
+    'access.inheritance.restore',
+    'access.inheritance.restrict',
+    'comments.destroy',
+    'comments.resolve',
     'documents.content.update',
     'documents.revisions.restore',
+    'drives.archive',
+    'drives.destroy',
+    'drives.unarchive',
     'files.revisions.restore',
     'files.revisions.store',
+    'grants.destroy',
     'nodes.move',
     'nodes.properties.update',
     'nodes.purge',
     'nodes.restore',
     'nodes.trash',
     'nodes.update',
+    'shares.destroy',
+    'shares.rotate',
+    'shares.update',
+    'webhook-endpoints.deactivate',
+    'webhook-endpoints.destroy',
+    'webhook-endpoints.rotate-secret',
+    'webhook-endpoints.update',
 ];
 
 /** The single resources that answer a matching If-None-Match with 304. */

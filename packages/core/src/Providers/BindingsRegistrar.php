@@ -27,12 +27,16 @@ use Vaulter\Http\Middleware\VaulterThrottledRouteMap;
 use Vaulter\Idempotency\IdempotencyClaim;
 use Vaulter\Idempotency\IdempotencyOutcome;
 use Vaulter\Idempotency\IdempotencyStore;
+use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Observability\NullTraceRecorder;
 use Vaulter\Operations\ModuleReadiness;
+use Vaulter\Operations\OperationCatalog;
 use Vaulter\Operations\OperationClaim;
 use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSources;
+use Vaulter\Operations\OperationsReference;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\EnumCaseAttributeResolver;
 use Vaulter\Tenancy\TenancyBypass;
@@ -69,6 +73,14 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(VaulterDatabase::class);
         // One runner per process: it counts the writes inside its root transaction (nesting).
         $app->scoped(OperationRunner::class);
+        // The policies of the active modules' operations (D47): the runner refuses a mutating operation outside them.
+        $app->singleton(OperationCatalog::class, static fn (Application $app): OperationCatalog => new OperationCatalog(
+            static fn (): array => OperationSources::active($app->make(Kernel::class)),
+        ));
+        // The reference lists the operations of every offered module, an opt-in one included.
+        $app->bind(OperationsReference::class, static fn (Application $app): OperationsReference => new OperationsReference(new OperationCatalog(
+            static fn (): array => OperationSources::offered($app),
+        )));
         $app->singleton(ModuleReadiness::class);
         // Stage 4 of the pipeline (D25): scoped with the runner and the outcome the HTTP middleware reads.
         $app->scoped(OperationClaim::class, IdempotencyClaim::class);

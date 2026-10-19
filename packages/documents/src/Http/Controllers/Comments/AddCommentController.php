@@ -22,6 +22,8 @@ final readonly class AddCommentController
     {
         $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
 
-        return (new CommentResource($this->documents->comments($drive)->add($node, $request->toData())))->response()->setStatusCode(201);
+        $resource = new CommentResource($this->documents->comments($drive)->add($node, $request->toData()));
+
+        return $resource->response()->setStatusCode(201)->setEtag($resource->etag());
     }
 }

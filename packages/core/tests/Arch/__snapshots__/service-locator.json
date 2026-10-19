@@ -23,7 +23,7 @@
     "drive/src/Actions/Access/GrantNodeAccessAction.php": 1,
     "drive/src/Actions/Files/RestoreFileRevisionAction.php": 2,
     "drive/src/Actions/Nodes/CopyNodeAction.php": 2,
-    "drive/src/Actions/Nodes/MoveNodeAction.php": 3,
+    "drive/src/Actions/Nodes/MoveNodeAction.php": 1,
     "drive/src/Actions/Nodes/RenameNodeAction.php": 4,
     "drive/src/Actions/Trash/PurgeNodeAction.php": 2,
     "drive/src/Actions/Trash/TrashNodeAction.php": 1,

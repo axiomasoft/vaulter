@@ -1171,6 +1171,111 @@
             "id": "config:vaulter-collaboration.drain.max_append_tx",
             "kind": "config",
             "reason": "P5.6: the longest append transaction (5 s): a drain decides no earlier than this after it set the flag, so an append that read the flag before it was set has committed"
+        },
+        {
+            "change": "redefined",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.hub.token_ttl",
+            "kind": "config",
+            "reason": "P5.10: default 3600 -> 300 and at most 300 seconds (D26: a token that missed a revocation lives at most this long; a renewal checks the rights again)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.hub.clock_skew",
+            "kind": "config",
+            "reason": "P5.10: default 30 (0..60) seconds of clock difference on the exp of a room token, tolerated by the backend and the hub; part of the exposure bound token_ttl + clock_skew"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.control.transport",
+            "kind": "config",
+            "reason": "P5.10: redis|http|none (default none): how the control consumer collaboration.control tells the hubs of a change of effective permissions"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.control.redis.connection",
+            "kind": "config",
+            "reason": "P5.10: the Redis connection the redis control transport publishes on (channel vaulter:collab:control), default \"default\""
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.control.http.urls",
+            "kind": "config",
+            "reason": "P5.10: the management base URLs of the hubs the http control transport POSTs <url>/control to (list or comma-separated string)"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "config:vaulter-collaboration.control.http.timeout",
+            "kind": "config",
+            "reason": "P5.10: seconds one control POST may take, default 2"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "env:VAULTER_COLLAB_CONTROL_TRANSPORT",
+            "kind": "config",
+            "reason": "P5.10: env of vaulter-collaboration.control.transport"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "env:VAULTER_COLLAB_CONTROL_REDIS",
+            "kind": "config",
+            "reason": "P5.10: env of vaulter-collaboration.control.redis.connection"
+        },
+        {
+            "change": "added",
+            "decision": "D26",
+            "id": "env:VAULTER_COLLAB_CONTROL_URLS",
+            "kind": "config",
+            "reason": "P5.10: env of vaulter-collaboration.control.http.urls"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.limit",
+            "kind": "config",
+            "reason": "P6.9: most blobs one scrub run visits (default 100)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.max_bytes",
+            "kind": "config",
+            "reason": "P6.9: bytes after which a scrub run stops (null: no byte budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "config:vaulter-media.scrub.max_seconds",
+            "kind": "config",
+            "reason": "P6.9: seconds after which a scrub run stops (null: no time budget)"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_LIMIT",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.limit"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_MAX_BYTES",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.max_bytes"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "env:VAULTER_SCRUB_MAX_SECONDS",
+            "kind": "config",
+            "reason": "P6.9: environment variable of vaulter-media.scrub.max_seconds"
         }
     ],
     "items": [
@@ -1391,6 +1496,62 @@
             }
         },
         {
+            "default": 2,
+            "id": "config:vaulter-collaboration.control.http.timeout",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "",
+                "env": "VAULTER_COLLAB_CONTROL_URLS"
+            },
+            "env": "VAULTER_COLLAB_CONTROL_URLS",
+            "id": "config:vaulter-collaboration.control.http.urls",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "default",
+                "env": "VAULTER_COLLAB_CONTROL_REDIS"
+            },
+            "env": "VAULTER_COLLAB_CONTROL_REDIS",
+            "id": "config:vaulter-collaboration.control.redis.connection",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "none",
+                "env": "VAULTER_COLLAB_CONTROL_TRANSPORT"
+            },
+            "env": "VAULTER_COLLAB_CONTROL_TRANSPORT",
+            "id": "config:vaulter-collaboration.control.transport",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "default": null,
             "id": "config:vaulter-collaboration.drain.cache_store",
             "owner": "collaboration",
@@ -1439,6 +1600,17 @@
             }
         },
         {
+            "default": 30,
+            "id": "config:vaulter-collaboration.hub.clock_skew",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "default": {
                 "env": "VAULTER_COLLAB_SECRET"
             },
@@ -1464,7 +1636,7 @@
             }
         },
         {
-            "default": 3600,
+            "default": 300,
             "id": "config:vaulter-collaboration.hub.token_ttl",
             "owner": "collaboration",
             "registered_defaults": true,
@@ -3061,6 +3233,49 @@
             }
         },
         {
+            "default": {
+                "default": 100,
+                "env": "VAULTER_SCRUB_LIMIT"
+            },
+            "env": "VAULTER_SCRUB_LIMIT",
+            "id": "config:vaulter-media.scrub.limit",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_SCRUB_MAX_BYTES"
+            },
+            "env": "VAULTER_SCRUB_MAX_BYTES",
+            "id": "config:vaulter-media.scrub.max_bytes",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_SCRUB_MAX_SECONDS"
+            },
+            "env": "VAULTER_SCRUB_MAX_SECONDS",
+            "id": "config:vaulter-media.scrub.max_seconds",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "default": "Vaulter\\Media\\Cas\\FlysystemStorageDriver",
             "id": "config:vaulter-media.storage_driver",
             "owner": "media",
@@ -3868,6 +4083,48 @@
         },
         {
             "config_keys": [
+                "vaulter-collaboration.control.redis.connection"
+            ],
+            "defaults": [
+                "default"
+            ],
+            "id": "env:VAULTER_COLLAB_CONTROL_REDIS",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-collaboration.control.transport"
+            ],
+            "defaults": [
+                "none"
+            ],
+            "id": "env:VAULTER_COLLAB_CONTROL_TRANSPORT",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-collaboration.control.http.urls"
+            ],
+            "defaults": [
+                ""
+            ],
+            "id": "env:VAULTER_COLLAB_CONTROL_URLS",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/config/vaulter-collaboration.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
                 "vaulter-collaboration.driver"
             ],
             "defaults": [
@@ -4201,6 +4458,48 @@
             "owner": "core",
             "source": {
                 "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.scrub.limit"
+            ],
+            "defaults": [
+                100
+            ],
+            "id": "env:VAULTER_SCRUB_LIMIT",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.scrub.max_bytes"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_SCRUB_MAX_BYTES",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.scrub.max_seconds"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_SCRUB_MAX_SECONDS",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
                 "symbol": "<file>"
             }
         },

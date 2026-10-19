@@ -48,6 +48,7 @@ final readonly class AccessSnapshotMapper
             revokedAt: SnapshotValue::time($share->revoked_at),
             createdAt: SnapshotValue::requiredTime($share->created_at),
             createdBy: SnapshotValue::nullableId($share->granted_by),
+            version: is_numeric($version = $share->getAttribute('version')) ? (int) $version : 0,
         );
     }
 }

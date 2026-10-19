@@ -69,6 +69,12 @@
         },
         {
             "match": "exact",
+            "value": "problem:stale_write",
+            "owner": "core",
+            "why": "kernel concern: the stale If-Match of an aggregate version, shared by every module (D47, architecture#errors)"
+        },
+        {
+            "match": "exact",
             "value": "problem:rate_limited",
             "owner": "core",
             "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
@@ -344,6 +350,16 @@
             "why": "validator of a node representation; If-Match on writes"
         },
         {
+            "id": "format:etag-versioned",
+            "owner": "drive",
+            "format": "\"<kind>.<id>.<version>\" (strong, quoted): kind access (node id, v_nodes.access_version; the etag of grants.index), share (link id, v_node_shares.version), drive (drive id, v_drives.version), comment (comment id, v_node_comments.version), webhook-endpoint (endpoint id, v_webhook_endpoints.version); in the body as etag, as the ETag header of single-resource mutation answers without a secret",
+            "source": {
+                "file": "packages/core/src/Http/Support/RepresentationTag.php",
+                "symbol": "Vaulter\\Http\\Support\\RepresentationTag::versioned"
+            },
+            "why": "D47 (CC2): validator of the aggregates with a version of their own; If-Match of grants.destroy, access.inheritance.*, shares.update/rotate/destroy, drives.archive/unarchive/destroy, and (kind comment, owner documents) comments.resolve/destroy, and (kind webhook-endpoint, owner webhooks) webhook-endpoints.update/deactivate/rotate-secret/destroy (412 stale_write)"
+        },
+        {
             "id": "format:if-match",
             "owner": "core",
             "format": "If-Match header: one or more strong entity tags; weak tags never match; absent -> 428 precondition_required, no match -> 412",
@@ -406,12 +422,12 @@
         {
             "id": "format:jwt-claims-room",
             "owner": "collaboration",
-            "format": "HS256 JWT: sub, node, drive, tenant, epoch, schema_version, mode (rw|ro), room (<channel prefix>.<drive>.<node>.<epoch>), iat, exp",
+            "format": "HS256 JWT: sub, document_id, drive_id, tenant, generation, schema_version, scope (read|write), permissions_version {drive, global}, room (<channel prefix>.<drive_id>.<document_id>.<generation>), iat, exp (iat + hub.token_ttl, accepted up to hub.clock_skew past it), jti",
             "source": {
-                "file": "packages/collaboration/src/HocuspocusCollaborationDriver.php",
-                "symbol": "Vaulter\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
+                "file": "packages/collaboration/src/RoomTokens.php",
+                "symbol": "Vaulter\\Collaboration\\RoomTokens::mint"
             },
-            "why": "the room token the hub verifies"
+            "why": "the room token the hub relays and the backend verifies and renews"
         },
         {
             "id": "format:webhook-envelope",
@@ -436,7 +452,7 @@
         {
             "id": "format:operation-name",
             "owner": "core",
-            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
+            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.invalidate, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.empty, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
             "source": {
                 "file": "packages/core/src/Operations/OperationSpec.php",
                 "symbol": "Vaulter\\Operations\\OperationSpec::__construct"
@@ -474,6 +490,76 @@
             "why": "D25: the stored receipt of folders.create and nodes.rename, decoded on a replay"
         },
         {
+            "id": "format:header-destination-if-match",
+            "source": {
+                "file": "packages/drive/src/Http/Resources/NodeResponses.php",
+                "symbol": "Vaulter\\Drive\\Http\\Resources\\NodeResponses::DESTINATION_IF_MATCH"
+            },
+            "format": "X-Vaulter-Destination-If-Match request header of a move: the strong ETag of the destination folder as the caller reads it (the drive root for a null destination); a mismatch answers 412 node_sequence_mismatch and the folder sequence is checked again under the tree lock; part of the move fingerprint",
+            "owner": "drive",
+            "why": "D47 (CC3): the optional precondition of a move on its destination"
+        },
+        {
+            "id": "format:receipt-purge",
+            "source": {
+                "file": "packages/drive/src/Idempotency/PurgeReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\PurgeReceiptCodec::encode"
+            },
+            "format": "receipt kind drive.purge-receipt, version 1: JSON {kind: node|revision|trash, id, drive_id, scope_node_id, ability, count}; ids and the authorization scope only, never content",
+            "owner": "drive",
+            "why": "D25 (ID2): the stored receipt of nodes.purge, files.delete_revision and trash.empty; a replay checks the recorded ability in the recorded scope"
+        },
+        {
+            "id": "format:receipt-revision-snapshot",
+            "source": {
+                "file": "packages/drive/src/Idempotency/RevisionReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\RevisionReceiptCodec::encode"
+            },
+            "format": "receipt kind drive.revision-snapshot, version 1: JSON of every FileRevisionSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP)",
+            "owner": "drive",
+            "why": "D25: the stored receipt of files.restore_revision, decoded on a replay"
+        },
+        {
+            "id": "format:receipt-upload-session",
+            "source": {
+                "file": "packages/drive/src/Idempotency/UploadSessionCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\UploadSessionCodec::encode"
+            },
+            "format": "receipt kind drive.upload-session, version 1: JSON {id, upload_id, drive_id, protocol, status, received_bytes, total_size_bytes, chunk_size, mime_type, target_node_id, target_parent_id, target_name, expires_at}; no staged bytes, storage key or blob",
+            "owner": "drive",
+            "why": "D25: the stored receipt of uploads.initiate, decoded on a replay"
+        },
+        {
+            "id": "format:receipt-access",
+            "source": {
+                "file": "packages/drive/src/Idempotency/AccessReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\AccessReceiptCodec::encode"
+            },
+            "format": "receipt kind drive.access-receipt, version 1: JSON {type: grant, grant: every GrantSnapshot field (snake_case, subject_type/subject_id; times Y-m-d\\TH:i:s.uP)} or {type: revoke, revoke: {kind: grant, id, drive_id, node_id, ability}}",
+            "owner": "drive",
+            "why": "D25 (ID2): the stored receipt of drive.access.grant and drive.access.revoke; a revoke replay checks Manage on the recorded node"
+        },
+        {
+            "id": "format:receipt-share",
+            "source": {
+                "file": "packages/drive/src/Idempotency/ShareReceiptCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\ShareReceiptCodec::encode"
+            },
+            "format": "receipt kind drive.share-receipt, version 1: JSON {type: link, link} | {type: minted, link, token: Crypt::encryptString(raw token)} | {type: revoke, revoke: {kind: share, id, drive_id, node_id, ability}}; link = every ShareLinkSnapshot field (snake_case), never the token; the raw token is stored only as ciphertext (APP_KEY)",
+            "owner": "drive",
+            "why": "D25, D47(5), ID5: the stored receipt of drive.shares.*; a create/rotate replay returns the same token only to the same scope digest after the current authorization"
+        },
+        {
+            "id": "format:receipt-drive-snapshot",
+            "source": {
+                "file": "packages/drive/src/Idempotency/DriveSnapshotCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\DriveSnapshotCodec::encode"
+            },
+            "format": "receipt kind drive.drive-snapshot, version 1: JSON {id, owner_type, owner_id, profile, name, status, tenant_id, created_at, version}",
+            "owner": "drive",
+            "why": "D25, D47(6): the stored receipt of drive.drives.archive, drive.drives.unarchive and drive.drives.delete"
+        },
+        {
             "id": "format:receipt-problem",
             "source": {
                 "file": "packages/core/src/Idempotency/IdempotencyClaim.php",
@@ -482,6 +568,46 @@
             "format": "receipt kind vaulter.problem, version 1: JSON {code, status, details} of a refusal whose code is receipt: cacheable; headers in receipt_headers",
             "owner": "core",
             "why": "D25: the stored receipt of a deterministic refusal"
+        },
+        {
+            "id": "format:receipt-document-snapshot",
+            "source": {
+                "file": "packages/documents/src/Idempotency/DocumentSnapshotCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\DocumentSnapshotCodec::encode"
+            },
+            "format": "receipt kind documents.document-snapshot, version 1: JSON {node_id, document_id, type, schema_version, type_available, editable, epoch, state_version, dirty, head_revision_id, content: the JSON payload of the content (read back with ContentDecoder::read), revision: receipt-document-revision fields | null, content_hash, yjs_state_size, updated_at (Y-m-d\\TH:i:s.uP), updated_by}",
+            "owner": "documents",
+            "why": "D25, D47: the stored receipt of documents.documents.update and .restore"
+        },
+        {
+            "id": "format:receipt-document-revision",
+            "source": {
+                "file": "packages/documents/src/Idempotency/DocumentRevisionSnapshotCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\DocumentRevisionSnapshotCodec::encode"
+            },
+            "format": "receipt kind documents.revision-snapshot, version 1: JSON of every DocumentRevisionSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP); no content",
+            "owner": "documents",
+            "why": "D25, D47: the stored receipt of documents.documents.snapshot"
+        },
+        {
+            "id": "format:receipt-comment",
+            "source": {
+                "file": "packages/documents/src/Idempotency/CommentReceiptCodec.php",
+                "symbol": "Vaulter\\Documents\\Idempotency\\CommentReceiptCodec::encode"
+            },
+            "format": "receipt kind documents.comment-receipt, version 1: JSON {type: comment, comment: every CommentSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version)} | {type: deleted, deleted: {id, node_id, drive_id, by_author}}; a deletion keeps the basis of the right (author or Manage), never the comment",
+            "owner": "documents",
+            "why": "D25, D47, ID2: the stored receipt of documents.comments.*; a delete replay is authorized by the recorded basis (scope kind node | node-author) now"
+        },
+        {
+            "id": "format:receipt-webhook-endpoint",
+            "source": {
+                "file": "packages/webhooks/src/Idempotency/EndpointReceiptCodec.php",
+                "symbol": "Vaulter\\Webhooks\\Idempotency\\EndpointReceiptCodec::encode"
+            },
+            "format": "receipt kind webhooks.endpoint-receipt, version 1: JSON {type: endpoint, endpoint: every WebhookEndpointSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; version; no secret)} | {type: minted, endpoint: as above, secret: Crypt::encryptString ciphertext of the signing secret} | {type: deleted, deleted: {id, tenant_id, ability}} | {type: redelivered, redelivered: {id, endpoint_id}}; a deletion keeps the id and the scope the right was proven in, never the endpoint; a redelivery keeps the ids of the delivery and its endpoint, never the payload",
+            "owner": "webhooks",
+            "why": "D25, D47, ID2, ID5: the stored receipt of webhooks.endpoints.register, update, deactivate, rotate_secret, delete and redeliver; a replay is authorized by the manage ability now, on the recorded scope (the tenant) when the endpoint is gone"
         }
     ]
 }

@@ -126,6 +126,27 @@
             "id": "command:vaulter:collaboration:drain",
             "kind": "cli",
             "reason": "P5.6: managed disable (C10): {--deadline=30} {--release}; sets the draining flag, asks the hub to checkpoint every document with a pending marker and waits (not before drain.max_append_tx); exit 0 with no marker left, 1 listing the pending document_id, 2 a bad --deadline; --release removes the flag"
+        },
+        {
+            "change": "added",
+            "decision": "D47",
+            "id": "command:vaulter:operations",
+            "kind": "cli",
+            "reason": "P6.1: prints the operation catalogue of every offered module (operation, module, aggregate, concurrency, idempotency, routes) as Markdown, or one JSON document with --json; exit 0"
+        },
+        {
+            "change": "redefined",
+            "decision": "D47",
+            "id": "command:vaulter:errors:reference",
+            "kind": "cli",
+            "reason": "P6.7: --openapi prints the x-vaulter-problems table and the sorted code examples of the Problem schema of openapi/vaulter-v1.yaml, writing nothing; exit 0"
+        },
+        {
+            "change": "added",
+            "decision": "D49",
+            "id": "command:vaulter:blobs:scrub",
+            "kind": "cli",
+            "reason": "P6.9: integrity scrub of the CAS: {--limit} {--max-bytes} {--max-seconds} {--scope} {--dry-run}; never deletes or writes the drive; exit 0 intact, 1 failures found or objects unreadable, 2 invalid option; metrics vaulter_blobs_scrub_checked_total, vaulter_blobs_scrub_bytes_total, vaulter_blobs_scrub_failed_total{reason=missing|size|digest}; not scheduled"
         }
     ],
     "items": [
@@ -218,6 +239,71 @@
             "source": {
                 "file": "packages/media/src/Console/ReconcileBlobsCommand.php",
                 "symbol": "Vaulter\\Media\\Console\\ReconcileBlobsCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Media\\Console\\ScrubBlobsCommand",
+            "description": "Verify the size and sha256 of a sample of stored blobs and mark the damaged ones (D49)",
+            "exit_codes": [
+                "FAILURE",
+                "INVALID",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:blobs:scrub",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Most blobs to visit (default vaulter-media.scrub.limit)",
+                    "name": "limit",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Stop after this many bytes were read (default vaulter-media.scrub.max_bytes)",
+                    "name": "max-bytes",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Stop after this many seconds (default vaulter-media.scrub.max_seconds)",
+                    "name": "max-seconds",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Only the blobs of one scope key (tenant:<id>, drive:<id> or off:<id>)",
+                    "name": "scope",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Read and report, write nothing",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "media",
+            "parse": "signature",
+            "source": {
+                "file": "packages/media/src/Console/ScrubBlobsCommand.php",
+                "symbol": "Vaulter\\Media\\Console\\ScrubBlobsCommand"
             }
         },
         {
@@ -579,6 +665,15 @@
             "hidden": false,
             "id": "command:vaulter:errors:reference",
             "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Print the x-vaulter-problems table and the code examples for openapi/vaulter-v1.yaml, writing nothing",
+                    "name": "openapi",
+                    "shortcut": null,
+                    "value_required": false
+                },
                 {
                     "accepts_value": false,
                     "array": false,
@@ -986,6 +1081,33 @@
             "source": {
                 "file": "packages/core/src/Console/ModulesCommand.php",
                 "symbol": "Vaulter\\Console\\ModulesCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\OperationsReferenceCommand",
+            "description": "List the mutating operations with their concurrency and idempotency policies.",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:operations",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Print one JSON document",
+                    "name": "json",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/OperationsReferenceCommand.php",
+                "symbol": "Vaulter\\Console\\OperationsReferenceCommand"
             }
         },
         {

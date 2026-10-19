@@ -12,5 +12,6 @@ use Vaulter\Drive\Models\Node;
 #[Internal]
 final readonly class RevokeGrantInput
 {
-    public function __construct(public Node $node, public NodeGrant $grant) {}
+    /** @param int|null $expectedAccessVersion the node's access_version the caller read (If-Match); null skips the check */
+    public function __construct(public Node $node, public NodeGrant $grant, public ?int $expectedAccessVersion = null) {}
 }

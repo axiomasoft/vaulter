@@ -76,7 +76,7 @@ it('records every drive event in both sinks under one event id', function (): vo
     expect($types)->toEqualCanonicalizing([
         'drive.created', 'folder.created', 'file.uploaded', 'file.revision_added', 'file.revision_deleted',
         'node.renamed', 'node.moved', 'node.copied', 'node.trashed', 'node.restored', 'node.purged',
-        'drive.archived', 'drive.unarchived',
+        'drive.archived', 'drive.unarchived', 'drive.access.effective_permissions_changed',
     ])->and(driveEventsUnpaired())->toBe([]);
 });
 

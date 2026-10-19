@@ -199,7 +199,7 @@ it('gives every serial and stand test the umbrella groups the lanes exclude (nof
 it('plans stand as its own command: load tests and real-process scripts, SQLite, one process, never k6 or a benchmark', function (): void {
     [$code, $plan, $err] = g_t(['stand']);
     expect($code)->toBe(0, $err)->and($plan['mode'])->toBe('stand')->and($plan['engines'])->toBe(['sqlite'])
-        ->and($plan['suites'])->toBe(['load', 'collab-e2e']);
+        ->and($plan['suites'])->toBe(['load', 'collab-e2e', 'collab-stand']);
 
     $pest = array_values(array_filter($plan['steps'], static fn (array $step): bool => $step['kind'] === 'pest'));
     expect($pest)->not->toBe([]);
@@ -210,7 +210,7 @@ it('plans stand as its own command: load tests and real-process scripts, SQLite,
 
     foreach ([['sqlite'], ['sqlite', '--full'], ['all', '--full']] as $args) {
         [$other, $otherPlan] = g_t($args);
-        expect($other)->toBe(0)->and($otherPlan['suites'])->not->toContain('load')->and($otherPlan['suites'])->not->toContain('collab-e2e');
+        expect($other)->toBe(0)->and($otherPlan['suites'])->not->toContain('load')->and($otherPlan['suites'])->not->toContain('collab-e2e')->and($otherPlan['suites'])->not->toContain('collab-stand');
     }
 });
 

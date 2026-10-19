@@ -175,15 +175,18 @@ final readonly class BlobGarbageCollector
 
     /**
      * Sweep PENDING blobs from a crashed staging: a pending row older than
-     * the grace window whose commit never finished and that carries no pin. Its
-     * staged object (if any) is deleted and the row is finalised as a deleted
-     * tombstone, all under the lock so a slow-but-live commit is not stolen.
+     * the ORPHAN grace window (vaulter-media.gc.orphan_grace_hours, D23: a
+     * pending row is bytes whose commit never finished — the orphan hazard, not a
+     * tombstone) whose commit never finished and that carries no pin. Its staged
+     * object (if any) is deleted and the row is finalised as a deleted tombstone,
+     * all under the lock so a slow-but-live commit is not stolen. A positive
+     * $graceHours overrides the configured window.
      *
      * @return array{swept: int, skipped: int}
      */
     public function sweepPending(int $graceHours = 0): array
     {
-        $grace = $this->mediaConfig->gcGraceHours($graceHours);
+        $grace = $this->mediaConfig->orphanGraceHours($graceHours);
         $cutoff = now()->subHours($grace);
         $swept = 0;
         $skipped = 0;

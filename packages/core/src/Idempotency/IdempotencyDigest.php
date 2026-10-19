@@ -26,18 +26,31 @@ final class IdempotencyDigest
      */
     public static function tuple(OperationContext $context, string $operation, string $key): array
     {
-        $actor = $context->actor->ref();
-
         return [
             'tenant_kind' => $context->tenant->kind,
             'tenant_id' => $context->tenant->id,
             'scope_kind' => $context->scope->kind,
             'scope_id' => $context->scope->id,
-            'actor_kind' => $actor->type === ActorRef::SYSTEM_TYPE ? 'system' : 'user',
-            'actor_id' => self::actorId($actor),
+            ...self::actor($context->actor->ref()),
             'operation' => $operation,
             'idempotency_key' => $key,
         ];
+    }
+
+    /**
+     * The actor fields of a tuple.
+     *
+     * @return array{actor_kind: string, actor_id: string|null}
+     */
+    public static function actor(ActorRef $actor): array
+    {
+        return ['actor_kind' => $actor->type === ActorRef::SYSTEM_TYPE ? 'system' : 'user', 'actor_id' => self::actorId($actor)];
+    }
+
+    /** The request hash of a keyed write whose transport fingerprinted the request itself (HTTP). */
+    public static function transport(string $fingerprint): string
+    {
+        return self::request(['transport' => $fingerprint]);
     }
 
     /**

@@ -55,6 +55,7 @@ final class NodeSnapshotCodec implements ReceiptCodec
             'size_bytes' => $node->sizeBytes,
             'sequence' => $node->sequence,
             'inherits_access' => $node->inheritsAccess,
+            'access_version' => $node->accessVersion,
             'properties' => $node->properties,
             'created_at' => self::time($node->createdAt),
             'created_by' => $node->createdBy,
@@ -134,6 +135,7 @@ final class NodeSnapshotCodec implements ReceiptCodec
                 stateVersion: self::int($document, 'state_version'),
             ) : null,
             viewer: is_array($viewer) ? new ViewerStateSnapshot(starred: self::bool($viewer, 'starred')) : null,
+            accessVersion: self::int($body, 'access_version'),
         );
     }
 

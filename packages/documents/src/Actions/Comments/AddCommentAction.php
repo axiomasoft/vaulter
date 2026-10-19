@@ -66,6 +66,7 @@ final readonly class AddCommentAction
                 'author_id' => $author->id,
                 'body' => $data->body,
                 'anchor' => $data->anchor,
+                'version' => 0,
             ]);
             $comment->setRelation('node', $current);
             $this->recorder->record(new CommentAdded(comment: $comment, actor: $author, correlationId: $context->correlationId));

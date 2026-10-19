@@ -10,12 +10,13 @@ use Vaulter\Support\Identity;
 
 /**
  * What an event is about: the resource a consumer fetches to see the new state.
- * The id is a string whatever the id strategy.
+ * The id is a string whatever the id strategy. An `access` subject is the access policy of a
+ * scope (`drive:<id>`, `global`), which has nothing to fetch.
  */
 #[Api]
 final readonly class EventSubject
 {
-    public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload'];
+    public const array TYPES = ['drive', 'node', 'comment', 'share', 'upload', 'access'];
 
     public string $id;
 

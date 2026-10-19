@@ -18,6 +18,8 @@
             "name": "FakeProject storage",
             "root_node_id": "4",
             "status": "active",
+            "version": 0,
+            "etag": "\"drive.2.0\"",
             "quota_bytes": null,
             "used_bytes": 8,
             "created_at": "2026-10-11T05:20:29.000000Z"

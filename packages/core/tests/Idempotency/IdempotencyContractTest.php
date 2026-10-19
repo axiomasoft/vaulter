@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Configuration\DatabaseConfig;
@@ -300,8 +302,8 @@ it('refuses a key on a write that does not declare idempotency, before it runs',
     [$drive] = idemDrive();
     $folder = Vaulter::drive($drive)->actingAs(AccessTestHelpers::user())->folders()->create('Stay');
 
-    expect(fn () => idemHandle($drive, 'move-1')->nodes()->trash($folder->id))->toThrow(InvalidArgumentException::class, 'does not accept an idempotency key');
-    expect(Node::query()->findOrFail($folder->id)->trashed_at)->toBeNull();
+    expect(fn () => idemHandle($drive, 'star-1')->nodes()->star($folder->id))->toThrow(InvalidArgumentException::class, 'does not accept an idempotency key');
+    expect(Vaulter::drive($drive)->actingAs(AccessTestHelpers::user())->nodes()->find($folder->id)->viewer?->starred)->toBeFalse();
 });
 
 it('gives a composed write the one receipt of its root', function (): void {
@@ -381,6 +383,27 @@ it('parses one Structured Field String or one plain token, nothing else', functi
     'empty' => [[''], null],
     'too long' => [[str_repeat('k', 256)], null],
 ]);
+
+it('fingerprints a keyed HTTP request with an HMAC under the application key, the destination precondition included', function (): void {
+    $fingerprint = static function (array $headers = []): string {
+        $request = Request::create('/api/vaulter/v1/x', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: '{"password":"hunter2"}');
+        $request->headers->add(['Idempotency-Key' => 'k', ...$headers]);
+        app(ReadIdempotencyKey::class)->handle($request, static fn (): Response => new Response);
+
+        return ReadIdempotencyKey::requestFingerprint($request) ?? '';
+    };
+    // What a plain digest of the same request would be: a guess of the secret in the body could be tested against it.
+    $plain = IdempotencyDigest::request(['method' => 'POST', 'route' => 'api/vaulter/v1/x', 'parameters' => [], 'query' => [], 'body' => ['password' => 'hunter2'], 'if_match' => null, 'destination_if_match' => null]);
+    $first = $fingerprint();
+
+    expect($first)->toMatch('/^[0-9a-f]{64}$/')->not->toBe($plain)
+        ->and($fingerprint())->toBe($first)
+        ->and($fingerprint(['X-Vaulter-Destination-If-Match' => '"node.1.2"']))->not->toBe($first);
+
+    config()->set('app.key', 'base64:'.base64_encode(str_repeat('x', 32)));
+    app()->forgetInstance('encrypter');
+    expect($fingerprint())->not->toBe($first);
+});
 
 it('refuses a request fingerprint without a key and a key out of bounds', function (): void {
     $scope = ScopeRef::drive('1');

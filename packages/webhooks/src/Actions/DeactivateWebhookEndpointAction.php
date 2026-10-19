@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks\Actions;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Operations\AggregateVersion;
 use Vaulter\Support\Identity;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Repositories\WebhookDeliveryStoreRepository;
@@ -27,15 +28,19 @@ final readonly class DeactivateWebhookEndpointAction
         private WebhookEndpointStoreRepository $endpoints,
         private WebhookDeliveryStoreRepository $deliveries,
         private VaulterDatabase $database,
+        private AggregateVersion $versions,
     ) {}
 
-    public function execute(WebhookEndpoint $endpoint): WebhookEndpoint
+    public function execute(WebhookEndpoint $endpoint, ?int $expectedVersion = null): WebhookEndpoint
     {
-        return $this->database->transaction(function () use ($endpoint): WebhookEndpoint {
+        return $this->database->transaction(function () use ($endpoint, $expectedVersion): WebhookEndpoint {
             // Same lock order as a delivery settlement and a redelivery: endpoint first.
             $endpoint->setRawAttributes($endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail()->getAttributes(), sync: true);
+            // CC1: the version the caller read is compared on the locked row.
+            $this->versions->assertExpected($endpoint, 'version', $expectedVersion, WebhookEndpoint::AGGREGATE);
             $this->endpoints->deactivate($endpoint);
             $this->deliveries->killOpenForEndpoint(endpointId: Identity::stringify($endpoint->getKey()), reason: 'endpoint_disabled');
+            $this->versions->bump($endpoint, 'version', WebhookEndpoint::AGGREGATE);
 
             return $endpoint;
         });

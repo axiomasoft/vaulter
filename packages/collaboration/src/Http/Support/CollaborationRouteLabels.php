@@ -18,6 +18,8 @@ final class CollaborationRouteLabels implements RouteLabelSource
             'vaulter.v1.collaboration.hub.append' => 'collab_append',
             'vaulter.v1.collaboration.hub.compaction.lease' => 'collab_lease',
             'vaulter.v1.collaboration.hub.checkpoint' => 'collab_checkpoint',
+            'vaulter.v1.collaboration.hub.renew' => 'collab_renew',
+            'vaulter.v1.collaboration.hub.recheck' => 'collab_recheck',
         ];
     }
 
@@ -28,6 +30,8 @@ final class CollaborationRouteLabels implements RouteLabelSource
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/append', 'operation' => 'collab_append'],
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/compaction/lease', 'operation' => 'collab_lease'],
             ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/checkpoint', 'operation' => 'collab_checkpoint'],
+            ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/renew', 'operation' => 'collab_renew'],
+            ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/recheck', 'operation' => 'collab_recheck'],
         ];
     }
 
@@ -38,6 +42,8 @@ final class CollaborationRouteLabels implements RouteLabelSource
             'vaulter.v1.collaboration.hub.append' => 'collab.append',
             'vaulter.v1.collaboration.hub.compaction.lease' => 'collab.lease',
             'vaulter.v1.collaboration.hub.checkpoint' => 'collab.checkpoint',
+            'vaulter.v1.collaboration.hub.renew' => 'collab.renew',
+            'vaulter.v1.collaboration.hub.recheck' => 'collab.recheck',
         ];
     }
 }

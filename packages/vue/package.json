@@ -55,11 +55,9 @@
   },
   "peerDependencies": {
     "vue": "^3.4",
-    "@tiptap/pm": "^3.0.0",
-    "yjs": "^13.6"
+    "@tiptap/pm": "^3.0.0"
   },
   "dependencies": {
-    "@hocuspocus/provider": "^4.3",
     "@tiptap/extension-link": "^3.0.0",
     "@tiptap/starter-kit": "^3.0.0",
     "@tiptap/vue-3": "^3.0.0"
@@ -76,7 +74,6 @@
     "vite-plugin-dts": "^4.3.0",
     "vitest": "^4.1.10",
     "vue": "^3.5.0",
-    "vue-tsc": "^2.1.0",
-    "yjs": "^13.6"
+    "vue-tsc": "^2.1.0"
   }
 }

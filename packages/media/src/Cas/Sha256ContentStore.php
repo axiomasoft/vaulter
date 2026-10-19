@@ -93,13 +93,19 @@ final readonly class Sha256ContentStore implements ContentStore, ListableContent
         try {
             // If-None-Match: * — a 412/409 means we were overtaken; the driver
             // returns false and we treat that as "already there", not fatal.
-            $this->driver->put(
+            $written = $this->driver->put(
                 key: $key,
                 stream: $stream,
                 disk: $disk,
                 ifNoneMatch: true,
                 options: ['ChecksumSHA256' => $this->base64Sha256($staged->sha256())],
             );
+
+            // False is also the answer of a lost conditional create, where the object is there: only a missing
+            // object after it is a failed write, and a caller must not go on as if the bytes had landed.
+            if (!$written && !$this->exists($key, $disk)) {
+                throw new RuntimeException("Unable to write the object [{$key}]: the storage driver reported a failed write.");
+            }
         } finally {
             if (is_resource($stream)) {
                 fclose($stream);

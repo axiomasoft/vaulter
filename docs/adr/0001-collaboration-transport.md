@@ -1,6 +1,7 @@
 # ADR-0001 — Collaboration transport
 
-**Status:** accepted
+**Status:** accepted — the placement and persistence of collaboration are replaced by
+[ADR-0031](/adr/0031-collaboration-package-and-durability) (the choice of Yjs and Hocuspocus stands)
 
 ## Context
 
@@ -49,7 +50,7 @@ guarantee on the connection.
 shape from the original Decision stand as designed — `reverb` remains a supported,
 selectable driver (kept for hosts that adopted it before this switch, and for pure-Laravel
 deployments unwilling to run a Node service), just no longer the default; it is documented
-as deprecated for Yjs document editing (`docs/guide/hocuspocus-server.md`).
+as deprecated for Yjs document editing ([Collaboration hub](/guides/hub)).
 
 Docs corrected alongside this Amendment: `docs/guide/collaboration.md` (default-transport
 table + config code sample, previously said `reverb`); `Vaulter\Support\Config::collaborationDriverName()`

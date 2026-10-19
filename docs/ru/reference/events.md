@@ -105,6 +105,7 @@ no-op и повторно не отдаётся слушателям. Две о�
 | `drive.unarchived` | drive | drive | — | ✓ | ✓ | — | An archived drive became writable again. |
 | `drive.deleted` | drive | drive | — | ✓ | ✓ | — | A drive was deleted. |
 | `file.revision_deleted` | drive | node | `revision_id`: `string`, `number`: `int` | ✓ | ✓ | — | A non-current revision was deleted. |
+| `drive.access.effective_permissions_changed` | drive | access | `drive_id`: `string\|null`, `scope`: `string`, `node_id`: `string\|null`, `reason`: `string` | — | — | — | Who may do what changed for a node, a subtree, a drive or every drive (scope); recorded in the transaction of the change, so the sessions issued before it can be checked again. |
 <!-- events:end -->
 
 Каждое сохранение содержимого документа засорило бы ленту, поэтому `document.updated`
@@ -151,7 +152,7 @@ no-op и повторно не отдаётся слушателям. Две о�
 ## Трансляция комментариев
 
 Три события комментариев публикуются в `PrivateChannel` с именем
-`{collaboration.channel_prefix}.{nodeId}` (префикс по умолчанию `vaulter.documents`) —
+`{broadcast.channel_prefix}.{nodeId}` (`vaulter-documents.broadcast.channel_prefix`, по умолчанию `vaulter.documents`) —
 ту же комнату, к которой подключаются открытые редакторы для совместной работы.
 
 | Событие | `broadcastAs()` | Ключи `broadcastWith()` |

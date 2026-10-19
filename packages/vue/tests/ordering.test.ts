@@ -207,17 +207,21 @@ describe('late list responses never replace a newer local state', () => {
   })
 
   it('useGrants: a list from before a grant keeps the new grant', async () => {
-    const late = deferred<unknown[]>()
-    const list = vi.fn().mockResolvedValueOnce([{ id: 'g-old' }]).mockReturnValueOnce(late.promise)
-    const { vm } = mountWith({ grants: { list, create: vi.fn().mockResolvedValue({ id: 'g-new' }) } }, () => useGrants('9'))
+    const late = deferred<unknown>()
+    const listTagged = vi.fn()
+      .mockResolvedValueOnce({ etag: '"node-access.9.0"', data: [{ id: 'g-old' }] })
+      .mockReturnValueOnce(late.promise)
+    const { vm } = mountWith({ grants: { listTagged, create: vi.fn().mockResolvedValue({ id: 'g-new' }) } }, () => useGrants('9'))
     await vm.list()
 
     const refreshing = vm.list()
     await vm.grant({ subject: { type: 'user', id: '1' }, role: 'reader' })
-    late.resolve([{ id: 'g-old' }])
+    late.resolve({ etag: '"node-access.9.0"', data: [{ id: 'g-old' }] })
     await refreshing
 
     expect(vm.grants.value.map((g) => g.id)).toEqual(['g-new', 'g-old'])
+    // The late list does not bring back the tag the grant made stale.
+    expect(vm.accessTag.value).toBeNull()
   })
 
   it('useRevisions: a list from before a snapshot keeps the snapshot', async () => {

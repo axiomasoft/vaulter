@@ -161,8 +161,8 @@ Install and register the type again and the same document is fully usable, with 
 Reading is lenient: a rich-text document that contains nodes of an editor extension you have
 since switched off (`vaulter-documents.tiptap.extra_nodes`) still opens — the unknown parts are
 left out. Saving that view back would delete them for good, so such a document is read-only:
-`DocumentSnapshot::$editable = false`, collaboration opens read-only (the hub's authenticate
-answers `readOnly: true` and its store answers 409), and `update()` answers
+`DocumentSnapshot::$editable = false`, collaboration opens read-only (the session is `mode: ro`,
+so the hub's authenticate answers read-only and its appends are refused), and `update()` answers
 `409 document_content_degraded`. Switch the extension back on (or restore a revision without
 it) and the document is editable again.
 

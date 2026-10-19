@@ -20,8 +20,9 @@ npm install @vaulter/vue
 ```
 
 ::: tip Peer dependencies
-`vue@^3.4`, `yjs@^13.6` and `@tiptap/pm@^3` are peers. The collaboration transport pulls in
-`@hocuspocus/provider`; the editor itself (TipTap, Univer, …) is yours — see [viewers](#viewers).
+`vue@^3.4` and `@tiptap/pm@^3` are peers. `@vaulter/vue` contains no Yjs: realtime editing is the separate package
+`@vaulter/vue-collaboration` (peers `yjs@^13.6` and `@vaulter/vue`, depends on `@hocuspocus/provider`); the editor itself
+(TipTap, Univer, …) is yours — see [viewers](#viewers).
 :::
 
 ## Setup
@@ -105,7 +106,7 @@ npm run api:check      # CI: fails when the committed file is stale or not track
 | `files` | `upload`, `download`, `downloadUrl`, `revisions`, `addRevision`, `downloadRevision`, `restoreRevision`, `setRevisionRetention`, `deleteRevision` |
 | `uploads` | `start` (resumable tus or S3 multipart), `show` |
 | `documents` | `create`, `content`, `update`, `export`, `revisions`, `revision`, `snapshot`, `setRevisionRetention`, `restoreRevision`, `collaborationSession` |
-| `grants`, `access` | `list`, `create`, `revoke`; `restrictInheritance`, `restoreInheritance` |
+| `grants`, `access` | `list`, `listTagged`, `create`, `revoke`; `restrictInheritance`, `restoreInheritance` |
 | `shares`, `publicShares` | `list`, `create`, `update`, `rotate`, `revoke`; `get`, `nodes`, `downloadUrl` |
 | `comments`, `activity`, `changes` | threads; the activity feeds; `start` and `list` of the change feed |
 
@@ -142,9 +143,25 @@ A method without its `etag` does not type-check. The content of a document carri
 response header, which the client returns as `content.etag` (`null` when the header is not exposed to the browser:
 add `ETag` to `Access-Control-Expose-Headers` on a cross-origin API).
 
+The same rule covers the other versioned resources: a drive (`archive`, `unarchive`, `delete`), a share link
+(`update`, `rotate`, `revoke`) and a comment (`resolve`, `remove`) send their own `etag`; a grant revoke and an
+inheritance change send the node's **access tag**, the `etag` of `client.grants.listTagged(nodeId)`:
+
+<!-- snippet: host -->
+
+```ts
+const { etag: accessTag, data: grants } = await client.grants.listTagged(node.id)
+await client.grants.revoke(node.id, grants[0].id, { etag: accessTag })
+await client.shares.rotate(node.id, share.id, { etag: share.etag })
+await client.comments.resolve(node.id, comment.id, { etag: comment.etag })
+```
+
+`useComments`, `useShares` and `useGrants` send the tag of the item they hold (`useGrants` keeps `accessTag` and
+reloads before a revoke once its own grant or revoke made it stale).
+
 | Answer | `error.code` | What it means |
 |--------|--------------|---------------|
-| `412` | `node_sequence_mismatch`, `document_state_mismatch` | somebody changed the resource since you read it — read it again |
+| `412` | `node_sequence_mismatch`, `document_state_mismatch`, `stale_write` | somebody changed the resource since you read it — read it again |
 | `428` | `precondition_required` | the call went out without `If-Match`: an integration bug, not a state to recover from |
 
 ### Errors
@@ -237,7 +254,6 @@ methods.
 | `useComments(nodeId)` | a thread |
 | `useDocument(nodeId)` | load, debounced autosave, `conflict`, export |
 | `useRevisions(nodeId)` | document history: `snapshot`, `setRetention`, `restore` |
-| `useCollaboration(nodeId)` | the realtime session (below) |
 
 **Mutations take the node, not its id**, because its `etag` is what the server compares:
 
@@ -260,9 +276,15 @@ Navigation and `refresh()` reload this permission, including the profile's creat
 
 ### Collaboration
 
-`useCollaboration(nodeId, { supportedSchemaVersion, onEpochChanged })` asks for a session
-(`documents.collaborationSession`) and opens the Hocuspocus provider on a `Y.Doc` you bind with TipTap's Collaboration
-extension. The content always comes from the hub — never seed the editor.
+Realtime editing is not in `@vaulter/vue`: the package defines the seam (`VaulterCollaborationKey`, the
+`CollaborationAdapter`, `CollaborationHandle` and `CollaborationStatus` types) and the REST autosave path. Install
+`@vaulter/vue-collaboration` and pass `createCollaborationAdapter()` as the `collaboration` option of `VaulterPlugin`;
+`VaulterDocumentNode` then opens a session for collaborative document types and falls back to the autosave only when the
+module is not offered (`404` or `409 collaboration_unavailable`). Its `useCollaboration(nodeId, { client,
+supportedSchemaVersion, onEpochChanged })` asks for a session (`documents.collaborationSession`), opens the Hocuspocus
+provider on a `Y.Doc` you bind with TipTap's Collaboration extension and reports the save `status` (`synchronized`,
+`pending`, `saved`, `error` — only the backend's receipt makes `saved`). The content always comes from the hub — never
+seed the editor.
 
 - `readOnly` is true for a `ro` session **or** when the server's schema is newer than `supportedSchemaVersion`
   (`schemaOutdated`): mount the editor with `editable: false` and ask the user to update the application.
@@ -271,8 +293,7 @@ extension. The content always comes from the hub — never seed the editor.
 - `4001` (token expired) and `4403` (lost the right to write) renew the session; `4422` is not retried.
 
 A `connect()` that another `connect()`/`disconnect()` overtook rejects with `CollaborationCancelledError` — not a failed session.
-
-`createCollaborationSession(client, nodeId, options)` does the same once, without the reopen logic.
+The wiring, the members and the update queue are in [Realtime collaboration](/guides/collaboration#frontend-wiring-vaulter-vue-collaboration).
 
 ## Components
 
@@ -377,5 +398,5 @@ app.use(VaulterPlugin, { viewers: { 'vaulter/tiptap': () => import('./AppDocumen
 - [REST API reference](/reference/rest-api) — the contract this package is generated from.
 - [Files & folders](/concepts/nodes-and-revisions) — the Drive routes behind these composables.
 - [Authorization](/concepts/access-model) — the abilities the components gate on.
-- [Realtime collaboration](/guides/collaboration) — the Yjs transport `useCollaboration` opens.
+- [Realtime collaboration](/guides/collaboration) — the Yjs transport `@vaulter/vue-collaboration` opens.
 - [Upgrade guide](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md) — what changed from the pre-v1 package.

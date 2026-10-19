@@ -1,6 +1,6 @@
 # Vaulter collaboration hub — a reusable, env-configured external image
 # (master plan Addendum A). One published image serves many projects; consumers
-# reference it via `image: ghcr.io/axiomasoft/vaulter-hocuspocus:<ver>` and configure
+# reference it via `image: ghcr.io/axiomasoft/vaulter-collaboration-hub:<ver>` and configure
 # it through environment variables only — no sources copied, no secrets baked.
 #
 # syntax=docker/dockerfile:1

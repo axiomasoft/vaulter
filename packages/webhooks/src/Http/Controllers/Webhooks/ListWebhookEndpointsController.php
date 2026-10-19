@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Attributes\Internal;
 use Vaulter\Http\Resources\PageResponse;
+use Vaulter\Webhooks\Data\WebhookEndpointSnapshot;
 use Vaulter\Webhooks\Http\Resources\Webhooks\WebhookEndpointResource;
 use Vaulter\Webhooks\Models\WebhookEndpoint;
 use Vaulter\Webhooks\Repositories\WebhookEndpointReadRepository;
@@ -29,7 +30,7 @@ final readonly class ListWebhookEndpointsController
 
         return PageResponse::fromPaginator(
             $this->endpoints->listing()->cursorPaginate(perPage: PageResponse::perPage($request), cursor: PageResponse::cursor($request)),
-            static fn (WebhookEndpoint $endpoint): WebhookEndpointResource => new WebhookEndpointResource($endpoint),
+            static fn (WebhookEndpoint $endpoint): WebhookEndpointResource => new WebhookEndpointResource(WebhookEndpointSnapshot::of($endpoint)),
         );
     }
 }

@@ -3,14 +3,17 @@
 declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Fixtures\GrantedDocuments as Granted;
 use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
+use Vaulter\Drive\Enums\Access\GrantScope;
 use Vaulter\Drive\Facades\Vaulter;
 use Vaulter\Drive\Models\Access\NodeGrant;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 
 /**
  * The content of a document is its own resource: GET carries a tag made of the
@@ -180,4 +183,56 @@ it('answers an editor on an archived drive 409 drive_archived before any precond
     $this->putJson(Docs::url('documents/'.$id.'/content'), ['content' => Docs::doc('x')], ['If-Match' => '"stale"'])->assertStatus(409);
     $this->postJson(Docs::url('documents/'.$id.'/revisions/1/restore'), [], ['If-Match' => $tag])->assertStatus(409)->assertJsonPath('code', 'drive_archived');
     $this->getJson(Docs::url('documents/'.$id.'/content'))->assertOk();
+});
+
+it('is conditional, not keyed: a repeat of the same PUT after it committed answers 412 and writes nothing more', function (): void {
+    [$node, $id] = sharedDocument();
+    $this->actingAs(AccessTestHelpers::user(1));
+    $tag = Docs::etag($id);
+
+    $first = Docs::put($id, Docs::doc('Once'), $tag)->assertOk();
+    $state = Granted::aggregate($node)->state_version;
+    $revisions = DocumentRevision::query()->count();
+    $events = OutboxEvent::query()->count();
+
+    // The same request again — with or without an Idempotency-Key, which this route does not read.
+    Docs::put($id, Docs::doc('Once'), $tag)->assertStatus(412)->assertJsonPath('code', 'document_state_mismatch');
+    $this->putJson(Docs::url('documents/'.$id.'/content'), ['content' => Docs::doc('Once')], ['If-Match' => $tag, 'Idempotency-Key' => 'ignored'])
+        ->assertStatus(412)->assertHeaderMissing('Idempotent-Replayed');
+
+    expect(Granted::aggregate($node)->state_version)->toBe($state)
+        ->and(DocumentRevision::query()->count())->toBe($revisions)
+        ->and(OutboxEvent::query()->count())->toBe($events)
+        ->and($first->headers->get('ETag'))->toBe(Docs::etag($id));
+});
+
+it('creates a document, checkpoints it and restores it under an Idempotency-Key, replaying each once', function (): void {
+    $node = Granted::document(level: RoleRegistry::WRITER, actorId: 1);
+    $id = (string) $node->getKey();
+    $this->actingAs(AccessTestHelpers::user(1));
+    $storage = $node->storage()->firstOrFail();
+    AccessTestHelpers::grant(Node::query()->findOrFail($storage->root_node_id), RoleRegistry::OWNER, scope: GrantScope::Subtree, subjectId: 1);
+    $drive = (string) $storage->getKey();
+
+    $created = $this->postJson(Docs::url('drives/'.$drive.'/documents'), ['name' => 'Keyed'], ['Idempotency-Key' => 'doc-1'])->assertCreated();
+    $this->postJson(Docs::url('drives/'.$drive.'/documents'), ['name' => 'Keyed'], ['Idempotency-Key' => 'doc-1'])
+        ->assertCreated()->assertHeader('Idempotent-Replayed', 'true')->assertJsonPath('data.id', $created->json('data.id'));
+    expect(Node::query()->where('name', 'Keyed')->count())->toBe(1);
+
+    $revision = $this->postJson(Docs::url('documents/'.$id.'/revisions'), ['label' => 'v1'], ['Idempotency-Key' => 'rev-1'])->assertCreated();
+    $revisions = DocumentRevision::query()->count();
+    $this->postJson(Docs::url('documents/'.$id.'/revisions'), ['label' => 'v1'], ['Idempotency-Key' => 'rev-1'])
+        ->assertCreated()->assertHeader('Idempotent-Replayed', 'true')->assertJsonPath('data.id', $revision->json('data.id'));
+    expect(DocumentRevision::query()->count())->toBe($revisions);
+
+    $tag = Docs::etag($id);
+    $restore = Docs::url('documents/'.$id.'/revisions/'.$revision->json('data.id').'/restore');
+    $first = $this->postJson($restore, [], ['If-Match' => $tag, 'Idempotency-Key' => 'restore-1'])->assertOk();
+    $state = Granted::aggregate($node)->state_version;
+    // The retry repeats the tag of the first request, stale since it committed.
+    $again = $this->postJson($restore, [], ['If-Match' => $tag, 'Idempotency-Key' => 'restore-1'])->assertOk()->assertHeader('Idempotent-Replayed', 'true');
+
+    expect($again->json('data'))->toBe($first->json('data'))->and(Granted::aggregate($node)->state_version)->toBe($state);
+    // Without a key the stale tag stands.
+    $this->postJson($restore, [], ['If-Match' => $tag])->assertStatus(412)->assertJsonPath('code', 'document_state_mismatch');
 });

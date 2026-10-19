@@ -490,6 +490,22 @@
                     "hidden": 0
                 },
                 {
+                    "name": "integrity_checked_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "integrity_failed_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "storage_version",
                     "type": "varchar",
                     "notnull": 0,
@@ -607,6 +623,19 @@
                     ],
                     "sql": "CREATE INDEX \"custom_blobs_gc_idx\" on \"custom_blobs\" (\"status\", \"ref_count\", \"delete_after_at\")"
                 },
+                "custom_blobs_integrity_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "integrity_checked_at",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"custom_blobs_integrity_idx\" on \"custom_blobs\" (\"integrity_checked_at\")"
+                },
                 "custom_blobs_scope_sha_uniq": {
                     "unique": 1,
                     "origin": "c",
@@ -679,7 +708,7 @@
                 }
             },
             "foreign_keys": [],
-            "create_sql": "CREATE TABLE \"custom_blobs\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"storage_id\" integer, \"hash_algo\" varchar not null default 'sha256', \"sha256\" varchar not null, \"size_bytes\" integer not null, \"disk\" varchar not null default 'default', \"storage_key\" varchar not null, \"status\" varchar not null default 'pending', \"ref_count\" integer not null default '0', \"dedup_scope\" varchar not null default 'tenant', \"quarantined_at\" datetime, \"storage_version\" varchar, \"etag\" varchar, \"md5\" varchar, \"crc32c\" varchar, \"chunked\" tinyint(1) not null default '0', \"encryption_key_id\" integer, \"first_seen_at\" datetime not null default CURRENT_TIMESTAMP, \"committed_at\" datetime, \"delete_after_at\" datetime, \"scope_key\" varchar not null)"
+            "create_sql": "CREATE TABLE \"custom_blobs\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"storage_id\" integer, \"hash_algo\" varchar not null default 'sha256', \"sha256\" varchar not null, \"size_bytes\" integer not null, \"disk\" varchar not null default 'default', \"storage_key\" varchar not null, \"status\" varchar not null default 'pending', \"ref_count\" integer not null default '0', \"dedup_scope\" varchar not null default 'tenant', \"quarantined_at\" datetime, \"integrity_checked_at\" datetime, \"integrity_failed_at\" datetime, \"storage_version\" varchar, \"etag\" varchar, \"md5\" varchar, \"crc32c\" varchar, \"chunked\" tinyint(1) not null default '0', \"encryption_key_id\" integer, \"first_seen_at\" datetime not null default CURRENT_TIMESTAMP, \"committed_at\" datetime, \"delete_after_at\" datetime, \"scope_key\" varchar not null)"
         },
         "custom_collaboration_heads": {
             "columns": [
@@ -824,6 +853,51 @@
                 }
             },
             "create_sql": "CREATE TABLE \"custom_collaboration_heads\" (\"document_id\" integer not null, \"generation\" BIGINT CHECK(typeof(generation) = 'integer' AND generation >= 0) not null default '0', \"head_seq\" BIGINT CHECK(typeof(head_seq) = 'integer' AND head_seq >= 0) not null default '0', \"checkpoint_seq\" BIGINT CHECK(typeof(checkpoint_seq) = 'integer' AND checkpoint_seq >= 0) not null default '0', \"checkpoint_version\" BIGINT CHECK(typeof(checkpoint_version) = 'integer' AND checkpoint_version >= 0) not null default '0', \"lease_token\" varchar, \"lease_owner\" varchar, \"lease_expires_at\" datetime, \"drain_requested_at\" datetime, \"retired_at\" datetime, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"document_id\") references \"custom_documents\"(\"id\") on delete cascade, primary key (\"document_id\", \"generation\"))"
+        },
+        "custom_collaboration_permission_versions": {
+            "columns": [
+                {
+                    "name": "scope_key",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 1,
+                    "hidden": 0
+                },
+                {
+                    "name": "version",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                }
+            ],
+            "indexes": {
+                "sqlite_autoindex_custom_collaboration_permission_versions_1": {
+                    "unique": 1,
+                    "origin": "pk",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "scope_key",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": null
+                }
+            },
+            "foreign_keys": [],
+            "create_sql": "CREATE TABLE \"custom_collaboration_permission_versions\" (\"scope_key\" varchar not null, \"version\" BIGINT CHECK(typeof(version) = 'integer' AND version >= 0) not null default '0', \"updated_at\" datetime, primary key (\"scope_key\"))"
         },
         "custom_collaboration_receipts": {
             "columns": [
@@ -1997,6 +2071,14 @@
                     "hidden": 0
                 },
                 {
+                    "name": "version",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "created_by",
                     "type": "varchar",
                     "notnull": 0,
@@ -2148,7 +2230,7 @@
                 }
             },
             "foreign_keys": [],
-            "create_sql": "CREATE TABLE \"custom_drives\" (\"id\" integer primary key autoincrement not null, \"profile\" varchar not null default 'default', \"tenant_id\" varchar, \"owner_id\" varchar not null, \"owner_type\" varchar not null, \"name\" varchar not null, \"root_node_id\" integer, \"disk\" varchar not null default 'default', \"quota_bytes\" integer, \"used_bytes\" integer not null default '0', \"scan_admission_sequence\" BIGINT CHECK(scan_admission_sequence IS NULL OR (typeof(scan_admission_sequence) = 'integer' AND scan_admission_sequence >= 0)) not null default '0', \"status\" varchar not null default 'active', \"created_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime)"
+            "create_sql": "CREATE TABLE \"custom_drives\" (\"id\" integer primary key autoincrement not null, \"profile\" varchar not null default 'default', \"tenant_id\" varchar, \"owner_id\" varchar not null, \"owner_type\" varchar not null, \"name\" varchar not null, \"root_node_id\" integer, \"disk\" varchar not null default 'default', \"quota_bytes\" integer, \"used_bytes\" integer not null default '0', \"scan_admission_sequence\" BIGINT CHECK(scan_admission_sequence IS NULL OR (typeof(scan_admission_sequence) = 'integer' AND scan_admission_sequence >= 0)) not null default '0', \"status\" varchar not null default 'active', \"version\" BIGINT CHECK(typeof(version) = 'integer' AND version >= 0) not null default '0', \"created_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime)"
         },
         "custom_file_revision_blobs": {
             "columns": [
@@ -3081,6 +3163,14 @@
                     "hidden": 0
                 },
                 {
+                    "name": "version",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "created_at",
                     "type": "datetime",
                     "notnull": 0,
@@ -3200,7 +3290,7 @@
                     "match": "NONE"
                 }
             },
-            "create_sql": "CREATE TABLE \"custom_node_comments\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"node_id\" integer not null, \"parent_id\" integer, \"author_id\" varchar not null, \"author_type\" varchar not null, \"body\" text not null, \"anchor\" text, \"resolved_at\" datetime, \"resolved_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"custom_nodes\"(\"id\") on delete cascade, foreign key(\"parent_id\") references \"custom_node_comments\"(\"id\") on delete cascade)"
+            "create_sql": "CREATE TABLE \"custom_node_comments\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"node_id\" integer not null, \"parent_id\" integer, \"author_id\" varchar not null, \"author_type\" varchar not null, \"body\" text not null, \"anchor\" text, \"resolved_at\" datetime, \"resolved_by\" varchar, \"version\" BIGINT CHECK(typeof(version) = 'integer' AND version >= 0) not null default '0', \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"custom_nodes\"(\"id\") on delete cascade, foreign key(\"parent_id\") references \"custom_node_comments\"(\"id\") on delete cascade)"
         },
         "custom_node_grants": {
             "columns": [
@@ -3488,6 +3578,14 @@
                     "hidden": 0
                 },
                 {
+                    "name": "version",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "scope",
                     "type": "varchar",
                     "notnull": 1,
@@ -3668,7 +3766,7 @@
                     "match": "NONE"
                 }
             },
-            "create_sql": "CREATE TABLE \"custom_node_shares\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"node_id\" integer not null, \"token_hash\" varchar not null, \"token_prefix\" varchar not null, \"role_key\" varchar not null, \"role_version\" integer not null default '1', \"audience\" varchar not null default 'anyone', \"token_generation\" integer not null default '1', \"scope\" varchar not null default 'item', \"password_hash\" varchar, \"expires_at\" datetime, \"max_uses\" integer, \"use_count\" integer not null default '0', \"revoked_at\" datetime, \"granted_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"custom_nodes\"(\"id\") on delete cascade)"
+            "create_sql": "CREATE TABLE \"custom_node_shares\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"node_id\" integer not null, \"token_hash\" varchar not null, \"token_prefix\" varchar not null, \"role_key\" varchar not null, \"role_version\" integer not null default '1', \"audience\" varchar not null default 'anyone', \"token_generation\" integer not null default '1', \"version\" BIGINT CHECK(typeof(version) = 'integer' AND version >= 0) not null default '0', \"scope\" varchar not null default 'item', \"password_hash\" varchar, \"expires_at\" datetime, \"max_uses\" integer, \"use_count\" integer not null default '0', \"revoked_at\" datetime, \"granted_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"custom_nodes\"(\"id\") on delete cascade)"
         },
         "custom_node_user_states": {
             "columns": [
@@ -3918,6 +4016,14 @@
                     "type": "tinyint(1)",
                     "notnull": 1,
                     "default": "'1'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "access_version",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
                     "pk": 0,
                     "hidden": 0
                 },
@@ -4266,7 +4372,7 @@
                     "match": "NONE"
                 }
             },
-            "create_sql": "CREATE TABLE \"custom_nodes\" (\"id\" integer primary key autoincrement not null, \"profile\" varchar not null default 'default', \"tenant_id\" varchar, \"drive_id\" integer not null, \"parent_id\" integer, \"kind\" varchar not null, \"name\" varchar not null, \"name_key\" varchar not null, \"mime_type\" varchar, \"extension\" varchar, \"size_bytes\" integer not null default '0', \"inherit_grants\" tinyint(1) not null default '1', \"shortcut_target_id\" integer, \"properties\" text, \"content_modified_at\" datetime, \"content_modified_by\" varchar, \"trashed_at\" datetime, \"trashed_by\" varchar, \"trashed_from_parent_id\" integer, \"trash_root_id\" integer, \"created_by\" varchar, \"updated_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime, sequence BIGINT NOT NULL DEFAULT 0 CHECK(typeof(sequence) = 'integer' AND sequence >= 0), foreign key(\"drive_id\") references \"custom_drives\"(\"id\") on delete cascade, foreign key(\"parent_id\") references \"custom_nodes\"(\"id\") on delete cascade)"
+            "create_sql": "CREATE TABLE \"custom_nodes\" (\"id\" integer primary key autoincrement not null, \"profile\" varchar not null default 'default', \"tenant_id\" varchar, \"drive_id\" integer not null, \"parent_id\" integer, \"kind\" varchar not null, \"name\" varchar not null, \"name_key\" varchar not null, \"mime_type\" varchar, \"extension\" varchar, \"size_bytes\" integer not null default '0', \"inherit_grants\" tinyint(1) not null default '1', \"access_version\" BIGINT CHECK(typeof(access_version) = 'integer' AND access_version >= 0) not null default '0', \"shortcut_target_id\" integer, \"properties\" text, \"content_modified_at\" datetime, \"content_modified_by\" varchar, \"trashed_at\" datetime, \"trashed_by\" varchar, \"trashed_from_parent_id\" integer, \"trash_root_id\" integer, \"created_by\" varchar, \"updated_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime, sequence BIGINT NOT NULL DEFAULT 0 CHECK(typeof(sequence) = 'integer' AND sequence >= 0), foreign key(\"drive_id\") references \"custom_drives\"(\"id\") on delete cascade, foreign key(\"parent_id\") references \"custom_nodes\"(\"id\") on delete cascade)"
         },
         "custom_outbox": {
             "columns": [
@@ -6814,6 +6920,14 @@
                     "hidden": 0
                 },
                 {
+                    "name": "version",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "created_at",
                     "type": "datetime",
                     "notnull": 0,
@@ -6915,7 +7029,7 @@
                     "match": "NONE"
                 }
             },
-            "create_sql": "CREATE TABLE \"custom_webhook_endpoints\" (\"id\" integer primary key autoincrement not null, \"url\" varchar not null, \"events\" text not null, \"signing_secret\" text not null, \"previous_signing_secret\" text, \"previous_secret_expires_at\" datetime, \"is_active\" tinyint(1) not null default '1', \"last_triggered_at\" datetime, \"failure_count\" integer not null default '0', \"failing_since\" datetime, \"disabled_at\" datetime, \"disabled_reason\" varchar, \"created_at\" datetime, \"updated_at\" datetime, \"tenant_id\" varchar, \"drive_id\" integer, foreign key(\"drive_id\") references \"custom_drives\"(\"id\") on delete cascade)"
+            "create_sql": "CREATE TABLE \"custom_webhook_endpoints\" (\"id\" integer primary key autoincrement not null, \"url\" varchar not null, \"events\" text not null, \"signing_secret\" text not null, \"previous_signing_secret\" text, \"previous_secret_expires_at\" datetime, \"is_active\" tinyint(1) not null default '1', \"last_triggered_at\" datetime, \"failure_count\" integer not null default '0', \"failing_since\" datetime, \"disabled_at\" datetime, \"disabled_reason\" varchar, \"version\" BIGINT CHECK(typeof(version) = 'integer' AND version >= 0) not null default '0', \"created_at\" datetime, \"updated_at\" datetime, \"tenant_id\" varchar, \"drive_id\" integer, foreign key(\"drive_id\") references \"custom_drives\"(\"id\") on delete cascade)"
         }
     },
     "preset": "bigint.uuid.custom.on",

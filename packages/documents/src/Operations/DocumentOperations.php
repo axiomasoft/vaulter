@@ -34,6 +34,8 @@ use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
+use Vaulter\Documents\Idempotency\DocumentRevisionSnapshotCodec;
+use Vaulter\Documents\Idempotency\DocumentSnapshotCodec;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Queries\MappedCursorPaginator;
@@ -49,10 +51,13 @@ use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\Operations\OperationKind;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;
+use Vaulter\Drive\Idempotency\NodeSnapshotCodec;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Operations\NodeLocator;
 use Vaulter\Drive\Profiles\ProfilePolicy;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
@@ -75,6 +80,10 @@ use Vaulter\Operations\OperationSpec;
  * purged; editing, checkpointing, restoring and exporting answer 409
  * document_type_unavailable until the type is registered again. Content that reads only partly under its type
  * (DocumentSnapshot::$editable = false) is not overwritten: 409 document_content_degraded.
+ *
+ * Every write but the autosave is idempotent by key (D25): the receipt is the created node, the document state or the
+ * checkpoint the first request answered. The HTTP autosave (updateContent) is conditional instead: its repeat after the
+ * commit carries a stale state version and answers 412 without a second revision.
  *
  * A document with saved collaboration edits its working state does not hold yet (the pending-state
  * marker, D26) is first drained through the collaboration transport; while the marker stays, its
@@ -116,6 +125,14 @@ final readonly class DocumentOperations implements DriveExtension
      */
     public function create(string $name, ?string $type = null, ?array $content = null, NodeSnapshot|string|int|null $parent = null, ?CreateFolderOptions $options = null): NodeSnapshot
     {
+        $parentId = $parent === null ? null : self::idOf($parent);
+        // A replay needs Create in the folder the document is in now.
+        $idempotency = new IdempotentWrite(
+            codec: new NodeSnapshotCodec,
+            authorizer: NodeReplayAuthorizer::forCreate($this->context, $this->locator, $this->guard, $parentId),
+            fingerprint: ['name' => $name, 'type' => $type, 'content' => $content, 'parent' => $parentId, 'on_conflict' => ($options ?? new CreateFolderOptions)->onConflict->value],
+        );
+
         return $this->write('create', function () use ($name, $type, $content, $parent, $options): NodeSnapshot {
             $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
             $this->guard->authorizeCreate($this->context, $parent);
@@ -133,7 +150,7 @@ final readonly class DocumentOperations implements DriveExtension
             ));
 
             return $this->nodes->map($node, $this->context->actor->ref());
-        });
+        }, $idempotency);
     }
 
     /**
@@ -169,7 +186,14 @@ final readonly class DocumentOperations implements DriveExtension
      */
     public function update(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion = null): DocumentSnapshot
     {
-        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update', fn (): DocumentSnapshot => $this->writeContent($document, $content, null, $expectedStateVersion)));
+        $nodeId = self::idOf($document);
+        $idempotency = new IdempotentWrite(
+            codec: new DocumentSnapshotCodec($this->decoder),
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
+            fingerprint: ['node' => $nodeId, 'content' => $content, 'expected_state_version' => $expectedStateVersion],
+        );
+
+        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update', fn (): DocumentSnapshot => $this->writeContent($document, $content, null, $expectedStateVersion), $idempotency));
     }
 
     /**
@@ -204,13 +228,20 @@ final readonly class DocumentOperations implements DriveExtension
     /** Checkpoint the working state as a named revision; it becomes the head. */
     public function snapshot(NodeSnapshot|string|int $document, ?string $label = null, bool $keepForever = false): DocumentRevisionSnapshot
     {
+        $nodeId = self::idOf($document);
+        $idempotency = new IdempotentWrite(
+            codec: new DocumentRevisionSnapshotCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
+            fingerprint: ['node' => $nodeId, 'label' => $label, 'keep_forever' => $keepForever],
+        );
+
         return $this->write('snapshot', function () use ($document, $label, $keepForever): DocumentRevisionSnapshot {
             $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
             $this->installedType($node);
             $revision = $this->snapshot->execute($this->context, new CreateNamedRevisionInput(node: $node, label: $label, keepForever: $keepForever));
 
             return $this->mapper->revision($revision, $this->query->document($node));
-        });
+        }, $idempotency);
     }
 
     /** @return Page<DocumentRevisionSnapshot> newest first */
@@ -254,6 +285,13 @@ final readonly class DocumentOperations implements DriveExtension
      */
     public function restore(NodeSnapshot|string|int $document, DocumentRevisionSnapshot|string|int $revision, ?int $expectedStateVersion = null): DocumentSnapshot
     {
+        $nodeId = self::idOf($document);
+        $idempotency = new IdempotentWrite(
+            codec: new DocumentSnapshotCodec($this->decoder),
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
+            fingerprint: ['node' => $nodeId, 'revision' => $revision instanceof DocumentRevisionSnapshot ? $revision->id : (string) $revision, 'expected_state_version' => $expectedStateVersion],
+        );
+
         return $this->pending->settled(fn (): DocumentSnapshot => $this->write('restore', function () use ($document, $revision, $expectedStateVersion): DocumentSnapshot {
             $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
             $this->installedType($node);
@@ -264,7 +302,7 @@ final readonly class DocumentOperations implements DriveExtension
             ));
 
             return $this->current($node);
-        }));
+        }, $idempotency));
     }
 
     /** Pin a checkpoint out of pruning, or release the pin. */
@@ -308,9 +346,14 @@ final readonly class DocumentOperations implements DriveExtension
      * @param  Closure(): T $attempt
      * @return T
      */
-    private function write(string $verb, Closure $attempt): mixed
+    private function write(string $verb, Closure $attempt, ?IdempotentWrite $idempotency = null): mixed
     {
-        return $this->runner->write(new OperationSpec('documents.documents.'.$verb, new ModuleId('documents')), $this->context->operation, $attempt);
+        return $this->runner->write(new OperationSpec('documents.documents.'.$verb, new ModuleId('documents')), $this->context->operation, $attempt, $idempotency);
+    }
+
+    private static function idOf(NodeSnapshot|string|int $node): string
+    {
+        return $node instanceof NodeSnapshot ? $node->id : (string) $node;
     }
 
     private function document(NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node

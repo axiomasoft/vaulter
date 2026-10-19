@@ -289,6 +289,22 @@ it('does not count a delivery that is not due yet as lag', function (): void {
     expect(coreCodes('core.outbox.lag'))->toBe(['core.outbox.current']);
 });
 
+it('warns about dead outbox deliveries per consumer inside dead retention', function (): void {
+    expect(coreCodes('core.outbox.dead'))->toBe(['core.outbox.no_dead_letters']);
+
+    insertOutboxRow([], ['state' => 'dead', 'done_at' => now(), 'last_error' => 'poison']);
+    insertOutboxRow([], ['state' => 'dead', 'done_at' => now()]);
+    insertOutboxRow([], ['state' => 'dead', 'done_at' => now()->subYear()]);
+    insertOutboxRow([], ['state' => 'done', 'done_at' => now()]);
+
+    $finding = coreFindings('core.outbox.dead')[0];
+    expect($finding->code)->toBe('core.outbox.dead_letters')
+        ->and($finding->severity)->toBe(DoctorSeverity::Warning)
+        ->and($finding->evidence['dead_rows'])->toBe(2)
+        ->and($finding->evidence['consumers'])->toBe('webhooks.fanout')
+        ->and(coreSeverities('core.outbox.dead', production: true))->toBe(['warning']);
+});
+
 it('escalates a stuck relay lease in production', function (): void {
     insertOutboxRow([], ['state' => 'leased', 'lease_owner' => 'live', 'lease_generation' => 1, 'lease_expires_at' => now()->subMinutes(2)]);
     expect(coreCodes('core.outbox.leases'))->toBe(['core.outbox.leases_ok']);

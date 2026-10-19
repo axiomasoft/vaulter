@@ -1,5 +1,6 @@
 import type { App } from 'vue'
 import { createVaulterClient, type VaulterClient, type VaulterClientOptions } from './api/client'
+import { VaulterCollaborationKey, type CollaborationAdapter } from './collaboration-adapter'
 import { vaulterClientKey } from './composables/useVaulterClient'
 import { createVaulterI18n, vaulterI18nKey, type VaulterI18nOptions } from './i18n'
 import { builtinViewers } from './viewers/builtin'
@@ -29,6 +30,11 @@ export interface VaulterPluginOptions extends VaulterClientOptions {
   viewers?: Record<string, ViewerEntry>
   /** UI language and message overrides for the strings the package renders. */
   i18n?: VaulterI18nOptions
+  /**
+   * Realtime editing: `createCollaborationAdapter()` of `@vaulter/vue-collaboration`. Without it
+   * every document is edited through the REST autosave.
+   */
+  collaboration?: CollaborationAdapter
 }
 
 /** Provide an existing client to a Vue app (for tests or custom wiring). */
@@ -47,6 +53,9 @@ export const VaulterPlugin = {
     // One registry per app: viewers registered on one application never leak into another.
     app.provide(viewerRegistryKey, createViewerRegistry({ ...builtinViewers(), ...options.viewers }))
     app.provide(vaulterI18nKey, createVaulterI18n(options.i18n))
+    if (options.collaboration) {
+      app.provide(VaulterCollaborationKey, options.collaboration)
+    }
 
     app.component('VaulterBreadcrumb', VaulterBreadcrumb)
     app.component('VaulterCommentsPanel', VaulterCommentsPanel)

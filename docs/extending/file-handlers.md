@@ -410,7 +410,7 @@ defineProps<{ node: Node }>()
 
 The `vaulter/tiptap` and `vaulter/univer` viewers are headless editing shells
 (`VaulterDocumentNode`, `VaulterSpreadsheet`): they load the content, autosave and, when the
-presentation is **collaborative** and collaboration is enabled, open a Yjs session. The editor
+presentation is **collaborative**, the `vaulter-collaboration` module is active and `@vaulter/vue-collaboration` is installed, open a Yjs session. The editor
 engine itself is yours — replace the key as above, or fill the shell's default slot. See
 [Document nodes](/guides/documents#working-state-and-checkpoints) for the autosave path.
 

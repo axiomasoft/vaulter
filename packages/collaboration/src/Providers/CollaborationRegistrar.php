@@ -18,6 +18,10 @@ use Vaulter\Collaboration\Drain\BackoffDrainWaiter;
 use Vaulter\Collaboration\Drain\DrainWaiter;
 use Vaulter\Collaboration\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
+use Vaulter\Collaboration\Revocation\ControlTransport;
+use Vaulter\Collaboration\Revocation\Transports\HttpControlTransport;
+use Vaulter\Collaboration\Revocation\Transports\NoControlTransport;
+use Vaulter\Collaboration\Revocation\Transports\RedisControlTransport;
 use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -38,6 +42,8 @@ final class CollaborationRegistrar implements ModuleBindings
             $config = $app->make(CollaborationConfig::class);
             $config->assertDistinctHubSecrets();
             $config->hubTokenTtl();
+            $config->hubClockSkew();
+            $config->controlTransport();
             $config->mode();
             (new ScheduleConfig($app->make('config')))->frequencies('vaulter-collaboration', CollaborationSchedule::KEYS);
         });
@@ -54,6 +60,13 @@ final class CollaborationRegistrar implements ModuleBindings
 
         // How a drain waits for the hub's checkpoint; a test binds a fake hub here.
         $app->bind(DrainWaiter::class, BackoffDrainWaiter::class);
+
+        // How a control message reaches the hubs (control.transport); a test binds a recording transport here.
+        $app->bind(ControlTransport::class, static fn (Container $app): ControlTransport => match ($app->make(CollaborationConfig::class)->controlTransport()) {
+            'redis' => $app->make(RedisControlTransport::class),
+            'http' => $app->make(HttpControlTransport::class),
+            default => new NoControlTransport,
+        });
     }
 
     public function boot(Application $app): void

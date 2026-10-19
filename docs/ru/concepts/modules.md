@@ -22,6 +22,7 @@ outline: deep
 | `azgard` | `vaulter-azgard` | auto (выбирается через `vaulter-drive.access.permission_driver`) | `core`, `drive` |
 | `filament` | `vaulter-filament` | auto (плагин панели хост подключает сам) | `drive` |
 | `webhooks` | `vaulter-webhooks` (ставится отдельно) | **opt-in** | `core`, `drive` |
+| `collaboration` | `vaulter-collaboration` (ставится отдельно) | **opt-in** | `core`, `drive`, `documents` |
 
 *Auto*-модули активны, пока их не выключили; *opt-in*-модули — те, что открывают исходящую сеть
 или требуют секретов, — только когда их включили. Политику переопределяет один ключ конфига:
@@ -29,7 +30,8 @@ outline: deep
 ```php
 // config/vaulter.php
 'modules' => [
-    'webhooks' => true,   // включить исходящие вебхуки
+    'webhooks' => true,       // включить исходящие вебхуки
+    'collaboration' => true,  // включить редактирование в реальном времени (нужны URL хаба и два секрета)
 ],
 ```
 
@@ -39,7 +41,9 @@ drive (`'drive' => false`) убирает его целиком — маршру
 который его требует, тоже нужно выключить. Команда `php artisan vaulter:modules` показывает каждый модуль, его
 политику, активен ли он и почему. Вебхуки переключаются только ключом `vaulter.modules.webhooks`
 (`vaulter.features.webhooks` не существует; конфиг хоста, который его задаёт, падает при загрузке с указанием на
-ключ модуля). Пакет нужно установить заранее: `composer require axioma-studio/vaulter-webhooks`.
+ключ модуля). Пакет нужно установить заранее: `composer require axioma-studio/vaulter-webhooks`. Коллаборация
+переключается только ключом `vaulter.modules.collaboration`; активный opt-in модуль без обязательной конфигурации (URL
+хаба и два секрета) — ошибка загрузки, а не тихий no-op ([Совместное редактирование](/ru/guides/collaboration)).
 
 ## Невалидный граф модулей
 

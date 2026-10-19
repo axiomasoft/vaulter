@@ -50,6 +50,7 @@ use Vaulter\Support\Concerns\HasStableMorphAlias;
  * @property int                                       $sequence
  * @property array<string, array<string, string>>|null $properties
  * @property bool                                      $inherit_grants
+ * @property int                                       $access_version
  * @property int|string|null                           $shortcut_target_id
  * @property Carbon|null                               $trashed_at
  * @property int|string|null                           $trashed_by
@@ -226,6 +227,7 @@ class Node extends Model
             'sequence' => 'integer',
             'properties' => 'array',
             'inherit_grants' => 'boolean',
+            'access_version' => 'integer',
             'trashed_at' => 'datetime',
             'content_modified_at' => 'datetime',
         ];

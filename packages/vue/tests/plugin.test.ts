@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h } from 'vue'
+import { createApp, defineComponent, h, inject } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import { VaulterPlugin, provideVaulterClient, provideViewerRegistry } from '../src/plugin'
 import { useVaulterClient } from '../src/composables/useVaulterClient'
 import { useViewerRegistry, createViewerRegistry } from '../src/viewers/registry'
 import { useVaulterI18n } from '../src/i18n'
 import { createVaulterClient } from '../src/api/client'
+import { VaulterCollaborationKey, type CollaborationAdapter } from '../src/collaboration-adapter'
 import { VIEWER_KEYS } from '../src/viewers/builtin'
 import VaulterViewer from '../src/viewers/VaulterViewer.vue'
 import { makeFile, makePresentation } from './support/nodes'
@@ -98,6 +99,21 @@ describe('VaulterPlugin', () => {
 
     expect(wrapper.find('.vaulter-download-viewer').exists()).toBe(true)
     expect(wrapper.get('a').attributes('href')).toBe('/api/vaulter/v1/files/9/download')
+  })
+
+  it('provides the collaboration adapter given in the options, and none otherwise', () => {
+    const adapter: CollaborationAdapter = { open: vi.fn() }
+    const AdapterProbe = defineComponent({
+      setup(_props, { expose }) {
+        expose({ adapter: inject(VaulterCollaborationKey, null) })
+        return () => h('span')
+      },
+    })
+    const withAdapter = mount(AdapterProbe, { global: { plugins: [[VaulterPlugin, { collaboration: adapter }]] } })
+    const without = mount(AdapterProbe, { global: { plugins: [[VaulterPlugin, {}]] } })
+
+    expect((withAdapter.vm as unknown as { adapter: unknown }).adapter).toBe(adapter)
+    expect((without.vm as unknown as { adapter: unknown }).adapter).toBeNull()
   })
 
   it('provide helpers wire a client and a registry into an app by hand', () => {

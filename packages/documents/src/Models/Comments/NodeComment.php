@@ -39,6 +39,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property array<string, mixed>|null $anchor
  * @property Carbon|null               $resolved_at
  * @property int|string|null           $resolved_by
+ * @property int                       $version
  * @property Carbon|null               $created_at
  * @property Carbon|null               $updated_at
  * @property-read Node $node
@@ -46,6 +47,9 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 #[Internal]
 class NodeComment extends Model
 {
+    /** The aggregate of the operation catalogue the refusal of a stale comment write names (D47). */
+    public const string AGGREGATE = 'documents.comment';
+
     use GuardsWrites;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
@@ -116,6 +120,7 @@ class NodeComment extends Model
         return [
             'anchor' => 'array',
             'resolved_at' => 'datetime',
+            'version' => 'integer',
         ];
     }
 }

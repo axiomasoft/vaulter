@@ -53,5 +53,5 @@ it('keeps copy_current producing grant.created next to the inheritance event', f
 
     $this->access->restrictInheritance($this->child->id, InheritanceRestriction::CopyCurrent);
 
-    expect(OutboxEvent::query()->orderBy('outbox_seq')->pluck('type')->all())->toBe(['access.inheritance_changed', 'grant.created']);
+    expect(OutboxEvent::query()->orderBy('outbox_seq')->pluck('type')->all())->toBe(['access.inheritance_changed', 'grant.created', 'drive.access.effective_permissions_changed']);
 });

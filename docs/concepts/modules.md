@@ -22,6 +22,7 @@ module registers nothing at runtime; its database schema is still installed.
 | `azgard` | `vaulter-azgard` | auto (selected with `vaulter-drive.access.permission_driver`) | `core`, `drive` |
 | `filament` | `vaulter-filament` | auto (the panel plugin is added to a panel by the host) | `drive` |
 | `webhooks` | `vaulter-webhooks` (installed separately) | **opt-in** | `core`, `drive` |
+| `collaboration` | `vaulter-collaboration` (installed separately) | **opt-in** | `core`, `drive`, `documents` |
 
 *Auto* modules are active unless switched off; *opt-in* modules — the ones that open outbound
 network traffic or need secrets — only when switched on. One config key overrides the policy:
@@ -29,7 +30,8 @@ network traffic or need secrets — only when switched on. One config key overri
 ```php
 // config/vaulter.php
 'modules' => [
-    'webhooks' => true,   // opt in to outbound webhooks
+    'webhooks' => true,       // opt in to outbound webhooks
+    'collaboration' => true,  // opt in to realtime editing (needs the hub URL and two secrets)
 ],
 ```
 
@@ -39,7 +41,9 @@ silently. Switching the drive off (`'drive' => false`) removes all of it — its
 doctor checks; every module that requires it must be switched off too. Run `php artisan vaulter:modules` to see every
 module, its policy, whether it is active and why. Webhooks are switched only by `vaulter.modules.webhooks`
 (`vaulter.features.webhooks` does not exist; a host config that still sets it fails at boot with a pointer to the
-module key). The package must be installed first: `composer require axioma-studio/vaulter-webhooks`.
+module key). The package must be installed first: `composer require axioma-studio/vaulter-webhooks`. Collaboration is
+switched only by `vaulter.modules.collaboration`; an active opt-in module without its required configuration (the hub
+URL and the two secrets) is a boot error, not a silent no-op ([Realtime collaboration](/guides/collaboration)).
 
 ## An invalid module graph
 

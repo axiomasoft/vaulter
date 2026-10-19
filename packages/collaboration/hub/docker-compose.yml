@@ -1,20 +1,20 @@
 # Vaulter collaboration hub — reference deployment.
 #
 # The recommended model is to REFERENCE the published image (not vendor the sources):
-#   image: ghcr.io/axiomasoft/vaulter-hocuspocus:<version>   # pin @sha256:… in prod
+#   image: ghcr.io/axiomasoft/vaulter-collaboration-hub:<version>   # pin @sha256:… in prod
 # and configure it entirely through environment variables. For LOCAL development against
 # this repo, uncomment `build: .` to build the image from source instead.
 #
 # F-P1.8-05: the tag is REQUIRED (no floating `:latest` default) — set
-# VAULTER_COLLAB_IMAGE_TAG to a released vaulter-hocuspocus version (semver, e.g. `1.2.3`;
+# VAULTER_COLLAB_IMAGE_TAG to a released vaulter-collaboration-hub version (semver, e.g. `1.2.3`;
 # in production prefer the immutable `@sha256:…` digest published alongside each release —
-# see .github/workflows/hocuspocus-image.yml) before bringing this stack up.
+# see .github/workflows/collaboration-hub-image.yml) before bringing this stack up.
 #
 # Full env contract + security guidance (wss/TLS, Origin allowlist, scaling): see
 # docs/guides/hub.md.
 services:
   vaulter-collab:
-    image: ghcr.io/axiomasoft/vaulter-hocuspocus:${VAULTER_COLLAB_IMAGE_TAG:?Set VAULTER_COLLAB_IMAGE_TAG to a pinned vaulter-hocuspocus release tag or @sha256 digest — see docs/guides/hub.md}
+    image: ghcr.io/axiomasoft/vaulter-collaboration-hub:${VAULTER_COLLAB_IMAGE_TAG:?Set VAULTER_COLLAB_IMAGE_TAG to a pinned vaulter-collaboration-hub release tag or @sha256 digest — see docs/guides/hub.md}
     # build: .   # ← local dev: build from source instead of pulling the published image
     ports:
       # Bound to 127.0.0.1 by default: the WS port must NOT face the internet directly.
@@ -46,7 +46,8 @@ services:
       # — Security (CSWSH / DoS) — REQUIRED in production —
       # Comma-separated EXACT browser origins allowed to connect ("*" = any, dev only).
       VAULTER_COLLAB_ALLOWED_ORIGINS: ${VAULTER_COLLAB_ALLOWED_ORIGINS:-}
-      VAULTER_COLLAB_MAX_PAYLOAD_BYTES: ${VAULTER_COLLAB_MAX_PAYLOAD_BYTES:-4194304}
+      # Empty: the frame the limits need (a sync step 2 of MAX_DOCUMENT_BYTES); a smaller value stops the hub at start.
+      VAULTER_COLLAB_MAX_PAYLOAD_BYTES: ${VAULTER_COLLAB_MAX_PAYLOAD_BYTES:-}
       VAULTER_COLLAB_THROTTLE: ${VAULTER_COLLAB_THROTTLE:-15}
       VAULTER_COLLAB_THROTTLE_SECONDS: ${VAULTER_COLLAB_THROTTLE_SECONDS:-60}
       VAULTER_COLLAB_BAN_TIME: ${VAULTER_COLLAB_BAN_TIME:-5}

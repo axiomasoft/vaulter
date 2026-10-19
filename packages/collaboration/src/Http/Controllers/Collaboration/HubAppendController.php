@@ -12,6 +12,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\CollaborationHub;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
+use Vaulter\Collaboration\Http\Middleware\LimitHubAppend;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Collaboration\Http\Support\HubProtocol;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
@@ -19,10 +20,13 @@ use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 /**
  * Protocol 2 append: one Yjs update of the room's generation into the document's log. Body `{room, generation,
  * update_id (uuid), sha256 (hex of the payload), payload (base64), origin: client|server, seed_state_version?}`. The
- * answer `{generation, update_id, seq, sha256, persisted: true}` is built after the commit; a retry with the same
- * update_id and payload gets the same seq. The base64 length is checked against `limits.update_bytes` before it is
- * decoded. `seed_state_version` marks the hub's seed (409 collaboration_seed_conflict unless the generation has no
- * checkpoint and no record yet and the document's state version still equals it).
+ * answer `{generation, update_id, seq, sha256, persisted: true, permissions_stale}` is built after the commit; a retry
+ * with the same update_id and payload gets the same seq. `permissions_stale` is true when the token predates a change
+ * of its drive's rights (D46): the append was allowed by the rights now, and the hub renews the token. The base64 length is checked against `limits.update_bytes` before it is
+ * decoded — against `max_state_bytes` for a seed, which carries the document's whole initial state. `seed_state_version`
+ * marks the hub's seed (409 collaboration_seed_conflict unless the generation has no checkpoint and no record yet and the
+ * document's state version still equals it). The size gate ({@see LimitHubAppend}) takes a body of a whole state for a
+ * request that declares a seed; a body that is no seed is held to `limits.request_bytes` here.
  */
 #[Internal]
 final readonly class HubAppendController
@@ -36,7 +40,8 @@ final readonly class HubAppendController
         $update = $this->envelope($request);
         $room = $this->hub->open($call, $request->input('room'));
 
-        return HubProtocol::mark(new JsonResponse($this->hub->append($room, $call, $update)->ack()));
+        // The rights were checked above whatever the token's permission versions; a stale token tells the hub to renew.
+        return HubProtocol::mark(new JsonResponse([...$this->hub->append($room, $call, $update)->ack(), 'permissions_stale' => $room->permissionsStale]));
     }
 
     private function envelope(Request $request): UpdateEnvelope
@@ -63,8 +68,15 @@ final readonly class HubAppendController
             throw ValidationException::withMessages(array_map(static fn (string $message): array => [$message], $errors));
         }
 
-        // The size is known from the encoded length: refuse before decoding allocates the update.
-        $max = $this->config->updateBytes();
+        // The gate let a body of a whole state through for a request that declared a seed: anything else is one update.
+        $body = strlen($request->getContent());
+        if ($seedStateVersion === null && $body > $this->config->requestBytes()) {
+            throw new CollaborationUpdateTooLargeException($body, $this->config->requestBytes());
+        }
+
+        // The size is known from the encoded length: refuse before decoding allocates the update. A seed is the whole
+        // initial state of the document, bounded as a state is; every other record is one update.
+        $max = $seedStateVersion === null ? $this->config->updateBytes() : $this->config->maxStateBytes();
         $encodedMax = 4 * (int) ceil($max / 3);
         if (strlen($payload) > $encodedMax) {
             throw new CollaborationUpdateTooLargeException(intdiv(strlen($payload), 4) * 3, $max);

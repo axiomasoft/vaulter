@@ -1,13 +1,13 @@
 # Contributing to Vaulter
 
 Thanks for your interest in Vaulter! This is a monorepo containing a Laravel package,
-Vue components, a Node collaboration server and the documentation site.
+Vue components, a Node collaboration hub (`packages/collaboration/hub`) and the documentation site.
 
 ## Prerequisites
 
 - PHP `^8.4` with `composer`
-- Node `>=20` with `npm`
-- Docker (optional — only for the Hocuspocus collaboration server)
+- Node `>=22` with `npm`
+- Docker (optional — only for the collaboration hub stands, `scripts/collab-stand.sh`)
 
 ## Setup
 
@@ -15,7 +15,7 @@ Vue components, a Node collaboration server and the documentation site.
 git clone https://github.com/axioma-studio/vaulter.git
 cd vaulter
 composer install     # path-linked packages under packages/*
-npm install          # npm workspaces (packages/vue, hocuspocus-server) + docs
+npm install          # npm workspaces (packages/vue, packages/vue-collaboration, packages/collaboration/hub) + docs
 ```
 
 ## Development workflow (PHP)
@@ -52,6 +52,20 @@ make test-db                         # schema/query change: every database test 
 ```
 
 Full, coverage, mutation and load runs are not part of a pull request.
+
+### The collaboration hub and `@vaulter/vue-collaboration`
+
+The Node hub lives in `packages/collaboration/hub` (image `ghcr.io/axiomasoft/vaulter-collaboration-hub`, workflow
+`.github/workflows/collaboration-hub-image.yml`). Its fast checks are plain `node:test` and need no running stack:
+
+```bash
+cd packages/collaboration/hub && npm run check && npm test   # syntax + the unit suite against a stub backend
+npm --prefix packages/vue-collaboration run typecheck && npm --prefix packages/vue-collaboration test
+```
+
+The scenarios that need real processes — `scripts/collab-e2e.sh` (one hub) and `scripts/collab-stand.sh` (PostgreSQL, Redis,
+two hubs: kill after retry, two hubs, `SIGTERM` drain) — need Docker and are not part of a pull request; see
+[Collaboration hub](docs/guides/hub.md#local-development-and-the-stands).
 
 ### Concurrency tests
 

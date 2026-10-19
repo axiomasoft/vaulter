@@ -243,7 +243,7 @@ it('declares every inventoried event type in the module that owns it', function 
     ksort($declared);
     ksort($owners);
 
-    expect($events)->toHaveCount(32)
+    expect($events)->toHaveCount(33)
         ->and($declared)->toBe($owners);
 });
 

@@ -42,7 +42,7 @@ it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', functi
     config()->set('vaulter-collaboration.driver', 'hocuspocus');
     config()->set('vaulter-collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
     config()->set('vaulter-collaboration.hub.url', 'ws://hub:1234');
-    config()->set('vaulter-collaboration.hub.token_ttl', 900);
+    config()->set('vaulter-collaboration.hub.token_ttl', 240);
 
     $node = documentNode();
     $before = time();
@@ -57,11 +57,11 @@ it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', functi
 
     expect($claims->room)->toBe(roomOf($node, 3))
         ->and($claims->sub)->toBe('42')
-        ->and($claims->node)->toBe((string) $node->getKey())
-        ->and($claims->epoch)->toBe(3)
-        ->and($claims->mode)->toBe('rw')
-        ->and($claims->exp)->toBeGreaterThanOrEqual($before + 900)
-        ->and($claims->exp)->toBeLessThanOrEqual(time() + 900);
+        ->and($claims->document_id)->toBe((string) $node->getKey())
+        ->and($claims->generation)->toBe(3)
+        ->and($claims->scope)->toBe('write')
+        ->and($claims->exp)->toBeGreaterThanOrEqual($before + 240)
+        ->and($claims->exp)->toBeLessThanOrEqual(time() + 240);
 });
 
 it('encodes the ro mode into the hocuspocus JWT of a read-only session', function (): void {
@@ -73,7 +73,7 @@ it('encodes the ro mode into the hocuspocus JWT of a read-only session', functio
     $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     expect($session->readOnly)->toBeTrue()
-        ->and($claims->mode)->toBe('ro');
+        ->and($claims->scope)->toBe('read');
 });
 
 it('binds the hocuspocus room JWT to a single node', function (): void {

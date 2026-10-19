@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
 use Vaulter\Http\Problems\ErrorsReference;
 
 require_once __DIR__.'/ProblemCatalogHelpers.php';
@@ -63,4 +64,27 @@ it('fails the check when a page drifts and succeeds on a current page', function
 
 it('returns null for a page without markers', function (): void {
     expect(errorsReference()->apply('plain', 'en'))->toBeNull();
+});
+
+it('prints the code table for the OpenAPI document with --openapi and writes nothing', function (): void {
+    $reference = errorsReference();
+    $this->app->instance(ErrorsReference::class, $reference);
+    $dir = sys_get_temp_dir().'/vaulter-errors-'.bin2hex(random_bytes(4));
+    mkdir($dir);
+    file_put_contents($dir.'/page.md', 'untouched');
+
+    try {
+        expect(Artisan::call('vaulter:errors:reference', ['--openapi' => true, '--path' => [$dir.'/page.md']]))->toBe(0)
+            ->and(trim(Artisan::output()))->toBe($reference->openApi());
+        expect(file_get_contents($dir.'/page.md'))->toBe('untouched');
+    } finally {
+        unlink($dir.'/page.md');
+        rmdir($dir);
+    }
+
+    $fragment = $reference->openApi();
+    $codes = array_keys(fullProblemCatalog()->all());
+    expect($fragment)->toStartWith('x-vaulter-problems:')
+        ->and($fragment)->toContain("\n  stale_write: {status: 412, retryable: after_refetch, receipt: cacheable, module: core}\n")
+        ->and($fragment)->toContain("\nexamples:\n- ".$codes[0]."\n");
 });

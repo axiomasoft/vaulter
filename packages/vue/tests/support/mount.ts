@@ -1,19 +1,24 @@
 import { defineComponent, h } from 'vue'
 import { mount } from '@vue/test-utils'
 import type { VaulterClient } from '../../src/api/client'
+import { VaulterCollaborationKey, type CollaborationAdapter } from '../../src/collaboration-adapter'
 import { vaulterClientKey } from '../../src/composables/useVaulterClient'
 import { createVaulterI18n, vaulterI18nKey } from '../../src/i18n'
 import { builtinViewers } from '../../src/viewers/builtin'
 import { createViewerRegistry, viewerRegistryKey } from '../../src/viewers/registry'
 
-/** Everything a component needs from the plugin, around a (partial) fake client. */
-export function withClient(client: unknown) {
+/**
+ * Everything a component needs from the plugin, around a (partial) fake client; `collaboration`
+ * installs a (fake) collaboration adapter, as the plugin option does.
+ */
+export function withClient(client: unknown, options: { collaboration?: CollaborationAdapter } = {}) {
   return {
     global: {
       provide: {
         [vaulterClientKey as symbol]: client as VaulterClient,
         [viewerRegistryKey as symbol]: createViewerRegistry(builtinViewers()),
         [vaulterI18nKey as symbol]: createVaulterI18n(),
+        ...(options.collaboration ? { [VaulterCollaborationKey as symbol]: options.collaboration } : {}),
       },
     },
   }

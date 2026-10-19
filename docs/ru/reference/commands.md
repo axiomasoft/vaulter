@@ -24,6 +24,8 @@ outline: deep
 | `vaulter:make:profile` | Сгенерировать класс-провайдер Storage Panel |
 | `vaulter:blobs:gc` | Двухфазная, устойчивая к гонкам сборка мусора блобов |
 | `vaulter:blobs:reconcile` | Пересчитать `ref_count` блобов из пинов и сообщить о висячих строках |
+| `vaulter:blobs:scrub` | Сверить байты блобов с их sha256 в пределах выборки и бюджета ([руководство](/ru/guides/blob-integrity)) |
+| `vaulter:operations` | Напечатать каталог операций ([справочник](/ru/reference/operations)) |
 | `vaulter:trash:purge` | Окончательно удалить узлы из корзины по истечении срока хранения |
 | `vaulter:revisions:prune` | Удалить нетекущие ревизии файлов сверх политики ретеншна профиля |
 | `vaulter:uploads:sweep` | Прервать и подчистить протухшие сессии резюмируемой загрузки |
@@ -175,7 +177,7 @@ JSON-документ описан схемой `packages/core/resources/schemas
 | `drive.drives.deleting` | Drive в статусе `deleting` дольше 24 ч (`vaulter:drives:purge`) | warning → warning |
 | `drive.drives.usage` | Сохранённый `used_bytes` против формулы квоты, тот же калькулятор, что у `vaulter:drives:recount`, без блокировки | warning → warning |
 | `documents.types` | Тип по умолчанию зарегистрирован; документы незарегистрированных типов, счётчик | warning → warning |
-| `documents.collaboration` | При включённой совместной работе: оба секрета заданы и различны, URL хаба (`wss://` в production), срок токена ≤ 3600 с, установлен `firebase/php-jwt` | error → error |
+| `collaboration.hub` | При включённом модуле коллаборации: оба секрета заданы и различны, URL хаба (`wss://` в production), срок токена ≤ 300 с, cache-store флага drain общий для всех процессов; действующий флаг `vaulter:collaboration:drain` (`collaboration.draining`) — предупреждение | error → error |
 | `azgard.dependency` | AzGuard установлен и guard моста разрешается | error → error |
 
 Проверки `drive.scan.*` выполняются независимо от `vaulter.modules.webhooks`: сканирование — обязательная
@@ -196,6 +198,7 @@ JSON-документ описан схемой `packages/core/resources/schemas
 | `vaulter.schedule.outbox_prune` | `vaulter:outbox:prune` | `hourly` |
 | `vaulter-webhooks.schedule.webhooks_retry` | `vaulter:webhooks:retry` (нужен `vaulter.modules.webhooks`) | `everyMinute` |
 | `vaulter-webhooks.schedule.webhooks_prune` | `vaulter:webhooks:prune` (нужен `vaulter.modules.webhooks`) | `dailyAt:03:10` |
+| `vaulter-collaboration.schedule.collaboration_prune` | `vaulter:collaboration:prune` (нужен `vaulter.modules.collaboration`) | `dailyAt:03:40` |
 | `vaulter-drive.schedule.changes_prune` | `vaulter:changes:prune` (нужен `vaulter-drive.features.changes`) | `dailyAt:03:20` |
 | `vaulter-drive.schedule.uploads_sweep` | `vaulter:uploads:sweep` | `hourlyAt:15` |
 | `vaulter-drive.schedule.trash_purge` | `vaulter:trash:purge` | `dailyAt:03:30` |
@@ -533,6 +536,51 @@ php artisan vaulter:changes:reset 42
 
 ---
 
+## `vaulter:collaboration:drain`
+
+Делает модуль [коллаборации](/ru/guides/collaboration) безопасным для выключения (opt-in модуль
+`vaulter.modules.collaboration`). Команда выставляет флаг draining — с этого момента каждый append отвечает
+`503 collaboration_draining` — просит воркер компактации хаба сделать чекпоинт каждого документа с pending-маркером и
+ждёт вне транзакций, пока не останется ни одного либо не пройдёт `--deadline` секунд. Итог — то, что документы сообщают
+потом, а не ответ хаба, и читается он не раньше `drain.max_append_tx` после выставления флага. Маркер, появившийся
+тем временем, тоже сбрасывается.
+
+```
+vaulter:collaboration:drain
+    {--deadline=30}   Секунд ждать, пока хаб сделает чекпоинт каждого pending-документа
+    {--release}       Снять флаг draining: append снова принимаются
+```
+
+Код `0`: pending-документов нет — выключайте модуль или выполняйте `vaulter:module:uninstall collaboration`. Код `1`:
+документы всё ещё pending (хаба нет, срок вышел) и перечислены, либо cache-store не сохранил флаг
+(`vaulter-collaboration.drain.cache_store`), и хабу ничего не передано; повторите, когда хаб работает. Код `2`: неверная
+опция. Флаг остаётся после обоих исходов до `--release`, **в том числе после повторного включения модуля**.
+
+```bash
+php artisan vaulter:collaboration:drain --deadline=60
+php artisan vaulter:collaboration:drain --release
+```
+
+---
+
+## `vaulter:collaboration:prune`
+
+Удаляет журнал обновлений, квитанции и head закрытых поколений коллаборации после льготного срока: закрыто раньше, чем
+`hub.token_ttl` + горизонт повторов хаба (10 с) + `retention.retired_generation_days`. Текущее поколение документа не
+затрагивается. Сначала команда закрывает head поколений, которые документ покинул, пока модуль был выключен. Запускается по
+расписанию ежедневно (`vaulter-collaboration.schedule.collaboration_prune`).
+
+```
+vaulter:collaboration:prune
+    {--dry-run}   Показать, что было бы удалено, ничего не удаляя
+```
+
+```bash
+php artisan vaulter:collaboration:prune --dry-run
+```
+
+---
+
 ## Планирование по расписанию
 
 Команды обслуживания дружелюбны к расписанию. Показательный график:
@@ -567,6 +615,8 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:blobs:reconcile` | Rebuild blob ref_count from the pins and report dangling rows; optionally disk-walk for orphan objects (H.3) | `[--orphans] [--disk [DISK]] [--orphan-grace [ORPHAN-GRACE]] [--prune]` |
 | `vaulter:changes:prune` | Delete drive change-journal entries past the retention window. | `[--days [DAYS]] [--drive [DRIVE]]` |
 | `vaulter:changes:reset` | Expire every change-journal cursor of a drive, forcing its clients to resynchronize. | `<drive>` |
+| `vaulter:collaboration:drain` | Refuse new collaboration updates and checkpoint every pending document through the hub before the module is switched off. | `[--deadline [DEADLINE]] [--release]` |
+| `vaulter:collaboration:prune` | Delete the log and receipts of closed collaboration generations past their grace. | `[--dry-run]` |
 | `vaulter:commands:reference` | Generate the command table in the reference docs. | `[--check] [--path [PATH]]` |
 | `vaulter:config:reference` | Generate the config key table in the reference docs. | `[--check] [--path [PATH]]` |
 | `vaulter:doctor` | Diagnose the Vaulter setup of this host (read-only) | `[--production] [--json] [--check [CHECK]] [--sample [SAMPLE]] [--probe-storage]` |

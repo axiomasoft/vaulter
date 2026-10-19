@@ -6,14 +6,16 @@
         {"name": "axioma-studio/vaulter-drive", "path": "packages/drive", "split": "axioma-studio/vaulter-drive"},
         {"name": "axioma-studio/vaulter-documents", "path": "packages/documents", "split": "axioma-studio/vaulter-documents"},
         {"name": "axioma-studio/vaulter-webhooks", "path": "packages/webhooks", "split": "axioma-studio/vaulter-webhooks"},
+        {"name": "axioma-studio/vaulter-collaboration", "path": "packages/collaboration", "split": "axioma-studio/vaulter-collaboration"},
         {"name": "axioma-studio/vaulter-filament", "path": "packages/filament", "split": "axioma-studio/vaulter-filament"},
         {"name": "axioma-studio/vaulter-azgard", "path": "packages/azgard", "split": "axioma-studio/vaulter-azgard", "requires_tag": "axiomasoft/azguard", "excluded_unless_tagged": true},
         {"name": "axioma-studio/vaulter", "path": "packages/vaulter", "split": "axioma-studio/vaulter", "metapackage": true}
     ],
     "npm": [
-        {"name": "@vaulter/vue", "path": "packages/vue", "api": "1"}
+        {"name": "@vaulter/vue", "path": "packages/vue", "api": "1"},
+        {"name": "@vaulter/vue-collaboration", "path": "packages/vue-collaboration", "api": "1"}
     ],
     "images": [
-        {"name": "ghcr.io/axiomasoft/vaulter-hocuspocus", "path": "packages/collaboration/hub"}
+        {"name": "ghcr.io/axiomasoft/vaulter-collaboration-hub", "path": "packages/collaboration/hub"}
     ]
 }

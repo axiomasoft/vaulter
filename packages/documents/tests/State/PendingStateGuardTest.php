@@ -265,34 +265,64 @@ it('drains the purge target even behind more trashed pending documents than one 
         ->and($drained)->toContain($target);
 });
 
-// Retention (vaulter:trash:purge) and the drive purge step run PurgeNodeAction in transactions of their own, outside
-// the operation runner, so no documents hook drains before them (owner of that boundary: drive). Pinned here: the
-// purge is refused untouched while the marker stays, and converges once the marker is cleared (the compaction
-// worker of the transport clears it on its own).
-it('refuses a retention purge of a pending document untouched and purges it once the marker is cleared', function (): void {
+// Retention (vaulter:trash:purge) and the drive purge step purge each root as the root operation drive.trash.purge
+// (D48), so the same drain runs before their transaction: a marker the drain settles is purged at once, one that stays
+// refuses only that root and the run goes on.
+it('drains a pending document before a retention purge, then purges it', function (): void {
     guardMark($this->id, 3);
     guardDrainer(publish: true);
     $this->handle->nodes()->trash($this->id);
     $this->travel(1)->minutes();
 
-    $this->artisan('vaulter:trash:purge', ['--days' => 0])->assertExitCode(1);
+    $this->artisan('vaulter:trash:purge', ['--days' => 0])->assertExitCode(0);
+
+    expect(Document::query()->where('node_id', $this->id)->exists())->toBeFalse()
+        ->and(FakePendingStateDrainer::$calls)->toHaveCount(1)
+        ->and(FakePendingStateDrainer::$calls[0]['transactionLevel'])->toBe(0)
+        ->and(FakePendingStateDrainer::$calls[0]['marker']->nodeId)->toBe($this->id);
+});
+
+it('refuses a retention purge of a pending document the drain did not settle, keeps it, and purges the other roots', function (): void {
+    guardMark($this->id, 3);
+    guardDrainer(publish: false);
+    $other = (string) $this->documents->create('Other', content: DocumentTestHelpers::content('Other')->toArray())->id;
+    $this->handle->nodes()->trash($this->id);
+    $this->handle->nodes()->trash($other);
+    $this->travel(1)->minutes();
+
+    $this->artisan('vaulter:trash:purge', ['--days' => 0])->expectsOutputToContain('Purged 1 trashed subtree. Skipped 1.')->assertExitCode(1);
+
     expect(Document::query()->where('node_id', $this->id)->exists())->toBeTrue()
-        ->and(FakePendingStateDrainer::$calls)->toBe([]);
+        ->and(Document::query()->where('node_id', $other)->exists())->toBeFalse()
+        // One drain per root operation: the stuck document is asked once for each of the two roots.
+        ->and(FakePendingStateDrainer::$calls)->toHaveCount(2);
 
     guardSettle($this->id);
     $this->artisan('vaulter:trash:purge', ['--days' => 0])->assertExitCode(0);
     expect(Document::query()->where('node_id', $this->id)->exists())->toBeFalse();
 });
 
-it('keeps a drive being deleted while one of its documents is pending and finishes once the marker is cleared', function (): void {
+it('drains a pending document of a drive being deleted before the drive purge step, then finishes the drive', function (): void {
     guardMark($this->id, 3);
     guardDrainer(publish: true);
     $drive = $this->handle->model();
     $drive->forceFill(['status' => DriveStatus::Deleting])->save();
 
+    expect(app(PurgeDriveStepAction::class)->execute($drive->getKey()))->toBeTrue()
+        ->and(Document::query()->where('node_id', $this->id)->exists())->toBeFalse()
+        ->and(FakePendingStateDrainer::$calls)->toHaveCount(1)
+        ->and(FakePendingStateDrainer::$calls[0]['transactionLevel'])->toBe(0);
+});
+
+it('keeps a drive being deleted while the drain does not settle one of its documents and finishes once the marker is cleared', function (): void {
+    guardMark($this->id, 3);
+    guardDrainer(publish: false);
+    $drive = $this->handle->model();
+    $drive->forceFill(['status' => DriveStatus::Deleting])->save();
+
     expect(fn () => app(PurgeDriveStepAction::class)->execute($drive->getKey()))->toThrow(DocumentStatePendingException::class)
         ->and(Document::query()->where('node_id', $this->id)->exists())->toBeTrue()
-        ->and(FakePendingStateDrainer::$calls)->toBe([]);
+        ->and(FakePendingStateDrainer::$calls)->toHaveCount(1);
 
     guardSettle($this->id);
     expect(app(PurgeDriveStepAction::class)->execute($drive->getKey()))->toBeTrue()

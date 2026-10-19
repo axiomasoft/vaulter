@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Media\Enums\Cas\BlobStatus;
@@ -26,6 +27,8 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * Swappable via configuration key vaulter-media.models.blob.
  *
  * @property CarbonImmutable|null $quarantined_at
+ * @property CarbonImmutable|null $integrity_checked_at
+ * @property CarbonImmutable|null $integrity_failed_at
  * @property string|null          $storage_version
  * @property int|string           $id
  * @property int|string|null      $tenant_id
@@ -75,6 +78,18 @@ class Blob extends Model
     }
 
     /**
+     * Whether the integrity scrub (D49) found nothing wrong with the bytes of this blob: false from the moment it
+     * marks the blob (missing object, wrong size or wrong digest) until an ingest of the same bytes rewrites the
+     * object. The mark is media's own state — the drive's scan quarantine is a different thing — and a consumer that
+     * hands the bytes out refuses a blob that is not intact.
+     */
+    #[Api]
+    public function isIntact(): bool
+    {
+        return $this->integrity_failed_at === null;
+    }
+
+    /**
      * GC-candidate scope: committed blobs whose ref-count CACHE is zero.
      * That cache is rebuilt from the pins by reconciliation, so a committed
      * blob reaches ref_count<=0 the moment its last pin is removed and
@@ -117,6 +132,8 @@ class Blob extends Model
     {
         return [
             'quarantined_at' => UtcDateTimeCast::class,
+            'integrity_checked_at' => UtcDateTimeCast::class,
+            'integrity_failed_at' => UtcDateTimeCast::class,
             'size_bytes' => 'integer',
             'ref_count' => 'integer',
             'status' => BlobStatus::class,

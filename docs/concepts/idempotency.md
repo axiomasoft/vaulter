@@ -34,8 +34,9 @@ A key is opaque: 1–255 bytes, compared exactly — never trimmed or case-folde
 Field String (`"…"`) or one token without spaces, controls or commas; anything else is `422 validation_failed`.
 Use a fresh random key (a UUID) per logical request and reuse it only for retries of that request.
 
-In 1.0 `folders()->create()` (`POST …/folders`) and `nodes()->rename()` (`PATCH v1/nodes/{node}`) accept a key;
-the other writes refuse one in PHP and ignore the header over HTTP until they declare idempotency.
+Every operation whose idempotency policy is `receipt` accepts a key (see [Coverage](#coverage)); the
+other writes refuse one in PHP and ignore the header over HTTP, because their repeat is already safe by its
+own policy.
 
 ## What a retry gets
 
@@ -78,11 +79,41 @@ Authentication, authorization and visibility refusals, `validation_failed`, `pre
 `rate_limited`, `dependency_unavailable`, `5xx` and transient failures are `never` stored: the claim of the key
 rolls back with them and the next retry runs again.
 
+## Coverage
+
+The policy of each operation is declared in the [operation catalogue](/reference/operations)
+([ADR-0032](/adr/0032-operation-catalog-and-concurrency)); a route of a `receipt` operation carries the
+`Idempotency-Key` middleware.
+
+| Policy | Operations | A repeat |
+|---|---|---|
+| `receipt` | create, rename, move, copy, properties, trash, restore, purge, empty trash; restore and delete a file revision; start an upload; grants, inheritance, shares, drive archive/unarchive/delete; documents create, update, snapshot, restore; comments; webhook endpoints and redelivery | the stored result, `Idempotent-Replayed: true` |
+| `natural` | star, unstar, retention flags, complete or abort an upload, collaboration session | no second effect without a key |
+| `conditional` | content `PUT` of a document, new file revision, file upload | answers by its precondition: the same `If-Match` after the commit is `412`, with no second revision |
+| `protocol` | collaboration hub, Tus `PATCH` | the protocol's own de-duplication (`update_id`, `Upload-Offset`, generation) |
+
+A move replays against the **new** place: the right on the node and the right to create where it is now.
+A purge or a delete stores the authorization scope it was done under (the drive, the parent), and a replay
+checks the actor's current right on that scope. The receipt of `trash.empty` holds a count.
+
+## Operations that return a secret
+
+Share create and rotate (the token) and webhook endpoint register and rotate-secret (the signing secret)
+return a value that cannot be recomputed. Their receipts are encoded with `Crypt::encryptString` (`APP_KEY`),
+so no plaintext secret sits in `v_idempotency_keys` for 24 hours. A replay returns the same secret only to the
+same scope (the actor is part of the key's digest) and only after the current authorization passes. Rotating
+`APP_KEY` makes older receipts of this kind unreadable; they are ignored like expired ones.
+
 ## Retention
 
 `vaulter.idempotency.ttl_seconds` (86400 — 24 hours) is how long a receipt answers retries. The scheduled
 `vaulter:idempotency:prune` (`vaulter.schedule.idempotency_prune`, daily at 03:30) deletes expired receipts; an
 expired receipt is ignored even before it is pruned.
+
+**A retry after expiry** is a new request. It is not answered from the old receipt and is not an error: it
+runs against the state of the world as it is now. A retry of a create may then create a second row; a retry of
+a guarded write (`If-Match`) is refused with `412` if the aggregate moved on. Send a retry within the TTL, and
+keep a precondition on every write that must not repeat.
 
 ## For module authors
 
