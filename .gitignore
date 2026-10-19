@@ -51,21 +51,7 @@ __pycache__
 /.cursor/
 /packages/*/.cursor/
 /scratchpad/
-/plans/archive/VLT-LOAD/.plan-cache/
-/plans/archive/VLT-LOAD/artifacts/*.tmp.*/
-# Full P6 ledgers are retained as compressed RNN archives; extracted ledgers are local only.
-/plans/archive/VLT-LOAD/artifacts/P6-R09/*-prior-ledgers/
-/plans/archive/VLT-LOAD/artifacts/P6-R09/*/queue/lifecycle.jsonl
-/plans/archive/VLT-LOAD/artifacts/P6-R09/*/sink/ledger.jsonl
-/plans/archive/VLT-LOAD/artifacts/P6-R10/*/queue/lifecycle.jsonl
-/plans/archive/VLT-LOAD/artifacts/P6-R10/*/sink/ledger.jsonl
-/load/seed/out/
-/load/chaos/__pycache__/
-/plans/archive/REMAINING-WORK/remaining-evidence/R18-checks/*cache*/
-/plans/archive/REMAINING-WORK/remaining-evidence/R07-checks/**/pest-mutate-cache/
-/plans/archive/REMAINING-WORK/remaining-evidence/R19-checks/**/pest-mutate-cache/
-/plans/archive/REMAINING-WORK/remaining-evidence/R20-checks/__pycache__/
-/packages/core/core
+/plans/
 /_create_project_drive_drive_tables.php
 /2026_09_24_135041_create_project_drive_drive_tables.php
 .serena/
@@ -118,4 +104,3 @@ load/gates/__pycache__/
 # Local quality/baseline run output (plans VLT-LOAD, KERNEL P1)
 /var/
 .grok/state/
-plans/*/artifacts/**/*.jsonl
