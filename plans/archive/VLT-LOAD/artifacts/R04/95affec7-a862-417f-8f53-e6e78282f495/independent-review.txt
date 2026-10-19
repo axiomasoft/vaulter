@@ -1,5 +1,0 @@
-Independent read-only review /root/r04_review.
-Initial findings: selected artifact-dir retained historical explain-dir default; publication accepted incomplete manifest and missing artifact IDs.
-Both corrected and covered by regression tests. Final review: no blocking findings.
-Verified offline: 29 Python tests; 7 PHP tests / 35 assertions; shell syntax.
-Limits: fakes and SQLite only; PostgreSQL capture, real ANALYZE and measured trace completeness unverified. No Docker workload; no reviewer edits.

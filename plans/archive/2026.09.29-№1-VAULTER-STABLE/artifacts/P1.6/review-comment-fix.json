@@ -1,8 +1,0 @@
-{
-  "path": "packages/drive/src/Actions/Uploads/CommitUploadAction.php",
-  "before": "44d0322a67a0645927ffa240d9333be942c8ee59f15e0a28fdb682c2c69319db",
-  "after": "ca9fe31ad604771cabad5874f33be0cf29093fbed32ed6042872ba5d6a7f3ee5",
-  "change": "Replace stale class-doc BlobStore.commit wording with commitStaged",
-  "material": false,
-  "validation": "Documentation-only; no executable tokens changed"
-}

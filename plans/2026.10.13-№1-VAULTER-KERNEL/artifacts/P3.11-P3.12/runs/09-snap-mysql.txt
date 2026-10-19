@@ -1,3 +1,0 @@
-### scripts/schema-snapshot.sh --driver=mysql --all-presets --compare=packages/core/tests/Fixtures/Schema/expected
-schema-snapshot: driver=mysql presets=48 failed=0
-EXIT=0

@@ -1,9 +1,0 @@
-
-   PASS  Tests\Document\DocumentCopyLifecycleTest
-  ✓ it V33 copies a document into a new aggregate with one revision and… 2.56s  
-  ✓ it V33 copies a folder with a document inside                        2.30s  
-  ✓ it copies the content of a document whose type is not registered, a… 2.08s  
-
-  Tests:    3 passed (26 assertions)
-  Duration: 7.06s
-

@@ -1,3 +1,0 @@
-load/gates/p7_live_matrix.py: compile() OK; no bytecode
-load/gates/test_p7_integrity_contract.py: compile() OK; no bytecode
-plans/remaining-evidence/R11-B14-04-checks/readback.py: compile() OK; no bytecode

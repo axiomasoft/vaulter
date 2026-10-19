@@ -1,2 +1,0 @@
-deleted=4000
-tombstoned=4000

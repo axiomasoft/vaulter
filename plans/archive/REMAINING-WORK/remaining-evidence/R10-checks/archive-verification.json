@@ -1,8 +1,0 @@
-{
-  "original_exit": 0,
-  "original_stdout": "p6-matrix verify: ok digest=100d368f90e4c985a40fb4bb624128bda8ee6e483727dc4a7d4db302c9a2dad7",
-  "original_stderr": "",
-  "extracted_exit": 0,
-  "extracted_stdout": "p6-matrix verify: ok digest=100d368f90e4c985a40fb4bb624128bda8ee6e483727dc4a7d4db302c9a2dad7",
-  "extracted_stderr": ""
-}

@@ -1,9 +1,0 @@
-# NC9 GREEN after byte-exact restore (md5 5ea3fd20b44eba3da471ea29ae7f6654)
-# exit 0
-
-   PASS  Tests\Types\DegradedContentTest
-  ✓ it re-checks the working state on the locked row, so a racing resto… 0.53s  
-
-  Tests:    1 passed (3 assertions)
-  Duration: 0.63s
-

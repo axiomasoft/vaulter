@@ -1,4 +1,0 @@
-# Review P6.6 — grok/grok-4.7/high, session 01a12ad3-a2f0-7f33-9b9e-9562137c34a4 (1 round)
-Finding 1 (medium, reproduced by reviewer, CONFIRMED by executor): NodeResource::records() paginated only for an int recordsPerPage; the per-page select posts a string, so the table showed every loaded row. Fixed (numeric strings accepted, "all" = every row) + test in NodeResourceExactVisibilityTest; V1/V80 rerun green (116 passed).
-Finding 2 (medium, CONFIRMED): CHANGELOG/guide claimed every resource goes through the handle; grant/share/activity resources build core operations with the panel actor. Fixed: wording narrowed; stale grant/share field lists and ActivityResource page class names corrected in EN and RU guides.
-Held: Move without Create refused (incl. root), hidden destination 404, no actor → no rows, tenant isolation, arch boundary test.

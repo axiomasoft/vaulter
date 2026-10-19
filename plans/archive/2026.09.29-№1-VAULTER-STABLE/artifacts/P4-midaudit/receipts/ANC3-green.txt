@@ -1,7 +1,0 @@
-
-   PASS  Tests\Operations\DocumentOperationsTest
-  ✓ it refuses an oversized generated conflict name without creating a…  0.49s  
-
-  Tests:    1 passed (3 assertions)
-  Duration: 0.61s
-

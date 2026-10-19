@@ -1,2 +1,0 @@
-  Tests:    139 passed (778 assertions)
-exit 0

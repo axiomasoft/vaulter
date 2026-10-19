@@ -1,6 +1,0 @@
-Final independent audit — /root/r24_review
-Verdict: no Blocker/Major/Minor findings.
-Read-only review of final product diff and expanded tests: atomic lease claim, stale attempts CAS, token-fenced settlement, configured model connection, HTTP outside transaction, active retry exclusion, expiry/recovery, rollback via custom model, default/panel/missing/partial schema upgrade and fork failure cleanup.
-Independent checks: git diff --check and PHP syntax checks for implementation/migration/expanded tests, exit 0.
-Reviewer did not run PostgreSQL, regression suites, live/load or mutation.
-Boundary: leases exclude active overlapping attempts. Expiry or remote acceptance followed by worker crash can permit repeated HTTP; at-least-once remains, while stale owners cannot overwrite their successors.

@@ -1,9 +1,0 @@
-{
-  "temporary_root": "/tmp/vaulter-P3.1-negative-glmdmrqs",
-  "autoload_probe": "/tmp/vaulter-P3.1-negative-glmdmrqs/packages/core/src/Operations/NodeLocator.php",
-  "original_sources_unchanged": true,
-  "preparation_repairs": [
-    "Removed own failed copy that followed vendor symlink; no product test/injection occurred.",
-    "Copied Pest runtime to prevent bootstrap loading the original Composer autoloader; initial bootstrap failure not accepted as negative proof."
-  ]
-}

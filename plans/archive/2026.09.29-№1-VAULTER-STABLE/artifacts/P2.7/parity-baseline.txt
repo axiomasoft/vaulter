@@ -1,3 +1,0 @@
-Baseline HEAD: 0df7704ee66155934708ce6e8e26703ad031d71b; PostgreSQL 16.15; PHP 8.4.26.
-bigint: 0 differences
-ulid: 0 differences

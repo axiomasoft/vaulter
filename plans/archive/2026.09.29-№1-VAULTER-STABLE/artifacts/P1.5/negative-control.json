@@ -1,6 +1,0 @@
-{
-  "mutant": "forUpload storage uses is_numeric and collapses nonnumeric IDs to missing",
-  "red_exit": 1,
-  "restored_exit": 0,
-  "restored_sha256": "c7e6fca440c9a2a908ce0af397c9d4f01d52921f191d21b7fb60a7a9b2ce8c5b"
-}

@@ -1,5 +1,0 @@
-cwd: .
-cmd: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress
-head: b68d2d63
-{"tool":"pint","result":"passed"}{"tool":"phpstan","result":"passed","errors":0}
-exit: 0

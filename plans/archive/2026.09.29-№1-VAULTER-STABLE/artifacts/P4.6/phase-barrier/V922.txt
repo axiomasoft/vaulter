@@ -1,7 +1,0 @@
-$ cd . && scripts/test-db.sh mysql packages/core/tests/Schema   env={'DB_PARALLEL': '10'}
-exit=0 duration_s=514.4
-
-engine=mysql workers=10 cwd=/home/vostrikov/projects/packages/vaulter output=/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.6/phase-barrier/logs/V922/mysql-output.log
-{"tool":"pest","result":"passed","tests":108,"passed":108,"assertions":471,"duration_ms":499530}
-{"tool":"pest","result":"failed","tests":0,"passed":0,"assertions":0,"duration_ms":2,"raw":["No tests found."]}
-engine=mysql exit=0 seconds=500

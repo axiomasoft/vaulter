@@ -1,5 +1,0 @@
-{
-  "expected": "old shared implementation fails cursor contract and empty-page continuation",
-  "exit_code": 1,
-  "restored": true
-}

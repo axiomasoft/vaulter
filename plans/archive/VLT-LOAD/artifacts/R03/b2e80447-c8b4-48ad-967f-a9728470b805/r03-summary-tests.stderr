@@ -1,8 +1,0 @@
-test_dense_full_window_can_prove_a_red_product_metric (test_r03_summary.R03SummaryTest.test_dense_full_window_can_prove_a_red_product_metric) ... ok
-test_premature_abort_does_not_become_proof (test_r03_summary.R03SummaryTest.test_premature_abort_does_not_become_proof) ... ok
-test_sparse_trend_is_unevaluated (test_r03_summary.R03SummaryTest.test_sparse_trend_is_unevaluated) ... ok
-
-----------------------------------------------------------------------
-Ran 3 tests in 0.000s
-
-OK

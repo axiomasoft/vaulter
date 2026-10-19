@@ -1,9 +1,0 @@
-Validation on current implementation:
-- core Access: 112 passed, 5988 assertions; seeded 500 random trees; owner grouping delta: 1 passed, 7 assertions.
-- core full: 640 passed, 26 pre-existing skipped, 17 pre-existing risky; Pint/PHPStan green.
-- drive full: 499 passed, 11 pre-existing skipped, 2 risky; Pint/PHPStan green.
-- documents full: 256 passed, 1 pre-existing skipped; Pint/PHPStan green.
-- filament full: 80 passed, 1 pre-existing skipped; Pint/PHPStan green after getTableRecords typing repair; actual table regression 1 passed.
-- ExactListingTest: SQLite and PostgreSQL 16: 7 passed, 106 assertions each. Includes V09, V22, signed cursor integrity, query budget <=5, descending tie-break, mid-batch continuation, cross-storage shared.
-- Negative control: restore old index candidate cursorPaginate; V09 and V22 both fail; original restored, all 7 green.
-No new skips, no disabled tests, no weakened gates. Review P1.3 only; existing P1.2 quota risks belong to P1.6.

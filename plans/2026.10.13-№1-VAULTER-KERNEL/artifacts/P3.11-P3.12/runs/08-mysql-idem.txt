@@ -1,8 +1,0 @@
-### scripts/t mysql -p core packages/core/tests/Idempotency
-engine=mysql workers=1 external=0
->>> core mysql [DatabaseMigrations+TestCase] single  files=1 processes=1
-Terminated
-
-== scripts/t summary ==
-core mysql [DatabaseMigrations+TestCase] single exit=143 skipped=0 961s  FAIL
-EXIT=1

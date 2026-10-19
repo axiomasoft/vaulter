@@ -1,1 +1,0 @@
-{"samples": [{"monotonic_ns": 84343015710254, "schema": "p5-pg-snapshot/v1", "deadlocks": 0, "log_cursor": null, "locks": [], "activity": [{"pid": 234, "wait_event_type": "Client", "wait_event": "ClientRead", "state": "idle"}], "blockers": [], "diagnostic_lock_join": []}]}

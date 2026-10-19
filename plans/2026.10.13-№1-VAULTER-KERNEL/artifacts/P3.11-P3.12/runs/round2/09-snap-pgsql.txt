@@ -1,3 +1,0 @@
-### scripts/schema-snapshot.sh --driver=pgsql --all-presets --compare=packages/core/tests/Fixtures/Schema/expected
-schema-snapshot: driver=pgsql presets=48 failed=0
-EXIT=0

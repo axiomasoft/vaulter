@@ -1,6 +1,0 @@
-86a87
->                 pcntl_waitpid($pid, $sequential); // NEGATIVE CONTROL: sequential run
-130c131
-<             while (count(glob("{$dir}/ready.*") ?: []) < $count) {
----
->             while (false && count(glob("{$dir}/ready.*") ?: []) < $count) { // NEGATIVE CONTROL: no barrier

@@ -1,1 +1,0 @@
-NOT EXECUTED (MySQL Schema suite ran >36 min and was killed).

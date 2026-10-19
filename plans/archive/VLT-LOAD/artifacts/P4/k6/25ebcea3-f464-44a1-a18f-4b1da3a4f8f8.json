@@ -1,9 +1,0 @@
-{
-  "ok": true,
-  "cell_id": "s3_putpart/500m",
-  "path_id": "s3_putpart",
-  "http_status": 201,
-  "content_length_bytes": 67108864,
-  "client_bytes_received": 67108864,
-  "transfer_bytes": 67108864
-}

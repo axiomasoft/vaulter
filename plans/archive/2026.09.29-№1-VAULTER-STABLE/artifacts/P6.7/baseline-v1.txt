@@ -1,6 +1,0 @@
-  ✓ it CopyNode rejects a real shortcut before inserting a copy or char… 0.25s  
-  ✓ it R07Model exposes real storage ability flags when actor and root…  0.21s  
-  Tests:    2 risky, 2 skipped, 831 passed (3150 assertions)
-  Duration: 248.25s
-real	4m8.457s
-exit 0

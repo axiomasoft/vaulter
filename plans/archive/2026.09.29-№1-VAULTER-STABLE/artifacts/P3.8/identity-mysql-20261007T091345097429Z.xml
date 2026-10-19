@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites>
-  <testsuite name="Packages\core\tests\Tenancy\TenantIdentifierPredicateTest" file="packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php" tests="1" assertions="6" errors="0" failures="0" skipped="0" time="12.009993">
-    <testcase name="it SEC-TENANT-IDENTITY keeps numeric and case-sensitive tenant identity on the actual database" file="packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php::it SEC-TENANT-IDENTITY keeps numeric and case-sensitive tenant identity on the actual database" class="Packages\core\tests\Tenancy\TenantIdentifierPredicateTest" classname="Packages.core.tests.Tenancy.TenantIdentifierPredicateTest" assertions="6" time="12.009993"/>
-  </testsuite>
-</testsuites>

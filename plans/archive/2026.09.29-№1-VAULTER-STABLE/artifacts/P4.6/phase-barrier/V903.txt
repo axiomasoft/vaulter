@@ -1,7 +1,0 @@
-$ cd . && scripts/test-db.sh sqlite packages/core/tests   env={'DB_PARALLEL': '8'}
-exit=0 duration_s=57.3
-
-engine=sqlite workers=8 cwd=/home/vostrikov/projects/packages/vaulter output=/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.6/phase-barrier/logs/V903/sqlite-output.log
-{"tool":"pest","result":"passed","tests":1377,"passed":1323,"assertions":13804,"duration_ms":56399,"skipped":54,"risky":17}
-{"tool":"pest","result":"failed","tests":0,"passed":0,"assertions":0,"duration_ms":6,"raw":["No tests found."]}
-engine=sqlite exit=0 seconds=58
