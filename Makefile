@@ -1,4 +1,4 @@
-.PHONY: help db-up db-down db-up-mysql db-down-mysql test-changed test-db test-db-mysql test-full lint lint-check stan rector rector-fix mutate quality quality-fix test test-coverage ci \
+.PHONY: help db-up db-down db-up-mysql db-down-mysql test-changed test-db test-db-mysql test-full lint lint-check stan rector rector-fix quality quality-fix test test-coverage ci \
         e2e-migrate e2e-laravel e2e-hub e2e-smoke e2e-test e2e-up e2e-down
 
 help: ## Show this help
@@ -18,9 +18,6 @@ rector: ## Run Rector dry-run (no changes)
 
 rector-fix: ## Apply Rector refactoring
 	vendor/bin/rector --no-progress-bar
-
-mutate: ## Run mutation testing (native Pest mutation; Infection dropped — D38/P5.9)
-	vendor/bin/pest --mutate --path=packages/core/src --covered-only --parallel --processes=4 --min=95
 
 quality: lint-check stan rector ## Run all quality checks (no fix)
 

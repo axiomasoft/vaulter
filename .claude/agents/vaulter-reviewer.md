@@ -103,7 +103,7 @@ grep by `**/*ServiceProvider.php` in diff:
 ### (d) Composer-constraints
 
 - Dev-tools (`orchestra/testbench`, `pestphp/*`, `phpunit/*`, `phpstan/*`,
-  `larastan/*`, `laravel/pint`, `infection/*`) in `require` instead `require-dev` →
+  `larastan/*`, `laravel/pint`) in `require` instead `require-dev` →
   **CRITICAL**: package will leak the entire test stack to each consumer.
 - `laravel/framework` in `require` instead of specific `illuminate/*`-components →
   **MED**: bold dependency, conflicts with the framework of the application itself.

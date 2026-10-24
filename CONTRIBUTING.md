@@ -51,7 +51,7 @@ scripts/t --changed                  # before a commit: affected zones + consume
 make test-db                         # schema/query change: every database test on pgsql
 ```
 
-Full, coverage, mutation and load runs are not part of a pull request.
+Full, coverage and load runs are not part of a pull request.
 
 ### The collaboration hub and `@vaulter/vue-collaboration`
 

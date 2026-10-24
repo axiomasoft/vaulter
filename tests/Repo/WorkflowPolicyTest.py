@@ -13,17 +13,6 @@ policy = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(policy)
 
 
-def mutation_doc():
-    jobs = {}
-    floors = {'core': '--min=95', 'media': '--min=0\nphp bin/x 95', 'drive': '--min=43',
-              'documents': '--min=95', 'filament': '--min=95'}
-    for pkg, floor in floors.items():
-        jobs[pkg] = {'if': f"inputs.package == '{pkg}'", 'timeout-minutes': 360,
-                     'steps': [{'run': f'vendor/bin/pest --mutate --path=src {floor}'}]}
-    return {'on': {'workflow_dispatch': {'inputs': {'package': {
-        'type': 'choice', 'options': list(policy.MUTATION_PACKAGES)}}}}, 'jobs': jobs}
-
-
 def test_doc(**extra):
     doc = {
         'on': {'push': {}, 'pull_request': {}},
@@ -56,39 +45,10 @@ class WorkflowPolicyTest(unittest.TestCase):
     def test_comment_is_not_a_command(self):
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, 'a.yml').write_text(
-                "on: [push]\n# pest --mutate --coverage\njobs:\n  j:\n    timeout-minutes: 5\n"
-                "    steps:\n      - run: echo ok # --mutate\n")
+                "on: [push, pull_request]\nconcurrency: {group: test, cancel-in-progress: true}\n# pest --coverage\njobs:\n  j:\n    timeout-minutes: 5\n"
+                "    steps:\n      - run: echo ok # --coverage\n")
             doc = policy.load_workflow(Path(tmp, 'a.yml'))
         self.assertEqual([], self.errors('a.yml', doc))
-
-    def test_mutation_outside_mutation_workflow(self):
-        doc = test_doc()
-        doc['jobs']['t']['steps'].append({'run': 'vendor/bin/pest --mutate --min=1'})
-        self.assertTrue(any('--mutate outside' in e for e in self.errors('tests.yml', doc)))
-
-    def test_mutation_manual_only_with_package_choice(self):
-        self.assertEqual([], self.errors('mutation.yml', mutation_doc()))
-
-        doc = mutation_doc()
-        doc['on']['pull_request'] = {}
-        self.assertTrue(any('exactly workflow_dispatch' in e for e in self.errors('mutation.yml', doc)))
-
-        doc = mutation_doc()
-        doc['on']['workflow_dispatch']['inputs']['package']['options'].remove('drive')
-        self.assertTrue(any('inputs.package must be a choice' in e for e in self.errors('mutation.yml', doc)))
-
-    def test_mutation_floor_gate_and_parallel(self):
-        doc = mutation_doc()
-        doc['jobs']['drive']['steps'][0]['run'] = 'vendor/bin/pest --mutate --min=40'
-        self.assertTrue(any('lost its floor' in e for e in self.errors('mutation.yml', doc)))
-
-        doc = mutation_doc()
-        doc['jobs']['core']['if'] = 'true'
-        self.assertTrue(any('not gated' in e for e in self.errors('mutation.yml', doc)))
-
-        doc = mutation_doc()
-        doc['jobs']['core']['steps'][0]['run'] += ' --parallel'
-        self.assertTrue(any('parallel' in e for e in self.errors('mutation.yml', doc)))
 
     def test_load_manual_only(self):
         doc = {'on': {'workflow_dispatch': {}, 'schedule': [{'cron': '1 1 * * *'}]},

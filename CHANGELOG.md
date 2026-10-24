@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Removed mutation testing workflows, Composer/Make commands and the media score-union tool until the kernel is stable. Existing regression tests remain in place.
+
 ### Collaboration package and the durability model (PLAN3.P5, ADR-0031)
 
 There are no installations to upgrade (1.0 is the starting point), so identities moved without shims or aliases;

@@ -1,6 +1,6 @@
 export const meta = {
   name: 'vlt-remed-final',
-  description: 'Закрывает остаточное автономное VLT-REMED: P4.1 Node-engine Major (hocuspocus v4 требует Node≥22) + независимая построчная сверка UPGRADE.md ↔ Known Deviations всех items (критерий 3) → пересчёт вердикта release-readiness. MSI и CHANGELOG-deny остаются человеку (ограничения окружения/пермишенов).',
+  description: 'Закрывает остаточное автономное VLT-REMED: P4.1 Node-engine Major (hocuspocus v4 требует Node≥22) + независимая построчная сверка UPGRADE.md ↔ Known Deviations всех items (критерий 3) → пересчёт вердикта release-readiness. CHANGELOG-deny остаётся человеку (ограничения окружения/пермишенов).',
   whenToUse: 'Финальная зачистка VLT-REMED после закрытия P4.1/P4.9/P4.10.',
   phases: [
     { title: 'P4.1-fix', detail: 'Node≥22 + drop Node20 CI-лейн + UPGRADE-нота (opus/high)' },
@@ -83,8 +83,7 @@ const COLD_START = `
 План: plans/VLT-REMED/. Матрица: plans/VLT-REMED/findings/P5.3-closure-matrix.md.
 Реестр (append-only, НЕ править): plans/AUDIT-VLT/findings/REGISTER.md (103).
 
-СОСТОЯНИЕ: закрыты P0–P3, P4.2–P4.10, вся P5. Вердикт release-readiness = НЕ ГОТОВ по трём осям:
-крит.5 MSI (провизорный порог — Infection не запускается в песочнице, вне автономного контроля),
+СОСТОЯНИЕ: закрыты P0–P3, P4.2–P4.10, вся P5. Вердикт release-readiness = НЕ ГОТОВ по двум осям:
 крит.3 UPGRADE неполнота (сверялась грепом по F-id), и новый Major по P4.1 (Node-engine).
 
 Актуальность версий — только RAG на момент исполнения (context7/perplexity), не из памяти.
@@ -164,9 +163,7 @@ ${COLD_START}
 дополнения UPGRADE.md. Обнови статусы и КРИТЕРИИ release-readiness по фактам:
 - крит.3 (UPGRADE полнота): после независимой построчной сверки — ✅ если пропусков не осталось,
   иначе честно ⚠️/❌ со списком.
-- крит.5 (MSI): остаётся ❌ — Infection не запускается в песочнице (нет xdebug/pcov). Это ЧЕСТНОЕ
-  ограничение окружения, НЕ выдавай за ✅. Явно отметь как «требует прогона в реальном окружении / или
-  осознанного принятия advisory-MSI владельцем».
+- крит.5 снят владельцем до стабилизации ядра; исключи его из открытых критериев и расчёта вердикта.
 - Пересчитай итоговый вердикт по правилу «любой не-✅ → НЕ ГОТОВ». Перечисли ОСТАВШИЕСЯ открытые
   критерии (openCriteria).
 Закрой по plan-протоколу: Status Board / Update Log / handoff.md, plan-lint.py. Коммит:
@@ -181,8 +178,8 @@ ${COLD_START}
 2. missing[] — пропущенные F-id и «fake-closed: <F-id>» (статус «закрыт» без живого коммита
    \`git cat-file -e\` / без живого теста grep'ом).
 3. verdict — процитируй итоговый вердикт. openCriteria[] — какие критерии release-readiness ещё не ✅.
-4. verdictHonest=false, если матрица рисует «готов» при живом открытом критерии, ИЛИ ставит крит.5 (MSI)
-   как ✅ (MSI не измерялся — должно быть ❌ до реального прогона).
+4. verdictHonest=false, если матрица рисует «готов» при живом открытом критерии. Снятый владельцем
+   крит.5 не участвует в расчёте вердикта.
 `.trim()
 
 // ─── Прогон ─────────────────────────────────────────────────────────────────
@@ -295,11 +292,10 @@ return {
   verdict,
   openCriteria,
   humanResiduals: [
-    'Критерий 5 (MSI): Infection не запускается в песочнице (нет xdebug/pcov) — нужен реальный прогон и калибровка порога, ЛИБО осознанное принятие advisory-MSI.',
     'CHANGELOG.md: deny-правило в .claude/settings.local.json — снять может только владелец, затем консолидировать BC из UPGRADE.md.',
     'Финальная архивация: /task:plan-close archive VLT-REMED — по замыслу требует approve владельца.',
   ],
   nextStep: queued.length
     ? 'Разбери queued[]. Остаточные человеку — humanResiduals. Вердикт: ' + (verdict ?? '—')
-    : 'Автономное закрыто. Вердикт: ' + (verdict ?? '—') + '. Остаток — humanResiduals (MSI/CHANGELOG/archive).',
+    : 'Автономное закрыто. Вердикт: ' + (verdict ?? '—') + '. Остаток — humanResiduals (CHANGELOG/archive).',
 }

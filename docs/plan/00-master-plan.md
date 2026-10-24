@@ -415,7 +415,7 @@ vaulter/                              # git-корень = источник ис
 ├─ docs/                              # VitePress (см. §8)
 └─ .github/workflows/
    ├─ frontend.yml                    # ИСПРАВИТЬ: @docvault/vue → @vaulter/vue (3 вхожд.+имя job); filament.yml label
-   ├─ tests.yml, filament.yml, static-analysis.yml, mutation.yml, code-style.yml
+   ├─ tests.yml, filament.yml, static-analysis.yml, code-style.yml
    ├─ release-npm.yml                 # ДОБАВИТЬ: changesets/action@v1 + OIDC provenance
    └─ monorepo-split.yml              # ДОБАВИТЬ: monorepo-split на тег (как Filament)
 ```
@@ -616,7 +616,7 @@ Handler-registry по mime/расширению (тот же идиом, что 
 - **ACL:** табличные тесты наследования — direct vs inherited, cut-off `inherit_grants=false`, `deny`-бьёт-`allow` ближе, OR bitmask, expiry; контракт-тест: каждый драйвер (database/azgard/spatie/gate) даёт одинаковое решение на общей фикстуре.
 - **Загрузки:** сессия переживает разрыв (offset `received_bytes`); S3 part re-upload заменяет; assemble→sha256→dedup; sweep протухших по `(status, expires_at)`.
 - **Надёжность:** outbox дренит один раз (`event_id` uniq); webhook backoff по `(status, next_retry_at)`; подпись проверяется.
-- **Качество (скиллы/CI):** Pint+PHPStan/Larastan (baseline), Pest Arch (границы слоёв, нет кросс-пакетных утечек, FQCN-only конфиг, каждая модель `HasVaulterKey`+`HasExtraData`, каждая таблица через `VaulterSchema`/`PanelTablesBuilder`), MSI-гейт нативной мутацией Pest на core Services/Schema/Panels, Playwright E2E Vue-диска (upload/move/share/trash), CI-матрица по путям, `composer validate` на split-пакет.
+- **Качество (скиллы/CI):** Pint+PHPStan/Larastan (baseline), Pest Arch (границы слоёв, нет кросс-пакетных утечек, FQCN-only конфиг, каждая модель `HasVaulterKey`+`HasExtraData`, каждая таблица через `VaulterSchema`/`PanelTablesBuilder`), Playwright E2E Vue-диска (upload/move/share/trash), CI-матрица по путям, `composer validate` на split-пакет.
 - **e2e ручная:** demo-app — создать storage → папки (на диске НЕ появляются) → загрузить PDF/изображение/DocX → DocX открывается редактором, PDF — превью, архив — download; выдать доступ user/role; корзина→restore; **standalone `vaulter-media`** в чистом Laravel: прикрепить файлы с per-file ACL без Drive.
 - **Интеграция FlexCRM:** заменить `AllowAuthenticatedResolver` на `AzgardResolver`; задача создаёт storage, к ней цепляются узлы; доступ через Workspace=tenant; зелёные тесты FlexCRM.
 

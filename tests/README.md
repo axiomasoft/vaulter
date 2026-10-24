@@ -74,7 +74,7 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
 | Consumer isolation (I14) | `ci.yml` (`consumer-isolation`), blocking, per `core`, `media`, `drive`, `documents`, `webhooks` | `scripts/release/consumer-check.sh <pkg>`: the package in an empty directory with path repositories only on the siblings it declares (no repository `vendor/`, no `packages/core/tests`), then its fast sqlite set; `--dry-run` prints the plan and runs only the static refusal (an undeclared sibling class, `../core/tests`, `Vaulter\Tests`). Tested in `tests/Repo/ConsumerCheckTest.php`; the zip archives of a release are qualified in PLAN4 |
 | Gate | `ci.yml` (`ci-gate`) | the single required status |
 | Weekly full | `weekly-full.yml` (Monday) | `--full` on every engine, coverage, the stand |
-| Mutation, load | `mutation.yml`, `load.yml` | `workflow_dispatch` only, on the owner's request |
+| Load | `load.yml` | `workflow_dispatch` only, on the owner's request |
 
 ## Writing a test
 
@@ -133,7 +133,8 @@ scripts/php84 php scripts/inventory/move-types.php --owner=<drive|media|webhooks
 ## Which run when
 
 This table is the single source for humans and agents (`AGENTS.md`, `CLAUDE.md` and `CONTRIBUTING.md` link here).
-**While PLAN3 is active** (`plans/ACTIVE.md`) a narrower rule applies on top of it: only the Fast set of decision D41 (`plans/2026.10.13-№1-VAULTER-KERNEL/knowledge/orchestration`, section `run-set`) may be run — SQLite, static analysis and structural checks, at most 10 minutes per plan item; the server, full, coverage, mutation and load rows below are deferred to the next plan.
+**For planned work**, the item's `validation` declares the exact commands, working directories and expected outcomes. Local checks belong to their item; shared integration checks belong to an explicitly named item at the end of a batch and run once. The table below helps choose that set; it does not automatically add a pre-commit or database run to every item. If the actual change needs more coverage, amend `validation` with the reason before accepting it. Reuse evidence only while the command and all relevant inputs remain unchanged; record deferred checks separately from successful runs.
+**For PLAN3** (`plans/2026.10.13-№1-VAULTER-KERNEL/plan.json`), D41 still restricts execution to SQLite, static analysis and structural checks, at most 10 minutes per item. D50 defines item-specific checks and batch checkpoints for P7; server, full, coverage and load runs remain deferred to PLAN4.
 Pick the **smallest** row that covers the change; a bigger row is never a substitute for reading what failed.
 
 | When | Command | Covers | Does not cover | Time¹ |
@@ -144,15 +145,15 @@ Pick the **smallest** row that covers the change; a bigger row is never a substi
 | Before a push of a schema/query change | `make test-db` (= `scripts/t pgsql --group=database`) | every engine-dependent test of every suite, pgsql | mysql, `serial`, `extended` | 2 min 43 s |
 | MySQL-specific doubt (collation, locking, DDL) | `make test-db-mysql` (= `scripts/t mysql --group=database`, local server in Docker on tmpfs) | every engine-dependent test, mysql | pgsql, `serial`, `extended` | 10 min (was hours with a native mysqld on disk) |
 | All default suites on SQLite (harness change, wide refactor) | `make test` (= `scripts/t sqlite`) | every default suite, SQLite fast lane, vue, hub | servers, `serial`, `extended`, `stand` | 3 min 52 s |
-| Closing a plan, before a release (frozen code) | `make test-full` (= `scripts/t all --full`) | the whole matrix: sqlite+pgsql+mysql, `serial`, `extended` (full seeds) | `stand`, coverage, mutation, load | see below² |
-| Owner's explicit request only | `scripts/t stand`; `make test-coverage`; `make mutate`; `load.yml` | external services, coverage, mutation, k6 | — | long |
+| Closing a plan, before a release (frozen code) | `make test-full` (= `scripts/t all --full`) | the whole matrix: sqlite+pgsql+mysql, `serial`, `extended` (full seeds) | `stand`, coverage, load | see below² |
+| Owner's explicit request only | `scripts/t stand`; `make test-coverage`; `load.yml` | external services, coverage, k6 | — | long |
 
 ¹ Measured on the 8-CPU dev host, 4 workers, `make db-up` / `make db-up-mysql` running, other jobs on the host.
 ² Recorded in "Timings" below.
 
 Rules:
 
-- Never run `--full`, `all`, coverage or mutation per change; CI and `weekly-full.yml` run them.
+- Never run `--full`, `all` or coverage per change; CI and `weekly-full.yml` run them.
 - `scripts/t --changed` exits 2 for a harness change (`scripts/t`, `tests/*.json`, `composer.json`, TestCases) or an
   unknown path and prints the affected plan: then run `make test` (SQLite) and `make test-db`, not `--full`.
 - Start the local servers once per session: `make db-up` (pgsql in `/dev/shm`, native binaries) and, only when you need
@@ -210,6 +211,6 @@ server, a few at a time: the wall time is that of the slowest cell, not the sum.
   (sqlite+pgsql+mysql), Pint/PHPStan of every suite, Node suites. An engine-specific failure found there is fixed then;
   it is not a reason to run mysql on every change. mysql alone: `scripts/t mysql -p <pkg> --group=database`.
 - **Full** is never run per change. When `--changed` refuses with exit 2, run `make test` and `make test-db` instead.
-- **Coverage** runs weekly in CI. **Mutation and load/k6/benchmarks** run only when the owner asks for them.
+- **Coverage** runs weekly in CI. **Load/k6/benchmarks** run only when the owner asks for them.
 - Report what really ran: the engine, the skips and the exit codes. A skipped or failed check is not a pass; a missing
   engine or an unavailable stand makes a qualification incomplete.

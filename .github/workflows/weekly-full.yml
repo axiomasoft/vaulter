@@ -3,7 +3,7 @@ name: Weekly full
 # Full qualification (PLAN3 P1.6): everything ci.yml thins out per change, once and complete — every package on
 # both Laravel lines with `--full` (fast + serial + extended, each exactly once), every package on pgsql and
 # mysql, pcov coverage with its floor, the stand (real processes + the functional load tests), Node and the
-# repository harness. It never mutates (mutation.yml, D3) and never benchmarks (load.yml, D4).
+# repository harness. It never benchmarks (load.yml, D4).
 #
 # Triggers: Monday 04:00 UTC, by hand, and as a reusable workflow. monorepo-split.yml calls it for a release tag,
 # so the exact tagged commit (github.sha of the caller) is qualified first and nothing is published before

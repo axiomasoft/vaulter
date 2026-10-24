@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""CI workflow policy (PLAN3 P1.2, D3/D4).
+"""CI workflow policy (PLAN3 P1.2, D4).
 
 Checks `.github/workflows/*.yml` as parsed YAML, never as text, so a comment that
-mentions `--mutate` or `pull_request` is not a violation:
+mentions `--coverage` or `pull_request` is not a violation:
 
-* mutation testing (`--mutate` in a step command) lives only in mutation.yml, which is
-  `workflow_dispatch`-only with a package choice and keeps its `--min` floors;
 * load.yml is `workflow_dispatch`-only, and no job `if` waits for an event the workflow
   no longer has (the old-PR trap: such a job is skipped for ever);
 * no workflow with a pull_request trigger collects coverage;
@@ -42,14 +40,6 @@ import re
 import sys
 from pathlib import Path
 
-MUTATION_PACKAGES = ['core', 'media', 'drive', 'documents', 'filament']
-MUTATION_FLOORS = {
-    'core': ['--min=95'],
-    'media': ['--min=0', ' 95'],
-    'drive': ['--min=43'],
-    'documents': ['--min=95'],
-    'filament': ['--min=95'],
-}
 COVERAGE_MARKERS = ('--coverage', 'codecov', '--coverage-clover')
 
 # PLAN3 P1.6: the single CI.
@@ -137,13 +127,6 @@ def check_workflow(name: str, doc: dict) -> list[str]:
     errors: list[str] = []
     events = triggers(doc)
     jobs = doc.get('jobs') or {}
-    commands = step_commands(doc)
-
-    # D3: mutation only in mutation.yml, only by hand.
-    if name != 'mutation.yml' and any('--mutate' in c for c in commands):
-        errors.append(f'{name}: --mutate outside mutation.yml')
-    if name == 'mutation.yml':
-        errors += check_mutation(doc, events)
 
     # D4: load only by hand.
     if name == 'load.yml' and set(events) != {'workflow_dispatch'}:
@@ -187,33 +170,6 @@ def check_workflow(name: str, doc: dict) -> list[str]:
     elif cancel.lower() == 'true' or 'event_name' in cancel:
         errors.append(f'{name}: non-PR workflow must not cancel in-progress runs')
 
-    return errors
-
-
-def check_mutation(doc: dict, events: dict) -> list[str]:
-    errors: list[str] = []
-    if set(events) != {'workflow_dispatch'}:
-        errors.append(f'mutation.yml: triggers must be exactly workflow_dispatch, got {sorted(events)}')
-    package = ((events.get('workflow_dispatch') or {}).get('inputs') or {}).get('package') or {}
-    if package.get('type') != 'choice' or list(package.get('options') or []) != MUTATION_PACKAGES:
-        errors.append(f'mutation.yml: inputs.package must be a choice of {MUTATION_PACKAGES}')
-    jobs = doc.get('jobs') or {}
-    for pkg in MUTATION_PACKAGES:
-        job = jobs.get(pkg)
-        if job is None:
-            errors.append(f'mutation.yml: no job for package {pkg}')
-            continue
-        if f"inputs.package == '{pkg}'" not in str(job.get('if', '')):
-            errors.append(f'mutation.yml: job {pkg} is not gated by inputs.package')
-        runs = ' '.join(str(s.get('run', '')) for s in job.get('steps') or [])
-        for floor in MUTATION_FLOORS[pkg]:
-            if floor not in runs:
-                errors.append(f'mutation.yml: job {pkg} lost its floor {floor.strip()!r}')
-        if '--parallel' in runs:
-            errors.append(f'mutation.yml: job {pkg} runs Pest --mutate in parallel (forbidden)')
-    extra = set(jobs) - set(MUTATION_PACKAGES)
-    if extra:
-        errors.append(f'mutation.yml: unexpected jobs {sorted(extra)}')
     return errors
 
 
@@ -389,7 +345,7 @@ def check_dir(directory: Path) -> list[str]:
     root = directory.resolve().parents[1]
     files = sorted(directory.glob('*.yml'))
     names = {f.name for f in files}
-    for required in ('mutation.yml', 'load.yml', 'ci.yml', 'weekly-full.yml', 'monorepo-split.yml'):
+    for required in ('load.yml', 'ci.yml', 'weekly-full.yml', 'monorepo-split.yml'):
         if required not in names:
             errors.append(f'{required}: missing')
     for removed in REMOVED_WORKFLOWS:

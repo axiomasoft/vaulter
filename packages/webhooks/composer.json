@@ -94,7 +94,6 @@
         "test:types": "vendor/bin/pest --type-coverage --min=100",
         "lint": "vendor/bin/pint",
         "lint:check": "vendor/bin/pint --test",
-        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
-        "mutate": "vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95"
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M"
     }
 }

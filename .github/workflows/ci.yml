@@ -5,7 +5,7 @@ name: CI
 # commit (pull_request.base.sha / push.before). Without a usable base every lane runs. `CI gate` is the only
 # check a branch rule or a release has to require: it needs every other job and is red on a failure, a
 # cancellation, a skipped lane that was expected or an empty required matrix; a docs-only skip is explicit
-# (changes.skip_reason). Mutation and load stay manual (mutation.yml, load.yml, D3/D4); coverage, the extended
+# (changes.skip_reason). Load stays manual (load.yml, D4); coverage, the extended
 # layer and the stand run in weekly-full.yml.
 #
 # job map from the pre-P1.6 workflows (nothing that ran on a PR was dropped):
