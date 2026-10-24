@@ -66,7 +66,7 @@ serena-code graph (LSP) is relevant on the fly - the disclaimer does not apply t
 ## Project Communications
 
 - **scope memory:** `project:vaulter`; shared `ns:*`/`global` only by explicit authorized request.
-- **namespaces:** `axioma, vaulter` (within a group - general, between groups - isolated).
+- **namespaces:** `axioma` (within a group - general, between groups - isolated).
 - **linked to:** azguard.
 - see current connections: `maind graph --project vaulter`.
 

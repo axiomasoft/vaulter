@@ -36,12 +36,7 @@
         "severity",
         "impact",
         "public",
-        "api",
-        "deps",
-        "example",
-        "user",
-        "assistant",
-        "vaulter-contribution-reviewer"
+        "api"
       ]
     },
     {
@@ -95,10 +90,7 @@
         "announcement",
         "breaking-changes",
         "example",
-        "user",
-        "assistant",
-        "vaulter-release-conductor",
-        "approve"
+        "user"
       ]
     },
     {
