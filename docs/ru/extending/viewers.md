@@ -240,3 +240,10 @@ createApp(App)
       она совпадает с любым другим viewer'ом.
 - [ ] Если оборачиваете SDK с двойной лицензией, граница free/commercial-импортов обеспечена, а
       не просто держится в памяти.
+
+Типы документов возвращают `DocumentViewer` и собственные `DocumentFeatures` из
+`Vaulter\Documents\Data\Types`. `DocumentPresenter` преобразует их в VO Drive;
+поля REST не меняются. `collaborative` вычисляется по доступной для записи схеме,
+`SupportsCollaboration` и активному драйверу коллаборации. Без драйвера rich text
+остаётся локально редактируемым. `DocumentFeatures::readOnly()` запрещает изменение
+и сохраняет предпросмотр. Тип без клиентского редактора использует `vaulter/unsupported`.

@@ -7,6 +7,8 @@ namespace Vaulter\Documents\Presentation;
 use Vaulter\Attributes\Api;
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Content\ContentDecoder;
+use Vaulter\Documents\Contracts\CollaborationDriver;
+use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Drive\Contracts\Presentation\KindPresenter;
 use Vaulter\Drive\Data\Snapshots\NodeSnapshot;
@@ -14,6 +16,8 @@ use Vaulter\Drive\Enums\NodeKind;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
+use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Kernel;
 
 /**
  * Presents a document node by its document type, never by its mime: no file handler
@@ -25,7 +29,7 @@ use Vaulter\Drive\ValueObjects\Handlers\NodePresentation;
 final readonly class DocumentPresenter implements KindPresenter
 {
     #[Internal]
-    public function __construct(private ContentDecoder $decoder) {}
+    public function __construct(private ContentDecoder $decoder, private Kernel $kernel) {}
 
     public function kind(): NodeKind
     {
@@ -36,23 +40,22 @@ final readonly class DocumentPresenter implements KindPresenter
     {
         [$key, $schemaVersion] = $this->head($node);
         $type = $this->decoder->type($key);
-        $capabilities = $type->capabilities();
-
-        if (!$this->decoder->schemaWritable($type, $schemaVersion)) {
-            // Written by a newer version of the type: shown, not overwritten.
-            $capabilities = new ContentCapabilities(
-                editable: false,
-                previewable: $capabilities->previewable,
-                downloadable: $capabilities->downloadable,
-                thumbnailable: $capabilities->thumbnailable,
-                collaborative: false,
-            );
-        }
+        $features = $type->features();
+        $viewer = $type->viewer();
+        $writable = $this->decoder->schemaWritable($type, $schemaVersion);
+        $capabilities = new ContentCapabilities(
+            editable: $features->editable && $writable,
+            previewable: $features->previewable,
+            downloadable: $features->downloadable,
+            thumbnailable: $features->thumbnailable,
+            collaborative: $writable && $type instanceof SupportsCollaboration
+                && $this->kernel->capabilities()->has(CollaborationDriver::class),
+        );
 
         return new NodePresentation(
             id: null,
             capabilities: $capabilities,
-            ui: $type->viewer(),
+            ui: new ViewerDescriptor(key: $viewer->key, props: $viewer->props),
             documentType: $key,
             typeAvailable: $this->decoder->available($key),
         );

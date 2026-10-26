@@ -56,7 +56,7 @@ trait DocumentTypeContractTests
             Assert::assertSame($once, $type->upgrade($once, $type->schemaVersion()), 'upgrade() must be idempotent.');
         }
 
-        foreach ($type->capabilities()->toArray() as $flag) {
+        foreach ($type->features()->toArray() as $flag) {
             Assert::assertIsBool($flag);
         }
     }

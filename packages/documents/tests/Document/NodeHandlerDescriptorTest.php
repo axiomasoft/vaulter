@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Access\ValueObjects\NodeAbilities;
 use Vaulter\Drive\Contracts\Handlers\NodePresenter;
@@ -36,9 +37,22 @@ it('presents a document node by its document type, not by a file handler', funct
         ->and($descriptor->documentType)->toBe('vaulter/rich-text')
         ->and($descriptor->typeAvailable)->toBeTrue()
         ->and($descriptor->capabilities->editable)->toBeTrue()
-        ->and($descriptor->capabilities->collaborative)->toBeTrue()
+        ->and($descriptor->capabilities->collaborative)->toBeFalse()
         ->and($descriptor->capabilities->downloadable)->toBeFalse()
         ->and($descriptor->ui->toArray())->toBe(['key' => 'vaulter/tiptap', 'props' => ['preset' => 'rich-text']]);
+
+    app(VaulterDatabase::class)->write(fn () => Document::query()
+        ->where('node_id', $node->getKey())->update(['schema_version' => 99]));
+    $future = app(NodePresenter::class)->present($node);
+    expect($future->capabilities->editable)->toBeFalse()
+        ->and($future->capabilities->collaborative)->toBeFalse();
+
+    app(VaulterDatabase::class)->write(fn () => Document::query()
+        ->where('node_id', $node->getKey())->update(['type' => 'host/missing', 'schema_version' => 1]));
+    $missing = app(NodePresenter::class)->present($node);
+    expect($missing->typeAvailable)->toBeFalse()
+        ->and($missing->capabilities->editable)->toBeFalse()
+        ->and($missing->ui->key)->toBe('vaulter/unsupported');
 });
 
 it('embeds the presentation in the NodeResource payload', function (): void {

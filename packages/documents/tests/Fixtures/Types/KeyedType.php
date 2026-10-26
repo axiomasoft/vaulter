@@ -9,8 +9,8 @@ use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
-use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Documents\Data\Types\DocumentFeatures;
+use Vaulter\Documents\Data\Types\DocumentViewer;
 
 /** A type of a host or a test that claims a key; used for the key rules. */
 final readonly class KeyedType implements DocumentType
@@ -42,13 +42,13 @@ final readonly class KeyedType implements DocumentType
         return OpaqueContent::fromArray([]);
     }
 
-    public function viewer(): ViewerDescriptor
+    public function viewer(): DocumentViewer
     {
-        return new ViewerDescriptor(key: 'acme/keyed');
+        return new DocumentViewer(key: 'acme/keyed');
     }
 
-    public function capabilities(): ContentCapabilities
+    public function features(): DocumentFeatures
     {
-        return new ContentCapabilities;
+        return new DocumentFeatures;
     }
 }

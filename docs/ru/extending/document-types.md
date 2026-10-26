@@ -86,8 +86,8 @@ interface DocumentType
     public function schemaVersion(): int;          // >= 1; версия, в которой пишется новое содержимое
     public function codec(): DocumentCodec;
     public function defaultContent(): DocumentContent;
-    public function viewer(): ViewerDescriptor;    // ключ клиентского редактора
-    public function capabilities(): ContentCapabilities;
+    public function viewer(): DocumentViewer;    // ключ клиентского редактора
+    public function features(): DocumentFeatures;
 }
 
 interface DocumentCodec
@@ -233,3 +233,7 @@ $board = Document::factory()->ofType('acme/kanban')->named('Roadmap')->in($folde
 `richText()` наполняет rich-text-документ, `ofType()` создаёт документ любого установленного
 типа с содержимым этого типа по умолчанию, `in()` принимает драйв (его корень) или папку.
 Другой тенант вместо текущего выбирается через `forTenant()`.
+
+Типы документов используют `Vaulter\Documents\Data\Types\DocumentViewer` и
+`Vaulter\Documents\Data\Types\DocumentFeatures`. Тип без клиентского редактора
+возвращает `new DocumentViewer(key: 'vaulter/unsupported')`.

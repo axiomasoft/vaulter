@@ -99,13 +99,13 @@ Vaulter\Documents\Contracts\DocumentExporter spi:implement since 1.0 interface
   public function mimeType(): string
 
 Vaulter\Documents\Contracts\DocumentType spi:implement since 1.0 interface
-  public function capabilities(): Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
   public function codec(): Vaulter\Documents\Contracts\DocumentCodec
   public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
+  public function features(): Vaulter\Documents\Data\Types\DocumentFeatures
   public function key(): string
   public function label(): string
   public function schemaVersion(): int
-  public function viewer(): Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+  public function viewer(): Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\Contracts\ExportFilenameResolver spi:implement since 1.0 interface
   public function resolve(Vaulter\Drive\Models\Node $node, string $extension): string
@@ -230,6 +230,21 @@ Vaulter\Documents\Data\Snapshots\DocumentSnapshot api since 1.0 final readonly c
   public DateTimeImmutable $updatedAt
   public ?string $updatedBy
   public ?int $yjsStateSize
+
+Vaulter\Documents\Data\Types\DocumentFeatures api since 1.0 final readonly class
+  public bool $downloadable
+  public bool $editable
+  public bool $previewable
+  public bool $thumbnailable
+  public function __construct(bool $editable = true, bool $previewable = true, bool $thumbnailable = false, bool $downloadable = false)
+  public static function readOnly(): self
+  public function toArray(): array
+
+Vaulter\Documents\Data\Types\DocumentViewer api since 1.0 final readonly class
+  public string $key
+  public array $props
+  public function __construct(string $key, array $props = [])
+  public function toArray(): array
 
 Vaulter\Documents\Database\Factories\DocumentFactory api since 1.0 final class extends Vaulter\Drive\Database\Factories\VaulterFactory
   protected $model = \Vaulter\Documents\Models\Documents\Document::class
@@ -552,37 +567,37 @@ Vaulter\Documents\Types\DocumentTypeRegistry api since 1.0 final class
 
 Vaulter\Documents\Types\MarkdownDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType, Vaulter\Documents\Contracts\SupportsCollaboration
   public const string KEY = 'vaulter/markdown'
-  public function capabilities(): Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
   public function codec(): Vaulter\Documents\Contracts\DocumentCodec
   public function collaborationProtocol(): string
   public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
+  public function features(): Vaulter\Documents\Data\Types\DocumentFeatures
   public function key(): string
   public function label(): string
   public function projectFromState(string $state): ?Vaulter\Documents\Contracts\DocumentContent
   public function schemaVersion(): int
-  public function viewer(): Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+  public function viewer(): Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\Types\RichTextDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType, Vaulter\Documents\Contracts\SupportsCollaboration
   public const string KEY = 'vaulter/rich-text'
-  public function capabilities(): Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
   public function codec(): Vaulter\Documents\Contracts\DocumentCodec
   public function collaborationProtocol(): string
   public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
+  public function features(): Vaulter\Documents\Data\Types\DocumentFeatures
   public function key(): string
   public function label(): string
   public function projectFromState(string $state): ?Vaulter\Documents\Contracts\DocumentContent
   public function schemaVersion(): int
-  public function viewer(): Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+  public function viewer(): Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\Types\SpreadsheetDocumentType api since 1.0 final readonly class implements Vaulter\Documents\Contracts\DocumentType
   public const string KEY = 'vaulter/spreadsheet'
-  public function capabilities(): Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
   public function codec(): Vaulter\Documents\Contracts\DocumentCodec
   public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
+  public function features(): Vaulter\Documents\Data\Types\DocumentFeatures
   public function key(): string
   public function label(): string
   public function schemaVersion(): int
-  public function viewer(): Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+  public function viewer(): Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\ValueObjects\DocumentExport api since 1.0 final readonly class
   public string $bytes

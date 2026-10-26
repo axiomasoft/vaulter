@@ -86,8 +86,8 @@ interface DocumentType
     public function schemaVersion(): int;          // >= 1; the version new content is written in
     public function codec(): DocumentCodec;
     public function defaultContent(): DocumentContent;
-    public function viewer(): ViewerDescriptor;    // the client editor key
-    public function capabilities(): ContentCapabilities;
+    public function viewer(): DocumentViewer;    // the client editor key
+    public function features(): DocumentFeatures;
 }
 
 interface DocumentCodec
@@ -233,3 +233,7 @@ $board = Document::factory()->ofType('acme/kanban')->named('Roadmap')->in($folde
 `richText()` fills a rich-text document, `ofType()` starts a document of any installed type with
 that type's default content, and `in()` takes a drive (its root) or a folder. A tenant other than
 the current one is chosen with `forTenant()`.
+
+Document types use `Vaulter\Documents\Data\Types\DocumentViewer` and
+`Vaulter\Documents\Data\Types\DocumentFeatures`. A backend-only type returns
+`new DocumentViewer(key: 'vaulter/unsupported')`.

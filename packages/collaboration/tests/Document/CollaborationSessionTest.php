@@ -11,6 +11,7 @@ use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\VaulterException;
@@ -45,6 +46,9 @@ it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', functi
     config()->set('vaulter-collaboration.hub.token_ttl', 240);
 
     $node = documentNode();
+    $presentation = app(DocumentPresenter::class)->present($node);
+    expect($presentation->capabilities->editable)->toBeTrue()
+        ->and($presentation->capabilities->collaborative)->toBeTrue();
     $before = time();
     $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, epoch: 3, schemaVersion: 1, writable: true, actorId: 42);
 

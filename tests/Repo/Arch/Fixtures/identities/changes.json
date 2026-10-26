@@ -5670,6 +5670,13 @@
             "id": "env:VAULTER_SCRUB_MAX_SECONDS",
             "kind": "config",
             "reason": "P6.9: environment variable of vaulter-media.scrub.max_seconds"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D4",
+            "id": "command:vaulter:make:document-type",
+            "kind": "cli",
+            "reason": "P3.1: generates DocumentViewer and DocumentFeatures instead of Drive VO; backend-only types use the existing vaulter/unsupported viewer. Command identity and options are unchanged."
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

@@ -124,7 +124,7 @@ final class Identities
 
     /**
      * A ledger record must name an existing identity for added/redefined/renamed, a gone one for removed and for the
-     * old id of a rename; the reason and a decision `D<n>` are required.
+     * old id of a rename; the reason and a decision `D<n>` or `PLAN<n>-D<n>` are required.
      *
      * @param  list<array<string, mixed>> $changes
      * @param  array<string, mixed>       $items   id => item
@@ -137,8 +137,8 @@ final class Identities
             $id = $change['id'] ?? null;
             $type = $change['change'] ?? null;
             $label = $kind.' ledger: '.(is_string($id) ? $id : '?');
-            if (!is_string($id) || $id === '' || !in_array($type, self::CHANGES, true) || !is_string($change['reason'] ?? null) || trim($change['reason']) === '' || !is_string($change['decision'] ?? null) || preg_match('/^D\d+$/', $change['decision']) !== 1) {
-                $problems[] = ['code' => 'invalid-change', 'message' => "{$label}: needs id, change (".implode('|', self::CHANGES).'), reason and decision D<n>', 'exit' => 2];
+            if (!is_string($id) || $id === '' || !in_array($type, self::CHANGES, true) || !is_string($change['reason'] ?? null) || trim($change['reason']) === '' || !is_string($change['decision'] ?? null) || preg_match('/^(?:PLAN[1-9]\d*-)?D[1-9]\d*$/', $change['decision']) !== 1) {
+                $problems[] = ['code' => 'invalid-change', 'message' => "{$label}: needs id, change (".implode('|', self::CHANGES).'), reason and decision D<n> or PLAN<n>-D<n>', 'exit' => 2];
 
                 continue;
             }

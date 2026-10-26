@@ -30,6 +30,10 @@ it('writes a document type class with an app/ key and does not touch the config'
         ->toContain('final readonly class KanbanDocumentType implements DocumentType')
         ->toContain("return 'app/kanban';")
         ->toContain('new OpaqueJsonCodec')
+        ->toContain('function viewer(): DocumentViewer')
+        ->toContain('function features(): DocumentFeatures')
+        ->toContain("key: 'vaulter/unsupported'")
+        ->not->toContain('Vaulter\\Drive\\')
         ->and(config('vaulter-documents.types'))->toBe($typesBefore);
 });
 

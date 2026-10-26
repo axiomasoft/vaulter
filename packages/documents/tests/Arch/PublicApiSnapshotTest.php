@@ -12,6 +12,8 @@ use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
+use Vaulter\Documents\Data\Types\DocumentFeatures;
+use Vaulter\Documents\Data\Types\DocumentViewer;
 use Vaulter\Documents\Database\Factories\DocumentFactory;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
@@ -305,6 +307,8 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
         DocumentRevisionSnapshot::class,
         CommentSnapshot::class,
         AddCommentInput::class,
+        DocumentViewer::class,
+        DocumentFeatures::class,
         CollaborationSession::class,
         DocumentExport::class,
     ] as $class) {

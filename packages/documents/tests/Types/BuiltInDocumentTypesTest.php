@@ -7,6 +7,7 @@ use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
+use Vaulter\Documents\Data\Types\DocumentFeatures;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanType;
@@ -30,6 +31,9 @@ it('keeps the document type contract', function (DocumentType $type): void {
 ]);
 
 it('describes each built-in type by key, viewer and collaboration', function (): void {
+    expect(DocumentFeatures::readOnly()->toArray())
+        ->toBe(['editable' => false, 'previewable' => true, 'thumbnailable' => false, 'downloadable' => false]);
+
     $rich = new RichTextDocumentType;
     $markdown = new MarkdownDocumentType;
     $sheet = new SpreadsheetDocumentType;
@@ -38,14 +42,14 @@ it('describes each built-in type by key, viewer and collaboration', function ():
         ->and($rich->viewer()->toArray())->toBe(['key' => 'vaulter/tiptap', 'props' => ['preset' => 'rich-text']])
         ->and($rich)->toBeInstanceOf(SupportsCollaboration::class)
         ->and($rich->collaborationProtocol())->toBe('yjs')
-        ->and($rich->capabilities()->collaborative)->toBeTrue()
+        ->and($rich->features()->toArray())->toBe(['editable' => true, 'previewable' => true, 'thumbnailable' => false, 'downloadable' => false])
         ->and($markdown->key())->toBe('vaulter/markdown')
         ->and($markdown->viewer()->toArray())->toBe(['key' => 'vaulter/tiptap', 'props' => ['preset' => 'markdown']])
         ->and($markdown)->toBeInstanceOf(SupportsCollaboration::class)
         ->and($sheet->key())->toBe('vaulter/spreadsheet')
         ->and($sheet->viewer()->key)->toBe('vaulter/univer')
         ->and($sheet)->not->toBeInstanceOf(SupportsCollaboration::class)
-        ->and($sheet->capabilities()->collaborative)->toBeFalse()
+        ->and($sheet->features()->editable)->toBeTrue()
         ->and($sheet->codec())->toBeInstanceOf(OpaqueJsonCodec::class);
 });
 

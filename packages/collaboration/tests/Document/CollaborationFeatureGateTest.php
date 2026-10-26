@@ -6,6 +6,7 @@ use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
 use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Kernel;
@@ -54,6 +55,9 @@ it('the hub routes answer 404 when the module is off', function (string $endpoin
 
 it('base (non-realtime) content editing keeps working with the collaboration module off', function (): void {
     $node = collabGateDocumentNode();
+    $presentation = app(DocumentPresenter::class)->present($node);
+    expect($presentation->capabilities->editable)->toBeTrue()
+        ->and($presentation->capabilities->collaborative)->toBeFalse();
     $nodeId = (string) $node->getKey();
 
     $this->getJson(Docs::url('documents/'.$nodeId.'/content'))->assertOk();

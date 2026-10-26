@@ -10,8 +10,8 @@ use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
-use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Documents\Data\Types\DocumentFeatures;
+use Vaulter\Documents\Data\Types\DocumentViewer;
 
 /**
  * A spreadsheet workbook owned by the Univer editor; the server stores its JSON
@@ -48,13 +48,13 @@ final readonly class SpreadsheetDocumentType implements DocumentType
         return OpaqueContent::fromArray([]);
     }
 
-    public function viewer(): ViewerDescriptor
+    public function viewer(): DocumentViewer
     {
-        return new ViewerDescriptor(key: 'vaulter/univer');
+        return new DocumentViewer(key: 'vaulter/univer');
     }
 
-    public function capabilities(): ContentCapabilities
+    public function features(): DocumentFeatures
     {
-        return new ContentCapabilities(editable: true, previewable: true, downloadable: false, thumbnailable: false, collaborative: false);
+        return new DocumentFeatures(editable: true, previewable: true, downloadable: false, thumbnailable: false);
     }
 }

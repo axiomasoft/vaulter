@@ -20,13 +20,13 @@ Vaulter\Documents\Contracts\DocumentExporter
   mimeType(): string
 
 Vaulter\Documents\Contracts\DocumentType
-  capabilities(): \Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
   codec(): \Vaulter\Documents\Contracts\DocumentCodec
   defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
+  features(): \Vaulter\Documents\Data\Types\DocumentFeatures
   key(): string
   label(): string
   schemaVersion(): int
-  viewer(): \Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+  viewer(): \Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\Contracts\ExportFilenameResolver
   resolve(\Vaulter\Drive\Models\Node $node, string $extension): string
@@ -277,6 +277,21 @@ Vaulter\Documents\Data\Comments\AddCommentInput
   readonly int|null|string $parentId
   readonly string $body
 
+Vaulter\Documents\Data\Types\DocumentViewer
+  __construct(string $key, array $props = [])
+  toArray(): array
+  readonly array $props
+  readonly string $key
+
+Vaulter\Documents\Data\Types\DocumentFeatures
+  __construct(bool $editable = true, bool $previewable = true, bool $thumbnailable = false, bool $downloadable = false)
+  readOnly(): \self
+  toArray(): array
+  readonly bool $downloadable
+  readonly bool $editable
+  readonly bool $previewable
+  readonly bool $thumbnailable
+
 Vaulter\Documents\Data\Collaboration\CollaborationSession
   __construct(string $driver, string $room, string $nodeId, string $driveId, int $epoch, int $schemaVersion, bool $readOnly, string $token, ?string $url = null)
   mode(): string
@@ -318,35 +333,35 @@ Vaulter\Documents\Export\DocumentExporterRegistry
   replace(string $key, \Vaulter\Documents\Contracts\DocumentExporter|string $exporter): void
 
 Vaulter\Documents\Types\RichTextDocumentType
-  capabilities(): \Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
   codec(): \Vaulter\Documents\Contracts\DocumentCodec
   collaborationProtocol(): string
   defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
+  features(): \Vaulter\Documents\Data\Types\DocumentFeatures
   key(): string
   label(): string
   projectFromState(string $state): ?\Vaulter\Documents\Contracts\DocumentContent
   schemaVersion(): int
-  viewer(): \Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+  viewer(): \Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\Types\MarkdownDocumentType
-  capabilities(): \Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
   codec(): \Vaulter\Documents\Contracts\DocumentCodec
   collaborationProtocol(): string
   defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
+  features(): \Vaulter\Documents\Data\Types\DocumentFeatures
   key(): string
   label(): string
   projectFromState(string $state): ?\Vaulter\Documents\Contracts\DocumentContent
   schemaVersion(): int
-  viewer(): \Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+  viewer(): \Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\Types\SpreadsheetDocumentType
-  capabilities(): \Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities
   codec(): \Vaulter\Documents\Contracts\DocumentCodec
   defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
+  features(): \Vaulter\Documents\Data\Types\DocumentFeatures
   key(): string
   label(): string
   schemaVersion(): int
-  viewer(): \Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor
+  viewer(): \Vaulter\Documents\Data\Types\DocumentViewer
 
 Vaulter\Documents\Content\OpaqueContent
   contentHash(): string

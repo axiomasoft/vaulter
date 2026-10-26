@@ -9,8 +9,8 @@ use Vaulter\Documents\Content\OpaqueJsonCodec;
 use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
-use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Documents\Data\Types\DocumentFeatures;
+use Vaulter\Documents\Data\Types\DocumentViewer;
 
 /** Breaks the type contract: the key is not vendor/name. */
 final readonly class BrokenDocumentType implements DocumentType
@@ -40,13 +40,13 @@ final readonly class BrokenDocumentType implements DocumentType
         return OpaqueContent::fromArray(['columns' => []]);
     }
 
-    public function viewer(): ViewerDescriptor
+    public function viewer(): DocumentViewer
     {
-        return new ViewerDescriptor(key: 'acme/kanban-board');
+        return new DocumentViewer(key: 'acme/kanban-board');
     }
 
-    public function capabilities(): ContentCapabilities
+    public function features(): DocumentFeatures
     {
-        return new ContentCapabilities(editable: true);
+        return new DocumentFeatures(editable: true);
     }
 }

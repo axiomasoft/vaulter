@@ -147,6 +147,13 @@
             "id": "command:vaulter:blobs:scrub",
             "kind": "cli",
             "reason": "P6.9: integrity scrub of the CAS: {--limit} {--max-bytes} {--max-seconds} {--scope} {--dry-run}; never deletes or writes the drive; exit 0 intact, 1 failures found or objects unreadable, 2 invalid option; metrics vaulter_blobs_scrub_checked_total, vaulter_blobs_scrub_bytes_total, vaulter_blobs_scrub_failed_total{reason=missing|size|digest}; not scheduled"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D4",
+            "id": "command:vaulter:make:document-type",
+            "kind": "cli",
+            "reason": "P3.1: generates DocumentViewer and DocumentFeatures instead of Drive VO; backend-only types use the existing vaulter/unsupported viewer. Command identity and options are unchanged."
         }
     ],
     "items": [

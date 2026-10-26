@@ -6,8 +6,8 @@ namespace Vaulter\Documents\Contracts;
 
 use Vaulter\Attributes\Spi;
 use Vaulter\Attributes\SpiKind;
-use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Documents\Data\Types\DocumentFeatures;
+use Vaulter\Documents\Data\Types\DocumentViewer;
 
 /**
  * A kind of structured document (rich text, markdown, a spreadsheet, a host's own),
@@ -32,7 +32,7 @@ interface DocumentType
     public function defaultContent(): DocumentContent;
 
     /** The client editor/viewer key, e.g. 'vaulter/tiptap'. */
-    public function viewer(): ViewerDescriptor;
+    public function viewer(): DocumentViewer;
 
-    public function capabilities(): ContentCapabilities;
+    public function features(): DocumentFeatures;
 }

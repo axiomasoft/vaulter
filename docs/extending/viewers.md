@@ -238,3 +238,10 @@ external consumer of that specific engine exists.
       any other viewer's.
 - [ ] If wrapping a dual-licensed SDK, the free/commercial import boundary is enforced, not just
       remembered.
+
+Document types return `DocumentViewer` and intrinsic `DocumentFeatures` from
+`Vaulter\Documents\Data\Types`. Only `DocumentPresenter` maps them to Drive's
+viewer and capabilities; the REST fields stay unchanged. `collaborative` is computed
+from a writable schema, `SupportsCollaboration`, and an active collaboration driver.
+Without that driver rich text remains locally editable. `DocumentFeatures::readOnly()`
+disables editing and keeps preview enabled. A backend-only type uses `vaulter/unsupported`.

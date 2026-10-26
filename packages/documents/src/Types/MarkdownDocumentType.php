@@ -12,8 +12,8 @@ use Vaulter\Documents\Contracts\DocumentCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
-use Vaulter\Drive\ValueObjects\Handlers\ContentCapabilities;
-use Vaulter\Drive\ValueObjects\Handlers\ViewerDescriptor;
+use Vaulter\Documents\Data\Types\DocumentFeatures;
+use Vaulter\Documents\Data\Types\DocumentViewer;
 
 /**
  * Markdown: the TipTap editor limited to what Markdown can represent, so it always
@@ -49,14 +49,14 @@ final readonly class MarkdownDocumentType implements DocumentType, SupportsColla
         return TipTapContent::empty();
     }
 
-    public function viewer(): ViewerDescriptor
+    public function viewer(): DocumentViewer
     {
-        return new ViewerDescriptor(key: 'vaulter/tiptap', props: ['preset' => 'markdown']);
+        return new DocumentViewer(key: 'vaulter/tiptap', props: ['preset' => 'markdown']);
     }
 
-    public function capabilities(): ContentCapabilities
+    public function features(): DocumentFeatures
     {
-        return new ContentCapabilities(editable: true, previewable: true, downloadable: false, thumbnailable: false, collaborative: true);
+        return new DocumentFeatures(editable: true, previewable: true, downloadable: false, thumbnailable: false);
     }
 
     public function collaborationProtocol(): string
