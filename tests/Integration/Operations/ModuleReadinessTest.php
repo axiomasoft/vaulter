@@ -6,10 +6,10 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Vaulter\Exceptions\Modules\ModuleNotReadyException;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\ModuleReadiness;
 use Vaulter\Schema\ModuleSchemas;
-use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 

@@ -79,5 +79,5 @@ it('stays idempotent with the doctor step and leaves the published config as shi
     $this->artisan('vaulter:install', ['--no-interaction' => true])->assertExitCode(0);
     $this->artisan('vaulter:install', ['--no-interaction' => true])->assertExitCode(0);
 
-    expect(file_get_contents(config_path('vaulter.php')))->toBe(file_get_contents(__DIR__.'/../../config/vaulter.php'));
+    expect(file_get_contents(config_path('vaulter.php')))->toBe(file_get_contents(dirname(__DIR__, 3).'/packages/core/config/vaulter.php'));
 });

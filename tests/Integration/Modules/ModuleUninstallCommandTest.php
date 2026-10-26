@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Tests\Modules\Fixtures\FixtureModulesProvider;
-use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 

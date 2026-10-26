@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Operations\ConcurrencyPolicy;
 use Vaulter\Operations\IdempotencyPolicy;
@@ -10,7 +11,6 @@ use Vaulter\Operations\OperationCatalog;
 use Vaulter\Operations\OperationsReference;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\Operations\Fixtures\ContractOperationPolicies;
-use Vaulter\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 

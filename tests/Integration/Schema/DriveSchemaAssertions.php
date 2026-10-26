@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Tests\Schema;
+namespace Vaulter\Integration\Tests\Schema;
 
 use Illuminate\Support\Facades\Schema;
 
