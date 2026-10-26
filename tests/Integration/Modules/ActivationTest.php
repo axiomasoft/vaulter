@@ -67,8 +67,8 @@ it('installs the schema of every offered module, active or not', function (): vo
     $paths = $app->make('migrator')->paths();
 
     expect($app->make(Kernel::class)->isActive('optional'))->toBeFalse()
-        ->and($paths)->toContain(__DIR__.'/../../../packages/core/database/migrations')
-        ->and($paths)->toContain(__DIR__.'/Fixtures/migrations/optional');
+        ->and($paths)->toContain(dirname(__DIR__, 3).'/packages/core/database/migrations')
+        ->and($paths)->toContain(dirname(__DIR__, 3).'/packages/core/tests/Modules/Fixtures/migrations/optional');
 });
 
 it('activates the webhooks module with vaulter.modules.webhooks and stamps its routes with the fingerprint', function (): void {

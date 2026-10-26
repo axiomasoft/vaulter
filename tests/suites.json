@@ -49,7 +49,6 @@
                         "serial"
                     ],
                     "files": [
-                        "packages/core/tests/IdStrategy/Bigint/DriveMigrationsBigintTest.php",
                         "packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php",
                         "packages/core/tests/IdStrategy/IdStrategyResolverTest.php",
                         "packages/core/tests/IdStrategy/IdStrategyTest.php"
@@ -57,11 +56,10 @@
                 },
                 {
                     "key": "DatabaseMigrations+TestCase",
-                    "fingerprint": "b915586b9a35",
+                    "fingerprint": "1bfeee1e798f",
                     "lifecycle": "migrations",
                     "database": true,
                     "engines": [
-                        "sqlite",
                         "pgsql",
                         "mysql"
                     ],
@@ -114,31 +112,9 @@
                         "packages/core/tests/Doctor/DoctorRunnerTest.php",
                         "packages/core/tests/Feature/NodeCommentFeatureOffTest.php",
                         "packages/core/tests/Http/PreconditionsTest.php",
-                        "packages/core/tests/Modules/ModuleUninstallCommandTest.php",
-                        "packages/core/tests/Observability/P83/P83UploadSessionActiveMetricsTest.php",
-                        "packages/core/tests/Operations/ModuleReadinessTest.php",
                         "packages/core/tests/Providers/BindingsRegistrarTest.php",
                         "packages/core/tests/Providers/EventsRegistrarTest.php",
-                        "packages/core/tests/Schema/HostKeyColumnsSchemaTest.php",
                         "packages/core/tests/Support/TenantFootgunGuardTest.php"
-                    ]
-                },
-                {
-                    "key": "RefreshDatabase+TestCase#skeleton",
-                    "fingerprint": "a738073fd8e6",
-                    "lifecycle": "refresh",
-                    "database": true,
-                    "engines": [
-                        "sqlite",
-                        "pgsql",
-                        "mysql"
-                    ],
-                    "skeleton_writer": true,
-                    "empty_passes": [
-                        "serial"
-                    ],
-                    "files": [
-                        "packages/core/tests/Console/InstallCommandTest.php"
                     ]
                 },
                 {
@@ -156,7 +132,6 @@
                         "serial"
                     ],
                     "files": [
-                        "packages/core/tests/IdStrategy/Ulid/DriveMigrationsUlidTest.php",
                         "packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php"
                     ]
                 },
@@ -175,7 +150,6 @@
                         "serial"
                     ],
                     "files": [
-                        "packages/core/tests/IdStrategy/Uuid7/DriveMigrationsUuid7Test.php",
                         "packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php"
                     ]
                 },
@@ -215,7 +189,6 @@
                         "packages/core/tests/Modules/InvalidModuleGraphHttpTest.php",
                         "packages/core/tests/Modules/ModuleKernelBootTest.php",
                         "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
-                        "packages/core/tests/Operations/OperationsReferenceTest.php",
                         "packages/core/tests/Unit/IdentityFitsKeyTest.php"
                     ]
                 }
@@ -290,7 +263,8 @@
                         "serial"
                     ],
                     "files": [
-                        "tests/Integration/IdStrategy/Bigint/HostKeysBigintTest.php"
+                        "tests/Integration/IdStrategy/Bigint/HostKeysBigintTest.php",
+                        "tests/Integration/IdStrategy/Bigint/DriveMigrationsBigintTest.php"
                     ]
                 },
                 {
@@ -532,7 +506,11 @@
                         "tests/Integration/Support/ReleaseReadinessGuardTest.php",
                         "tests/Integration/Support/SnapshotResourceTimestampTest.php",
                         "tests/Integration/Testing/ContractSuitesTest.php",
-                        "tests/Integration/WriteGuard/WriteScopeTest.php"
+                        "tests/Integration/WriteGuard/WriteScopeTest.php",
+                        "tests/Integration/Modules/ModuleUninstallCommandTest.php",
+                        "tests/Integration/Observability/P83/P83UploadSessionActiveMetricsTest.php",
+                        "tests/Integration/Operations/ModuleReadinessTest.php",
+                        "tests/Integration/Schema/HostKeyColumnsSchemaTest.php"
                     ]
                 },
                 {
@@ -550,7 +528,8 @@
                         "serial"
                     ],
                     "files": [
-                        "tests/Integration/IdStrategy/Ulid/HostKeysTest.php"
+                        "tests/Integration/IdStrategy/Ulid/HostKeysTest.php",
+                        "tests/Integration/IdStrategy/Ulid/DriveMigrationsUlidTest.php"
                     ]
                 },
                 {
@@ -617,7 +596,8 @@
                         "tests/Integration/Operations/OperationCatalogTest.php",
                         "tests/Integration/Unit/NodeNameTest.php",
                         "tests/Integration/Http/Problems/ProblemSpecRulesTest.php",
-                        "tests/Integration/Modules/ActivationMatrixTest.php"
+                        "tests/Integration/Modules/ActivationMatrixTest.php",
+                        "tests/Integration/Operations/OperationsReferenceTest.php"
                     ]
                 },
                 {
@@ -635,6 +615,42 @@
                     "files": [
                         "tests/Integration/Modules/RouteCacheActivationTest.php",
                         "tests/Integration/Modules/ActivationCacheTest.php"
+                    ]
+                },
+                {
+                    "key": "RefreshDatabase+TestCase#skeleton",
+                    "fingerprint": "555a082c1a50",
+                    "lifecycle": "refresh",
+                    "database": true,
+                    "engines": [
+                        "sqlite",
+                        "pgsql",
+                        "mysql"
+                    ],
+                    "skeleton_writer": true,
+                    "empty_passes": [
+                        "serial"
+                    ],
+                    "files": [
+                        "tests/Integration/Console/InstallCommandTest.php"
+                    ]
+                },
+                {
+                    "key": "RefreshDatabase+Uuid7StrategyTestCase",
+                    "fingerprint": "db41db0f94b8",
+                    "lifecycle": "refresh",
+                    "database": true,
+                    "engines": [
+                        "sqlite",
+                        "pgsql",
+                        "mysql"
+                    ],
+                    "skeleton_writer": false,
+                    "empty_passes": [
+                        "serial"
+                    ],
+                    "files": [
+                        "tests/Integration/IdStrategy/Uuid7/DriveMigrationsUuid7Test.php"
                     ]
                 }
             ]

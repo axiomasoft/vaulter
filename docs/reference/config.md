@@ -711,6 +711,10 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter-media.dedup.scope` | `VAULTER_DEDUP_SCOPE` | `'tenant'` | — |
 | `vaulter-media.gc.grace_hours` | `VAULTER_GC_GRACE_HOURS` | `24` | — |
 | `vaulter-media.gc.orphan_grace_hours` | `VAULTER_ORPHAN_GRACE_HOURS` | `env('VAULTER_GC_GRACE_HOURS', 24)` | — |
+| `vaulter-media.scrub` | — | — | The integrity scrub (vaulter:blobs:scrub, D49): the sample and budget of one run — the first one used up ends it. Reading a whole object store is expensive, so a run covers a sample; null: no byte or time budget. Not scheduled. |
+| `vaulter-media.scrub.limit` | `VAULTER_SCRUB_LIMIT` | `100` | — |
+| `vaulter-media.scrub.max_bytes` | `VAULTER_SCRUB_MAX_BYTES` | `null` | — |
+| `vaulter-media.scrub.max_seconds` | `VAULTER_SCRUB_MAX_SECONDS` | `null` | — |
 | `vaulter-media.schedule` | — | — | Same value grammar and vaulter.schedule.enabled switch as the core schedule keys. |
 | `vaulter-media.schedule.blobs_gc` | — | `'dailyAt:04:00'` | — |
 | `vaulter-media.schedule.blobs_reconcile` | — | `'weeklyOn:0,04:30'` | — |

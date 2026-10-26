@@ -225,7 +225,7 @@ it('tags every core sub-zone through the Pest group zone:<name>, and the groups 
     };
 
     // a small zone and a two-directory zone keep this cheap; the full partition was measured once when the map was written
-    foreach (['core-modules', 'core-operations'] as $zone) {
+    foreach (['core-modules', 'core-http'] as $zone) {
         $classes = $listed("zone:$zone");
         expect($classes)->not->toBe([]);
         foreach ($classes as $class) {

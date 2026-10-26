@@ -29,6 +29,11 @@ return [
         22 => 'TablePrefix/TablePrefixTest.php',
         23 => 'Ulid/UlidModeTest.php',
         24 => 'Unit/DatabaseSchemaReuseTest.php',
+        25 => 'Console/InstallCommandTest.php',
+        26 => 'IdStrategy/Bigint/DriveMigrationsBigintTest.php',
+        27 => 'IdStrategy/Ulid/DriveMigrationsUlidTest.php',
+        28 => 'IdStrategy/Uuid7/DriveMigrationsUuid7Test.php',
+        29 => 'Schema/HostKeyColumnsSchemaTest.php',
     ],
     'engine:server' => [
         0 => 'Concurrency/EventRecorderRollbackPgTest.php',

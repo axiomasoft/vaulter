@@ -211,8 +211,18 @@ it('plans exactly the inventory partitions of every PHP suite, and the inventory
         $plan = t_plan(['sqlite', '-p', (string) $name, '-j1']);
         $planned = array_merge(...array_column($plan['steps'], 'files'));
         sort($planned);
-        expect($planned)->toBe($inventoried, "$name: the plan does not cover its inventory");
-        expect(array_values(array_unique(array_column($plan['steps'], 'partition'))))->toBe(array_column($suite['partitions'], 'key'));
+        $applicable = array_values(array_filter($suite['partitions'], static fn (array $partition): bool => in_array('sqlite', $partition['engines'], true)));
+        $eligible = array_merge(...array_column($applicable, 'files'));
+        sort($eligible);
+        expect($planned)->toBe($eligible, "$name: the plan does not cover its SQLite-applicable inventory");
+        expect(array_values(array_unique(array_column($plan['steps'], 'partition'))))->toBe(array_column($applicable, 'key'));
+        foreach ($suite['partitions'] as $partition) {
+            if (!in_array('sqlite', $partition['engines'], true)) {
+                $skipped = array_values(array_filter($plan['skipped'], static fn (array $skip): bool => $skip['partition'] === $partition['key']));
+                expect($skipped)->toHaveCount(1)
+                    ->and($skipped[0]['reason'])->toBe('partition not applicable to sqlite');
+            }
+        }
     }
 });
 

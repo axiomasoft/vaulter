@@ -61,7 +61,6 @@
                 "packages/core/tests/Modules/ExtensionRegistryTest.php",
                 "packages/core/tests/Modules/InvalidModuleGraphHttpTest.php",
                 "packages/core/tests/Modules/ModuleKernelBootTest.php",
-                "packages/core/tests/Modules/ModuleUninstallCommandTest.php",
                 "packages/core/tests/Modules/SealTest.php"
             ],
             "uses": [
@@ -75,10 +74,7 @@
                 "packages/core/src/Operations",
                 "packages/core/src/Idempotency"
             ],
-            "tests": [
-                "packages/core/tests/Operations/ModuleReadinessTest.php",
-                "packages/core/tests/Operations/OperationsReferenceTest.php"
-            ],
+            "tests": [],
             "uses": [
                 "core-kernel",
                 "core-modules",
@@ -126,15 +122,11 @@
                 "packages/core/tests/Concurrency/ForkRaceTest.php",
                 "packages/core/tests/Database/AggregateLockTest.php",
                 "packages/core/tests/HostKeyMysql",
-                "packages/core/tests/IdStrategy/Bigint/DriveMigrationsBigintTest.php",
                 "packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php",
                 "packages/core/tests/IdStrategy/IdStrategyResolverTest.php",
                 "packages/core/tests/IdStrategy/IdStrategyTest.php",
-                "packages/core/tests/IdStrategy/Ulid/DriveMigrationsUlidTest.php",
                 "packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php",
-                "packages/core/tests/IdStrategy/Uuid7/DriveMigrationsUuid7Test.php",
-                "packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php",
-                "packages/core/tests/Schema/HostKeyColumnsSchemaTest.php"
+                "packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php"
             ],
             "uses": [
                 "core-kernel"
@@ -150,11 +142,9 @@
             ],
             "tests": [
                 "packages/core/tests/Console/CommandsReferenceCommandTest.php",
-                "packages/core/tests/Console/InstallCommandTest.php",
                 "packages/core/tests/Doctor/DoctorJsonSchemaTest.php",
                 "packages/core/tests/Doctor/DoctorRunnerTest.php",
-                "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
-                "packages/core/tests/Observability/P83/P83UploadSessionActiveMetricsTest.php"
+                "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php"
             ],
             "uses": [
                 "core-kernel",
@@ -798,18 +788,18 @@
         "packages/collaboration/tests/Restore",
         "packages/collaboration/tests/Revocation",
         "packages/core/tests/Concurrency/ForkRaceTest.php",
-        "packages/core/tests/Console/InstallCommandTest.php",
+        "tests/Integration/Console/InstallCommandTest.php",
         "packages/core/tests/Database/AggregateLockTest.php",
         "packages/core/tests/HostKeyMysql/HostKeyColumnsMysqlTest.php",
-        "packages/core/tests/IdStrategy/Bigint/DriveMigrationsBigintTest.php",
+        "tests/Integration/IdStrategy/Bigint/DriveMigrationsBigintTest.php",
         "packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php",
         "packages/core/tests/IdStrategy/IdStrategyResolverTest.php",
         "packages/core/tests/IdStrategy/IdStrategyTest.php",
-        "packages/core/tests/IdStrategy/Ulid/DriveMigrationsUlidTest.php",
+        "tests/Integration/IdStrategy/Ulid/DriveMigrationsUlidTest.php",
         "packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php",
-        "packages/core/tests/IdStrategy/Uuid7/DriveMigrationsUuid7Test.php",
+        "tests/Integration/IdStrategy/Uuid7/DriveMigrationsUuid7Test.php",
         "packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php",
-        "packages/core/tests/Schema/HostKeyColumnsSchemaTest.php",
+        "tests/Integration/Schema/HostKeyColumnsSchemaTest.php",
         "packages/documents/tests/AfterCommit/CommentAfterCommitTest.php",
         "packages/documents/tests/Concurrency",
         "packages/documents/tests/Document/DocumentCopyLifecycleTest.php",

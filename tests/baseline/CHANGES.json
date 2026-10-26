@@ -12053,10 +12053,11 @@
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_an_unknown_driver",
       "replacement": [
-        "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_a_malformed_middleware_and_no_longer_knows_a_permission_driver_option__the_drive_owns_it_"
+        "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_a_malformed_middleware_and_no_longer_knows_a_permission_driver_option__the_drive_owns_it_"
       ],
-      "reason": "P4.16: the installer no longer has a permission driver option (the drive owns the driver)",
-      "decision": "D10"
+      "reason": "P4.16: the installer no longer has a permission driver option (the drive owns the driver); D28 supplemental runtime upper-module move",
+      "decision": "PLAN4-D6",
+      "new_suite": "integration"
     },
     {
       "suite": "core",
@@ -17975,12 +17976,212 @@
       "new_suite": "integration",
       "reason": "Mechanical core integration split, same case/dataset and assertions",
       "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\IdStrategy\\Bigint\\DriveMigrationsBigintTest::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_bigint_стратегией",
+      "new": "P\\Tests\\Integration\\IdStrategy\\Bigint\\DriveMigrationsBigintTest::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_bigint_стратегией",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\IdStrategy\\Ulid\\DriveMigrationsUlidTest::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_ulid_стратегией",
+      "new": "P\\Tests\\Integration\\IdStrategy\\Ulid\\DriveMigrationsUlidTest::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_ulid_стратегией",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\IdStrategy\\Uuid7\\DriveMigrationsUuid7Test::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_uuid7_стратегией",
+      "new": "P\\Tests\\Integration\\IdStrategy\\Uuid7\\DriveMigrationsUuid7Test::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_uuid7_стратегией",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_does_not_migrate_without_the_flag",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_does_not_migrate_without_the_flag",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_ends_with_the_doctor_report_and_still_exits_0_when_the_doctor_finds_an_error",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_ends_with_the_doctor_report_and_still_exits_0_when_the_doctor_finds_an_error",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_falls_back_to_the_defaults_non_interactively",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_falls_back_to_the_defaults_non_interactively",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_prints_the_host_settings_without_editing_the_host_config",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_prints_the_host_settings_without_editing_the_host_config",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_publishes_the_config_of_every_installed_package_without_prompting",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_publishes_the_config_of_every_installed_package_without_prompting",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_runs_the_migrations_with___migrate",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_runs_the_migrations_with___migrate",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_skips_a_config_that_is_already_published_unless_forced",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_skips_a_config_that_is_already_published_unless_forced",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_stays_idempotent_with_the_doctor_step_and_leaves_the_published_config_as_shipped",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_stays_idempotent_with_the_doctor_step_and_leaves_the_published_config_as_shipped",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Observability\\P83\\P83UploadSessionActiveMetricsTest::__pest_evaluable_it_records_vaulter__upload__session__active_gauges_by_protocol",
+      "new": "P\\Tests\\Integration\\Observability\\P83\\P83UploadSessionActiveMetricsTest::__pest_evaluable_it_records_vaulter__upload__session__active_gauges_by_protocol",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('bigint')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('bigint')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('string')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('string')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('ulid')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('ulid')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('uuid')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('uuid')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('bigint', 'bigint', 'bigint unsigned')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('bigint', 'bigint', 'bigint unsigned')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('string', 'varchar(64)', 'varchar(64)')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('string', 'varchar(64)', 'varchar(64)')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('ulid', 'char(26)', 'char(26)')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('ulid', 'char(26)', 'char(26)')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('uuid', 'uuid', 'char(36)')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('uuid', 'uuid', 'char(36)')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_preserves_nullable_and_index_conventions_for_migration_helpers",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_preserves_nullable_and_index_conventions_for_migration_helpers",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"('nested')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"('nested')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"('unknown')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"('unknown')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"(42)\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"(42)\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"(null)\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"(null)\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime dependency, same assertion/case",
+      "decision": "PLAN4-D6"
     }
   ],
   "additions": {
     "repo": {
       "introduced": "P1.3",
-      "count": 258,
+      "count": 265,
       "names": [
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__all_four_block__I1_and_I2_since_P4_16__the_collaboration_residual_of_D32_emptied_in_P5_1_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
@@ -18005,6 +18206,7 @@
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__the_head_foreign_keys_are_flagged_and_a_table_owned_by_the_dependency_is_fine",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__the_same_reference_counted_twice_in_one_place_is_one_entry_with_count_2",
         "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_allows_kernel_local_fixtures_and_ignores_dependencies_mentioned_only_in_comments",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_keeps_a_synthetic_module_and_negative_dependency_strings_usable_without_upper_modules",
         "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_keeps_every_core_PHP_test_and_fixture_independent_of_upper_packages_and_repository_harnesses",
         "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"alias\"\"",
         "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"class string\"\"",
@@ -18014,6 +18216,12 @@
         "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"package fixture\"\"",
         "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"root subprocess\"\"",
         "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"sibling fixture\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"drive table\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"load namespace\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"module identity\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"published config\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"runtime operation\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"schema entity owner\"\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('cli')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('config')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('http')\"",
@@ -18321,17 +18529,51 @@
           "name": "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_core_with_no_sibling_repository_after_the_kernel_split",
           "reason": "Core consumer declares no sibling repositories after kernel split.",
           "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_keeps_a_synthetic_module_and_negative_dependency_strings_usable_without_upper_modules",
+          "reason": "D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"drive table\"\"",
+          "reason": "D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"load namespace\"\"",
+          "reason": "D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"module identity\"\"",
+          "reason": "D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"published config\"\"",
+          "reason": "D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"runtime operation\"\"",
+          "reason": "D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals\"dataset \"schema entity owner\"\"",
+          "reason": "D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures",
+          "decision": "PLAN4-D6"
         }
       ]
     },
     "core": {
-      "count": 72,
+      "count": 60,
       "names": [
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_has_no_accessor_of_a_module_section__the_drive_reads_its_own_through_DriveConfig",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_keeps_no_drive_and_no_webhooks_section_in_the_kernel_config_root__P4_11__P4_13_",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_names_every_table_by_the_configured_prefix_and_the_canonical_entity__ignoring_table__names",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_resolves_the_outbox_model_from_vaulter_models_and_refuses_a_foreign_class",
-        "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_a_malformed_middleware_and_no_longer_knows_a_permission_driver_option__the_drive_owns_it_",
         "P\\Packages\\core\\tests\\Database\\AggregateLockTest::__pest_evaluable_it_keeps_the_aggregate_lock_free_of_the_entities_of_any_module__the_entity_key_is_its_argument",
         "P\\Packages\\core\\tests\\Database\\AggregateLockTest::__pest_evaluable_it_takes_the_aggregate_lock_of_any_entity_inside_a_transaction__on_its_own_table_outside_PostgreSQL\"('idempotency_keys')\"",
         "P\\Packages\\core\\tests\\Database\\AggregateLockTest::__pest_evaluable_it_takes_the_aggregate_lock_of_any_entity_inside_a_transaction__on_its_own_table_outside_PostgreSQL\"('outbox')\"",
@@ -18378,23 +18620,12 @@
         "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_compiles_the_offered_manifests_whichever_side_of_the_core_provider_offers_them\"dataset \"before\"\"",
         "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_refuses_a_module_offered_after_the_application_booted",
         "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_seals_a_valid_graph_of_the_offered_modules_for_the_suite_application",
-        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_plans_the_removal_of_a_module_that_ships_its_migrations_in_its_own_package",
-        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_plans_the_removal_of_a_module_that_ships_no_migration_of_its_own",
-        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses_an_unknown_module_as_a_usage_error",
-        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses_the_core__it_cannot_be_uninstalled_and_other_modules_require_it",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_freezes_every_builder_once_compiled__valid_or_not\"dataset \"invalid graph\"\"",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_freezes_every_builder_once_compiled__valid_or_not\"dataset \"valid graph\"\"",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_refuses_an_offer_after_the_catalogue_is_sealed_and_keeps_one_offer_per_class",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_refuses_reads_before_the_graph_is_compiled",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_reports_an_invalid_graph_on_every_read",
         "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_seals_the_kernel_once",
-        "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_lists_the_tables_by_the_module_that_owns_them__from_the_schema_class_of_each_manifest",
-        "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_queries_nothing_until_the_first_write__once_for_it_and_never_again_for_a_ready_module",
-        "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_refuses_a_module_that_is_not_active",
-        "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_refuses_a_module_whose_tables_are_missing_and_checks_it_again_on_the_next_write",
-        "P\\Packages\\core\\tests\\Operations\\OperationsReferenceTest::__pest_evaluable_it_prints_a_Markdown_table__one_row_per_operation",
-        "P\\Packages\\core\\tests\\Operations\\OperationsReferenceTest::__pest_evaluable_it_prints_every_operation_of_the_offered_modules_as_JSON__an_inactive_opt_in_module_included",
-        "P\\Packages\\core\\tests\\Operations\\OperationsReferenceTest::__pest_evaluable_it_renders_the_rows_of_the_catalogue_it_is_given",
         "P\\Packages\\core\\tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_registers_the_kernel_config__database_and_observability_seams",
         "P\\Packages\\core\\tests\\Tenancy\\TenancyWithoutTest::__pest_evaluable_it_nests_and_restores_the_previous_state_when_the_callback_throws",
         "P\\Packages\\core\\tests\\Tenancy\\TenancyWithoutTest::__pest_evaluable_it_runs_the_callback_inside_the_tenancy_bypass_and_returns_its_value",
@@ -28021,11 +28252,314 @@
       "new_suite": "integration",
       "reason": "Mechanical transfer of the current pre-split case/dataset; source discovery pinned by U1",
       "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\IdStrategy\\Bigint\\DriveMigrationsBigintTest::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_bigint_стратегией",
+      "new": "P\\Tests\\Integration\\IdStrategy\\Bigint\\DriveMigrationsBigintTest::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_bigint_стратегией",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\IdStrategy\\Ulid\\DriveMigrationsUlidTest::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_ulid_стратегией",
+      "new": "P\\Tests\\Integration\\IdStrategy\\Ulid\\DriveMigrationsUlidTest::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_ulid_стратегией",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\IdStrategy\\Uuid7\\DriveMigrationsUuid7Test::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_uuid7_стратегией",
+      "new": "P\\Tests\\Integration\\IdStrategy\\Uuid7\\DriveMigrationsUuid7Test::__pest_evaluable_it_применяет_базовые_Drive_миграции_под_uuid7_стратегией",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_lists_the_tables_by_the_module_that_owns_them__from_the_schema_class_of_each_manifest",
+      "new": "P\\Tests\\Integration\\Operations\\ModuleReadinessTest::__pest_evaluable_it_lists_the_tables_by_the_module_that_owns_them__from_the_schema_class_of_each_manifest",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_queries_nothing_until_the_first_write__once_for_it_and_never_again_for_a_ready_module",
+      "new": "P\\Tests\\Integration\\Operations\\ModuleReadinessTest::__pest_evaluable_it_queries_nothing_until_the_first_write__once_for_it_and_never_again_for_a_ready_module",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_refuses_a_module_that_is_not_active",
+      "new": "P\\Tests\\Integration\\Operations\\ModuleReadinessTest::__pest_evaluable_it_refuses_a_module_that_is_not_active",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_refuses_a_module_whose_tables_are_missing_and_checks_it_again_on_the_next_write",
+      "new": "P\\Tests\\Integration\\Operations\\ModuleReadinessTest::__pest_evaluable_it_refuses_a_module_whose_tables_are_missing_and_checks_it_again_on_the_next_write",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_plans_the_removal_of_a_module_that_ships_its_migrations_in_its_own_package",
+      "new": "P\\Tests\\Integration\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_plans_the_removal_of_a_module_that_ships_its_migrations_in_its_own_package",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_plans_the_removal_of_a_module_that_ships_no_migration_of_its_own",
+      "new": "P\\Tests\\Integration\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_plans_the_removal_of_a_module_that_ships_no_migration_of_its_own",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses_an_unknown_module_as_a_usage_error",
+      "new": "P\\Tests\\Integration\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses_an_unknown_module_as_a_usage_error",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses_the_core__it_cannot_be_uninstalled_and_other_modules_require_it",
+      "new": "P\\Tests\\Integration\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses_the_core__it_cannot_be_uninstalled_and_other_modules_require_it",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_does_not_migrate_without_the_flag",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_does_not_migrate_without_the_flag",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_ends_with_the_doctor_report_and_still_exits_0_when_the_doctor_finds_an_error",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_ends_with_the_doctor_report_and_still_exits_0_when_the_doctor_finds_an_error",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_falls_back_to_the_defaults_non_interactively",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_falls_back_to_the_defaults_non_interactively",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_prints_the_host_settings_without_editing_the_host_config",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_prints_the_host_settings_without_editing_the_host_config",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_publishes_the_config_of_every_installed_package_without_prompting",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_publishes_the_config_of_every_installed_package_without_prompting",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_a_malformed_middleware_and_no_longer_knows_a_permission_driver_option__the_drive_owns_it_",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_rejects_a_malformed_middleware_and_no_longer_knows_a_permission_driver_option__the_drive_owns_it_",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_runs_the_migrations_with___migrate",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_runs_the_migrations_with___migrate",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_skips_a_config_that_is_already_published_unless_forced",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_skips_a_config_that_is_already_published_unless_forced",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Console\\InstallCommandTest::__pest_evaluable_it_stays_idempotent_with_the_doctor_step_and_leaves_the_published_config_as_shipped",
+      "new": "P\\Tests\\Integration\\Console\\InstallCommandTest::__pest_evaluable_it_stays_idempotent_with_the_doctor_step_and_leaves_the_published_config_as_shipped",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Operations\\OperationsReferenceTest::__pest_evaluable_it_prints_a_Markdown_table__one_row_per_operation",
+      "new": "P\\Tests\\Integration\\Operations\\OperationsReferenceTest::__pest_evaluable_it_prints_a_Markdown_table__one_row_per_operation",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Operations\\OperationsReferenceTest::__pest_evaluable_it_prints_every_operation_of_the_offered_modules_as_JSON__an_inactive_opt_in_module_included",
+      "new": "P\\Tests\\Integration\\Operations\\OperationsReferenceTest::__pest_evaluable_it_prints_every_operation_of_the_offered_modules_as_JSON__an_inactive_opt_in_module_included",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Operations\\OperationsReferenceTest::__pest_evaluable_it_renders_the_rows_of_the_catalogue_it_is_given",
+      "new": "P\\Tests\\Integration\\Operations\\OperationsReferenceTest::__pest_evaluable_it_renders_the_rows_of_the_catalogue_it_is_given",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Observability\\P83\\P83UploadSessionActiveMetricsTest::__pest_evaluable_it_records_vaulter__upload__session__active_gauges_by_protocol",
+      "new": "P\\Tests\\Integration\\Observability\\P83\\P83UploadSessionActiveMetricsTest::__pest_evaluable_it_records_vaulter__upload__session__active_gauges_by_protocol",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('bigint')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('bigint')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('string')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('string')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('ulid')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('ulid')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('uuid')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_creates_host_keys_independently_of_entity_IDs_on_a_fresh_panel\"('uuid')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('bigint', 'bigint', 'bigint unsigned')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('bigint', 'bigint', 'bigint unsigned')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('string', 'varchar(64)', 'varchar(64)')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('string', 'varchar(64)', 'varchar(64)')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('ulid', 'char(26)', 'char(26)')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('ulid', 'char(26)', 'char(26)')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('uuid', 'uuid', 'char(36)')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_maps_every_supported_SQL_driver_and_host_type\"('uuid', 'uuid', 'char(36)')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_preserves_nullable_and_index_conventions_for_migration_helpers",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_preserves_nullable_and_index_conventions_for_migration_helpers",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"('nested')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"('nested')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"('unknown')\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"('unknown')\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"(42)\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"(42)\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"(null)\"",
+      "new": "P\\Tests\\Integration\\Schema\\HostKeyColumnsSchemaTest::__pest_evaluable_it_rejects_unknown_host_key_configuration\"(null)\"",
+      "new_suite": "integration",
+      "reason": "D28 supplemental runtime upper-module seed/helper closure; exact case/dataset",
+      "decision": "PLAN4-D6"
     }
   ],
   "transfer_source": {
     "discovery": "@plan/artifacts/P2.2/discovery-before.json",
     "sha256": "1810aaf2b8b1bb3be8049cae99aa3b0d00952a1c214913979362747de95251d2",
     "note": "entries maps immutable original cases; transfers records every current source case, including post-original additions."
+  },
+  "supplemental_transfer_source": {
+    "base": "e6d1d4f752fc6601fe7b729e1c8934c966476bfc",
+    "manifest": "@plan/artifacts/P2.2/U5-supplemental-move-manifest.json",
+    "count": 37,
+    "decision": "PLAN4-D6",
+    "amendment": "PLAN4-D28"
   }
 }

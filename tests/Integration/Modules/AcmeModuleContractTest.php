@@ -193,7 +193,7 @@ it('uses only the module surface, the slot contracts and what their signatures n
     foreach (glob(__DIR__.'/Fixtures/AcmeModule/*.php') ?: [] as $file) {
         preg_match_all('/\\\\?(Vaulter(?:\\\\[A-Za-z0-9_]+)+)/', (string) preg_replace('/^namespace .*;$/m', '', (string) file_get_contents($file)), $matches);
         foreach ($matches[1] as $name) {
-            if (!str_starts_with($name, 'Vaulter\\Tests\\Modules\\Fixtures\\AcmeModule')) {
+            if (!str_starts_with($name, 'Vaulter\\Integration\\Tests\\Modules\\Fixtures\\AcmeModule')) {
                 $imports[$name][] = basename($file);
             }
         }

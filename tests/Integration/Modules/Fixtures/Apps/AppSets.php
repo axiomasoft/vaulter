@@ -116,7 +116,7 @@ final class AppSets
                 if (!str_starts_with($class, $prefix)) {
                     continue;
                 }
-                $file = __DIR__.'/../../../../../packages'.$package.'/src/'.str_replace('\\', '/', substr($class, strlen($prefix))).'.php';
+                $file = dirname(__DIR__, 5).'/packages/'.$package.'/src/'.str_replace('\\', '/', substr($class, strlen($prefix))).'.php';
                 if (is_file($file)) {
                     require_once $file;
                 }
