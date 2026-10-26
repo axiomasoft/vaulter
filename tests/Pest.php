@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Integration\Tests\TestCase as IntegrationTestCase;
 use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Testing\Support\TestGroups;
@@ -134,3 +135,7 @@ uses(LoadTestCase::class)->in(
 );
 
 uses(HostKeyMysqlTestCase::class)->in($core.'/HostKeyMysql');
+
+// Preparation only: integration has no test files yet. The manifest move installs
+// the per-file TestCase/trait bindings before any integration test executes.
+uses(IntegrationTestCase::class)->in(__DIR__.'/Integration');

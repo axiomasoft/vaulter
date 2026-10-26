@@ -509,6 +509,424 @@
         }
       ]
     },
+    "integration": {
+      "kind": "pest",
+      "cwd": ".",
+      "vendor": "vendor/bin/pest",
+      "config": "phpunit.xml",
+      "tests_dir": "tests/Integration",
+      "path_base": "repo",
+      "default": true,
+      "discovery": [
+        "--list-tests",
+        "--testsuite=integration"
+      ],
+      "partitions": [
+        {
+          "key": "(unbound)",
+          "fingerprint": "922f4b9187ab",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Arch/ArchTest.php",
+            "tests/Integration/Arch/ConfigurationArchitectureGuardTest.php",
+            "tests/Integration/Arch/ConfigurationBoundaryTest.php",
+            "tests/Integration/Arch/HttpV1ArchTest.php",
+            "tests/Integration/Arch/NoSoftDeletesTest.php",
+            "tests/Integration/Arch/OperationsBoundaryTest.php",
+            "tests/Integration/Arch/OperationsUseRunnerTest.php",
+            "tests/Integration/Arch/ProvidersDeclareOnlyTest.php",
+            "tests/Integration/Arch/PublicApiReturnTypesTest.php",
+            "tests/Integration/Arch/ServiceLocatorRatchetTest.php",
+            "tests/Integration/Arch/SurfaceManifestTest.php",
+            "tests/Integration/Arch/TestingBoundaryTest.php",
+            "tests/Integration/Events/EventCatalogTest.php",
+            "tests/Integration/Events/EventPipelineArchTest.php",
+            "tests/Integration/Events/EventsReferenceTest.php",
+            "tests/Integration/Modules/ModuleCompilerTest.php",
+            "tests/Integration/PublicApi/OperationsContractTest.php",
+            "tests/Integration/PublicApi/OptionsTest.php",
+            "tests/Integration/PublicApi/SequenceOptionContractTest.php",
+            "tests/Integration/PublicApi/UploadSourceTest.php",
+            "tests/Integration/Unit/AccessEnumsTest.php",
+            "tests/Integration/Unit/DatabaseCompatibilityDocsGuardTest.php",
+            "tests/Integration/Unit/DatabaseSchemaReuseTest.php",
+            "tests/Integration/Unit/EnumTest.php",
+            "tests/Integration/Unit/GatePermissionResolverDocGuardTest.php",
+            "tests/Integration/Unit/InstallationDocsGuardTest.php"
+          ]
+        },
+        {
+          "key": "BigintStrategyTestCase+RefreshDatabase",
+          "fingerprint": "f44802251cc1",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/IdStrategy/Bigint/HostKeysBigintTest.php"
+          ]
+        },
+        {
+          "key": "DatabaseMigrations+EnablesWebhooksModule+TestCase",
+          "fingerprint": "ee2d7ebc364c",
+          "lifecycle": "migrations",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Concurrency/EventRecorderRollbackPgTest.php",
+            "tests/Integration/Concurrency/OutboxFanoutRaceTest.php",
+            "tests/Integration/Concurrency/OutboxLateCommitTest.php",
+            "tests/Integration/Concurrency/OutboxLeaseTakeoverTest.php",
+            "tests/Integration/Events/EventRecorderTest.php"
+          ]
+        },
+        {
+          "key": "DatabaseMigrations+TestCase",
+          "fingerprint": "c83ff6c62f49",
+          "lifecycle": "migrations",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Concurrency/IdempotencyRaceTest.php",
+            "tests/Integration/Events/EventSinkContractTest.php",
+            "tests/Integration/Idempotency/IdempotencyContractTest.php",
+            "tests/Integration/Modules/AcmeModuleContractTest.php",
+            "tests/Integration/Modules/CleanInstallMatrixTest.php",
+            "tests/Integration/Modules/ModuleUninstallTest.php",
+            "tests/Integration/Operations/OperationRunnerContractTest.php"
+          ]
+        },
+        {
+          "key": "EnablesWebhooksModule+RefreshDatabase+TestCase",
+          "fingerprint": "1a18f6780bda",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Doctor/CoreDoctorChecksTest.php",
+            "tests/Integration/Observability/P85/P85Section53CoreMetricsTest.php",
+            "tests/Integration/Outbox/OutboxRelayTest.php",
+            "tests/Integration/Outbox/OutboxWriteTest.php"
+          ]
+        },
+        {
+          "key": "ExercisesWideNodeListing+RefreshDatabase+UlidStrategyTestCase",
+          "fingerprint": "2ed2a7954df2",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/IdStrategy/Ulid/WideNodeListingTest.php"
+          ]
+        },
+        {
+          "key": "InteractsWithVaulter+RefreshDatabase+TestCase",
+          "fingerprint": "2474e207add7",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Testing/InteractsWithVaulterTest.php"
+          ]
+        },
+        {
+          "key": "OpenApiTestCase",
+          "fingerprint": "c7e20d2a5424",
+          "lifecycle": "custom",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/OpenApi/OpenApiDocumentTest.php",
+            "tests/Integration/OpenApi/OpenApiExamplesTest.php",
+            "tests/Integration/OpenApi/OpenApiOperationPoliciesTest.php",
+            "tests/Integration/OpenApi/OpenApiProblemsTableTest.php",
+            "tests/Integration/OpenApi/OpenApiRouteCoverageTest.php",
+            "tests/Integration/OpenApi/OpenApiValidationEnabledTest.php",
+            "tests/Integration/OpenApi/OpenApiValidatorSelfTest.php",
+            "tests/Integration/OpenApi/RouteListSnapshotTest.php"
+          ]
+        },
+        {
+          "key": "P83DocumentsTestCase",
+          "fingerprint": "0da1f7e37ce6",
+          "lifecycle": "custom",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial",
+            "parallel"
+          ],
+          "files": [
+            "tests/Integration/Database/VaulterDatabaseTest.php"
+          ]
+        },
+        {
+          "key": "P83DocumentsTestCase+RefreshDatabase",
+          "fingerprint": "9e003888e725",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/ObservabilityDocuments/P83DocumentsMetricsTest.php"
+          ]
+        },
+        {
+          "key": "RefreshDatabase+TablePrefixTestCase",
+          "fingerprint": "4885e0f72862",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/TablePrefix/TablePrefixTest.php"
+          ]
+        },
+        {
+          "key": "RefreshDatabase+TestCase",
+          "fingerprint": "555a082c1a50",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Configuration/ConfigDefaultsLoadingTest.php",
+            "tests/Integration/Configuration/ConfigNormalizerTest.php",
+            "tests/Integration/Configuration/ConfigValidatorTest.php",
+            "tests/Integration/Console/ConfigReferenceCommandTest.php",
+            "tests/Integration/Console/SchedulingRegistrarTest.php",
+            "tests/Integration/Doctor/DoctorReadOnlyTest.php",
+            "tests/Integration/Events/CoreEventCatalogConformanceTest.php",
+            "tests/Integration/Feature/EventTypeTest.php",
+            "tests/Integration/Feature/ServiceProviderTest.php",
+            "tests/Integration/Feature/VaulterManagerExporterHandlerSeamTest.php",
+            "tests/Integration/Http/CrossTenantV1Test.php",
+            "tests/Integration/Http/HttpKernelV1Test.php",
+            "tests/Integration/Http/LegacyRoutesRemovedTest.php",
+            "tests/Integration/Observability/P83/P83ActivityFeedMetricsTest.php",
+            "tests/Integration/Observability/P83/P83Section51MetricsTest.php",
+            "tests/Integration/Observability/P84/P84Section52HostMetricsTest.php",
+            "tests/Integration/Observability/TelemetryMiddlewareTest.php",
+            "tests/Integration/Operations/ActorContextTest.php",
+            "tests/Integration/Operations/CoreOperationsSecurityTest.php",
+            "tests/Integration/Operations/NodeLocatorTest.php",
+            "tests/Integration/Operations/OperationContextTest.php",
+            "tests/Integration/Operations/OperationGuardTest.php",
+            "tests/Integration/Operations/OperationTaxonomyTest.php",
+            "tests/Integration/Operations/ProfileGuardBoundaryTest.php",
+            "tests/Integration/Operations/ProfilePermissionDriverTest.php",
+            "tests/Integration/Providers/AccessRegistrarTest.php",
+            "tests/Integration/Recipes/PermissionDriverRecipeTest.php",
+            "tests/Integration/Schema/BlobDedupIndexTest.php",
+            "tests/Integration/Schema/CanonicalSchemaTest.php",
+            "tests/Integration/Schema/HotPathIndexesTest.php",
+            "tests/Integration/Schema/KeyColumnTypesTest.php",
+            "tests/Integration/Schema/SchemaSnapshotTest.php",
+            "tests/Integration/Support/CollaborationDefaultsGuardTest.php",
+            "tests/Integration/Support/ContractsDocFqcnGuardTest.php",
+            "tests/Integration/Support/DocsDriftGuardTest.php",
+            "tests/Integration/Support/DomainExceptionStatusTest.php",
+            "tests/Integration/Support/DriveNameRulesConfigSeamTest.php",
+            "tests/Integration/Support/EnumCaseAttributeResolverInstanceCacheTest.php",
+            "tests/Integration/Support/ReleaseReadinessGuardTest.php",
+            "tests/Integration/Support/SnapshotResourceTimestampTest.php",
+            "tests/Integration/Testing/ContractSuitesTest.php",
+            "tests/Integration/WriteGuard/WriteScopeTest.php"
+          ]
+        },
+        {
+          "key": "RefreshDatabase+UlidStrategyTestCase",
+          "fingerprint": "00991ae2103d",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/IdStrategy/Ulid/HostKeysTest.php"
+          ]
+        },
+        {
+          "key": "RefreshDatabase+UlidTestCase",
+          "fingerprint": "7136740c7624",
+          "lifecycle": "refresh",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Ulid/UlidModeTest.php"
+          ]
+        },
+        {
+          "key": "TestCase",
+          "fingerprint": "20db02f08b7a",
+          "lifecycle": "custom",
+          "database": true,
+          "engines": [
+            "sqlite",
+            "pgsql",
+            "mysql"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Operations/ProblemMappingTest.php"
+          ]
+        },
+        {
+          "key": "TestCase+WithoutDatabaseSchema",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Http/Problems/ErrorsReferenceTest.php",
+            "tests/Integration/Http/Problems/HostRouteUntouchedTest.php",
+            "tests/Integration/Http/Problems/ProblemCatalogLangTest.php",
+            "tests/Integration/Http/Problems/ProblemMetaRedactionTest.php",
+            "tests/Integration/Http/Problems/ProblemRendererTest.php",
+            "tests/Integration/Http/Problems/ProblemSpecRulesTest.php",
+            "tests/Integration/Modules/ActivationMatrixTest.php",
+            "tests/Integration/Modules/ActivationTest.php",
+            "tests/Integration/Modules/DriveDisabledTest.php",
+            "tests/Integration/Modules/InvalidModuleGraphConsoleTest.php",
+            "tests/Integration/Modules/ModulesCommandTest.php",
+            "tests/Integration/Modules/OwnershipRegistryTest.php",
+            "tests/Integration/Modules/RouteLabelSourceTest.php",
+            "tests/Integration/Observability/Tracing/TraceRecorderBindingTest.php",
+            "tests/Integration/Operations/OperationCatalogTest.php",
+            "tests/Integration/Unit/NodeNameTest.php"
+          ]
+        },
+        {
+          "key": "TestCase+WithoutDatabaseSchema#skeleton",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": true,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
+            "tests/Integration/Modules/ActivationCacheTest.php",
+            "tests/Integration/Modules/RouteCacheActivationTest.php"
+          ]
+        }
+      ]
+    },
     "media": {
       "kind": "pest",
       "cwd": "packages/media",
