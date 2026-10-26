@@ -30,8 +30,8 @@ use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
-use Vaulter\Tests\Support\Schema\SchemaPresets;
-use Vaulter\Tests\Support\Schema\SchemaSnapshot;
+use Vaulter\Integration\Tests\Support\Schema\SchemaPresets;
+use Vaulter\Integration\Tests\Support\Schema\SchemaSnapshot;
 use Vaulter\VaulterServiceProvider;
 use Vaulter\Webhooks\VaulterWebhooksServiceProvider;
 

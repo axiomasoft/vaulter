@@ -2,42 +2,29 @@
 
 declare(strict_types=1);
 
-/*
- * Test groups of the core suite (PLAN3 P1.5), paths relative to this directory; Vaulter\Testing\Support\TestGroups turns them into
- * Pest groups, tests/Repo/TestGroupsTest.php keeps them true. A test belongs to `database` only when its RESULT depends on the
- * engine; why each entry is here: plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md.
- */
-return [
-    'database' => [
-        'Schema',
-        'Concurrency',
-        'IdStrategy',
-        'TablePrefix',
-        'Ulid',
-        'HostKeyMysql',
-        'Database',
-        'Idempotency',
-        'Events/EventRecorderTest.php',
-        'Modules/AcmeModuleContractTest.php',
-        'Modules/CleanInstallMatrixTest.php',
-        'Modules/ModuleUninstallTest.php',
-        'Outbox/OutboxRelayTest.php',
-        'Outbox/OutboxWriteTest.php',
-        'Doctor/CoreDoctorChecksTest.php',
-        'Console/InstallCommandTest.php',
-        'Unit/DatabaseSchemaReuseTest.php',
-    ],
-    // Forked children on their own connections, or process-global state a parallel worker would trample.
-    'serial' => [
-        'Concurrency',
-        'Database/VaulterDatabaseTest.php',
-    ],
-    // No test of this suite qualifies yet: a scale test moves here only with a cheap same-defect equivalent on the PR lane
-    // (classification.md, "Extended").
-    'extended' => [],
-    'stand' => [],
-    // Whole files that can only say something on a server engine: skipped before the schema is built on SQLite.
-    'engine:server' => [
-        'Concurrency',
-    ],
-];
+return array (
+  'database' => 
+  array (
+    0 => 'Concurrency/ForkRaceTest.php',
+    1 => 'Console/InstallCommandTest.php',
+    2 => 'Database/AggregateLockTest.php',
+    3 => 'HostKeyMysql/HostKeyColumnsMysqlTest.php',
+    4 => 'IdStrategy/Bigint/DriveMigrationsBigintTest.php',
+    5 => 'IdStrategy/Bigint/VaulterSchemaBigintTest.php',
+    6 => 'IdStrategy/IdStrategyResolverTest.php',
+    7 => 'IdStrategy/IdStrategyTest.php',
+    8 => 'IdStrategy/Ulid/DriveMigrationsUlidTest.php',
+    9 => 'IdStrategy/Ulid/VaulterSchemaUlidTest.php',
+    10 => 'IdStrategy/Uuid7/DriveMigrationsUuid7Test.php',
+    11 => 'IdStrategy/Uuid7/VaulterSchemaUuid7Test.php',
+    12 => 'Schema/HostKeyColumnsSchemaTest.php',
+  ),
+  'engine:server' => 
+  array (
+    0 => 'Concurrency/ForkRaceTest.php',
+  ),
+  'serial' => 
+  array (
+    0 => 'Concurrency/ForkRaceTest.php',
+  ),
+);

@@ -262,7 +262,7 @@ it('catches a class-string of a sibling in src but not a forbidden namespace spe
 it('fails a package whose tests reach into another package tests, and one that takes the kernel test namespace', function (): void {
     $root = c_fixture([
         'packages/beta/tests/Pest.php' => "<?php\n\nrequire __DIR__.'/../../core/tests/Concerns/Helpers.php';\n",
-        'packages/alpha/tests/UsesKernelTestCase.php' => "<?php\n\nuse Vaulter\\Tests\\TestCase;\n\nuses(TestCase::class);\n",
+        'packages/alpha/tests/UsesKernelTestCase.php' => "<?php\n\nuse Vaulter\\Integration\\Tests\\TestCase;\n\nuses(TestCase::class);\n",
     ]);
 
     [$code, , $err] = c_run(['beta', '--dry-run', "--root={$root}"]);

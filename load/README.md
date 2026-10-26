@@ -454,7 +454,7 @@ vendor/bin/pest load/tests/Feature/ConcurrencyFixturesTest.php
 | `gates/p4_memory.py`, `gates/test_p4_memory.py` | P4.1 evidence validator + fixtures |
 | `docker/entrypoint.sh` | renders the FPM pool, migrates direct-to-postgres (bypasses PgBouncer — DDL/prepared-statement reuse under transaction pooling is a known caveat), then runs php-fpm + nginx |
 | `docker/prometheus.yml` | self-scrape only; k6's `--out experimental-prometheus-rw` (D24) reaches Prometheus via `--web.enable-remote-write-receiver` (compose `command`, not this file) |
-| `app/LoadServiceProvider.php`, `LoadActingAs.php` | load-stand host — mirrors `packages/core/tests/E2E/E2eServiceProvider.php` |
+| `app/LoadServiceProvider.php`, `LoadActingAs.php` | load-stand host — mirrors `tests/Integration/E2E/E2eServiceProvider.php` |
 | `app/testbench.load.yaml` | testbench config, bind-mounted to `/app/testbench.yaml` |
 | `app/Console/SeedLoadDatasetCommand.php` | `load:seed` — P2.3, the tier volume+dirty-state envelope |
 | `app/Console/ActivityWriterCommand.php` | `load:activity-write` — P2.3, sustained `v_activity` tail during a k6 run |

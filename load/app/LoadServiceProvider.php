@@ -65,7 +65,7 @@ use Vaulter\Webhooks\Contracts\OutboundUrlGuard;
 /**
  * Load-stand host provider (P2.2). Boots ONLY under the VLT-LOAD nginx+php-fpm SUT
  * (see testbench.load.yaml) — the shipped package never loads it. Mirrors
- * packages/core/tests/E2E/E2eServiceProvider.php (P2.1 Required Reads #4), adapted for
+ * tests/Integration/E2E/E2eServiceProvider.php (P2.1 Required Reads #4), adapted for
  * the harness: full k6-exercised feature surface (operations-catalog.md), MinIO S3 disk,
  * and a `/load/storage` convenience seam that stands in for the "create storage" step —
  * vaulter has no public HTTP endpoint for that (a storage is provisioned per host entity

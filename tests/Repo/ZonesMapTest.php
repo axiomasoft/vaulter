@@ -252,7 +252,7 @@ it('goes red when a test directory loses its zone', function (): void {
         $map['zones']['core-operations']['tests'] = ['packages/core/tests/Operations'];
     });
 
-    expect($broken['problems'])->toContain('test file packages/core/tests/Idempotency/IdempotencyContractTest.php (core) belongs to no zone');
+    expect($broken['problems'])->toContain('test file tests/Integration/Idempotency/IdempotencyContractTest.php (core) belongs to no zone');
 });
 
 it('goes red when a test directory is claimed by a zone of another suite', function (): void {

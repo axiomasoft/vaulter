@@ -35,7 +35,7 @@ fi
 vendor/bin/pest \
     load/tests/Observability/OpenTelemetryTraceRecorderTest.php \
     load/tests/Observability/TraceFlushLifecycleTest.php \
-    packages/core/tests/Observability/Tracing/TraceRecorderBindingTest.php \
+    tests/Integration/Observability/Tracing/TraceRecorderBindingTest.php \
     packages/core/tests/Observability/Tracing/WebhookPipelineTracingTest.php
 (
     cd packages/drive

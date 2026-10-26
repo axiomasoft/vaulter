@@ -3,7 +3,15 @@
     "note": "The single source of test zones (PLAN3 P1.4). A zone is an index over existing directories: it never moves a test. Leaf zones own src[] and tests[] (repo-relative, files or directories, never nested across leaves); `core` is an aggregator of its sub-zones. uses[] = zones whose change affects this one's tests (the Composer graph for packages, a coarse leaf graph inside core). `suite` is the tests/suites.json suite a leaf runs in. `explicit` = never pulled in as a consumer, selected only when touched directly. harness[] = paths whose change means \"run the whole affected set\" (scripts/test-select.php exits 2); database[] = engine-dependent tests (P1.5; the union of the database lists of every packages/*/tests/groups.php, kept equal by tests/Repo/TestGroupsTest.php); tail[] = glob allowlist of prose paths that need no test. This map proves the classification of every source root and test file is complete — not that uses[] is the true dependency graph.",
     "zones": {
         "core": {
-            "children": ["core-kernel", "core-modules", "core-operations", "core-events", "core-http", "core-schema", "core-observability"],
+            "children": [
+                "core-kernel",
+                "core-modules",
+                "core-operations",
+                "core-events",
+                "core-http",
+                "core-schema",
+                "core-observability"
+            ],
             "suite": "core",
             "uses": []
         },
@@ -27,94 +35,360 @@
                 "packages/core/resources"
             ],
             "tests": [
-                "packages/core/tests/Arch",
-                "packages/core/tests/Configuration",
-                "packages/core/tests/Feature",
-                "packages/core/tests/Providers",
-                "packages/core/tests/Recipes",
-                "packages/core/tests/Support",
+                "tests/Integration/Arch/ArchTest.php",
+                "tests/Integration/Arch/ConfigurationArchitectureGuardTest.php",
+                "tests/Integration/Arch/ConfigurationBoundaryTest.php",
+                "tests/Integration/Arch/HttpV1ArchTest.php",
+                "tests/Integration/Arch/NoSoftDeletesTest.php",
+                "tests/Integration/Arch/OperationsBoundaryTest.php",
+                "tests/Integration/Arch/OperationsUseRunnerTest.php",
+                "tests/Integration/Arch/ProvidersDeclareOnlyTest.php",
+                "tests/Integration/Arch/PublicApiReturnTypesTest.php",
+                "tests/Integration/Arch/ServiceLocatorRatchetTest.php",
+                "tests/Integration/Arch/SurfaceManifestTest.php",
+                "tests/Integration/Arch/TestingBoundaryTest.php",
+                "tests/Integration/Arch/__snapshots__/service-locator.json",
+                "packages/core/tests/Arch/CommandNamingTest.php",
+                "tests/Integration/Configuration/ConfigDefaultsLoadingTest.php",
+                "tests/Integration/Configuration/ConfigNormalizerTest.php",
+                "tests/Integration/Configuration/ConfigValidatorTest.php",
+                "packages/core/tests/Configuration/ScheduleFrequencyTest.php",
+                "packages/core/tests/Configuration/VaulterConfigTest.php",
+                "tests/Integration/Feature/EventTypeTest.php",
+                "tests/Integration/Feature/ServiceProviderTest.php",
+                "tests/Integration/Feature/VaulterManagerExporterHandlerSeamTest.php",
+                "packages/core/tests/Feature/NodeCommentFeatureOffTest.php",
+                "tests/Integration/Providers/AccessRegistrarTest.php",
+                "packages/core/tests/Providers/BindingsRegistrarTest.php",
+                "packages/core/tests/Providers/EventsRegistrarTest.php",
+                "tests/Integration/Recipes/PermissionDriverRecipeTest.php",
+                "tests/Integration/Support/CollaborationDefaultsGuardTest.php",
+                "tests/Integration/Support/ContractsDocFqcnGuardTest.php",
+                "tests/Integration/Support/DocsDriftGuardTest.php",
+                "tests/Integration/Support/DomainExceptionStatusTest.php",
+                "tests/Integration/Support/DriveNameRulesConfigSeamTest.php",
+                "tests/Integration/Support/EnumCaseAttributeResolverInstanceCacheTest.php",
+                "tests/Integration/Support/OpenApi/OpenApiTestCase.php",
+                "tests/Integration/Support/ReleaseReadinessGuardTest.php",
+                "tests/Integration/Support/SnapshotResourceTimestampTest.php",
+                "tests/Integration/Support/configuration-code-guidance.php",
+                "tests/Integration/Support/ConfigurationArchitectureGuard.php",
+                "tests/Integration/Support/Schema/SchemaPresets.php",
+                "tests/Integration/Support/Schema/SchemaSnapshot.php",
+                "packages/core/tests/Support/TenantFootgunGuardTest.php",
                 "packages/core/tests/Tenancy",
-                "packages/core/tests/Testing",
-                "packages/core/tests/Unit",
-                "packages/core/tests/WriteGuard"
+                "tests/Integration/Testing/ContractSuitesTest.php",
+                "tests/Integration/Testing/InteractsWithVaulterTest.php",
+                "tests/Integration/Unit/AccessEnumsTest.php",
+                "tests/Integration/Unit/DatabaseCompatibilityDocsGuardTest.php",
+                "tests/Integration/Unit/DatabaseSchemaReuseTest.php",
+                "tests/Integration/Unit/EnumTest.php",
+                "tests/Integration/Unit/GatePermissionResolverDocGuardTest.php",
+                "tests/Integration/Unit/InstallationDocsGuardTest.php",
+                "tests/Integration/Unit/NodeNameTest.php",
+                "packages/core/tests/Unit/IdentityFitsKeyTest.php",
+                "packages/core/tests/Unit/StorageAdapterRemovedGuardTest.php",
+                "tests/Integration/WriteGuard/WriteScopeTest.php"
             ],
             "uses": []
         },
         "core-modules": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Modules", "packages/core/src/Kernel.php", "packages/core/src/CoreModule.php"],
-            "tests": ["packages/core/tests/Modules"],
-            "uses": ["core-kernel"]
+            "src": [
+                "packages/core/src/Modules",
+                "packages/core/src/Kernel.php",
+                "packages/core/src/CoreModule.php"
+            ],
+            "tests": [
+                "tests/Integration/Modules/AcmeModuleContractTest.php",
+                "tests/Integration/Modules/ActivationTest.php",
+                "tests/Integration/Modules/CleanInstallMatrixTest.php",
+                "tests/Integration/Modules/DriveDisabledTest.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeDownloadGuard.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeModule.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeSnapshotContributor.php",
+                "tests/Integration/Modules/Fixtures/Apps/AppSets.php",
+                "tests/Integration/Modules/InvalidModuleGraphConsoleTest.php",
+                "tests/Integration/Modules/ModuleCompilerTest.php",
+                "tests/Integration/Modules/ModuleUninstallTest.php",
+                "tests/Integration/Modules/ModulesCommandTest.php",
+                "tests/Integration/Modules/OwnershipRegistryTest.php",
+                "tests/Integration/Modules/RouteCacheActivationTest.php",
+                "tests/Integration/Modules/RouteLabelSourceTest.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeMiddleware.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeEventSink.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeOutboxConsumer.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/Broken/BrokenModule.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeRestrictionRunner.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeWidening.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeRestrictionViolation.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeOperationPolicies.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeProvider.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeBindings.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeNarrowing.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeDoctorCheck.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/config.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/routes.php",
+                "tests/Integration/Modules/ActivationCacheTest.php",
+                "tests/Integration/Modules/ActivationMatrixTest.php",
+                "tests/Integration/Modules/Fixtures/Apps/AppSet.php",
+                "tests/Integration/Modules/Fixtures/NotAGreeter.php",
+                "tests/Integration/Modules/Fixtures/FixtureProblemCodes.php",
+                "tests/Integration/Modules/Fixtures/MalformedProblemCodes.php",
+                "tests/Integration/Modules/Fixtures/GuardedModule/GuardedProvider.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeRestriction.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeConstraints.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeCommand.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeListener.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/migrations/2026_10_15_000001_create_acme_notes_table.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmePingController.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeService.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/ConfigCachedProvider.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmeProbe.php",
+                "tests/Integration/Modules/Fixtures/AcmeModule/AcmePinged.php",
+                "tests/Integration/Modules/Fixtures/GuardedModule/GuardedModule.php",
+                "tests/Integration/Modules/Fixtures/GuardedModule/GuardedRemovalGuard.php",
+                "tests/Integration/Modules/Fixtures/GuardedModule/migrations/2026_10_17_000001_create_v_guarded_notes_table.php",
+                "packages/core/tests/Modules/CapabilitiesTest.php",
+                "packages/core/tests/Modules/ExtensionRegistryTest.php",
+                "packages/core/tests/Modules/InvalidModuleGraphHttpTest.php",
+                "packages/core/tests/Modules/ModuleKernelBootTest.php",
+                "packages/core/tests/Modules/ModuleUninstallCommandTest.php",
+                "packages/core/tests/Modules/SealTest.php"
+            ],
+            "uses": [
+                "core-kernel"
+            ]
         },
         "core-operations": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Operations", "packages/core/src/Idempotency"],
-            "tests": ["packages/core/tests/Operations", "packages/core/tests/Idempotency"],
-            "uses": ["core-kernel", "core-modules", "core-schema", "core-events"]
+            "src": [
+                "packages/core/src/Operations",
+                "packages/core/src/Idempotency"
+            ],
+            "tests": [
+                "tests/Integration/Operations/ActorContextTest.php",
+                "tests/Integration/Operations/CoreOperationsSecurityTest.php",
+                "tests/Integration/Operations/NodeLocatorTest.php",
+                "tests/Integration/Operations/OperationCatalogTest.php",
+                "tests/Integration/Operations/OperationContextTest.php",
+                "tests/Integration/Operations/OperationGuardTest.php",
+                "tests/Integration/Operations/OperationRunnerContractTest.php",
+                "tests/Integration/Operations/OperationTaxonomyTest.php",
+                "tests/Integration/Operations/ProblemMappingTest.php",
+                "tests/Integration/Operations/ProfileGuardBoundaryTest.php",
+                "tests/Integration/Operations/ProfilePermissionDriverTest.php",
+                "tests/Integration/Operations/Fixtures/OuterMiddleware.php",
+                "tests/Integration/Operations/Fixtures/ProbeMiddleware.php",
+                "packages/core/tests/Operations/ModuleReadinessTest.php",
+                "packages/core/tests/Operations/OperationsReferenceTest.php",
+                "tests/Integration/Idempotency/IdempotencyContractTest.php",
+                "tests/Integration/Idempotency/Fixtures/EchoReceiptCodec.php",
+                "tests/Integration/Idempotency/Fixtures/RecordingReplayAuthorizer.php"
+            ],
+            "uses": [
+                "core-kernel",
+                "core-modules",
+                "core-schema",
+                "core-events"
+            ]
         },
         "core-events": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Events"],
-            "tests": [
-                "packages/core/tests/Events",
-                "packages/core/tests/Outbox"
+            "src": [
+                "packages/core/src/Events"
             ],
-            "uses": ["core-kernel"]
+            "tests": [
+                "tests/Integration/Events/CoreEventCatalogConformanceTest.php",
+                "tests/Integration/Events/EventCatalogTest.php",
+                "tests/Integration/Events/EventPipelineArchTest.php",
+                "tests/Integration/Events/EventRecorderTest.php",
+                "tests/Integration/Events/EventSinkContractTest.php",
+                "tests/Integration/Events/EventsReferenceTest.php",
+                "tests/Integration/Events/Fixtures/GammaSink.php",
+                "tests/Integration/Events/Fixtures/BetaSink.php",
+                "tests/Integration/Events/Fixtures/AlphaSink.php",
+                "tests/Integration/Events/Fixtures/ScriptedSink.php",
+                "tests/Integration/Outbox/OutboxRelayTest.php",
+                "tests/Integration/Outbox/OutboxWriteTest.php",
+                "tests/Integration/Outbox/Fixtures/MisnamedConsumer.php",
+                "tests/Integration/Outbox/Fixtures/EphemeralConsumer.php",
+                "tests/Integration/Outbox/Fixtures/ScriptedConsumer.php"
+            ],
+            "uses": [
+                "core-kernel"
+            ]
         },
         "core-http": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Http", "openapi"],
-            "tests": ["packages/core/tests/Http", "packages/core/tests/OpenApi", "packages/core/tests/PublicApi"],
-            "uses": ["core-kernel", "core-operations", "core-events"]
+            "src": [
+                "packages/core/src/Http",
+                "openapi"
+            ],
+            "tests": [
+                "tests/Integration/Http/CrossTenantV1Test.php",
+                "tests/Integration/Http/HttpKernelV1Test.php",
+                "tests/Integration/Http/LegacyRoutesRemovedTest.php",
+                "tests/Integration/Http/Problems/ErrorsReferenceTest.php",
+                "tests/Integration/Http/Problems/HostRouteUntouchedTest.php",
+                "tests/Integration/Http/Problems/ProblemCatalogHelpers.php",
+                "tests/Integration/Http/Problems/ProblemCatalogLangTest.php",
+                "tests/Integration/Http/Problems/ProblemMetaRedactionTest.php",
+                "tests/Integration/Http/Problems/ProblemRendererTest.php",
+                "tests/Integration/Http/Problems/ProblemSpecRulesTest.php",
+                "packages/core/tests/Http/PreconditionsTest.php",
+                "packages/core/tests/Http/Problems/FrameworkExceptionMappingTest.php",
+                "tests/Integration/OpenApi/OpenApiExamplesTest.php",
+                "tests/Integration/OpenApi/OpenApiValidatorSelfTest.php",
+                "tests/Integration/OpenApi/OpenApiProblemsTableTest.php",
+                "tests/Integration/OpenApi/OpenApiDocumentTest.php",
+                "tests/Integration/OpenApi/OpenApiOperationPoliciesTest.php",
+                "tests/Integration/OpenApi/OpenApiRouteCoverageTest.php",
+                "tests/Integration/OpenApi/OpenApiValidationEnabledTest.php",
+                "tests/Integration/OpenApi/RouteListSnapshotTest.php",
+                "tests/Integration/PublicApi/OperationsContractTest.php",
+                "tests/Integration/PublicApi/OptionsTest.php",
+                "tests/Integration/PublicApi/SequenceOptionContractTest.php",
+                "tests/Integration/PublicApi/UploadSourceTest.php"
+            ],
+            "uses": [
+                "core-kernel",
+                "core-operations",
+                "core-events"
+            ]
         },
         "core-schema": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Database", "packages/core/src/Schema", "packages/core/database/migrations"],
-            "tests": [
-                "packages/core/tests/Concurrency",
-                "packages/core/tests/Database",
-                "packages/core/tests/HostKeyMysql",
-                "packages/core/tests/IdStrategy",
-                "packages/core/tests/Schema",
-                "packages/core/tests/TablePrefix",
-                "packages/core/tests/Ulid"
+            "src": [
+                "packages/core/src/Database",
+                "packages/core/src/Schema",
+                "packages/core/database/migrations"
             ],
-            "uses": ["core-kernel"]
+            "tests": [
+                "tests/Integration/Concurrency/EventRecorderRollbackPgTest.php",
+                "tests/Integration/Concurrency/IdempotencyRaceTest.php",
+                "tests/Integration/Concurrency/OutboxFanoutRaceTest.php",
+                "tests/Integration/Concurrency/OutboxLateCommitTest.php",
+                "tests/Integration/Concurrency/OutboxLeaseTakeoverTest.php",
+                "packages/core/tests/Concurrency/ForkRaceTest.php",
+                "tests/Integration/Database/VaulterDatabaseTest.php",
+                "packages/core/tests/Database/AggregateLockTest.php",
+                "packages/core/tests/HostKeyMysql",
+                "tests/Integration/IdStrategy/Bigint/HostKeysBigintTest.php",
+                "tests/Integration/IdStrategy/Ulid/HostKeysTest.php",
+                "tests/Integration/IdStrategy/Ulid/WideNodeListingTest.php",
+                "packages/core/tests/IdStrategy/Bigint/DriveMigrationsBigintTest.php",
+                "packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php",
+                "packages/core/tests/IdStrategy/IdStrategyResolverTest.php",
+                "packages/core/tests/IdStrategy/IdStrategyTest.php",
+                "packages/core/tests/IdStrategy/Ulid/DriveMigrationsUlidTest.php",
+                "packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php",
+                "packages/core/tests/IdStrategy/Uuid7/DriveMigrationsUuid7Test.php",
+                "packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php",
+                "tests/Integration/Schema/BlobDedupIndexTest.php",
+                "tests/Integration/Schema/CanonicalSchemaTest.php",
+                "tests/Integration/Schema/HotPathIndexesTest.php",
+                "tests/Integration/Schema/KeyColumnTypesTest.php",
+                "tests/Integration/Schema/SchemaSnapshotTest.php",
+                "packages/core/tests/Schema/HostKeyColumnsSchemaTest.php",
+                "tests/Integration/TablePrefix/TablePrefixTest.php",
+                "tests/Integration/Ulid/UlidModeTest.php"
+            ],
+            "uses": [
+                "core-kernel"
+            ]
         },
         "core-observability": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Console", "packages/core/src/Doctor", "packages/core/src/Observability"],
-            "tests": [
-                "packages/core/tests/Console",
-                "packages/core/tests/Doctor",
-                "packages/core/tests/Observability",
-                "packages/core/tests/ObservabilityDocuments"
+            "src": [
+                "packages/core/src/Console",
+                "packages/core/src/Doctor",
+                "packages/core/src/Observability"
             ],
-            "uses": ["core-kernel", "core-operations", "core-schema", "core-events", "core-http"]
+            "tests": [
+                "tests/Integration/Console/ConfigReferenceCommandTest.php",
+                "tests/Integration/Console/SchedulingRegistrarTest.php",
+                "packages/core/tests/Console/CommandsReferenceCommandTest.php",
+                "packages/core/tests/Console/InstallCommandTest.php",
+                "tests/Integration/Doctor/CoreDoctorChecksTest.php",
+                "tests/Integration/Doctor/DoctorReadOnlyTest.php",
+                "packages/core/tests/Doctor/DoctorJsonSchemaTest.php",
+                "packages/core/tests/Doctor/DoctorRunnerTest.php",
+                "tests/Integration/Observability/P83/P83ActivityFeedMetricsTest.php",
+                "tests/Integration/Observability/P83/P83Section51MetricsTest.php",
+                "tests/Integration/Observability/P84/P84Section52HostMetricsTest.php",
+                "tests/Integration/Observability/P85/P85Section53CoreMetricsTest.php",
+                "tests/Integration/Observability/TelemetryMiddlewareTest.php",
+                "tests/Integration/Observability/Tracing/TraceRecorderBindingTest.php",
+                "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
+                "packages/core/tests/Observability/P83/P83UploadSessionActiveMetricsTest.php",
+                "tests/Integration/ObservabilityDocuments/P83DocumentsMetricsTest.php",
+                "tests/Integration/ObservabilityDocuments/P83DocumentsTestCase.php"
+            ],
+            "uses": [
+                "core-kernel",
+                "core-operations",
+                "core-schema",
+                "core-events",
+                "core-http"
+            ]
         },
         "media": {
             "suite": "media",
-            "src": ["packages/media/src", "packages/media/config", "packages/media/resources", "packages/media/bin"],
-            "tests": ["packages/media/tests"],
-            "uses": ["core"]
+            "src": [
+                "packages/media/src",
+                "packages/media/config",
+                "packages/media/resources",
+                "packages/media/bin"
+            ],
+            "tests": [
+                "packages/media/tests"
+            ],
+            "uses": [
+                "core"
+            ]
         },
         "drive": {
             "suite": "drive",
-            "src": ["packages/drive/src", "packages/drive/config", "packages/drive/database/factories", "packages/drive/resources", "packages/drive/routes", "packages/drive/stubs"],
-            "tests": ["packages/drive/tests"],
-            "uses": ["core", "media"]
+            "src": [
+                "packages/drive/src",
+                "packages/drive/config",
+                "packages/drive/database/factories",
+                "packages/drive/resources",
+                "packages/drive/routes",
+                "packages/drive/stubs"
+            ],
+            "tests": [
+                "packages/drive/tests"
+            ],
+            "uses": [
+                "core",
+                "media"
+            ]
         },
         "webhooks": {
             "suite": "webhooks",
-            "src": ["packages/webhooks/src", "packages/webhooks/config", "packages/webhooks/database", "packages/webhooks/resources", "packages/webhooks/routes"],
-            "tests": ["packages/webhooks/tests"],
-            "uses": ["core", "media", "drive"]
+            "src": [
+                "packages/webhooks/src",
+                "packages/webhooks/config",
+                "packages/webhooks/database",
+                "packages/webhooks/resources",
+                "packages/webhooks/routes"
+            ],
+            "tests": [
+                "packages/webhooks/tests"
+            ],
+            "uses": [
+                "core",
+                "media",
+                "drive"
+            ]
         },
         "documents": {
             "suite": "documents",
@@ -126,130 +400,550 @@
                 "packages/documents/routes",
                 "packages/documents/stubs"
             ],
-            "tests": ["packages/documents/tests"],
-            "uses": ["core", "media", "drive"]
+            "tests": [
+                "packages/documents/tests"
+            ],
+            "uses": [
+                "core",
+                "media",
+                "drive"
+            ]
         },
         "collaboration": {
             "suite": "collaboration",
-            "src": ["packages/collaboration/src", "packages/collaboration/config", "packages/collaboration/resources", "packages/collaboration/routes"],
-            "tests": ["packages/collaboration/tests"],
-            "uses": ["core", "media", "drive", "documents"]
+            "src": [
+                "packages/collaboration/src",
+                "packages/collaboration/config",
+                "packages/collaboration/resources",
+                "packages/collaboration/routes"
+            ],
+            "tests": [
+                "packages/collaboration/tests"
+            ],
+            "uses": [
+                "core",
+                "media",
+                "drive",
+                "documents"
+            ]
         },
         "azgard": {
             "suite": "azgard",
-            "src": ["packages/azgard/src", "packages/azgard/config"],
-            "tests": ["packages/azgard/tests"],
-            "uses": ["core", "media", "drive"]
+            "src": [
+                "packages/azgard/src",
+                "packages/azgard/config"
+            ],
+            "tests": [
+                "packages/azgard/tests"
+            ],
+            "uses": [
+                "core",
+                "media",
+                "drive"
+            ]
         },
         "filament": {
             "suite": "filament",
-            "src": ["packages/filament/src", "packages/filament/config"],
-            "tests": ["packages/filament/tests"],
-            "uses": ["core", "media", "drive"]
+            "src": [
+                "packages/filament/src",
+                "packages/filament/config"
+            ],
+            "tests": [
+                "packages/filament/tests"
+            ],
+            "uses": [
+                "core",
+                "media",
+                "drive"
+            ]
         },
         "load": {
             "suite": "load",
             "explicit": true,
-            "src": ["load"],
-            "tests": ["load/tests"],
-            "uses": ["core", "media", "drive", "documents"]
+            "src": [
+                "load"
+            ],
+            "tests": [
+                "load/tests"
+            ],
+            "uses": [
+                "core",
+                "media",
+                "drive",
+                "documents"
+            ]
         },
         "repo": {
             "suite": "repo",
-            "src": ["scripts", "Makefile"],
-            "tests": ["tests/Repo"],
+            "src": [
+                "scripts",
+                "Makefile"
+            ],
+            "tests": [
+                "tests/Repo"
+            ],
             "uses": []
         },
         "hub": {
             "suite": "hub",
-            "src": ["packages/collaboration/hub"],
-            "tests": ["packages/collaboration/hub/test"],
+            "src": [
+                "packages/collaboration/hub"
+            ],
+            "tests": [
+                "packages/collaboration/hub/test"
+            ],
             "uses": []
         },
         "vue": {
             "suite": "vue",
-            "src": ["packages/vue"],
-            "tests": ["packages/vue/tests"],
+            "src": [
+                "packages/vue"
+            ],
+            "tests": [
+                "packages/vue/tests"
+            ],
             "uses": []
         },
         "vue-collaboration": {
             "suite": "vue-collaboration",
-            "src": ["packages/vue-collaboration"],
-            "tests": ["packages/vue-collaboration/tests"],
-            "uses": ["vue"]
+            "src": [
+                "packages/vue-collaboration"
+            ],
+            "tests": [
+                "packages/vue-collaboration/tests"
+            ],
+            "uses": [
+                "vue"
+            ]
         }
     },
     "harness": [
-        {"path": "tests/Pest.php", "zones": ["core", "load", "repo"]},
-        {"path": "phpunit.xml", "zones": ["core", "load", "repo"]},
-        {"path": "composer.json", "zones": ["core", "load", "repo"]},
-        {"path": "scripts/t", "zones": ["repo"]},
-        {"path": "scripts/test-select.php", "zones": ["repo"]},
-        {"path": "scripts/test-db.sh", "zones": ["repo"]},
-        {"path": "scripts/db-test-env.sh", "zones": ["repo"]},
-        {"path": "scripts/db-reap.sh", "zones": ["repo"]},
-        {"path": "scripts/php84", "zones": ["repo"]},
-        {"path": "tests/zones.json", "zones": ["repo"]},
-        {"path": "tests/suites.json", "zones": ["repo"]},
-        {"path": "tests/baseline", "zones": ["repo"]},
-        {"path": "packages/vaulter/composer.json", "zones": ["core"]},
-        {"path": "packages/core/composer.json", "zones": ["core"]},
-        {"path": "packages/core/tests/TestCase.php", "zones": ["core"]},
-        {"path": "packages/core/tests/TablePrefixTestCase.php", "zones": ["core"]},
-        {"path": "packages/core/tests/UlidTestCase.php", "zones": ["core"]},
-        {"path": "packages/core/tests/Concerns", "zones": ["core"]},
-        {"path": "packages/core/tests/E2E", "zones": ["core"]},
-        {"path": "packages/core/tests/Fixtures", "zones": ["core"]},
-        {"path": "packages/media/composer.json", "zones": ["media"]},
-        {"path": "packages/media/phpunit.xml", "zones": ["media"]},
-        {"path": "packages/media/tests/Pest.php", "zones": ["media"]},
-        {"path": "packages/media/tests/TestCase.php", "zones": ["media"]},
-        {"path": "packages/media/tests/Fixtures", "zones": ["media"]},
-        {"path": "packages/drive/composer.json", "zones": ["drive"]},
-        {"path": "packages/drive/phpunit.xml", "zones": ["drive"]},
-        {"path": "packages/drive/tests/Pest.php", "zones": ["drive"]},
-        {"path": "packages/drive/tests/TestCase.php", "zones": ["drive"]},
-        {"path": "packages/drive/tests/PanelTestCase.php", "zones": ["drive"]},
-        {"path": "packages/drive/tests/SpatieTestCase.php", "zones": ["drive"]},
-        {"path": "packages/drive/tests/database", "zones": ["drive"]},
-        {"path": "packages/drive/tests/Fixtures", "zones": ["drive"]},
-        {"path": "packages/webhooks/composer.json", "zones": ["webhooks"]},
-        {"path": "packages/webhooks/phpunit.xml", "zones": ["webhooks"]},
-        {"path": "packages/webhooks/tests/Pest.php", "zones": ["webhooks"]},
-        {"path": "packages/webhooks/tests/TestCase.php", "zones": ["webhooks"]},
-        {"path": "packages/documents/composer.json", "zones": ["documents"]},
-        {"path": "packages/documents/phpunit.xml", "zones": ["documents"]},
-        {"path": "packages/documents/tests/Pest.php", "zones": ["documents"]},
-        {"path": "packages/documents/tests/TestCase.php", "zones": ["documents"]},
-        {"path": "packages/documents/tests/Concerns", "zones": ["documents"]},
-        {"path": "packages/documents/tests/Fixtures", "zones": ["documents"]},
-        {"path": "packages/collaboration/composer.json", "zones": ["collaboration"]},
-        {"path": "packages/collaboration/phpunit.xml", "zones": ["collaboration"]},
-        {"path": "packages/collaboration/tests/Pest.php", "zones": ["collaboration"]},
-        {"path": "packages/collaboration/tests/TestCase.php", "zones": ["collaboration"]},
-        {"path": "packages/collaboration/tests/Support", "zones": ["collaboration"]},
-        {"path": "packages/collaboration/tests/Fixtures", "zones": ["collaboration"]},
-        {"path": "packages/azgard/composer.json", "zones": ["azgard"]},
-        {"path": "packages/azgard/phpunit.xml", "zones": ["azgard"]},
-        {"path": "packages/azgard/tests/Pest.php", "zones": ["azgard"]},
-        {"path": "packages/azgard/tests/TestCase.php", "zones": ["azgard"]},
-        {"path": "packages/azgard/tests/Stubs", "zones": ["azgard"]},
-        {"path": "packages/filament/composer.json", "zones": ["filament"]},
-        {"path": "packages/filament/phpunit.xml", "zones": ["filament"]},
-        {"path": "packages/filament/tests/Pest.php", "zones": ["filament"]},
-        {"path": "packages/filament/tests/TestCase.php", "zones": ["filament"]},
-        {"path": "packages/filament/tests/Fixtures", "zones": ["filament"]},
-        {"path": "load/tests/LoadTestCase.php", "zones": ["load"]},
-        {"path": "packages/collaboration/hub/package.json", "zones": ["hub"]},
-        {"path": "packages/collaboration/hub/package-lock.json", "zones": ["hub"]},
-        {"path": "packages/vue/package.json", "zones": ["vue"]},
-        {"path": "packages/vue/vite.config.ts", "zones": ["vue"]},
-        {"path": "packages/vue/tsconfig.json", "zones": ["vue"]},
-        {"path": "packages/vue/tests/support", "zones": ["vue"]},
-        {"path": "packages/vue-collaboration/package.json", "zones": ["vue-collaboration"]},
-        {"path": "packages/vue-collaboration/vite.config.ts", "zones": ["vue-collaboration"]},
-        {"path": "packages/vue-collaboration/tsconfig.json", "zones": ["vue-collaboration"]},
-        {"path": "packages/vue-collaboration/tests/support", "zones": ["vue-collaboration"]}
+        {
+            "path": "tests/Pest.php",
+            "zones": [
+                "core",
+                "load",
+                "repo"
+            ]
+        },
+        {
+            "path": "phpunit.xml",
+            "zones": [
+                "core",
+                "load",
+                "repo"
+            ]
+        },
+        {
+            "path": "composer.json",
+            "zones": [
+                "core",
+                "load",
+                "repo"
+            ]
+        },
+        {
+            "path": "scripts/t",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "scripts/test-select.php",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "scripts/test-db.sh",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "scripts/db-test-env.sh",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "scripts/db-reap.sh",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "scripts/php84",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "tests/zones.json",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "tests/suites.json",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "tests/baseline",
+            "zones": [
+                "repo"
+            ]
+        },
+        {
+            "path": "packages/vaulter/composer.json",
+            "zones": [
+                "core"
+            ]
+        },
+        {
+            "path": "packages/core/composer.json",
+            "zones": [
+                "core"
+            ]
+        },
+        {
+            "path": "packages/core/tests/TestCase.php",
+            "zones": [
+                "core"
+            ]
+        },
+        {
+            "path": "packages/core/tests/TablePrefixTestCase.php",
+            "zones": [
+                "core"
+            ]
+        },
+        {
+            "path": "packages/core/tests/UlidTestCase.php",
+            "zones": [
+                "core"
+            ]
+        },
+        {
+            "path": "packages/core/tests/Concerns",
+            "zones": [
+                "core"
+            ]
+        },
+        {
+            "path": "packages/core/tests/E2E",
+            "zones": [
+                "core"
+            ]
+        },
+        {
+            "path": "packages/core/tests/Fixtures",
+            "zones": [
+                "core"
+            ]
+        },
+        {
+            "path": "packages/media/composer.json",
+            "zones": [
+                "media"
+            ]
+        },
+        {
+            "path": "packages/media/phpunit.xml",
+            "zones": [
+                "media"
+            ]
+        },
+        {
+            "path": "packages/media/tests/Pest.php",
+            "zones": [
+                "media"
+            ]
+        },
+        {
+            "path": "packages/media/tests/TestCase.php",
+            "zones": [
+                "media"
+            ]
+        },
+        {
+            "path": "packages/media/tests/Fixtures",
+            "zones": [
+                "media"
+            ]
+        },
+        {
+            "path": "packages/drive/composer.json",
+            "zones": [
+                "drive"
+            ]
+        },
+        {
+            "path": "packages/drive/phpunit.xml",
+            "zones": [
+                "drive"
+            ]
+        },
+        {
+            "path": "packages/drive/tests/Pest.php",
+            "zones": [
+                "drive"
+            ]
+        },
+        {
+            "path": "packages/drive/tests/TestCase.php",
+            "zones": [
+                "drive"
+            ]
+        },
+        {
+            "path": "packages/drive/tests/PanelTestCase.php",
+            "zones": [
+                "drive"
+            ]
+        },
+        {
+            "path": "packages/drive/tests/SpatieTestCase.php",
+            "zones": [
+                "drive"
+            ]
+        },
+        {
+            "path": "packages/drive/tests/database",
+            "zones": [
+                "drive"
+            ]
+        },
+        {
+            "path": "packages/drive/tests/Fixtures",
+            "zones": [
+                "drive"
+            ]
+        },
+        {
+            "path": "packages/webhooks/composer.json",
+            "zones": [
+                "webhooks"
+            ]
+        },
+        {
+            "path": "packages/webhooks/phpunit.xml",
+            "zones": [
+                "webhooks"
+            ]
+        },
+        {
+            "path": "packages/webhooks/tests/Pest.php",
+            "zones": [
+                "webhooks"
+            ]
+        },
+        {
+            "path": "packages/webhooks/tests/TestCase.php",
+            "zones": [
+                "webhooks"
+            ]
+        },
+        {
+            "path": "packages/documents/composer.json",
+            "zones": [
+                "documents"
+            ]
+        },
+        {
+            "path": "packages/documents/phpunit.xml",
+            "zones": [
+                "documents"
+            ]
+        },
+        {
+            "path": "packages/documents/tests/Pest.php",
+            "zones": [
+                "documents"
+            ]
+        },
+        {
+            "path": "packages/documents/tests/TestCase.php",
+            "zones": [
+                "documents"
+            ]
+        },
+        {
+            "path": "packages/documents/tests/Concerns",
+            "zones": [
+                "documents"
+            ]
+        },
+        {
+            "path": "packages/documents/tests/Fixtures",
+            "zones": [
+                "documents"
+            ]
+        },
+        {
+            "path": "packages/collaboration/composer.json",
+            "zones": [
+                "collaboration"
+            ]
+        },
+        {
+            "path": "packages/collaboration/phpunit.xml",
+            "zones": [
+                "collaboration"
+            ]
+        },
+        {
+            "path": "packages/collaboration/tests/Pest.php",
+            "zones": [
+                "collaboration"
+            ]
+        },
+        {
+            "path": "packages/collaboration/tests/TestCase.php",
+            "zones": [
+                "collaboration"
+            ]
+        },
+        {
+            "path": "packages/collaboration/tests/Support",
+            "zones": [
+                "collaboration"
+            ]
+        },
+        {
+            "path": "packages/collaboration/tests/Fixtures",
+            "zones": [
+                "collaboration"
+            ]
+        },
+        {
+            "path": "packages/azgard/composer.json",
+            "zones": [
+                "azgard"
+            ]
+        },
+        {
+            "path": "packages/azgard/phpunit.xml",
+            "zones": [
+                "azgard"
+            ]
+        },
+        {
+            "path": "packages/azgard/tests/Pest.php",
+            "zones": [
+                "azgard"
+            ]
+        },
+        {
+            "path": "packages/azgard/tests/TestCase.php",
+            "zones": [
+                "azgard"
+            ]
+        },
+        {
+            "path": "packages/azgard/tests/Stubs",
+            "zones": [
+                "azgard"
+            ]
+        },
+        {
+            "path": "packages/filament/composer.json",
+            "zones": [
+                "filament"
+            ]
+        },
+        {
+            "path": "packages/filament/phpunit.xml",
+            "zones": [
+                "filament"
+            ]
+        },
+        {
+            "path": "packages/filament/tests/Pest.php",
+            "zones": [
+                "filament"
+            ]
+        },
+        {
+            "path": "packages/filament/tests/TestCase.php",
+            "zones": [
+                "filament"
+            ]
+        },
+        {
+            "path": "packages/filament/tests/Fixtures",
+            "zones": [
+                "filament"
+            ]
+        },
+        {
+            "path": "load/tests/LoadTestCase.php",
+            "zones": [
+                "load"
+            ]
+        },
+        {
+            "path": "packages/collaboration/hub/package.json",
+            "zones": [
+                "hub"
+            ]
+        },
+        {
+            "path": "packages/collaboration/hub/package-lock.json",
+            "zones": [
+                "hub"
+            ]
+        },
+        {
+            "path": "packages/vue/package.json",
+            "zones": [
+                "vue"
+            ]
+        },
+        {
+            "path": "packages/vue/vite.config.ts",
+            "zones": [
+                "vue"
+            ]
+        },
+        {
+            "path": "packages/vue/tsconfig.json",
+            "zones": [
+                "vue"
+            ]
+        },
+        {
+            "path": "packages/vue/tests/support",
+            "zones": [
+                "vue"
+            ]
+        },
+        {
+            "path": "packages/vue-collaboration/package.json",
+            "zones": [
+                "vue-collaboration"
+            ]
+        },
+        {
+            "path": "packages/vue-collaboration/vite.config.ts",
+            "zones": [
+                "vue-collaboration"
+            ]
+        },
+        {
+            "path": "packages/vue-collaboration/tsconfig.json",
+            "zones": [
+                "vue-collaboration"
+            ]
+        },
+        {
+            "path": "packages/vue-collaboration/tests/support",
+            "zones": [
+                "vue-collaboration"
+            ]
+        }
     ],
     "database": [
         "packages/core/tests/Schema",
