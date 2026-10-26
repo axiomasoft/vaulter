@@ -1,18 +1,9 @@
 {
     "name": "axioma-studio/vaulter-core",
-    "description": "Kernel of Vaulter: schema, access control, sharing, audit events and extension contracts. Install axioma-studio/vaulter for the full product.",
+    "description": "Vaulter kernel: module registry, operation pipeline, idempotency, events and outbox, problem details, tenancy and diagnostics. Install axioma-studio/vaulter for the full product.",
     "type": "library",
     "license": "MIT",
-    "keywords": [
-        "laravel",
-        "documents",
-        "tiptap",
-        "collaboration",
-        "yjs",
-        "versioning",
-        "editor",
-        "file-manager"
-    ],
+    "keywords": ["laravel", "kernel", "modules", "idempotency", "outbox", "tenancy"],
     "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
@@ -30,7 +21,7 @@
         "illuminate/database": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0",
         "spatie/laravel-package-tools": "^1.92",
-        "staudenmeir/laravel-adjacency-list": "^1.0",
+        "staudenmeir/laravel-cte": "^1.12",
         "psr/http-message": "^1.1|^2.0"
     },
     "require-dev": {
@@ -52,7 +43,7 @@
         "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions.",
         "axioma-studio/vaulter-media": "Content-addressed file/blob layer (CAS): the concrete ContentStore/StorageDriver/BlobStore engine behind the Contracts\\Cas seam. Required for Drive file upload/download/versioning.",
         "axioma-studio/vaulter-drive": "File/folder tree behaviour + resumable uploads: StorageManager, the DriveHandle factory, PurgeTrash/SweepUploads. Required for Vaulter::for()/forStorage() and the Drive REST surface.",
-        "axioma-studio/vaulter-documents": "Document-node behaviour: the format-handler registry, TipTap/export engines and real-time collaboration (Hocuspocus JWT minting needs firebase/php-jwt ^7.0). Required for Vaulter::registerHandler()/registerExporter() and the document REST surface.",
+        "axioma-studio/vaulter-documents": "Document-node behaviour: document types and codecs, revisions, comments and export. Required for Vaulter::registerHandler()/registerExporter() and the document REST surface.",
         "orchestra/testbench": "Testing kit (Vaulter\\Testing\\*): the base of every suite and of FreshApplication; the kit is loaded by tests only.",
         "opis/json-schema": "Testing kit: the OpenAPI contract check (VAULTER_OPENAPI_VALIDATE=1).",
         "symfony/yaml": "Testing kit: reads openapi/vaulter-v1.yaml for the contract check."

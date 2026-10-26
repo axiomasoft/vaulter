@@ -19,7 +19,8 @@
         "php": "^8.4",
         "axioma-studio/vaulter-core": "self.version",
         "axioma-studio/vaulter-media": "self.version",
-        "spatie/laravel-package-tools": "^1.92"
+        "spatie/laravel-package-tools": "^1.92",
+        "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {
         "opis/json-schema": "^2.4",

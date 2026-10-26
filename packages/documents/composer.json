@@ -1,6 +1,6 @@
 {
     "name": "axioma-studio/vaulter-documents",
-    "description": "Documents behaviour for Vaulter — TipTap document editing, version history, comments and export over the vaulter-core kernel (real-time collaboration is the vaulter-collaboration package).",
+    "description": "Structured documents for Vaulter: document types and codecs, revisions, comments, export and a protocol-neutral collaboration SPI.",
     "type": "library",
     "license": "MIT",
     "keywords": ["laravel", "documents", "tiptap", "versioning", "editor", "vaulter"],
