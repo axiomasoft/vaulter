@@ -18,7 +18,8 @@ declare(strict_types=1);
  * What a path is, in this order: a harness file → the whole affected set; a prose file of the `tail` allowlist →
  * nothing to run; a src/tests entry of a leaf zone → that zone; anything else → unknown. Affected = the touched
  * zones plus every zone that `uses` them, transitively (`--quick`: only the touched ones). A zone marked `explicit`
- * (load) is never pulled in as a consumer.
+ * (load) is never pulled in as a consumer. The integration zone consumes every PHP package through uses[],
+ * so source changes include its suite unless --quick explicitly limits the plan.
  *
  * Exit: 0 a plan (possibly empty: no changes, prose only) · 2 refused — unknown path, harness change, a broken map,
  * a missing base, `--db` without a database classification. Exit 2 still prints the full conservative plan (every
@@ -165,8 +166,8 @@ function validate_map(array $map, ?array $inventory): array
                     $errors[] = "zone $name: $key must be a list of paths";
                 }
             }
-            if (($zone['src'] ?? []) === []) {
-                $errors[] = "zone $name: src must not be empty";
+            if (($zone['src'] ?? []) === [] && ($zone['tests'] ?? []) === []) {
+                $errors[] = "zone $name: src and tests must not both be empty";
             }
             if (!is_string($zone['suite'] ?? null) || $zone['suite'] === '') {
                 $errors[] = "zone $name: suite is required";

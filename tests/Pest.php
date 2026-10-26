@@ -117,7 +117,4 @@ uses(LoadTestCase::class)->in(
 uses(HostKeyMysqlTestCase::class)->in(dirname(__DIR__).'/packages/core/tests/HostKeyMysql/HostKeyColumnsMysqlTest.php');
 
 
-TestGroups::bind(__DIR__.'/Integration', static function (string $path) use ($leafZones): string {
-    foreach ($leafZones as $name => $paths) { foreach ($paths as $entry) { if ($path === $entry || str_starts_with($path, $entry.'/')) { return $name; } } }
-    throw new LogicException('No integration zone owns '.$path);
-});
+TestGroups::bind(__DIR__.'/Integration', 'integration');

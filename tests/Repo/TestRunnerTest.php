@@ -222,7 +222,7 @@ it('selects the repo suite and keeps the default suites free of load', function 
     expect($plan['suites'])->toBe(['repo'])->and($plan['steps'][0]['files'])->toBe($inventory['suites']['repo']['partitions'][0]['files']);
 
     $default = t_plan(['sqlite']);
-    expect($default['suites'])->toBe(['core', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'repo', 'hub', 'vue', 'vue-collaboration']);
+    expect($default['suites'])->toBe(['core', 'integration', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'repo', 'hub', 'vue', 'vue-collaboration']);
 });
 
 it('runs a package path from the package cwd with a generated config holding only the selected files', function (): void {
@@ -556,4 +556,55 @@ it('keeps the repo suite baseline: an empty immutable original with provenance, 
 
     $ledger = json_decode((string) file_get_contents($root.'/CHANGES.json'), true, flags: JSON_THROW_ON_ERROR);
     expect($ledger['additions']['repo']['count'])->toBeGreaterThan(0)->and($ledger['entries'])->toBeArray();
+});
+
+
+it('preserves integration discovery and schema partitions in the runner', function (): void {
+    $inventory = json_decode((string) file_get_contents(t_real_root().'/tests/suites.json'), true, flags: JSON_THROW_ON_ERROR);
+    $suite = $inventory['suites']['integration'];
+    expect($suite['default'])->toBeTrue()->and($suite['discovery'])->toBe(['--list-tests', '--testsuite=integration']);
+    $plan = t_plan(['sqlite', '-p', 'integration', '-j1']);
+    expect($plan['suites'])->toBe(['integration'])
+        ->and(array_values(array_unique(array_column($plan['steps'], 'partition'))))->toBe(array_column($suite['partitions'], 'key'));
+    $files = array_merge(...array_column($suite['partitions'], 'files'));
+    expect($files)->not->toBe([])->and(count($files))->toBe(count(array_unique($files)));
+    foreach ($files as $file) {
+        expect($file)->toStartWith('tests/Integration/')->and(is_file(t_real_root().'/'.$file))->toBeTrue();
+    }
+});
+
+it('fingerprints schema semantics independently of testcase namespace and file path', function (): void {
+    $fingerprint = static function (array $descriptor): string {
+        $canonical = array_intersect_key($descriptor, array_flip(['providers', 'migrations', 'id_strategy', 'table_prefix', 'lifecycle', 'database', 'engines', 'skeleton_writer']));
+        foreach (['providers', 'migrations', 'engines'] as $key) {
+            sort($canonical[$key]);
+        }
+        ksort($canonical);
+        return substr(hash('sha256', json_encode($canonical, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)), 0, 12);
+    };
+    $descriptor = ['providers' => ['B', 'A'], 'migrations' => ['database/b', 'database/a'], 'id_strategy' => 'bigint', 'table_prefix' => 'v_', 'lifecycle' => 'refresh', 'database' => true, 'engines' => ['mysql', 'sqlite'], 'skeleton_writer' => false];
+    $hash = $fingerprint($descriptor);
+    expect($fingerprint($descriptor + ['namespace' => 'Moved', 'file' => 'tests/Integration/TestCase.php']))->toBe($hash);
+    $reordered = $descriptor;
+    $reordered['providers'] = ['A', 'B'];
+    expect($fingerprint($reordered))->toBe($hash);
+    foreach (['providers' => ['C'], 'migrations' => ['database/c'], 'id_strategy' => 'ulid', 'lifecycle' => 'migrations'] as $key => $value) {
+        $changed = $descriptor;
+        $changed[$key] = $value;
+        expect($fingerprint($changed))->not->toBe($hash, $key);
+    }
+});
+
+
+it('keeps transferred post-original source cases out of destination additions', function (): void {
+    $fx = t_baseline_fixture(['alpha' => ['P\A::one'], 'beta' => []], ['alpha' => ['P\A::one'], 'beta' => ['P\B::moved', 'P\B::fresh']]);
+    t_ledger($fx, []);
+    $path = $fx['root'].'/tests/baseline/CHANGES.json';
+    $ledger = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+    $ledger['transfers'] = [['suite' => 'alpha', 'old' => 'P\A::added_after_original', 'new' => 'P\B::moved', 'new_suite' => 'beta', 'reason' => 'same current source case', 'decision' => 'PLAN4-D6']];
+    file_put_contents($path, json_encode($ledger, JSON_THROW_ON_ERROR));
+    [$code] = t_run(['baseline', '--write', '-p', 'alpha,beta'], t_env($fx), $fx['root']);
+    $written = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+    expect($code)->toBe(0)->and($written['additions']['beta']['names'])->toBe(['P\B::fresh'])
+        ->and(file_get_contents($fx['root'].'/tests/baseline/original/alpha.list'))->toBe("P\\A::one\n");
 });

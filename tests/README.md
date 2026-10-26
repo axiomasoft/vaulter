@@ -14,13 +14,14 @@ Pest on Orchestra Testbench (PHP), `node --test` (hub) and Vitest (vue). Every s
 |---|---|---|
 | `core` | repo root | `core-kernel`, `core-access`, `core-sharing`, `core-events`, `core-http`, `core-schema`, `core-observability` (aggregator `core`) |
 | `media`, `drive`, `webhooks`, `documents`, `azgard`, `filament` | `packages/<name>` | one zone each; `uses` follows the Composer graph (drive uses core+media, webhooks and documents use core+media+drive, …) |
+| `integration` | repo root | `tests/Integration`; consumes every PHP package, preserves each schema partition and group |
 | `repo` | repo root | `tests/Repo`: the harness itself (runner, selector, zone map, groups) |
 | `hub` | `packages/collaboration/hub` | Node tests of the collaboration hub (not Pest) |
 | `vue` | `packages/vue` | the TypeScript client (not Pest) |
 | `vue-collaboration` | `packages/vue-collaboration` | the Yjs/Hocuspocus adapter of the client: envelopes, queue, save status (Vitest, not Pest); uses `vue` |
 | `load` | repo root | `load/tests`; **explicit only** (`-p load` or `stand`), never in `all` |
 
-Paths are repo-relative for `core`, `load` and `repo`, package-relative for the others. Zones of the core suite and
+Paths are repo-relative for `core`, `integration`, `load` and `repo`, package-relative for the others. Zones of the core suite and
 their `src`/`tests`/`uses` are listed in `tests/zones.json`.
 
 ## Groups
@@ -215,3 +216,5 @@ server, a few at a time: the wall time is that of the slowest cell, not the sum.
 - **Coverage** runs weekly in CI. **Load/k6/benchmarks** run only when the owner asks for them.
 - Report what really ran: the engine, the skips and the exit codes. A skipped or failed check is not a pass; a missing
   engine or an unavailable stand makes a qualification incomplete.
+
+The baseline ledger keeps historical original renames in `entries` and the complete current core-to-integration case/dataset mapping in `transfers`. Both exclude moved cases from destination additions; `transfer_source` pins the pre-split discovery. Original lists remain immutable.

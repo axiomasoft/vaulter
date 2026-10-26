@@ -348,7 +348,7 @@ write_ledger_additions() {
         cur="$baseline_dir/$name.list"
         adds="$(LC_ALL=C comm -13 "$orig" "$cur")"
         # a test that moved here from another suite (ledger entry with new_suite = this suite) is not an addition of this suite
-        moved="$(jq -r --arg s "$name" '[.entries[] | select(.new_suite == $s and .suite != $s) | ([(.new // empty)] + (.replacement // []))[]] | .[]' <<<"$doc")"
+        moved="$(jq -r --arg s "$name" '[((.entries // []) + (.transfers // []))[] | select(.new_suite == $s and .suite != $s) | ([(.new // empty)] + (.replacement // []))[]] | .[]' <<<"$doc")"
         # names go through --rawfile: a single argv string is capped at 128 KiB (MAX_ARG_STRLEN)
         doc="$(jq --arg s "$name" --rawfile adds <(printf '%s\n' "$adds") --rawfile moved <(printf '%s\n' "$moved") '
             ($moved | split("\n") | map(select(length > 0))) as $mv

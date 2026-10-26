@@ -297,15 +297,15 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('true', out['has_openapi'])
 
     def test_exit_2_plan_is_the_full_affected_set(self):
-        suites = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament', 'load', 'repo', 'hub', 'vue',
+        suites = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament', 'load', 'repo', 'hub', 'vue',
                   'vue-collaboration']
         out = self.plan(selector('unknown', 2, suites))
         self.assertEqual('true', out['has_vue'])
         self.assertEqual('true', out['has_vue_collaboration'])
         self.assertEqual('true', out['has_hub'])
         self.assertEqual('true', out['has_repo'])
-        self.assertEqual(15, len(json.loads(out['fast_matrix'])['include']))  # 7 packages x 2 lines + filament x 1
-        self.assertEqual(8, len(json.loads(out['quality_matrix'])['include']))
+        self.assertEqual(17, len(json.loads(out['fast_matrix'])['include']))  # 7 packages x 2 lines + filament x 1
+        self.assertEqual(9, len(json.loads(out['quality_matrix'])['include']))
         self.assertEqual(['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration'],
                          [r['package'] for r in json.loads(out['consumer_matrix'])['include']])
 
@@ -327,13 +327,34 @@ class SingleCiTest(unittest.TestCase):
         self.assertEqual('', out['skip_reason'])
         self.assertEqual('true', out['has_fast'])
         self.assertEqual('true', out['has_vue_collaboration'])
-        self.assertEqual(16, len(json.loads(out['db_matrix'])['include']))
-        self.assertEqual(6, len(json.loads(out['serial_matrix'])['include']))
+        self.assertEqual(18, len(json.loads(out['db_matrix'])['include']))
+        self.assertEqual(7, len(json.loads(out['serial_matrix'])['include']))
         self.assertEqual(6, len(json.loads(out['consumer_matrix'])['include']))
         with self.assertRaises(ValueError):
             policy.plan_outputs(self.support, 'changed')
 
     # -- webhooks and the I14 consumer lane (PLAN3 P4.19) ---------------------------------------------------------------
+
+    def test_integration_is_a_root_suite_of_every_test_lane(self):
+        support = policy.derive_support(ROOT)
+        self.assertEqual('.', support['integration']['dir'])
+        self.assertEqual(['12', '13'], support['integration']['lines'])
+        self.assertTrue(support['integration']['serial'])
+        out = self.plan(selector('ok', 0, ['integration']), pgsql=selector('ok', 0, ['integration']), mysql=selector('ok', 0, ['integration']))
+        self.assertEqual({('integration', '12.*'), ('integration', '13.*')},
+                         {(r['package'], r['laravel']) for r in json.loads(out['fast_matrix'])['include']})
+        self.assertEqual(['integration'], [r['package'] for r in json.loads(out['serial_matrix'])['include']])
+        self.assertEqual([('integration', 'pgsql'), ('integration', 'mysql')],
+                         [(r['package'], r['engine']) for r in json.loads(out['db_matrix'])['include']])
+        for workflow in ('ci.yml', 'weekly-full.yml'):
+            doc = policy.load_workflow(ROOT / '.github' / 'workflows' / workflow)
+            declared = json.loads(doc['env']['PHP_SUPPORT'])
+            del declared['integration']
+            doc['env']['PHP_SUPPORT'] = json.dumps(declared)
+            self.assertTrue(any('PHP_SUPPORT[integration]' in error for error in policy.check_support(workflow, doc, ROOT)))
+        matrix = (ROOT / 'scripts' / 't-matrix').read_text()
+        for package in ('integration', 'webhooks', 'collaboration'):
+            self.assertIn(package, matrix.split('packages=', 1)[1].splitlines()[0].split(','))
 
     def test_webhooks_is_a_php_package_of_every_lane(self):
         support = self.support

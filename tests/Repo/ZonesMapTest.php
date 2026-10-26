@@ -230,7 +230,7 @@ it('tags every core sub-zone through the Pest group zone:<name>, and the groups 
         expect($classes)->not->toBe([]);
         foreach ($classes as $class) {
             $path = 'packages/core/tests/'.str_replace('\\', '/', substr($class, strlen('P\\Packages\\core\\tests\\'))).'.php';
-            expect(array_filter($map['zones'][$zone]['tests'], static fn (string $entry): bool => str_starts_with($path, $entry.'/')))->not->toBe([], "$class is tagged zone:$zone but lives outside its tests");
+            expect(array_filter($map['zones'][$zone]['tests'], static fn (string $entry): bool => $path === $entry || str_starts_with($path, $entry.'/')))->not->toBe([], "$class is tagged zone:$zone but lives outside its tests");
         }
     }
 });
@@ -249,10 +249,10 @@ it('goes red when a source root loses its zone', function (): void {
 
 it('goes red when a test directory loses its zone', function (): void {
     $broken = z_broken(static function (array &$map): void {
-        $map['zones']['core-operations']['tests'] = ['packages/core/tests/Operations'];
+        $map['zones']['integration']['tests'] = ['tests/Integration/Operations'];
     });
 
-    expect($broken['problems'])->toContain('test file tests/Integration/Idempotency/IdempotencyContractTest.php (core) belongs to no zone');
+    expect($broken['problems'])->toContain('test file tests/Integration/Idempotency/IdempotencyContractTest.php (integration) belongs to no zone');
 });
 
 it('goes red when a test directory is claimed by a zone of another suite', function (): void {

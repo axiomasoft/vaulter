@@ -15,6 +15,7 @@ function g_suites(): array
 {
     return [
         'core' => 'packages/core/tests',
+        'integration' => 'tests/Integration',
         'media' => 'packages/media/tests',
         'drive' => 'packages/drive/tests',
         'webhooks' => 'packages/webhooks/tests',

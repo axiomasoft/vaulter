@@ -43,7 +43,7 @@ from pathlib import Path
 COVERAGE_MARKERS = ('--coverage', 'codecov', '--coverage-clover')
 
 # PLAN3 P1.6: the single CI.
-PHP_PACKAGES = ['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament']
+PHP_PACKAGES = ['core', 'integration', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament']
 TESTBENCH_TO_LARAVEL = {'10': '12', '11': '13'}  # the Testbench major that supports each Laravel major
 LARAVEL_TO_TESTBENCH = {'12': '^10.0', '13': '^11.0'}
 REMOVED_WORKFLOWS = [
@@ -177,16 +177,16 @@ def derive_support(root: Path) -> dict:
     """The actual PHP support matrix, read from composer.json / groups.php of every package."""
     support: dict = {}
     for pkg in PHP_PACKAGES:
-        directory = '.' if pkg == 'core' else f'packages/{pkg}'
-        composer = json.loads((root / 'packages' / pkg / 'composer.json').read_text(encoding='utf-8'))
+        directory = '.' if pkg in ('core', 'integration') else f'packages/{pkg}'
+        composer = json.loads((root / 'packages' / ('core' if pkg == 'integration' else pkg) / 'composer.json').read_text(encoding='utf-8'))
         dev = composer.get('require-dev') or {}
         testbench = str(dev.get('orchestra/testbench', ''))
         lines = sorted({TESTBENCH_TO_LARAVEL[m] for m in re.findall(r'\^(\d+)', testbench) if m in TESTBENCH_TO_LARAVEL})
         # core runs from the repository root, whose composer.json owns the type-coverage plugin and rector.
-        tooling = json.loads((root / 'composer.json').read_text(encoding='utf-8')).get('require-dev', {}) if pkg == 'core' else dev
-        groups = root / 'packages' / pkg / 'tests' / 'groups.php'
+        tooling = json.loads((root / 'composer.json').read_text(encoding='utf-8')).get('require-dev', {}) if pkg in ('core', 'integration') else dev
+        groups = root / 'tests' / 'Integration' / 'groups.php' if pkg == 'integration' else root / 'packages' / pkg / 'tests' / 'groups.php'
         text = re.sub(r'//[^\n]*|/\*.*?\*/', '', groups.read_text(encoding='utf-8') if groups.exists() else '', flags=re.S)
-        serial = re.search(r"'serial'\s*=>\s*\[(.*?)\]\s*,", text, re.S)
+        serial = re.search(r"'serial'\s*=>\s*(?:\[|array\s*\()(.*?)(?:\]|\))\s*,", text, re.S)
         support[pkg] = {
             'dir': directory,
             'lines': lines,

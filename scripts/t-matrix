@@ -11,7 +11,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 engines=sqlite,pgsql,mysql
-packages=core,drive,documents,media,filament,azgard
+packages=core,integration,drive,documents,media,webhooks,collaboration,filament,azgard
 cpus="$(nproc 2>/dev/null || echo 4)"
 jobs=$(( cpus / 8 > 2 ? cpus / 8 : 2 ))
 extra=()

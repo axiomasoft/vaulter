@@ -456,15 +456,15 @@ it('plans a media change for media and its Composer consumers only', function ()
     [$code, $plan] = s_select(['--paths=packages/media/src/Cas/BlobStore.php']);
 
     // azgard consumes media since P3.4: its module requires drive, whose manifest requires media.
-    expect($code)->toBe(0)->and($plan['touched'])->toBe(['media'])->and($plan['affected'])->toBe(['media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament'])
-        ->and(s_runs($plan))->toBe(['scripts/t sqlite -p media', 'scripts/t sqlite -p drive', 'scripts/t sqlite -p webhooks', 'scripts/t sqlite -p documents', 'scripts/t sqlite -p collaboration', 'scripts/t sqlite -p azgard', 'scripts/t sqlite -p filament']);
+    expect($code)->toBe(0)->and($plan['touched'])->toBe(['media'])->and($plan['affected'])->toBe(['media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'integration'])
+        ->and(s_runs($plan))->toBe(['scripts/t sqlite -p media', 'scripts/t sqlite -p drive', 'scripts/t sqlite -p webhooks', 'scripts/t sqlite -p documents', 'scripts/t sqlite -p collaboration', 'scripts/t sqlite -p azgard', 'scripts/t sqlite -p filament', 'scripts/t sqlite -p integration']);
 });
 
 it('plans a core sub-zone change by group and pulls the dependent sub-zones and packages, never load', function (): void {
     [$code, $plan] = s_select(['--paths=packages/core/src/Events/EventRecorder.php']);
 
     expect($code)->toBe(0)->and($plan['touched'])->toBe(['core-events'])
-        ->and($plan['affected'])->toBe(['core-operations', 'core-events', 'core-http', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament'])
+        ->and($plan['affected'])->toBe(['core-operations', 'core-events', 'core-http', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'integration'])
         ->and($plan['affected'])->not->toContain('load')
         ->and($plan['runs'][0]['command'])->toBe('scripts/t sqlite -p core --group=zone:core-operations,zone:core-events,zone:core-http,zone:core-observability');
 
@@ -491,7 +491,7 @@ it('refuses a core TestCase change with the whole of core and its consumers', fu
     [$code, $plan] = s_select(['--paths=packages/core/tests/TestCase.php']);
 
     expect($code)->toBe(2)->and($plan['status'])->toBe('harness')
-        ->and($plan['affected'])->toBe(['core-kernel', 'core-modules', 'core-operations', 'core-events', 'core-http', 'core-schema', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament'])
+        ->and($plan['affected'])->toBe(['core-kernel', 'core-modules', 'core-operations', 'core-events', 'core-http', 'core-schema', 'core-observability', 'media', 'drive', 'webhooks', 'documents', 'collaboration', 'azgard', 'filament', 'integration'])
         ->and(s_runs($plan)[0])->toBe('scripts/t sqlite -p core');
 });
 
@@ -630,4 +630,29 @@ it('routes --db through the database classification and refuses it while that is
     $plan = json_decode($out, true, flags: JSON_THROW_ON_ERROR);
     expect($code)->toBe(0)->and($plan['commands'])->toBe(['scripts/t pgsql -p core -- tests/core/a/DbTest.php'])
         ->and($plan['plans'][0]['engines'])->toBe(['pgsql']);
+});
+
+
+it('plans integration for every PHP source dependency and excludes consumers with quick', function (): void {
+    foreach (['core', 'media', 'drive', 'documents', 'webhooks', 'collaboration', 'azgard', 'filament'] as $package) {
+        $path = $package === 'core' ? 'packages/core/src/Events/EventRecorder.php' : "packages/$package/src/Example.php";
+        [$code, $plan] = s_select(["--paths=$path"]);
+        expect($code)->toBe(0, $package)->and($plan['affected'])->toContain('integration')
+            ->and(s_runs($plan))->toContain('scripts/t sqlite -p integration');
+        [$code, $quick] = s_select(["--paths=$path", '--quick']);
+        expect($code)->toBe(0, $package)->and($quick['affected'])->not->toContain('integration');
+    }
+});
+
+it('plans integration harness and database files without executing product suites', function (): void {
+    [$code, $harness] = s_select(['--paths=tests/Pest.php', '--quick']);
+    expect($code)->toBe(2)->and($harness['status'])->toBe('harness')
+        ->and(s_runs($harness))->toContain('scripts/t sqlite -p integration');
+    [$code, $database] = s_select(['--paths=packages/core/src/Events/EventRecorder.php', '--db=pgsql']);
+    expect($code)->toBe(0);
+    $integration = array_values(array_filter($database['runs'], static fn (array $run): bool => $run['suite'] === 'integration'));
+    expect($integration)->toHaveCount(1)->and($integration[0]['paths'])->toContain('tests/Integration/Events/EventRecorderTest.php');
+    foreach ($integration[0]['paths'] as $path) {
+        expect($path)->toStartWith('tests/Integration/')->and($database['classified']['unknown'])->toBe([]);
+    }
 });
