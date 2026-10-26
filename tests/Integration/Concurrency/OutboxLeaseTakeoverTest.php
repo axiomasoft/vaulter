@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Bus;
 use Vaulter\Events\Outbox\DeliveryState;
 use Vaulter\Events\Outbox\OutboxRelay;
 use Vaulter\Events\Outbox\OutboxStore;
+use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
-use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookFanoutConsumer;
 

@@ -3,7 +3,14 @@
     "description": "Vaulter kernel: module registry, operation pipeline, idempotency, events and outbox, problem details, tenancy and diagnostics. Install axioma-studio/vaulter for the full product.",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "kernel", "modules", "idempotency", "outbox", "tenancy"],
+    "keywords": [
+        "laravel",
+        "kernel",
+        "modules",
+        "idempotency",
+        "outbox",
+        "tenancy"
+    ],
     "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
@@ -26,18 +33,9 @@
     },
     "require-dev": {
         "opis/json-schema": "^2.4",
-        "symfony/yaml": "^8.0",
-        "axioma-studio/vaulter-collaboration": "self.version",
-        "axioma-studio/vaulter-documents": "self.version",
-        "axioma-studio/vaulter-drive": "self.version",
-        "axioma-studio/vaulter-media": "self.version",
-        "axioma-studio/vaulter-webhooks": "self.version",
-        "firebase/php-jwt": "^7.0",
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0",
-        "spatie/laravel-permission": "^8.0",
-        "nikic/php-parser": "^5.7"
+        "pestphp/pest-plugin-laravel": "^4.0"
     },
     "suggest": {
         "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions.",
@@ -68,43 +66,6 @@
             "dev-main": "0.1.x-dev"
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../documents",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../drive",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../media",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../webhooks",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../collaboration",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {

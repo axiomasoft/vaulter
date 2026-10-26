@@ -14,14 +14,14 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Events\EventSink;
 use Vaulter\Events\SinkResult;
 use Vaulter\Events\SinkWriter;
-use Vaulter\Kernel;
-use Vaulter\Modules\CompiledModules;
-use Vaulter\Modules\SlotContribution;
 use Vaulter\Integration\Tests\Events\Fixtures\AlphaSink;
 use Vaulter\Integration\Tests\Events\Fixtures\BetaSink;
 use Vaulter\Integration\Tests\Events\Fixtures\GammaSink;
 use Vaulter\Integration\Tests\Events\Fixtures\ScriptedSink;
 use Vaulter\Integration\Tests\TestCase;
+use Vaulter\Kernel;
+use Vaulter\Modules\CompiledModules;
+use Vaulter\Modules\SlotContribution;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**

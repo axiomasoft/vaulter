@@ -17,7 +17,7 @@
             "partitions": [
                 {
                     "key": "(unbound)",
-                    "fingerprint": "922f4b9187ab",
+                    "fingerprint": "0c18c6f85039",
                     "lifecycle": "none",
                     "database": false,
                     "engines": [
@@ -36,7 +36,7 @@
                 },
                 {
                     "key": "BigintStrategyTestCase+RefreshDatabase",
-                    "fingerprint": "f44802251cc1",
+                    "fingerprint": "092bd3615da6",
                     "lifecycle": "refresh",
                     "database": true,
                     "engines": [
@@ -57,7 +57,7 @@
                 },
                 {
                     "key": "DatabaseMigrations+TestCase",
-                    "fingerprint": "c83ff6c62f49",
+                    "fingerprint": "b915586b9a35",
                     "lifecycle": "migrations",
                     "database": true,
                     "engines": [
@@ -75,7 +75,7 @@
                 },
                 {
                     "key": "HostKeyMysqlTestCase",
-                    "fingerprint": "d4e2b5ee4c67",
+                    "fingerprint": "3b6f7da261f7",
                     "lifecycle": "custom",
                     "database": true,
                     "engines": [
@@ -93,7 +93,7 @@
                 },
                 {
                     "key": "RefreshDatabase+TestCase",
-                    "fingerprint": "555a082c1a50",
+                    "fingerprint": "092bd3615da6",
                     "lifecycle": "refresh",
                     "database": true,
                     "engines": [
@@ -125,7 +125,7 @@
                 },
                 {
                     "key": "RefreshDatabase+TestCase#skeleton",
-                    "fingerprint": "555a082c1a50",
+                    "fingerprint": "a738073fd8e6",
                     "lifecycle": "refresh",
                     "database": true,
                     "engines": [
@@ -143,7 +143,7 @@
                 },
                 {
                     "key": "RefreshDatabase+UlidStrategyTestCase",
-                    "fingerprint": "00991ae2103d",
+                    "fingerprint": "371275bb82a4",
                     "lifecycle": "refresh",
                     "database": true,
                     "engines": [
@@ -162,7 +162,7 @@
                 },
                 {
                     "key": "RefreshDatabase+Uuid7StrategyTestCase",
-                    "fingerprint": "db41db0f94b8",
+                    "fingerprint": "8fdc4d840292",
                     "lifecycle": "refresh",
                     "database": true,
                     "engines": [
@@ -181,7 +181,7 @@
                 },
                 {
                     "key": "TestCase",
-                    "fingerprint": "20db02f08b7a",
+                    "fingerprint": "e897e18596a7",
                     "lifecycle": "custom",
                     "database": true,
                     "engines": [
@@ -199,7 +199,7 @@
                 },
                 {
                     "key": "TestCase+WithoutDatabaseSchema",
-                    "fingerprint": "ebfe4eb78046",
+                    "fingerprint": "03d691d9d3a7",
                     "lifecycle": "none",
                     "database": false,
                     "engines": [
@@ -2201,6 +2201,7 @@
                     ],
                     "files": [
                         "tests/Repo/Arch/BoundaryScanTest.php",
+                        "tests/Repo/Arch/CoreTestsKernelOnlyTest.php",
                         "tests/Repo/Arch/IdentitiesTest.php",
                         "tests/Repo/Arch/InventoryHarnessTest.php",
                         "tests/Repo/Arch/MoveTypesTest.php",

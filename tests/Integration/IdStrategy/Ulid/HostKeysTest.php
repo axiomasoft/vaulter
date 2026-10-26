@@ -12,8 +12,8 @@ use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
-use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Integration\Tests\Fixtures\HostKeyUser;
+use Vaulter\Schema\ModuleSchemas;
 
 // Build a fresh panel after upgrade migrations, so the regression cannot be
 // hidden by the upgrade repairing an incorrectly emitted fresh column.

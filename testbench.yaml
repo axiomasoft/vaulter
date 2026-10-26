@@ -7,7 +7,7 @@ providers:
   - Vaulter\Drive\VaulterDriveServiceProvider
   - Vaulter\Documents\VaulterDocumentsServiceProvider
   - Vaulter\Collaboration\VaulterCollaborationServiceProvider
-  - Vaulter\Tests\E2E\E2eServiceProvider
+  - Vaulter\Integration\Tests\E2E\E2eServiceProvider
 
 env:
   - APP_KEY="base64:lRknxO3IznrZODHVPvLNKylvYP19ch+EXZ8dM+i3OlY="

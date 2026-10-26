@@ -10,13 +10,13 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Exceptions\Idempotency\OperationInProgressException;
 use Vaulter\Idempotency\IdempotencyStore;
 use Vaulter\Idempotency\IdempotentWrite;
+use Vaulter\Integration\Tests\Idempotency\Fixtures\EchoReceiptCodec;
+use Vaulter\Integration\Tests\Idempotency\Fixtures\RecordingReplayAuthorizer;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Operations\OperationSpec;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
-use Vaulter\Integration\Tests\Idempotency\Fixtures\EchoReceiptCodec;
-use Vaulter\Integration\Tests\Idempotency\Fixtures\RecordingReplayAuthorizer;
 
 /**
  * K2 and K5 of D25 under real concurrency (PostgreSQL, forked processes on their own connections): two requests with

@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Symfony\Component\Console\Exception\CommandNotFoundException;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
-use Vaulter\Integration\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 

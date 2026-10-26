@@ -16,10 +16,10 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxEnvelope;
-use Vaulter\Testing\FakeMetricsRecorder;
-use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Integration\Tests\TestCase;
+use Vaulter\Testing\FakeMetricsRecorder;
+use Vaulter\Testing\Support\CanonicalJson;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 

@@ -10,6 +10,7 @@ use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Events\EventCatalog;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Http\Problems\ProblemCatalog;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleCatalog;
@@ -18,7 +19,6 @@ use Vaulter\Modules\VaulterModule;
 use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
-use Vaulter\Integration\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 

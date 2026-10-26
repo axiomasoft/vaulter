@@ -17980,7 +17980,7 @@
   "additions": {
     "repo": {
       "introduced": "P1.3",
-      "count": 247,
+      "count": 258,
       "names": [
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__all_four_block__I1_and_I2_since_P4_16__the_collaboration_residual_of_D32_emptied_in_P5_1_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
@@ -18004,6 +18004,16 @@
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__the_current_view_counts_a_type_of_a_package_outside_the_current_require__wherever_the_namespace_says_it_lives",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__the_head_foreign_keys_are_flagged_and_a_table_owned_by_the_dependency_is_fine",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__the_same_reference_counted_twice_in_one_place_is_one_entry_with_count_2",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_allows_kernel_local_fixtures_and_ignores_dependencies_mentioned_only_in_comments",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_keeps_every_core_PHP_test_and_fixture_independent_of_upper_packages_and_repository_harnesses",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"alias\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"class string\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"group import\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"include\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"integration\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"package fixture\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"root subprocess\"\"",
+        "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"sibling fixture\"\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('cli')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('config')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('http')\"",
@@ -18136,6 +18146,7 @@
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_lists_exactly_the_declared_siblings_for_collaboration__its_dev_sibling_included__and_no_other_package",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_lists_exactly_the_declared_siblings_for_webhooks_and_no_other_package",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_passes_a_fixture_package_that_names_only_what_it_declares",
+        "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_core_with_no_sibling_repository_after_the_kernel_split",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_the_declared_siblings_of_every_consumer_package_of_the_repository_and_touches_nothing\"('collaboration')\"",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_the_declared_siblings_of_every_consumer_package_of_the_repository_and_touches_nothing\"('core')\"",
         "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_the_declared_siblings_of_every_consumer_package_of_the_repository_and_touches_nothing\"('documents')\"",
@@ -18254,6 +18265,61 @@
         {
           "name": "P\\Tests\\Repo\\TestSelectTest::__pest_evaluable_it_plans_integration_harness_and_database_files_without_executing_product_suites",
           "reason": "Guards integration harness and database selector plans without executing product suites.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_allows_kernel_local_fixtures_and_ignores_dependencies_mentioned_only_in_comments",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_keeps_every_core_PHP_test_and_fixture_independent_of_upper_packages_and_repository_harnesses",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"alias\"\"",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"class string\"\"",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"group import\"\"",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"include\"\"",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"integration\"\"",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"package fixture\"\"",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"root subprocess\"\"",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\Arch\\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths\"dataset \"sibling fixture\"\"",
+          "reason": "Kernel-only core boundary and negative dependency fixtures.",
+          "decision": "PLAN4-D6"
+        },
+        {
+          "name": "P\\Tests\\Repo\\ConsumerCheckTest::__pest_evaluable_it_plans_core_with_no_sibling_repository_after_the_kernel_split",
+          "reason": "Core consumer declares no sibling repositories after kernel split.",
           "decision": "PLAN4-D6"
         }
       ]

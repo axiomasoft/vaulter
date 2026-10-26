@@ -5,6 +5,9 @@ declare(strict_types=1);
 use Vaulter\CoreModule;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\Operations\DriveOperationPolicies;
+use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeModule;
+use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeOperationPolicies;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Media\MediaModule;
 use Vaulter\Modules\Activation;
@@ -20,12 +23,9 @@ use Vaulter\Operations\OperationPolicy;
 use Vaulter\Operations\OperationPolicySource;
 use Vaulter\Operations\OperationSources;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
-use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeModule;
-use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeOperationPolicies;
 use Vaulter\Tests\Modules\Fixtures\FixtureModule;
 use Vaulter\Tests\Modules\Fixtures\PlainGreeter;
 use Vaulter\Tests\Operations\Fixtures\ContractOperationPolicies;
-use Vaulter\Integration\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 

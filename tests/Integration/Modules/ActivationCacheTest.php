@@ -8,9 +8,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Vaulter\Http\Middleware\EnsureModuleActive;
-use Vaulter\Kernel;
-use Vaulter\Testing\Concerns\FreshApplication;
-use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmePingController;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeProbe;
 use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\AcmeProvider;
@@ -19,6 +16,9 @@ use Vaulter\Integration\Tests\Modules\Fixtures\AcmeModule\ConfigCachedProvider;
 use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSet;
 use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSets;
 use Vaulter\Integration\Tests\TestCase;
+use Vaulter\Kernel;
+use Vaulter\Testing\Concerns\FreshApplication;
+use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 

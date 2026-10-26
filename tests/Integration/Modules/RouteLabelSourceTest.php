@@ -8,11 +8,11 @@ use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
 use Vaulter\Http\Middleware\VaulterThrottledRouteMap;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
-use Vaulter\Integration\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 

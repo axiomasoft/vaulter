@@ -14,8 +14,8 @@ use Vaulter\Drive\Profiles\Profile;
 use Vaulter\Drive\Profiles\ProfileRegistry;
 use Vaulter\Drive\Profiles\UploadPolicy;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Integration\Tests\TestCase;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
 uses(TestCase::class, RefreshDatabase::class);

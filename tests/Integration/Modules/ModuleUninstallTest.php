@@ -16,15 +16,15 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
+use Vaulter\Integration\Tests\Modules\Fixtures\GuardedModule\GuardedProvider;
+use Vaulter\Integration\Tests\Modules\Fixtures\GuardedModule\GuardedRemovalGuard;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\Models\Cas\Blob;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Testing\Concerns\FreshApplication;
-use Vaulter\Integration\Tests\Modules\Fixtures\GuardedModule\GuardedProvider;
-use Vaulter\Integration\Tests\Modules\Fixtures\GuardedModule\GuardedRemovalGuard;
-use Vaulter\Integration\Tests\TestCase;
 use Vaulter\VaulterServiceProvider;
 
 uses(TestCase::class, DatabaseMigrations::class);

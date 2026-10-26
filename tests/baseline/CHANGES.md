@@ -2118,7 +2118,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 
 ## Additions (current − original)
 
-- `repo`: 247 (introduced P1.3)
+- `repo`: 258 (introduced P1.3)
 - `core`: 72
 - `media`: 142
 - `drive`: 427
@@ -2132,10 +2132,16 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `vue-collaboration`: 43
 - `integration`: 0
 
-## PLAN4-D6 repo additions (P2.2/U4)
+## PLAN4-D6: U5 kernel-only guard and consumer additions
 
-- `repo` `P\Tests\Repo\TestRunnerTest::__pest_evaluable_it_fingerprints_schema_semantics_independently_of_testcase_namespace_and_file_path` — Guards descriptor schema fingerprints independently of namespace and file path during the core/integration split. (PLAN4-D6)
-- `repo` `P\Tests\Repo\TestRunnerTest::__pest_evaluable_it_keeps_transferred_post_original_source_cases_out_of_destination_additions` — Guards current-name cross-suite transfers so moved post-original cases do not become integration additions. (PLAN4-D6)
-- `repo` `P\Tests\Repo\TestRunnerTest::__pest_evaluable_it_preserves_integration_discovery_and_schema_partitions_in_the_runner` — Guards integration suite discovery and schema partitions after the mechanical split. (PLAN4-D6)
-- `repo` `P\Tests\Repo\TestSelectTest::__pest_evaluable_it_plans_integration_for_every_PHP_source_dependency_and_excludes_consumers_with_quick` — Guards integration selection for every PHP source dependency and quick-mode consumer exclusion. (PLAN4-D6)
-- `repo` `P\Tests\Repo\TestSelectTest::__pest_evaluable_it_plans_integration_harness_and_database_files_without_executing_product_suites` — Guards integration harness and database selector plans without executing product suites. (PLAN4-D6)
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_allows_kernel_local_fixtures_and_ignores_dependencies_mentioned_only_in_comments` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_keeps_every_core_PHP_test_and_fixture_independent_of_upper_packages_and_repository_harnesses` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths"dataset "alias""` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths"dataset "class string""` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths"dataset "group import""` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths"dataset "include""` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths"dataset "integration""` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths"dataset "package fixture""` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths"dataset "root subprocess""` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_aliased_upper_imports__string_classes__includes_and_repository_subprocess_paths"dataset "sibling fixture""` — Kernel boundary guard/negative fixture (PLAN4-D6).
+- `P\Tests\Repo\ConsumerCheckTest::__pest_evaluable_it_plans_core_with_no_sibling_repository_after_the_kernel_split` — Core consumer without sibling dependencies (PLAN4-D6).

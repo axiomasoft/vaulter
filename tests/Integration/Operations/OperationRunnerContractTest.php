@@ -18,6 +18,9 @@ use Vaulter\Exceptions\Modules\ModuleNotReadyException;
 use Vaulter\Exceptions\Operations\UnknownOperationException;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
 use Vaulter\Idempotency\IdempotencyStore;
+use Vaulter\Integration\Tests\Operations\Fixtures\OuterMiddleware;
+use Vaulter\Integration\Tests\Operations\Fixtures\ProbeMiddleware;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Modules\CompiledModules;
 use Vaulter\Modules\InvalidModuleGraph;
@@ -34,9 +37,6 @@ use Vaulter\Operations\OperationSources;
 use Vaulter\Operations\OperationSpec;
 use Vaulter\Schema\ModuleSchemas;
 use Vaulter\Tests\Operations\Fixtures\ContractOperationPolicies;
-use Vaulter\Integration\Tests\Operations\Fixtures\OuterMiddleware;
-use Vaulter\Integration\Tests\Operations\Fixtures\ProbeMiddleware;
-use Vaulter\Integration\Tests\TestCase;
 
 /**
  * I8, the operation pipeline (ADR-0028): the stages of OperationRunner::write() and the contract of

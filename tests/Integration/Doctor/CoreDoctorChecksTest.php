@@ -19,8 +19,8 @@ use Vaulter\Drive\Providers\BindingsRegistrar as DriveBindingsRegistrar;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Drive\Testing\NullPermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
+use Vaulter\Testing\Tenancy\MutableTenantResolver;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 uses(EnablesWebhooksModule::class);

@@ -14,15 +14,15 @@ use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Events\Outbox\OutboxRelay;
 use Vaulter\Events\Outbox\OutboxStore;
-use Vaulter\Kernel;
-use Vaulter\Modules\CompiledModules;
-use Vaulter\Modules\SlotContribution;
-use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Integration\Tests\Outbox\Fixtures\EphemeralConsumer;
 use Vaulter\Integration\Tests\Outbox\Fixtures\MisnamedConsumer;
 use Vaulter\Integration\Tests\Outbox\Fixtures\ScriptedConsumer;
 use Vaulter\Integration\Tests\TestCase;
+use Vaulter\Kernel;
+use Vaulter\Modules\CompiledModules;
+use Vaulter\Modules\SlotContribution;
+use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 /**

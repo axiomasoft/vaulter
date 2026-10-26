@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSet;
+use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSets;
+use Vaulter\Integration\Tests\Support\Schema\SchemaPresets;
+use Vaulter\Integration\Tests\Support\Schema\SchemaSnapshot;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Media\Contracts\Cas\BlobPins;
 use Vaulter\Media\Contracts\Cas\BlobStore;
 use Vaulter\Media\ValueObjects\Cas\BlobScope;
@@ -19,11 +24,6 @@ use Vaulter\Schema\SchemaHelpers;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Support\SuiteDatabaseConnection;
 use Vaulter\Testing\Tenancy\MutableTenantResolver;
-use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSet;
-use Vaulter\Integration\Tests\Modules\Fixtures\Apps\AppSets;
-use Vaulter\Integration\Tests\Support\Schema\SchemaPresets;
-use Vaulter\Integration\Tests\Support\Schema\SchemaSnapshot;
-use Vaulter\Integration\Tests\TestCase;
 
 uses(TestCase::class, DatabaseMigrations::class);
 

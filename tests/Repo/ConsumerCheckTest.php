@@ -363,14 +363,25 @@ it('stages the root Pest harness next to core, which keeps phpunit.xml and tests
         ->and($composer['autoload-dev']['psr-4'])->toBe(['Vaulter\\Tests\\' => 'packages/core/tests/'])
         ->and(array_column($composer['repositories'], 'url'))->not->toContain('.deps/core')
         ->and(json_encode($composer))->not->toContain('self.version');
-    foreach (['phpunit.xml', 'tests/Pest.php', 'tests/zones.json', 'load/tests/groups.php', 'packages/core/src', 'packages/core/tests'] as $staged) {
+    foreach (['phpunit.xml', 'tests/Pest.php', 'packages/core/src', 'packages/core/tests'] as $staged) {
         expect(file_exists("{$work}/consumer/{$staged}"))->toBeTrue("{$staged} is staged for core");
     }
-    expect(file_exists("{$work}/consumer/packages/core/vendor"))->toBeFalse();
+    expect(file_exists("{$work}/consumer/packages/core/vendor"))->toBeFalse()
+        ->and(file_exists("{$work}/consumer/tests/zones.json"))->toBeFalse()
+        ->and(file_exists("{$work}/consumer/tests/Integration"))->toBeFalse()
+        ->and(file_exists("{$work}/consumer/load"))->toBeFalse()
+        ->and(glob("{$work}/consumer/.deps/*"))->toBe([])
+        ->and(file_get_contents("{$work}/consumer/tests/Pest.php"))->not->toContain('Integration', 'LoadTestCase', 'zones.json')
+        ->and(file_get_contents("{$work}/consumer/phpunit.xml"))->not->toContain('tests/Integration', 'packages/drive/tests');
 
     $pest = json_decode((string) file_get_contents("{$tools}/pest.json"), true);
     expect($pest['argv'])->toBe(['--ci', '--exclude-group=nofast', '--testsuite=core']);
 
     c_rmdir($tools);
     c_rmdir($work);
+});
+
+it('plans core with no sibling repository after the kernel split', function (): void {
+    [$code, $out, $err] = c_run(['core', '--dry-run']);
+    expect($code)->toBe(0, $out.$err)->and($out)->toContain('repositories: (none)');
 });

@@ -130,7 +130,7 @@ check_reference() { # <file> <line> <match>
     segment="$(sed -E 's/^\\?Vaulter\\+//' <<<"$match" | sed -E 's/\\.*$//')"
     owner="${segment_owner[$segment]:-$core_name}"
     relative="${file#"$root/$path/"}"
-    if [[ "$segment" == "Tests" && "$name" != "$core_name" ]]; then
+    if [[ "$segment" == "Integration" || ( "$segment" == "Tests" && "$name" != "$core_name" ) ]]; then
         violations+=("${relative}:${line}: ${match} is the kernel's test namespace; a split package has no packages/core/tests (D14: own TestCase)")
     elif [[ -z "${allowed[$owner]:-}" ]]; then
         violations+=("${relative}:${line}: ${match} belongs to ${owner}, which ${name} does not declare in composer.json")
@@ -175,7 +175,7 @@ pest_args=(--ci --exclude-group=nofast)
 if [[ "$layout" == repo ]]; then
     # phpunit.xml, tests/Pest.php and the zone map are read from the repository root by the core suite; openapi/ is the
     # contract its HTTP tests validate against. The load suite is not part of a consumer, so its group file stays empty.
-    harness_files=(phpunit.xml tests/Pest.php tests/zones.json openapi)
+    harness_files=() # Generated below from core-only bindings; no integration/load/OpenAPI harness.
     pest_args+=("--testsuite=${short}")
 fi
 
@@ -231,8 +231,28 @@ if [[ "$layout" == repo ]]; then
             cp -R "$root/$item" "$work/$item"
         fi
     done
-    mkdir -p "$work/load/tests"
-    printf '<?php\n\nreturn [];\n' >"$work/load/tests/groups.php"
+    mkdir -p "$work/tests"
+    "$php_bin" /dev/stdin "$root" "$work" <<'PHP'
+<?php
+[$unused, $root, $work] = $argv;
+$xml = new DOMDocument;
+$xml->load($root.'/phpunit.xml');
+foreach (iterator_to_array($xml->getElementsByTagName('testsuite')) as $suite) {
+    if ($suite->getAttribute('name') !== 'core') { $suite->parentNode->removeChild($suite); }
+}
+$xml->save($work.'/phpunit.xml');
+$source = file_get_contents($root.'/tests/Pest.php');
+$imports = [];
+preg_match_all('/^use ([^;]+);$/m', $source, $matches);
+foreach ($matches[1] as $name) {
+    if (str_starts_with($name, 'Vaulter\\Load\\')) { continue; }
+    if (str_starts_with($name, 'Vaulter\\Tests\\') && !is_file($root.'/packages/core/tests/'.str_replace('\\', '/', substr($name, strlen('Vaulter\\Tests\\'))).'.php')) { continue; }
+    $imports[] = 'use '.$name.';';
+}
+preg_match_all('/^uses\(.*?;[ \t]*$/ms', $source, $matches);
+$bindings = array_filter($matches[0], static fn ($line) => str_contains($line, '/packages/core/tests/') && !str_contains($line, '/tests/Integration/'));
+file_put_contents($work.'/tests/Pest.php', "<?php\n\ndeclare(strict_types=1);\n\n".implode("\n", $imports)."\nTestGroups::bind(dirname(__DIR__).'/packages/core/tests', 'core');\n".implode("\n", $bindings)."\n");
+PHP
     composer_source="$root/$path/composer.json"
 else
     project="$work"

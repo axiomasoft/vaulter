@@ -11,9 +11,9 @@ use Vaulter\Drive\Models\Activity\Activity;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxStore;
+use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Testing\Concurrency\ForkRace;
 use Vaulter\Testing\Concurrency\RaceOutcome;
-use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Webhooks\Testing\WebhookTestHelpers;
 
 uses(EnablesWebhooksModule::class);

@@ -9,8 +9,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Drive\Models\Drive;
 use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
-use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\Integration\Tests\TestCase;
+use Vaulter\Testing\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 

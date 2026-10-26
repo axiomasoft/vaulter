@@ -16,6 +16,7 @@ use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Http\Middleware\EnsureModuleActive;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Media\MediaModule;
 use Vaulter\Modules\ModuleApplier;
@@ -24,7 +25,6 @@ use Vaulter\Modules\ModuleGraphException;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\Modules\Fixtures\FixtureModulesProvider;
-use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Webhooks\WebhooksModule;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);

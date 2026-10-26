@@ -6,8 +6,8 @@ namespace Vaulter\Integration\Tests\Modules\Fixtures\Apps;
 
 use Illuminate\Contracts\Foundation\Application as ApplicationContract;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Integration\Tests\TestCase;
+use Vaulter\Testing\Concerns\FreshApplication;
 
 /**
  * One application of the install matrix (I6, I15): the Vaulter providers of a downward-closed set of packages (D6). A set is

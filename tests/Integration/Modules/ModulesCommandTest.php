@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Artisan;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\CoreModule;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
-use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Webhooks\WebhooksModule;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);

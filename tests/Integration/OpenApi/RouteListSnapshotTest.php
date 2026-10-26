@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
+use Vaulter\Testing\Support\OpenApi\ValidateOpenApiResponses;
 
 // The contract describes the webhooks routes and problems too: the opt-in module is on (D22).
 uses(EnablesWebhooksModule::class);

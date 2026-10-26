@@ -7,11 +7,11 @@ use Illuminate\Routing\Route;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\Contracts\DriveHandleFactory;
 use Vaulter\Http\Middleware\EnsureModuleActive;
+use Vaulter\Integration\Tests\TestCase;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleState;
 use Vaulter\Testing\Concerns\FreshApplication;
 use Vaulter\Testing\Concerns\WithoutDatabaseSchema;
-use Vaulter\Integration\Tests\TestCase;
 
 uses(TestCase::class, WithoutDatabaseSchema::class);
 
