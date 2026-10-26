@@ -10,7 +10,6 @@ use Vaulter\Collaboration\Exceptions\CollaborationDrainingException;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationProtocolMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
-use Vaulter\Collaboration\Exceptions\CollaborationUnavailableException;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationUpdateTooLargeException;
 use Vaulter\Http\Problems\ProblemCodeSource;
@@ -43,7 +42,6 @@ final class CollaborationProblemCodes implements ProblemCodeSource
             'collaboration_protocol_mismatch' => new ProblemSpec(409, CollaborationProtocolMismatchException::class),
             'collaboration_seed_conflict' => new ProblemSpec(409, CollaborationSeedConflictException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
             // The host's configuration decides, not the request: waiting does not help and a receipt would outlive a config change.
-            'collaboration_unavailable' => new ProblemSpec(409, CollaborationUnavailableException::class),
             'collaboration_update_mismatch' => new ProblemSpec(422, CollaborationUpdateMismatchException::class),
             'collaboration_update_too_large' => new ProblemSpec(413, CollaborationUpdateTooLargeException::class),
         ];

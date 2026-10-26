@@ -95,7 +95,7 @@ abstract class TestCase extends OrchestraTestCase
     /**
      * The connection the whole suite runs on. Default: in-memory SQLite. Opt INTO
      * Postgres by exporting DB_CONNECTION=pgsql (plus the DB_* coordinates): the
-     * dedicated pgsql CI lane exercises the yjs_state bytea NUL-safe round-trip and
+     * dedicated pgsql CI lane exercises the collab_state bytea NUL-safe round-trip and
      * the v_activity/v_document_revisions jsonb gin(jsonb_path_ops) indexes that
      * SQLite cannot model.
      *

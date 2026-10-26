@@ -7,6 +7,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\State\CheckpointPublication;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\LockedDocumentState;
 use Vaulter\Documents\State\PendingMarker;
@@ -39,17 +40,17 @@ function collabStateMark(Node $node, int $throughSeq, ?int $generation = null): 
     return collabStateIn(static function (CollaborativeState $state) use ($node, $throughSeq, $generation): PendingMarker {
         $locked = $state->lock($node->getKey());
 
-        return $state->markPending($locked, $generation ?? $locked->generation, $throughSeq);
+        return $state->markPending($locked, new CollaborationStateBinding('yjs', 'yjs-update-v1', $locked->schemaVersion, $generation ?? $locked->generation), $throughSeq);
     });
 }
 
 function collabStatePublication(LockedDocumentState $locked, int $coveredThrough, string $text = 'Merged', ?int $generation = null, ?int $stateVersion = null): CheckpointPublication
 {
     return new CheckpointPublication(
-        generation: $generation ?? $locked->generation,
+        binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, $generation ?? $locked->generation),
         expectedStateVersion: $stateVersion ?? $locked->stateVersion,
         coveredThrough: $coveredThrough,
-        yjsState: 'state:'.$text,
+        collabState: 'state:'.$text,
         content: GrantedDocuments::tiptap($text),
     );
 }
@@ -63,7 +64,7 @@ it('requires an open Vaulter transaction for every method', function (): void {
     $locked = collabStateIn(fn (CollaborativeState $state): LockedDocumentState => $state->lock($this->node->getKey()));
 
     expect(fn () => $state->lock($this->node->getKey()))->toThrow(LogicException::class)
-        ->and(fn () => $state->markPending($locked, 0, 1))->toThrow(LogicException::class)
+        ->and(fn () => $state->markPending($locked, new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), 1))->toThrow(LogicException::class)
         ->and(fn () => $state->publishCheckpoint($locked, collabStatePublication($locked, 1)))->toThrow(LogicException::class)
         ->and(fn () => $state->pendingDocuments())->toThrow(LogicException::class)
         ->and(GrantedDocuments::aggregate($this->node)->pending_generation)->toBeNull();
@@ -143,7 +144,7 @@ it('publishes a covering checkpoint as the working state and clears the marker',
         ->and($outcome->stateVersion)->toBe($before->state_version + 1)
         ->and($document->state_version)->toBe($before->state_version + 1)
         ->and($document->collab_epoch)->toBe(0)
-        ->and($document->yjs_state)->toBe('state:Merged')
+        ->and($document->collab_state)->toBe('state:Merged')
         ->and($document->tipTapContent()->toArray())->toBe(GrantedDocuments::tiptap('Merged'))
         ->and($document->pending_generation)->toBeNull()
         ->and($document->pending_through_seq)->toBeNull();
@@ -164,7 +165,7 @@ it('keeps the marker of an edit appended after the merge read the log', function
     expect($outcome->published)->toBeTrue()
         ->and($outcome->pending?->throughSeq)->toBe(4)
         ->and([$document->pending_generation, $document->pending_through_seq])->toBe([0, 4])
-        ->and($document->yjs_state)->toBe('state:Merged');
+        ->and($document->collab_state)->toBe('state:Merged');
 
     // The append before the read and the publication in the other order end the same: the marker stays at 4.
     $other = GrantedDocuments::document(level: null);
@@ -202,7 +203,7 @@ it('loses the CAS on a moved state version or a closed generation and changes no
         ->and($closed->generation)->toBe(0)
         ->and($after->state_version)->toBe($before->state_version)
         ->and($after->content_hash)->toBe($before->content_hash)
-        ->and($after->yjs_state)->toBeNull()
+        ->and($after->collab_state)->toBeNull()
         ->and([$after->pending_generation, $after->pending_through_seq])->toBe([0, 3]);
 });
 
@@ -258,7 +259,7 @@ it('refuses half a marker or a sequence below one in the database', function (ar
 ]);
 
 it('validates a publication before it reaches the document', function (): void {
-    expect(fn () => new CheckpointPublication(generation: -1, expectedStateVersion: 0, coveredThrough: 0, yjsState: 's', content: []))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => new CheckpointPublication(generation: 0, expectedStateVersion: 0, coveredThrough: -1, yjsState: 's', content: []))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => new CheckpointPublication(generation: 0, expectedStateVersion: 0, coveredThrough: 0, yjsState: '', content: []))->toThrow(InvalidArgumentException::class);
+    expect(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, -1), expectedStateVersion: 0, coveredThrough: 0, collabState: 's', content: []))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), expectedStateVersion: 0, coveredThrough: -1, collabState: 's', content: []))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => new CheckpointPublication(binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, 0), expectedStateVersion: 0, coveredThrough: 0, collabState: '', content: []))->toThrow(InvalidArgumentException::class);
 });

@@ -39,8 +39,8 @@ function copyLifecycleSource(DriveHandle $drive, string $name = 'Source'): Node
     app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->getKey())->update([
         'state_version' => 5,
         'collab_epoch' => 2,
-        'yjs_state' => 'yjs-bytes',
-        'yjs_state_size' => 9,
+        'collab_state' => 'yjs-bytes',
+        'collab_state_size' => 9,
     ]));
 
     return $node;
@@ -66,7 +66,7 @@ it('V33 copies a document into a new aggregate with one revision and its own wor
         ->and($copy->schema_version)->toBe($original->schema_version)
         ->and($copy->content)->toBe($original->content)
         ->and($copy->content_hash)->toBe($original->content_hash)
-        ->and($copy->yjs_state)->toBe('yjs-bytes')
+        ->and($copy->collab_state)->toBe('yjs-bytes')
         ->and($copy->revision_count)->toBe(1)
         ->and(copyLifecycleRevisionCount($copy))->toBe(1)
         ->and($copy->collab_epoch)->toBe(0)

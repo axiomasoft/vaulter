@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Collaboration\Exceptions\CollaborationUnavailableException;
 use Vaulter\Collaboration\Operations\CollaborationOperations;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers;
 use Vaulter\Collaboration\Tests\Support\AcmeKanbanV2Type;
@@ -10,6 +9,7 @@ use Vaulter\Collaboration\Tests\Support\DocumentTestHelpers;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Snapshots\NodeSnapshot;
+use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;

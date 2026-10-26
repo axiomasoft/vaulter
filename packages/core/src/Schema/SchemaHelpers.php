@@ -93,7 +93,7 @@ final class SchemaHelpers
     }
 
     /**
-     * A nullable binary column (yjs_state). longBlob on MySQL/MariaDB (the
+     * A nullable binary column (collab_state). longBlob on MySQL/MariaDB (the
      * portability note — Yjs state can outgrow a plain blob); a portable
      * binary() (bytea on Postgres) everywhere else.
      */

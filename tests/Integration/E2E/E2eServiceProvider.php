@@ -94,7 +94,7 @@ final class E2eServiceProvider extends ServiceProvider
     {
         Route::get('/e2e/health', static fn () => response()->json(['status' => 'ok']));
 
-        // Проверка персистентности снапшота: вернуть размер последнего yjs_state узла,
+        // Проверка персистентности снапшота: вернуть размер последнего collab_state узла,
         // чтобы e2e-тест убедился, что debounced-снапшот хаба долетел до БД.
         Route::get('/e2e/snapshot/{node}', static function (int|string $node) {
             $latest = DocumentRevision::query()
@@ -105,10 +105,10 @@ final class E2eServiceProvider extends ServiceProvider
             return response()->json([
                 'node_id' => $node,
                 'number' => $latest?->number,
-                'yjs_state_size' => $latest?->yjs_state_size,
+                'collab_state_size' => $latest?->collab_state_size,
                 'has_state' => $latest !== null
-                    && $latest->yjs_state_size !== null
-                    && $latest->yjs_state_size > 0,
+                    && $latest->collab_state_size !== null
+                    && $latest->collab_state_size > 0,
             ]);
         });
 
@@ -159,7 +159,7 @@ final class E2eServiceProvider extends ServiceProvider
                 'node_id' => $node,
                 'epoch' => $document->collab_epoch,
                 'state_version' => $document->state_version,
-                'yjs_state_size' => $document->yjs_state_size,
+                'collab_state_size' => $document->collab_state_size,
                 'content' => $document->content,
             ]);
         });

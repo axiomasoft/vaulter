@@ -112,6 +112,7 @@ Vaulter\Documents\Contracts\ExportFilenameResolver spi:implement since 1.0 inter
 
 Vaulter\Documents\Contracts\SupportsCollaboration spi:implement since 1.0 interface
   public function collaborationProtocol(): string
+  public function collaborationStateFormat(): string
   public function projectFromState(string $state): ?Vaulter\Documents\Contracts\DocumentContent
 
 Vaulter\Documents\Contracts\UpgradesSchema spi:implement since 1.0 interface
@@ -159,7 +160,6 @@ Vaulter\Documents\Data\Documents\UpdateDocumentContentInput api since 1.0 final 
   public Vaulter\Documents\Contracts\DocumentContent $content
   public ?int $expectedStateVersion
   public Vaulter\Drive\Models\Node $node
-  public ?string $yjsState
 
 Vaulter\Documents\Data\Export\ExportDocumentInput api since 1.0 final readonly class
   public string $format
@@ -195,11 +195,15 @@ Vaulter\Documents\Data\Snapshots\CommentSnapshot api since 1.0 final readonly cl
   public int $version
 
 Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot api since 1.0 final readonly class
+  public ?string $collabProtocol
+  public ?string $collabStateFormat
+  public ?int $collabStateSize
   public ?string $contentHash
   public ?int $contentSize
   public DateTimeImmutable $createdAt
   public ?string $createdBy
   public string $documentId
+  public int $epoch
   public string $id
   public bool $isAutosave
   public bool $isHead
@@ -211,9 +215,11 @@ Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot api since 1.0 final re
   public int $schemaVersion
   public int $stateVersion
   public string $type
-  public ?int $yjsStateSize
 
 Vaulter\Documents\Data\Snapshots\DocumentSnapshot api since 1.0 final readonly class
+  public ?string $collabProtocol
+  public ?string $collabStateFormat
+  public ?int $collabStateSize
   public Vaulter\Documents\Contracts\DocumentContent $content
   public ?string $contentHash
   public bool $dirty
@@ -229,7 +235,6 @@ Vaulter\Documents\Data\Snapshots\DocumentSnapshot api since 1.0 final readonly c
   public bool $typeAvailable
   public DateTimeImmutable $updatedAt
   public ?string $updatedBy
-  public ?int $yjsStateSize
 
 Vaulter\Documents\Data\Types\DocumentFeatures api since 1.0 final readonly class
   public bool $downloadable
@@ -358,6 +363,15 @@ Vaulter\Documents\Events\Revisions\DocumentRevisionCreated api since 1.0 final r
   public function scope(): Vaulter\ValueObjects\Events\EventScope
   public function subject(): Vaulter\ValueObjects\Events\EventSubject
   public function type(): Vaulter\Documents\Enums\DocumentEventType
+
+Vaulter\Documents\Exceptions\CollaborationUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
+  public readonly string $reason
+  public readonly ?string $type
+  public function __construct(string $reason, ?string $type = null)
+  public function httpStatus(): int
+  public function problemCode(): string
+  public function problemDetails(): array
+  public static function unsupportedType(string $type): self
 
 Vaulter\Documents\Exceptions\CommentNotFoundException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public static function forNode(mixed $nodeId, mixed $commentId): self
@@ -517,20 +531,45 @@ Vaulter\Documents\State\CheckpointOutcome api since 1.0 final readonly class
 
 Vaulter\Documents\State\CheckpointPublication api since 1.0 final readonly class
   public ?Vaulter\ValueObjects\Access\ActorRef $actor
+  public Vaulter\Documents\State\CollaborationStateBinding $binding
+  public ?string $collabState
   public array $content
   public int $coveredThrough
   public int $expectedStateVersion
+  public function __construct(Vaulter\Documents\State\CollaborationStateBinding $binding, int $expectedStateVersion, int $coveredThrough, ?string $collabState, array $content, ?Vaulter\ValueObjects\Access\ActorRef $actor = null)
+
+Vaulter\Documents\State\CollaborationStateBinding api since 1.0 final readonly class
   public int $generation
-  public string $yjsState
-  public function __construct(int $generation, int $expectedStateVersion, int $coveredThrough, string $yjsState, array $content, ?Vaulter\ValueObjects\Access\ActorRef $actor = null)
+  public string $protocol
+  public int $schemaVersion
+  public string $stateFormat
+  public function __construct(string $protocol, string $stateFormat, int $schemaVersion, int $generation)
+  public function sameAs(self $other): bool
 
 Vaulter\Documents\State\CollaborativeState api since 1.0 interface
   public function lock(int|string $nodeId): Vaulter\Documents\State\LockedDocumentState
-  public function markPending(Vaulter\Documents\State\LockedDocumentState $state, int $generation, int $throughSeq): Vaulter\Documents\State\PendingMarker
-  public function pendingDocuments(int $limit = 100, int|null|string $after = null): array
+  public function markPending(Vaulter\Documents\State\LockedDocumentState $state, Vaulter\Documents\State\CollaborationStateBinding $binding, int $throughSeq): Vaulter\Documents\State\PendingMarker
+  public function pendingDocuments(int $limit = 100, int|null|string $after = null, ?string $protocol = null): array
   public function publishCheckpoint(Vaulter\Documents\State\LockedDocumentState $state, Vaulter\Documents\State\CheckpointPublication $publication): Vaulter\Documents\State\CheckpointOutcome
+  public function transition(Vaulter\Documents\State\LockedDocumentState $state, Vaulter\Documents\State\CollaborativeStateTransition $transition): Vaulter\Documents\State\CheckpointOutcome
+
+Vaulter\Documents\State\CollaborativeStateTransition api since 1.0 final readonly class
+  public Vaulter\ValueObjects\Access\ActorRef $actor
+  public ?string $collabState
+  public Vaulter\Documents\Contracts\DocumentContent $content
+  public string $correlationId
+  public string $documentType
+  public ?Vaulter\Documents\State\CollaborationStateBinding $expectedBinding
+  public int $expectedStateVersion
+  public ?string $protocol
+  public int $schemaVersion
+  public ?string $stateFormat
+  public function __construct(?Vaulter\Documents\State\CollaborationStateBinding $expectedBinding, int $expectedStateVersion, string $documentType, int $schemaVersion, ?string $protocol, ?string $stateFormat, Vaulter\Documents\Contracts\DocumentContent $content, ?string $collabState, Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId)
 
 Vaulter\Documents\State\LockedDocumentState api since 1.0 final readonly class
+  public ?Vaulter\Documents\State\CollaborationStateBinding $binding
+  public ?string $collabState
+  public array $content
   public string $documentId
   public string $driveId
   public int $generation
@@ -542,11 +581,13 @@ Vaulter\Documents\State\LockedDocumentState api since 1.0 final readonly class
   public string $type
 
 Vaulter\Documents\State\PendingMarker api since 1.0 final readonly class
+  public Vaulter\Documents\State\CollaborationStateBinding $binding
   public string $documentId
   public int $generation
   public string $nodeId
   public int $throughSeq
-  public function coveredBy(int $generation, int $coveredThrough): bool
+  public function coveredBy(Vaulter\Documents\State\CollaborationStateBinding $binding, int $coveredThrough): bool
+  public function generation(): int
 
 Vaulter\Documents\State\PendingStateDrainer spi:implement since 1.0 interface
   public function drain(Vaulter\Documents\State\PendingMarker $marker): void
@@ -569,6 +610,7 @@ Vaulter\Documents\Types\MarkdownDocumentType api since 1.0 final readonly class 
   public const string KEY = 'vaulter/markdown'
   public function codec(): Vaulter\Documents\Contracts\DocumentCodec
   public function collaborationProtocol(): string
+  public function collaborationStateFormat(): string
   public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
   public function features(): Vaulter\Documents\Data\Types\DocumentFeatures
   public function key(): string
@@ -581,6 +623,7 @@ Vaulter\Documents\Types\RichTextDocumentType api since 1.0 final readonly class 
   public const string KEY = 'vaulter/rich-text'
   public function codec(): Vaulter\Documents\Contracts\DocumentCodec
   public function collaborationProtocol(): string
+  public function collaborationStateFormat(): string
   public function defaultContent(): Vaulter\Documents\Contracts\DocumentContent
   public function features(): Vaulter\Documents\Data\Types\DocumentFeatures
   public function key(): string

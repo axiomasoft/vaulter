@@ -11,9 +11,12 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
+use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
+use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
@@ -78,10 +81,13 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
             stateVersion: $document->state_version,
             pending: PendingStateGuard::markerOf($document),
             trashed: $current->trashed_at !== null,
+            binding: $document->collaborationBinding(),
+            collabState: $document->collab_state,
+            content: $document->content ?? [],
         );
     }
 
-    public function markPending(LockedDocumentState $state, int $generation, int $throughSeq): PendingMarker
+    public function markPending(LockedDocumentState $state, CollaborationStateBinding $binding, int $throughSeq): PendingMarker
     {
         $this->assertTransaction();
         if ($throughSeq < 1) {
@@ -89,13 +95,14 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         }
 
         $document = $this->relock($state);
-        if ($generation !== $document->collab_epoch) {
+        $generation = $binding->generation;
+        if (!$binding->sameAs($document->collaborationBinding() ?? throw new LogicException('[Vaulter] No stored binding.'))) {
             throw new LogicException(sprintf('[Vaulter] A pending marker is set for the current generation %d only, not %d: fence the generation on the locked state first.', $document->collab_epoch, $generation));
         }
 
         $marker = PendingStateGuard::markerOf($document);
-        if ($marker !== null && $marker->generation !== $generation) {
-            throw new LogicException(sprintf('[Vaulter] The document still carries a pending marker of generation %d; a generation closes only without one.', $marker->generation));
+        if ($marker !== null && !$marker->binding->sameAs($binding)) {
+            throw new LogicException(sprintf('[Vaulter] The document still carries a pending marker of generation %d; a generation closes only without one.', $marker->binding->generation));
         }
         if ($marker === null || $marker->throughSeq < $throughSeq) {
             $this->writer->mark($document, $generation, $throughSeq);
@@ -110,7 +117,7 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
 
         $document = $this->relock($state);
         // CAS: a closed generation or a write since the merge started makes the publication lose, untouched.
-        if ($publication->generation !== $document->collab_epoch || $publication->expectedStateVersion !== $document->state_version) {
+        if (!$publication->binding->sameAs($document->collaborationBinding() ?? throw new LogicException('[Vaulter] No stored binding.')) || $publication->expectedStateVersion !== $document->state_version) {
             return new CheckpointOutcome(
                 published: false,
                 changed: false,
@@ -126,13 +133,16 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         }
         $document->setRelation('node', $node);
         $type = $this->decoder->editableType($document);
+        if ($type->schemaVersion() !== $publication->binding->schemaVersion) {
+            throw new CollaborationUnavailableException('unsupported_binding', $document->type);
+        }
         $content = $this->decoder->decode($type, $publication->content);
 
         $result = $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Collaboration,
             content: $content,
-            schemaVersion: $type->schemaVersion(),
-            yjsState: $publication->yjsState,
+            schemaVersion: $publication->binding->schemaVersion,
+            collabState: $publication->collabState,
             actorId: $publication->actor?->id,
         ));
 
@@ -150,7 +160,7 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
 
         // Edits committed after the merge read the log stay pending: only a covering checkpoint clears the marker.
         $marker = PendingStateGuard::markerOf($document);
-        if ($marker !== null && $marker->coveredBy($publication->generation, $publication->coveredThrough)) {
+        if ($marker !== null && $marker->coveredBy($publication->binding, $publication->coveredThrough)) {
             $this->writer->mark($document, null, null);
             $marker = null;
         }
@@ -164,7 +174,49 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         );
     }
 
-    public function pendingDocuments(int $limit = 100, int|string|null $after = null): array
+    public function transition(LockedDocumentState $state, CollaborativeStateTransition $transition): CheckpointOutcome
+    {
+        $this->assertTransaction();
+        $document = $this->relock($state);
+        $binding = $document->collaborationBinding();
+        $sameBinding = $binding === null ? $transition->expectedBinding === null : ($transition->expectedBinding !== null && $binding->sameAs($transition->expectedBinding));
+        if (!$sameBinding || $transition->expectedStateVersion !== $document->state_version || PendingStateGuard::markerOf($document) !== null) {
+            return new CheckpointOutcome(false, false, $document->collab_epoch, $document->state_version, PendingStateGuard::markerOf($document));
+        }
+        $type = $this->decoder->writable($transition->documentType);
+        if ($type->schemaVersion() !== $transition->schemaVersion
+            || ($transition->protocol !== null && (!$type instanceof SupportsCollaboration
+                || $type->collaborationProtocol() !== $transition->protocol || $type->collaborationStateFormat() !== $transition->stateFormat))) {
+            throw new CollaborationUnavailableException('unsupported_binding', $transition->documentType);
+        }
+        $content = $this->decoder->decode($type, $transition->content->toArray());
+        $node = $document->node()->firstOrFail();
+        $document->setRelation('node', $node);
+        $result = $this->writer->write($document, new DocumentStateChange(
+            cause: StateWriteCause::Transition,
+            content: $content,
+            schemaVersion: $transition->schemaVersion,
+            collabState: $transition->collabState,
+            actorId: $transition->actor->id,
+            forceCheckpoint: true,
+            documentType: $transition->documentType,
+            protocol: $transition->protocol,
+            stateFormat: $transition->stateFormat,
+        ));
+        $revision = $result->checkpoint ?? throw new LogicException('[Vaulter] A transition requires a checkpoint.');
+        $this->recorder->record(new DocumentRevisionCreated(
+            node: $node, version: $revision, stateVersion: $document->state_version, epoch: $document->collab_epoch,
+            restored: false, actor: $transition->actor, correlationId: $transition->correlationId,
+        ));
+        $this->recorder->record(new DocumentContentUpdated(
+            node: $node, version: $revision, created: true, stateVersion: $document->state_version,
+            epoch: $document->collab_epoch, actor: $transition->actor, correlationId: $transition->correlationId,
+        ));
+
+        return new CheckpointOutcome(true, true, $document->collab_epoch, $document->state_version, null);
+    }
+
+    public function pendingDocuments(int $limit = 100, int|string|null $after = null, ?string $protocol = null): array
     {
         $this->assertTransaction();
         if ($limit < 1) {
@@ -172,13 +224,16 @@ final readonly class DatabaseCollaborativeState implements CollaborativeState
         }
 
         $query = Document::query()->whereNotNull('pending_generation')->orderBy('id')->limit($limit);
+        if ($protocol !== null) {
+            $query->where('pending_protocol', $protocol);
+        }
         if ($after !== null) {
             $query->where('id', '>', $after);
         }
 
         return array_values(array_filter(array_map(
             static fn (Document $document): ?PendingMarker => PendingStateGuard::markerOf($document),
-            $query->get(['id', 'node_id', 'pending_generation', 'pending_through_seq'])->all(),
+            $query->get(['id', 'node_id', 'pending_generation', 'pending_through_seq', 'pending_protocol', 'pending_state_format', 'pending_schema_version'])->all(),
         )));
     }
 

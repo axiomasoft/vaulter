@@ -88,15 +88,6 @@ Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException api since 1.
   public function problemCode(): string
   public function problemDetails(): array
 
-Vaulter\Collaboration\Exceptions\CollaborationUnavailableException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
-  public readonly string $reason
-  public readonly ?string $type
-  public function __construct(string $reason, ?string $type = null)
-  public function httpStatus(): int
-  public function problemCode(): string
-  public function problemDetails(): array
-  public static function unsupportedType(string $type): self
-
 Vaulter\Collaboration\Exceptions\CollaborationUpdateMismatchException api since 1.0 final class extends Vaulter\Exceptions\VaulterException implements Vaulter\Exceptions\Contracts\ProblemException uses Vaulter\Exceptions\Concerns\ProvidesProblemDetails
   public readonly string $reason
   public readonly string $updateId

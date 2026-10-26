@@ -2036,6 +2036,139 @@
             "id": "index:v_blobs.v_blobs_integrity_idx",
             "kind": "schema",
             "reason": "P6.9: the scrub queue order (integrity_checked_at)"
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_epoch",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_protocol",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_state",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_state_format",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_state_size",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.type",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.yjs_state",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.yjs_state_size",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.collab_protocol",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.collab_state",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.collab_state_format",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.collab_state_size",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.pending_protocol",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.pending_schema_version",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.pending_state_format",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.yjs_state",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.yjs_state_size",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "table:v_document_revisions",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "table:v_documents",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
         }
     ],
     "engines": [
@@ -4659,6 +4792,86 @@
         },
         {
             "engines": {
+                "sqlite": {
+                    "default": "'0'",
+                    "nullable": false,
+                    "type": "BIGINT"
+                }
+            },
+            "id": "column:v_document_revisions.collab_epoch",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+                "symbol": "v_document_revisions"
+            },
+            "table": "v_document_revisions"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_document_revisions.collab_protocol",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+                "symbol": "v_document_revisions"
+            },
+            "table": "v_document_revisions"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "BLOB"
+                }
+            },
+            "id": "column:v_document_revisions.collab_state",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+                "symbol": "v_document_revisions"
+            },
+            "table": "v_document_revisions"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_document_revisions.collab_state_format",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+                "symbol": "v_document_revisions"
+            },
+            "table": "v_document_revisions"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_document_revisions.collab_state_size",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+                "symbol": "v_document_revisions"
+            },
+            "table": "v_document_revisions"
+        },
+        {
+            "engines": {
                 "mysql": {
                     "default": null,
                     "nullable": true,
@@ -5330,6 +5543,22 @@
         },
         {
             "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_document_revisions.type",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
+                "symbol": "v_document_revisions"
+            },
+            "table": "v_document_revisions"
+        },
+        {
+            "engines": {
                 "mysql": {
                     "default": null,
                     "nullable": true,
@@ -5339,11 +5568,6 @@
                     "default": null,
                     "nullable": true,
                     "type": "bytea"
-                },
-                "sqlite": {
-                    "default": null,
-                    "nullable": true,
-                    "type": "BLOB"
                 }
             },
             "id": "column:v_document_revisions.yjs_state",
@@ -5365,11 +5589,6 @@
                     "default": null,
                     "nullable": true,
                     "type": "integer"
-                },
-                "sqlite": {
-                    "default": null,
-                    "nullable": true,
-                    "type": "INTEGER"
                 }
             },
             "id": "column:v_document_revisions.yjs_state_size",
@@ -5425,6 +5644,70 @@
                 }
             },
             "id": "column:v_documents.collab_epoch",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_documents.collab_protocol",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "BLOB"
+                }
+            },
+            "id": "column:v_documents.collab_state",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_documents.collab_state_format",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_documents.collab_state_size",
             "owner": "documents",
             "source": {
                 "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
@@ -5892,6 +6175,54 @@
         },
         {
             "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_documents.pending_protocol",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_documents.pending_schema_version",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_documents.pending_state_format",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/database/migrations/0001_01_01_000302_create_v_documents_table.php",
+                "symbol": "v_documents"
+            },
+            "table": "v_documents"
+        },
+        {
+            "engines": {
                 "mysql": {
                     "default": null,
                     "nullable": true,
@@ -6214,11 +6545,6 @@
                     "default": null,
                     "nullable": true,
                     "type": "bytea"
-                },
-                "sqlite": {
-                    "default": null,
-                    "nullable": true,
-                    "type": "BLOB"
                 }
             },
             "id": "column:v_documents.yjs_state",
@@ -6240,11 +6566,6 @@
                     "default": null,
                     "nullable": true,
                     "type": "integer"
-                },
-                "sqlite": {
-                    "default": null,
-                    "nullable": true,
-                    "type": "INTEGER"
                 }
             },
             "id": "column:v_documents.yjs_state_size",
@@ -33452,6 +33773,684 @@
             "id": "table:v_document_revisions",
             "logical": "document_revisions",
             "migration": "0001_01_01_000303_create_v_document_revisions_table.php",
+            "original_diff": {
+                "sqlite": {
+                    "columns": {
+                        "bigint.bigint.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.bigint.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.bigint.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.bigint.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.string.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.string.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.string.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.string.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.ulid.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.ulid.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.ulid.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.ulid.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.uuid.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.uuid.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.uuid.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "bigint.uuid.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.bigint.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.bigint.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.bigint.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.bigint.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.string.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.string.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.string.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.string.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.ulid.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.ulid.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.ulid.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.ulid.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.uuid.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.uuid.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.uuid.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "ulid.uuid.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.bigint.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.bigint.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.bigint.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.bigint.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.string.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.string.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.string.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.string.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.ulid.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.ulid.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.ulid.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.ulid.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.uuid.custom.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.uuid.custom.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.uuid.v.off": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        },
+                        "uuid7.uuid.v.on": {
+                            "added": [
+                                "type",
+                                "collab_epoch",
+                                "collab_protocol",
+                                "collab_state_format",
+                                "collab_state",
+                                "collab_state_size"
+                            ],
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
+                        }
+                    }
+                }
+            },
             "owner": "documents",
             "source": {
                 "file": "packages/documents/database/migrations/0001_01_01_000303_create_v_document_revisions_table.php",
@@ -34171,339 +35170,819 @@
                     "columns": {
                         "bigint.bigint.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.bigint.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.bigint.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.bigint.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.string.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.string.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.string.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.string.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.ulid.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.ulid.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.ulid.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.ulid.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.uuid.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.uuid.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.uuid.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "bigint.uuid.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.bigint.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.bigint.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.bigint.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.bigint.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.string.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.string.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.string.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.string.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.ulid.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.ulid.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.ulid.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.ulid.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.uuid.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.uuid.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.uuid.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "ulid.uuid.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.bigint.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.bigint.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.bigint.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.bigint.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.string.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.string.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.string.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.string.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.ulid.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.ulid.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.ulid.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.ulid.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.uuid.custom.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.uuid.custom.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.uuid.v.off": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         },
                         "uuid7.uuid.v.on": {
                             "added": [
+                                "collab_protocol",
+                                "collab_state_format",
+                                "pending_protocol",
+                                "pending_state_format",
+                                "pending_schema_version",
                                 "pending_generation",
-                                "pending_through_seq"
+                                "pending_through_seq",
+                                "collab_state",
+                                "collab_state_size"
                             ],
-                            "removed": []
+                            "removed": [
+                                "yjs_state",
+                                "yjs_state_size"
+                            ]
                         }
                     }
                 }

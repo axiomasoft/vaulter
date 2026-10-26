@@ -20,9 +20,9 @@ use Vaulter\Drive\Models\Node;
 final class StateWrites
 {
     /** @param array<string, mixed>|null $content the JSON projection that goes with the state; null keeps the current one */
-    public static function yjs(Node $node, string $yjsState, ?array $content = null, bool $seed = false, int|string|null $actorId = null): DocumentStateResult
+    public static function yjs(Node $node, string $collabState, ?array $content = null, bool $seed = false, int|string|null $actorId = null): DocumentStateResult
     {
-        return app(VaulterDatabase::class)->transaction(static function () use ($node, $yjsState, $content, $seed, $actorId): DocumentStateResult {
+        return app(VaulterDatabase::class)->transaction(static function () use ($node, $collabState, $content, $seed, $actorId): DocumentStateResult {
             $document = Document::query()->where('node_id', $node->getKey())->lockForUpdate()->firstOrFail();
             $document->setRelation('node', $node);
 
@@ -30,7 +30,7 @@ final class StateWrites
                 cause: $seed ? StateWriteCause::Seed : StateWriteCause::Collaboration,
                 content: $content === null ? null : TipTapContent::fromArray($content),
                 schemaVersion: $document->schema_version,
-                yjsState: $yjsState,
+                collabState: $collabState,
                 actorId: $actorId,
             ));
         });

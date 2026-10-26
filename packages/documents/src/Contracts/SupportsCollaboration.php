@@ -11,6 +11,9 @@ use Vaulter\Attributes\SpiKind;
 #[Spi(SpiKind::Implement)]
 interface SupportsCollaboration
 {
+    /** The persisted binary representation, independent of the wire version. */
+    public function collaborationStateFormat(): string;
+
     /** e.g. 'yjs'. */
     public function collaborationProtocol(): string;
 

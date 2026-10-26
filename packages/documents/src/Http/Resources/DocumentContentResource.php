@@ -47,6 +47,8 @@ final class DocumentContentResource extends JsonResource
         return [
             'type' => $document->type,
             'schema_version' => $document->schemaVersion,
+            'collab_protocol' => $document->collabProtocol,
+            'collab_state_format' => $document->collabStateFormat,
             'state_version' => $document->stateVersion,
             'collab_epoch' => $document->epoch,
             'revision_id' => $document->headRevisionId,

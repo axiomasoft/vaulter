@@ -256,7 +256,7 @@ final readonly class CompactionLeases
      */
     private function size(string $documentId, Head $head): int
     {
-        $checkpoint = Document::query()->whereKey(Identity::key($documentId))->lockForUpdate()->value('yjs_state_size');
+        $checkpoint = Document::query()->whereKey(Identity::key($documentId))->lockForUpdate()->value('collab_state_size');
         // Locking reads, row by row: on MySQL a plain read would miss the appends committed since this transaction's
         // first read (UpdateLog::read()), and PostgreSQL locks no rows for an aggregate.
         $stored = $this->log->rows('collaboration_updates', $documentId, $head->generation)

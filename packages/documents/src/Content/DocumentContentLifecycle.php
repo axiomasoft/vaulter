@@ -55,6 +55,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
             throw new LogicException('[Vaulter] A document node has no document aggregate.');
         }
 
+        $this->pending->assertSettled($original);
         $actorId = $context->actor->ref()->id;
         $document = $this->documents->create([
             'node_id' => $copy->getKey(),
@@ -70,8 +71,11 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Copy,
             content: is_array($original->content) ? OpaqueContent::fromArray($original->content) : null,
-            yjsState: $original->yjs_state,
+            collabState: $original->collab_state,
             schemaVersion: $original->schema_version,
+            documentType: $original->type,
+            protocol: $original->collab_protocol,
+            stateFormat: $original->collab_state_format,
             actorId: $actorId,
             forceCheckpoint: true,
         ));

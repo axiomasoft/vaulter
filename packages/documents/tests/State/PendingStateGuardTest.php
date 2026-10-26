@@ -8,6 +8,7 @@ use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\State\CheckpointPublication;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\State\PendingMarker;
 use Vaulter\Documents\State\PendingStateDrainer;
@@ -36,7 +37,7 @@ function guardMark(int|string $nodeId, int $throughSeq): PendingMarker
         $state = app(CollaborativeState::class);
         $locked = $state->lock($nodeId);
 
-        return $state->markPending($locked, $locked->generation, $throughSeq);
+        return $state->markPending($locked, $locked->binding, $throughSeq);
     });
 }
 
@@ -55,10 +56,10 @@ function guardSettle(string $nodeId): void
         $locked = $state->lock($nodeId);
         $marker = $locked->pending ?? throw new LogicException('no marker to settle');
         $state->publishCheckpoint($locked, new CheckpointPublication(
-            generation: $marker->generation,
+            binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, $marker->generation),
             expectedStateVersion: $locked->stateVersion,
             coveredThrough: $marker->throughSeq,
-            yjsState: 'drained',
+            collabState: 'drained',
             content: GrantedDocuments::tiptap('Drained'),
         ));
     });

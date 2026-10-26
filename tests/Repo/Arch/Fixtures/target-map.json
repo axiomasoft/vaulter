@@ -1086,20 +1086,6 @@
         {
             "action": "keep",
             "eloquent": false,
-            "file": "packages/collaboration/src/Exceptions/CollaborationUnavailableException.php",
-            "fqcn": "Vaulter\\Collaboration\\Exceptions\\CollaborationUnavailableException",
-            "kind": "final-class",
-            "note": null,
-            "owner": "collaboration",
-            "package": "collaboration",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Collaboration\\",
-            "surface": "Api",
-            "target_fqcn": "Vaulter\\Collaboration\\Exceptions\\CollaborationUnavailableException"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
             "file": "packages/collaboration/src/Exceptions/CollaborationUpdateMismatchException.php",
             "fqcn": "Vaulter\\Collaboration\\Exceptions\\CollaborationUpdateMismatchException",
             "kind": "final-class",
@@ -3564,6 +3550,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Exceptions/CollaborationUnavailableException.php",
+            "fqcn": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Exceptions\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Exceptions/CommentNotFoundException.php",
             "fqcn": "Vaulter\\Documents\\Exceptions\\CommentNotFoundException",
             "kind": "final-class",
@@ -4558,6 +4558,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/State/CollaborationStateBinding.php",
+            "fqcn": "Vaulter\\Documents\\State\\CollaborationStateBinding",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\State\\CollaborationStateBinding"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/State/CollaborativeState.php",
             "fqcn": "Vaulter\\Documents\\State\\CollaborativeState",
             "kind": "interface",
@@ -4568,6 +4582,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Documents\\State\\CollaborativeState"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/State/CollaborativeStateTransition.php",
+            "fqcn": "Vaulter\\Documents\\State\\CollaborativeStateTransition",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\State\\CollaborativeStateTransition"
         },
         {
             "action": "keep",

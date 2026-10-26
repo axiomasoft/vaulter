@@ -58,14 +58,14 @@ deleting it (SQLite: see [Database compatibility](/reference/compatibility)).
 | `state_version` | BIGINT ≥ 0 | Content validator; +1 on every effective write of the working state. |
 | `checkpoint_state_version` | BIGINT ≥ 0 | The `state_version` the head captured. |
 | `content`, `content_hash`, `content_size` | json, char(64), integer | The canonical JSON projection, its hash and byte size. |
-| `yjs_state`, `yjs_state_size` | binary, integer | The Yjs CRDT state (collaboration source of truth) and its size. |
+| `collab_state`, `collab_state_size` | binary, integer | The Yjs CRDT state (collaboration source of truth) and its size. |
 | `pending_generation`, `pending_through_seq` | BIGINT, nullable | The pending marker (both set or both null): saved collaboration edits of that generation through that log sequence are not in the checkpoint yet. Set and cleared only through the collaboration state contract; while set the content is neither read, exported nor replaced (`409 document_state_pending`). |
 | `last_checkpoint_at` | timestamp | When the last checkpoint was taken. |
 | `created_by`, `updated_by`, timestamps | | Audit. |
 
 `v_document_revisions` columns: `id`, `tenant_id`, `document_id` (FK, cascade), `number`
-(unique per document), `schema_version`, `content`, `content_hash`, `content_size`, `yjs_state`,
-`yjs_state_size`, `state_version` (the working state version captured), `label`, `is_autosave`,
+(unique per document), `schema_version`, `content`, `content_hash`, `content_size`, `collab_state`,
+`collab_state_size`, `state_version` (the working state version captured), `label`, `is_autosave`,
 `keep_forever`, `status` (`committed`), `restored_from_revision_id` (FK, set null) and
 `created_by`/`created_at`.
 
@@ -134,7 +134,7 @@ only partly under its type — see [Document Types](/extending/document-types)),
 `dirty` (the working state runs ahead of the head checkpoint), `headRevisionId`, `content` (the
 type's `DocumentContent`: `TipTapContent` for rich text and markdown, `OpaqueContent` for a
 spreadsheet or a type that is not installed), `revision`
-(the head, or the revision asked for), `contentHash`, `yjsStateSize`, `updatedAt` and `updatedBy`.
+(the head, or the revision asked for), `contentHash`, `collabStateSize`, `updatedAt` and `updatedBy`.
 Ids are strings. The Actions behind these methods are internal.
 
 ## Creating a document node

@@ -32,7 +32,7 @@ use Vaulter\Kernel;
 /** @return list<string|null> the binary state of each revision, oldest first */
 function pendingRevisionStates(mixed $node): array
 {
-    return DocumentTestHelpers::revisions($node)->pluck('yjs_state')->all();
+    return DocumentTestHelpers::revisions($node)->pluck('collab_state')->all();
 }
 
 beforeEach(function (): void {
@@ -122,7 +122,7 @@ it('drains before a REST replace, keeps the drained edits in a revision and clos
     expect(FakeHub::$drains)->toHaveCount(1)
         ->and(pendingRevisionStates($this->node))->toContain('u1u2')
         ->and($document->collab_epoch)->toBe(1)
-        ->and($document->yjs_state)->toBeNull()
+        ->and($document->collab_state)->toBeNull()
         ->and(data_get($document->content, 'content.0.content.0.text'))->toBe('Mine')
         ->and(Compaction::head($this->node, 0)?->retiredAt)->not->toBeNull()
         ->and(Compaction::rows('collaboration_receipts'))->toBe(2);

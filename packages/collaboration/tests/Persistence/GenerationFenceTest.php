@@ -80,7 +80,7 @@ it('takes appends of the new generation after the restore, numbered from 1 again
         ->and(fenceRows('collaboration_receipts'))->toBe(1);
 
     // Once the generation is clear (as a checkpoint would leave it), the restore closes it and the next one starts at 1.
-    Hub::aggregate($this->node)->forceFill(['pending_generation' => null, 'pending_through_seq' => null])->save();
+    Hub::aggregate($this->node)->forceFill(['pending_generation' => null, 'pending_through_seq' => null, 'pending_protocol' => null, 'pending_state_format' => null, 'pending_schema_version' => null])->save();
     fenceRestore($this->node);
     $result = fenceAppend($this->node, 1);
 

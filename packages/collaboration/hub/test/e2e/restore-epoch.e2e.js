@@ -104,7 +104,7 @@ test('V11: a client with an older schema version is read-only', async () => {
   const document = await stored(BACKEND, scene.node_id)
   assert.equal(JSON.stringify(document.content).includes('Outdated editor typing'), false)
   // No edit was saved, so no checkpoint exists: the REST state is still the JSON, not a Yjs state.
-  assert.equal(document.yjs_state_size, null)
+  assert.equal(document.collab_state_size, null)
   const room = await stateOn(HUB, await session(BACKEND, scene.node_id, scene.writer_user))
   assert.equal(room.includes('Outdated editor typing'), false)
 })

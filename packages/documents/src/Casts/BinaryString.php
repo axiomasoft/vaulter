@@ -25,11 +25,11 @@ use Vaulter\Attributes\Internal;
  *     uniformly across drivers keeps the on-disk format identical everywhere — a row
  *     is driver-portable, and there is no per-driver branch to drift.
  *
- * The cached byte length (yjs_state_size) is computed by DocumentStateWriter from
+ * The cached byte length (collab_state_size) is computed by DocumentStateWriter from
  * the RAW value before this cast encodes it, so it stays the
  * true payload size regardless of the at-rest base64 representation.
  *
- * Used for v_documents.yjs_state and v_document_revisions.yjs_state — the binary Yjs
+ * Used for v_documents.collab_state and v_document_revisions.collab_state — the binary Yjs
  * CRDT state that is the collaboration source of truth, read back through
  * Eloquent by the restore path and checkpoint capture. No code reads the column out of band (the hub persists it
  * via the collab/store webhook and never queries it directly).

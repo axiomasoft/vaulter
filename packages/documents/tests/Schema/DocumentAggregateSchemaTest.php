@@ -22,11 +22,11 @@ it('creates the document aggregate tables with every column and no 0.2 leftovers
     expect(Schema::hasColumns('v_documents', [
         'id', 'tenant_id', 'node_id', 'type', 'schema_version', 'current_revision_id', 'revision_count',
         'collab_epoch', 'state_version', 'checkpoint_state_version', 'content', 'content_hash', 'content_size',
-        'yjs_state', 'yjs_state_size', 'last_checkpoint_at', 'created_by', 'updated_by', 'created_at', 'updated_at',
+        'collab_state', 'collab_state_size', 'last_checkpoint_at', 'created_by', 'updated_by', 'created_at', 'updated_at',
     ]))->toBeTrue()
         ->and(Schema::hasColumns('v_document_revisions', [
             'id', 'tenant_id', 'document_id', 'number', 'schema_version', 'content', 'content_hash', 'content_size',
-            'yjs_state', 'yjs_state_size', 'state_version', 'label', 'is_autosave', 'keep_forever', 'status',
+            'collab_state', 'collab_state_size', 'state_version', 'label', 'is_autosave', 'keep_forever', 'status',
             'restored_from_revision_id', 'created_by', 'created_at',
         ]))->toBeTrue()
         ->and(Schema::hasTable('v_node_document_versions'))->toBeFalse();
@@ -48,12 +48,12 @@ it('creates the document aggregate tables with every column and no 0.2 leftovers
 it('keeps one aggregate per node, unique checkpoint numbers and nonnegative counters', function (): void {
     $node = AccessTestHelpers::folder(AccessTestHelpers::storage(), null, 'doc');
     $document = aggregateRow('v_documents', ['node_id' => $node->getKey(), 'type' => 'vaulter/rich-text', 'schema_version' => 1]);
-    aggregateRow('v_document_revisions', ['document_id' => $document, 'number' => 1, 'schema_version' => 1]);
+    aggregateRow('v_document_revisions', ['document_id' => $document, 'type' => 'vaulter/rich-text', 'number' => 1, 'schema_version' => 1]);
     $row = DB::table('v_documents')->where('id', $document)->first();
 
     expect([$row->collab_epoch, $row->state_version, $row->checkpoint_state_version, $row->revision_count])->toBe([0, 0, 0, 0])
         ->and(fn () => DB::transaction(fn () => aggregateRow('v_documents', ['node_id' => $node->getKey(), 'type' => 'vaulter/rich-text', 'schema_version' => 1])))->toThrow(QueryException::class)
-        ->and(fn () => DB::transaction(fn () => aggregateRow('v_document_revisions', ['document_id' => $document, 'number' => 1, 'schema_version' => 1])))->toThrow(QueryException::class);
+        ->and(fn () => DB::transaction(fn () => aggregateRow('v_document_revisions', ['document_id' => $document, 'type' => 'vaulter/rich-text', 'number' => 1, 'schema_version' => 1])))->toThrow(QueryException::class);
 
     foreach (['collab_epoch', 'state_version', 'checkpoint_state_version'] as $column) {
         expect(fn () => DB::transaction(fn () => DB::table('v_documents')->where('id', $document)->update([$column => -1])))->toThrow(QueryException::class);

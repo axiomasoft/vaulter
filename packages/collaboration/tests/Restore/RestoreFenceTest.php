@@ -43,7 +43,7 @@ it('refuses the publication of a lease the restore outlived and changes nothing'
     $after = Hub::aggregate($this->node);
     expect($restored->collab_epoch)->toBe(1)
         ->and($after->state_version)->toBe($restored->state_version)
-        ->and($after->yjs_state)->toBe($restored->yjs_state)
+        ->and($after->collab_state)->toBe($restored->collab_state)
         ->and($after->revision_count)->toBe($restored->revision_count)
         ->and(Compaction::head($this->node, 0))->toEqual($closed)
         ->and($closed?->retiredAt)->not->toBeNull()

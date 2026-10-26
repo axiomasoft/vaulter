@@ -7,7 +7,7 @@
 //   1) the room JWT is verified by the hub -> Laravel collab/authenticate webhook,
 //   2) writer edits sync to the viewer (Yjs over the hub),
 //   3) a read-only viewer's edits are DROPPED server-side (never reach the writer),
-//   4) the debounced snapshot lands in v_node_document_versions.yjs_state.
+//   4) the debounced snapshot lands in v_node_document_versions.collab_state.
 //
 // Run (stack already up — see e2e/README.md):  node scripts/headless-smoke.mjs
 import { HocuspocusProvider } from '@hocuspocus/provider'

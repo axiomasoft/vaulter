@@ -18,6 +18,7 @@ use Vaulter\Attributes\Internal;
 #[Api]
 final readonly class LockedDocumentState
 {
+    /** @param array<string, mixed> $content */
     #[Internal]
     public function __construct(
         public string $documentId,
@@ -29,5 +30,8 @@ final readonly class LockedDocumentState
         public int $stateVersion,
         public ?PendingMarker $pending,
         public bool $trashed,
+        public ?CollaborationStateBinding $binding,
+        public ?string $collabState,
+        public array $content,
     ) {}
 }

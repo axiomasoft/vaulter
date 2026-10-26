@@ -4859,7 +4859,7 @@ components:
         collaboration_epoch_mismatch: {status: 409, retryable: after_refetch, receipt: cacheable, module: collaboration}
         collaboration_protocol_mismatch: {status: 409, retryable: never, receipt: never, module: collaboration}
         collaboration_seed_conflict: {status: 409, retryable: after_refetch, receipt: cacheable, module: collaboration}
-        collaboration_unavailable: {status: 409, retryable: never, receipt: never, module: collaboration}
+        collaboration_unavailable: {status: 409, retryable: never, receipt: never, module: documents}
         collaboration_update_mismatch: {status: 422, retryable: never, receipt: never, module: collaboration}
         collaboration_update_too_large: {status: 413, retryable: never, receipt: never, module: collaboration}
         comment_not_found: {status: 404, retryable: never, receipt: never, module: documents}
@@ -5411,8 +5411,12 @@ components:
       type: object
       required:
       - id
+      - type
+      - collab_epoch
       - number
       - schema_version
+      - collab_protocol
+      - collab_state_format
       - label
       - is_autosave
       - keep_forever
@@ -5421,10 +5425,18 @@ components:
       - created_by
       - created_at
       properties:
+        type:
+          type: string
+        collab_epoch:
+          type: integer
         id:
           type: string
         number:
           type: integer
+        collab_protocol:
+          type: [string, 'null']
+        collab_state_format:
+          type: [string, 'null']
         schema_version:
           type: integer
         label:
@@ -5467,6 +5479,8 @@ components:
       required:
       - type
       - schema_version
+      - collab_protocol
+      - collab_state_format
       - state_version
       - collab_epoch
       - revision_id
@@ -5474,6 +5488,10 @@ components:
       properties:
         type:
           type: string
+        collab_protocol:
+          type: [string, 'null']
+        collab_state_format:
+          type: [string, 'null']
         schema_version:
           type: integer
         state_version:

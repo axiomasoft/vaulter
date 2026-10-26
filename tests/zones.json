@@ -811,6 +811,7 @@
         "packages/documents/tests/Document/DocumentTreeInvariantsTest.php",
         "packages/documents/tests/Document/PurgeTrashCascadeTest.php",
         "packages/documents/tests/Schema",
+        "packages/documents/tests/State/CollaborationBindingTransitionTest.php",
         "packages/documents/tests/State/CollaborativeStateTest.php",
         "packages/documents/tests/Types/UnknownDocumentTypeFallbackTest.php",
         "packages/drive/tests/Access/AccessAwareListingTest.php",

@@ -1167,9 +1167,41 @@
                     "hidden": 0
                 },
                 {
+                    "name": "type",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "collab_epoch",
+                    "type": "BIGINT",
+                    "notnull": 1,
+                    "default": "'0'",
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "schema_version",
                     "type": "INTEGER",
                     "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "collab_protocol",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "varchar",
+                    "notnull": 0,
                     "default": null,
                     "pk": 0,
                     "hidden": 0
@@ -1199,7 +1231,7 @@
                     "hidden": 0
                 },
                 {
-                    "name": "yjs_state",
+                    "name": "collab_state",
                     "type": "BLOB",
                     "notnull": 0,
                     "default": null,
@@ -1207,7 +1239,7 @@
                     "hidden": 0
                 },
                 {
-                    "name": "yjs_state_size",
+                    "name": "collab_state_size",
                     "type": "INTEGER",
                     "notnull": 0,
                     "default": null,
@@ -1397,7 +1429,7 @@
                     "match": "NONE"
                 }
             },
-            "create_sql": "CREATE TABLE \"v_document_revisions\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"document_id\" integer not null, \"number\" integer not null, \"schema_version\" integer not null, \"content\" text, \"content_hash\" varchar, \"content_size\" integer, \"yjs_state\" blob, \"yjs_state_size\" integer, \"state_version\" BIGINT CHECK(typeof(state_version) = 'integer' AND state_version >= 0) not null default '0', \"label\" varchar, \"is_autosave\" tinyint(1) not null default '0', \"keep_forever\" tinyint(1) not null default '0', \"status\" varchar not null default 'committed', \"restored_from_revision_id\" integer, \"created_by\" varchar, \"created_at\" datetime, foreign key(\"document_id\") references \"v_documents\"(\"id\") on delete cascade, foreign key(\"restored_from_revision_id\") references \"v_document_revisions\"(\"id\") on delete set null)"
+            "create_sql": "CREATE TABLE \"v_document_revisions\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"document_id\" integer not null, \"number\" integer not null, \"type\" varchar not null, \"collab_epoch\" BIGINT CHECK(typeof(collab_epoch) = 'integer' AND collab_epoch >= 0) not null default '0', \"schema_version\" integer not null, \"collab_protocol\" varchar, \"collab_state_format\" varchar, \"content\" text, \"content_hash\" varchar, \"content_size\" integer, \"collab_state\" blob, \"collab_state_size\" integer, \"state_version\" BIGINT CHECK(typeof(state_version) = 'integer' AND state_version >= 0) not null default '0', \"label\" varchar, \"is_autosave\" tinyint(1) not null default '0', \"keep_forever\" tinyint(1) not null default '0', \"status\" varchar not null default 'committed', \"restored_from_revision_id\" integer, \"created_by\" varchar, \"created_at\" datetime, foreign key(\"document_id\") references \"v_documents\"(\"id\") on delete cascade, foreign key(\"restored_from_revision_id\") references \"v_document_revisions\"(\"id\") on delete set null)"
         },
         "v_documents": {
             "columns": [
@@ -1437,6 +1469,22 @@
                     "name": "schema_version",
                     "type": "INTEGER",
                     "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "collab_protocol",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "collab_state_format",
+                    "type": "varchar",
+                    "notnull": 0,
                     "default": null,
                     "pk": 0,
                     "hidden": 0
@@ -1482,6 +1530,30 @@
                     "hidden": 0
                 },
                 {
+                    "name": "pending_protocol",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "pending_state_format",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "pending_schema_version",
+                    "type": "INTEGER",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
                     "name": "pending_generation",
                     "type": "BIGINT",
                     "notnull": 0,
@@ -1522,7 +1594,7 @@
                     "hidden": 0
                 },
                 {
-                    "name": "yjs_state",
+                    "name": "collab_state",
                     "type": "BLOB",
                     "notnull": 0,
                     "default": null,
@@ -1530,7 +1602,7 @@
                     "hidden": 0
                 },
                 {
-                    "name": "yjs_state_size",
+                    "name": "collab_state_size",
                     "type": "INTEGER",
                     "notnull": 0,
                     "default": null,
@@ -1668,7 +1740,7 @@
                     "match": "NONE"
                 }
             },
-            "create_sql": "CREATE TABLE \"v_documents\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"node_id\" integer not null, \"type\" varchar not null, \"schema_version\" integer not null, \"current_revision_id\" integer, \"revision_count\" integer not null default '0', \"collab_epoch\" BIGINT CHECK(typeof(collab_epoch) = 'integer' AND collab_epoch >= 0) not null default '0', \"state_version\" BIGINT CHECK(typeof(state_version) = 'integer' AND state_version >= 0) not null default '0', \"checkpoint_state_version\" BIGINT CHECK(typeof(checkpoint_state_version) = 'integer' AND checkpoint_state_version >= 0) not null default '0', \"pending_generation\" BIGINT CHECK(pending_generation IS NULL OR (typeof(pending_generation) = 'integer' AND pending_generation >= 0)), \"pending_through_seq\" BIGINT CHECK(pending_through_seq IS NULL OR (typeof(pending_through_seq) = 'integer' AND pending_through_seq >= 1)) CHECK((pending_generation IS NULL AND pending_through_seq IS NULL) OR (pending_generation IS NOT NULL AND pending_through_seq IS NOT NULL)), \"content\" text, \"content_hash\" varchar, \"content_size\" integer, \"yjs_state\" blob, \"yjs_state_size\" integer, \"last_checkpoint_at\" datetime, \"created_by\" varchar, \"updated_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"v_nodes\"(\"id\") on delete cascade)"
+            "create_sql": "CREATE TABLE \"v_documents\" (\"id\" integer primary key autoincrement not null, \"tenant_id\" varchar, \"node_id\" integer not null, \"type\" varchar not null, \"schema_version\" integer not null, \"collab_protocol\" varchar, \"collab_state_format\" varchar, \"current_revision_id\" integer, \"revision_count\" integer not null default '0', \"collab_epoch\" BIGINT CHECK(typeof(collab_epoch) = 'integer' AND collab_epoch >= 0) not null default '0', \"state_version\" BIGINT CHECK(typeof(state_version) = 'integer' AND state_version >= 0) not null default '0', \"checkpoint_state_version\" BIGINT CHECK(typeof(checkpoint_state_version) = 'integer' AND checkpoint_state_version >= 0) not null default '0', \"pending_protocol\" varchar, \"pending_state_format\" varchar, \"pending_schema_version\" integer, \"pending_generation\" BIGINT CHECK(pending_generation IS NULL OR (typeof(pending_generation) = 'integer' AND pending_generation >= 0)), \"pending_through_seq\" BIGINT CHECK(pending_through_seq IS NULL OR (typeof(pending_through_seq) = 'integer' AND pending_through_seq >= 1)) CHECK((pending_generation IS NULL AND pending_through_seq IS NULL AND pending_protocol IS NULL AND pending_state_format IS NULL AND pending_schema_version IS NULL) OR (pending_generation IS NOT NULL AND pending_through_seq IS NOT NULL AND pending_protocol IS NOT NULL AND length(pending_protocol) > 0 AND pending_state_format IS NOT NULL AND length(pending_state_format) > 0 AND pending_schema_version IS NOT NULL AND pending_schema_version >= 1)), \"content\" text, \"content_hash\" varchar, \"content_size\" integer, \"collab_state\" blob, \"collab_state_size\" integer, \"last_checkpoint_at\" datetime, \"created_by\" varchar, \"updated_by\" varchar, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"v_nodes\"(\"id\") on delete cascade)"
         },
         "v_drive_change_heads": {
             "columns": [

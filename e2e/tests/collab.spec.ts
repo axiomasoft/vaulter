@@ -45,7 +45,7 @@ test('правки writer долетают до read-only viewer и снапшо
   await typeInto(writer, 'привет от writer')
   await expect(editorOf(viewer)).toContainText('привет от writer')
 
-  // Debounced-снапшот хаба долетел до v_node_document_versions.yjs_state.
+  // Debounced-снапшот хаба долетел до v_node_document_versions.collab_state.
   await expect
     .poll(
       async () => (await (await request.get(`${BACKEND}/e2e/snapshot/${node}`)).json()).has_state,

@@ -33,7 +33,7 @@ function requestDrain(Node $node): bool
     return app(CompactionLeases::class)->requestDrain(new PendingMarker(
         documentId: (string) $document->getKey(),
         nodeId: (string) $node->getKey(),
-        generation: $document->collab_epoch,
+        binding: $document->collaborationBinding(),
         throughSeq: (int) $document->pending_through_seq,
     ));
 }

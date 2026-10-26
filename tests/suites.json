@@ -1438,6 +1438,7 @@
                         "serial"
                     ],
                     "files": [
+                        "packages/documents/tests/State/CollaborationBindingTransitionTest.php",
                         "packages/documents/tests/State/CollaborativeStateTest.php",
                         "packages/documents/tests/State/PendingStateGuardTest.php"
                     ]

@@ -14,6 +14,7 @@ use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -29,12 +30,19 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property int|string|null           $tenant_id
  * @property int|string                $document_id
  * @property int                       $number
+ * @property string|null               $collab_protocol
+ * @property string|null               $collab_state_format
+ * @property string|null               $pending_protocol
+ * @property string|null               $pending_state_format
+ * @property int|null                  $pending_schema_version
+ * @property string                    $type
+ * @property int                       $collab_epoch
  * @property int                       $schema_version
  * @property array<string, mixed>|null $content
  * @property string|null               $content_hash
  * @property int|null                  $content_size
- * @property string|null               $yjs_state
- * @property int|null                  $yjs_state_size
+ * @property string|null               $collab_state
+ * @property int|null                  $collab_state_size
  * @property int                       $state_version
  * @property string|null               $label
  * @property bool                      $is_autosave
@@ -65,6 +73,13 @@ class DocumentRevision extends Model
      * @var list<string>
      */
     protected $fillable = [];
+
+    public function collaborationBinding(): ?CollaborationStateBinding
+    {
+        return $this->collab_protocol === null ? null : new CollaborationStateBinding(
+            $this->collab_protocol, $this->collab_state_format ?? throw new LogicException('Incomplete stored binding.'), $this->schema_version, $this->collab_epoch,
+        );
+    }
 
     #[\Override]
     protected static function booted(): void
@@ -149,12 +164,12 @@ class DocumentRevision extends Model
             'content' => 'array',
             // Postgres returns bytea as a stream resource; normalise to a string on every
             // driver so consumers (copy/restore actions, collab load) never see a resource.
-            'yjs_state' => BinaryString::class,
+            'collab_state' => BinaryString::class,
             'number' => 'integer',
             'schema_version' => 'integer',
             'state_version' => 'integer',
             'content_size' => 'integer',
-            'yjs_state_size' => 'integer',
+            'collab_state_size' => 'integer',
             'is_autosave' => 'boolean',
             'keep_forever' => 'boolean',
         ];

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Collaboration\Exceptions;
+namespace Vaulter\Documents\Exceptions;
 
 use Vaulter\Attributes\Api;
 use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;

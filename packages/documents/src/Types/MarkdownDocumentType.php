@@ -59,6 +59,11 @@ final readonly class MarkdownDocumentType implements DocumentType, SupportsColla
         return new DocumentFeatures(editable: true, previewable: true, downloadable: false, thumbnailable: false);
     }
 
+    public function collaborationStateFormat(): string
+    {
+        return 'yjs-update-v1';
+    }
+
     public function collaborationProtocol(): string
     {
         return 'yjs';

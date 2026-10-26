@@ -51,7 +51,7 @@ function rawDisableLeftPending(Node $node): void
     app(VaulterDatabase::class)->transaction(static function () use ($node): void {
         $state = app(CollaborativeState::class);
         $locked = $state->lock($node->getKey());
-        $state->markPending($locked, $locked->generation, 2);
+        $state->markPending($locked, $locked->binding, 2);
     });
     $document = Document::query()->where('node_id', $node->getKey())->firstOrFail();
     $key = ['document_id' => $document->getKey(), 'generation' => $document->collab_epoch];

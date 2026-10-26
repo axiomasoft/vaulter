@@ -46,7 +46,7 @@ final readonly class PendingStateGuard
         return new PendingMarker(
             documentId: Identity::stringify($document->getKey()),
             nodeId: Identity::stringify($document->node_id),
-            generation: $document->pending_generation,
+            binding: new CollaborationStateBinding($document->pending_protocol ?? throw new \LogicException('Incomplete pending binding.'), $document->pending_state_format ?? throw new \LogicException('Incomplete pending binding.'), $document->pending_schema_version ?? 0, $document->pending_generation),
             throughSeq: $document->pending_through_seq,
         );
     }
@@ -82,7 +82,7 @@ final readonly class PendingStateGuard
             if ($after !== null) {
                 $query->where('id', '>', $after);
             }
-            $documents = $query->get(['id', 'node_id', 'pending_generation', 'pending_through_seq']);
+            $documents = $query->get(['id', 'node_id', 'pending_generation', 'pending_through_seq', 'pending_protocol', 'pending_state_format', 'pending_schema_version']);
             foreach ($documents as $document) {
                 $after = $document->getKey();
                 $marker = self::markerOf($document);

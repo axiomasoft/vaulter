@@ -43,7 +43,7 @@ function documentsSourcesMatching(string $pattern, array $allowed): array
 it('writes Yjs state and JSON content of documents only in DocumentStateWriter', function (): void {
     // Request validation rules name the same input keys; they never write a model.
     $offenders = array_values(array_filter(
-        documentsSourcesMatching('/\'yjs_state\'\s*=>|->yjs_state\s*=[^=>]|->content\s*=[^=>]/', ['Content/DocumentStateWriter.php']),
+        documentsSourcesMatching('/\'collab_state\'\s*=>|->collab_state\s*=[^=>]|->content\s*=[^=>]/', ['Content/DocumentStateWriter.php']),
         static fn (string $path): bool => !str_starts_with($path, 'Http/Requests/'),
     ));
 

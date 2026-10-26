@@ -70,8 +70,8 @@ it('checkpoints every pending document through the hub and exits 0: no marker, e
         ->and(FakeHub::$drains)->each->toMatchArray(['transactionLevel' => 0])
         ->and(array_column(FakeHub::$published, 'status'))->toBe([200, 200])
         // The checkpoint covers every saved receipt; the receipts stay, the covered updates go.
-        ->and(Hub::aggregate($this->first)->yjs_state)->toBe('a1a2')
-        ->and(Hub::aggregate($this->second)->yjs_state)->toBe('b1')
+        ->and(Hub::aggregate($this->first)->collab_state)->toBe('a1a2')
+        ->and(Hub::aggregate($this->second)->collab_state)->toBe('b1')
         ->and(Compaction::head($this->first)?->checkpointSeq)->toBe(2)
         ->and(Compaction::head($this->first)?->drainRequestedAt)->toBeNull()
         ->and(Compaction::rows('collaboration_receipts'))->toBe(3)
@@ -152,7 +152,7 @@ it('drains the marker of an append that missed the flag and committed within the
 
     expect($late)->toBeTrue()
         ->and(Compaction::marker($this->first))->toBe([null, null])
-        ->and(Hub::aggregate($this->first)->yjs_state)->toBe('late')
+        ->and(Hub::aggregate($this->first)->collab_state)->toBe('late')
         ->and(FakeHub::$drains)->toHaveCount(1);
 });
 

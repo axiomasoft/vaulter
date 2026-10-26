@@ -5677,6 +5677,181 @@
             "id": "command:vaulter:make:document-type",
             "kind": "cli",
             "reason": "P3.1: generates DocumentViewer and DocumentFeatures instead of Drive VO; backend-only types use the existing vaulter/unsupported viewer. Command identity and options are unchanged."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "problem:collaboration_unavailable",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.collab_state",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D16",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.yjs_state",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.collab_state",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D16",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.yjs_state",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_epoch",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_protocol",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_state",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_state_format",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.collab_state_size",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.type",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.yjs_state",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "column:v_document_revisions.yjs_state_size",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.collab_protocol",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.collab_state",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.collab_state_format",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.collab_state_size",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.pending_protocol",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.pending_schema_version",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.pending_state_format",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.yjs_state",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "column:v_documents.yjs_state_size",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "table:v_document_revisions",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "table:v_documents",
+            "kind": "schema",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "format:receipt-document-snapshot",
+            "kind": "protocol",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

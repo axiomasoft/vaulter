@@ -32,8 +32,11 @@ final readonly class DocumentRevisionSnapshot
         public ?string $restoredFromRevisionId,
         public ?string $contentHash,
         public ?int $contentSize,
-        public ?int $yjsStateSize,
+        public ?int $collabStateSize,
         public DateTimeImmutable $createdAt,
         public ?string $createdBy,
+        public ?string $collabProtocol = null,
+        public ?string $collabStateFormat = null,
+        public int $epoch = 0,
     ) {}
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\State\CheckpointPublication;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\State\CollaborativeState;
 use Vaulter\Documents\Tests\Concurrency\RaceFixtures;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -26,7 +27,7 @@ it('keeps the marker of an append racing a publication of the head it read', fun
     $read = app(VaulterDatabase::class)->transaction(static function () use ($nodeId) {
         $state = app(CollaborativeState::class);
         $locked = $state->lock($nodeId);
-        $state->markPending($locked, $locked->generation, 3);
+        $state->markPending($locked, $locked->binding, 3);
 
         return $locked;
     });
@@ -34,15 +35,15 @@ it('keeps the marker of an append racing a publication of the head it read', fun
     $results = RaceFixtures::race([
         static fn (): array => RaceFixtures::attempt(static fn () => app(VaulterDatabase::class)->transaction(static function () use ($nodeId, $read): void {
             $state = app(CollaborativeState::class);
-            $state->markPending($state->lock($nodeId), $read->generation, 4);
+            $state->markPending($state->lock($nodeId), $read->binding, 4);
         })),
         static fn (): array => RaceFixtures::attempt(static fn () => app(VaulterDatabase::class)->transaction(static function () use ($nodeId, $read): void {
             $state = app(CollaborativeState::class);
             $outcome = $state->publishCheckpoint($state->lock($nodeId), new CheckpointPublication(
-                generation: $read->generation,
+                binding: new CollaborationStateBinding('yjs', 'yjs-update-v1', 1, $read->generation),
                 expectedStateVersion: $read->stateVersion,
                 coveredThrough: 3,
-                yjsState: 'merged through 3',
+                collabState: 'merged through 3',
                 content: GrantedDocuments::tiptap('Merged'),
             ));
             if (!$outcome->published) {
@@ -54,7 +55,7 @@ it('keeps the marker of an append racing a publication of the head it read', fun
     $document = DocumentTestHelpers::document($node);
     expect(array_column($results, 'kind'))->toBe(['committed', 'committed'])
         ->and([$document->pending_generation, $document->pending_through_seq])->toBe([$read->generation, 4])
-        ->and($document->yjs_state)->toBe('merged through 3')
+        ->and($document->collab_state)->toBe('merged through 3')
         ->and($document->state_version)->toBe($read->stateVersion + 1)
         ->and($document->collab_epoch)->toBe($read->generation);
 });

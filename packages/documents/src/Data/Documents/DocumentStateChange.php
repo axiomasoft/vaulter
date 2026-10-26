@@ -11,7 +11,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
 /**
  * One write of a document's working state. A null $content keeps the current JSON
- * projection (a collaboration store may carry only Yjs state); $yjsState is written
+ * projection (a collaboration store may carry only Yjs state); $collabState is written
  * as given, so null clears it. $schemaVersion is the schema the JSON is in after the
  * write — the caller's, never assumed: a write that keeps the JSON keeps its version.
  */
@@ -23,12 +23,15 @@ final readonly class DocumentStateChange
         public StateWriteCause $cause,
         public ?DocumentContent $content,
         public int $schemaVersion,
-        public ?string $yjsState = null,
+        public ?string $collabState = null,
         public int|string|null $actorId = null,
         public ?int $expectedStateVersion = null,
         public bool $forceCheckpoint = false,
         public ?string $label = null,
         public bool $keepForever = false,
         public ?DocumentRevision $restoredFrom = null,
+        public ?string $documentType = null,
+        public ?string $protocol = null,
+        public ?string $stateFormat = null,
     ) {}
 }

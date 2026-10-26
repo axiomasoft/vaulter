@@ -102,7 +102,7 @@ final readonly class UpdateLog
                 'committed_at' => $now,
             ]);
             $this->heads($locked->documentId, $update->generation)->update(['head_seq' => $seq, 'updated_at' => $now]);
-            $this->state->markPending($locked, $update->generation, $seq);
+            $this->state->markPending($locked, $locked->binding ?? throw new LogicException('Missing collaboration binding.'), $seq);
             // Read again as the last statement before the commit, after every lock wait and write: a flag set meanwhile
             // rolls the append back, so what a drain waits drain.max_append_tx for is this commit alone.
             $this->draining->assertAccepting();
@@ -174,7 +174,7 @@ final readonly class UpdateLog
             type: $document->type,
             schemaVersion: $document->schema_version,
             content: $document->content,
-            checkpoint: $document->yjs_state,
+            checkpoint: $document->collab_state,
             checkpointSeq: $head['checkpoint_seq'],
             headSeq: $head['head_seq'],
             tail: $tail,
@@ -239,7 +239,7 @@ final readonly class UpdateLog
     private function assertSeedable(LockedDocumentState $locked, array $head, int $expected): void
     {
         // The size column tells whether a checkpoint exists without reading it; a locking read, as in read().
-        $checkpointed = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->value('yjs_state_size') !== null;
+        $checkpointed = Document::query()->whereKey(Identity::key($locked->documentId))->lockForUpdate()->value('collab_state_size') !== null;
         if ($head['head_seq'] > 0 || $checkpointed) {
             throw new CollaborationSeedConflictException($locked->nodeId);
         }

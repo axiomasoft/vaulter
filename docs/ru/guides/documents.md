@@ -59,14 +59,14 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 | `state_version` | BIGINT ≥ 0 | Валидатор контента; +1 на каждую эффективную запись рабочего состояния. |
 | `checkpoint_state_version` | BIGINT ≥ 0 | `state_version`, захваченный головой. |
 | `content`, `content_hash`, `content_size` | json, char(64), integer | Каноническая JSON-проекция, её хеш и размер в байтах. |
-| `yjs_state`, `yjs_state_size` | binary, integer | Состояние Yjs CRDT (источник истины коллаборации) и его размер. |
+| `collab_state`, `collab_state_size` | binary, integer | Состояние Yjs CRDT (источник истины коллаборации) и его размер. |
 | `pending_generation`, `pending_through_seq` | BIGINT, nullable | Pending-маркер (оба заданы или оба null): сохранённые правки коллаборации этого поколения до этой последовательности журнала ещё не в чекпоинте. Ставится и снимается только через контракт состояния коллаборации; пока он стоит, контент не читается, не экспортируется и не заменяется (`409 document_state_pending`). |
 | `last_checkpoint_at` | timestamp | Когда снят последний чекпоинт. |
 | `created_by`, `updated_by`, метки времени | | Аудит. |
 
 Колонки `v_document_revisions`: `id`, `tenant_id`, `document_id` (FK, каскад), `number`
-(уникален в документе), `schema_version`, `content`, `content_hash`, `content_size`, `yjs_state`,
-`yjs_state_size`, `state_version` (захваченная версия рабочего состояния), `label`, `is_autosave`,
+(уникален в документе), `schema_version`, `content`, `content_hash`, `content_size`, `collab_state`,
+`collab_state_size`, `state_version` (захваченная версия рабочего состояния), `label`, `is_autosave`,
 `keep_forever`, `status` (`committed`), `restored_from_revision_id` (FK, set null) и
 `created_by`/`created_at`.
 
@@ -136,7 +136,7 @@ Documents::comments($drive)->add($node->id, new AddCommentInput('Looks good', an
 `dirty` (рабочее состояние опережает чекпоинт-голову), `headRevisionId`, `content`
 (`DocumentContent` типа: `TipTapContent` для rich text и markdown, `OpaqueContent` для
 spreadsheet или неустановленного типа), `revision`
-(голова или запрошенная ревизия), `contentHash`, `yjsStateSize`, `updatedAt` и `updatedBy`. Id —
+(голова или запрошенная ревизия), `contentHash`, `collabStateSize`, `updatedAt` и `updatedBy`. Id —
 строки. Actions за этими методами — внутренние.
 
 ## Создание узла-документа

@@ -20,6 +20,7 @@ enum StateWriteCause: string
     case Copy = 'copy';
     case Create = 'create';
     case Seed = 'seed';
+    case Transition = 'transition';
 
     /** Editor saves repeat themselves; an unchanged payload must not count as a change. */
     public function skipsIdenticalWrite(): bool

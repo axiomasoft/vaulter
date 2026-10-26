@@ -18,6 +18,7 @@ use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Database\Factories\DocumentFactory;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\State\CollaborationStateBinding;
 use Vaulter\Documents\Support\DocumentTypeKey;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Concerns\StampsDriveTenant;
@@ -36,6 +37,11 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property int|string|null           $tenant_id
  * @property int|string                $node_id
  * @property string                    $type
+ * @property string|null               $collab_protocol
+ * @property string|null               $collab_state_format
+ * @property string|null               $pending_protocol
+ * @property string|null               $pending_state_format
+ * @property int|null                  $pending_schema_version
  * @property int                       $schema_version
  * @property int|string|null           $current_revision_id
  * @property int                       $revision_count
@@ -47,8 +53,8 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property array<string, mixed>|null $content
  * @property string|null               $content_hash
  * @property int|null                  $content_size
- * @property string|null               $yjs_state
- * @property int|null                  $yjs_state_size
+ * @property string|null               $collab_state
+ * @property int|null                  $collab_state_size
  * @property Carbon|null               $last_checkpoint_at
  * @property int|string|null           $created_by
  * @property int|string|null           $updated_by
@@ -76,6 +82,13 @@ class Document extends Model
      * @var list<string>
      */
     protected $fillable = [];
+
+    public function collaborationBinding(): ?CollaborationStateBinding
+    {
+        return $this->collab_protocol === null ? null : new CollaborationStateBinding(
+            $this->collab_protocol, $this->collab_state_format ?? throw new LogicException('Incomplete stored binding.'), $this->schema_version, $this->collab_epoch,
+        );
+    }
 
     /**
      * The configuration readers, handed over once by the documents service
@@ -180,16 +193,17 @@ class Document extends Model
         return [
             'content' => 'array',
             // Postgres returns bytea as a stream resource; normalise to a string.
-            'yjs_state' => BinaryString::class,
+            'collab_state' => BinaryString::class,
             'schema_version' => 'integer',
             'revision_count' => 'integer',
             'collab_epoch' => 'integer',
             'state_version' => 'integer',
             'checkpoint_state_version' => 'integer',
+            'pending_schema_version' => 'integer',
             'pending_generation' => 'integer',
             'pending_through_seq' => 'integer',
             'content_size' => 'integer',
-            'yjs_state_size' => 'integer',
+            'collab_state_size' => 'integer',
             'last_checkpoint_at' => 'datetime',
         ];
     }

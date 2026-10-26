@@ -1518,8 +1518,12 @@ export interface components {
             created_at: string;
         };
         DocumentRevision: {
+            type: string;
+            collab_epoch: number;
             id: string;
             number: number;
+            collab_protocol: string | null;
+            collab_state_format: string | null;
             schema_version: number;
             label: string | null;
             is_autosave: boolean;
@@ -1537,6 +1541,8 @@ export interface components {
         DocumentBody: Record<string, never> | unknown[];
         DocumentContent: {
             type: string;
+            collab_protocol: string | null;
+            collab_state_format: string | null;
             schema_version: number;
             /** @description Opaque; the document ETag carries it. */
             state_version: number;

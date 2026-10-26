@@ -18,7 +18,7 @@ use Vaulter\Schema\ValueObjects\KeyColumnExpectation;
 final class DocumentsSchema implements ModuleSchema
 {
     /** The pending-state marker is set as a whole or not at all. */
-    private const string PENDING_MARKER_PAIR = '(pending_generation IS NULL AND pending_through_seq IS NULL) OR (pending_generation IS NOT NULL AND pending_through_seq IS NOT NULL)';
+    private const string PENDING_MARKER_PAIR = '(pending_generation IS NULL AND pending_through_seq IS NULL AND pending_protocol IS NULL AND pending_state_format IS NULL AND pending_schema_version IS NULL) OR (pending_generation IS NOT NULL AND pending_through_seq IS NOT NULL AND pending_protocol IS NOT NULL AND length(pending_protocol) > 0 AND pending_state_format IS NOT NULL AND length(pending_state_format) > 0 AND pending_schema_version IS NOT NULL AND pending_schema_version >= 1)';
 
     public function __construct(private readonly SchemaHelpers $helpers) {}
 
@@ -157,6 +157,8 @@ final class DocumentsSchema implements ModuleSchema
 
         $table->string('type', 64);
         $table->integer('schema_version');
+        $table->string('collab_protocol')->nullable();
+        $table->string('collab_state_format')->nullable();
         $ids->reference(table: $table, column: 'current_revision_id', nullable: true);
         // Monotonic: pruning old checkpoints never hands a number out twice.
         $table->integer('revision_count')->default(0);
@@ -170,8 +172,8 @@ final class DocumentsSchema implements ModuleSchema
         $table->jsonb('content')->nullable();
         $table->char('content_hash', 64)->nullable();
         $table->integer('content_size')->nullable();
-        $this->helpers->binaryColumn(table: $table, column: 'yjs_state');
-        $table->integer('yjs_state_size')->nullable();
+        $this->helpers->binaryColumn(table: $table, column: 'collab_state');
+        $table->integer('collab_state_size')->nullable();
         $table->timestamp('last_checkpoint_at')->nullable();
 
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
@@ -200,6 +202,9 @@ final class DocumentsSchema implements ModuleSchema
      */
     private function definePendingMarker(Blueprint $table): void
     {
+        $table->string('pending_protocol')->nullable();
+        $table->string('pending_state_format')->nullable();
+        $table->integer('pending_schema_version')->nullable();
         $sqlite = $this->helpers->dbConnection()->getDriverName() === 'sqlite';
         $type = static fn (string $column): string => $sqlite ? "typeof({$column}) = 'integer' AND " : '';
         $pair = $this->helpers->dbConnection()->getDriverName() === 'mysql' ? '' : ' CHECK('.self::PENDING_MARKER_PAIR.')';
@@ -221,13 +226,17 @@ final class DocumentsSchema implements ModuleSchema
         $this->helpers->tenant(table: $table);
         $ids->reference(table: $table, column: 'document_id');
         $table->integer('number');
+        $table->string('type', 64);
+        $this->helpers->counterColumn(table: $table, column: 'collab_epoch');
         $table->integer('schema_version');
+        $table->string('collab_protocol')->nullable();
+        $table->string('collab_state_format')->nullable();
 
         $table->jsonb('content')->nullable();
         $table->char('content_hash', 64)->nullable();
         $table->integer('content_size')->nullable();
-        $this->helpers->binaryColumn(table: $table, column: 'yjs_state');
-        $table->integer('yjs_state_size')->nullable();
+        $this->helpers->binaryColumn(table: $table, column: 'collab_state');
+        $table->integer('collab_state_size')->nullable();
         // The working state version this checkpoint captured.
         $this->helpers->counterColumn(table: $table, column: 'state_version');
 

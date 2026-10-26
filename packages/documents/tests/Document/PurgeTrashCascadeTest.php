@@ -17,7 +17,7 @@ use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
  * F-P1.12-02, on real PostgreSQL only (SQLite does not enforce the FK
  * cascadeOnDelete this fix relies on): vaulter:trash:purge past retention must
  * PHYSICALLY remove the document's working state and checkpoints (v_documents and
- * v_document_revisions content/yjs_state) through the node → document → revision
+ * v_document_revisions content/collab_state) through the node → document → revision
  * cascades, even though the head FK (RESTRICT) points back from the document into
  * its revisions — before this fix, that content lived in the database forever.
  */

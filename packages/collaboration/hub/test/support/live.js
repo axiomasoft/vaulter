@@ -67,7 +67,7 @@ export function restore(backend, nodeId, revisionId, user) {
   return json(`${backend}${API}/documents/${nodeId}/revisions/${revisionId}/restore`, { method: 'POST', user, body: {} })
 }
 
-/** The working state as the backend stores it (the last checkpoint): { epoch, state_version, yjs_state_size, content }. */
+/** The working state as the backend stores it (the last checkpoint): { epoch, state_version, collab_state_size, content }. */
 export function stored(backend, nodeId) {
   return json(`${backend}/e2e/document/${nodeId}`)
 }

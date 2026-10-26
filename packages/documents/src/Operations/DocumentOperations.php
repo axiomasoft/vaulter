@@ -193,7 +193,7 @@ final readonly class DocumentOperations implements DriveExtension
             fingerprint: ['node' => $nodeId, 'content' => $content, 'expected_state_version' => $expectedStateVersion],
         );
 
-        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update', fn (): DocumentSnapshot => $this->writeContent($document, $content, null, $expectedStateVersion), $idempotency));
+        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update', fn (): DocumentSnapshot => $this->writeContent($document, $content, $expectedStateVersion), $idempotency));
     }
 
     /**
@@ -202,13 +202,13 @@ final readonly class DocumentOperations implements DriveExtension
      * @param array<string, mixed> $content
      */
     #[Internal]
-    public function updateContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState = null, ?int $expectedStateVersion = null): DocumentSnapshot
+    public function updateContent(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion = null): DocumentSnapshot
     {
-        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $yjsState, $expectedStateVersion)));
+        return $this->pending->settled(fn (): DocumentSnapshot => $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $expectedStateVersion)));
     }
 
     /** @param array<string, mixed> $content */
-    private function writeContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState, ?int $expectedStateVersion): DocumentSnapshot
+    private function writeContent(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion): DocumentSnapshot
     {
         $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
         // Checked here so a degraded document answers before its payload is validated,
@@ -218,7 +218,6 @@ final readonly class DocumentOperations implements DriveExtension
         $this->update->execute($this->context, new UpdateDocumentContentInput(
             node: $node,
             content: $this->decoder->decode($type, $content),
-            yjsState: $yjsState,
             expectedStateVersion: $expectedStateVersion,
         ));
 

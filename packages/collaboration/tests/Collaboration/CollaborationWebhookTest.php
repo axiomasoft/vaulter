@@ -54,8 +54,8 @@ it('appends a binary update losslessly and publishes its checkpoint with the pro
     Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => Hub::tiptap('From hub')]);
     $state = Hub::aggregate($node);
 
-    expect($state->yjs_state)->toBe($yjs)
-        ->and($state->yjs_state_size)->toBe(strlen($yjs))
+    expect($state->collab_state)->toBe($yjs)
+        ->and($state->collab_state_size)->toBe(strlen($yjs))
         ->and($state->content['content'][0]['content'][0]['text'] ?? null)->toBe('From hub');
 });
 
@@ -69,7 +69,7 @@ it('requires the JSON projection with a checkpoint', function (): void {
         'expected_checkpoint_version' => $lease->checkpointVersion, 'state' => base64_encode('state-without-projection'),
     ], token: null)->assertStatus(422)->assertJsonValidationErrors('content');
 
-    expect(Hub::aggregate($node)->yjs_state)->toBeNull();
+    expect(Hub::aggregate($node)->collab_state)->toBeNull();
 });
 
 it('rejects an append call without a token, even when signed', function (): void {
@@ -257,7 +257,7 @@ it('refuses an append over content that cannot be saved back', function (Closure
 
     $after = Hub::aggregate($node);
     expect($after->content)->toBe($before->content)
-        ->and($after->yjs_state)->toBeNull()
+        ->and($after->collab_state)->toBeNull()
         ->and($after->pending_through_seq)->toBeNull()
         ->and($after->schema_version)->toBe($before->schema_version)
         ->and($after->state_version)->toBe($before->state_version)
@@ -293,5 +293,5 @@ it('decodes a checkpoint projection with the document type\'s own schema', funct
 
     $state = Hub::aggregate($node);
     expect($state->content)->toBe($empty)
-        ->and($state->yjs_state)->toBeNull();
+        ->and($state->collab_state)->toBeNull();
 });

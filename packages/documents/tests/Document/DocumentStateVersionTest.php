@@ -134,7 +134,7 @@ it('counts Yjs and projection changes while an identical Yjs state is a no-op', 
     StateWrites::yjs($node, "second\0state", DocumentTestHelpers::content('projection changed')->toArray());
     $document = DocumentTestHelpers::document($node);
     expect($document->state_version)->toBe(4)
-        ->and($document->yjs_state)->toBe("second\0state")
+        ->and($document->collab_state)->toBe("second\0state")
         ->and($document->collab_epoch)->toBe(0);
 });
 
@@ -149,8 +149,8 @@ it('replacing the JSON of a document with Yjs state drops that state and moves t
 
     expect($result->epochChanged)->toBeTrue()
         ->and($result->document->collab_epoch)->toBe(1)
-        ->and($result->document->yjs_state)->toBeNull()
-        ->and($result->document->yjs_state_size)->toBeNull();
+        ->and($result->document->collab_state)->toBeNull()
+        ->and($result->document->collab_state_size)->toBeNull();
 });
 
 it('refuses a negative expectation', function (): void {

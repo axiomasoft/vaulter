@@ -83,10 +83,10 @@ final readonly class Checkpoint
             }
 
             $outcome = $this->state->publishCheckpoint($locked, new CheckpointPublication(
-                generation: $locked->generation,
+                binding: $locked->binding ?? throw new \LogicException('Missing collaboration binding.'),
                 expectedStateVersion: $head->checkpointVersion,
                 coveredThrough: $request->coveredThrough,
-                yjsState: $request->state,
+                collabState: $request->state,
                 content: $request->content,
             ));
             if (!$outcome->published) {

@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Vaulter\Collaboration\Exceptions\CollaborationEpochMismatchException;
 use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
-use Vaulter\Collaboration\Exceptions\CollaborationUnavailableException;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
@@ -16,6 +15,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Events\Revisions\DocumentRestored;
+use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentStateTooLargeException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Facades\Documents;
@@ -151,7 +151,7 @@ it('refuses a seed built before a REST update and loses no text', function (): v
         ->assertJsonPath('meta.context.expected_state_version', $version)
         ->assertJsonPath('meta.context.actual_state_version', Hub::aggregate($node)->state_version);
     $after = Hub::aggregate($node);
-    expect($after->yjs_state)->toBeNull()
+    expect($after->collab_state)->toBeNull()
         ->and($after->pending_through_seq)->toBeNull()
         ->and(Compaction::seqs($node))->toBe([])
         ->and($after->content['content'][0]['content'][0]['text'])->toBe('Written over REST');
@@ -209,7 +209,7 @@ it('fences off an append from the room opened before a restore (V12)', function 
 
     $after = Hub::aggregate($node);
     expect($after->content)->toBe($restored->content)
-        ->and($after->yjs_state)->toBe($restored->yjs_state)
+        ->and($after->collab_state)->toBe($restored->collab_state)
         ->and($after->state_version)->toBe($restored->state_version)
         ->and(Compaction::head($node, 0))->toBeNull();
 
@@ -244,7 +244,7 @@ it('moves the epoch on an external JSON replace of a document with Yjs state', f
     $document = Hub::aggregate($node);
     expect($document->collab_epoch)->toBe(1)
         // The hub seeds the next room from the replaced JSON.
-        ->and($document->yjs_state)->toBeNull();
+        ->and($document->collab_state)->toBeNull();
     Hub::call('append', Hub::appendBody($node, 'stale', generation: 0), Hub::token($node, epoch: 0))
         ->assertStatus(409)
         ->assertJsonPath('code', 'collaboration_epoch_mismatch');
@@ -323,7 +323,7 @@ it('refuses a checkpoint state above collaboration.max_state_bytes with 413 and 
     Hub::callV2('checkpoint', $checkpoint(str_repeat('y', 9)), token: null)
         ->assertStatus(413)
         ->assertJsonPath('code', 'collaboration_update_too_large');
-    expect(Hub::aggregate($node)->yjs_state)->toBeNull()
+    expect(Hub::aggregate($node)->collab_state)->toBeNull()
         ->and(Compaction::seqs($node))->toBe([1]);
 
     Hub::callV2('checkpoint', $checkpoint(str_repeat('y', 8)), token: null)->assertOk()->assertJsonPath('marker_cleared', true);
@@ -336,7 +336,7 @@ it('refuses a checkpoint projection above the content limit', function (): void 
 
     expect(fn () => Compaction::publish(Compaction::leaseOf($node), overrides: ['content' => Hub::tiptap(str_repeat('x', 2048))]))
         ->toThrow(InvalidDocumentContentException::class);
-    expect(Hub::aggregate($node)->yjs_state)->toBeNull()
+    expect(Hub::aggregate($node)->collab_state)->toBeNull()
         ->and(Compaction::marker($node))->toBe([0, 1]);
 });
 

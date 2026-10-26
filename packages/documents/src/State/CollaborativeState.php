@@ -41,7 +41,7 @@ interface CollaborativeState
      *
      * @throws LogicException outside a transaction, for another generation than the current one, or over a marker of another generation
      */
-    public function markPending(LockedDocumentState $state, int $generation, int $throughSeq): PendingMarker;
+    public function markPending(LockedDocumentState $state, CollaborationStateBinding $binding, int $throughSeq): PendingMarker;
 
     /**
      * Publish a checkpoint as the working state, as one CAS: only while the document is still at the publication's
@@ -53,6 +53,8 @@ interface CollaborativeState
      * @throws DocumentContentDegradedException the working state reads only partly under its type
      * @throws InvalidDocumentContentException  the type rejects the projection
      */
+    public function transition(LockedDocumentState $state, CollaborativeStateTransition $transition): CheckpointOutcome;
+
     public function publishCheckpoint(LockedDocumentState $state, CheckpointPublication $publication): CheckpointOutcome;
 
     /**
@@ -62,5 +64,5 @@ interface CollaborativeState
      *
      * @return list<PendingMarker>
      */
-    public function pendingDocuments(int $limit = 100, int|string|null $after = null): array;
+    public function pendingDocuments(int $limit = 100, int|string|null $after = null, ?string $protocol = null): array;
 }

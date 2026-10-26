@@ -575,7 +575,7 @@
                 "file": "packages/documents/src/Idempotency/DocumentSnapshotCodec.php",
                 "symbol": "Vaulter\\Documents\\Idempotency\\DocumentSnapshotCodec::encode"
             },
-            "format": "receipt kind documents.document-snapshot, version 1: JSON {node_id, document_id, type, schema_version, type_available, editable, epoch, state_version, dirty, head_revision_id, content: the JSON payload of the content (read back with ContentDecoder::read), revision: receipt-document-revision fields | null, content_hash, yjs_state_size, updated_at (Y-m-d\\TH:i:s.uP), updated_by}",
+            "format": "receipt kind documents.document-snapshot, version 1: JSON {node_id, document_id, type, schema_version, type_available, editable, epoch, state_version, dirty, head_revision_id, content: the JSON payload of the content (read back with ContentDecoder::read), revision: receipt-document-revision fields | null, content_hash, collab_state_size, updated_at (Y-m-d\\TH:i:s.uP), updated_by}",
             "owner": "documents",
             "why": "D25, D47: the stored receipt of documents.documents.update and .restore"
         },

@@ -41,8 +41,10 @@ final readonly class DocumentSnapshot
         public DocumentContent $content,
         public ?DocumentRevisionSnapshot $revision,
         public ?string $contentHash,
-        public ?int $yjsStateSize,
+        public ?int $collabStateSize,
         public DateTimeImmutable $updatedAt,
         public ?string $updatedBy,
+        public ?string $collabProtocol = null,
+        public ?string $collabStateFormat = null,
     ) {}
 }

@@ -1414,6 +1414,48 @@
             "id": "serialized:cast:Vaulter\\Media\\Models\\Cas\\Blob.integrity_failed_at",
             "kind": "protocol",
             "reason": "P6.9: UTC timestamp cast of the new column"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "problem:collaboration_unavailable",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.collab_state",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D16",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.yjs_state",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.collab_state",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "removed",
+            "decision": "PLAN4-D16",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.yjs_state",
+            "kind": "protocol",
+            "reason": "P3.6 stored protocol/format/schema binding, neutral collab_state naming and documents ownership; server engine snapshots remain pending P8.2."
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "format:receipt-document-snapshot",
+            "kind": "protocol",
+            "reason": "P3.6 generated SQLite binding/schema and neutral state names; immutable pgsql/mysql remain pending P8.2."
         }
     ],
     "items": [
@@ -2234,7 +2276,7 @@
             }
         },
         {
-            "format": "receipt kind documents.document-snapshot, version 1: JSON {node_id, document_id, type, schema_version, type_available, editable, epoch, state_version, dirty, head_revision_id, content: the JSON payload of the content (read back with ContentDecoder::read), revision: receipt-document-revision fields | null, content_hash, yjs_state_size, updated_at (Y-m-d\\TH:i:s.uP), updated_by}",
+            "format": "receipt kind documents.document-snapshot, version 1: JSON {node_id, document_id, type, schema_version, type_available, editable, epoch, state_version, dirty, head_revision_id, content: the JSON payload of the content (read back with ContentDecoder::read), revision: receipt-document-revision fields | null, content_hash, collab_state_size, updated_at (Y-m-d\\TH:i:s.uP), updated_by}",
             "id": "format:receipt-document-snapshot",
             "manual": true,
             "owner": "documents",
@@ -2710,14 +2752,14 @@
             "status": 409
         },
         {
-            "exception": "Vaulter\\Collaboration\\Exceptions\\CollaborationUnavailableException",
+            "exception": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException",
             "id": "problem:collaboration_unavailable",
             "owner": "collaboration",
             "receipt": "never",
             "retryable": "never",
             "source": {
-                "file": "packages/collaboration/src/CollaborationProblemCodes.php",
-                "symbol": "Vaulter\\Collaboration\\CollaborationProblemCodes::codes"
+                "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
+                "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
             },
             "status": 409
         },
@@ -3634,9 +3676,9 @@
             "status": 500
         },
         {
-            "attribute": "yjs_state",
+            "attribute": "collab_state",
             "cast": "Vaulter\\Documents\\Casts\\BinaryString",
-            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.yjs_state",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Documents\\Document.collab_state",
             "model": "Vaulter\\Documents\\Models\\Documents\\Document",
             "owner": "documents",
             "source": {
@@ -3645,9 +3687,9 @@
             }
         },
         {
-            "attribute": "yjs_state",
+            "attribute": "collab_state",
             "cast": "Vaulter\\Documents\\Casts\\BinaryString",
-            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.yjs_state",
+            "id": "serialized:cast:Vaulter\\Documents\\Models\\Revisions\\DocumentRevision.collab_state",
             "model": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
             "owner": "documents",
             "source": {

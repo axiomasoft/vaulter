@@ -89,8 +89,11 @@ final readonly class RestoreDocumentRevisionAction
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Restore,
                 content: OpaqueContent::fromArray($source->content ?? []),
-                yjsState: $source->yjs_state,
+                collabState: $source->collab_state,
                 schemaVersion: $source->schema_version,
+                documentType: $source->type,
+                protocol: $source->collab_protocol,
+                stateFormat: $source->collab_state_format,
                 actorId: $actorId,
                 expectedStateVersion: $data->expectedStateVersion,
                 forceCheckpoint: true,

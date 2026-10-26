@@ -23,10 +23,6 @@ return [
         'title' => 'Collaboration seed conflict',
         'detail' => 'The document was seeded differently by another session.',
     ],
-    'collaboration_unavailable' => [
-        'title' => 'Collaboration unavailable',
-        'detail' => 'Collaboration is not available for this document.',
-    ],
     'collaboration_update_mismatch' => [
         'title' => 'Collaboration update mismatch',
         'detail' => 'The update does not match its hash or an update already saved under its id.',

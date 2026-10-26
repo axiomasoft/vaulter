@@ -10,6 +10,7 @@ use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
@@ -44,6 +45,7 @@ final readonly class DocumentStateWriter
         private NodeStoreRepository $nodes,
         private DocumentsConfig $documentsConfig,
         private VaulterDatabase $database,
+        private ContentDecoder $decoder,
     ) {}
 
     public function write(Document $locked, DocumentStateChange $change): DocumentStateResult
@@ -61,19 +63,21 @@ final readonly class DocumentStateWriter
             }
         }
 
+        $checkpointDue = $this->intervalElapsed($locked);
         $hash = $change->content?->contentHash() ?? $locked->content_hash;
-        if ($change->cause->skipsIdenticalWrite() && $hash === $locked->content_hash && $change->yjsState === $locked->yjs_state) {
+        if (!($change->cause === StateWriteCause::Update && $locked->collab_protocol !== null) && $change->cause->skipsIdenticalWrite() && $hash === $locked->content_hash && $change->collabState === $locked->collab_state) {
             return new DocumentStateResult(changed: false, document: $locked, checkpoint: null, epochChanged: false);
         }
 
         // A restore, or a JSON replace of a document that has Yjs state, makes every
         // open room's history stale: the next epoch fences their stores off.
         $epochChanged = $change->cause === StateWriteCause::Restore
-            || ($change->cause === StateWriteCause::Update && $locked->yjs_state !== null);
+            || $change->cause === StateWriteCause::Transition
+            || ($change->cause === StateWriteCause::Update && $locked->collab_protocol !== null);
 
         // Closing a generation over collaborative state no checkpoint holds yet would leave its saved edits in no
         // revision (C8): the state is captured first, then replaced.
-        if ($epochChanged && $locked->yjs_state !== null && $locked->hasUncheckpointedChanges()) {
+        if ($epochChanged && $locked->hasUncheckpointedChanges()) {
             $this->capture(
                 document: $locked,
                 label: null,
@@ -87,8 +91,8 @@ final readonly class DocumentStateWriter
         $attributes = [
             'state_version' => Int64Counter::increment($locked->state_version),
             'collab_epoch' => $epochChanged ? Int64Counter::increment($locked->collab_epoch) : $locked->collab_epoch,
-            'yjs_state' => $change->yjsState,
-            'yjs_state_size' => $change->yjsState === null ? null : strlen($change->yjsState),
+            'collab_state' => $change->collabState,
+            'collab_state_size' => $change->collabState === null ? null : strlen($change->collabState),
             'schema_version' => $change->schemaVersion,
             'updated_by' => $change->actorId,
         ];
@@ -99,10 +103,22 @@ final readonly class DocumentStateWriter
             $attributes['content_size'] = $change->content->sizeInBytes();
         }
 
+        if ($change->cause === StateWriteCause::Create) {
+            $type = $this->decoder->writable($locked->type);
+            if ($type instanceof SupportsCollaboration) {
+                $attributes['collab_protocol'] = $type->collaborationProtocol();
+                $attributes['collab_state_format'] = $type->collaborationStateFormat();
+            }
+        }
+        if ($change->cause === StateWriteCause::Transition || $change->cause === StateWriteCause::Restore || $change->cause === StateWriteCause::Copy) {
+            $attributes['type'] = $change->documentType ?? $locked->type;
+            $attributes['collab_protocol'] = $change->protocol;
+            $attributes['collab_state_format'] = $change->stateFormat;
+        }
         $this->documents->update($locked, $attributes);
 
         $checkpoint = null;
-        if ($change->forceCheckpoint || $locked->current_revision_id === null || $this->intervalElapsed($locked)) {
+        if ($change->forceCheckpoint || $locked->current_revision_id === null || $checkpointDue) {
             $checkpoint = $this->capture(
                 document: $locked,
                 label: $change->label,
@@ -149,7 +165,7 @@ final readonly class DocumentStateWriter
             throw new InvalidArgumentException('[Vaulter] A pending marker is a generation of at least 0 with a sequence of at least 1, or none at all.');
         }
 
-        $this->documents->update($locked, ['pending_generation' => $generation, 'pending_through_seq' => $throughSeq]);
+        $this->documents->update($locked, ['pending_generation' => $generation, 'pending_through_seq' => $throughSeq, 'pending_protocol' => $generation === null ? null : $locked->collab_protocol, 'pending_state_format' => $generation === null ? null : $locked->collab_state_format, 'pending_schema_version' => $generation === null ? null : $locked->schema_version]);
     }
 
     private function capture(
@@ -167,12 +183,16 @@ final readonly class DocumentStateWriter
             'tenant_id' => $document->tenant_id,
             'document_id' => $document->getKey(),
             'number' => $number,
+            'type' => $document->type,
+            'collab_protocol' => $document->collab_protocol,
+            'collab_state_format' => $document->collab_state_format,
+            'collab_epoch' => $document->collab_epoch,
             'schema_version' => $document->schema_version,
             'content' => $document->content,
             'content_hash' => $document->content_hash,
             'content_size' => $document->content_size,
-            'yjs_state' => $document->yjs_state,
-            'yjs_state_size' => $document->yjs_state_size,
+            'collab_state' => $document->collab_state,
+            'collab_state_size' => $document->collab_state_size,
             'state_version' => $document->state_version,
             'label' => $label,
             'is_autosave' => $autosave,

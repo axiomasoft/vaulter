@@ -10,11 +10,13 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
+use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentStatePendingException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
@@ -97,11 +99,15 @@ final readonly class UpdateDocumentContentAction
             // A restore may have committed between the caller's check and this lock.
             $type = $this->decoder->editableType($document);
 
+            if ($document->collab_protocol !== null && ($type->schemaVersion() !== $document->schema_version
+                || !$type instanceof SupportsCollaboration
+                || $type->collaborationProtocol() !== $document->collab_protocol || $type->collaborationStateFormat() !== $document->collab_state_format)) {
+                throw new CollaborationUnavailableException('unsupported_binding', $document->type);
+            }
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Update,
                 content: $data->content,
                 schemaVersion: $type->schemaVersion(),
-                yjsState: $data->yjsState,
                 actorId: $context->actor->ref()->id,
                 expectedStateVersion: $data->expectedStateVersion,
             ));

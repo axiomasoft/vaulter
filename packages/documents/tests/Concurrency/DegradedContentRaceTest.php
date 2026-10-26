@@ -103,5 +103,5 @@ it('refuses an update whose precheck went stale to a restore that committed befo
         ->and($after->schema_version)->toBe($case === 'lossy' ? 1 : 99)
         // jsonb returns object keys in its own order; the canonical hash ignores it.
         ->and(ContentHasher::hash($after->content))->toBe(ContentHasher::hash($stored))
-        ->and($after->yjs_state)->toBeNull();
+        ->and($after->collab_state)->toBeNull();
 })->with('degraded revisions');

@@ -16,17 +16,26 @@ use Vaulter\Attributes\Internal;
 #[Api]
 final readonly class PendingMarker
 {
+    public int $generation;
+
     #[Internal]
     public function __construct(
         public string $documentId,
         public string $nodeId,
-        public int $generation,
+        public CollaborationStateBinding $binding,
         public int $throughSeq,
-    ) {}
+    ) {
+        $this->generation = $binding->generation;
+    }
+
+    public function generation(): int
+    {
+        return $this->binding->generation;
+    }
 
     /** Whether a checkpoint of `$generation` covering the log through `$coveredThrough` covers this marker. */
-    public function coveredBy(int $generation, int $coveredThrough): bool
+    public function coveredBy(CollaborationStateBinding $binding, int $coveredThrough): bool
     {
-        return $generation === $this->generation && $this->throughSeq <= $coveredThrough;
+        return $binding->sameAs($this->binding) && $this->throughSeq <= $coveredThrough;
     }
 }

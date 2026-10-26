@@ -40,7 +40,7 @@ it('refuses to change any payload or provenance column of a stored checkpoint', 
 })->with([
     'content' => ['content', ['type' => 'doc', 'content' => []]],
     'content_hash' => ['content_hash', str_repeat('0', 64)],
-    'yjs_state' => ['yjs_state', "rewritten\0state"],
+    'collab_state' => ['collab_state', "rewritten\0state"],
     'number' => ['number', 99],
     'label' => ['label', 'renamed'],
     'is_autosave' => ['is_autosave', true],

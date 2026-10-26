@@ -19,19 +19,19 @@ use Vaulter\ValueObjects\Access\ActorRef;
 #[Api]
 final readonly class CheckpointPublication
 {
-    /** @param array<string, mixed> $content the JSON projection of `$yjsState` in the document type's current schema */
+    /** @param array<string, mixed> $content the JSON projection of `$collabState` in the document type's current schema */
     public function __construct(
-        public int $generation,
+        public CollaborationStateBinding $binding,
         public int $expectedStateVersion,
         public int $coveredThrough,
-        public string $yjsState,
+        public ?string $collabState,
         public array $content,
         public ?ActorRef $actor = null,
     ) {
-        if ($generation < 0 || $expectedStateVersion < 0 || $coveredThrough < 0) {
+        if ($expectedStateVersion < 0 || $coveredThrough < 0) {
             throw new InvalidArgumentException('[Vaulter] A checkpoint names a generation, a state version and a covered sequence of at least 0.');
         }
-        if ($yjsState === '') {
+        if ($collabState === '') {
             throw new InvalidArgumentException('[Vaulter] A checkpoint carries a binary state.');
         }
     }

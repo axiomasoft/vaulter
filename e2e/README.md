@@ -6,7 +6,7 @@ collaboration **live**, with two clients editing through the real transport:
 ```
  browser A (writer) ┐                              ┌─ POST /collab/authenticate  (JWT verified)
  browser B (viewer) ┘─ ws ─▶ Hocuspocus hub :1234 ─┤
-                                                    └─ POST /collab/store         (yjs_state persisted)
+                                                    └─ POST /collab/store         (collab_state persisted)
         │                                                     │
         └──── POST /nodes/{id}/collab/token ──▶ Laravel (testbench serve :8000) ◀┘
                                                      │
@@ -18,7 +18,7 @@ What it asserts (the P1.1 checklist from `docs/plan/00-master-plan.md`):
 1. the room **JWT is really verified** by the hub → Laravel `collab/authenticate` webhook;
 2. a **writer's edits propagate** to a second client in realtime (Yjs over the hub);
 3. **`readOnly` is enforced on the live socket** — a viewer's edits are dropped server-side;
-4. the **debounced snapshot lands** in `v_node_document_versions.yjs_state`.
+4. the **debounced snapshot lands** in `v_node_document_versions.collab_state`.
 
 > This stand exists only for development/CI. The Laravel host is an Orchestra
 > Testbench app (`testbench.yaml` + `packages/core/tests/E2E/`), never shipped.
