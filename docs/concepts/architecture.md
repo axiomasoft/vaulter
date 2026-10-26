@@ -366,3 +366,34 @@ delegation), **0019 → 0027 → 0030** (who owns what) and **0001 → 0031** (c
 - [Troubleshooting](/guides/troubleshooting) — the failure modes this architecture creates and
   how to avoid them.
 - [Configuration](/guides/configuration) — every config key, by section.
+
+## Dependency rules and kernel budget
+
+Runtime dependencies point down the package graph: `core ← media ← drive ← documents ← collaboration`;
+webhooks, azgard and filament depend on drive. Core owns generic operations, typed context, module slots,
+idempotency and outbox; Node, Document, Blob, Share and Revision remain in their domain packages.
+A domain table, HTTP endpoint or implicit `class_exists` activation does not belong in core.
+The existing boundary and surface guards enforce these ownership rules.
+
+A package's Vaulter `require-dev` siblings must occur in the transitive closure of its runtime `require`.
+Only the exact metapackage `axioma-studio/vaulter` is exempt. External `axioma/azguard` is not a Vaulter sibling.
+Unknown runtime siblings and cycles fail. The dev-graph allowlist records exact `from`, `to`, nonempty `reason`
+and `decision`; unused entries fail too. It is currently empty.
+
+`tests/Repo/Arch/Fixtures/kernel-budget.json` records the post-P2.2 core baseline: **262 PHP files,
+18,911 physical lines and 122 unique Api/Spi types**. This matches P1's file and line counts; snapshot member
+lines are not a count of types. Only regular PHP files under core src are counted, without following symlinks;
+physical lines include blanks and docblocks. Runtime require keys must match exactly, irrespective of order,
+and core has no sibling dev dependency. File, line and unique surface-type growth each have a **10%** ceiling,
+using integer comparison without rounding. Shrinking one metric does not offset growth in another.
+
+A budget change needs an appended history entry with a substantive reason and an ADR explaining growth;
+do not simply raise the baseline to make a failing change pass. Preserve earlier history and the immutable
+P1 evidence. The fixtures exercise the threshold, threshold plus one, a new require key, reverse dev edges,
+cycles, unknown siblings and stale exceptions. These guards do not prove physical standalone installation:
+that qualification remains deferred to the owner's P8.2 runbook.
+
+Add an SPI only for two implementations, a trust boundary, a deliberate extension point with a contract kit,
+or separation of an add-on. Prefer existing typed slots and sealed registries; do not introduce another
+ResourceType, PolicyEvaluator, OperationStore or event bus. The BC catalog belongs to P6.
+See [ADR-0033](/adr/0033-kernel-budget-and-dependency-rules).

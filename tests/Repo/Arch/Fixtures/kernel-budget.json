@@ -1,0 +1,36 @@
+{
+  "runtime_require": [
+    "illuminate/contracts",
+    "illuminate/database",
+    "illuminate/support",
+    "php",
+    "psr/http-message",
+    "spatie/laravel-package-tools",
+    "staudenmeir/laravel-cte"
+  ],
+  "forbidden_namespaces": [
+    "Vaulter\\Media\\",
+    "Vaulter\\Drive\\",
+    "Vaulter\\Documents\\",
+    "Vaulter\\Webhooks\\",
+    "Vaulter\\Collaboration\\",
+    "Vaulter\\Azgard\\",
+    "Vaulter\\Filament\\"
+  ],
+  "forbidden_dev_packages_prefix": "axioma-studio/",
+  "src": {
+    "php_files": 262,
+    "loc": 18911,
+    "max_growth_percent": 10
+  },
+  "api_types": 122,
+  "history": [
+    {
+      "date": "2026-10-27",
+      "php_files": 262,
+      "loc": 18911,
+      "api_types": 122,
+      "reason": "PLAN4 P2.3 post-P2.2 baseline; ADR-0033"
+    }
+  ]
+}

@@ -2143,7 +2143,7 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 
 ## Additions (current − original)
 
-- `repo`: 265 (introduced P1.3)
+- `repo`: 269 (introduced P1.3)
 - `core`: 60
 - `media`: 142
 - `drive`: 427
@@ -2182,3 +2182,10 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 - `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals"dataset "published config""` — D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures (PLAN4-D6).
 - `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals"dataset "runtime operation""` — D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures (PLAN4-D6).
 - `P\Tests\Repo\Arch\CoreTestsKernelOnlyTest::__pest_evaluable_it_rejects_implicit_upper_module_and_table_lookups_but_allows_inert_negative_literals"dataset "schema entity owner""` — D28 material upper module/table/operation/config/Load lookup guard and valid negative fixtures (PLAN4-D6).
+
+## PLAN4 P2.3 additions
+
+- `P\Tests\Repo\Arch\DependencyGraphTest::__pest_evaluable_it_detects_reverse_dev_edges_cycles_unknown_siblings_and_stale_exceptions_on_fixture_manifests` — PLAN4 P2.3 executable kernel budget and dev closure guards with negative fixture manifests (PLAN4-D7).
+- `P\Tests\Repo\Arch\DependencyGraphTest::__pest_evaluable_it_keeps_package_dev_siblings_within_the_runtime_transitive_closure` — PLAN4 P2.3 executable kernel budget and dev closure guards with negative fixture manifests (PLAN4-D7).
+- `P\Tests\Repo\Arch\KernelBudgetTest::__pest_evaluable_it_enforces_the_measured_kernel_budget_and_exact_runtime_dependency_keys` — PLAN4 P2.3 executable kernel budget and dev closure guards with negative fixture manifests (PLAN4-D7).
+- `P\Tests\Repo\Arch\KernelBudgetTest::__pest_evaluable_it_rejects_budget_boundary_plus_one_and_independent_dependency_or_reason_changes` — PLAN4 P2.3 executable kernel budget and dev closure guards with negative fixture manifests (PLAN4-D7).

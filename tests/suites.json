@@ -2218,8 +2218,10 @@
                     "files": [
                         "tests/Repo/Arch/BoundaryScanTest.php",
                         "tests/Repo/Arch/CoreTestsKernelOnlyTest.php",
+                        "tests/Repo/Arch/DependencyGraphTest.php",
                         "tests/Repo/Arch/IdentitiesTest.php",
                         "tests/Repo/Arch/InventoryHarnessTest.php",
+                        "tests/Repo/Arch/KernelBudgetTest.php",
                         "tests/Repo/Arch/MoveTypesTest.php",
                         "tests/Repo/Arch/SurfaceManifestTest.php",
                         "tests/Repo/Arch/SurfaceRulesTest.php",

@@ -1,0 +1,70 @@
+[
+  {
+    "name": "boundary",
+    "metrics": {
+      "php_files": 110,
+      "loc": 1100,
+      "api_types": 22
+    },
+    "errors": []
+  },
+  {
+    "name": "php_files plus one",
+    "metrics": {
+      "php_files": 111,
+      "loc": 1100,
+      "api_types": 22
+    },
+    "errors": [
+      "php_files"
+    ]
+  },
+  {
+    "name": "loc plus one",
+    "metrics": {
+      "php_files": 110,
+      "loc": 1101,
+      "api_types": 22
+    },
+    "errors": [
+      "loc"
+    ]
+  },
+  {
+    "name": "api_types plus one",
+    "metrics": {
+      "php_files": 110,
+      "loc": 1100,
+      "api_types": 23
+    },
+    "errors": [
+      "api_types"
+    ]
+  },
+  {
+    "name": "new require",
+    "require": [
+      "php",
+      "vendor/new"
+    ],
+    "errors": [
+      "runtime_require"
+    ]
+  },
+  {
+    "name": "sibling dev",
+    "dev": [
+      "axioma-studio/vaulter-drive"
+    ],
+    "errors": [
+      "require-dev"
+    ]
+  },
+  {
+    "name": "empty reason",
+    "reason": " ",
+    "errors": [
+      "history reason"
+    ]
+  }
+]
