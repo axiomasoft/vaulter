@@ -14,6 +14,8 @@ return [
         'Changes/ChangeJournalTest.php',
         'Changes/PruneChangesCommandTest.php',
         'Changes/DriveChangesEndToEndTest.php',
+        'Changes/ReaderSyncIdentityTest.php',
+        'Changes/SyncLifecycleTest.php',
         'Access/AccessAwareListingTest.php',
         'Access/EvaluateManyEquivalenceTest.php',
         'Access/WideNodeListingTest.php',

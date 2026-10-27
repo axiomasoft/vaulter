@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Repositories\Access;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use UnexpectedValueException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Drive\Access\ValueObjects\Subject;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -189,7 +190,15 @@ final class GrantReadRepository
             ->where('expires_at', '>', $now)
             ->min('expires_at');
 
-        return $earliest === null ? null : Carbon::parse($earliest, 'UTC')->getTimestamp();
+        if ($earliest === null) {
+            return null;
+        }
+        // MIN over a timestamp column comes back as the driver's datetime string.
+        if (!is_string($earliest)) {
+            throw new UnexpectedValueException('[Vaulter] The earliest grant expiry is not a timestamp string.');
+        }
+
+        return Carbon::parse($earliest, 'UTC')->getTimestamp();
     }
 
     /**

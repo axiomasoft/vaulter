@@ -254,7 +254,7 @@ final readonly class ChangeOperations
 
         return $this->grants->earliestExpiryIn(
             subjects: $this->drivers->subjectsFor($driver, $actor, AccessScope::forDrive($drive)),
-            driveId: $drive->getKey(),
+            driveId: $this->context->driveId(),
             now: $now,
         );
     }
