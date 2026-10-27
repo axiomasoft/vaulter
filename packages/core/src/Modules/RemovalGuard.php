@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Modules;
 
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * What stops the removal of a module that no foreign key, row count or reference shows: `vaulter:module:uninstall`
@@ -15,7 +16,7 @@ use Vaulter\Attributes\Internal;
  * {@see ModuleReferences} are, so it reports the current state, takes no lock and caches nothing. Between two
  * rollbacks some tables of the module are gone already: it reads none of them, or reads a missing one as empty.
  */
-#[Internal]
+#[Spi(SpiKind::Implement)]
 interface RemovalGuard
 {
     /**

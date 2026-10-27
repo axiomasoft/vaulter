@@ -500,6 +500,9 @@ Vaulter\Modules\ExtensionRegistry api since 1.0 final readonly class
   public function handlerKeys(string $slot): array
   public function resolve(string $slot): array
 
+Vaulter\Modules\GuardsRemoval spi:implement since 1.0 interface
+  public static function removalGuard(): string
+
 Vaulter\Modules\MissingExtensionException api since 1.0 final class extends Vaulter\Exceptions\VaulterException
   public static function capability(string $contract): self
   public static function handler(string $slot, string $key): self
@@ -577,6 +580,12 @@ Vaulter\Modules\ModuleState api since 1.0 final readonly class
 
 Vaulter\Modules\OffersModules spi:implement since 1.0 trait
   protected function offerModule(string $manifest): void
+
+Vaulter\Modules\OwnsSchema spi:implement since 1.0 interface
+  public static function ownedSchema(): string
+
+Vaulter\Modules\RemovalGuard spi:implement since 1.0 interface
+  public function blockers(string $module): array
 
 Vaulter\Modules\SlotContribution api since 1.0 final readonly class
   public string $id
@@ -668,9 +677,20 @@ Vaulter\Operations\OperationSpec api since 1.0 final readonly class
   public string $name
   public function __construct(string $name, Vaulter\Modules\ModuleId $module, bool $mutating = true)
 
+Vaulter\Providers\SchedulingRegistrar spi:call since 1.0 final class
+  public const int DEFAULT_EXPIRY = 120
+  public const int RECOVERY_EXPIRY = 10
+  public static function task(Illuminate\Console\Scheduling\Schedule $schedule, string $command, Vaulter\Configuration\ScheduleFrequency $frequency, int $expiry, array $arguments = []): Illuminate\Console\Scheduling\Event
+
 Vaulter\Schema\HostKeyColumns api since 1.0 final class
   public static function add(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
   public static function sqlType(string $driver): string
+
+Vaulter\Schema\ModuleSchema spi:implement since 1.0 interface
+  public function create(string $entity): void
+  public function drop(string $entity): void
+  public function entities(): array
+  public function keyColumns(): array
 
 Vaulter\Schema\SchemaHelpers spi:call since 1.0 final class
   public function addHeadForeignKey(string $aggregate, string $revisions, string $owner): void
@@ -687,6 +707,13 @@ Vaulter\Schema\SchemaHelpers spi:call since 1.0 final class
   public function schemaConnection(): Illuminate\Database\Schema\Builder
   public function table(string $entity): string
   public function tenant(Illuminate\Database\Schema\Blueprint $table): void
+
+Vaulter\Schema\ValueObjects\KeyColumnExpectation api since 1.0 final readonly class
+  public string $column
+  public string $kind
+  public ?int $length
+  public string $table
+  public function __construct(string $table, string $column, string $kind, ?int $length = null)
 
 Vaulter\Schema\VaulterSchema api since 1.0 final class
   public static function actor(Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
@@ -712,6 +739,9 @@ Vaulter\Support\Identity api since 1.0 final class
   public static function fitsKey(Illuminate\Database\Eloquent\Model $model, int|string $key): bool
   public static function key(mixed $value): int|null|string
   public static function stringify(mixed $value): string
+
+Vaulter\Support\LoadTier spi:call since 1.0 final class
+  public static function label(): string
 
 Vaulter\Tenancy\Tenancy api since 1.0 final class
   public static function without(Closure $callback): mixed

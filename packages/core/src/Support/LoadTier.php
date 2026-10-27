@@ -7,14 +7,17 @@ namespace Vaulter\Support;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 
 /**
  * Load-stand tier label (`S0`/`S`/`M`/`L`) from host middleware.
  * Package seams read only this context — never load env/config directly.
  */
-#[Internal]
+#[Spi(SpiKind::Call)]
 final class LoadTier
 {
+    #[Internal]
     public const string REQUEST_ATTRIBUTE = 'vaulter_load_tier';
 
     /** @var list<string> */
@@ -27,6 +30,7 @@ final class LoadTier
         return $tier ?? 'S0';
     }
 
+    #[Internal]
     public static function set(?string $tier): void
     {
         $normalized = self::normalize($tier);

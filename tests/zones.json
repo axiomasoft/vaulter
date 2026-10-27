@@ -59,6 +59,7 @@
             "tests": [
                 "packages/core/tests/Modules/CapabilitiesTest.php",
                 "packages/core/tests/Modules/ExtensionRegistryTest.php",
+                "packages/core/tests/Modules/ExtensionSeamsContractTest.php",
                 "packages/core/tests/Modules/InvalidModuleGraphHttpTest.php",
                 "packages/core/tests/Modules/ModuleKernelBootTest.php",
                 "packages/core/tests/Modules/SealTest.php"

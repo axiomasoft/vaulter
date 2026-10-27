@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema\ValueObjects;
 
-use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Api;
 
-#[Internal]
+#[Api]
 final readonly class KeyColumnExpectation
 {
     /**

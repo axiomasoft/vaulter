@@ -8,6 +8,8 @@ use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Attributes\Internal;
+use Vaulter\Attributes\Spi;
+use Vaulter\Attributes\SpiKind;
 use Vaulter\Configuration\ScheduleFrequency;
 use Vaulter\Modules\ModuleSchedule;
 
@@ -16,7 +18,7 @@ use Vaulter\Modules\ModuleSchedule;
  * single-server guards, {@see self::whenScheduling()} defines tasks whenever the scheduler resolves.
  * Modules declare their tasks with a {@see ModuleSchedule}.
  */
-#[Internal]
+#[Spi(SpiKind::Call)]
 final class SchedulingRegistrar
 {
     /** Minutes a stale overlap mutex lives: a stuck relay/retry run must not block recovery for long. */
@@ -33,6 +35,7 @@ final class SchedulingRegistrar
     }
 
     /** Runs $callback on the scheduler whether it is resolved before or after this call. */
+    #[Internal]
     public static function whenScheduling(Application $app, \Closure $callback): void
     {
         $app->afterResolving(Schedule::class, $callback);
