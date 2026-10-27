@@ -12,6 +12,7 @@ use Throwable;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Revocation\PermissionVersion;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * Authenticates a server-to-server call the Node Hocuspocus hub makes back into
@@ -177,6 +178,9 @@ final readonly class CollaborationCallResolver
 
         $room = $claims['room'] ?? null;
         $subject = $claims['sub'] ?? null;
+        $subjectType = $claims['sub_type'] ?? null;
+        $protocol = $claims['protocol'] ?? null;
+        $stateFormat = $claims['state_format'] ?? null;
         $scope = $claims['scope'] ?? null;
         $generation = $claims['generation'] ?? null;
         $schemaVersion = $claims['schema_version'] ?? null;
@@ -186,8 +190,11 @@ final readonly class CollaborationCallResolver
         $version = PermissionVersion::fromClaim($claims['permissions_version'] ?? null);
 
         if (!is_string($room) || !is_string($subject) || $subject === ''
+            || !is_string($subjectType) || $subjectType === '' || $subjectType === ActorRef::SYSTEM_TYPE
+            || !is_string($protocol) || $protocol === '' || !is_string($stateFormat) || $stateFormat === ''
+            || !array_key_exists('tenant', $claims)
             || !in_array($scope, [CollaborationCall::SCOPE_READ, CollaborationCall::SCOPE_WRITE], true)
-            || !is_int($generation) || !is_int($schemaVersion) || ($tenant !== null && !is_string($tenant))
+            || !is_int($generation) || $generation < 0 || !is_int($schemaVersion) || $schemaVersion < 1 || ($tenant !== null && !is_string($tenant))
             || !is_string($jti) || $jti === '' || !is_int($exp) || !$version instanceof PermissionVersion) {
             return null;
         }
@@ -202,7 +209,9 @@ final readonly class CollaborationCallResolver
         return new CollaborationCall(
             room: $room,
             ref: $ref,
-            subject: $subject,
+            principal: new ActorRef(type: $subjectType, id: $subject),
+            protocol: $protocol,
+            stateFormat: $stateFormat,
             mode: $scope === CollaborationCall::SCOPE_WRITE ? 'rw' : 'ro',
             schemaVersion: $schemaVersion,
             tenant: $tenant,

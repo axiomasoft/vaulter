@@ -11,6 +11,7 @@ import { clientUpdate, envelope, fakeConnection, quietLog, ROOM, testConf } from
 // it cannot send envelopes, so nothing it types could ever be saved.
 
 function token(claims) {
+  claims = { sub: '2', sub_type: 'staff', protocol: 'yjs', state_format: 'yjs-update-v1', schema_version: 1, generation: 0, document_id: '42', drive_id: '1', tenant: null, room: ROOM, scope: 'write', jti: 'test', ...claims }
   const part = (value) => Buffer.from(JSON.stringify(value)).toString('base64url')
 
   return `${part({ alg: 'HS256', typ: 'JWT' })}.${part(claims)}.signature`
@@ -58,12 +59,12 @@ test('a writer that does not announce protocol 2 is read-only', async () => {
 })
 
 test('a refused or past-epoch connection never opens; a protocol mismatch is reported', async () => {
-  await assert.rejects(hooksAnswering({ allowed: false, mode: 'ro', conflict: null }).onAuthenticate({ token: 't', documentName: ROOM }), /rejected/)
-  await assert.rejects(hooksAnswering({ allowed: false, mode: 'ro', conflict: 'collaboration_epoch_mismatch' }).onAuthenticate({ token: 't', documentName: ROOM }), /epoch_changed/)
+  await assert.rejects(hooksAnswering({ allowed: false, mode: 'ro', conflict: null }).onAuthenticate({ token: token({ exp: Math.floor(Date.now() / 1000) + 300 }), documentName: ROOM }), /rejected/)
+  await assert.rejects(hooksAnswering({ allowed: false, mode: 'ro', conflict: 'collaboration_epoch_mismatch' }).onAuthenticate({ token: token({ exp: Math.floor(Date.now() / 1000) + 300 }), documentName: ROOM }), /epoch_changed/)
   await assert.rejects(hooksAnswering({ allowed: true, mode: 'rw' }).onAuthenticate({ token: '', documentName: ROOM }), /Missing collaboration token/)
 
   const mismatched = hooksAnswering({ allowed: false, mode: 'ro', conflict: 'collaboration_protocol_mismatch' })
-  await assert.rejects(mismatched.onAuthenticate({ token: 't', documentName: ROOM }), /rejected/)
+  await assert.rejects(mismatched.onAuthenticate({ token: token({ exp: Math.floor(Date.now() / 1000) + 300 }), documentName: ROOM }), /rejected/)
   assert.equal(mismatched.persistence.state().protocolMismatch, true)
 })
 
@@ -113,4 +114,23 @@ test('a reconnect with an expired token is refused with the reason the client re
   )
   // Refused before the backend is asked: it would answer an opaque 401.
   assert.equal(calls.length, 0)
+})
+
+test('authentication forwards the exact typed credential and retains its read ceiling and state binding', async () => {
+  const exp = Math.floor(Date.now() / 1000) + 300
+  const credential = token({ sub: '42', sub_type: 'staff', scope: 'read', exp })
+  const forwarded = []
+  const hooks = createHooks({ backend: { authenticate: async (args) => { forwarded.push(args); return { allowed: true, mode: 'rw', userId: '42' } } }, conf: testConf(), log: quietLog })
+  const connectionConfig = {}
+  const context = await hooks.onAuthenticate({ token: credential, documentName: ROOM, connectionConfig, requestParameters: v2 })
+  assert.deepEqual(forwarded, [{ token: credential, room: ROOM }])
+  assert.deepEqual(context.principal, { type: 'staff', id: '42' })
+  assert.deepEqual(context.binding, { protocol: 'yjs', stateFormat: 'yjs-update-v1', schemaVersion: 1, generation: 0 })
+  assert.equal(context.exp, exp)
+  assert.equal(context.mode, 'ro')
+  assert.equal(connectionConfig.readOnly, true)
+  for (const claims of [{ sub_type: '' }, { room: 'other' }, { schema_version: 0 }, { generation: 1 }]) {
+    await assert.rejects(hooks.onAuthenticate({ token: token({ exp, ...claims }), documentName: ROOM }), /Malformed/)
+  }
+  assert.equal(forwarded.length, 1)
 })

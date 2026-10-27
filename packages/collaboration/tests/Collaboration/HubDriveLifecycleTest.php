@@ -19,6 +19,8 @@ use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /*
  * An archive or a deletion of the drive committed after the hub opened a room still refuses the room's next append: the
@@ -31,7 +33,9 @@ it('refuses an append when the drive changes after the room was opened', functio
     $call = new CollaborationCall(
         room: Hub::room($node),
         ref: new RoomRef(driveId: (string) $node->drive_id, nodeId: (string) $node->id, epoch: 0),
-        subject: '1', mode: 'rw', schemaVersion: 1, tenant: null,
+        principal: new ActorRef((new TestUser)->getMorphClass(), '1'),
+        protocol: 'yjs',
+        stateFormat: 'yjs-update-v1', mode: 'rw', schemaVersion: 1, tenant: null,
         permissionsVersion: new PermissionVersion(drive: 0, global: 0), jti: 'test-call', expiresAt: time() + 300,
     );
     $hub = app(CollaborationHub::class);

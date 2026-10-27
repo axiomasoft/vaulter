@@ -1,9 +1,13 @@
 # Surface manifest of the package `documents` (D27): the types marked #[Api] and #[Spi] with their public and protected members that are not #[Internal].
 # Generated: scripts/php84 php scripts/inventory/inventory.php surface --write. Do not edit by hand.
 
+Vaulter\Documents\Access\CollaborationAccessPolicy api since 1.0 final readonly class
+  public function evaluate(Vaulter\Drive\Operations\DriveContext $context, Vaulter\Drive\Data\Snapshots\NodeSnapshot|int|string $document, Vaulter\Documents\Data\Collaboration\CollaborationMode $ceiling = \Vaulter\Documents\Data\Collaboration\CollaborationMode::Write, ?int $clientSchemaVersion = null): Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision
+
 Vaulter\Documents\Configuration\DocumentsConfig api since 1.0 final readonly class
   public function channelPrefix(): string
   public function checkpointIntervalSeconds(): int
+  public function collaborationSessionTtl(): int
   public function commentsEnabled(): bool
   public function defaultType(): string
   public function exporters(): array
@@ -119,6 +123,11 @@ Vaulter\Documents\Contracts\SupportsCollaboration spi:implement since 1.0 interf
 
 Vaulter\Documents\Contracts\UpgradesSchema spi:implement since 1.0 interface
   public function upgrade(array $content, int $fromVersion): array
+
+Vaulter\Documents\Data\Collaboration\CollaborationAccessDecision api since 1.0 final readonly class
+  public Vaulter\Drive\Enums\Access\Ability $ability
+  public Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant
+  public function __construct(Vaulter\Documents\Data\Collaboration\CollaborationGrant $grant, Vaulter\Drive\Enums\Access\Ability $ability)
 
 Vaulter\Documents\Data\Collaboration\CollaborationGrant api since 1.0 final readonly class
   public string $documentType

@@ -11,22 +11,22 @@ use Vaulter\Collaboration\Exceptions\CollaborationSeedConflictException;
 use Vaulter\Collaboration\Persistence\AppendResult;
 use Vaulter\Collaboration\Persistence\UpdateEnvelope;
 use Vaulter\Collaboration\Persistence\UpdateLog;
-use Vaulter\Collaboration\Persistence\YjsStateCompatibility;
 use Vaulter\Collaboration\Revocation\PermissionVersions;
-use Vaulter\Documents\Content\ContentDecoder;
-use Vaulter\Documents\Contracts\SupportsCollaboration;
+use Vaulter\Documents\Access\CollaborationAccessPolicy;
+use Vaulter\Documents\Data\Collaboration\CollaborationMode;
 use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
-use Vaulter\Drive\Access\AccessResolver;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Enums\DriveStatus;
 use Vaulter\Drive\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Drive\Operations\DriveContext;
 use Vaulter\Drive\Repositories\NodeReadRepository;
 use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Access\Actor;
 
 /**
  * The server side of the hub's protocol 2 calls on behalf of a room connection (authenticate, load, append). They
@@ -43,13 +43,11 @@ final readonly class CollaborationHub
     public function __construct(
         private NodeReadRepository $nodes,
         private DocumentReadRepository $documents,
-        private ContentDecoder $decoder,
         private DocumentTypeRegistry $types,
-        private AccessResolver $access,
+        private CollaborationAccessPolicy $policy,
         private HostUserResolver $users,
         private UpdateLog $log,
         private PermissionVersions $versions,
-        private YjsStateCompatibility $compatibility,
     ) {}
 
     /**
@@ -76,54 +74,40 @@ final readonly class CollaborationHub
             || $this->tenant($node) !== $call->tenant) {
             throw NodeNotFoundException::forId($ref->nodeId);
         }
-        if (!$node->kind->isDocument()) {
-            throw NotADocumentException::forNode($node->getKey());
-        }
-
-        $driveStatus = $node->storage()->value('status');
-        if ($driveStatus !== DriveStatus::Active && $driveStatus !== DriveStatus::Archived) {
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($ref->nodeId);
+        $actor = $this->users->find($call->principal);
+        if ($actor === null) {
             throw NodeNotFoundException::forId($ref->nodeId);
         }
-
+        $resolved = Actor::user($actor);
+        if ($resolved->ref()->type !== $call->principal->type
+            || Identity::stringify($resolved->ref()->id) !== Identity::stringify($call->principal->id)
+            || ($drive->tenant_id === null ? null : Identity::stringify($drive->tenant_id)) !== $call->tenant) {
+            throw NodeNotFoundException::forId($ref->nodeId);
+        }
+        $decision = $this->policy->evaluate(
+            DriveContext::for($drive, $resolved, $call->jti), $ref->nodeId,
+            ceiling: $call->mayStore() ? CollaborationMode::Write : CollaborationMode::Read,
+            clientSchemaVersion: $call->schemaVersion,
+        );
+        $grant = $decision->grant;
+        if ($grant->generation !== $ref->epoch) {
+            throw new CollaborationEpochMismatchException(expected: $ref->epoch, actual: $grant->generation);
+        }
+        if ($grant->protocol !== $call->protocol || $grant->stateFormat !== $call->stateFormat || $grant->schemaVersion !== $call->schemaVersion) {
+            throw new CollaborationUnavailableException('unsupported_binding', $grant->documentType);
+        }
         $document = $this->documents->forNode($node) ?? throw NotADocumentException::forNode($node->getKey());
-        $type = $this->types->find($document->type);
-        $ability = $this->ability($call->subject, $node);
-        $unsupported = $type !== null && !$type instanceof SupportsCollaboration;
-        // A subject without View learns neither the document's generation nor its type: what would tell them apart
-        // from a missing document answers as one. Without View and nothing to tell, the call goes on and each
-        // endpoint answers for itself (authenticate: allowed=false; load and append: 404).
-        if ($ability === null && ($document->collab_epoch !== $ref->epoch || $unsupported)) {
-            throw NodeNotFoundException::forId($ref->nodeId);
-        }
-        if ($document->collab_epoch !== $ref->epoch) {
-            throw new CollaborationEpochMismatchException(expected: $ref->epoch, actual: $document->collab_epoch);
-        }
-        if ($type !== null && $unsupported) {
-            throw CollaborationUnavailableException::unsupportedType($type->key());
-        }
-
-        if ($ability !== null) {
-            $this->compatibility->assert($document->type, $document->collaborationBinding());
-        }
-
-        // The same rule as DocumentOperations::collaborationSession(), re-evaluated now:
-        // a token issued read-only stays read-only, and a writable one only writes while
-        // every condition still holds.
-        $writable = $call->mode === 'rw'
-            && $ability === Ability::Edit
-            && $driveStatus === DriveStatus::Active
-            && $type !== null
-            && $call->schemaVersion === $type->schemaVersion()
-            && $this->decoder->editable($document);
 
         return new HubRoom(
             node: $node,
             document: $document,
-            type: $type,
-            ability: $ability,
-            writable: $writable,
-            driveActive: $driveStatus === DriveStatus::Active,
-            userId: $call->subject,
+            type: $this->types->find($grant->documentType),
+            ability: $decision->ability,
+            writable: $grant->mode === CollaborationMode::Write,
+            driveActive: $drive->status === DriveStatus::Active,
+            userId: Identity::stringify($call->principal->id),
+            grant: $grant,
             permissionsStale: $call->permissionsVersion->olderThan($this->versions->current($ref->driveId)),
         );
     }
@@ -148,7 +132,13 @@ final readonly class CollaborationHub
             throw new CollaborationEpochMismatchException(expected: $update->generation, actual: $room->document->collab_epoch);
         }
 
-        return $this->log->append($call->ref->nodeId, $update);
+        return $this->log->append($call->ref->nodeId, $update, function () use ($call): void {
+            // UpdateLog invokes this after T → N → D locks, inside the append transaction.
+            $current = $this->open($call, $call->room);
+            if (!$current->writable) {
+                throw PermissionDeniedException::forAbility(Ability::Edit->value);
+            }
+        });
     }
 
     /**
@@ -189,23 +179,6 @@ final readonly class CollaborationHub
         if ($room->ability === null) {
             throw NodeNotFoundException::forId($call->ref->nodeId);
         }
-    }
-
-    /** The highest collaboration ability the token subject holds now, or null without View. */
-    private function ability(string $userId, Node $node): ?Ability
-    {
-        $actor = $this->users->find($userId);
-        if ($actor === null) {
-            return null;
-        }
-
-        foreach ([Ability::Edit, Ability::Comment, Ability::View] as $ability) {
-            if ($this->access->can($actor, $ability, $node)) {
-                return $ability;
-            }
-        }
-
-        return null;
     }
 
     private function tenant(Node $node): ?string

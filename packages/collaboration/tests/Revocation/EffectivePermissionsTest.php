@@ -44,7 +44,7 @@ it('counts the revocation of a grant on an ancestor in the drive\'s version and 
     $this->drive->access()->revoke($this->folder->id, $this->grant);
 
     expect(Revocation::versions($this->node)->drive)->toBe($before->drive + 1);
-    Hub::call('append', Hub::appendBody($this->node, 'u1'), $token)->assertForbidden()->assertJsonPath('code', 'permission_denied');
+    Hub::call('append', Hub::seedBody($this->node, 'u1'), $token)->assertForbidden()->assertJsonPath('code', 'permission_denied');
     revocationRecheck([['id' => 'c1', 'token' => $token]])->assertOk()->assertJsonPath('results.0.access', 'read');
     expect(Compaction::seqs($this->node))->toBe([]);
 });
@@ -58,7 +58,7 @@ it('counts the revocation of a share and makes the sessions of its drive stale',
 
     expect(Revocation::versions($this->node)->drive)->toBe($before->drive + 1);
     // A share gives no right to the token's subject: the append is allowed, and stale.
-    Hub::call('append', Hub::appendBody($this->node, 'u1'), $token)->assertOk()->assertJsonPath('permissions_stale', true);
+    Hub::call('append', Hub::seedBody($this->node, 'u1'), $token)->assertOk()->assertJsonPath('permissions_stale', true);
 });
 
 it('counts a host role change globally, and the renewal checks the rights the host changed', function (): void {
@@ -70,10 +70,10 @@ it('counts a host role change globally, and the renewal checks the rights the ho
     app(AccessInvalidation::class)->changed(null, 'host-role');
 
     expect(Revocation::globalVersion())->toBe($before + 1);
-    Hub::call('renew', ['room' => Hub::room($this->node)], $token)->assertForbidden();
+    Hub::call('renew', ['room' => Hub::room($this->node)], $token)->assertNotFound();
     revocationRecheck([['id' => 'c1', 'token' => $token]])->assertOk()
         ->assertJsonPath('results.0.access', 'none')
-        ->assertJsonPath('results.0.reason', 'revoked');
+        ->assertJsonPath('results.0.reason', 'gone');
 });
 
 it('refuses the revoked writer\'s append when the control message is lost (transport none)', function (): void {
@@ -84,7 +84,7 @@ it('refuses the revoked writer\'s append when the control message is lost (trans
     Revocation::relayControl();
 
     expect(DB::table(app(DatabaseConfig::class)->table(OutboxStore::DELIVERIES))->where('consumer_id', ControlConsumer::ID)->where('state', 'done')->count())->toBeGreaterThan(0);
-    Hub::call('append', Hub::appendBody($this->node, 'u1'), $token)->assertNotFound();
+    Hub::call('append', Hub::seedBody($this->node, 'u1'), $token)->assertNotFound();
     expect(Compaction::seqs($this->node))->toBe([]);
 });
 
@@ -106,7 +106,7 @@ it('answers a batch recheck connection by connection, in order', function (): vo
 
     expect(array_map(static fn (array $result): array => [$result['id'], $result['access'], $result['reason']], $response->json('results')))->toBe([
         ['reader', 'read', null],
-        ['lost', 'none', 'revoked'],
+        ['lost', 'none', 'gone'],
         ['expired', 'none', 'token'],
         ['tampered', 'none', 'token'],
         ['past-generation', 'none', 'generation'],
@@ -130,5 +130,5 @@ it('leaves the sessions of other drives current', function (): void {
 
     $other->archive();
 
-    Hub::call('append', Hub::appendBody($this->node, 'u1'), $token)->assertOk()->assertJsonPath('permissions_stale', false);
+    Hub::call('append', Hub::seedBody($this->node, 'u1'), $token)->assertOk()->assertJsonPath('permissions_stale', false);
 });

@@ -1624,6 +1624,7 @@
                         "serial"
                     ],
                     "files": [
+                        "packages/documents/tests/Collaboration/CollaborationAccessPolicyTest.php",
                         "packages/documents/tests/Events/DocumentEventCatalogConformanceTest.php",
                         "packages/documents/tests/Events/DocumentEventValidatorsTest.php",
                         "packages/documents/tests/Events/DocumentEventsRecordedTest.php",
@@ -1786,6 +1787,7 @@
                         "serial"
                     ],
                     "files": [
+                        "packages/collaboration/tests/Collaboration/CollaborationGrantVerificationTest.php",
                         "packages/collaboration/tests/Collaboration/CollaborationWebhookTest.php",
                         "packages/collaboration/tests/Collaboration/HubDriveLifecycleTest.php",
                         "packages/collaboration/tests/Collaboration/HubProtocolTest.php",
@@ -1800,6 +1802,7 @@
                         "packages/collaboration/tests/Http/HubAppendV2Test.php",
                         "packages/collaboration/tests/Http/HubV1RoutesTest.php",
                         "packages/collaboration/tests/Http/ProtocolVersionTest.php",
+                        "packages/collaboration/tests/Http/TypedPrincipalTest.php",
                         "packages/collaboration/tests/Operations/CollaborationOperationsTest.php",
                         "packages/collaboration/tests/Persistence/AppendIdempotencyTest.php",
                         "packages/collaboration/tests/Persistence/AppendValidationTest.php",

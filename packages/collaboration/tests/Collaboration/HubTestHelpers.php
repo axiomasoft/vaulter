@@ -23,6 +23,7 @@ use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Models\Node;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
+use Vaulter\Testing\Fixtures\TestUser;
 
 /**
  * The hub's side of the protocol for tests: room tokens shaped exactly like
@@ -92,6 +93,9 @@ final class HubTestHelpers
         return JWT::encode(
             payload: [
                 'sub' => (string) $actorId,
+                'sub_type' => (new TestUser)->getMorphClass(),
+                'protocol' => 'yjs',
+                'state_format' => 'yjs-update-v1',
                 'document_id' => (string) $node->getKey(),
                 'drive_id' => (string) $node->drive_id,
                 'tenant' => null,
@@ -100,8 +104,8 @@ final class HubTestHelpers
                 'scope' => $mode === 'rw' ? CollaborationCall::SCOPE_WRITE : CollaborationCall::SCOPE_READ,
                 'permissions_version' => app(PermissionVersions::class)->current((string) $node->drive_id)->toClaim(),
                 'room' => self::room($node, $epoch),
-                'iat' => time(),
-                'exp' => time() + 300,
+                'iat' => now()->getTimestamp(),
+                'exp' => now()->getTimestamp() + 300,
                 'jti' => (string) Str::uuid(),
                 ...$claims,
             ],

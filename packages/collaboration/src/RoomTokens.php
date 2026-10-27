@@ -7,10 +7,13 @@ namespace Vaulter\Collaboration;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Exceptions\CollaborationConfigException;
 use Vaulter\Collaboration\Revocation\PermissionVersions;
+use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * Mints the room JWT of a session and of its renewals (HS256, hub.jwt_secret). Claims: `sub` (the host user),
@@ -33,19 +36,26 @@ final readonly class RoomTokens
      *
      * @return array{token: string, room: string, exp: int, jti: string, scope: string, permissions_version: array{drive: int, global: int}}
      */
-    public function mint(string $subject, string $documentId, string $driveId, ?string $tenant, int $generation, int $schemaVersion, bool $writable, ?int $notAfter = null): array
+    public function mint(ActorRef $principal, string $documentId, string $driveId, ?string $tenant, int $generation, int $schemaVersion, bool $writable, string $protocol, string $stateFormat, int $notAfter): array
     {
         $secret = $this->config->hubJwtSecret() ?? throw CollaborationConfigException::missingSecret();
         $room = $this->config->room($driveId, $documentId, $generation);
         $scope = $writable ? CollaborationCall::SCOPE_WRITE : CollaborationCall::SCOPE_READ;
         $version = $this->versions->current($driveId)->toClaim();
         $issuedAt = Carbon::now()->getTimestamp();
-        $exp = min($issuedAt + $this->config->hubTokenTtl(), $notAfter ?? PHP_INT_MAX);
+        $exp = min($issuedAt + $this->config->hubTokenTtl(), $notAfter);
+        if ($principal->type === null || $principal->type === ActorRef::SYSTEM_TYPE || $principal->id === null
+            || $protocol === '' || $stateFormat === '' || $schemaVersion < 1 || $generation < 0 || $exp <= $issuedAt) {
+            throw new InvalidArgumentException('[Vaulter] A room credential needs a live grant and complete user and state identities.');
+        }
         $jti = (string) Str::uuid();
 
         $token = JWT::encode(
             payload: [
-                'sub' => $subject,
+                'sub' => Identity::stringify($principal->id),
+                'sub_type' => $principal->type,
+                'protocol' => $protocol,
+                'state_format' => $stateFormat,
                 'document_id' => $documentId,
                 'drive_id' => $driveId,
                 'tenant' => $tenant,

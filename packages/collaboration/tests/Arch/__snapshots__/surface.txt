@@ -36,7 +36,7 @@ Vaulter\Collaboration\Configuration\CollaborationConfig api since 1.0 final read
   public function updateBytes(): int
 
 Vaulter\Collaboration\Contracts\HostUserResolver spi:implement since 1.0 interface
-  public function find(int|string $id): ?Illuminate\Contracts\Auth\Access\Authorizable
+  public function find(Vaulter\ValueObjects\Access\ActorRef $principal): ?Illuminate\Contracts\Auth\Access\Authorizable
 
 Vaulter\Collaboration\Data\RoomRef api since 1.0 final readonly class
   public string $driveId

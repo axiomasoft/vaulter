@@ -6,6 +6,7 @@ namespace Vaulter\Collaboration;
 
 use Vaulter\Attributes\Internal;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Data\Collaboration\CollaborationGrant;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Drive\Enums\Access\Ability;
 use Vaulter\Drive\Models\Node;
@@ -28,6 +29,7 @@ final readonly class HubRoom
         public bool $writable,
         public bool $driveActive,
         public string $userId,
+        public CollaborationGrant $grant,
         public bool $permissionsStale = false,
     ) {}
 

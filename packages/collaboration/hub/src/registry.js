@@ -55,6 +55,7 @@ export function sessionOf(context, documentName) {
   return {
     driveId: stringClaim(claims.drive_id) ?? room.driveId,
     documentId: stringClaim(claims.document_id) ?? room.documentId,
+    subjectType: stringClaim(claims.sub_type),
     subject: stringClaim(claims.sub) ?? stringClaim(context?.userId),
     jti: stringClaim(claims.jti),
     scope: context?.mode === 'rw' ? ACCESS.WRITE : ACCESS.READ,
@@ -171,6 +172,7 @@ export function createRegistry({ id = () => crypto.randomUUID() } = {}) {
     entry.jti = session.jti
     entry.driveId = session.driveId ?? entry.driveId
     entry.documentId = session.documentId ?? entry.documentId
+    entry.subjectType = session.subjectType ?? entry.subjectType
     entry.subject = session.subject ?? entry.subject
     index(entry)
   }

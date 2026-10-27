@@ -8,6 +8,7 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Data\RoomRef;
 use Vaulter\Collaboration\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Collaboration\Revocation\PermissionVersion;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * The verified room token of a hub call, resolved by {@see CollaborationCallResolver} and stashed by
@@ -33,7 +34,9 @@ final readonly class CollaborationCall
     public function __construct(
         public string $room,
         public RoomRef $ref,
-        public string $subject,
+        public ActorRef $principal,
+        public string $protocol,
+        public string $stateFormat,
         public string $mode,
         public int $schemaVersion,
         public ?string $tenant,

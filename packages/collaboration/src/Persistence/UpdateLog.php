@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Collaboration\Persistence;
 
+use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use LogicException;
@@ -55,7 +56,7 @@ final readonly class UpdateLog
      * @throws CollaborationUpdateMismatchException the claimed hash is wrong, or the id was committed with another payload
      * @throws CollaborationSeedConflictException   a seed over a log that is no longer empty, or over newer JSON
      */
-    public function append(int|string $nodeId, UpdateEnvelope $update): AppendResult
+    public function append(int|string $nodeId, UpdateEnvelope $update, ?Closure $authorize = null): AppendResult
     {
         // Before any lock, and again before the commit (below): a draining log takes no lock at all.
         $this->draining->assertAccepting();
@@ -64,8 +65,9 @@ final readonly class UpdateLog
             throw CollaborationUpdateMismatchException::hash($update->updateId);
         }
 
-        return $this->database->transaction(function () use ($nodeId, $update, $sha256): AppendResult {
+        return $this->database->transaction(function () use ($nodeId, $update, $sha256, $authorize): AppendResult {
             $locked = $this->state->lock($nodeId);
+            $authorize?->__invoke();
             $this->compatibility->assert($locked->type, $locked->binding);
             if ($locked->trashed) {
                 throw NodeNotFoundException::forId($nodeId);

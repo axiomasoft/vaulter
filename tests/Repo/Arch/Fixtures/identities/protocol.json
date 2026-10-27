@@ -1463,6 +1463,27 @@
             "id": "problem:collaboration_protocol_contract",
             "kind": "protocol",
             "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
+        },
+        {
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "id": "format:jwt-claims-room",
+            "kind": "protocol",
+            "reason": "P3.7 typed principal, complete state binding and grant-bounded expiry verified by production resolver."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "morph:Vaulter\\Collaboration\\HostUserResolver::find#getMorphClass",
+            "kind": "protocol",
+            "reason": "P3.7 resolves the trusted provider morph type before looking up the user id."
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
+            "kind": "protocol",
+            "reason": "P3.7 resolves the trusted provider morph type before looking up the user id."
         }
     ],
     "items": [
@@ -2233,7 +2254,7 @@
             }
         },
         {
-            "format": "HS256 JWT: sub, document_id, drive_id, tenant, generation, schema_version, scope (read|write), permissions_version {drive, global}, room (<channel prefix>.<drive_id>.<document_id>.<generation>), iat, exp (iat + hub.token_ttl, accepted up to hub.clock_skew past it), jti",
+            "format": "HS256 JWT: sub, sub_type (trusted host morph type), document_id, drive_id, tenant (exact nullable string), protocol, state_format, generation, schema_version, scope (read|write ceiling), permissions_version {drive, global}, room (<channel prefix>.<drive_id>.<document_id>.<generation>), iat, exp (min(iat + hub.token_ttl, grant.notAfter); now < exp + hub.clock_skew, actual skew 0..60 default30), jti",
             "id": "format:jwt-claims-room",
             "manual": true,
             "owner": "collaboration",
@@ -2400,6 +2421,26 @@
             "source": {
                 "file": "packages/azgard/src/Testing/FakeAzgardGuard.php",
                 "symbol": "Vaulter\\Azgard\\Testing\\FakeAzgardGuard::entityKey"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Collaboration\\HostUserResolver::find#getMorphClass",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/src/HostUserResolver.php",
+                "symbol": "Vaulter\\Collaboration\\HostUserResolver::find"
+            }
+        },
+        {
+            "call": "getMorphClass",
+            "calls": 1,
+            "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/collaboration/src/Testing/Fixtures/FakeHostUserResolver.php",
+                "symbol": "Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find"
             }
         },
         {

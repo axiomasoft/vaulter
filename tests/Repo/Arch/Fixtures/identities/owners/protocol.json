@@ -149,7 +149,7 @@
             "match": "exact",
             "value": "problem:blob_unavailable",
             "owner": "media",
-            "why": "D23: a pin refused because the bytes of the blob are gone \u2014 the media pin protocol"
+            "why": "D23: a pin refused because the bytes of the blob are gone — the media pin protocol"
         },
         {
             "match": "prefix",
@@ -312,6 +312,18 @@
             "value": "problem:collaboration_protocol_contract",
             "owner": "documents",
             "why": "PLAN4-D16 P3.2 documents validates protocol sessions"
+        },
+        {
+            "match": "exact",
+            "value": "morph:Vaulter\\Collaboration\\HostUserResolver::find#getMorphClass",
+            "owner": "collaboration",
+            "why": "P3.7 trusted provider morph identity for typed principal resolution; PLAN4-D16/D17."
+        },
+        {
+            "match": "exact",
+            "value": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
+            "owner": "collaboration",
+            "why": "P3.7 trusted provider morph identity for typed principal resolution; PLAN4-D16/D17."
         }
     ],
     "formats": [
@@ -428,7 +440,7 @@
         {
             "id": "format:jwt-claims-room",
             "owner": "collaboration",
-            "format": "HS256 JWT: sub, document_id, drive_id, tenant, generation, schema_version, scope (read|write), permissions_version {drive, global}, room (<channel prefix>.<drive_id>.<document_id>.<generation>), iat, exp (iat + hub.token_ttl, accepted up to hub.clock_skew past it), jti",
+            "format": "HS256 JWT: sub, sub_type (trusted host morph type), document_id, drive_id, tenant (exact nullable string), protocol, state_format, generation, schema_version, scope (read|write ceiling), permissions_version {drive, global}, room (<channel prefix>.<drive_id>.<document_id>.<generation>), iat, exp (min(iat + hub.token_ttl, grant.notAfter); now < exp + hub.clock_skew, actual skew 0..60 default30), jti",
             "source": {
                 "file": "packages/collaboration/src/RoomTokens.php",
                 "symbol": "Vaulter\\Collaboration\\RoomTokens::mint"
@@ -471,7 +483,7 @@
                 "file": "packages/core/src/Http/Middleware/ReadIdempotencyKey.php",
                 "symbol": "Vaulter\\Http\\Middleware\\ReadIdempotencyKey::parse"
             },
-            "format": "Idempotency-Key request header: one Structured Field String (\"\u2026\", \\\" and \\\\ escapes) or one token of visible ASCII without commas; 1-255 bytes, never trimmed or case-folded; Idempotent-Replayed: true on a replayed response",
+            "format": "Idempotency-Key request header: one Structured Field String (\"…\", \\\" and \\\\ escapes) or one token of visible ASCII without commas; 1-255 bytes, never trimmed or case-folded; Idempotent-Replayed: true on a replayed response",
             "owner": "core",
             "why": "D25: the HTTP spelling of the idempotency key on the routes of idempotent operations"
         },

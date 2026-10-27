@@ -18,6 +18,8 @@ use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\DocumentsV1 as Docs;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Drive\Models\Node;
+use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /*
  * Protocol 2 at the HTTP boundary: append answers the committed receipt and a retry the same one; load replays the
@@ -97,7 +99,9 @@ it('seeds a load from the content of the locked row, together with its state ver
     $call = new CollaborationCall(
         room: Hub::room($this->node),
         ref: new RoomRef(driveId: (string) $this->node->drive_id, nodeId: (string) $this->node->getKey(), epoch: 0),
-        subject: '1', mode: 'rw', schemaVersion: 1, tenant: null,
+        principal: new ActorRef((new TestUser)->getMorphClass(), '1'),
+        protocol: 'yjs',
+        stateFormat: 'yjs-update-v1', mode: 'rw', schemaVersion: 1, tenant: null,
         permissionsVersion: new PermissionVersion(drive: 0, global: 0), jti: 'test-call', expiresAt: time() + 300,
     );
     $hub = app(CollaborationHub::class);

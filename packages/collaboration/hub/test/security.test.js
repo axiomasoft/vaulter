@@ -126,3 +126,21 @@ test('validateConfig: a well-formed dev config with custom numerics stays valid'
   }))
   assert.deepEqual(problems, [])
 })
+
+test('room claims retain typed principal and exact binding and reject malformed claims', async () => {
+  const { roomTokenClaims } = await import('../src/tokens.js')
+  const room = 'vaulter.documents.7.42.3'
+  const base = { sub: '42', sub_type: 'staff', protocol: 'yjs', state_format: 'yjs-update-v1', schema_version: 1,
+    generation: 3, document_id: '42', drive_id: '7', tenant: '0', scope: 'read', exp: 1300, room, jti: 'id' }
+  const jwt = (claims) => `header.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.signature`
+  assert.deepEqual(roomTokenClaims(jwt(base), room), base)
+  for (const [key, value] of Object.entries({ sub_type: '', sub: 42, protocol: null, state_format: '', schema_version: 0,
+    generation: 4, document_id: '43', drive_id: '8', tenant: 0, scope: 'owner', exp: 1.5, room: 'other' })) {
+    assert.equal(roomTokenClaims(jwt({ ...base, [key]: value }), room), null, key)
+  }
+  for (const key of Object.keys(base)) {
+    const missing = { ...base }
+    delete missing[key]
+    assert.equal(roomTokenClaims(jwt(missing), room), null, `missing ${key}`)
+  }
+})

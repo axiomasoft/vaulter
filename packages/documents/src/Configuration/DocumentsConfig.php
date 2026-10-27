@@ -18,6 +18,16 @@ final readonly class DocumentsConfig
     #[Internal]
     public function __construct(private Repository $config) {}
 
+    public function collaborationSessionTtl(): int
+    {
+        $value = $this->config->get('vaulter-documents.collaboration.session_ttl', 300);
+        if (!is_int($value) || $value < 1 || $value > 300) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-documents.collaboration.session_ttl must be an integer between 1 and 300.');
+        }
+
+        return $value;
+    }
+
     public function revisionLimit(): int
     {
         $value = $this->config->get(key: 'vaulter-documents.revisions.limit', default: 50);

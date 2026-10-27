@@ -1298,6 +1298,13 @@
             "id": "env:VAULTER_COLLAB_DRIVER",
             "kind": "config",
             "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
+        },
+        {
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "id": "config:vaulter-documents.collaboration.session_ttl",
+            "kind": "config",
+            "reason": "P3.7 documents policy bounds grant lifetime to 1..300 seconds."
         }
     ],
     "items": [
@@ -1755,6 +1762,17 @@
         {
             "default": "vaulter.documents",
             "id": "config:vaulter-documents.broadcast.channel_prefix",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 300,
+            "id": "config:vaulter-documents.collaboration.session_ttl",
             "owner": "documents",
             "registered_defaults": true,
             "root": "vaulter-documents",

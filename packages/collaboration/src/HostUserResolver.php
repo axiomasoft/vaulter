@@ -6,20 +6,12 @@ namespace Vaulter\Collaboration;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
+use Illuminate\Database\Eloquent\Model;
 use Vaulter\Attributes\Internal;
+use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\ValueObjects\Access\ActorRef;
 
-/**
- * The default {@see HostUserResolverContract}: materialise a host user by id by
- * deferring to the host's configured auth user-provider (the host owns its users;
- * Vaulter has no users table), so the resolved user is exactly the one the host would
- * authenticate. Used by the collaboration webhook, which carries only a user id.
- *
- * Owned by vaulter-documents (ADR-0015) — purely collaboration-webhook
- * machinery, bound by that package's own provider; core neither defines nor binds it.
- *
- * Returns null when no user provider is available or the id resolves to nothing (the
- * webhook then answers allowed=false rather than failing open).
- */
+/** Resolves only the trusted auth provider model and checks its complete morph identity. */
 #[Internal]
 final readonly class HostUserResolver implements Contracts\HostUserResolver
 {
@@ -27,7 +19,7 @@ final readonly class HostUserResolver implements Contracts\HostUserResolver
         private AuthFactory $auth,
     ) {}
 
-    public function find(int|string $id): ?Authorizable
+    public function find(ActorRef $principal): ?Authorizable
     {
         $guard = $this->auth->guard();
 
@@ -37,8 +29,25 @@ final readonly class HostUserResolver implements Contracts\HostUserResolver
             return null;
         }
 
-        $user = $guard->getProvider()->retrieveById($id);
+        $provider = $guard->getProvider();
+        // Only the model configured by the trusted host provider may be materialised.
+        if (!method_exists($provider, 'getModel')) {
+            return null;
+        }
+        $model = $provider->getModel();
+        if (!is_string($model) || !is_a($model, Model::class, true)) {
+            return null;
+        }
+        $expected = new $model;
+        if ($principal->id === null || $principal->type !== $expected->getMorphClass()) {
+            return null;
+        }
+        $user = $provider->retrieveById($principal->id);
+        if (!$user instanceof Authorizable) {
+            return null;
+        }
+        $resolved = Actor::user($user)->ref();
 
-        return $user instanceof Authorizable ? $user : null;
+        return $resolved->type === $principal->type && (string) $resolved->id === (string) $principal->id ? $user : null;
     }
 }

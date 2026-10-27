@@ -9,13 +9,9 @@ use Vaulter\Attributes\Internal;
 use Vaulter\Collaboration\Contracts\HostUserResolver;
 use Vaulter\Support\Identity;
 use Vaulter\Testing\Fixtures\TestUser;
+use Vaulter\ValueObjects\Access\ActorRef;
 
-/**
- * A test {@see HostUserResolver} (M4b): materialises a TestUser for any id without a
- * configured auth user-provider, so the collaboration webhook's authenticate flow can
- * run the AccessResolver against a real actor in tests. An id present in $unknownIds
- * resolves to null (to exercise the allowed=false path).
- */
+/** TestUser-only typed resolver; unknown IDs fail closed. */
 #[Internal]
 final class FakeHostUserResolver implements HostUserResolver
 {
@@ -26,9 +22,10 @@ final class FakeHostUserResolver implements HostUserResolver
         private readonly array $unknownIds = [],
     ) {}
 
-    public function find(int|string $id): ?Authorizable
+    public function find(ActorRef $principal): ?Authorizable
     {
-        if (in_array($id, $this->unknownIds, strict: false)) {
+        $id = $principal->id;
+        if ($principal->type !== (new TestUser)->getMorphClass() || $id === null || in_array($id, $this->unknownIds, strict: false)) {
             return null;
         }
 

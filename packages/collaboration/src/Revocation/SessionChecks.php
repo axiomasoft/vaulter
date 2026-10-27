@@ -65,13 +65,16 @@ final readonly class SessionChecks
         }
 
         $minted = $this->tokens->mint(
-            subject: $call->subject,
+            principal: $opened->grant->principal,
             documentId: $call->ref->nodeId,
             driveId: $call->ref->driveId,
             tenant: $call->tenant,
             generation: $call->ref->epoch,
             schemaVersion: $call->schemaVersion,
             writable: $opened->writable,
+            protocol: $opened->grant->protocol,
+            stateFormat: $opened->grant->stateFormat,
+            notAfter: $opened->grant->notAfter,
         );
         $this->metrics->counter(name: 'vaulter_collab_token_renewals_total', labels: ['outcome' => $minted['scope']]);
 

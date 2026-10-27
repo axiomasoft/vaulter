@@ -2,14 +2,18 @@
 
 declare(strict_types=1);
 
+use Firebase\JWT\JWT;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
+use Vaulter\Collaboration\Configuration\CollaborationConfig;
 use Vaulter\Collaboration\Tests\Collaboration\HubTestHelpers as Hub;
 use Vaulter\Collaboration\Tests\Support\Revocation;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\Access\GrantInput;
 use Vaulter\Drive\Testing\Access\AccessTestHelpers;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
  * POST /v1/collaboration/hub/renew (D26, I17 #9): the hub renews a connection's token before it expires. The rights
@@ -53,7 +57,7 @@ it('refuses to renew a session whose subject lost every right', function (): voi
     $token = Hub::token($this->node);
     $this->drive->access()->revoke($this->folder->id, $this->grant);
 
-    revocationRenew($this, $token)->assertForbidden()->assertJsonPath('code', 'permission_denied');
+    revocationRenew($this, $token)->assertNotFound()->assertJsonPath('code', 'node_not_found');
 });
 
 it('renews a writer who lost Edit but kept View read-only', function (): void {
@@ -101,4 +105,52 @@ it('refuses a body that names another room than the token', function (): void {
     ['node' => $other] = Revocation::inheritedDocument();
 
     revocationRenew($this, Hub::token($this->node), Hub::room($other))->assertForbidden();
+});
+
+it('keeps the exact production verifier skew boundary with fixed clocks', function (int $skew, int $exp, int $status): void {
+    $oldNow = Carbon::getTestNow();
+    $oldSkew = config('vaulter-collaboration.hub.clock_skew');
+    [$leeway, $timestamp] = [JWT::$leeway, JWT::$timestamp];
+    try {
+        Carbon::setTestNow(Carbon::createFromTimestamp(1000));
+        config()->set('vaulter-collaboration.hub.clock_skew', $skew);
+        $token = Hub::token($this->node, claims: ['iat' => 900, 'nbf' => 900, 'exp' => $exp]);
+        $response = revocationRenew($this, $token)->assertStatus($status);
+        if ($status === 200) {
+            expect($response->json('exp'))->toBe(1300)->and($response->json('token'))->not->toBe($token);
+        } else {
+            $response->assertJsonMissingPath('token');
+        }
+        expect(JWT::$leeway)->toBe($leeway)->and(JWT::$timestamp)->toBe($timestamp);
+    } finally {
+        Carbon::setTestNow($oldNow);
+        config()->set('vaulter-collaboration.hub.clock_skew', $oldSkew);
+        [JWT::$leeway, JWT::$timestamp] = [$leeway, $timestamp];
+    }
+})->with([[30, 990, 200], [30, 970, 401], [30, 969, 401], [0, 990, 401], [60, 941, 200], [60, 940, 401], [60, 939, 401]]);
+
+it('preserves actual skew configuration bounds zero through sixty', function (int $skew, bool $valid): void {
+    expect(app(CollaborationConfig::class)->hubClockSkew())->toBe(30);
+    config()->set('vaulter-collaboration.hub.clock_skew', $skew);
+    $read = fn () => app(CollaborationConfig::class)->hubClockSkew();
+    if ($valid) {
+        expect($read())->toBe($skew);
+    } else {
+        expect($read)->toThrow(InvalidConfigurationException::class);
+    }
+})->with([[0, true], [30, true], [60, true], [-1, false], [61, false]]);
+
+it('applies live View and the original Read ceiling even inside expiry skew', function (): void {
+    $oldNow = Carbon::getTestNow();
+    try {
+        Carbon::setTestNow(Carbon::createFromTimestamp(1000));
+        $token = Hub::token($this->node, mode: 'ro', claims: ['iat' => 900, 'nbf' => 900, 'exp' => 990]);
+        revocationRenew($this, $token)->assertOk()->assertJsonPath('scope', 'read');
+        revocationRenew($this, $token.'x')->assertUnauthorized();
+        revocationRenew($this, Hub::token($this->node, claims: ['iat' => 900, 'exp' => 990, 'sub_type' => null]))->assertUnauthorized();
+        $this->drive->access()->revoke($this->folder->id, $this->grant);
+        revocationRenew($this, $token)->assertNotFound()->assertJsonMissingPath('token');
+    } finally {
+        Carbon::setTestNow($oldNow);
+    }
 });

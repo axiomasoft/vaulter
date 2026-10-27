@@ -5881,6 +5881,34 @@
             "id": "problem:collaboration_protocol_contract",
             "kind": "protocol",
             "reason": "P3.2 keyed protocol handlers and fail-closed session contract"
+        },
+        {
+            "kind": "config",
+            "id": "config:vaulter-documents.collaboration.session_ttl",
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "reason": "P3.7 documents policy bounds grant lifetime to 1..300 seconds."
+        },
+        {
+            "kind": "protocol",
+            "id": "format:jwt-claims-room",
+            "change": "redefined",
+            "decision": "PLAN4-D16",
+            "reason": "P3.7 typed principal, complete state binding and grant-bounded expiry verified by production resolver."
+        },
+        {
+            "kind": "protocol",
+            "id": "morph:Vaulter\\Collaboration\\HostUserResolver::find#getMorphClass",
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "reason": "P3.7 resolves the trusted provider morph type before looking up the user id."
+        },
+        {
+            "kind": "protocol",
+            "id": "morph:Vaulter\\Collaboration\\Testing\\Fixtures\\FakeHostUserResolver::find#getMorphClass",
+            "change": "added",
+            "decision": "PLAN4-D16",
+            "reason": "P3.7 resolves the trusted provider morph type before looking up the user id."
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

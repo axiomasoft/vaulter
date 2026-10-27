@@ -25,7 +25,7 @@ import {
   UPDATE_TOO_LARGE,
 } from './rooms.js'
 import { createShutdown } from './shutdown.js'
-import { decodeTokenClaims, decodeTokenExpiry } from './tokens.js'
+import { decodeTokenClaims, decodeTokenExpiry, roomTokenClaims } from './tokens.js'
 import { createWorker } from './worker.js'
 
 // Vaulter collaboration hub — the external, env-configured Hocuspocus process.
@@ -273,6 +273,11 @@ export function createHooks({ backend = backendModule, log = console, persistenc
       throw tokenExpired()
     }
 
+    const claims = roomTokenClaims(token, documentName)
+    if (claims === null) {
+      throw new Error('Malformed collaboration token binding')
+    }
+
     // Taken before the backend checks the rights: a control message for the room's drive that comes
     // after it has the connection rechecked once it is registered (src/registry.js).
     const controlMark = revoke.registry.mark()
@@ -289,8 +294,7 @@ export function createHooks({ backend = backendModule, log = console, persistenc
     }
 
     // The backend accepted the token, so its tenant claim is the room's tenant.
-    const claimed = decodeTokenClaims(token)?.tenant
-    const tenant = typeof claimed === 'string' ? claimed : null
+    const tenant = claims.tenant
     const crossed = limit.admission(documentName, tenant)
 
     if (crossed !== null) {
@@ -299,7 +303,7 @@ export function createHooks({ backend = backendModule, log = console, persistenc
     }
 
     const protocol = readClientProtocol(requestParameters)
-    const readOnly = result.mode !== 'rw' || protocol !== CLIENT_PROTOCOL
+    const readOnly = claims.scope !== 'write' || result.mode !== 'rw' || protocol !== CLIENT_PROTOCOL
 
     // v4 hands the per-connection settings as connectionConfig; older payloads as connection. Set
     // whichever is there.
@@ -310,7 +314,7 @@ export function createHooks({ backend = backendModule, log = console, persistenc
     }
 
     // The expiry timer and the renewal are armed once the live connection is known (connected).
-    return { token, room: documentName, mode: result.mode, readOnly, protocol, userId: result.userId, exp, tenant, controlMark }
+    return { token, room: documentName, mode: claims.scope === 'read' ? 'ro' : result.mode, readOnly, protocol, userId: claims.sub, principal: { type: claims.sub_type, id: claims.sub }, binding: { protocol: claims.protocol, stateFormat: claims.state_format, schemaVersion: claims.schema_version, generation: claims.generation }, exp, tenant, controlMark }
   }
 
   /**

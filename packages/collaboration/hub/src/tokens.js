@@ -30,3 +30,19 @@ export function decodeTokenExpiry(token) {
 
   return typeof exp === 'number' ? exp : null
 }
+
+/** Complete room identity for local bookkeeping; only the backend verifies its authority. */
+export function roomTokenClaims(token, room) {
+  const claims = decodeTokenClaims(token)
+  const nonempty = (value) => typeof value === 'string' && value !== ''
+  if (!claims || !['sub', 'sub_type', 'protocol', 'state_format', 'document_id', 'drive_id', 'room', 'jti'].every((key) => nonempty(claims[key]))
+    || claims.sub_type === 'vaulter:system'
+    || !Object.hasOwn(claims, 'tenant') || (claims.tenant !== null && typeof claims.tenant !== 'string')
+    || !['read', 'write'].includes(claims.scope)
+    || !Number.isSafeInteger(claims.exp) || !Number.isSafeInteger(claims.schema_version) || claims.schema_version < 1
+    || !Number.isSafeInteger(claims.generation) || claims.generation < 0
+    || claims.room !== room || !room.endsWith(`.${claims.drive_id}.${claims.document_id}.${claims.generation}`)) {
+    return null
+  }
+  return claims
+}

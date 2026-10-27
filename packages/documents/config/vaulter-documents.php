@@ -13,6 +13,7 @@ return [
     // Document type classes; add SpreadsheetDocumentType or your own here.
     'types' => [RichTextDocumentType::class, MarkdownDocumentType::class],
     'default_type' => 'vaulter/rich-text',
+    'collaboration' => ['session_ttl' => 300],
     'content' => ['max_size_kb' => 5120],
     'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
     'comments' => ['enabled' => true],

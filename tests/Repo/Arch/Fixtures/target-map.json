@@ -2654,6 +2654,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Access/CollaborationAccessPolicy.php",
+            "fqcn": "Vaulter\\Documents\\Access\\CollaborationAccessPolicy",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Access\\CollaborationAccessPolicy"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Actions/Comments/AddCommentAction.php",
             "fqcn": "Vaulter\\Documents\\Actions\\Comments\\AddCommentAction",
             "kind": "final-class",
@@ -3112,6 +3126,20 @@
             "rule": "other-packages:prefix:Vaulter\\Documents\\Contracts\\",
             "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Documents\\Contracts\\UpgradesSchema"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Data/Collaboration/CollaborationAccessDecision.php",
+            "fqcn": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationAccessDecision",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Data\\Collaboration\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Data\\Collaboration\\CollaborationAccessDecision"
         },
         {
             "action": "keep",
