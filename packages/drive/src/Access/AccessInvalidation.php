@@ -11,6 +11,7 @@ use Vaulter\Drive\Contracts\Access\PermissionDriver;
 use Vaulter\Drive\Data\DriveRef;
 use Vaulter\Drive\Events\Access\EffectivePermissionsChanged;
 use Vaulter\Drive\Operations\DriveContext;
+use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Drive\Repositories\DriveReadRepository;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Modules\ModuleId;
@@ -29,6 +30,11 @@ use Vaulter\ValueObjects\Operations\TenantRef;
  * when `$drive` is null, in an operation of its own (`drive.access.invalidate`, a system actor whose reason is
  * `$reason`). Call it after the host's own change committed: the event is what makes a session re-check, and a check
  * before the commit would still read the old rights.
+ *
+ * In the same transaction, after the event is recorded, the change journal epoch of that drive (or of every drive,
+ * in one UPDATE) is raised, so every change cursor expires (410) and its reader bootstraps against the new rights
+ * (PLAN4.D20). The journal seq does not move; the event itself is not journaled. A failure rolls back both, and the
+ * host may call again.
  */
 #[Api]
 final readonly class AccessInvalidation
@@ -41,6 +47,7 @@ final readonly class AccessInvalidation
         private OperationRunner $runner,
         private EventRecorder $recorder,
         private DriveReadRepository $drives,
+        private ChangeHeadRepository $heads,
     ) {}
 
     /**
@@ -59,6 +66,7 @@ final readonly class AccessInvalidation
             $context = OperationContext::system(scope: new ScopeRef('access', 'global'), tenant: TenantRef::none(), reason: $reason);
             $this->runner->write($spec, $context, function () use ($context, $reason): void {
                 $this->recorder->record(EffectivePermissionsChanged::global(reason: $reason, actor: $context->actor->ref(), correlationId: $context->correlationId));
+                $this->heads->bumpAllEpochs();
             });
 
             return;
@@ -68,6 +76,7 @@ final readonly class AccessInvalidation
         $context = DriveContext::system(drive: $model, reason: $reason);
         $this->runner->write($spec, $context->operation, function () use ($context, $reason): void {
             $this->recorder->record(EffectivePermissionsChanged::forDrive(drive: $context->drive, reason: $reason, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->heads->bumpEpoch($context->driveId());
         });
     }
 }

@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Operations;
 
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use LogicException;
 use Vaulter\Attributes\Internal;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\OperationGuard;
+use Vaulter\Drive\Access\PermissionDriverManager;
+use Vaulter\Drive\Access\ValueObjects\AccessScope;
 use Vaulter\Drive\Changes\ChangeCursor;
 use Vaulter\Drive\Changes\ChangeJournal;
 use Vaulter\Drive\Changes\ReaderSyncIdentity;
@@ -26,6 +29,7 @@ use Vaulter\Drive\Exceptions\Changes\InvalidCursorException;
 use Vaulter\Drive\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Drive\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Drive\Models\Drive;
+use Vaulter\Drive\Repositories\Access\GrantReadRepository;
 use Vaulter\Drive\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Drive\Tenancy\TenancyBoundary;
@@ -58,6 +62,8 @@ final readonly class ChangeOperations
         private TenancyConfig $tenancy,
         private TenancyBoundary $boundary,
         private Repository $repository,
+        private PermissionDriverManager $drivers,
+        private GrantReadRepository $grants,
     ) {}
 
     /**
@@ -78,9 +84,10 @@ final readonly class ChangeOperations
         $this->heads->create($this->context->driveId(), self::tenant($this->drive()));
         $drive = $this->drive();
         $head = $this->database->transaction(fn (): array => $this->heads->find($this->context->driveId(), 'share') ?? self::emptyHead());
-        $issuedAt = now()->getTimestamp();
+        $now = Carbon::now();
+        $issuedAt = $now->getTimestamp();
 
-        return $this->cursor($drive, epoch: $head['epoch'], after: $head['last_seq'], issuedAt: $issuedAt, notAfter: $issuedAt + $this->changes->cursorMaxAgeSeconds());
+        return $this->cursor($drive, epoch: $head['epoch'], after: $head['last_seq'], issuedAt: $issuedAt, notAfter: $this->deadline($drive, $issuedAt, null, $now));
     }
 
     /**
@@ -107,11 +114,10 @@ final readonly class ChangeOperations
         if ($position->keyGeneration !== $identity->keyGeneration) {
             throw CursorExpiredException::reset();
         }
-        // The deadline only ever shrinks: the issued clock with the current cap.
-        $notAfter = min($position->notAfter, $position->issuedAt + $this->changes->cursorMaxAgeSeconds());
-        if (now()->getTimestamp() > $notAfter) {
-            throw CursorExpiredException::reset();
-        }
+        // One clock for the page, the resolver's: the deadline only ever shrinks.
+        $now = Carbon::now();
+        $notAfter = $this->deadline($drive, $position->issuedAt, $position->notAfter, $now);
+        $this->assertLive($notAfter, $now);
 
         // Inside a transaction the head is first read FOR SHARE: a prune waits until this
         // transaction ends, and one that committed earlier is seen even under a snapshot.
@@ -136,9 +142,20 @@ final readonly class ChangeOperations
         $rows = array_slice($rows, 0, $limit);
         $last = $rows === [] ? null : $rows[count($rows) - 1];
         $after = $hasMore && $last !== null ? ChangeHeadRepository::integer($last->seq) : $head['last_seq'];
+        $changes = $this->project($drive, $rows);
+
+        // Nothing is handed out once the cursor died while the page was projected: the
+        // deadline, the key generation and, outside a transaction, the head again.
+        $this->assertLive($notAfter, Carbon::now());
+        if ($position->keyGeneration !== $this->changes->keyGeneration()) {
+            throw CursorExpiredException::reset();
+        }
+        if (!$inTransaction) {
+            $this->assertCurrent($position, $this->heads->find($this->context->driveId()) ?? self::emptyHead());
+        }
 
         return new ChangePage(
-            changes: $this->project($drive, $rows),
+            changes: $changes,
             cursor: $this->cursor($drive, epoch: $position->epoch, after: $after, issuedAt: $position->issuedAt, notAfter: $notAfter),
             hasMore: $hasMore,
         );
@@ -208,6 +225,45 @@ final readonly class ChangeOperations
     private static function remove(?string $syncKey): NodeChange
     {
         return new NodeChange(operation: ChangeOperation::Remove, syncKey: $syncKey, nodeId: null, subtree: false, node: null, nodeSequence: null);
+    }
+
+    /**
+     * The cursor deadline (PLAN4.D20): the smallest of the latched one, issued_at plus
+     * the current cap (never now plus it) and the earliest expiry of a live grant of
+     * this reader's subject-set in the drive. A permanent grant or none adds no bound.
+     */
+    private function deadline(Drive $drive, int $issuedAt, ?int $latched, Carbon $now): int
+    {
+        $deadline = $issuedAt + $this->changes->cursorMaxAgeSeconds();
+        if ($latched !== null) {
+            $deadline = min($deadline, $latched);
+        }
+        $expiry = $this->grantExpiry($drive, $now);
+
+        return $expiry === null ? $deadline : min($deadline, $expiry);
+    }
+
+    /** The subject-set and clock of the AccessResolver, read through the same driver. */
+    private function grantExpiry(Drive $drive, Carbon $now): ?int
+    {
+        $actor = $this->context->actor->authorizable();
+        if ($actor === null || !$this->config->featureEnabled('grants', $drive->profile)) {
+            return null;
+        }
+        $driver = $this->drivers->forProfile($drive->profile);
+
+        return $this->grants->earliestExpiryIn(
+            subjects: $this->drivers->subjectsFor($driver, $actor, AccessScope::forDrive($drive)),
+            driveId: $drive->getKey(),
+            now: $now,
+        );
+    }
+
+    private function assertLive(int $notAfter, Carbon $now): void
+    {
+        if ($now->getTimestamp() > $notAfter) {
+            throw CursorExpiredException::reset();
+        }
     }
 
     /** @param array{last_seq: int, pruned_through: int, epoch: int} $head */

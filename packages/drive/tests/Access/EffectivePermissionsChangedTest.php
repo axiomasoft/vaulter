@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Access\AccessInvalidation;
 use Vaulter\Drive\Access\Roles\RoleRegistry;
@@ -15,6 +17,7 @@ use Vaulter\Drive\Data\UploadOptions;
 use Vaulter\Drive\Data\UploadSource;
 use Vaulter\Drive\Enums\Events\DriveEventType;
 use Vaulter\Drive\Models\Activity\Activity;
+use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxEnvelope;
@@ -174,3 +177,60 @@ it('refuses a malformed reason or an unknown drive and records nothing', functio
     'a reason over 64 bytes' => [fn () => app(AccessInvalidation::class)->changed(null, str_repeat('a', 65))],
     'a drive that does not exist' => [fn () => app(AccessInvalidation::class)->changed(DriveRef::of('01JZZZZZZZZZZZZZZZZZZZZZZZ'), 'host-policy')],
 ]);
+
+it('raises the journal epoch with the host invalidation, in one UPDATE for all drives, and leaves seq alone', function (): void {
+    $heads = app(ChangeHeadRepository::class);
+    $other = DriveTestHelpers::drive();
+    $this->drive->folders()->create('Team');
+    $other->folders()->create('Team');
+    $before = [$heads->find($this->driveId), $heads->find($other->snapshot()->id)];
+
+    app(AccessInvalidation::class)->changed(DriveRef::of($this->drive), 'host-policy');
+    $sql = [];
+    DB::listen(static function (QueryExecuted $query) use (&$sql): void {
+        if (str_contains($query->sql, 'drive_change_heads')) {
+            $sql[] = strtolower($query->sql);
+        }
+    });
+    app(AccessInvalidation::class)->changed(null, 'host-role');
+
+    expect($heads->find($this->driveId))->toBe([...$before[0], 'epoch' => 3])
+        ->and($heads->find($other->snapshot()->id))->toBe([...$before[1], 'epoch' => 2])
+        ->and(array_values(array_filter($sql, static fn (string $q): bool => str_starts_with($q, 'update'))))->toHaveCount(1)
+        ->and(implode(' ', $sql))->not->toContain('order by');
+});
+
+it('rolls back the event and the epoch together when the epoch UPDATE fails, and the host can retry', function (): void {
+    $heads = app(ChangeHeadRepository::class);
+    $this->drive->folders()->create('Team');
+    OutboxEvent::query()->delete();
+    $fail = true;
+    DB::listen(static function (QueryExecuted $query) use (&$fail): void {
+        if ($fail && str_contains($query->sql, 'drive_change_heads') && str_starts_with(strtolower($query->sql), 'update')) {
+            throw new RuntimeException('epoch update failed');
+        }
+    });
+
+    expect(fn () => app(AccessInvalidation::class)->changed(null, 'host-role'))->toThrow(RuntimeException::class, 'epoch update failed')
+        ->and(invalidations())->toBe([])
+        ->and($heads->find($this->driveId)['epoch'])->toBe(1);
+
+    $fail = false;
+    app(AccessInvalidation::class)->changed(null, 'host-role');
+
+    expect(array_column(invalidations(), 'reason'))->toBe(['host-role'])
+        ->and($heads->find($this->driveId)['epoch'])->toBe(2);
+});
+
+it('rolls back the epoch when recording the event fails', function (): void {
+    $heads = app(ChangeHeadRepository::class);
+    $this->drive->folders()->create('Team');
+    DB::listen(static function (QueryExecuted $query): void {
+        if (str_contains($query->sql, 'outbox') && str_starts_with(strtolower($query->sql), 'insert')) {
+            throw new RuntimeException('event record failed');
+        }
+    });
+
+    expect(fn () => app(AccessInvalidation::class)->changed(DriveRef::of($this->drive), 'host-policy'))->toThrow(RuntimeException::class, 'event record failed')
+        ->and($heads->find($this->driveId)['epoch'])->toBe(1);
+});

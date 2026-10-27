@@ -2,12 +2,19 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Access\AccessInvalidation;
+use Vaulter\Drive\Enums\Events\DriveEventType;
+use Vaulter\Drive\Repositories\Changes\ChangeHeadRepository;
+use Vaulter\Drive\Testing\Drive\DriveTestHelpers;
 use Vaulter\Events\Outbox\ConsumeResult;
+use Vaulter\Events\Outbox\Models\OutboxEvent;
 use Vaulter\Events\Outbox\OutboxConsumer;
 use Vaulter\Events\Outbox\OutboxRelay;
 use Vaulter\Integration\Tests\Concerns\EnablesWebhooksModule;
@@ -130,4 +137,38 @@ it('retries an accepted-then-timed-out webhook delivery with the same webhook-id
         ->and($accepted)->toBe(['evt-timeout-1', 'evt-timeout-1'])
         ->and($delivery->fresh()->status)->toBe('delivered')
         ->and($delivery->fresh()->attempts)->toBe(2);
+});
+
+it('wakes consumers only for a committed host invalidation, and a dropped delivery does not keep old cursors alive', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $drive->folders()->create('Team');
+    $driveId = $drive->model()->getKey();
+    $heads = app(ChangeHeadRepository::class);
+    $invalidations = static fn () => OutboxEvent::query()->where('type', DriveEventType::EffectivePermissionsChanged->value)->get();
+    $fail = true;
+    DB::listen(static function (QueryExecuted $query) use (&$fail): void {
+        if ($fail && str_contains($query->sql, 'drive_change_heads') && str_starts_with(strtolower($query->sql), 'update')) {
+            throw new RuntimeException('epoch update failed');
+        }
+    });
+
+    // positive control: the fault fired on the epoch UPDATE; journal head and outbox roll back together
+    expect(fn () => app(AccessInvalidation::class)->changed(null, 'host-role'))->toThrow(RuntimeException::class, 'epoch update failed')
+        ->and($invalidations())->toHaveCount(0)
+        ->and($heads->find($driveId)['epoch'])->toBe(1);
+
+    $fail = false;
+    $seq = $heads->find($driveId)['last_seq'];
+    app(AccessInvalidation::class)->changed(null, 'host-role');
+    $event = $invalidations()->sole();
+
+    // The webhook is a wake-up only: its delivery failing leaves the epoch raised, so polling still resets.
+    $earlier = OutboxEvent::query()->where('outbox_seq', '<', $event->outbox_seq)->count();
+    ScriptedConsumer::$answers = [...array_fill(0, $earlier, ConsumeResult::done()), 'throw'];
+    $this->travel(900)->seconds();
+    app(OutboxRelay::class)->pass();
+
+    expect(ScriptedConsumer::$consumed)->toContain(ScriptedConsumer::ID.':'.$event->event_id)
+        ->and(WebhookTestHelpers::outboxDelivery($event->event_id, ScriptedConsumer::ID)['state'])->toBe('pending')
+        ->and($heads->find($driveId))->toMatchArray(['epoch' => 2, 'last_seq' => $seq]);
 });

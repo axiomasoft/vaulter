@@ -869,6 +869,7 @@
                         "packages/drive/tests/Changes/DriveChangesEndToEndTest.php",
                         "packages/drive/tests/Changes/PruneChangesCommandTest.php",
                         "packages/drive/tests/Changes/ReaderSyncIdentityTest.php",
+                        "packages/drive/tests/Changes/SyncLifecycleTest.php",
                         "packages/drive/tests/Concurrency/ChangeJournalRaceTest.php",
                         "packages/drive/tests/Concurrency/CompleteUploadRaceTest.php",
                         "packages/drive/tests/Concurrency/CompleteUploadRetryTest.php",

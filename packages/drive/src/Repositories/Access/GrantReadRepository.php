@@ -168,6 +168,31 @@ final class GrantReadRepository
     }
 
     /**
+     * The earliest expiry, as a UTC unix time, of the live grants a subject-set holds in
+     * one drive (PLAN4.D20): the change cursor of that reader must not outlive it. Null
+     * when every live grant is permanent or there is none, so there is no such bound.
+     * The drive is reached through the node, as in {@see self::nodeIdsGrantedIn()}.
+     *
+     * @param list<Subject> $subjects
+     */
+    public function earliestExpiryIn(array $subjects, int|string $driveId, Carbon $now): ?int
+    {
+        if ($subjects === []) {
+            return null;
+        }
+
+        $model = $this->vaulterConfig->model('grant');
+        $earliest = $this->boundary->constrain($model::query(), 'node.storage')
+            ->whereHas('node', static fn (Builder $query): Builder => $query->where('drive_id', $driveId))
+            ->forSubjects($subjects)
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '>', $now)
+            ->min('expires_at');
+
+        return $earliest === null ? null : Carbon::parse($earliest, 'UTC')->getTimestamp();
+    }
+
+    /**
      * Every live subtree grant on the given nodes, for any subject: what a node below
      * them currently inherits when those nodes are its ancestors up to the boundary.
      *

@@ -91,6 +91,21 @@ final readonly class ChangeHeadRepository
         ]) > 0;
     }
 
+    /**
+     * Start a new epoch on every drive at once (a global access invalidation): one
+     * UPDATE over the existing heads, no ORDER BY and no per-drive commits; last_seq
+     * stays. A drive without a head has no cursor to expire.
+     *
+     * @return int the heads changed
+     */
+    public function bumpAllEpochs(): int
+    {
+        return $this->database->connection()->table($this->table())->update([
+            'epoch' => $this->database->connection()->raw('epoch + 1'),
+            'updated_at' => now(),
+        ]);
+    }
+
     /** @return list<int|string> the drive ids with a head, in id order */
     public function driveIds(): array
     {
